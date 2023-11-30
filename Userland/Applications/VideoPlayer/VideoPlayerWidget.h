@@ -13,8 +13,8 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Forward.h>
-#include <LibVideo/DecoderError.h>
-#include <LibVideo/PlaybackManager.h>
+#include <LibMedia/DecoderError.h>
+#include <LibMedia/PlaybackManager.h>
 
 #include "VideoFrameWidget.h"
 

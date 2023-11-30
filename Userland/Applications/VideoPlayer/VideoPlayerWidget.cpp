@@ -65,15 +65,15 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
         set_current_timestamp(m_playback_manager->current_playback_time());
     };
 
-    m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
-    m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
+    m_play_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/play.png"sv));
+    m_pause_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/pause.png"sv));
 
     m_play_pause_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
 
     m_cycle_sizing_modes_action = GUI::Action::create(
-        "Sizing", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
+        "Sizing", TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
             cycle_sizing_modes();
         });
 
@@ -412,7 +412,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     view_menu->add_action(*m_toggle_fullscreen_action);
 
     auto sizing_mode_menu = view_menu->add_submenu("&Sizing Mode"_string);
-    sizing_mode_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)));
+    sizing_mode_menu->set_icon(TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)));
 
     m_sizing_mode_group = make<GUI::ActionGroup>();
     m_sizing_mode_group->set_exclusive(true);

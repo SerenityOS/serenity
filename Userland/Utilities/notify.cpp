@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     notification->set_text(message);
     notification->set_title(title);
     if (!icon_path.is_empty()) {
-        notification->set_icon(TRY(Gfx::Bitmap::load_from_file(icon_path)));
+        notification->set_icon(TRY(Media::ImageDecoder::load_from_file(icon_path)));
     }
     notification->show();
 

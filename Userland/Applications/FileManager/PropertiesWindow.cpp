@@ -50,7 +50,7 @@
 ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(DeprecatedString const& path, bool disable_rename, Window* parent)
 {
     auto window = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PropertiesWindow(path, parent)));
-    window->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv)));
+    window->set_icon(TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/properties.png"sv)));
     TRY(window->create_widgets(disable_rename));
     return window;
 }
@@ -400,7 +400,7 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
 
 ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file, StringView mime_type)
 {
-    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
+    auto image_decoder = Media::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
     if (!image_decoder)
         return {};
 

@@ -116,13 +116,13 @@ ErrorOr<RefPtr<Gfx::Bitmap>> MessageBox::icon() const
 {
     switch (m_type) {
     case Type::Information:
-        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-information.png"sv));
+        return TRY(Media::ImageDecoder::load_from_file("/res/icons/32x32/msgbox-information.png"sv));
     case Type::Warning:
-        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-warning.png"sv));
+        return TRY(Media::ImageDecoder::load_from_file("/res/icons/32x32/msgbox-warning.png"sv));
     case Type::Error:
-        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-error.png"sv));
+        return TRY(Media::ImageDecoder::load_from_file("/res/icons/32x32/msgbox-error.png"sv));
     case Type::Question:
-        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-question.png"sv));
+        return TRY(Media::ImageDecoder::load_from_file("/res/icons/32x32/msgbox-question.png"sv));
     default:
         return nullptr;
     }

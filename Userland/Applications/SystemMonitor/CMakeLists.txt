@@ -26,4 +26,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(SystemMonitor ICON app-system-monitor)
-target_link_libraries(SystemMonitor PRIVATE LibConfig LibCore LibGfx LibGUI LibMain LibSymbolication LibThreading)
+target_link_libraries(SystemMonitor PRIVATE LibConfig LibCore LibGUI LibMain LibSymbolication LibThreading)

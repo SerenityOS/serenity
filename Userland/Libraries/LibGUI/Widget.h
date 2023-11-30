@@ -27,6 +27,7 @@
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace GUI::Registration {
 extern GUI::ObjectClassRegistration registration_Widget;

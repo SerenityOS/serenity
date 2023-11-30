@@ -14,6 +14,7 @@
 #include <AK/Variant.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Emoji.h>
 
@@ -52,7 +53,7 @@ Bitmap const* Emoji::emoji_for_code_points(ReadonlySpan<u32> const& code_points)
         return it->value.ptr();
 
     auto emoji_path = LexicalPath::join(emoji_lookup_path(), emoji_file);
-    auto bitmap_or_error = Bitmap::load_from_file(emoji_path.string());
+    auto bitmap_or_error = ::Media::ImageDecoder::load_from_file(emoji_path.string());
 
     if (bitmap_or_error.is_error()) {
         dbgln_if(EMOJI_DEBUG, "Generated emoji data has file {}, but could not load image: {}", emoji_file, bitmap_or_error.error());

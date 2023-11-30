@@ -37,7 +37,7 @@ LinkLabel::LinkLabel(String text)
 ErrorOr<void> LinkLabel::create_actions()
 {
     m_open_action = GUI::Action::create(
-        "Show in File Manager", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](const GUI::Action&) {
+        "Show in File Manager", TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](const GUI::Action&) {
             if (on_click)
                 on_click();
         },

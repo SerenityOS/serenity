@@ -8,7 +8,7 @@
 #include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
-#include <LibVideo/Containers/Matroska/Reader.h>
+#include <LibMedia/Containers/Matroska/Reader.h>
 
 #define TRY_PARSE(expression)                                                                        \
     ({                                                                                               \

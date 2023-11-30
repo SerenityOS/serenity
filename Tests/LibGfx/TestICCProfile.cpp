@@ -10,9 +10,9 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
-#include <LibGfx/ImageFormats/JPEGLoader.h>
-#include <LibGfx/ImageFormats/PNGLoader.h>
-#include <LibGfx/ImageFormats/WebPLoader.h>
+#include <LibMedia/ImageFormats/JPEGLoader.h>
+#include <LibMedia/ImageFormats/PNGLoader.h>
+#include <LibMedia/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
 
 #ifdef AK_OS_SERENITY
@@ -24,7 +24,7 @@
 TEST_CASE(png)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/icc-v2.png"sv)));
-    auto png = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+    auto png = MUST(Media::PNGImageDecoderPlugin::create(file->bytes()));
     auto icc_bytes = MUST(png->icc_data());
     EXPECT(icc_bytes.has_value());
 
@@ -35,7 +35,7 @@ TEST_CASE(png)
 TEST_CASE(jpg)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/icc-v4.jpg"sv)));
-    auto jpg = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    auto jpg = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
     auto icc_bytes = MUST(jpg->icc_data());
     EXPECT(icc_bytes.has_value());
 
@@ -57,7 +57,7 @@ TEST_CASE(jpg)
 TEST_CASE(webp_extended_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/extended-lossless.webp"sv)));
-    auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    auto webp = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
     auto icc_bytes = MUST(webp->icc_data());
     EXPECT(icc_bytes.has_value());
 
@@ -68,7 +68,7 @@ TEST_CASE(webp_extended_lossless)
 TEST_CASE(webp_extended_lossy)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/extended-lossy.webp"sv)));
-    auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    auto webp = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
     auto icc_bytes = MUST(webp->icc_data());
     EXPECT(icc_bytes.has_value());
 

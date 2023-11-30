@@ -8,8 +8,8 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibGemini/Document.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoading.h>

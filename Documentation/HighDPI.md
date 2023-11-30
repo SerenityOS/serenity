@@ -168,7 +168,7 @@ Currently:
 
 or
 
-    s_unfilled_circle_bitmap = Bitmap::load_from_file("/res/icons/serenity/unfilled-radio-circle.png");
+    s_unfilled_circle_bitmap = ImageDecoder::load_from_file("/res/icons/serenity/unfilled-radio-circle.png");
 
 or
 

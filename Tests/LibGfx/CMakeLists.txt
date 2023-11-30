@@ -1,11 +1,9 @@
 set(TEST_SOURCES
     BenchmarkGfxPainter.cpp
-    BenchmarkJPEGLoader.cpp
     TestDeltaE.cpp
     TestFontHandling.cpp
     TestGfxBitmap.cpp
     TestICCProfile.cpp
-    TestImageDecoder.cpp
     TestParseISOBMFF.cpp
     TestRect.cpp
     TestScalingFunctions.cpp
@@ -14,7 +12,7 @@ set(TEST_SOURCES
 )
 
 foreach(source IN LISTS TEST_SOURCES)
-    serenity_test("${source}" LibGfx LIBS LibGfx)
+    serenity_test("${source}" LibGfx LIBS LibGfx LibMedia)
 endforeach()
 
 install(DIRECTORY test-inputs DESTINATION usr/Tests/LibGfx)

@@ -69,7 +69,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     };
     m_themes_combo->set_selected_index(current_theme_index, GUI::AllowCallback::No);
 
-    auto mouse_settings_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mouse.png"sv));
+    auto mouse_settings_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-mouse.png"sv));
 
     m_color_scheme_names.clear();
     TRY(Core::Directory::for_each_entry("/res/color-schemes"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto&) -> ErrorOr<IterationDecision> {

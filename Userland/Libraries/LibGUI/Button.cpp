@@ -188,7 +188,7 @@ void Button::set_icon(RefPtr<Gfx::Bitmap const> icon)
 
 void Button::set_icon_from_path(DeprecatedString const& path)
 {
-    auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
+    auto maybe_bitmap = Media::ImageDecoder::load_from_file(path);
     if (maybe_bitmap.is_error()) {
         dbgln("Unable to load bitmap `{}` for button icon", path);
         return;

@@ -8,8 +8,8 @@
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/LZWDecoder.h>
-#include <LibGfx/ImageFormats/JPEGLoader.h>
-#include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibMedia/ImageFormats/JPEGLoader.h>
+#include <LibMedia/ImageFormats/PNGLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Reader.h>
@@ -162,10 +162,10 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_p
     for (int row_index = 0; row_index < number_of_rows; ++row_index) {
         auto row = Bytes { bytes.data() + row_index * bytes_per_row, bytes_per_row };
 
-        auto filter = TRY(Gfx::PNG::filter_type(row[0]));
+        auto filter = TRY(Media::PNG::filter_type(row[0]));
         row = row.slice(1);
 
-        Gfx::PNGImageDecoderPlugin::unfilter_scanline(filter, row, previous_row, bytes_per_pixel);
+        Media::PNGImageDecoderPlugin::unfilter_scanline(filter, row, previous_row, bytes_per_pixel);
 
         previous_row = row;
         decoded.append(row);
@@ -248,8 +248,8 @@ PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
-    if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
-        auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create_with_options({ bytes.data(), bytes.size() }, { .cmyk = Gfx::JPEGDecoderOptions::CMYK::PDF }));
+    if (Media::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
+        auto decoder = TRY(Media::JPEGImageDecoderPlugin::create_with_options({ bytes.data(), bytes.size() }, { .cmyk = Media::JPEGDecoderOptions::CMYK::PDF }));
         auto frame = TRY(decoder->frame(0));
         return TRY(frame.image->serialize_to_byte_buffer());
     }

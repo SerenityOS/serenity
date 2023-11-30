@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(LibGfxScaleDemo ICON app-libgfx-demo)
-target_link_libraries(LibGfxScaleDemo PRIVATE LibGUI LibIPC LibGfx LibCore LibMain)
+target_link_libraries(LibGfxScaleDemo PRIVATE LibGUI LibIPC LibCore LibMain)

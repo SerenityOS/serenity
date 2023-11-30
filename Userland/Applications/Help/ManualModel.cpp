@@ -12,12 +12,13 @@
 #include <LibManual/PageNode.h>
 #include <LibManual/Path.h>
 #include <LibManual/SectionNode.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 ManualModel::ManualModel()
 {
-    m_section_open_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_section_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_page_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_section_open_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_section_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/book.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_page_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors());
 }
 
 Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const

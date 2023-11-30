@@ -243,7 +243,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     suit_actions.add_action(two_suit_action);
 
     auto game_menu = window->add_menu("&Game"_string);
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (!confirm_end_current_game())
             return;
 

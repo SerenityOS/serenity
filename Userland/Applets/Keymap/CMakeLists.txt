@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_bin(Keymap.Applet)
-target_link_libraries(Keymap.Applet PRIVATE LibGUI LibCore LibGfx LibIPC LibMain LibKeyboard)
+target_link_libraries(Keymap.Applet PRIVATE LibGUI LibCore LibIPC LibMain LibKeyboard)

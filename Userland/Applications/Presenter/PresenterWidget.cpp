@@ -72,21 +72,21 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     }));
 
     auto presentation_menu = window->add_menu("&Presentation"_string);
-    m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
+    m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();
             update_web_view();
             update_slides_actions();
         }
     });
-    m_previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [this](auto&) {
+    m_previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-back.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->previous_frame();
             update_web_view();
             update_slides_actions();
         }
     });
-    m_present_from_first_slide_action = GUI::Action::create("Present from First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
+    m_present_from_first_slide_action = GUI::Action::create("Present from First &Slide", { KeyCode::Key_F5 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->go_to_first_slide();
             update_web_view();
@@ -99,11 +99,11 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     presentation_menu->add_action(*m_present_from_first_slide_action);
 
     auto view_menu = window->add_menu("&View"_string);
-    m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
+    m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
         auto* window = this->window();
         window->set_fullscreen(!window->is_fullscreen());
     });
-    m_resize_to_fit_content_action = GUI::Action::create("Resize to Fit &Content", { KeyModifier::Mod_Alt, KeyCode::Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)), [this](auto&) {
+    m_resize_to_fit_content_action = GUI::Action::create("Resize to Fit &Content", { KeyModifier::Mod_Alt, KeyCode::Key_C }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/scale.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             auto presentation_size = m_current_presentation->normative_size();
             auto* window = this->window();

@@ -701,7 +701,7 @@ static Threading::MutexProtected<ThumbnailCache> s_thumbnail_cache {};
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
     Gfx::IntSize thumbnail_size { 32, 32 };
-    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path, 1, thumbnail_size));
+    auto bitmap = TRY(Media::ImageDecoder::load_from_file(path, 1, thumbnail_size));
     auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, thumbnail_size));
 
     double scale = min(thumbnail_size.width() / (double)bitmap->width(), thumbnail_size.height() / (double)bitmap->height());

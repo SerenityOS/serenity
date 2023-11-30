@@ -58,7 +58,7 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
     TRY(food_bitmaps.try_ensure_capacity(food_bitmaps_files.size()));
 
     for (auto file : food_bitmaps_files) {
-        auto bitmap = Gfx::Bitmap::load_from_file(file);
+        auto bitmap = Media::ImageDecoder::load_from_file(file);
         if (bitmap.is_error()) {
             dbgln("\033[31;1mCould not load bitmap file\033[0m '{}': {}", file, bitmap.error());
             return bitmap.release_error();

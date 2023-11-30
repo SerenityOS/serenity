@@ -7,13 +7,14 @@
 
 #include "MailboxTreeModel.h"
 #include "AccountHolder.h"
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 MailboxTreeModel::MailboxTreeModel(AccountHolder const& account_holder)
     : m_account_holder(account_holder)
 {
-    m_mail_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mail.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_folder_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_account_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/home-directory.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_mail_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/app-mail.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_folder_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_account_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/home-directory.png"sv).release_value_but_fixme_should_propagate_errors());
 }
 
 GUI::ModelIndex MailboxTreeModel::index(int row, int column, GUI::ModelIndex const& parent) const

@@ -21,12 +21,12 @@ ErrorOr<NonnullRefPtr<PlayerWidget>> PlayerWidget::try_create(TrackManager& mana
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PlayerWidget(manager, main_widget, loop)));
 
-    widget->m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
-    widget->m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
-    widget->m_back_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv));    // Go back a note
-    widget->m_next_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)); // Advance a note
-    widget->m_add_track_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv));
-    widget->m_next_track_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv));
+    widget->m_play_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/play.png"sv));
+    widget->m_pause_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/pause.png"sv));
+    widget->m_back_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-back.png"sv));    // Go back a note
+    widget->m_next_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-forward.png"sv)); // Advance a note
+    widget->m_add_track_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/plus.png"sv));
+    widget->m_next_track_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-last.png"sv));
     TRY(widget->initialize());
 
     return widget;

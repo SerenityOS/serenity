@@ -17,8 +17,8 @@
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibMain/Main.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -28,12 +28,12 @@ static ErrorOr<Optional<String>> description_only(StringView description, String
     return String::from_utf8(description);
 }
 
-// FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
+// FIXME: Ideally Media::ImageDecoder could tell us the image type directly.
 static ErrorOr<Optional<String>> image_details(StringView description, StringView path)
 {
     auto mapped_file = TRY(Core::MappedFile::map(path));
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
+    auto image_decoder = Media::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
     if (!image_decoder)
         return OptionalNone {};
 

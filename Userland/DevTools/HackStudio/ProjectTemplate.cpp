@@ -11,6 +11,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <sys/stat.h>
@@ -53,7 +54,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(DeprecatedString con
     auto bitmap_path_32 = DeprecatedString::formatted("/res/icons/hackstudio/templates-32x32/{}.png", config->read_entry("HackStudioTemplate", "IconName32x"));
 
     if (FileSystem::exists(bitmap_path_32)) {
-        auto bitmap_or_error = Gfx::Bitmap::load_from_file(bitmap_path_32);
+        auto bitmap_or_error = Media::ImageDecoder::load_from_file(bitmap_path_32);
         if (!bitmap_or_error.is_error())
             icon = GUI::Icon(bitmap_or_error.release_value());
     }

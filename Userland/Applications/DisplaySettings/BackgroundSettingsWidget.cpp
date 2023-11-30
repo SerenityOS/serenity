@@ -76,7 +76,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     };
 
     m_context_menu = GUI::Menu::construct();
-    auto const file_manager_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv));
+    auto const file_manager_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-file-manager.png"sv));
     m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", file_manager_icon, [this](GUI::Action const&) {
         LexicalPath path { m_monitor_widget->wallpaper().value().to_deprecated_string() };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));

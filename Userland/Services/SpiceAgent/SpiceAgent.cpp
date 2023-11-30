@@ -8,8 +8,8 @@
 #include "SpiceAgent.h"
 #include <AK/Debug.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 
 namespace SpiceAgent {
 
@@ -94,7 +94,7 @@ ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
     auto clipboard_data = data_and_type.data;
     if (is_serenity_image) {
         auto bitmap = data_and_type.as_bitmap();
-        clipboard_data = TRY(Gfx::PNGWriter::encode(*bitmap));
+        clipboard_data = TRY(Media::PNGWriter::encode(*bitmap));
     }
 
     auto message = ClipboardMessage(data_type, move(clipboard_data));
@@ -256,7 +256,7 @@ ErrorOr<void> SpiceAgent::did_receive_clipboard_message(ClipboardMessage& messag
         auto mime_type = TRY(clipboard_data_type_to_mime_type(message.data_type()));
 
         // FIXME: It should be trivial to make `try_create_for_raw_bytes` take a `StringView` instead of a direct `DeprecatedString`.
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_deprecated_string());
+        auto decoder = Media::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_deprecated_string());
         if (!decoder || (decoder->frame_count() == 0)) {
             return Error::from_string_literal("Failed to find a suitable decoder for a pasted image!");
         }

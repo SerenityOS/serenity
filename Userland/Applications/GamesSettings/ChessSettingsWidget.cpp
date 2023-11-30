@@ -98,7 +98,7 @@ public:
 
         auto load_piece_image = [&](Chess::Color color, Chess::Type piece, StringView filename) {
             auto path = MUST(String::formatted("/res/graphics/chess/sets/{}/{}", m_piece_set_name, filename));
-            auto image = Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
+            auto image = Media::ImageDecoder::load_from_file(path.bytes_as_string_view());
             if (image.is_error()) {
                 m_any_piece_images_are_missing = true;
                 return;

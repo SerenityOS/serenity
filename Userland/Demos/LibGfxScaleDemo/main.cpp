@@ -74,7 +74,7 @@ void Canvas::paint_event(GUI::PaintEvent& event)
 
 void Canvas::draw(Gfx::Painter& painter)
 {
-    auto active_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto active_window_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
 
     Gfx::WindowTheme::current().paint_normal_frame(painter, Gfx::WindowTheme::WindowState::Active, Gfx::WindowTheme::WindowMode::Other, { 4, 18, WIDTH - 8, HEIGHT - 29 }, "Well hello friends 🐞"sv, *active_window_icon, palette(), { WIDTH - 20, 6, 16, 16 }, 0, false);
 
@@ -83,7 +83,7 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.draw_rect({ 24, 38, WIDTH - 48, HEIGHT - 53 }, palette().color(Gfx::ColorRole::Selection));
 
     // buggie.png has an alpha channel.
-    auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto buggie = Media::ImageDecoder::load_from_file("/res/graphics/buggie.png"sv).release_value_but_fixme_should_propagate_errors();
     painter.blit({ 25, 39 }, *buggie, { 2, 30, 62, 20 });
     painter.draw_scaled_bitmap({ 88, 39, 62 * 2, 20 * 2 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
     painter.draw_scaled_bitmap({ 202, 39, 80, 40 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
@@ -93,7 +93,7 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.blit({ 25, 101 }, *buggie, { 2, 30, 3 * buggie->width(), 20 });
 
     // grid does not have an alpha channel.
-    auto grid = Gfx::Bitmap::load_from_file("/res/wallpapers/grid.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto grid = Media::ImageDecoder::load_from_file("/res/wallpapers/grid.png"sv).release_value_but_fixme_should_propagate_errors();
     VERIFY(!grid->has_alpha_channel());
     painter.fill_rect({ 25, 122, 62, 20 }, Color::Green);
     painter.blit({ 25, 122 }, *grid, { (grid->width() - 62) / 2, (grid->height() - 20) / 2 + 40, 62, 20 }, 0.9);

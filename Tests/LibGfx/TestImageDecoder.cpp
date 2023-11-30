@@ -7,22 +7,22 @@
 
 #include <AK/DeprecatedString.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/ImageFormats/BMPLoader.h>
-#include <LibGfx/ImageFormats/DDSLoader.h>
-#include <LibGfx/ImageFormats/GIFLoader.h>
-#include <LibGfx/ImageFormats/ICOLoader.h>
-#include <LibGfx/ImageFormats/ILBMLoader.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
-#include <LibGfx/ImageFormats/JPEGLoader.h>
-#include <LibGfx/ImageFormats/JPEGXLLoader.h>
-#include <LibGfx/ImageFormats/PBMLoader.h>
-#include <LibGfx/ImageFormats/PGMLoader.h>
-#include <LibGfx/ImageFormats/PNGLoader.h>
-#include <LibGfx/ImageFormats/PPMLoader.h>
-#include <LibGfx/ImageFormats/TGALoader.h>
-#include <LibGfx/ImageFormats/TIFFLoader.h>
-#include <LibGfx/ImageFormats/TinyVGLoader.h>
-#include <LibGfx/ImageFormats/WebPLoader.h>
+#include <LibMedia/ImageFormats/BMPLoader.h>
+#include <LibMedia/ImageFormats/DDSLoader.h>
+#include <LibMedia/ImageFormats/GIFLoader.h>
+#include <LibMedia/ImageFormats/ICOLoader.h>
+#include <LibMedia/ImageFormats/ILBMLoader.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/JPEGLoader.h>
+#include <LibMedia/ImageFormats/JPEGXLLoader.h>
+#include <LibMedia/ImageFormats/PBMLoader.h>
+#include <LibMedia/ImageFormats/PGMLoader.h>
+#include <LibMedia/ImageFormats/PNGLoader.h>
+#include <LibMedia/ImageFormats/PPMLoader.h>
+#include <LibMedia/ImageFormats/TGALoader.h>
+#include <LibMedia/ImageFormats/TIFFLoader.h>
+#include <LibMedia/ImageFormats/TinyVGLoader.h>
+#include <LibMedia/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,8 +55,8 @@ static Gfx::ImageFrameDescriptor expect_single_frame_of_size(Gfx::ImageDecoderPl
 TEST_CASE(test_bmp)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("bmp/rgba32-1.bmp"sv)));
-    EXPECT(Gfx::BMPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::BMPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::BMPImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -64,8 +64,8 @@ TEST_CASE(test_bmp)
 TEST_CASE(test_bmp_top_down)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("bmp/top-down.bmp"sv)));
-    EXPECT(Gfx::BMPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::BMPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::BMPImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -80,7 +80,7 @@ TEST_CASE(test_ico_malformed_frame)
 
     for (auto test_input : test_inputs) {
         auto file = MUST(Core::MappedFile::map(test_input));
-        auto plugin_decoder = TRY_OR_FAIL(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Media::ICOImageDecoderPlugin::create(file->bytes()));
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
     }
@@ -89,8 +89,8 @@ TEST_CASE(test_ico_malformed_frame)
 TEST_CASE(test_gif)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("download-animation.gif"sv)));
-    EXPECT(Gfx::GIFImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::GIFImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::GIFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::GIFImageDecoderPlugin::create(file->bytes()));
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(plugin_decoder->is_animated());
@@ -103,15 +103,15 @@ TEST_CASE(test_gif)
 TEST_CASE(test_not_ico)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("png/buggie.png"sv)));
-    EXPECT(!Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
-    EXPECT(Gfx::ICOImageDecoderPlugin::create(file->bytes()).is_error());
+    EXPECT(!Media::ICOImageDecoderPlugin::sniff(file->bytes()));
+    EXPECT(Media::ICOImageDecoderPlugin::create(file->bytes()).is_error());
 }
 
 TEST_CASE(test_bmp_embedded_in_ico)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("serenity.ico"sv)));
-    EXPECT(Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::ICOImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::ICOImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -119,8 +119,8 @@ TEST_CASE(test_bmp_embedded_in_ico)
 TEST_CASE(test_ilbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/gradient.iff"sv)));
-    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::ILBMImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
 
@@ -130,8 +130,8 @@ TEST_CASE(test_ilbm)
 TEST_CASE(test_ilbm_uncompressed)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/gradient-uncompressed.iff"sv)));
-    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::ILBMImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
 
@@ -146,7 +146,7 @@ TEST_CASE(test_ilbm_malformed_header)
 
     for (auto test_input : test_inputs) {
         auto file = MUST(Core::MappedFile::map(test_input));
-        auto plugin_decoder_or_error = Gfx::ILBMImageDecoderPlugin::create(file->bytes());
+        auto plugin_decoder_or_error = Media::ILBMImageDecoderPlugin::create(file->bytes());
         EXPECT(plugin_decoder_or_error.is_error());
     }
 }
@@ -161,7 +161,7 @@ TEST_CASE(test_ilbm_malformed_frame)
 
     for (auto test_input : test_inputs) {
         auto file = MUST(Core::MappedFile::map(test_input));
-        auto plugin_decoder = TRY_OR_FAIL(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Media::ILBMImageDecoderPlugin::create(file->bytes()));
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
     }
@@ -170,8 +170,8 @@ TEST_CASE(test_ilbm_malformed_frame)
 TEST_CASE(test_jpeg_sof0_one_scan)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/rgb24.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -179,8 +179,8 @@ TEST_CASE(test_jpeg_sof0_one_scan)
 TEST_CASE(test_jpeg_sof0_several_scans)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/several_scans.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 592, 800 });
 }
@@ -188,8 +188,8 @@ TEST_CASE(test_jpeg_sof0_several_scans)
 TEST_CASE(test_jpeg_rgb_components)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/rgb_components.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 592, 800 });
 }
@@ -197,8 +197,8 @@ TEST_CASE(test_jpeg_rgb_components)
 TEST_CASE(test_jpeg_sof2_spectral_selection)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/spectral_selection.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 592, 800 });
 }
@@ -206,8 +206,8 @@ TEST_CASE(test_jpeg_sof2_spectral_selection)
 TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/several_scans_odd_number_mcu.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 600, 600 });
 }
@@ -215,8 +215,8 @@ TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
 TEST_CASE(test_jpeg_sof2_successive_aproximation)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/successive_approximation.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 600, 800 });
 }
@@ -224,8 +224,8 @@ TEST_CASE(test_jpeg_sof2_successive_aproximation)
 TEST_CASE(test_jpeg_sof1_12bits)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/12-bit.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 320, 240 });
 }
@@ -233,8 +233,8 @@ TEST_CASE(test_jpeg_sof1_12bits)
 TEST_CASE(test_jpeg_sof2_12bits)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/12-bit-progressive.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 320, 240 });
 }
@@ -242,8 +242,8 @@ TEST_CASE(test_jpeg_sof2_12bits)
 TEST_CASE(test_jpeg_empty_icc)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/gradient_empty_icc.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 80, 80 });
 }
@@ -251,8 +251,8 @@ TEST_CASE(test_jpeg_empty_icc)
 TEST_CASE(test_jpeg_grayscale_with_app14)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/grayscale_app14.jpg"sv)));
-    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 80, 80 });
 }
@@ -265,7 +265,7 @@ TEST_CASE(test_jpeg_malformed_header)
 
     for (auto test_input : test_inputs) {
         auto file = MUST(Core::MappedFile::map(test_input));
-        auto plugin_decoder_or_error = Gfx::JPEGImageDecoderPlugin::create(file->bytes());
+        auto plugin_decoder_or_error = Media::JPEGImageDecoderPlugin::create(file->bytes());
         EXPECT(plugin_decoder_or_error.is_error());
     }
 }
@@ -279,7 +279,7 @@ TEST_CASE(test_jpeg_malformed_frame)
 
     for (auto test_input : test_inputs) {
         auto file = MUST(Core::MappedFile::map(test_input));
-        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Media::JPEGImageDecoderPlugin::create(file->bytes()));
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
     }
@@ -288,8 +288,8 @@ TEST_CASE(test_jpeg_malformed_frame)
 TEST_CASE(test_pbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pbm"sv)));
-    EXPECT(Gfx::PBMImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::PBMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::PBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::PBMImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -297,8 +297,8 @@ TEST_CASE(test_pbm)
 TEST_CASE(test_pgm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pgm"sv)));
-    EXPECT(Gfx::PGMImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::PGMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::PGMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::PGMImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -306,8 +306,8 @@ TEST_CASE(test_pgm)
 TEST_CASE(test_png)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("png/buggie.png"sv)));
-    EXPECT(Gfx::PNGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::PNGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::PNGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -321,7 +321,7 @@ TEST_CASE(test_png_malformed_frame)
 
     for (auto test_input : test_inputs) {
         auto file = MUST(Core::MappedFile::map(test_input));
-        auto plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Media::PNGImageDecoderPlugin::create(file->bytes()));
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
     }
@@ -330,8 +330,8 @@ TEST_CASE(test_png_malformed_frame)
 TEST_CASE(test_ppm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.ppm"sv)));
-    EXPECT(Gfx::PPMImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::PPMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::PPMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::PPMImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -339,8 +339,8 @@ TEST_CASE(test_ppm)
 TEST_CASE(test_targa_bottom_left)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-bottom-left-uncompressed.tga"sv)));
-    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
-    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(MUST(Media::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Media::TGAImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -348,8 +348,8 @@ TEST_CASE(test_targa_bottom_left)
 TEST_CASE(test_targa_top_left)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-top-left-uncompressed.tga"sv)));
-    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
-    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(MUST(Media::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Media::TGAImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -357,8 +357,8 @@ TEST_CASE(test_targa_top_left)
 TEST_CASE(test_targa_bottom_left_compressed)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-bottom-left-compressed.tga"sv)));
-    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
-    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(MUST(Media::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Media::TGAImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -366,8 +366,8 @@ TEST_CASE(test_targa_bottom_left_compressed)
 TEST_CASE(test_targa_top_left_compressed)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-top-left-compressed.tga"sv)));
-    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
-    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(MUST(Media::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Media::TGAImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
 }
@@ -375,8 +375,8 @@ TEST_CASE(test_targa_top_left_compressed)
 TEST_CASE(test_tiff_uncompressed)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tiff/uncompressed.tiff"sv)));
-    EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::TIFFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::TIFFImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 400, 300 });
 
@@ -387,8 +387,8 @@ TEST_CASE(test_tiff_uncompressed)
 TEST_CASE(test_tiff_lzw)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tiff/lzw.tiff"sv)));
-    EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::TIFFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::TIFFImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 400, 300 });
 
@@ -399,8 +399,8 @@ TEST_CASE(test_tiff_lzw)
 TEST_CASE(test_tiff_packed_bits)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tiff/packed_bits.tiff"sv)));
-    EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::TIFFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::TIFFImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 400, 300 });
 
@@ -411,8 +411,8 @@ TEST_CASE(test_tiff_packed_bits)
 TEST_CASE(test_webp_simple_lossy)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 240, 240 });
 
@@ -425,8 +425,8 @@ TEST_CASE(test_webp_simple_lossy)
 TEST_CASE(test_webp_simple_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8l.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     // Ironically, simple-vp8l.webp is a much more complex file than extended-lossless.webp tested below.
     // extended-lossless.webp tests the decoding basics.
@@ -446,8 +446,8 @@ TEST_CASE(test_webp_simple_lossless_alpha_used_false)
     // This file is identical to simple-vp8l.webp, but the `is_alpha_used` used bit is false.
     // The file still contains alpha data. This tests that the decoder replaces the stored alpha data with 0xff if `is_alpha_used` is false.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8l-alpha-used-false.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 386, 395 });
     EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(0, 0, 0, 0xff));
@@ -457,8 +457,8 @@ TEST_CASE(test_webp_extended_lossy)
 {
     // This extended lossy image has an ALPH chunk for (losslessly compressed) alpha data.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossy.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 417, 223 });
 
@@ -484,8 +484,8 @@ TEST_CASE(test_webp_extended_lossy_alpha_horizontal_filter)
     // Also lossy rgb + lossless alpha, but with a horizontal alpha filtering method.
     // The image should look like smolkling.webp, but with a horizontal alpha gradient.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling-horizontal-alpha.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
@@ -500,8 +500,8 @@ TEST_CASE(test_webp_extended_lossy_alpha_vertical_filter)
     // Also lossy rgb + lossless alpha, but with a vertical alpha filtering method.
     // The image should look like smolkling.webp, but with a vertical alpha gradient, and with a fully transparent first column.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling-vertical-alpha.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
@@ -516,8 +516,8 @@ TEST_CASE(test_webp_extended_lossy_alpha_gradient_filter)
     // Also lossy rgb + lossless alpha, but with a gradient alpha filtering method.
     // The image should look like smolkling.webp, but with a few transparent pixels in the shape of a C on it. Most of the image should not be transparent.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling-gradient-alpha.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
@@ -531,8 +531,8 @@ TEST_CASE(test_webp_extended_lossy_alpha_gradient_filter)
 TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossy-uncompressed-alpha.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 417, 223 });
 
@@ -548,8 +548,8 @@ TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
 TEST_CASE(test_webp_extended_lossy_negative_quantization_offset)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
@@ -565,8 +565,8 @@ TEST_CASE(test_webp_lossy_4)
     // as webp at https://developers.google.com/speed/webp/gallery1 and the webp version is from there.
     // No other changes have been made.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/4.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 1024, 772 });
 
@@ -578,8 +578,8 @@ TEST_CASE(test_webp_lossy_4_with_partitions)
 {
     // Same input file as in the previous test, but re-encoded to use 8 secondary partitions.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/4-with-8-partitions.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 1024, 772 });
     EXPECT_EQ(frame.image->get_pixel(780, 570), Gfx::Color(0x73, 0xc9, 0xf9, 255));
@@ -588,8 +588,8 @@ TEST_CASE(test_webp_lossy_4_with_partitions)
 TEST_CASE(test_webp_extended_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossless.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 417, 223 });
 
@@ -611,8 +611,8 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform)
 {
     // In addition to testing the index transform, this file also tests handling of explicity setting max_symbol.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/Qpalette.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 256, 256 });
 
@@ -643,8 +643,8 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
 
     for (auto test_case : test_cases) {
         auto file = MUST(Core::MappedFile::map(MUST(String::formatted("{}{}", TEST_INPUT(""), test_case.file_name))));
-        EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-        auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+        EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
         auto frame = expect_single_frame_of_size(*plugin_decoder, { 32, 32 });
 
@@ -667,7 +667,7 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling_odd_wid
 
     for (auto file_name : file_names) {
         auto file = MUST(Core::MappedFile::map(MUST(String::formatted("{}{}", TEST_INPUT(""), file_name))));
-        auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+        auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
         expect_single_frame_of_size(*plugin_decoder, { 11, 11 });
     }
 }
@@ -675,8 +675,8 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling_odd_wid
 TEST_CASE(test_webp_extended_lossless_animated)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossless-animated.webp"sv)));
-    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::WebPImageDecoderPlugin::create(file->bytes()));
 
     EXPECT_EQ(plugin_decoder->frame_count(), 8u);
     EXPECT(plugin_decoder->is_animated());
@@ -699,8 +699,8 @@ TEST_CASE(test_webp_extended_lossless_animated)
 TEST_CASE(test_tvg)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tvg/yak.tvg"sv)));
-    EXPECT(Gfx::TinyVGImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::TinyVGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(Media::TinyVGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Media::TinyVGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 1024, 1024 });
 }
@@ -714,8 +714,8 @@ TEST_CASE(test_everything_tvg)
 
     for (auto file_name : file_names) {
         auto file = MUST(Core::MappedFile::map(file_name));
-        EXPECT(Gfx::TinyVGImageDecoderPlugin::sniff(file->bytes()));
-        auto plugin_decoder = MUST(Gfx::TinyVGImageDecoderPlugin::create(file->bytes()));
+        EXPECT(Media::TinyVGImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = MUST(Media::TinyVGImageDecoderPlugin::create(file->bytes()));
 
         expect_single_frame_of_size(*plugin_decoder, { 400, 768 });
     }
@@ -762,8 +762,8 @@ TEST_CASE(test_dds)
 
     for (auto file_name : file_names) {
         auto file = MUST(Core::MappedFile::map(file_name));
-        EXPECT(Gfx::DDSImageDecoderPlugin::sniff(file->bytes()));
-        auto plugin_decoder = MUST(Gfx::DDSImageDecoderPlugin::create(file->bytes()));
+        EXPECT(Media::DDSImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = MUST(Media::DDSImageDecoderPlugin::create(file->bytes()));
         expect_single_frame(*plugin_decoder);
     }
 }

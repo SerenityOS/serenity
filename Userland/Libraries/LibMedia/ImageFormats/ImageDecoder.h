@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/ByteBuffer.h>
+#include <AK/OwnPtr.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Size.h>
+#include <LibGfx/VectorGraphic.h>
+
+namespace Media {
+
+struct ImageFrameDescriptor {
+    RefPtr<Gfx::Bitmap> image;
+    int duration { 0 };
+};
+
+struct VectorImageFrameDescriptor {
+    RefPtr<Gfx::VectorGraphic> image;
+    int duration { 0 };
+};
+
+class ImageDecoderPlugin {
+public:
+    virtual ~ImageDecoderPlugin() = default;
+
+    // Each plugin should implement these static functions and register them in ImageDecoder.cpp
+    // Implement sniff() if the file includes a magic number
+    // static bool sniff(ReadonlyBytes);
+    // Implement validate_before_create() otherwise
+    // static ErrorOr<bool> validate_before_create(ReadonlyBytes);
+
+    // This function should be used to both create the context and parse the image header.
+    // static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+
+    // This should always be available as gathered in create()
+    virtual Gfx::IntSize size() = 0;
+
+    // Override this if the format supports animated images
+    virtual bool is_animated() { return false; }
+    virtual size_t loop_count() { return 0; }
+    virtual size_t frame_count() { return 1; }
+    virtual size_t first_animated_frame_index() { return 0; }
+
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<Gfx::IntSize> ideal_size = {}) = 0;
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
+
+    virtual bool is_vector() { return false; }
+    virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t) { VERIFY_NOT_REACHED(); }
+
+protected:
+    ImageDecoderPlugin() = default;
+};
+
+class ImageDecoder : public RefCounted<ImageDecoder> {
+public:
+    static RefPtr<ImageDecoder> try_create_for_raw_bytes(ReadonlyBytes, Optional<DeprecatedString> mime_type = {});
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_from_file(StringView path, int scale_factor = 1, Optional<Gfx::IntSize> ideal_size = {});
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path, Optional<Gfx::IntSize> ideal_size = {});
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_from_bytes(ReadonlyBytes, Optional<Gfx::IntSize> ideal_size = {}, Optional<DeprecatedString> mine_type = {});
+    ~ImageDecoder() = default;
+
+    Gfx::IntSize size() const { return m_plugin->size(); }
+    int width() const { return size().width(); }
+    int height() const { return size().height(); }
+    bool is_animated() const { return m_plugin->is_animated(); }
+    size_t loop_count() const { return m_plugin->loop_count(); }
+    size_t frame_count() const { return m_plugin->frame_count(); }
+    size_t first_animated_frame_index() const { return m_plugin->first_animated_frame_index(); }
+    ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<Gfx::IntSize> ideal_size = {}) const { return m_plugin->frame(index, ideal_size); }
+    ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
+
+    bool is_vector() { return m_plugin->is_vector(); }
+    ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t index) { return m_plugin->vector_frame(index); }
+
+private:
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_scaled_bitmap(StringView path, int scale_factor, Optional<Gfx::IntSize> ideal_size);
+    explicit ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin>);
+
+    NonnullOwnPtr<ImageDecoderPlugin> mutable m_plugin;
+};
+
+}

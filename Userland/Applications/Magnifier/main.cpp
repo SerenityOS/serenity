@@ -19,19 +19,19 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Filters/ColorBlindnessFilter.h>
-#include <LibGfx/ImageFormats/BMPWriter.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
-#include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibMain/Main.h>
+#include <LibMedia/ImageFormats/BMPWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/QOIWriter.h>
 
 static ErrorOr<ByteBuffer> dump_bitmap(RefPtr<Gfx::Bitmap> bitmap, AK::StringView extension)
 {
     if (extension == "bmp") {
-        return Gfx::BMPWriter::encode(*bitmap);
+        return Media::BMPWriter::encode(*bitmap);
     } else if (extension == "png") {
-        return Gfx::PNGWriter::encode(*bitmap);
+        return Media::PNGWriter::encode(*bitmap);
     } else if (extension == "qoi") {
-        return Gfx::QOIWriter::encode(*bitmap);
+        return Media::QOIWriter::encode(*bitmap);
     } else {
         return Error::from_string_literal("invalid image format");
     }
@@ -156,13 +156,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto timeline_menu = window->add_menu("&Timeline"_string);
     auto previous_frame_action = GUI::Action::create(
-        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
+        "&Previous frame", { Key_Left }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_previous_frame();
         });
     auto next_frame_action = GUI::Action::create(
-        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
+        "&Next frame", { Key_Right }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_next_frame();

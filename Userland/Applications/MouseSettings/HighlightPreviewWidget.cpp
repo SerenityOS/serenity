@@ -25,10 +25,10 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
     auto theme_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}", cursor_theme, "Config.ini");
     auto cursor_theme_config = TRY(Core::ConfigFile::open(theme_path));
     auto load_bitmap = [](StringView path, StringView default_path) {
-        auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
+        auto maybe_bitmap = Media::ImageDecoder::load_from_file(path);
         if (!maybe_bitmap.is_error())
             return maybe_bitmap;
-        return Gfx::Bitmap::load_from_file(default_path);
+        return Media::ImageDecoder::load_from_file(default_path);
     };
     constexpr auto default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
     auto cursor_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}",

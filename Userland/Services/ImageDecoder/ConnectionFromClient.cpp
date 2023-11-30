@@ -8,7 +8,7 @@
 #include <ImageDecoder/ConnectionFromClient.h>
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace ImageDecoder {
 
@@ -22,7 +22,7 @@ void ConnectionFromClient::die()
     Core::EventLoop::current().quit(0);
 }
 
-static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder const& decoder, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
+static void decode_image_to_bitmaps_and_durations_with_decoder(Media::ImageDecoder const& decoder, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
 {
     for (size_t i = 0; i < decoder.frame_count(); ++i) {
         auto frame_or_error = decoder.frame(i);
@@ -42,7 +42,7 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
 
-    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
+    auto decoder = Media::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
     if (!decoder) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not find suitable image decoder plugin for data");
         return;

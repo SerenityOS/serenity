@@ -428,6 +428,7 @@ if (BUILD_LAGOM)
         Locale
         Manual
         Markdown
+        Media
         PDF
         Protocol
         Regex
@@ -438,7 +439,6 @@ if (BUILD_LAGOM)
         Threading
         TLS
         Unicode
-        Video
         Wasm
         WebSocket
         XML
@@ -486,7 +486,7 @@ if (BUILD_LAGOM)
     list(TRANSFORM LIBGUI_SOURCES PREPEND "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibGUI/")
     lagom_lib(LibGUI gui
         SOURCES ${LIBGUI_SOURCES}
-        LIBS LibGfx LibSyntax)
+        LIBS LibGfx LibMedia LibSyntax)
 
     # FIXME: How about we don't include Kernel/API from random high-level libraries?
     install(FILES ${SERENITY_PROJECT_ROOT}/Kernel/API/KeyCode.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Kernel/API")
@@ -526,7 +526,7 @@ if (BUILD_LAGOM)
         if (NOT EMSCRIPTEN)
             # LibELF is part of LibC in SerenityOS builds, but not in Lagom.
             add_executable(file ../../Userland/Utilities/file.cpp)
-            target_link_libraries(file LibAudio LibArchive LibCompress LibCore LibELF LibGfx LibIPC LibMain)
+            target_link_libraries(file LibAudio LibArchive LibCompress LibCore LibELF LibGfx LibMedia LibIPC LibMain)
         endif()
 
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
@@ -555,16 +555,16 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(icc ../../Userland/Utilities/icc.cpp)
-        target_link_libraries(icc LibCore LibGfx LibMain)
+        target_link_libraries(icc LibCore LibGfx LibMedia LibMain)
 
         add_executable(image ../../Userland/Utilities/image.cpp)
-        target_link_libraries(image LibCore LibGfx LibMain)
+        target_link_libraries(image LibCore LibGfx LibMedia LibMain)
 
         add_executable(isobmff ../../Userland/Utilities/isobmff.cpp)
-        target_link_libraries(isobmff LibCore LibGfx LibMain)
+        target_link_libraries(isobmff LibCore LibGfx LibMedia LibMain)
 
         add_executable(ttfdisasm ../../Userland/Utilities/ttfdisasm.cpp)
-        target_link_libraries(ttfdisasm LibGfx LibMain)
+        target_link_libraries(ttfdisasm LibGfx LibMedia LibMain)
 
         add_executable(js ../../Userland/Utilities/js.cpp)
         target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
@@ -590,7 +590,7 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(pdf ../../Userland/Utilities/pdf.cpp)
-        target_link_libraries(pdf LibCore LibGfx LibPDF LibMain)
+        target_link_libraries(pdf LibCore LibGfx LibMedia LibPDF LibMain)
 
         add_executable(sql ../../Userland/Utilities/sql.cpp)
         target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
@@ -652,6 +652,7 @@ if (BUILD_LAGOM)
             LibIMAP
             LibLocale
             LibMarkdown
+            LibMedia
             LibPDF
             LibSQL
             LibTest
@@ -659,7 +660,6 @@ if (BUILD_LAGOM)
             LibTTF
             LibTimeZone
             LibUnicode
-            LibVideo
             LibWebView
             LibXML
         )

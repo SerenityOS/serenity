@@ -13,10 +13,10 @@
 #include <AK/JsonObject.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/BMPWriter.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
-#include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibImageDecoderClient/Client.h>
+#include <LibMedia/ImageFormats/BMPWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/QOIWriter.h>
 #include <stdio.h>
 
 namespace PixelPaint {
@@ -132,9 +132,9 @@ ErrorOr<void> Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json
             TRY(json_layer.add("opacity_percent"sv, layer->opacity_percent()));
             TRY(json_layer.add("visible"sv, layer->is_visible()));
             TRY(json_layer.add("selected"sv, layer->is_selected()));
-            TRY(json_layer.add("bitmap"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(layer->content_bitmap()))))));
+            TRY(json_layer.add("bitmap"sv, TRY(encode_base64(TRY(Media::PNGWriter::encode(layer->content_bitmap()))))));
             if (layer->is_masked())
-                TRY(json_layer.add("mask"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(*layer->mask_bitmap()))))));
+                TRY(json_layer.add("mask"sv, TRY(encode_base64(TRY(Media::PNGWriter::encode(*layer->mask_bitmap()))))));
             TRY(json_layer.finish());
         }
 
@@ -174,7 +174,7 @@ ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Stream> stream, bool prese
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(compose_bitmap(bitmap_format));
 
-    auto encoded_data = TRY(Gfx::BMPWriter::encode(*bitmap));
+    auto encoded_data = TRY(Media::BMPWriter::encode(*bitmap));
     TRY(stream->write_until_depleted(encoded_data));
     return {};
 }
@@ -184,7 +184,7 @@ ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<Stream> stream, bool prese
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(compose_bitmap(bitmap_format));
 
-    auto encoded_data = TRY(Gfx::PNGWriter::encode(*bitmap));
+    auto encoded_data = TRY(Media::PNGWriter::encode(*bitmap));
     TRY(stream->write_until_depleted(encoded_data));
     return {};
 }
@@ -193,7 +193,7 @@ ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Stream> stream) const
 {
     auto bitmap = TRY(compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
-    auto encoded_data = TRY(Gfx::QOIWriter::encode(bitmap));
+    auto encoded_data = TRY(Media::QOIWriter::encode(bitmap));
     TRY(stream->write_until_depleted(encoded_data));
     return {};
 }

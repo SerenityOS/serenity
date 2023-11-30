@@ -13,8 +13,8 @@
 #include "StringUtils.h"
 #include "TVGIconEngine.h"
 #include <AK/TemporaryChange.h>
-#include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
+#include <LibMedia/ImageFormats/BMPWriter.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <LibWebView/URL.h>
@@ -399,7 +399,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         if (bitmap == nullptr)
             return;
 
-        auto data = Gfx::BMPWriter::encode(*bitmap);
+        auto data = Media::BMPWriter::encode(*bitmap);
         if (data.is_error())
             return;
 

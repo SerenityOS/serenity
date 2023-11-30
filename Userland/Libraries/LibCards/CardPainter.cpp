@@ -13,6 +13,7 @@
 #include <LibConfig/Client.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace Cards {
 
@@ -183,19 +184,19 @@ void CardPainter::set_front_images_set_name(AK::StringView path)
         for (auto& pip_bitmap : m_suit_pips_flipped_vertically)
             pip_bitmap = nullptr;
     } else {
-        auto diamond = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/diamond.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        auto diamond = Media::ImageDecoder::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/diamond.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
         m_suit_pips[to_underlying(Suit::Diamonds)] = diamond;
         m_suit_pips_flipped_vertically[to_underlying(Suit::Diamonds)] = diamond->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
 
-        auto club = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/club.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        auto club = Media::ImageDecoder::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/club.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
         m_suit_pips[to_underlying(Suit::Clubs)] = club;
         m_suit_pips_flipped_vertically[to_underlying(Suit::Clubs)] = club->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
 
-        auto heart = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/heart.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        auto heart = Media::ImageDecoder::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/heart.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
         m_suit_pips[to_underlying(Suit::Hearts)] = heart;
         m_suit_pips_flipped_vertically[to_underlying(Suit::Hearts)] = heart->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
 
-        auto spade = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/spade.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        auto spade = Media::ImageDecoder::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/spade.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
         m_suit_pips[to_underlying(Suit::Spades)] = spade;
         m_suit_pips_flipped_vertically[to_underlying(Suit::Spades)] = spade->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
     }
@@ -431,7 +432,7 @@ void CardPainter::paint_card_front(Gfx::Bitmap& bitmap, Cards::Suit suit, Cards:
             }
 
             auto front_image_path = MUST(String::formatted("/res/graphics/cards/fronts/{}/{}-{}.png", m_front_images_set_name, suit_name, rank_name));
-            auto maybe_front_image = Gfx::Bitmap::load_from_file(front_image_path);
+            auto maybe_front_image = Media::ImageDecoder::load_from_file(front_image_path);
             if (maybe_front_image.is_error()) {
                 dbgln("Failed to load `{}`: {}", front_image_path, maybe_front_image.error());
                 return;
@@ -452,7 +453,7 @@ void CardPainter::paint_card_back(Gfx::Bitmap& bitmap)
     auto inner_paint_rect = paint_rect.shrunken(2, 2);
     painter.fill_rect_with_rounded_corners(inner_paint_rect, Color::White, Card::card_radius - 1);
 
-    auto image = Gfx::Bitmap::load_from_file(m_back_image_path).release_value_but_fixme_should_propagate_errors();
+    auto image = Media::ImageDecoder::load_from_file(m_back_image_path).release_value_but_fixme_should_propagate_errors();
     painter.blit({ (bitmap.width() - image->width()) / 2, (bitmap.height() - image->height()) / 2 }, image, image->rect());
 }
 

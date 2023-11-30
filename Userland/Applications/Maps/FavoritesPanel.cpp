@@ -42,7 +42,7 @@ ErrorOr<void> FavoritesPanel::setup()
     m_favorites_list->on_context_menu_request = [this](auto const& index, auto const& event) {
         m_context_menu = GUI::Menu::construct();
         m_context_menu->add_action(GUI::Action::create(
-            "&Edit...", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/rename.png"sv)), [this, index](auto&) {
+            "&Edit...", MUST(Media::ImageDecoder::load_from_file("/res/icons/16x16/rename.png"sv)), [this, index](auto&) {
                 MUST(edit_favorite(index.row()));
             },
             this));

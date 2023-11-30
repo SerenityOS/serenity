@@ -109,7 +109,7 @@ public:
         if (!m_context_menu) {
             m_context_menu = GUI::Menu::construct();
 
-            auto settings_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv));
+            auto settings_icon = MUST(Media::ImageDecoder::load_from_file("/res/icons/16x16/settings.png"sv));
             auto open_workspace_settings_action = GUI::Action::create("Workspace &Settings", *settings_icon, [](auto&) {
                 auto result = Core::Process::spawn("/bin/DisplaySettings"sv, Array { "--open-tab", "workspaces" }.span());
                 if (result.is_error()) {

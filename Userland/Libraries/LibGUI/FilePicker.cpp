@@ -90,11 +90,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     case Mode::OpenMultiple:
     case Mode::OpenFolder:
         set_title("Open");
-        set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
+        set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     case Mode::Save:
         set_title("Save As");
-        set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors());
+        set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     }
     resize(560, 320);
@@ -159,7 +159,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     }
 
     auto open_parent_directory_action = Action::create(
-        "Open Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "Open Parent Directory", { Mod_Alt, Key_Up }, Media::ImageDecoder::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             set_path(DeprecatedString::formatted("{}/..", m_model->root_path()));
         },
         this);
@@ -173,7 +173,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Media::ImageDecoder::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             String value;
             if (InputBox::show(this, value, "Enter a name:"sv, "New Directory"sv, GUI::InputType::NonemptyText) == InputBox::ExecResult::OK) {
                 auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));

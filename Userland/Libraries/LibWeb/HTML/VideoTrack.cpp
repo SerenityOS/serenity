@@ -9,8 +9,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibVideo/PlaybackManager.h>
-#include <LibVideo/Track.h>
+#include <LibMedia/PlaybackManager.h>
+#include <LibMedia/Track.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/VideoTrackPrototype.h>
 #include <LibWeb/DOM/Event.h>

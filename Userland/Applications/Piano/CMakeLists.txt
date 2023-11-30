@@ -28,4 +28,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Piano ICON app-piano)
-target_link_libraries(Piano PRIVATE LibAudio LibCore LibDSP LibGfx LibGUI LibIPC LibMain LibThreading)
+target_link_libraries(Piano PRIVATE LibAudio LibCore LibDSP LibGUI LibIPC LibMain LibThreading)

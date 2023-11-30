@@ -6,4 +6,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCards cards)
-target_link_libraries(LibCards PRIVATE LibCore LibConfig LibGfx LibGUI)
+target_link_libraries(LibCards PRIVATE LibCore LibConfig LibGUI)

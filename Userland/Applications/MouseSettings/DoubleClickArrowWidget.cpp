@@ -24,7 +24,7 @@ void DoubleClickArrowWidget::set_double_click_speed(int speed)
 
 DoubleClickArrowWidget::DoubleClickArrowWidget()
 {
-    m_arrow_bitmap = Gfx::Bitmap::load_from_file("/res/graphics/double-click-down-arrow.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_arrow_bitmap = Media::ImageDecoder::load_from_file("/res/graphics/double-click-down-arrow.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
 void DoubleClickArrowWidget::paint_event(GUI::PaintEvent& event)

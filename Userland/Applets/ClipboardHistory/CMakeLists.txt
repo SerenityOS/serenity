@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(ClipboardHistory.Applet ICON edit-copy)
-target_link_libraries(ClipboardHistory.Applet PRIVATE LibGUI LibCore LibGfx LibConfig LibMain)
+target_link_libraries(ClipboardHistory.Applet PRIVATE LibGUI LibCore LibConfig LibMain)

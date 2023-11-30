@@ -85,13 +85,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = window->add_menu("&Game"_string);
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.reset();
     }));
     static String const pause_text = "&Pause Game"_string;
-    auto const pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
+    auto const pause_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/pause.png"sv));
     static String const continue_text = "&Continue Game"_string;
-    auto const continue_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
+    auto const continue_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/play.png"sv));
     game_menu->add_action(GUI::Action::create(pause_text.to_deprecated_string(), { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
         if (game.has_timer()) {
             game.pause();
@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }));
 
-    auto change_snake_color = GUI::Action::create("&Change Snake Color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
+    auto change_snake_color = GUI::Action::create("&Change Snake Color", TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         auto was_paused = game.is_paused();
         if (!was_paused)
             game.pause();

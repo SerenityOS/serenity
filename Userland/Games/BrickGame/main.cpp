@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = window->add_menu("&Game"_string);
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game->reset();
     }));
     game_menu->add_action(GUI::Action::create("Toggle &Pause", { Mod_None, Key_P }, [&](auto&) {

@@ -188,7 +188,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, DeprecatedString ti
     , m_original_color(color)
     , m_color(color)
 {
-    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
+    set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
     set_title(title);
     set_resizable(false);
     resize(480, 326);

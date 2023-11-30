@@ -9,8 +9,8 @@
 #include <AK/URL.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/Resource.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 
 #import <Application/ApplicationDelegate.h>
 #import <UI/Console.h>
@@ -305,7 +305,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 {
     static constexpr size_t FAVICON_SIZE = 16;
 
-    auto png = Gfx::PNGWriter::encode(bitmap);
+    auto png = Media::PNGWriter::encode(bitmap);
     if (png.is_error()) {
         return;
     }

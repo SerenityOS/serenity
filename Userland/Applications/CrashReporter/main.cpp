@@ -288,13 +288,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     close_button.set_focus(true);
 
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
-    debug_button.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
+    debug_button.set_icon(TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
     debug_button.on_click = [&](int) {
         GUI::Process::spawn_or_show_error(window, "/bin/HackStudio"sv, Array { "-c", coredump_path.characters() });
     };
 
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");
-    save_backtrace_button.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
+    save_backtrace_button.set_icon(TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
         LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
         auto file_or_error = FileSystemAccessClient::Client::the().save_file(window, lexical_path.title(), lexical_path.extension());

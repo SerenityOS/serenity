@@ -21,6 +21,7 @@
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/SessionManagement.h>
 #include <LibKeyboard/CharacterMap.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace WindowServer {
 
@@ -33,7 +34,7 @@ static Gfx::Bitmap& default_window_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file(default_window_icon_path()).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file(default_window_icon_path()).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -41,7 +42,7 @@ static Gfx::Bitmap& minimize_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -49,7 +50,7 @@ static Gfx::Bitmap& maximize_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -57,7 +58,7 @@ static Gfx::Bitmap& restore_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png"sv).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/window-restore.png"sv).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -65,7 +66,7 @@ static Gfx::Bitmap& close_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -73,7 +74,7 @@ static Gfx::Bitmap& pin_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-pin.png"sv).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/window-pin.png"sv).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -81,7 +82,7 @@ static Gfx::Bitmap& move_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/move.png"sv).release_value_but_fixme_should_propagate_errors();
+        s_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/move.png"sv).release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 

@@ -17,4 +17,4 @@ set(GENERATED_SOURCES
 
 serenity_app(ModelGallery ICON app-model-gallery)
 
-target_link_libraries(ModelGallery PRIVATE LibCore LibGUI LibGfx LibMain)
+target_link_libraries(ModelGallery PRIVATE LibCore LibGUI LibMain)

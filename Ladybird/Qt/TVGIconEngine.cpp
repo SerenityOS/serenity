@@ -67,7 +67,7 @@ TVGIconEngine* TVGIconEngine::from_file(QString const& path)
         return nullptr;
     auto icon_data = icon_resource.readAll();
     FixedMemoryStream icon_bytes { ReadonlyBytes { icon_data.data(), static_cast<size_t>(icon_data.size()) } };
-    if (auto tvg = Gfx::TinyVGDecodedImageData::decode(icon_bytes); !tvg.is_error())
+    if (auto tvg = Media::TinyVGDecodedImageData::decode(icon_bytes); !tvg.is_error())
         return new TVGIconEngine(tvg.release_value());
     return nullptr;
 }

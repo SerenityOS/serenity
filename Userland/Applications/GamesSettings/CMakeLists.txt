@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(GamesSettings ICON games)
-target_link_libraries(GamesSettings PRIVATE LibConfig LibCore LibGfx LibGUI LibMain LibCards LibChess)
+target_link_libraries(GamesSettings PRIVATE LibConfig LibCore LibGUI LibMain LibCards LibChess)

@@ -72,7 +72,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::create()
 
 ErrorOr<void> MainWidget::setup()
 {
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv)), [this](auto&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/new.png"sv)), [this](auto&) {
         open_new_script();
     });
 
@@ -158,7 +158,7 @@ ErrorOr<void> MainWidget::setup()
         update_editor_actions(editor);
     });
 
-    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
+    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         auto database_name = m_databases_combo_box->text().trim_whitespace();
         if (database_name.is_empty())
             return;
@@ -180,7 +180,7 @@ ErrorOr<void> MainWidget::setup()
         }
     });
 
-    m_run_script_action = GUI::Action::create("Run Script", { Mod_Alt, Key_F9 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [&](auto&) {
+    m_run_script_action = GUI::Action::create("Run Script", { Mod_Alt, Key_F9 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/play.png"sv)), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
         read_next_sql_statement_of_editor();

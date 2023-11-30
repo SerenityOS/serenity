@@ -9,14 +9,14 @@
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <LibGfx/ImageFormats/TinyVGLoader.h>
+#include <LibMedia/ImageFormats/TinyVGLoader.h>
 #include <QIconEngine>
 
 namespace Ladybird {
 
 class TVGIconEngine : public QIconEngine {
 public:
-    TVGIconEngine(Gfx::TinyVGDecodedImageData const& image_data)
+    TVGIconEngine(Media::TinyVGDecodedImageData const& image_data)
         : m_image_data(image_data)
     {
     }
@@ -61,7 +61,7 @@ private:
     QString pixmap_cache_key(QSize const& size, QIcon::Mode mode, QIcon::State state);
 
     Vector<NonnullRefPtr<Filter>> m_filters;
-    NonnullRefPtr<Gfx::TinyVGDecodedImageData> m_image_data;
+    NonnullRefPtr<Media::TinyVGDecodedImageData> m_image_data;
     unsigned m_cache_id { next_cache_id() };
 };
 

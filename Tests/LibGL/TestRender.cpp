@@ -11,7 +11,8 @@
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/QOIWriter.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/QOIWriter.h>
 #include <LibTest/TestCase.h>
 
 #ifdef AK_OS_SERENITY
@@ -35,13 +36,13 @@ static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView
 
     if constexpr (SAVE_OUTPUT) {
         auto target_path = LexicalPath("/home/anon").append(reference_filename);
-        auto qoi_buffer = MUST(Gfx::QOIWriter::encode(bitmap));
+        auto qoi_buffer = MUST(Media::QOIWriter::encode(bitmap));
         auto qoi_output_stream = MUST(Core::File::open(target_path.string(), Core::File::OpenMode::Write));
         MUST(qoi_output_stream->write_until_depleted(qoi_buffer));
     }
 
     auto reference_image_path = DeprecatedString::formatted(REFERENCE_IMAGE_DIR "/{}", reference_filename);
-    auto reference_bitmap = MUST(Gfx::Bitmap::load_from_file(reference_image_path));
+    auto reference_bitmap = MUST(Media::ImageDecoder::load_from_file(reference_image_path));
     EXPECT_EQ(reference_bitmap->visually_equals(bitmap), true);
 }
 

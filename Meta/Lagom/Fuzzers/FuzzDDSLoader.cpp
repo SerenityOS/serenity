@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/ImageFormats/DDSLoader.h>
+#include <LibMedia/ImageFormats/DDSLoader.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     AK::set_debug_enabled(false);
-    auto decoder_or_error = Gfx::DDSImageDecoderPlugin::create({ data, size });
+    auto decoder_or_error = Media::DDSImageDecoderPlugin::create({ data, size });
     if (decoder_or_error.is_error())
         return 0;
     auto decoder = decoder_or_error.release_value();

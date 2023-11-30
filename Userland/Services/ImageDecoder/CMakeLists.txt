@@ -17,4 +17,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(ImageDecoder)
-target_link_libraries(ImageDecoder PRIVATE LibCore LibGfx LibIPC LibMain)
+target_link_libraries(ImageDecoder PRIVATE LibCore LibGfx LibMedia LibIPC LibMain)

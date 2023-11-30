@@ -42,14 +42,14 @@ ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
 {
     auto timezonesettings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TimeZoneSettingsWidget));
 
-    auto time_zone_map_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/map.png"sv));
+    auto time_zone_map_bitmap = TRY(Media::ImageDecoder::load_from_file("/res/graphics/map.png"sv));
     auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
     time_zone_map_bitmap = TRY(time_zone_map_bitmap->cropped(time_zone_rect));
 
     timezonesettings_widget->m_time_zone_map = *timezonesettings_widget->find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
     timezonesettings_widget->m_time_zone_map->set_bitmap(time_zone_map_bitmap);
 
-    auto time_zone_marker = TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/ladyball.png"sv));
+    auto time_zone_marker = TRY(Media::ImageDecoder::load_from_file("/res/icons/32x32/ladyball.png"sv));
     timezonesettings_widget->m_time_zone_marker = TRY(time_zone_marker->scaled(0.75f, 0.75f));
 
     timezonesettings_widget->set_time_zone_location();

@@ -20,13 +20,13 @@ void HackStudio::ProjectDeclarations::set_declared_symbols(DeprecatedString cons
 
 Optional<GUI::Icon> HackStudio::ProjectDeclarations::get_icon_for(CodeComprehension::DeclarationType type)
 {
-    static GUI::Icon struct_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Struct.png"sv).release_value_but_fixme_should_propagate_errors());
-    static GUI::Icon class_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Class.png"sv).release_value_but_fixme_should_propagate_errors());
-    static GUI::Icon function_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Function.png"sv).release_value_but_fixme_should_propagate_errors());
-    static GUI::Icon variable_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Variable.png"sv).release_value_but_fixme_should_propagate_errors());
-    static GUI::Icon preprocessor_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Preprocessor.png"sv).release_value_but_fixme_should_propagate_errors());
-    static GUI::Icon member_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Member.png"sv).release_value_but_fixme_should_propagate_errors());
-    static GUI::Icon namespace_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Namespace.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon struct_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Struct.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon class_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Class.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon function_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Function.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon variable_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Variable.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon preprocessor_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Preprocessor.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon member_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Member.png"sv).release_value_but_fixme_should_propagate_errors());
+    static GUI::Icon namespace_icon(Media::ImageDecoder::load_from_file("/res/icons/hackstudio/Namespace.png"sv).release_value_but_fixme_should_propagate_errors());
     switch (type) {
     case CodeComprehension::DeclarationType::Struct:
         return struct_icon;

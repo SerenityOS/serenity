@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<MonitorWidget>> MonitorWidget::try_create()
 {
     auto monitor_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MonitorWidget()));
     monitor_widget->m_desktop_resolution = GUI::Desktop::the().rect().size();
-    monitor_widget->m_monitor_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/monitor.png"sv));
+    monitor_widget->m_monitor_bitmap = TRY(Media::ImageDecoder::load_from_file("/res/graphics/monitor.png"sv));
     monitor_widget->m_desktop_bitmap = TRY(Gfx::Bitmap::create(monitor_widget->m_monitor_bitmap->format(), { 280, 158 }));
     monitor_widget->m_monitor_rect = { { 12, 13 }, monitor_widget->m_desktop_bitmap->size() };
     monitor_widget->set_fixed_size(304, 201);
@@ -36,7 +36,7 @@ bool MonitorWidget::set_wallpaper(String path)
         [path](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
             if (path.is_empty())
                 return Error::from_errno(ENOENT);
-            return Gfx::Bitmap::load_from_file(path);
+            return Media::ImageDecoder::load_from_file(path);
         },
 
         [this, path](NonnullRefPtr<Gfx::Bitmap> bitmap) -> ErrorOr<void> {

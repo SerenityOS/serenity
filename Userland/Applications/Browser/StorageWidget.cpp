@@ -39,7 +39,7 @@ StorageWidget::StorageWidget()
     m_cookies_table_view->set_alternating_row_colors(true);
 
     auto delete_cookie_action = GUI::Action::create(
-        "&Delete Cookie", { Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto const&) {
+        "&Delete Cookie", { Key_Delete }, Media::ImageDecoder::load_from_file("/res/icons/16x16/delete.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto const&) {
             auto cookie_index = m_cookies_table_view->selection().first();
             delete_cookie(m_cookies_model->take_cookie(cookie_index));
         },

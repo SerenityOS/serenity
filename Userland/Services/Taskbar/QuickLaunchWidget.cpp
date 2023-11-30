@@ -315,7 +315,7 @@ QuickLaunchWidget::QuickLaunchWidget()
 
 ErrorOr<void> QuickLaunchWidget::create_context_menu()
 {
-    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv));
+    auto icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/delete.png"sv));
     m_context_menu = GUI::Menu::construct();
     m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
         remove_entry(m_context_menu_app_name);

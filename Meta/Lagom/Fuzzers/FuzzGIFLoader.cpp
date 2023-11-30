@@ -6,14 +6,14 @@
 
 #include <AK/Debug.h>
 #include <AK/Format.h>
-#include <LibGfx/ImageFormats/GIFLoader.h>
+#include <LibMedia/ImageFormats/GIFLoader.h>
 #include <stddef.h>
 #include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     AK::set_debug_enabled(false);
-    auto decoder_or_error = Gfx::GIFImageDecoderPlugin::create({ data, size });
+    auto decoder_or_error = Media::GIFImageDecoderPlugin::create({ data, size });
     if (decoder_or_error.is_error())
         return 0;
     auto decoder = decoder_or_error.release_value();

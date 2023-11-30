@@ -21,10 +21,10 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
 #include <LibImageDecoderClient/Client.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace ImageViewer {
 
@@ -224,7 +224,7 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
     Vector<Animation::Frame> frames;
     // Note: Doing this check only requires reading the header of images
     // (so if the image is not vector graphics it can be still be decoded OOP).
-    if (auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file_data); decoder && decoder->is_vector()) {
+    if (auto decoder = Media::ImageDecoder::try_create_for_raw_bytes(file_data); decoder && decoder->is_vector()) {
         // Use in-process decoding for vector graphics.
         is_animated = decoder->is_animated();
         loop_count = decoder->loop_count();

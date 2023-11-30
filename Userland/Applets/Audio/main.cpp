@@ -39,11 +39,11 @@ public:
     static ErrorOr<NonnullRefPtr<AudioWidget>> try_create()
     {
         Array<VolumeBitmapPair, 5> volume_level_bitmaps = {
-            { { 66, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-high.png"sv)) },
-                { 33, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-medium.png"sv)) },
-                { 1, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-low.png"sv)) },
-                { 0, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-zero.png"sv)) },
-                { 0, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-muted.png"sv)) } }
+            { { 66, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/audio-volume-high.png"sv)) },
+                { 33, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/audio-volume-medium.png"sv)) },
+                { 1, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/audio-volume-low.png"sv)) },
+                { 0, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/audio-volume-zero.png"sv)) },
+                { 0, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/audio-volume-muted.png"sv)) } }
         };
         auto audio_client = TRY(Audio::ConnectionToManagerServer::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));

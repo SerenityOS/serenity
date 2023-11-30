@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     // Favorites panel
-    auto marker_red_image = TRY(Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-red.png"sv));
+    auto marker_red_image = TRY(Media::ImageDecoder::load_from_file("/res/graphics/maps/marker-red.png"sv));
     auto favorites_panel = TRY(Maps::FavoritesPanel::create());
     favorites_panel->on_favorites_change = [&map_widget, marker_red_image](auto const& favorites) {
         // Sync all favorites markers
@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     favorites_panel->load_favorites();
     main_widget.insert_child_before(favorites_panel, map_widget);
 
-    auto favorites_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hearts.png"sv));
+    auto favorites_icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-hearts.png"sv));
     map_widget.add_context_menu_action(GUI::Action::create(
         "Add to &Favorites", favorites_icon, [favorites_panel, &map_widget](auto&) {
             MUST(favorites_panel->add_favorite({ "Unnamed place"_string, map_widget.context_menu_latlng(), map_widget.zoom() }));
@@ -146,7 +146,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Main menu actions
     auto file_menu = window->add_menu("&File"_string);
-    auto open_settings_action = GUI::Action::create("Maps &Settings", { Mod_Ctrl, Key_Comma }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [window](GUI::Action const&) {
+    auto open_settings_action = GUI::Action::create("Maps &Settings", { Mod_Ctrl, Key_Comma }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-settings.png"sv)), [window](GUI::Action const&) {
         GUI::Process::spawn_or_show_error(window, "/bin/MapsSettings"sv);
     });
     file_menu->add_action(open_settings_action);
@@ -157,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RefPtr<GUI::Action> show_favorites_panel_action;
     auto show_search_panel_action = GUI::Action::create_checkable(
-        "Show &search panel", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&](auto& action) {
+        "Show &search panel", TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/find.png"sv)), [&](auto& action) {
             if (favorites_panel->is_visible()) {
                 show_favorites_panel_action->set_checked(false);
                 hide_favorites_panel();
@@ -187,7 +187,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     show_favorites_panel_action->set_checked(favorites_panel->is_visible());
 
     auto show_users_action = GUI::Action::create_checkable(
-        "Show SerenityOS &users", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
+        "Show SerenityOS &users", TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
     show_users_action->set_checked(map_widget.show_users());
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() + 1); }, window);
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() - 1); }, window);

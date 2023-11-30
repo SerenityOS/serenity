@@ -13,8 +13,8 @@
 #endif
 #include "Utilities.h"
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibImageDecoderClient/Client.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace Ladybird {
 

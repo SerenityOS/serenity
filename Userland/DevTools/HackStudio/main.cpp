@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     window->restore_size_and_position("HackStudio"sv, "Window"sv, { { 840, 600 } });
     window->save_size_and_position_on_close("HackStudio"sv, "Window"sv);
-    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv));
+    auto icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-hack-studio.png"sv));
     window->set_icon(icon);
 
     update_path_environment_variable();
@@ -112,7 +112,7 @@ static bool make_is_available()
 static ErrorOr<void> notify_make_not_available()
 {
     auto notification = GUI::Notification::construct();
-    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"sv));
+    auto icon = TRY(Media::ImageDecoder::load_from_file("/res/icons/32x32/app-hack-studio.png"sv));
     notification->set_icon(icon);
     notification->set_title("'make' Not Available"_string);
     notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository"_string);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Bitmap.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace FontEditor {
 
@@ -16,7 +17,7 @@ struct Resources final {
         Resources resources;
 
         auto load_bitmap = [](StringView path) -> RefPtr<Gfx::Bitmap> {
-            auto bitmap = Gfx::Bitmap::load_from_file(path);
+            auto bitmap = Media::ImageDecoder::load_from_file(path);
             if (!bitmap.is_error())
                 return bitmap.release_value();
             warnln("Loading Gfx::Bitmap \"{}\" failed: {}", path, bitmap.release_error());

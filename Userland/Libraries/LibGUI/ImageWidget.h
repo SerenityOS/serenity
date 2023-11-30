@@ -9,7 +9,7 @@
 
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace GUI {
 
@@ -46,7 +46,7 @@ private:
     bool m_should_stretch { false };
     bool m_auto_resize { false };
 
-    RefPtr<Gfx::ImageDecoder> m_image_decoder;
+    RefPtr<Media::ImageDecoder> m_image_decoder;
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
     NonnullRefPtr<Core::Timer> m_timer;

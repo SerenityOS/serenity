@@ -312,7 +312,7 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
     auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), builder.string_view());
     if (!response.is_error()) {
         auto texture_file = response.release_value();
-        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_file.release_stream(), texture_file.filename());
+        auto bitmap_or_error = Media::ImageDecoder::load_from_file(texture_file.release_stream(), texture_file.filename());
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     }

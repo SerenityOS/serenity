@@ -59,14 +59,6 @@ size_t EventLoopImplementationQt::pump(PumpMode mode)
     return result;
 }
 
-void EventLoopImplementationQt::quit(int code)
-{
-    if (is_main_loop())
-        QCoreApplication::exit(code);
-    else
-        m_event_loop.exit(code);
-}
-
 void EventLoopImplementationQt::wake()
 {
     if (!is_main_loop())

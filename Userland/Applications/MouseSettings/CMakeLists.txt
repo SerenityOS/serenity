@@ -24,4 +24,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(MouseSettings ICON app-mouse)
-target_link_libraries(MouseSettings PRIVATE LibCore LibGfx LibGUI LibIPC LibMain)
+target_link_libraries(MouseSettings PRIVATE LibCore LibGUI LibIPC LibMain)

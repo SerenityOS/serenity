@@ -9,7 +9,7 @@
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/StandardPaths.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWebView/ViewImplementation.h>
 
@@ -364,7 +364,7 @@ ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
     LexicalPath path { Core::StandardPaths::downloads_directory() };
     path = path.append(TRY(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
 
-    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
+    auto encoded = TRY(Media::PNGWriter::encode(*bitmap.bitmap()));
 
     auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
     TRY(screenshot_file->write_until_depleted(encoded));

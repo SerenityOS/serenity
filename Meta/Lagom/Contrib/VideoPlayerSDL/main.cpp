@@ -9,7 +9,7 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibMain/Main.h>
-#include <LibVideo/PlaybackManager.h>
+#include <LibMedia/PlaybackManager.h>
 #include <SDL2/SDL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

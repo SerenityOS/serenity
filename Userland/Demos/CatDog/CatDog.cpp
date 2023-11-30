@@ -50,7 +50,7 @@ ErrorOr<NonnullRefPtr<CatDog>> CatDog::create()
 
     auto catdog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CatDog));
     for (auto const& image_source : image_sources)
-        TRY(catdog->m_images.try_append({ image_source.state, *TRY(Gfx::Bitmap::load_from_file(image_source.path)) }));
+        TRY(catdog->m_images.try_append({ image_source.state, *TRY(Media::ImageDecoder::load_from_file(image_source.path)) }));
 
     return catdog;
 }

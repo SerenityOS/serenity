@@ -64,9 +64,9 @@ GalleryWidget::GalleryWidget()
         m_enabled_label->set_text(String::from_deprecated_string(m_frame_shape_combobox->text()).release_value_but_fixme_should_propagate_errors());
     };
 
-    m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Media::ImageDecoder::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Media::ImageDecoder::load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Media::ImageDecoder::load_from_file("/res/icons/16x16/ladybug.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_icon_button = basics_tab.find_descendant_of_type_named<GUI::Button>("icon_button");
     m_icon_button->set_icon(*m_button_icons[2]);
@@ -86,7 +86,7 @@ GalleryWidget::GalleryWidget()
     m_text_editor = basics_tab.find_descendant_of_type_named<GUI::TextEditor>("text_editor");
 
     m_font_button = basics_tab.find_descendant_of_type_named<GUI::Button>("font_button");
-    m_font_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_font_button->set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_font_button->on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), &m_text_editor->font(), false);
@@ -96,7 +96,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_file_button = basics_tab.find_descendant_of_type_named<GUI::Button>("file_button");
-    m_file_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_file_button->set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_file_button->on_click = [&](auto) {
         auto response = FileSystemAccessClient::Client::the().open_file(window());
@@ -106,7 +106,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_input_button = basics_tab.find_descendant_of_type_named<GUI::Button>("input_button");
-    m_input_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_input_button->set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_input_button->on_click = [&](auto) {
         String value;
@@ -124,7 +124,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_msgbox_button = basics_tab.find_descendant_of_type_named<GUI::Button>("msgbox_button");
-    m_msgbox_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_msgbox_button->set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/app-browser.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_msgbox_type = GUI::MessageBox::Type::None;
     m_msgbox_input_type = GUI::MessageBox::InputType::OK;

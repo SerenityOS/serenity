@@ -6,6 +6,7 @@
 
 #include "MultiScaleBitmaps.h"
 #include "Screen.h"
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace WindowServer {
 
@@ -52,7 +53,7 @@ bool MultiScaleBitmaps::load(StringView filename, StringView default_filename)
     m_bitmaps.clear(); // If we're reloading the bitmaps get rid of the old ones
 
     auto add_bitmap = [&](StringView path, int scale_factor) {
-        auto bitmap_or_error = Gfx::Bitmap::load_from_file(path, scale_factor);
+        auto bitmap_or_error = Media::ImageDecoder::load_from_file(path, scale_factor);
         if (bitmap_or_error.is_error())
             return;
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();

@@ -16,7 +16,7 @@ ErrorOr<NonnullOwnPtr<ImageSkin>> ImageSkin::create(StringView skin_name)
 {
     auto skin_directory = TRY(Core::Directory::create(DeprecatedString::formatted("/res/graphics/snake/skins/{}", skin_name), Core::Directory::CreateDirectories::No));
 
-    auto head = TRY(Gfx::Bitmap::load_from_file(TRY(skin_directory.open("head.png"sv, Core::File::OpenMode::Read)), "head.png"sv));
+    auto head = TRY(Media::ImageDecoder::load_from_file(TRY(skin_directory.open("head.png"sv, Core::File::OpenMode::Read)), "head.png"sv));
     Vector<NonnullRefPtr<Gfx::Bitmap>> head_bitmaps;
     TRY(head_bitmaps.try_ensure_capacity(4));
     TRY(head_bitmaps.try_append(head));
@@ -26,16 +26,16 @@ ErrorOr<NonnullOwnPtr<ImageSkin>> ImageSkin::create(StringView skin_name)
 
     Vector<NonnullRefPtr<Gfx::Bitmap>> body_bitmaps;
     TRY(body_bitmaps.try_ensure_capacity(16));
-    auto tail_up = TRY(Gfx::Bitmap::load_from_file(TRY(skin_directory.open("tail.png"sv, Core::File::OpenMode::Read)), "tail.png"sv));
+    auto tail_up = TRY(Media::ImageDecoder::load_from_file(TRY(skin_directory.open("tail.png"sv, Core::File::OpenMode::Read)), "tail.png"sv));
     auto tail_right = TRY(tail_up->rotated(Gfx::RotationDirection::Clockwise));
     auto tail_down = TRY(tail_right->rotated(Gfx::RotationDirection::Clockwise));
     auto tail_left = TRY(tail_down->rotated(Gfx::RotationDirection::Clockwise));
-    auto corner_ur = TRY(Gfx::Bitmap::load_from_file(TRY(skin_directory.open("corner.png"sv, Core::File::OpenMode::Read)), "corner.png"sv));
+    auto corner_ur = TRY(Media::ImageDecoder::load_from_file(TRY(skin_directory.open("corner.png"sv, Core::File::OpenMode::Read)), "corner.png"sv));
     auto corner_dr = TRY(corner_ur->rotated(Gfx::RotationDirection::Clockwise));
     auto corner_dl = TRY(corner_dr->rotated(Gfx::RotationDirection::Clockwise));
     auto corner_ul = TRY(corner_dl->rotated(Gfx::RotationDirection::Clockwise));
-    auto horizontal = TRY(Gfx::Bitmap::load_from_file(TRY(skin_directory.open("horizontal.png"sv, Core::File::OpenMode::Read)), "horizontal.png"sv));
-    auto vertical = TRY(Gfx::Bitmap::load_from_file(TRY(skin_directory.open("vertical.png"sv, Core::File::OpenMode::Read)), "vertical.png"sv));
+    auto horizontal = TRY(Media::ImageDecoder::load_from_file(TRY(skin_directory.open("horizontal.png"sv, Core::File::OpenMode::Read)), "horizontal.png"sv));
+    auto vertical = TRY(Media::ImageDecoder::load_from_file(TRY(skin_directory.open("vertical.png"sv, Core::File::OpenMode::Read)), "vertical.png"sv));
 
     TRY(body_bitmaps.try_append(tail_up));
     TRY(body_bitmaps.try_append(corner_ur));

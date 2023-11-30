@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return Error::from_string_literal("No wallpapers found");
 
         auto& chosen_wallpaper_path = wallpaper_paths.at(get_random_uniform(wallpaper_paths.size()));
-        auto chosen_wallpaper_bitmap = TRY(Gfx::Bitmap::load_from_file(chosen_wallpaper_path));
+        auto chosen_wallpaper_bitmap = TRY(Media::ImageDecoder::load_from_file(chosen_wallpaper_path));
         if (!GUI::Desktop::the().set_wallpaper(chosen_wallpaper_bitmap, chosen_wallpaper_path))
             return Error::from_string_literal("Failed to set wallpaper");
 
@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (path.is_null())
             return Error::from_string_literal("Must provide a path to a wallpaper");
 
-        auto wallpaper_bitmap = TRY(Gfx::Bitmap::load_from_file(path));
+        auto wallpaper_bitmap = TRY(Media::ImageDecoder::load_from_file(path));
         if (!GUI::Desktop::the().set_wallpaper(wallpaper_bitmap, path))
             return Error::from_string_literal("Failed to set wallpaper");
     }

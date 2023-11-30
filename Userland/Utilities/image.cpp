@@ -8,12 +8,12 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/Profile.h>
-#include <LibGfx/ImageFormats/BMPWriter.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
-#include <LibGfx/ImageFormats/JPEGWriter.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
-#include <LibGfx/ImageFormats/PortableFormatWriter.h>
-#include <LibGfx/ImageFormats/QOIWriter.h>
+#include <LibMedia/ImageFormats/BMPWriter.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/JPEGWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/PortableFormatWriter.h>
+#include <LibMedia/ImageFormats/QOIWriter.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto file = TRY(Core::MappedFile::map(in_path));
-    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+    auto decoder = Media::ImageDecoder::try_create_for_raw_bytes(file->bytes());
     if (!decoder) {
         warnln("Failed to decode input file '{}'", in_path);
         return 1;
@@ -141,18 +141,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = icc_data }));
+        bytes = TRY(Media::BMPWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = icc_data }));
+        bytes = TRY(Media::PNGWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
-        auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
+        auto const format = ppm_ascii ? Media::PortableFormatWriter::Options::Format::ASCII : Media::PortableFormatWriter::Options::Format::Raw;
+        TRY(Media::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
         return 0;
     } else if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .quality = quality }));
+        TRY(Media::JPEGWriter::encode(*buffered_stream, *frame, { .quality = quality }));
         return 0;
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::QOIWriter::encode(*frame));
+        bytes = TRY(Media::QOIWriter::encode(*frame));
     } else {
         warnln("can only write .bmp, .png, .ppm, and .qoi");
         return 1;

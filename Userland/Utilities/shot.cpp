@@ -19,9 +19,9 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 #include <unistd.h>
 
 class SelectableLayover final : public GUI::Widget {
@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto encoded_bitmap_or_error = Gfx::PNGWriter::encode(*bitmap);
+    auto encoded_bitmap_or_error = Media::PNGWriter::encode(*bitmap);
     if (encoded_bitmap_or_error.is_error()) {
         warnln("Failed to encode PNG");
         return 1;

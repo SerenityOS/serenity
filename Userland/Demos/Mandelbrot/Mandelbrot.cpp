@@ -17,10 +17,10 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/BMPWriter.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
-#include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibMain/Main.h>
+#include <LibMedia/ImageFormats/BMPWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/QOIWriter.h>
 #include <unistd.h>
 
 class MandelbrotSet {
@@ -372,13 +372,13 @@ ErrorOr<void> Mandelbrot::export_image(DeprecatedString const& export_path, Imag
     ByteBuffer encoded_data;
     switch (image_type) {
     case ImageType::BMP:
-        encoded_data = TRY(Gfx::BMPWriter::encode(m_set.bitmap()));
+        encoded_data = TRY(Media::BMPWriter::encode(m_set.bitmap()));
         break;
     case ImageType::PNG:
-        encoded_data = TRY(Gfx::PNGWriter::encode(m_set.bitmap()));
+        encoded_data = TRY(Media::PNGWriter::encode(m_set.bitmap()));
         break;
     case ImageType::QOI:
-        encoded_data = TRY(Gfx::QOIWriter::encode(m_set.bitmap()));
+        encoded_data = TRY(Media::QOIWriter::encode(m_set.bitmap()));
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -442,7 +442,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }));
 
-    export_submenu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
+    export_submenu->set_icon(TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/save.png"sv)));
 
     file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));

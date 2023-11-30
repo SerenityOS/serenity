@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibVideo/Containers/Matroska/Reader.h>
+#include <LibMedia/Containers/Matroska/Reader.h>
 #include <stddef.h>
 
 extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)

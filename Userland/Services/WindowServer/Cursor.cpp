@@ -5,6 +5,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
@@ -46,7 +47,7 @@ bool Cursor::load(StringView filename, StringView default_filename)
     bool did_load_any = false;
 
     auto load_bitmap = [&](StringView path, int scale_factor) {
-        auto bitmap_or_error = Gfx::Bitmap::load_from_file(path, scale_factor);
+        auto bitmap_or_error = Media::ImageDecoder::load_from_file(path, scale_factor);
         if (bitmap_or_error.is_error())
             return;
         did_load_any = true;

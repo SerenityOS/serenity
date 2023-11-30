@@ -13,4 +13,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibImageDecoderClient imagedecoderclient)
-target_link_libraries(LibImageDecoderClient PRIVATE LibCore LibIPC LibGfx)
+target_link_libraries(LibImageDecoderClient PRIVATE LibCore LibIPC LibGfx LibMedia)

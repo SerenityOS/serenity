@@ -7,8 +7,8 @@
 #include <AK/Optional.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <UI/LadybirdWebViewBridge.h>
@@ -755,7 +755,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         return;
     }
 
-    auto png = Gfx::PNGWriter::encode(*bitmap);
+    auto png = Media::PNGWriter::encode(*bitmap);
     if (png.is_error()) {
         return;
     }

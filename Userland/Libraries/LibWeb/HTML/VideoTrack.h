@@ -9,7 +9,7 @@
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <LibGfx/Forward.h>
-#include <LibVideo/Forward.h>
+#include <LibMedia/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {

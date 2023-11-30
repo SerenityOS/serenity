@@ -7,7 +7,7 @@
 #include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
+#include <LibMedia/ImageFormats/ISOBMFF/Reader.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto file = TRY(Core::MappedFile::map(path));
-    auto reader = TRY(Gfx::ISOBMFF::Reader::create(TRY(try_make<FixedMemoryStream>(file->bytes()))));
+    auto reader = TRY(Media::ISOBMFF::Reader::create(TRY(try_make<FixedMemoryStream>(file->bytes()))));
     auto boxes = TRY(reader.read_entire_file());
 
     for (auto& box : boxes)

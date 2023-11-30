@@ -5,7 +5,7 @@
  */
 
 #include <LibCore/File.h>
-#include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibMedia/ImageFormats/JPEGLoader.h>
 #include <LibTest/TestCase.h>
 
 #ifdef AK_OS_SERENITY
@@ -25,24 +25,24 @@ auto several_scans = Core::File::open(TEST_INPUT("jpg/several_scans.jpg"sv), Cor
 
 BENCHMARK_CASE(small_image)
 {
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(small_image));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(small_image));
     MUST(plugin_decoder->frame(0));
 }
 
 BENCHMARK_CASE(big_image)
 {
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(big_image));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(big_image));
     MUST(plugin_decoder->frame(0));
 }
 
 BENCHMARK_CASE(rgb_image)
 {
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(rgb_image));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(rgb_image));
     MUST(plugin_decoder->frame(0));
 }
 
 BENCHMARK_CASE(several_scans)
 {
-    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(several_scans));
+    auto plugin_decoder = MUST(Media::JPEGImageDecoderPlugin::create(several_scans));
     MUST(plugin_decoder->frame(0));
 }

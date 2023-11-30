@@ -218,7 +218,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     auto help_menu = window.add_menu("&Help"_string);
     String help_page_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], "Applications/Help"_string))->path());
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu->add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
+    help_menu->add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
         open_page(help_page_path);
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Help"_string, TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window));

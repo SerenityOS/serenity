@@ -60,7 +60,7 @@ ShutdownDialog::ShutdownDialog()
     icon_wrapper.set_layout<GUI::VerticalBoxLayout>();
 
     auto& icon_image = icon_wrapper.add<GUI::ImageWidget>();
-    icon_image.set_bitmap(Gfx::Bitmap::load_from_file("/res/icons/32x32/shutdown.png"sv).release_value_but_fixme_should_propagate_errors());
+    icon_image.set_bitmap(Media::ImageDecoder::load_from_file("/res/icons/32x32/shutdown.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& right_container = content_container.add<GUI::Widget>();
     right_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 12, 12, 8, 0 });
@@ -108,7 +108,7 @@ ShutdownDialog::ShutdownDialog()
     center_on_screen();
     set_resizable(false);
     set_title("Exit SerenityOS");
-    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv).release_value_but_fixme_should_propagate_errors());
+    set_icon(Media::ImageDecoder::load_from_file("/res/icons/16x16/power.png"sv).release_value_but_fixme_should_propagate_errors());
 
     // Request WindowServer to re-update us on the current theme as we might've not been alive for the last notification.
     refresh_system_theme();

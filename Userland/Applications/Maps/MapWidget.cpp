@@ -13,7 +13,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 #include <LibProtocol/Request.h>
 
 namespace Maps {
@@ -77,7 +77,7 @@ MapWidget::MapWidget(Options const& options)
         URL attribution_url = options.attribution_url.value_or(URL(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv, Maps::default_tile_provider_attribution_url)));
         add_panel({ attribution_text, Panel::Position::BottomRight, attribution_url, "attribution"_string });
     }
-    m_marker_image = Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-blue.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_marker_image = Media::ImageDecoder::load_from_file("/res/graphics/maps/marker-blue.png"sv).release_value_but_fixme_should_propagate_errors();
     m_default_tile_provider = MUST(String::from_deprecated_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, Maps::default_tile_provider_url_format)));
 }
 
@@ -236,7 +236,7 @@ void MapWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(GUI::Action::create(
-        "&Copy Coordinates to Clipboard", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [this](auto&) {
+        "&Copy Coordinates to Clipboard", MUST(Media::ImageDecoder::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [this](auto&) {
             GUI::Clipboard::the().set_plain_text(MUST(String::formatted("{}, {}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude)).bytes_as_string_view());
         }));
     m_context_menu->add_separator();
@@ -245,7 +245,7 @@ void MapWidget::context_menu_event(GUI::ContextMenuEvent& event)
             m_context_menu->add_action(action);
         m_context_menu->add_separator();
     }
-    auto link_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"sv));
+    auto link_icon = MUST(Media::ImageDecoder::load_from_file("/res/icons/16x16/filetype-symlink.png"sv));
     m_context_menu->add_action(GUI::Action::create(
         "Open in &OpenStreetMap", link_icon, [this](auto&) {
             Desktop::Launcher::open(URL(MUST(String::formatted("https://www.openstreetmap.org/#map={}/{}/{}", m_zoom, m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
@@ -264,7 +264,7 @@ void MapWidget::context_menu_event(GUI::ContextMenuEvent& event)
         }));
     m_context_menu->add_separator();
     m_context_menu->add_action(GUI::Action::create(
-        "Center &map here", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)), [this](auto&) { set_center(m_context_menu_latlng); }));
+        "Center &map here", MUST(Media::ImageDecoder::load_from_file("/res/icons/16x16/scale.png"sv)), [this](auto&) { set_center(m_context_menu_latlng); }));
     m_context_menu->popup(event.screen_position());
 }
 
@@ -341,7 +341,7 @@ void MapWidget::process_tile_queue()
         m_first_image_loaded = true;
 
         // Decode loaded PNG image data
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(payload, "image/png");
+        auto decoder = Media::ImageDecoder::try_create_for_raw_bytes(payload, "image/png");
         if (!decoder || (decoder->frame_count() == 0)) {
             dbgln("Maps: Can't decode image: {}", url);
             return;

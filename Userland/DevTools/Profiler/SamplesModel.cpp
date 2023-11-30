@@ -9,14 +9,15 @@
 #include "SamplesModel.h"
 #include "Profile.h"
 #include <AK/StringBuilder.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace Profiler {
 
 SamplesModel::SamplesModel(Profile& profile)
     : m_profile(profile)
 {
-    m_user_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_kernel_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object-red.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_user_frame_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_kernel_frame_icon.set_bitmap_for_size(16, Media::ImageDecoder::load_from_file("/res/icons/16x16/inspector-object-red.png"sv).release_value_but_fixme_should_propagate_errors());
 }
 
 int SamplesModel::row_count(GUI::ModelIndex const&) const

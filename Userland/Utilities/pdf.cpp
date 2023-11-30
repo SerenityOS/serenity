@@ -11,7 +11,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/ResourceImplementationFile.h>
 #include <LibCore/System.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Renderer.h>
@@ -74,7 +74,7 @@ static PDF::PDFErrorOr<void> save_rendered_page(PDF::Document& document, int pag
 
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
     auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
-    ByteBuffer bytes = TRY(Gfx::PNGWriter::encode(*bitmap));
+    ByteBuffer bytes = TRY(Media::PNGWriter::encode(*bitmap));
     TRY(buffered_stream->write_until_depleted(bytes));
 
     return {};

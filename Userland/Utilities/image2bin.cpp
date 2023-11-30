@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Path to image", "path");
     args_parser.parse(arguments);
 
-    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path));
+    auto bitmap = TRY(Media::ImageDecoder::load_from_file(path));
 
     TRY(Core::System::pledge("stdio"));
     Vector<u8> data;

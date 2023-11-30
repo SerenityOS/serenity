@@ -132,7 +132,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     game_menu->add_separator();
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (widget->board().game_result() == Chess::Board::Result::NotFinished) {
             if (widget->resign() < 0)
                 return;
@@ -142,7 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game_menu->add_separator();
 
     auto settings_action = GUI::Action::create(
-        "Chess &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/games.png"sv)), [window](auto&) {
+        "Chess &Settings", {}, TRY(Media::ImageDecoder::load_from_file("/res/icons/16x16/games.png"sv)), [window](auto&) {
             GUI::Process::spawn_or_show_error(window, "/bin/GamesSettings"sv, Array { "--open-tab", "chess" });
         },
         window);

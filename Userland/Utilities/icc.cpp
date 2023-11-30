@@ -15,8 +15,8 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
-#include <LibGfx/ImageFormats/ImageDecoder.h>
-#include <LibVideo/Color/CodingIndependentCodePoints.h>
+#include <LibMedia/Color/CodingIndependentCodePoints.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 template<class T>
 static ErrorOr<String> hyperlink(URL const& target, T const& label)
@@ -247,7 +247,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         auto file = TRY(Core::MappedFile::map(path));
 
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+        auto decoder = Media::ImageDecoder::try_create_for_raw_bytes(file->bytes());
         if (decoder) {
             if (auto embedded_icc_bytes = TRY(decoder->icc_data()); embedded_icc_bytes.has_value()) {
                 icc_bytes = *embedded_icc_bytes;

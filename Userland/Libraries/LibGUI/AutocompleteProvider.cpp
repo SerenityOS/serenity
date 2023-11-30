@@ -11,6 +11,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 static RefPtr<Gfx::Bitmap> s_cpp_identifier_icon;
 static RefPtr<Gfx::Bitmap> s_unspecified_identifier_icon;
@@ -52,13 +53,13 @@ public:
             if (index.column() == Column::Icon) {
                 if (suggestion.language == CodeComprehension::Language::Cpp) {
                     if (!s_cpp_identifier_icon) {
-                        s_cpp_identifier_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/completion/cpp-identifier.png"sv).release_value_but_fixme_should_propagate_errors();
+                        s_cpp_identifier_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/completion/cpp-identifier.png"sv).release_value_but_fixme_should_propagate_errors();
                     }
                     return *s_cpp_identifier_icon;
                 }
                 if (suggestion.language == CodeComprehension::Language::Unspecified) {
                     if (!s_unspecified_identifier_icon) {
-                        s_unspecified_identifier_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/completion/unspecified-identifier.png"sv).release_value_but_fixme_should_propagate_errors();
+                        s_unspecified_identifier_icon = Media::ImageDecoder::load_from_file("/res/icons/16x16/completion/unspecified-identifier.png"sv).release_value_but_fixme_should_propagate_errors();
                     }
                     return *s_unspecified_identifier_icon;
                 }

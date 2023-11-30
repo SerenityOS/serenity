@@ -14,6 +14,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Point.h>
+#include <LibMedia/ImageFormats/ImageDecoder.h>
 
 namespace Snake {
 

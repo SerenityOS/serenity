@@ -8,8 +8,8 @@
 #include <AK/Checked.h>
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageFormats/JPEGWriter.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibMedia/ImageFormats/JPEGWriter.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
@@ -235,16 +235,16 @@ static ErrorOr<SerializeBitmapResult> serialize_bitmap(Gfx::Bitmap const& bitmap
 
     if (type.equals_ignoring_ascii_case("image/jpeg"sv)) {
         AllocatingMemoryStream file;
-        Gfx::JPEGWriter::Options jpeg_options;
+        Media::JPEGWriter::Options jpeg_options;
         if (quality.has_value())
             jpeg_options.quality = static_cast<int>(quality.value() * 100);
-        TRY(Gfx::JPEGWriter::encode(file, bitmap, jpeg_options));
+        TRY(Media::JPEGWriter::encode(file, bitmap, jpeg_options));
         return SerializeBitmapResult { TRY(file.read_until_eof()), "image/jpeg"sv };
     }
 
     // User agents must support PNG ("image/png"). User agents may support other types.
     // If the user agent does not support the requested type, then it must create the file using the PNG format. [PNG]
-    return SerializeBitmapResult { TRY(Gfx::PNGWriter::encode(bitmap)), "image/png"sv };
+    return SerializeBitmapResult { TRY(Media::PNGWriter::encode(bitmap)), "image/png"sv };
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-todataurl

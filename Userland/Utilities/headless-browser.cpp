@@ -30,7 +30,6 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/ShareableBitmap.h>
@@ -38,6 +37,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibIPC/File.h>
+#include <LibMedia/ImageFormats/PNGWriter.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
@@ -135,7 +135,7 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
                 outln("Saving screenshot to {}", output_file_path);
 
                 auto output_file = MUST(Core::File::open(output_file_path, Core::File::OpenMode::Write));
-                auto image_buffer = MUST(Gfx::PNGWriter::encode(*screenshot));
+                auto image_buffer = MUST(Media::PNGWriter::encode(*screenshot));
                 MUST(output_file->write_until_depleted(image_buffer.bytes()));
             } else {
                 warnln("No screenshot available");
@@ -276,7 +276,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
         auto title = LexicalPath::title(input_path);
         auto dump_screenshot = [&](Gfx::Bitmap& bitmap, StringView path) -> ErrorOr<void> {
             auto screenshot_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
-            auto encoded_data = TRY(Gfx::PNGWriter::encode(bitmap));
+            auto encoded_data = TRY(Media::PNGWriter::encode(bitmap));
             TRY(screenshot_file->write_until_depleted(encoded_data));
             warnln("\033[33;1mDumped {}\033[0m", TRY(FileSystem::real_path(path)));
             return {};
