@@ -276,8 +276,6 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
         TRY(form->submit_form(*this));
     } else if (type_state() == TypeAttributeState::FileUpload || type_state() == TypeAttributeState::Color) {
         show_the_picker_if_applicable(*this);
-    } else {
-        dispatch_event(DOM::Event::create(realm(), EventNames::change));
     }
 
     return {};
@@ -288,6 +286,8 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     // An input element's dirty value flag must be set to true whenever the user interacts with the control in a way that changes the value.
     m_value = value_sanitization_algorithm(m_text_node->data());
     m_dirty_value = true;
+
+    m_has_uncommitted_changes = true;
 
     update_placeholder_visibility();
 
@@ -404,6 +404,33 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     }
 
     return {};
+}
+
+void HTMLInputElement::commit_pending_changes()
+{
+    // The change event fires when the value is committed, if that makes sense for the control,
+    // or else when the control loses focus
+    switch (type_state()) {
+    case TypeAttributeState::Email:
+    case TypeAttributeState::Password:
+    case TypeAttributeState::Search:
+    case TypeAttributeState::Telephone:
+    case TypeAttributeState::Text:
+    case TypeAttributeState::URL:
+        if (!m_has_uncommitted_changes)
+            return;
+        break;
+
+    default:
+        break;
+    }
+
+    m_has_uncommitted_changes = false;
+
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change, { .bubbles = true });
+        dispatch_event(change_event);
+    });
 }
 
 void HTMLInputElement::update_placeholder_visibility()
@@ -615,13 +642,7 @@ void HTMLInputElement::did_receive_focus()
 
 void HTMLInputElement::did_lose_focus()
 {
-    // The change event fires when the value is committed, if that makes sense for the control,
-    // or else when the control loses focus
-    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
-        change_event->set_bubbles(true);
-        dispatch_event(change_event);
-    });
+    commit_pending_changes();
 }
 
 void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String> const& value)

@@ -69,6 +69,8 @@ public:
     virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);
 
+    void commit_pending_changes();
+
     Optional<DeprecatedString> placeholder_value() const;
 
     bool checked() const { return m_checked; }
@@ -215,6 +217,8 @@ private:
 
     TypeAttributeState m_type { TypeAttributeState::Text };
     String m_value;
+
+    bool m_has_uncommitted_changes { false };
 };
 
 }

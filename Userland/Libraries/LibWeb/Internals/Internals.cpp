@@ -11,6 +11,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Internals/Internals.h>
 #include <LibWeb/Page/Page.h>
@@ -60,6 +61,27 @@ JS::Object* Internals::hit_test(double x, double y)
         return hit_tеsting_result;
     }
     return nullptr;
+}
+
+void Internals::send_text(HTML::HTMLElement& target, String const& text)
+{
+    auto* page = global_object().browsing_context()->page();
+    if (!page)
+        return;
+
+    target.focus();
+
+    for (auto code_point : text.code_points())
+        page->handle_keydown(code_point_to_key_code(code_point), 0, code_point);
+}
+
+void Internals::commit_text()
+{
+    auto* page = global_object().browsing_context()->page();
+    if (!page)
+        return;
+
+    page->handle_keydown(Key_Return, 0, 0);
 }
 
 WebIDL::ExceptionOr<bool> Internals::dispatch_user_activated_event(DOM::EventTarget& target, DOM::Event& event)

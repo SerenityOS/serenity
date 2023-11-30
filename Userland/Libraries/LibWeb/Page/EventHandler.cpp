@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -769,6 +770,8 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     }
 
     if (m_browsing_context->cursor_position() && m_browsing_context->cursor_position()->node()->is_editable()) {
+        auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
+
         if (key == KeyCode::Key_Backspace) {
             if (!m_browsing_context->decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node and delete the last character there.
@@ -799,13 +802,16 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             return true;
         }
         if (key == KeyCode::Key_Home) {
-            auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
             m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, 0));
             return true;
         }
         if (key == KeyCode::Key_End) {
-            auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
             m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, (unsigned)node.data().bytes().size()));
+            return true;
+        }
+        if (key == KeyCode::Key_Return && is<HTML::HTMLInputElement>(node.editable_text_node_owner())) {
+            auto& input_element = static_cast<HTML::HTMLInputElement&>(*node.editable_text_node_owner());
+            input_element.commit_pending_changes();
             return true;
         }
         if (!should_ignore_keydown_event(code_point)) {

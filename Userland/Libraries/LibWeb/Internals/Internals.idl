@@ -1,10 +1,15 @@
 #import <DOM/EventTarget.idl>
+#import <HTML/HTMLElement.idl>
 
 [Exposed=Nobody] interface Internals {
 
     undefined signalTextTestIsDone();
     undefined gc();
     object hitTest(double x, double y);
+
+    undefined sendText(HTMLElement target, DOMString text);
+    undefined commitText();
+
     boolean dispatchUserActivatedEvent(EventTarget target, Event event);
 
 };

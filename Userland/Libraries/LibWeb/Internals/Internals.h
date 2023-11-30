@@ -22,6 +22,9 @@ public:
     void gc();
     JS::Object* hit_test(double x, double y);
 
+    void send_text(HTML::HTMLElement&, String const&);
+    void commit_text();
+
     WebIDL::ExceptionOr<bool> dispatch_user_activated_event(DOM::EventTarget&, DOM::Event& event);
 
 private:
