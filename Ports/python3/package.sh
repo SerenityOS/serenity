@@ -26,7 +26,6 @@ depends=(
     'openssl'
     'readline'
     'sqlite'
-    'termcap'
     'xz'
     'zlib'
 )
