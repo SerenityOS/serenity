@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
@@ -27,33 +28,45 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     , m_inspector_web_view(inspector_web_view)
 {
     m_content_web_view.on_received_dom_tree = [this](auto const& dom_tree) {
-        if (auto result = parse_json_tree(dom_tree); result.is_error())
+        auto result = parse_json_tree(dom_tree);
+        if (result.is_error()) {
             dbgln("Failed to load DOM tree: {}", result.error());
-        else
-            m_dom_tree = result.release_value();
+            return;
+        }
 
-        maybe_load_inspector();
+        auto dom_tree_html = generate_dom_tree(result.value().as_object());
+        auto dom_tree_base64 = MUST(encode_base64(dom_tree_html.bytes()));
+
+        auto script = MUST(String::formatted("inspector.loadDOMTree(\"{}\");", dom_tree_base64));
+        m_inspector_web_view.run_javascript(script);
+
+        m_dom_tree_loaded = true;
+
+        if (m_pending_selection.has_value())
+            select_node(m_pending_selection.release_value());
+        else
+            select_default_node();
     };
 
-    m_content_web_view.on_received_accessibility_tree = [this](auto const& dom_tree) {
-        if (auto result = parse_json_tree(dom_tree); result.is_error())
+    m_content_web_view.on_received_accessibility_tree = [this](auto const& accessibility_tree) {
+        auto result = parse_json_tree(accessibility_tree);
+        if (result.is_error()) {
             dbgln("Failed to load accessibility tree: {}", result.error());
-        else
-            m_accessibility_tree = result.release_value();
+            return;
+        }
 
-        maybe_load_inspector();
+        auto accessibility_tree_html = generate_accessibility_tree(result.value().as_object());
+        auto accessibility_tree_base64 = MUST(encode_base64(accessibility_tree_html.bytes()));
+
+        auto script = MUST(String::formatted("inspector.loadAccessibilityTree(\"{}\");", accessibility_tree_base64));
+        m_inspector_web_view.run_javascript(script);
     };
 
     m_inspector_web_view.enable_inspector_prototype();
     m_inspector_web_view.use_native_user_style_sheet();
 
     m_inspector_web_view.on_inspector_loaded = [this]() {
-        m_inspector_loaded = true;
-
-        if (m_pending_selection.has_value())
-            select_node(m_pending_selection.release_value());
-        else
-            select_default_node();
+        inspect();
     };
 
     m_inspector_web_view.on_inspector_selected_dom_node = [this](auto node_id, auto const& pseudo_element) {
@@ -84,7 +97,7 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_inspector_web_view.run_javascript(builder.string_view());
     };
 
-    inspect();
+    load_inspector();
 }
 
 InspectorClient::~InspectorClient()
@@ -101,13 +114,10 @@ void InspectorClient::inspect()
 
 void InspectorClient::reset()
 {
-    m_dom_tree.clear();
-    m_accessibility_tree.clear();
-
     m_body_node_id.clear();
     m_pending_selection.clear();
 
-    m_inspector_loaded = false;
+    m_dom_tree_loaded = false;
 }
 
 void InspectorClient::select_hovered_node()
@@ -132,7 +142,7 @@ void InspectorClient::clear_selection()
 
 void InspectorClient::select_node(i32 node_id)
 {
-    if (!m_inspector_loaded) {
+    if (!m_dom_tree_loaded) {
         m_pending_selection = node_id;
         return;
     }
@@ -141,11 +151,8 @@ void InspectorClient::select_node(i32 node_id)
     m_inspector_web_view.run_javascript(script);
 }
 
-void InspectorClient::maybe_load_inspector()
+void InspectorClient::load_inspector()
 {
-    if (!m_dom_tree.has_value() || !m_accessibility_tree.has_value())
-        return;
-
     StringBuilder builder;
 
     builder.append(R"~~~(
@@ -339,21 +346,8 @@ void InspectorClient::maybe_load_inspector()
                     <button id="accessibility-tree-button" onclick="selectTopTab(this, 'accessibility-tree')">Accessibility Tree</button>
                 </div>
             </div>
-
-            <div id="dom-tree" class="tab-content html">
-)~~~"sv);
-
-    generate_dom_tree(builder);
-
-    builder.append(R"~~~(
-            </div>
-            <div id="accessibility-tree" class="tab-content">
-)~~~"sv);
-
-    generate_accessibility_tree(builder);
-
-    builder.append(R"~~~(
-            </div>
+            <div id="dom-tree" class="tab-content html"></div>
+            <div id="accessibility-tree" class="tab-content"></div>
         </div>
         <div id="inspector-bottom" class="split-view-container" style="height: 40%">
             <div class="tab-controls-container">
@@ -443,6 +437,25 @@ void InspectorClient::maybe_load_inspector()
             window.scrollTo(0, position);
         }
 
+        inspector.loadDOMTree = tree => {
+            let domTree = document.getElementById("dom-tree");
+            domTree.innerHTML = atob(tree);
+
+            let domNodes = domTree.getElementsByClassName("hoverable");
+
+            for (let domNode of domNodes) {
+                domNode.addEventListener("click", event => {
+                    inspectDOMNode(domNode);
+                    event.preventDefault();
+                });
+            }
+        };
+
+        inspector.loadAccessibilityTree = tree => {
+            let accessibilityTree = document.getElementById("accessibility-tree");
+            accessibilityTree.innerHTML = atob(tree);
+        };
+
         inspector.inspectDOMNodeID = nodeID => {
             let domNodes = document.querySelectorAll(`[data-id="${nodeID}"]`);
             if (domNodes.length !== 1) {
@@ -505,16 +518,6 @@ void InspectorClient::maybe_load_inspector()
         };
 
         document.addEventListener("DOMContentLoaded", () => {
-            let domTree = document.getElementById("dom-tree");
-            let domNodes = domTree.getElementsByClassName("hoverable");
-
-            for (let domNode of domNodes) {
-                domNode.addEventListener("click", event => {
-                    inspectDOMNode(domNode);
-                    event.preventDefault();
-                });
-            }
-
             inspector.inspectorLoaded();
         });
     </script>
@@ -548,9 +551,11 @@ static void generate_tree(StringBuilder& builder, JsonObject const& node, Genera
     }
 }
 
-void InspectorClient::generate_dom_tree(StringBuilder& builder)
+String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
 {
-    generate_tree(builder, m_dom_tree->as_object(), [&](JsonObject const& node) {
+    StringBuilder builder;
+
+    generate_tree(builder, dom_tree, [&](JsonObject const& node) {
         auto type = node.get_deprecated_string("type"sv).value_or("unknown"sv);
         auto name = node.get_deprecated_string("name"sv).value_or({});
 
@@ -630,11 +635,15 @@ void InspectorClient::generate_dom_tree(StringBuilder& builder)
         builder.append("<span>&gt;</span>"sv);
         builder.append("</span>"sv);
     });
+
+    return MUST(builder.to_string());
 }
 
-void InspectorClient::generate_accessibility_tree(StringBuilder& builder)
+String InspectorClient::generate_accessibility_tree(JsonObject const& accessibility_tree)
 {
-    generate_tree(builder, m_accessibility_tree->as_object(), [&](JsonObject const& node) {
+    StringBuilder builder;
+
+    generate_tree(builder, accessibility_tree, [&](JsonObject const& node) {
         auto type = node.get_deprecated_string("type"sv).value_or("unknown"sv);
         auto role = node.get_deprecated_string("role"sv).value_or({});
 
@@ -663,6 +672,8 @@ void InspectorClient::generate_accessibility_tree(StringBuilder& builder)
         builder.appendff(" name: \"{}\", description: \"{}\"", name, description);
         builder.append("</span>"sv);
     });
+
+    return MUST(builder.to_string());
 }
 
 }
