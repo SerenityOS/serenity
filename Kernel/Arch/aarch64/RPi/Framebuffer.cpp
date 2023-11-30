@@ -127,6 +127,8 @@ void Framebuffer::initialize()
         // NOTE: The required pixel format for MULTIBOOT_FRAMEBUFFER_TYPE_RGB is actually BGRx8888.
         VERIFY(framebuffer.pixel_order() == PixelOrder::BGR);
         multiboot_framebuffer_type = MULTIBOOT_FRAMEBUFFER_TYPE_RGB;
+
+        multiboot_flags |= MULTIBOOT_INFO_FRAMEBUFFER_INFO;
     }
 }
 
