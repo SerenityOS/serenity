@@ -473,6 +473,7 @@ public:
     Vector<JS::Handle<HTML::BrowsingContext>> list_of_descendant_browsing_contexts() const;
 
     Vector<JS::Handle<HTML::Navigable>> descendant_navigables();
+    Vector<JS::Handle<HTML::Navigable>> const descendant_navigables() const;
     Vector<JS::Handle<HTML::Navigable>> inclusive_descendant_navigables();
     Vector<JS::Handle<HTML::Navigable>> ancestor_navigables();
     Vector<JS::Handle<HTML::Navigable>> inclusive_ancestor_navigables();
