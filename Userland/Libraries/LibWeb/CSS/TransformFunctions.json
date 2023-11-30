@@ -139,6 +139,14 @@
       }
     ]
   },
+  "translateZ": {
+    "parameters": [
+      {
+        "type": "<length>",
+        "required": true
+      }
+    ]
+  },
   "scale": {
     "parameters": [
       {

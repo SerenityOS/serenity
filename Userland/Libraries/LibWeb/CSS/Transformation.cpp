@@ -84,6 +84,13 @@ Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& pain
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
+    case CSS::TransformFunction::TranslateZ:
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, value(0),
+                0, 0, 0, 1);
+        break;
     case CSS::TransformFunction::Scale:
         if (count == 1)
             return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
