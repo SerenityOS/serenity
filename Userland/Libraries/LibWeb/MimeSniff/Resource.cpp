@@ -370,7 +370,7 @@ ErrorOr<Resource> Resource::create(ReadonlyBytes data, SniffingConfiguration con
     auto resource = Resource { data, configuration.no_sniff, move(default_computed_mime_type) };
 
     TRY(resource.supplied_mime_type_detection_algorithm(configuration.scheme, move(configuration.supplied_type)));
-    TRY(resource.mime_type_sniffing_algorithm());
+    TRY(resource.context_specific_sniffing_algorithm(configuration.sniffing_context));
 
     return resource;
 }
@@ -516,6 +516,20 @@ ErrorOr<void> Resource::mime_type_sniffing_algorithm()
 
     // 10. The computed MIME type is the supplied MIME type.
     m_computed_mime_type = m_supplied_mime_type.value();
+
+    return {};
+}
+
+// https://mimesniff.spec.whatwg.org/#context-specific-sniffing-algorithm
+ErrorOr<void> Resource::context_specific_sniffing_algorithm(SniffingContext sniffing_context)
+{
+    // A context-specific sniffing algorithm determines the computed MIME type of a resource only if
+    // the resource is a MIME type relevant to a particular context.
+    if (sniffing_context == SniffingContext::None || sniffing_context == SniffingContext::Browsing) {
+        // https://mimesniff.spec.whatwg.org/#sniffing-in-a-browsing-context
+        // Use the MIME type sniffing algorithm.
+        return mime_type_sniffing_algorithm();
+    }
 
     return {};
 }
