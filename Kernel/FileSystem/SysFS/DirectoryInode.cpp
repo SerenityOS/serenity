@@ -28,7 +28,7 @@ InodeMetadata SysFSDirectoryInode::metadata() const
     // NOTE: No locking required as m_associated_component or its component index will never change during our lifetime.
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
-    metadata.mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
+    metadata.mode = S_IFDIR | 0755;
     metadata.uid = 0;
     metadata.gid = 0;
     metadata.size = 0;
