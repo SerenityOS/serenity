@@ -15,7 +15,7 @@ extern bool is_using_dark_system_theme(QWidget&);
 
 InspectorWidget::InspectorWidget(WebContentView& content_view)
 {
-    m_inspector_view = make<WebContentView>(StringView {}, WebView::EnableCallgrindProfiling::No, UseLagomNetworking::No, WebView::EnableGPUPainting::No);
+    m_inspector_view = make<WebContentView>(WebContentOptions {}, StringView {});
 
     if (is_using_dark_system_theme(*this))
         m_inspector_view->update_palette(WebContentView::PaletteMode::Dark);

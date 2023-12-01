@@ -23,19 +23,20 @@ static T scale_for_device(T size, float device_pixel_ratio)
     return size.template to_type<float>().scaled(device_pixel_ratio).template to_type<int>();
 }
 
-ErrorOr<NonnullOwnPtr<WebViewBridge>> WebViewBridge::create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
+ErrorOr<NonnullOwnPtr<WebViewBridge>> WebViewBridge::create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, WebContentOptions const& web_content_options, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) WebViewBridge(move(screen_rects), device_pixel_ratio, move(webdriver_content_ipc_path), preferred_color_scheme));
+    return adopt_nonnull_own_or_enomem(new (nothrow) WebViewBridge(move(screen_rects), device_pixel_ratio, web_content_options, move(webdriver_content_ipc_path), preferred_color_scheme));
 }
 
-WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
+WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, WebContentOptions const& web_content_options, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
     : m_screen_rects(move(screen_rects))
+    , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(move(webdriver_content_ipc_path))
     , m_preferred_color_scheme(preferred_color_scheme)
 {
     m_device_pixel_ratio = device_pixel_ratio;
 
-    create_client(WebView::EnableCallgrindProfiling::No);
+    create_client();
 
     on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
         auto position = m_viewport_rect.location();
@@ -184,12 +185,12 @@ Gfx::IntPoint WebViewBridge::to_widget_position(Gfx::IntPoint content_position) 
     return scale_for_device(content_position, inverse_device_pixel_ratio());
 }
 
-void WebViewBridge::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+void WebViewBridge::create_client()
 {
     m_client_state = {};
 
     auto candidate_web_content_paths = MUST(get_paths_for_helper_process("WebContent"sv));
-    auto new_client = MUST(launch_web_content_process(*this, candidate_web_content_paths, enable_callgrind_profiling, WebView::IsLayoutTestMode::No, Ladybird::UseLagomNetworking::Yes, WebView::EnableGPUPainting::No));
+    auto new_client = MUST(launch_web_content_process(*this, candidate_web_content_paths, m_web_content_options));
 
     m_client_state.client = new_client;
     m_client_state.client->on_web_content_process_crash = [this] {

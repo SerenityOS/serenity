@@ -42,12 +42,10 @@ static QIcon const& app_icon()
     return icon;
 }
 
-BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking, WebView::EnableGPUPainting use_gpu_painting)
+BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
     : m_cookie_jar(cookie_jar)
+    , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
-    , m_enable_callgrind_profiling(enable_callgrind_profiling)
-    , m_use_lagom_networking(use_lagom_networking)
-    , m_use_gpu_painting(use_gpu_painting)
 {
     setWindowIcon(app_icon());
     m_tabs_container = new QTabWidget(this);
@@ -464,7 +462,7 @@ Tab& BrowserWindow::new_tab(StringView html, Web::HTML::ActivateTab activate_tab
 
 Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
 {
-    auto tab = make<Tab>(this, m_webdriver_content_ipc_path, m_enable_callgrind_profiling, m_use_lagom_networking, m_use_gpu_painting);
+    auto tab = make<Tab>(this, m_web_content_options, m_webdriver_content_ipc_path);
     auto tab_ptr = tab.ptr();
     m_tabs.append(std::move(tab));
 

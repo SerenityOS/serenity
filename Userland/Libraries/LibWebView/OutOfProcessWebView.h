@@ -78,7 +78,7 @@ private:
     virtual void did_scroll() override;
 
     // ^WebView::ViewImplementation
-    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) override;
+    virtual void create_client() override;
     virtual void update_zoom() override;
 
     virtual Gfx::IntRect viewport_rect() const override;

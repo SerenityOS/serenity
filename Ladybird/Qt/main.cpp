@@ -140,7 +140,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         initial_urls.append(MUST(ak_string_from_qstring(new_tab_page)));
     }
 
-    Ladybird::BrowserWindow window(initial_urls, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No, use_gpu_painting ? WebView::EnableGPUPainting::Yes : WebView::EnableGPUPainting::No);
+    Ladybird::WebContentOptions web_content_options {
+        .enable_callgrind_profiling = enable_callgrind_profiling ? Ladybird::EnableCallgrindProfiling::Yes : Ladybird::EnableCallgrindProfiling::No,
+        .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
+        .use_lagom_networking = use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No,
+    };
+
+    Ladybird::BrowserWindow window(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
     window.setWindowTitle("Ladybird");
 
     app.on_open_file = [&](auto file_url) {

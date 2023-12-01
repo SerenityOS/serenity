@@ -52,7 +52,7 @@ static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& pal
     return QIcon(icon_engine);
 }
 
-Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking, WebView::EnableGPUPainting enable_gpu_painting)
+Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
     : QWidget(window)
     , m_window(window)
 {
@@ -60,7 +60,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling, use_lagom_networking, enable_gpu_painting);
+    m_view = new WebContentView(web_content_options, webdriver_content_ipc_path);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
 

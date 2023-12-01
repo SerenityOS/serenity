@@ -25,6 +25,7 @@
     // This will always be populated, but we cannot have a non-default constructible instance variable.
     Optional<WebView::CookieJar> m_cookie_jar;
 
+    Ladybird::WebContentOptions m_web_content_options;
     Optional<StringView> m_webdriver_content_ipc_path;
 
     Web::CSS::PreferredColorScheme m_preferred_color_scheme;
@@ -52,6 +53,7 @@
 - (instancetype)init:(Vector<URL>)initial_urls
               newTabPageURL:(URL)new_tab_page_url
               withCookieJar:(WebView::CookieJar)cookie_jar
+          webContentOptions:(Ladybird::WebContentOptions const&)web_content_options
     webdriverContentIPCPath:(StringView)webdriver_content_ipc_path
 {
     if (self = [super init]) {
@@ -74,6 +76,8 @@
         m_new_tab_page_url = move(new_tab_page_url);
 
         m_cookie_jar = move(cookie_jar);
+
+        m_web_content_options = web_content_options;
 
         if (!webdriver_content_ipc_path.is_empty()) {
             m_webdriver_content_ipc_path = webdriver_content_ipc_path;
@@ -120,6 +124,11 @@
 - (WebView::CookieJar&)cookieJar
 {
     return *m_cookie_jar;
+}
+
+- (Ladybird::WebContentOptions const&)webContentOptions
+{
+    return m_web_content_options;
 }
 
 - (Optional<StringView> const&)webdriverContentIPCPath
