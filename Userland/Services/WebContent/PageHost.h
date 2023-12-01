@@ -8,15 +8,12 @@
 
 #pragma once
 
-#include <LibAccelGfx/Forward.h>
-#include <LibGfx/Rect.h>
-#include <LibWeb/Page/Page.h>
-#include <LibWeb/PixelUnits.h>
+#include <AK/Function.h>
+#include <AK/HashMap.h>
+#include <AK/NonnullOwnPtr.h>
 #include <WebContent/Forward.h>
 
 namespace WebContent {
-
-class ConnectionFromClient;
 
 class PageHost {
     AK_MAKE_NONCOPYABLE(PageHost);
