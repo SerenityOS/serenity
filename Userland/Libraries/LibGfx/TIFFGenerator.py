@@ -56,6 +56,7 @@ known_tags: List[Tag] = [
     Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample"),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression),
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets"),
+    Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel"),
     Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip"),
     Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts"),
     Tag('317', [TIFFType.UnsignedShort], [1], Predictor.NoPrediction, "Predictor", Predictor),
