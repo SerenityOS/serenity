@@ -10,7 +10,6 @@
 
 namespace WebView {
 
-class ConsoleClient;
 class CookieJar;
 class Database;
 class History;
