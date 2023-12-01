@@ -6,26 +6,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "PageHost.h"
-#include "ConnectionFromClient.h"
-#include "PageClient.h"
-#include <LibGfx/ShareableBitmap.h>
-#include <LibGfx/SystemTheme.h>
-#include <LibWeb/CSS/SystemColor.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
-#include <LibWeb/Layout/Viewport.h>
-#include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
-#include <LibWeb/Painting/ViewportPaintable.h>
-#include <LibWeb/Platform/Timer.h>
-#include <WebContent/WebContentClientEndpoint.h>
+#include <WebContent/ConnectionFromClient.h>
+#include <WebContent/PageClient.h>
+#include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
-
-#ifdef HAS_ACCELERATED_GRAPHICS
-#    include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
-#endif
 
 namespace WebContent {
 
