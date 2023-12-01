@@ -70,4 +70,8 @@ executable("WebContent") {
     "main.cpp",
   ]
   sources += get_target_outputs(":generate_moc")
+
+  if (current_os == "linux" || current_os == "mac") {
+    cflags_cc = [ "-DHAS_ACCELERATED_GRAPHICS" ]
+  }
 }
