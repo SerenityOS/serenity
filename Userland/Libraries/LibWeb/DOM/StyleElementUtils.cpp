@@ -61,10 +61,12 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
     // 6. Create a CSS style sheet with the following properties...
     create_a_css_style_sheet(
         style_element.document(),
-        "text/css"sv,
+        "text/css"_string,
         &style_element,
-        style_element.deprecated_attribute(HTML::AttributeNames::media),
-        style_element.in_a_document_tree() ? style_element.deprecated_attribute(HTML::AttributeNames::title) : DeprecatedString::empty(),
+        style_element.attribute(HTML::AttributeNames::media).value_or({}),
+        style_element.in_a_document_tree()
+            ? style_element.attribute(HTML::AttributeNames::title).value_or({})
+            : String {},
         false,
         true,
         {},
@@ -86,7 +88,7 @@ void StyleElementUtils::remove_a_css_style_sheet(DOM::Document& document, CSS::C
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, DeprecatedString type, DOM::Element* owner_node, DeprecatedString media, DeprecatedString title, bool alternate, bool origin_clean, Optional<DeprecatedString> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
+void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, Optional<String> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
     // FIXME: We receive `sheet` from the caller already. This is weird.
@@ -94,15 +96,12 @@ void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, Deprec
     sheet.set_parent_css_style_sheet(parent_style_sheet);
     sheet.set_owner_css_rule(owner_rule);
     sheet.set_owner_node(owner_node);
-    sheet.set_type(MUST(String::from_deprecated_string(type)));
-    sheet.set_media(MUST(String::from_deprecated_string(media)));
-    sheet.set_title(MUST(String::from_deprecated_string(title)));
+    sheet.set_type(move(type));
+    sheet.set_media(move(media));
+    sheet.set_title(move(title));
     sheet.set_alternate(alternate);
     sheet.set_origin_clean(origin_clean);
-    if (!location.has_value())
-        sheet.set_location({});
-    else
-        sheet.set_location(MUST(String::from_deprecated_string(*location)));
+    sheet.set_location(move(location));
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
     add_a_css_style_sheet(document, sheet);

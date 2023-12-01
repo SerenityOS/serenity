@@ -20,7 +20,7 @@ public:
 
 private:
     void remove_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& sheet);
-    void create_a_css_style_sheet(DOM::Document& document, DeprecatedString type, DOM::Element* owner_node, DeprecatedString media, DeprecatedString title, bool alternate, bool origin_clean, Optional<DeprecatedString> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet);
+    void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, Optional<String> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet);
     void add_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& sheet);
 
     // https://www.w3.org/TR/cssom/#associated-css-style-sheet
