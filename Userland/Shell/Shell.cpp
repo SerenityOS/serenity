@@ -2076,9 +2076,6 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     tcsetpgrp(STDOUT_FILENO, pgid);
     tcsetpgrp(STDIN_FILENO, pgid);
 
-    if (suggestions.is_empty())
-        return Error::from_string_literal("No results");
-
     return suggestions;
 }
 
