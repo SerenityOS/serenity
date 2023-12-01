@@ -414,4 +414,10 @@ void WebContentClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::
         m_view.on_inspector_selected_dom_node(node_id, pseudo_element);
 }
 
+void WebContentClient::inspector_did_execute_console_script(String const& script)
+{
+    if (m_view.on_inspector_executed_console_script)
+        m_view.on_inspector_executed_console_script(script);
+}
+
 }

@@ -508,6 +508,11 @@ void PageClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::S
     client().async_inspector_did_select_dom_node(node_id, pseudo_element);
 }
 
+void PageClient::inspector_did_execute_console_script(String const& script)
+{
+    client().async_inspector_did_execute_console_script(script);
+}
+
 ErrorOr<void> PageClient::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     VERIFY(!m_webdriver);

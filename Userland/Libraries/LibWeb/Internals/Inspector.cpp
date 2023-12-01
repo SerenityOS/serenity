@@ -47,4 +47,10 @@ void Inspector::inspect_dom_node(i32 node_id, Optional<i32> const& pseudo_elemen
     }
 }
 
+void Inspector::execute_console_script(String const& script)
+{
+    if (auto* page = global_object().browsing_context()->page())
+        page->client().inspector_did_execute_console_script(script);
+}
+
 }
