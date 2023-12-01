@@ -113,7 +113,7 @@ void serialize_a_url(StringBuilder& builder, StringView url)
     // To serialize a URL means to create a string represented by "url(",
     // followed by the serialization of the URL as a string, followed by ")".
     builder.append("url("sv);
-    serialize_a_string(builder, url.to_deprecated_string());
+    serialize_a_string(builder, url);
     builder.append(')');
 }
 
@@ -123,7 +123,7 @@ void serialize_a_local(StringBuilder& builder, StringView path)
     // To serialize a LOCAL means to create a string represented by "local(",
     // followed by the serialization of the LOCAL as a string, followed by ")".
     builder.append("local("sv);
-    serialize_a_string(builder, path.to_deprecated_string());
+    serialize_a_string(builder, path);
     builder.append(')');
 }
 

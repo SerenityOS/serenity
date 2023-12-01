@@ -317,7 +317,7 @@ String PropertyOwningCSSStyleDeclaration::serialized() const
         // NOTE: There are no shorthands for custom properties.
 
         // 5. Let value be the result of invoking serialize a CSS value of declaration.
-        auto value = declaration.value.value->to_string().to_deprecated_string();
+        auto value = declaration.value.value->to_string();
 
         // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
         //    and the important flag set if declaration has its important flag set.
@@ -419,7 +419,7 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyK
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_get(name, receiver, cacheable_metadata);
     if (auto maybe_property = property(property_id); maybe_property.has_value())
-        return { JS::PrimitiveString::create(vm(), maybe_property->value->to_string().to_deprecated_string()) };
+        return { JS::PrimitiveString::create(vm(), maybe_property->value->to_string()) };
     return { JS::PrimitiveString::create(vm(), String {}) };
 }
 
@@ -432,7 +432,7 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey co
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver, cacheable_metadata);
 
-    auto css_text = TRY(value.to_deprecated_string(vm));
+    auto css_text = TRY(value.to_string(vm));
 
     TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return set_property(property_id, css_text); }));
     return true;
