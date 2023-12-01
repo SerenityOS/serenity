@@ -13,7 +13,6 @@
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
 #include "BrowserWindow.h"
-#include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include "History/HistoryWidget.h"
 #include "InspectorWidget.h"
@@ -233,9 +232,6 @@ Tab::Tab(BrowserWindow& window)
 
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->reset();
-
-        if (m_console_widget)
-            m_console_widget->reset();
     };
 
     view().on_load_finish = [this](auto&) {
@@ -895,24 +891,7 @@ void Tab::close_sub_widgets()
         }
     };
     close_widget_window(m_dom_inspector_widget);
-    close_widget_window(m_console_widget);
     close_widget_window(m_storage_widget);
-}
-
-void Tab::show_console_window()
-{
-    if (!m_console_widget) {
-        auto console_window = GUI::Window::construct(&window());
-        console_window->resize(500, 300);
-        console_window->set_title("JS Console");
-        console_window->set_icon(g_icon_bag.filetype_javascript);
-
-        m_console_widget = console_window->set_main_widget<ConsoleWidget>(view());
-    }
-
-    auto* window = m_console_widget->window();
-    window->show();
-    window->move_to_front();
 }
 
 void Tab::show_storage_inspector()

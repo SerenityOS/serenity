@@ -14,7 +14,6 @@ stringify_gml(Tab.gml TabGML.h tab_gml)
 set(SOURCES
     BookmarksBarWidget.cpp
     BrowserWindow.cpp
-    ConsoleWidget.cpp
     CookiesModel.cpp
     DownloadWidget.cpp
     History/HistoryModel.cpp

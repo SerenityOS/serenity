@@ -25,7 +25,6 @@ namespace Browser {
 
 class BrowserWindow;
 class InspectorWidget;
-class ConsoleWidget;
 class HistoryWidget;
 class StorageWidget;
 class URLBox;
@@ -89,7 +88,6 @@ public:
     };
     void show_inspector_window(InspectorTarget);
 
-    void show_console_window();
     void show_storage_inspector();
     void show_history_inspector();
 
@@ -125,7 +123,6 @@ private:
     RefPtr<GUI::Button> m_reset_zoom_button;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
-    RefPtr<ConsoleWidget> m_console_widget;
     RefPtr<StorageWidget> m_storage_widget;
     RefPtr<HistoryWidget> m_history_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
@@ -158,7 +155,7 @@ private:
     RefPtr<GUI::Menu> m_go_forward_context_menu;
 
     DeprecatedString m_title;
-    RefPtr<const Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
 
     Optional<URL> m_navigating_url;
 
