@@ -137,8 +137,6 @@ elseif (APPLE)
         AppKit/Application/Application.mm
         AppKit/Application/ApplicationDelegate.mm
         AppKit/Application/EventLoopImplementation.mm
-        AppKit/UI/Console.mm
-        AppKit/UI/ConsoleController.mm
         AppKit/UI/Event.mm
         AppKit/UI/Inspector.mm
         AppKit/UI/InspectorController.mm

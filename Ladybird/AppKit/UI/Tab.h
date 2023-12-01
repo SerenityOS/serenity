@@ -14,9 +14,6 @@
 
 - (void)tabWillClose;
 
-- (void)openConsole:(id)sender;
-- (void)onConsoleClosed;
-
 - (void)openInspector:(id)sender;
 - (void)onInspectorClosed;
 
