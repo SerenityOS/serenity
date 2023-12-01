@@ -7,12 +7,16 @@ shared_library("LibAccelGfx") {
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibGfx",
   ]
+
   if (current_os == "linux") {
     libs = [
       "GL",
       "EGL",
     ]
+  } else if (current_os == "mac") {
+    frameworks = [ "OpenGL.framework" ]
   }
+
   sources = [
     "Canvas.h",
     "Context.cpp",
