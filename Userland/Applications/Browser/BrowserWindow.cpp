@@ -10,7 +10,6 @@
 #include "BrowserWindow.h"
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
-#include "ConsoleWidget.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
@@ -255,14 +254,6 @@ void BrowserWindow::build_menus()
     auto inspect_menu = add_menu("&Inspect"_string);
     inspect_menu->add_action(*m_view_source_action);
     inspect_menu->add_action(*m_inspect_dom_tree_action);
-
-    auto js_console_action = GUI::Action::create(
-        "Open &JS Console", { Mod_Ctrl, Key_I }, g_icon_bag.filetype_javascript, [this](auto&) {
-            active_tab().show_console_window();
-        },
-        this);
-    js_console_action->set_status_tip("Open JavaScript console for this page"_string);
-    inspect_menu->add_action(js_console_action);
 
     auto storage_window_action = GUI::Action::create(
         "Open S&torage Inspector", g_icon_bag.cookie, [this](auto&) {
