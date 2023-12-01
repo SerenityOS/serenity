@@ -22,7 +22,7 @@ public:
 
     virtual ~MediaQueryList() override = default;
 
-    DeprecatedString media() const;
+    String media() const;
     bool matches() const;
     bool evaluate();
 
