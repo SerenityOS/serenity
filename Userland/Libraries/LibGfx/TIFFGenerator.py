@@ -79,8 +79,17 @@ def export_enum_to_cpp(e: Type[Enum], special_name: Optional[str] = None) -> str
     for entry in e:
         output += f'    {entry.name} = {entry.value},\n'
 
-    output += "};"
+    output += "};\n"
     return output
+
+
+def export_tag_related_enums(tags: List[Tag]) -> str:
+    exported_enums = []
+    for tag in tags:
+        if tag.associated_enum:
+            exported_enums.append(export_enum_to_cpp(tag.associated_enum))
+
+    return '\n'.join(exported_enums)
 
 
 def promote_type(t: TIFFType) -> TIFFType:
@@ -224,11 +233,7 @@ struct Rational {{
 // Note that u16 is not include on purpose
 using Value = Variant<u8, String, u32, Rational<u32>, i32, Rational<i32>>;
 
-// This enum is progressively defined across sections but summarized in:
-// Appendix A: TIFF Tags Sorted by Number
-{export_enum_to_cpp(Compression)}
-
-{export_enum_to_cpp(Predictor)}
+{export_tag_related_enums(known_tags)}
 
 {HANDLE_TAG_SIGNATURE};
 
