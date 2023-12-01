@@ -76,16 +76,18 @@ private:
         BigEndian,
     };
 
-    template<typename ByteReader>
-    ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader, Function<ErrorOr<void>(u32)> initializer = {})
+    template<CallableAs<ErrorOr<ReadonlyBytes>, u32> StripDecoder>
+    ErrorOr<void> loop_over_pixels(StripDecoder&& strip_decoder)
     {
         auto const strips_offset = *m_metadata.strip_offsets();
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
 
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
-            if (initializer)
-                TRY(initializer(strip_byte_counts[strip_index]));
+
+            auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index]));
+            auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
+
             for (u32 row = 0; row < *m_metadata.rows_per_strip(); row++) {
                 auto const scanline = row + *m_metadata.rows_per_strip() * strip_index;
                 if (scanline >= *m_metadata.image_height())
@@ -94,7 +96,7 @@ private:
                 Optional<Color> last_color {};
 
                 for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
-                    auto color = Color { TRY(byte_reader()), TRY(byte_reader()), TRY(byte_reader()) };
+                    auto color = Color { TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()) };
 
                     if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
                         color.set_red(last_color->red() + color.red());
@@ -116,15 +118,18 @@ private:
         m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, size()));
 
         switch (*m_metadata.compression()) {
-        case Compression::NoCompression:
-            TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
+        case Compression::NoCompression: {
+            auto identity = [&](u32 num_bytes) {
+                return m_stream->read_in_place<u8 const>(num_bytes);
+            };
+
+            TRY(loop_over_pixels(move(identity)));
             break;
+        }
         case Compression::LZW: {
             ByteBuffer decoded_bytes {};
-            u32 read_head {};
-
-            auto initializer = [&](u32 bytes) -> ErrorOr<void> {
-                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(bytes));
+            auto decode_lzw_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
 
                 if (encoded_bytes.is_empty())
                     return Error::from_string_literal("TIFFImageDecoderPlugin: Unable to read from empty LZW strip");
@@ -141,31 +146,20 @@ private:
                 else
                     decoded_bytes = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(encoded_bytes, 8, -1));
 
-                read_head = 0;
-                return {};
+                return decoded_bytes;
             };
 
-            auto read_lzw_byte = [&]() -> ErrorOr<u8> {
-                if (read_head < decoded_bytes.size())
-                    return decoded_bytes[read_head++];
-                return Error::from_string_literal("TIFFImageDecoderPlugin: Reached end of LZW stream");
-            };
-
-            TRY(loop_over_pixels([read_lzw_byte = move(read_lzw_byte)]() { return read_lzw_byte(); }, move(initializer)));
+            TRY(loop_over_pixels(move(decode_lzw_strip)));
             break;
         }
         case Compression::PackBits: {
             // Section 9: PackBits Compression
-
-            OwnPtr<FixedMemoryStream> strip_stream;
             ByteBuffer decoded_bytes {};
-            u32 read_head {};
 
-            auto initializer = [&](u32 num_bytes) -> ErrorOr<void> {
-                strip_stream = make<FixedMemoryStream>(TRY(m_stream->read_in_place<u8 const>(num_bytes)));
+            auto decode_packbits_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+                auto strip_stream = make<FixedMemoryStream>(TRY(m_stream->read_in_place<u8 const>(num_bytes)));
 
                 decoded_bytes.clear();
-                read_head = 0;
 
                 Optional<i8> n {};
                 Optional<u8> saved_byte {};
@@ -201,16 +195,10 @@ private:
                     }
                 }
 
-                return {};
+                return decoded_bytes;
             };
 
-            auto read_packed_byte = [&]() -> ErrorOr<u8> {
-                if (read_head < decoded_bytes.size())
-                    return decoded_bytes[read_head++];
-                return Error::from_string_literal("TIFFImageDecoderPlugin: Reached end of PackedBits stream");
-            };
-
-            TRY(loop_over_pixels(move(read_packed_byte), move(initializer)));
+            TRY(loop_over_pixels(move(decode_packbits_strip)));
             break;
         }
         default:
