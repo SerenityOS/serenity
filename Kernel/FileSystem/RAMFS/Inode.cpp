@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/FileSystem/RAMFS/Inode.h>
 #include <Kernel/Tasks/Process.h>
 
@@ -49,6 +50,28 @@ InodeMetadata RAMFSInode::metadata() const
     return m_metadata;
 }
 
+static RAMFS::FileType file_type_from_mode(mode_t mode)
+{
+    switch (mode & S_IFMT) {
+    case S_IFDIR:
+        return RAMFS::FileType::Directory;
+    case S_IFCHR:
+        return RAMFS::FileType::Character;
+    case S_IFBLK:
+        return RAMFS::FileType::Block;
+    case S_IFREG:
+        return RAMFS::FileType::Regular;
+    case S_IFIFO:
+        return RAMFS::FileType::FIFO;
+    case S_IFLNK:
+        return RAMFS::FileType::Link;
+    case S_IFSOCK:
+        return RAMFS::FileType::Socket;
+    default:
+        return RAMFS::FileType::Unknown;
+    }
+}
+
 ErrorOr<void> RAMFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
@@ -56,15 +79,15 @@ ErrorOr<void> RAMFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     if (!is_directory())
         return ENOTDIR;
 
-    TRY(callback({ "."sv, identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), to_underlying(RAMFS::FileType::Directory) }));
     if (m_root_directory_inode) {
-        TRY(callback({ ".."sv, identifier(), 0 }));
+        TRY(callback({ ".."sv, identifier(), to_underlying(RAMFS::FileType::Directory) }));
     } else if (auto parent = m_parent.strong_ref()) {
-        TRY(callback({ ".."sv, parent->identifier(), 0 }));
+        TRY(callback({ ".."sv, parent->identifier(), to_underlying(RAMFS::FileType::Directory) }));
     }
 
     for (auto& child : m_children) {
-        TRY(callback({ child.name->view(), child.inode->identifier(), 0 }));
+        TRY(callback({ child.name->view(), child.inode->identifier(), to_underlying(file_type_from_mode(child.inode->metadata().mode)) }));
     }
     return {};
 }
