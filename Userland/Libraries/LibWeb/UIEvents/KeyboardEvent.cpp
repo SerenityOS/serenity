@@ -20,6 +20,31 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     if (is_ascii_digit(code_point))
         return code_point;
 
+    switch (platform_key) {
+    case KeyCode::Key_ExclamationPoint:
+        return static_cast<unsigned long>('1');
+    case KeyCode::Key_AtSign:
+        return static_cast<unsigned long>('2');
+    case KeyCode::Key_Hashtag:
+        return static_cast<unsigned long>('3');
+    case KeyCode::Key_Dollar:
+        return static_cast<unsigned long>('4');
+    case KeyCode::Key_Percent:
+        return static_cast<unsigned long>('5');
+    case KeyCode::Key_Circumflex:
+        return static_cast<unsigned long>('6');
+    case KeyCode::Key_Ampersand:
+        return static_cast<unsigned long>('7');
+    case KeyCode::Key_Asterisk:
+        return static_cast<unsigned long>('8');
+    case KeyCode::Key_LeftParen:
+        return static_cast<unsigned long>('9');
+    case KeyCode::Key_RightParen:
+        return static_cast<unsigned long>('0');
+    default:
+        break;
+    }
+
     // If input key when pressed without modifiers would insert a lower case character in the a-z alphabetical range, return the ASCII code of the upper case equivalent.
     if (is_ascii_lower_alpha(code_point))
         return to_ascii_uppercase(code_point);
@@ -61,6 +86,45 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
         return 39;
     case KeyCode::Key_Down:
         return 40;
+    default:
+        break;
+    }
+
+    // https://www.w3.org/TR/uievents/#optionally-fixed-virtual-key-codes
+    switch (platform_key) {
+    case KeyCode::Key_Semicolon:
+    case KeyCode::Key_Colon:
+        return 186;
+    case KeyCode::Key_Equal:
+    case KeyCode::Key_Plus:
+        return 187;
+    case KeyCode::Key_Comma:
+    case KeyCode::Key_LessThan:
+        return 188;
+    case KeyCode::Key_Minus:
+    case KeyCode::Key_Underscore:
+        return 189;
+    case KeyCode::Key_Period:
+    case KeyCode::Key_GreaterThan:
+        return 190;
+    case KeyCode::Key_Slash:
+    case KeyCode::Key_QuestionMark:
+        return 191;
+    case KeyCode::Key_Backtick:
+    case KeyCode::Key_Tilde:
+        return 192;
+    case KeyCode::Key_LeftBracket:
+    case KeyCode::Key_LeftBrace:
+        return 219;
+    case KeyCode::Key_Backslash:
+    case KeyCode::Key_Pipe:
+        return 220;
+    case KeyCode::Key_RightBracket:
+    case KeyCode::Key_RightBrace:
+        return 221;
+    case KeyCode::Key_Apostrophe:
+    case KeyCode::Key_DoubleQuote:
+        return 222;
     default:
         break;
     }
