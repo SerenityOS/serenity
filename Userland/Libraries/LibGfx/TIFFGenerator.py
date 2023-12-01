@@ -50,6 +50,17 @@ class Compression(EnumWithExportName):
     PackBits = 32773
 
 
+class PhotometricInterpretation(EnumWithExportName):
+    WhiteIsZero = 0
+    BlackIsZero = 1
+    RGB = 2
+    RGBPalette = 3
+    TransparencyMask = 4
+    CMYK = 5
+    YCbCr = 6
+    CIELab = 8
+
+
 tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum']
 
 Tag = namedtuple(
@@ -64,6 +75,7 @@ known_tags: List[Tag] = [
     Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageHeight"),
     Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample"),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression),
+    Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation", PhotometricInterpretation),
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets"),
     Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel"),
     Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip"),
