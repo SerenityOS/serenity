@@ -19,22 +19,6 @@
 
 namespace WebView {
 
-// Note: This only exists inside Serenity to avoid #ifdefs in all implementors of ViewImplementation.
-enum class EnableCallgrindProfiling {
-    No,
-    Yes
-};
-
-enum class EnableGPUPainting {
-    No,
-    Yes
-};
-
-enum class IsLayoutTestMode {
-    No,
-    Yes
-};
-
 class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
@@ -190,7 +174,7 @@ protected:
     void request_repaint();
     void handle_resize();
 
-    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) { }
+    virtual void create_client() { }
 
     void handle_web_content_process_crash();
 

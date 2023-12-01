@@ -5,6 +5,7 @@
  */
 
 #include <BrowserSettings/Defaults.h>
+#include <Ladybird/Types.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -61,9 +62,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (initial_urls.is_empty())
         initial_urls.append(new_tab_page_url);
 
+    Ladybird::WebContentOptions web_content_options {
+        .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
+    };
+
     auto* delegate = [[ApplicationDelegate alloc] init:move(initial_urls)
                                          newTabPageURL:move(new_tab_page_url)
                                          withCookieJar:move(cookie_jar)
+                                     webContentOptions:web_content_options
                                webdriverContentIPCPath:webdriver_content_ipc_path];
 
     [NSApp setDelegate:delegate];

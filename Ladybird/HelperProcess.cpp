@@ -6,12 +6,10 @@
 
 #include "HelperProcess.h"
 
-ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(WebView::ViewImplementation& view,
+ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
+    WebView::ViewImplementation& view,
     ReadonlySpan<String> candidate_web_content_paths,
-    WebView::EnableCallgrindProfiling enable_callgrind_profiling,
-    WebView::IsLayoutTestMode is_layout_test_mode,
-    Ladybird::UseLagomNetworking use_lagom_networking,
-    WebView::EnableGPUPainting enable_gpu_painting)
+    Ladybird::WebContentOptions const& web_content_options)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -49,13 +47,13 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
                 "--webcontent-fd-passing-socket"sv,
                 webcontent_fd_passing_socket_string
             };
-            if (enable_callgrind_profiling == WebView::EnableCallgrindProfiling::No)
+            if (web_content_options.enable_callgrind_profiling == Ladybird::EnableCallgrindProfiling::No)
                 arguments.remove(0, callgrind_prefix_length);
-            if (is_layout_test_mode == WebView::IsLayoutTestMode::Yes)
+            if (web_content_options.is_layout_test_mode == Ladybird::IsLayoutTestMode::Yes)
                 arguments.append("--layout-test-mode"sv);
-            if (use_lagom_networking == Ladybird::UseLagomNetworking::Yes)
+            if (web_content_options.use_lagom_networking == Ladybird::UseLagomNetworking::Yes)
                 arguments.append("--use-lagom-networking"sv);
-            if (enable_gpu_painting == WebView::EnableGPUPainting::Yes)
+            if (web_content_options.enable_gpu_painting == Ladybird::EnableGPUPainting::Yes)
                 arguments.append("--use-gpu-painting"sv);
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
@@ -77,7 +75,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     auto new_client = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(move(socket), view)));
     new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
-    if (enable_callgrind_profiling == WebView::EnableCallgrindProfiling::Yes) {
+    if (web_content_options.enable_callgrind_profiling == Ladybird::EnableCallgrindProfiling::Yes) {
         dbgln();
         dbgln("\033[1;45mLaunched WebContent process under callgrind!\033[0m");
         dbgln("\033[100mRun `\033[4mcallgrind_control -i on\033[24m` to start instrumentation and `\033[4mcallgrind_control -i off\033[24m` stop it again.\033[0m");

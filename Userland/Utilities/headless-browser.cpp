@@ -18,6 +18,7 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
+#include <Ladybird/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
@@ -54,7 +55,7 @@ constexpr int DEFAULT_TIMEOUT_MS = 30000; // 30sec
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No)
+    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No)
     {
         auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView));
 
@@ -62,8 +63,10 @@ public:
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
         (void)is_layout_test_mode;
 #else
+        Ladybird::WebContentOptions web_content_options { .is_layout_test_mode = is_layout_test_mode };
+
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, Ladybird::UseLagomNetworking::No, WebView::EnableGPUPainting::No));
+        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options));
 #endif
 
         view->client().async_update_system_theme(move(theme));
@@ -108,7 +111,7 @@ private:
     HeadlessWebContentView() = default;
 
     void update_zoom() override { }
-    void create_client(WebView::EnableCallgrindProfiling) override { }
+    void create_client() override { }
 
     virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override { return widget_position; }
@@ -451,7 +454,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         is_layout_test_mode = true;
     }
 
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No));
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No));
     RefPtr<Core::Timer> timer;
 
     if (!test_root_path.is_empty()) {

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Tab.h"
+#include <Ladybird/Types.h>
 #include <LibCore/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/Forward.h>
@@ -24,8 +25,9 @@ class WebContentView;
 
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
+
 public:
-    explicit BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking, WebView::EnableGPUPainting);
+    BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar&, WebContentOptions const&, StringView webdriver_content_ipc_path);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -118,10 +120,8 @@ private:
 
     WebView::CookieJar& m_cookie_jar;
 
+    WebContentOptions m_web_content_options;
     StringView m_webdriver_content_ipc_path;
-    WebView::EnableCallgrindProfiling m_enable_callgrind_profiling;
-    UseLagomNetworking m_use_lagom_networking;
-    WebView::EnableGPUPainting m_use_gpu_painting;
 };
 
 }
