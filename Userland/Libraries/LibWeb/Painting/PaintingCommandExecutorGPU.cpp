@@ -27,8 +27,9 @@ PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
     painter().flush(m_target_bitmap);
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Gfx::FloatPoint baseline_start, String text, Gfx::Font const& font, Color const& color)
 {
+    auto glyph_run = Gfx::get_glyph_run(baseline_start, Utf8View(text), font);
     painter().draw_glyph_run(glyph_run, color);
     return CommandResult::Continue;
 }

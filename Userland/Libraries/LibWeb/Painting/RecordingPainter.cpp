@@ -216,9 +216,10 @@ void RecordingPainter::draw_signed_distance_field(Gfx::IntRect const& dst_rect, 
 
 void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Utf8View string, Gfx::Font const& font, Color color, Gfx::IntRect const& rect)
 {
-    auto glyph_run = Gfx::get_glyph_run(state().translation.map(baseline_start).to_type<float>(), string, font);
     push_command(DrawGlyphRun {
-        .glyph_run = glyph_run,
+        .baseline_start = state().translation.map(baseline_start).to_type<float>(),
+        .text = String::from_utf8(string.as_string()).release_value_but_fixme_should_propagate_errors(),
+        .font = font,
         .color = color,
         .rect = state().translation.map(rect),
     });
@@ -414,12 +415,9 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
         HashMap<Gfx::Font const*, HashTable<u32>> unique_glyphs;
         for (auto& command : m_painting_commands) {
             if (command.has<DrawGlyphRun>()) {
-                for (auto const& glyph_or_emoji : command.get<DrawGlyphRun>().glyph_run) {
-                    if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
-                        auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
-                        unique_glyphs.ensure(glyph.font, [] { return HashTable<u32> {}; }).set(glyph.code_point);
-                    }
-                }
+                auto& unique_code_points = unique_glyphs.ensure(command.get<DrawGlyphRun>().font, [] { return HashTable<u32> {}; });
+                for (auto code_point : command.get<DrawGlyphRun>().text.code_points())
+                    unique_code_points.set(code_point);
             }
         }
         executor.prepare_glyph_texture(unique_glyphs);
@@ -446,7 +444,7 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
 
         auto result = command.visit(
             [&](DrawGlyphRun const& command) {
-                return executor.draw_glyph_run(command.glyph_run, command.color);
+                return executor.draw_glyph_run(command.baseline_start, command.text, command.font, command.color);
             },
             [&](DrawText const& command) {
                 return executor.draw_text(command.rect, command.raw_text, command.alignment, command.color, command.elision, command.wrapping, command.font);

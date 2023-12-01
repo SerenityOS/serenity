@@ -24,18 +24,9 @@ PaintingCommandExecutorCPU::PaintingCommandExecutorCPU(Gfx::Bitmap& bitmap)
         .scaling_mode = {} });
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+CommandResult PaintingCommandExecutorCPU::draw_glyph_run(Gfx::FloatPoint baseline_start, String text, Gfx::Font const& font, Color const& color)
 {
-    auto& painter = this->painter();
-    for (auto& glyph_or_emoji : glyph_run) {
-        if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
-            auto& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
-            painter.draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
-        } else {
-            auto& emoji = glyph_or_emoji.get<Gfx::DrawEmoji>();
-            painter.draw_emoji(emoji.position, *emoji.emoji, *emoji.font);
-        }
-    }
+    painter().draw_text_run(baseline_start, Utf8View(text), font, color);
     return CommandResult::Continue;
 }
 

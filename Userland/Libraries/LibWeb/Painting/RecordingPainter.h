@@ -42,7 +42,9 @@ enum class CommandResult {
 };
 
 struct DrawGlyphRun {
-    Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
+    Gfx::FloatPoint baseline_start;
+    String text;
+    NonnullRefPtr<Gfx::Font> font;
     Color color;
     Gfx::IntRect rect;
 
@@ -358,7 +360,7 @@ class PaintingCommandExecutor {
 public:
     virtual ~PaintingCommandExecutor() = default;
 
-    virtual CommandResult draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const&) = 0;
+    virtual CommandResult draw_glyph_run(Gfx::FloatPoint, String, Gfx::Font const&, Color const&) = 0;
     virtual CommandResult draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment alignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&) = 0;
     virtual CommandResult fill_rect(Gfx::IntRect const&, Color const&) = 0;
     virtual CommandResult draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) = 0;
