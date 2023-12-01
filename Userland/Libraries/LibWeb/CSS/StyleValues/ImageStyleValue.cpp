@@ -100,7 +100,7 @@ Gfx::ImmutableBitmap const* ImageStyleValue::bitmap(size_t frame_index, Gfx::Int
 
 String ImageStyleValue::to_string() const
 {
-    return serialize_a_url(m_url.to_deprecated_string());
+    return serialize_a_url(MUST(m_url.to_string()));
 }
 
 bool ImageStyleValue::equals(StyleValue const& other) const
