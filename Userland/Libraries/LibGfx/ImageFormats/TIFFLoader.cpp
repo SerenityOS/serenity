@@ -156,20 +156,31 @@ private:
         }
         case Compression::PackBits: {
             // Section 9: PackBits Compression
-            Optional<i8> n;
-            Optional<u8> saved_byte;
 
-            auto read_packed_byte = [&]() -> ErrorOr<u8> {
-                while (true) {
+            OwnPtr<FixedMemoryStream> strip_stream;
+            ByteBuffer decoded_bytes {};
+            u32 read_head {};
+
+            auto initializer = [&](u32 num_bytes) -> ErrorOr<void> {
+                strip_stream = make<FixedMemoryStream>(TRY(m_stream->read_in_place<u8 const>(num_bytes)));
+
+                decoded_bytes.clear();
+                read_head = 0;
+
+                Optional<i8> n {};
+                Optional<u8> saved_byte {};
+
+                while (strip_stream->remaining() > 0 || saved_byte.has_value()) {
                     if (!n.has_value())
-                        n = TRY(read_value<i8>());
+                        n = TRY(strip_stream->read_value<i8>());
 
                     if (n.value() >= 0 && !saved_byte.has_value()) {
                         n.value() = n.value() - 1;
                         if (n.value() == -1)
                             n.clear();
 
-                        return read_value<u8>();
+                        decoded_bytes.append(TRY(strip_stream->read_value<u8>()));
+                        continue;
                     }
 
                     if (n.value() == -128) {
@@ -178,22 +189,28 @@ private:
                     }
 
                     if (!saved_byte.has_value())
-                        saved_byte = TRY(read_value<u8>());
+                        saved_byte = TRY(strip_stream->read_value<u8>());
 
                     n.value() = n.value() + 1;
 
-                    auto const byte_backup = *saved_byte;
+                    decoded_bytes.append(*saved_byte);
 
                     if (n == 1) {
                         saved_byte.clear();
                         n.clear();
                     }
-
-                    return byte_backup;
                 }
+
+                return {};
             };
 
-            TRY(loop_over_pixels(move(read_packed_byte)));
+            auto read_packed_byte = [&]() -> ErrorOr<u8> {
+                if (read_head < decoded_bytes.size())
+                    return decoded_bytes[read_head++];
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Reached end of PackedBits stream");
+            };
+
+            TRY(loop_over_pixels(move(read_packed_byte), move(initializer)));
             break;
         }
         default:
