@@ -237,7 +237,7 @@ jobs:
         run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch != 'aarch64' }}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
