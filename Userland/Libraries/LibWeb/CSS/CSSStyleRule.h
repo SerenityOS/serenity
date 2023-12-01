@@ -28,7 +28,7 @@ public:
 
     virtual Type type() const override { return Type::Style; }
 
-    DeprecatedString selector_text() const;
+    String selector_text() const;
     void set_selector_text(StringView);
 
     CSSStyleDeclaration* style();
