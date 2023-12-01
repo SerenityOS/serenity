@@ -155,6 +155,13 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 #ifdef HAS_ACCELERATED_GRAPHICS
         Web::Painting::PaintingCommandExecutorGPU painting_command_executor(target);
         recording_painter.execute(painting_command_executor);
+#else
+        static bool has_warned_about_configuration = false;
+
+        if (!has_warned_about_configuration) {
+            warnln("\033[31;1mConfigured to use GPU painter, but current platform does not have accelerated graphics\033[0m");
+            has_warned_about_configuration = true;
+        }
 #endif
     } else {
         Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
