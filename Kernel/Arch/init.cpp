@@ -217,6 +217,20 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #elif ARCH(RISCV64)
+    static multiboot_memory_map_t mmap[] = {
+        {
+            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+            (u64)0x8020'0000,
+            (u64)128 * MiB - 0x20'0000,
+            MULTIBOOT_MEMORY_AVAILABLE,
+        }
+    };
+
+    multiboot_memory_map = mmap;
+    multiboot_memory_map_count = array_size(mmap);
+    multiboot_modules = nullptr;
+    multiboot_modules_count = 0;
+
     kernel_cmdline = "serial_debug"sv;
 #endif
 
