@@ -622,6 +622,7 @@ ErrorOr<void> Editor::interrupted()
         TRY(reposition_cursor(*stderr_stream, true));
         if (TRY(m_suggestion_display->cleanup()))
             TRY(reposition_cursor(*stderr_stream, true));
+        TRY(stderr_stream->write_until_depleted("\r"sv.bytes()));
     }
     m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
@@ -816,7 +817,7 @@ void Editor::handle_interrupt_event()
 
     m_previous_interrupt_was_handled_as_interrupt = true;
 
-    fprintf(stderr, "^C\r\n");
+    fprintf(stderr, "^C\n");
     fflush(stderr);
 
     if (on_interrupt_handled)
