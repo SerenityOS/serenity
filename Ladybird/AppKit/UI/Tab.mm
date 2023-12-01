@@ -13,8 +13,6 @@
 #include <LibGfx/ShareableBitmap.h>
 
 #import <Application/ApplicationDelegate.h>
-#import <UI/Console.h>
-#import <UI/ConsoleController.h>
 #import <UI/Inspector.h>
 #import <UI/InspectorController.h>
 #import <UI/LadybirdWebView.h>
@@ -34,7 +32,6 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 @property (nonatomic, strong) NSString* title;
 @property (nonatomic, strong) NSImage* favicon;
 
-@property (nonatomic, strong) ConsoleController* console_controller;
 @property (nonatomic, strong) InspectorController* inspector_controller;
 
 @property (nonatomic, assign) URL last_url;
@@ -114,28 +111,9 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)tabWillClose
 {
-    if (self.console_controller != nil) {
-        [self.console_controller.window close];
-    }
     if (self.inspector_controller != nil) {
         [self.inspector_controller.window close];
     }
-}
-
-- (void)openConsole:(id)sender
-{
-    if (self.console_controller != nil) {
-        [self.console_controller.window makeKeyAndOrderFront:sender];
-        return;
-    }
-
-    self.console_controller = [[ConsoleController alloc] init:self];
-    [self.console_controller showWindow:nil];
-}
-
-- (void)onConsoleClosed
-{
-    self.console_controller = nil;
 }
 
 - (void)openInspector:(id)sender
@@ -258,10 +236,6 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     self.favicon = [Tab defaultFavicon];
     [self updateTabTitleAndFavicon];
 
-    if (self.console_controller != nil) {
-        auto* console = (Console*)[self.console_controller window];
-        [console reset];
-    }
     if (self.inspector_controller != nil) {
         auto* inspector = (Inspector*)[self.inspector_controller window];
         [inspector reset];
