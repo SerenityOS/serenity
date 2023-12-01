@@ -9,6 +9,7 @@
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/Resource.h>
+#include <LibJS/MarkupGenerator.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWebView/InspectorClient.h>
 #include <LibWebView/SourceHighlighter.h>
@@ -63,11 +64,21 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_inspector_web_view.run_javascript(script);
     };
 
+    m_content_web_view.on_received_console_message = [this](auto message_index) {
+        handle_console_message(message_index);
+    };
+
+    m_content_web_view.on_received_console_messages = [this](auto start_index, auto const& message_types, auto const& messages) {
+        handle_console_messages(start_index, message_types, messages);
+    };
+
     m_inspector_web_view.enable_inspector_prototype();
     m_inspector_web_view.use_native_user_style_sheet();
 
     m_inspector_web_view.on_inspector_loaded = [this]() {
         inspect();
+
+        m_content_web_view.js_console_request_messages(0);
     };
 
     m_inspector_web_view.on_inspector_selected_dom_node = [this](auto node_id, auto const& pseudo_element) {
@@ -98,6 +109,12 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_inspector_web_view.run_javascript(builder.string_view());
     };
 
+    m_inspector_web_view.on_inspector_executed_console_script = [this](auto const& script) {
+        append_console_source(script);
+
+        m_content_web_view.js_console_input(script.to_deprecated_string());
+    };
+
     load_inspector();
 }
 
@@ -105,6 +122,8 @@ InspectorClient::~InspectorClient()
 {
     m_content_web_view.on_received_dom_tree = nullptr;
     m_content_web_view.on_received_accessibility_tree = nullptr;
+    m_content_web_view.on_received_console_message = nullptr;
+    m_content_web_view.on_received_console_messages = nullptr;
 }
 
 void InspectorClient::inspect()
@@ -119,6 +138,11 @@ void InspectorClient::reset()
     m_pending_selection.clear();
 
     m_dom_tree_loaded = false;
+
+    clear_console_output();
+    m_highest_notified_message_index = -1;
+    m_highest_received_message_index = -1;
+    m_waiting_for_messages = false;
 }
 
 void InspectorClient::select_hovered_node()
@@ -189,9 +213,20 @@ void InspectorClient::load_inspector()
         <div id="inspector-bottom" class="split-view-container" style="height: 40%">
             <div class="tab-controls-container">
                 <div class="tab-controls">
+                    <button id="console-button" onclick="selectBottomTab(this, 'console')">Console</button>
                     <button id="computed-style-button" onclick="selectBottomTab(this, 'computed-style')">Computed Style</button>
                     <button id="resolved-style-button" onclick="selectBottomTab(this, 'resolved-style')">Resolved Style</button>
                     <button id="custom-properties-button" onclick="selectBottomTab(this, 'custom-properties')">Custom Properties</button>
+                </div>
+            </div>
+            <div id="console" class="tab-content">
+                <div class="console">
+                    <div id="console-output" class="console-output"></div>
+                    <div class="console-input">
+                        <label for="console-input" class="console-prompt">&gt;&gt;</label>
+                        <input id="console-input" type="text" placeholder="Enter statement to execute">
+                        <button id="console-clear" title="Clear the console output" onclick="inspector.clearConsoleOutput()">X</button>
+                    </div>
                 </div>
             </div>
 )~~~"sv);
@@ -382,6 +417,102 @@ String InspectorClient::generate_accessibility_tree(JsonObject const& accessibil
     });
 
     return MUST(builder.to_string());
+}
+
+void InspectorClient::request_console_messages()
+{
+    VERIFY(!m_waiting_for_messages);
+
+    m_content_web_view.js_console_request_messages(m_highest_received_message_index + 1);
+    m_waiting_for_messages = true;
+}
+
+void InspectorClient::handle_console_message(i32 message_index)
+{
+    if (message_index <= m_highest_received_message_index) {
+        dbgln("Notified about console message we already have");
+        return;
+    }
+    if (message_index <= m_highest_notified_message_index) {
+        dbgln("Notified about console message we're already aware of");
+        return;
+    }
+
+    m_highest_notified_message_index = message_index;
+
+    if (!m_waiting_for_messages)
+        request_console_messages();
+}
+
+void InspectorClient::handle_console_messages(i32 start_index, ReadonlySpan<DeprecatedString> message_types, ReadonlySpan<DeprecatedString> messages)
+{
+    auto end_index = start_index + static_cast<i32>(message_types.size()) - 1;
+    if (end_index <= m_highest_received_message_index) {
+        dbgln("Received old console messages");
+        return;
+    }
+
+    for (size_t i = 0; i < message_types.size(); ++i) {
+        auto const& type = message_types[i];
+        auto const& message = messages[i];
+
+        if (type == "html"sv)
+            append_console_output(message);
+        else if (type == "clear"sv)
+            clear_console_output();
+        else if (type == "group"sv)
+            begin_console_group(message, true);
+        else if (type == "groupCollapsed"sv)
+            begin_console_group(message, false);
+        else if (type == "groupEnd"sv)
+            end_console_group();
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    m_highest_received_message_index = end_index;
+    m_waiting_for_messages = false;
+
+    if (m_highest_received_message_index < m_highest_notified_message_index)
+        request_console_messages();
+}
+
+void InspectorClient::append_console_source(StringView source)
+{
+    StringBuilder builder;
+
+    builder.append("<span class=\"console-prompt\">&gt;&nbsp;</span>"sv);
+    builder.append(MUST(JS::MarkupGenerator::html_from_source(source)));
+
+    append_console_output(builder.string_view());
+}
+
+void InspectorClient::append_console_output(StringView html)
+{
+    auto html_base64 = MUST(encode_base64(html.bytes()));
+
+    auto script = MUST(String::formatted("inspector.appendConsoleOutput(\"{}\");", html_base64));
+    m_inspector_web_view.run_javascript(script);
+}
+
+void InspectorClient::clear_console_output()
+{
+    static constexpr auto script = "inspector.clearConsoleOutput();"sv;
+    m_inspector_web_view.run_javascript(script);
+}
+
+void InspectorClient::begin_console_group(StringView label, bool start_expanded)
+{
+    auto label_base64 = MUST(encode_base64(label.bytes()));
+
+    auto script = MUST(String::formatted("inspector.beginConsoleGroup(\"{}\", {});", label_base64, start_expanded));
+    m_inspector_web_view.run_javascript(script);
+}
+
+void InspectorClient::end_console_group()
+{
+    static constexpr auto script = "inspector.endConsoleGroup();"sv;
+    m_inspector_web_view.run_javascript(script);
 }
 
 }

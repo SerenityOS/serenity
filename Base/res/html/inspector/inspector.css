@@ -138,6 +138,58 @@ details > :not(:first-child) {
     }
 }
 
+.console {
+    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    width: 100%;
+    height: 100%;
+}
+
+.console-output {
+    height: calc(100% - 75px);
+    overflow: scroll;
+}
+
+.console-input {
+    width: 100%;
+    height: 24px;
+    padding: 4px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.console-input input {
+    width: calc(100% - 60px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .console-prompt {
+        color: cyan;
+    }
+
+    .console-input {
+        background-color: rgb(57, 57, 57);
+    }
+
+    .console-input input:focus {
+        outline: 1px dashed cyan;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .console-prompt {
+        color: blue;
+    }
+
+    .console-input {
+        background-color: rgb(229, 229, 229);
+    }
+
+    .console-input input:focus {
+        outline: 1px dashed blue;
+    }
+}
+
 .property-table {
     width: 100%;
 

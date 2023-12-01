@@ -6,6 +6,12 @@ let selectedBottomTabButton = null;
 
 let selectedDOMNode = null;
 
+let consoleGroupStack = [];
+let consoleGroupNextID = 0;
+
+let consoleHistory = [];
+let consoleHistoryIndex = 0;
+
 const selectTab = (tabButton, tabID, selectedTab, selectedTabButton) => {
     let tab = document.getElementById(tabID);
 
@@ -36,8 +42,8 @@ const selectBottomTab = (tabButton, tabID) => {
 let initialTopTabButton = document.getElementById("dom-tree-button");
 selectTopTab(initialTopTabButton, "dom-tree");
 
-let initialBottomTabButton = document.getElementById("computed-style-button");
-selectBottomTab(initialBottomTabButton, "computed-style");
+let initialBottomTabButton = document.getElementById("console-button");
+selectBottomTab(initialBottomTabButton, "console");
 
 const scrollToElement = element => {
     // Include an offset to prevent the element being placed behind the fixed `tab-controls` header.
@@ -131,6 +137,140 @@ const inspectDOMNode = domNode => {
     inspector.inspectDOMNode(domNode.dataset.id, domNode.dataset.pseudoElement);
 };
 
+const executeConsoleScript = consoleInput => {
+    const script = consoleInput.value;
+
+    if (!/\S/.test(script)) {
+        return;
+    }
+
+    if (consoleHistory.length === 0 || consoleHistory[consoleHistory.length - 1] !== script) {
+        consoleHistory.push(script);
+    }
+
+    consoleHistoryIndex = consoleHistory.length;
+
+    inspector.executeConsoleScript(script);
+    consoleInput.value = "";
+};
+
+const setConsoleInputToPreviousHistoryItem = consoleInput => {
+    if (consoleHistoryIndex === 0) {
+        return;
+    }
+
+    --consoleHistoryIndex;
+
+    const script = consoleHistory[consoleHistoryIndex];
+    consoleInput.value = script;
+};
+
+const setConsoleInputToNextHistoryItem = consoleInput => {
+    if (consoleHistory.length === 0) {
+        return;
+    }
+
+    const lastIndex = consoleHistory.length - 1;
+
+    if (consoleHistoryIndex < lastIndex) {
+        ++consoleHistoryIndex;
+
+        consoleInput.value = consoleHistory[consoleHistoryIndex];
+        return;
+    }
+
+    if (consoleHistoryIndex === lastIndex) {
+        ++consoleHistoryIndex;
+
+        consoleInput.value = "";
+        return;
+    }
+};
+
+const consoleParentGroup = () => {
+    if (consoleGroupStack.length === 0) {
+        return document.getElementById("console-output");
+    }
+
+    const lastConsoleGroup = consoleGroupStack[consoleGroupStack.length - 1];
+    return document.getElementById(`console-group-${lastConsoleGroup.id}`);
+};
+
+const scrollConsoleToBottom = () => {
+    let consoleOutput = document.getElementById("console-output");
+
+    // FIXME: It should be sufficient to scrollTo a y value of document.documentElement.offsetHeight,
+    //        but due to an unknown bug offsetHeight seems to not be properly updated after spamming
+    //        a lot of document changes.
+    //
+    // The setTimeout makes the scrollTo async and allows the DOM to be updated.
+    setTimeout(function () {
+        consoleOutput.scrollTo(0, 1_000_000_000);
+    }, 0);
+};
+
+inspector.appendConsoleOutput = output => {
+    let parent = consoleParentGroup();
+
+    let element = document.createElement("p");
+    element.innerHTML = atob(output);
+
+    parent.appendChild(element);
+    scrollConsoleToBottom();
+};
+
+inspector.clearConsoleOutput = () => {
+    let consoleOutput = document.getElementById("console-output");
+    consoleOutput.innerHTML = "";
+
+    consoleGroupStack = [];
+};
+
+inspector.beginConsoleGroup = (label, startExpanded) => {
+    let parent = consoleParentGroup();
+
+    const group = {
+        id: ++consoleGroupNextID,
+        label: label,
+    };
+    consoleGroupStack.push(group);
+
+    let details = document.createElement("details");
+    details.id = `console-group-${group.id}`;
+    details.open = startExpanded;
+
+    let summary = document.createElement("summary");
+    summary.innerHTML = atob(label);
+
+    details.appendChild(summary);
+    parent.appendChild(details);
+    scrollConsoleToBottom();
+};
+
+inspector.endConsoleGroup = () => {
+    consoleGroupStack.pop();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
+    let consoleInput = document.getElementById("console-input");
+    consoleInput.focus();
+
+    consoleInput.addEventListener("keydown", event => {
+        const UP_ARROW_KEYCODE = 38;
+        const DOWN_ARROW_KEYCODE = 40;
+        const RETURN_KEYCODE = 13;
+
+        if (event.keyCode === UP_ARROW_KEYCODE) {
+            setConsoleInputToPreviousHistoryItem(consoleInput);
+            event.preventDefault();
+        } else if (event.keyCode === DOWN_ARROW_KEYCODE) {
+            setConsoleInputToNextHistoryItem(consoleInput);
+            event.preventDefault();
+        } else if (event.keyCode === RETURN_KEYCODE) {
+            executeConsoleScript(consoleInput);
+            event.preventDefault();
+        }
+    });
+
     inspector.inspectorLoaded();
 });
