@@ -37,4 +37,27 @@ unsigned RAMFS::next_inode_index()
     return m_next_inode_index++;
 }
 
+u8 RAMFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
+{
+    switch (static_cast<FileType>(entry.file_type)) {
+    case FileType::Directory:
+        return DT_DIR;
+    case FileType::Character:
+        return DT_CHR;
+    case FileType::Block:
+        return DT_BLK;
+    case FileType::Regular:
+        return DT_REG;
+    case FileType::FIFO:
+        return DT_FIFO;
+    case FileType::Link:
+        return DT_LNK;
+    case FileType::Socket:
+        return DT_SOCK;
+    case FileType::Unknown:
+    default:
+        return DT_UNKNOWN;
+    }
+}
+
 }
