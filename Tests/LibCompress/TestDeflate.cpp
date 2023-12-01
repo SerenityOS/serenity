@@ -11,7 +11,14 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCompress/Deflate.h>
+#include <LibCore/File.h>
 #include <cstring>
+
+#ifdef AK_OS_SERENITY
+#    define TEST_INPUT(x) ("/usr/Tests/LibCompress/deflate-test-files/" x)
+#else
+#    define TEST_INPUT(x) ("deflate-test-files/" x)
+#endif
 
 TEST_CASE(canonical_code_simple)
 {
@@ -154,4 +161,14 @@ TEST_CASE(deflate_compress_literals)
     // This byte array is known to not produce any back references with our lz77 implementation even at the highest compression settings
     Array<u8, 0x13> test { 0, 0, 0, 0, 0x72, 0, 0, 0xee, 0, 0, 0, 0x26, 0, 0, 0, 0x28, 0, 0, 0x72 };
     auto compressed = TRY_OR_FAIL(Compress::DeflateCompressor::compress_all(test, Compress::DeflateCompressor::CompressionLevel::GOOD));
+}
+
+TEST_CASE(ossfuzz_63183)
+{
+    auto path = TEST_INPUT("clusterfuzz-testcase-minimized-FuzzDeflateCompression-6163230961303552.fuzz"sv);
+    auto test_file = MUST(Core::File::open(path, Core::File::OpenMode::Read));
+    auto test_data = MUST(test_file->read_until_eof());
+    auto compressed = TRY_OR_FAIL(Compress::DeflateCompressor::compress_all(test_data, Compress::DeflateCompressor::CompressionLevel::GOOD));
+    auto decompressed = TRY_OR_FAIL(Compress::DeflateDecompressor::decompress_all(compressed));
+    EXPECT(test_data == decompressed);
 }

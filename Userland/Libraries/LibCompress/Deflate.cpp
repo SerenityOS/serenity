@@ -625,7 +625,7 @@ void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, Array
     u16 heap_keys[Size]; // Used for O(n) heap construction
     u16 heap_values[Size];
 
-    u16 huffman_links[Size * 2 + 1] = { 0 };
+    u16 huffman_links[Size * 2] = { 0 };
     size_t non_zero_freqs = 0;
     for (size_t i = 0; i < Size; i++) {
         auto frequency = frequencies[i];
@@ -657,7 +657,7 @@ void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, Array
         u16 second_lowest_frequency = heap.peek_min_key();
         u16 second_lowest_link = heap.pop_min();
 
-        u16 new_link = heap.size() + 2;
+        u16 new_link = heap.size() + 1;
 
         heap.insert(lowest_frequency + second_lowest_frequency, new_link);
 
@@ -676,7 +676,7 @@ void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, Array
         non_zero_freqs++;
 
         size_t bit_length = 1;
-        while (link != 2) {
+        while (link != 1) {
             bit_length++;
             link = huffman_links[link];
         }
