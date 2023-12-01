@@ -2181,7 +2181,7 @@ void Document::evaluate_media_queries_and_report_changes()
 
         if (did_match != now_matches) {
             CSS::MediaQueryListEventInit init;
-            init.media = String::from_deprecated_string(media_query_list->media()).release_value_but_fixme_should_propagate_errors();
+            init.media = media_query_list->media();
             init.matches = now_matches;
             auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init);
             event->set_is_trusted(true);

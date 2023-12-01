@@ -43,9 +43,9 @@ void MediaQueryList::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media
-DeprecatedString MediaQueryList::media() const
+String MediaQueryList::media() const
 {
-    return serialize_a_media_query_list(m_media).to_deprecated_string();
+    return serialize_a_media_query_list(m_media);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-matches

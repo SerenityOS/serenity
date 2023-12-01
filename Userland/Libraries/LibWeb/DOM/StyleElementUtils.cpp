@@ -95,7 +95,7 @@ void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, Deprec
     sheet.set_owner_css_rule(owner_rule);
     sheet.set_owner_node(owner_node);
     sheet.set_type(MUST(String::from_deprecated_string(type)));
-    sheet.set_media(move(media));
+    sheet.set_media(MUST(String::from_deprecated_string(media)));
     sheet.set_title(MUST(String::from_deprecated_string(title)));
     sheet.set_alternate(alternate);
     sheet.set_origin_clean(origin_clean);
