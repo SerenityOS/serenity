@@ -3,4 +3,6 @@
     undefined inspectorLoaded();
     undefined inspectDOMNode(long nodeID, optional long pseudoElement);
 
+    undefined executeConsoleScript(DOMString script);
+
 };

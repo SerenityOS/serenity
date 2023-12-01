@@ -21,6 +21,8 @@ public:
     void inspector_loaded();
     void inspect_dom_node(i32 node_id, Optional<i32> const& pseudo_element);
 
+    void execute_console_script(String const& script);
+
 private:
     explicit Inspector(JS::Realm&);
 

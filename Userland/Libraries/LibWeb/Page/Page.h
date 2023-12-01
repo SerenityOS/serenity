@@ -265,6 +265,7 @@ public:
 
     virtual void inspector_did_load() { }
     virtual void inspector_did_select_dom_node([[maybe_unused]] i32 node_id, [[maybe_unused]] Optional<CSS::Selector::PseudoElement> const& pseudo_element) { }
+    virtual void inspector_did_execute_console_script([[maybe_unused]] String const& script) { }
 
 protected:
     virtual ~PageClient() = default;
