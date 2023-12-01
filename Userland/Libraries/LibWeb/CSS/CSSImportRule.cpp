@@ -65,10 +65,7 @@ String CSSImportRule::serialized() const
     builder.append("@import "sv);
 
     // 2. The result of performing serialize a URL on the rule’s location.
-    // FIXME: Look into the correctness of this serialization
-    builder.append("url("sv);
-    builder.append(m_url.to_deprecated_string());
-    builder.append(')');
+    serialize_a_url(builder, MUST(m_url.to_string()));
 
     // FIXME: 3. If the rule’s associated media list is not empty, a single SPACE (U+0020) followed by the result of performing serialize a media query list on the media list.
 
