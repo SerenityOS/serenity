@@ -1,7 +1,6 @@
 include(${SerenityOS_SOURCE_DIR}/Meta/CMake/public_suffix.cmake)
 
 set(SOURCES
-    ConsoleClient.cpp
     CookieJar.cpp
     Database.cpp
     History.cpp
