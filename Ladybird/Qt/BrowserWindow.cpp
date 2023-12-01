@@ -8,7 +8,6 @@
  */
 
 #include "BrowserWindow.h"
-#include "ConsoleWidget.h"
 #include "Icon.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
@@ -171,16 +170,6 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     QObject::connect(m_view_source_action, &QAction::triggered, this, [this] {
         if (m_current_tab) {
             m_current_tab->view().get_source();
-        }
-    });
-
-    auto* js_console_action = new QAction("Show &JS Console", this);
-    js_console_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-javascript.png"sv));
-    js_console_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_J));
-    inspect_menu->addAction(js_console_action);
-    QObject::connect(js_console_action, &QAction::triggered, this, [this] {
-        if (m_current_tab) {
-            m_current_tab->show_console_window();
         }
     });
 
@@ -658,10 +647,7 @@ void BrowserWindow::select_all()
     if (!m_current_tab)
         return;
 
-    if (auto* console = m_current_tab->console(); console && console->isActiveWindow())
-        console->view().select_all();
-    else
-        m_current_tab->view().select_all();
+    m_current_tab->view().select_all();
 }
 
 void BrowserWindow::update_displayed_zoom_level()
@@ -676,12 +662,7 @@ void BrowserWindow::copy_selected_text()
     if (!m_current_tab)
         return;
 
-    DeprecatedString text;
-
-    if (auto* console = m_current_tab->console(); console && console->isActiveWindow())
-        text = console->view().selected_text();
-    else
-        text = m_current_tab->view().selected_text();
+    auto text = m_current_tab->view().selected_text();
 
     auto* clipboard = QGuiApplication::clipboard();
     clipboard->setText(qstring_from_ak_deprecated_string(text));
