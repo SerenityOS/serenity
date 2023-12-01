@@ -16,16 +16,16 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(CSSNamespaceRule);
 
-CSSNamespaceRule::CSSNamespaceRule(JS::Realm& realm, Optional<DeprecatedString> prefix, StringView namespace_uri)
+CSSNamespaceRule::CSSNamespaceRule(JS::Realm& realm, Optional<FlyString> prefix, FlyString namespace_uri)
     : CSSRule(realm)
-    , m_namespace_uri(namespace_uri)
-    , m_prefix(prefix.value_or(""sv))
+    , m_namespace_uri(move(namespace_uri))
+    , m_prefix(prefix.value_or(""_fly_string))
 {
 }
 
-JS::NonnullGCPtr<CSSNamespaceRule> CSSNamespaceRule::create(JS::Realm& realm, Optional<DeprecatedString> prefix, AK::StringView namespace_uri)
+JS::NonnullGCPtr<CSSNamespaceRule> CSSNamespaceRule::create(JS::Realm& realm, Optional<FlyString> prefix, FlyString namespace_uri)
 {
-    return realm.heap().allocate<CSSNamespaceRule>(realm, realm, prefix, namespace_uri);
+    return realm.heap().allocate<CSSNamespaceRule>(realm, realm, move(prefix), move(namespace_uri));
 }
 
 void CSSNamespaceRule::initialize(JS::Realm& realm)

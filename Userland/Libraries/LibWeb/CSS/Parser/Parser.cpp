@@ -1358,18 +1358,18 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             token_stream.skip_whitespace();
 
             auto token = token_stream.next_token();
-            Optional<DeprecatedString> prefix = {};
+            Optional<FlyString> prefix = {};
             if (token.is(Token::Type::Ident)) {
-                prefix = token.token().ident().bytes_as_string_view();
+                prefix = token.token().ident();
                 token_stream.skip_whitespace();
                 token = token_stream.next_token();
             }
 
-            DeprecatedString namespace_uri;
+            FlyString namespace_uri;
             if (token.is(Token::Type::String)) {
-                namespace_uri = token.token().string();
+                namespace_uri = MUST(FlyString::from_utf8(token.token().string()));
             } else if (auto url = parse_url_function(token); url.has_value()) {
-                namespace_uri = url.value().to_deprecated_string();
+                namespace_uri = MUST(FlyString::from_deprecated_fly_string(url.value().to_deprecated_string()));
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @namespace rule invalid; discarding.");
                 return {};
