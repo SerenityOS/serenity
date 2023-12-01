@@ -19,7 +19,6 @@ moc_qt_objects("generate_moc") {
   sources = [
     "Qt/AutoComplete.h",
     "Qt/BrowserWindow.h",
-    "Qt/ConsoleWidget.h",
     "Qt/EventLoopImplementationQtEventTarget.h",
     "Qt/InspectorWidget.h",
     "Qt/LocationEdit.h",
@@ -89,7 +88,6 @@ executable("ladybird_executable") {
     sources += [
       "Qt/AutoComplete.cpp",
       "Qt/BrowserWindow.cpp",
-      "Qt/ConsoleWidget.cpp",
       "Qt/EventLoopImplementationQt.cpp",
       "Qt/EventLoopImplementationQtEventTarget.cpp",
       "Qt/Icon.cpp",

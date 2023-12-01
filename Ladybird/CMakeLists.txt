@@ -115,7 +115,6 @@ if (ENABLE_QT)
     target_sources(ladybird PRIVATE
         Qt/AutoComplete.cpp
         Qt/BrowserWindow.cpp
-        Qt/ConsoleWidget.cpp
         Qt/EventLoopImplementationQt.cpp
         Qt/EventLoopImplementationQtEventTarget.cpp
         Qt/Icon.cpp

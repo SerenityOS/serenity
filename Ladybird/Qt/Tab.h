@@ -22,7 +22,6 @@
 namespace Ladybird {
 
 class BrowserWindow;
-class ConsoleWidget;
 class InspectorWidget;
 
 class Tab final : public QWidget {
@@ -51,9 +50,6 @@ public:
         HoveredElement
     };
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
-    void show_console_window();
-
-    Ladybird::ConsoleWidget* console() { return m_console_widget; }
 
 public slots:
     void focus_location_editor();
@@ -113,8 +109,6 @@ private:
 
     bool m_is_history_navigation { false };
 
-    Ladybird::ConsoleWidget* m_console_widget { nullptr };
-    OwnPtr<QMenu> m_console_context_menu;
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 
     QPointer<QDialog> m_dialog;

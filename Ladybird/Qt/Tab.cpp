@@ -6,7 +6,6 @@
  */
 
 #include "BrowserWindow.h"
-#include "ConsoleWidget.h"
 #include "Icon.h"
 #include "InspectorWidget.h"
 #include "Settings.h"
@@ -139,9 +138,6 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
         if (m_inspector_widget)
             m_inspector_widget->reset();
-
-        if (m_console_widget)
-            m_console_widget->reset();
     };
 
     view().on_load_finish = [this](auto&) {
@@ -706,31 +702,6 @@ void Tab::show_inspector_window(InspectorTarget inspector_target)
         m_inspector_widget->select_default_node();
 }
 
-void Tab::show_console_window()
-{
-    if (!m_console_widget) {
-        m_console_widget = new Ladybird::ConsoleWidget(view());
-        m_console_widget->setWindowTitle("JS Console");
-        m_console_widget->resize(640, 480);
-
-        // Make these actions available on the window itself. Adding them to the context menu alone
-        // does not enable activattion via keyboard shortcuts.
-        m_console_widget->addAction(&m_window->copy_selection_action());
-        m_console_widget->addAction(&m_window->select_all_action());
-
-        m_console_context_menu = make<QMenu>("Context menu", m_console_widget);
-        m_console_context_menu->addAction(&m_window->copy_selection_action());
-        m_console_context_menu->addAction(&m_window->select_all_action());
-
-        m_console_widget->view().on_context_menu_request = [this](Gfx::IntPoint) {
-            auto screen_position = QCursor::pos();
-            m_console_context_menu->exec(screen_position);
-        };
-    }
-
-    m_console_widget->show();
-}
-
 void Tab::close_sub_widgets()
 {
     auto close_widget_window = [](auto* widget) {
@@ -738,7 +709,6 @@ void Tab::close_sub_widgets()
             widget->close();
     };
 
-    close_widget_window(m_console_widget);
     close_widget_window(m_inspector_widget);
 }
 
