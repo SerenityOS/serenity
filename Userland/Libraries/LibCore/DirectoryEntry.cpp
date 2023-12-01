@@ -11,7 +11,7 @@ namespace Core {
 
 static DirectoryEntry::Type directory_entry_type_from_stat(mode_t st_mode)
 {
-    switch (st_mode) {
+    switch (st_mode & S_IFMT) {
     case S_IFIFO:
         return DirectoryEntry::Type::NamedPipe;
     case S_IFCHR:
