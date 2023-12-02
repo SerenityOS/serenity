@@ -153,7 +153,7 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
     auto chunky = TRY(ByteBuffer::create_zeroed(static_cast<size_t>(width) * height));
 
     for (u16 y = 0; y < height; y++) {
-        size_t scanline = y * width;
+        size_t scanline = static_cast<size_t>(y) * width;
         for (u8 p = 0; p < planes; p++) {
             u8 const plane_mask = 1 << p;
             size_t offset_base = (pitch * planes * y) + (p * pitch);
