@@ -8,5 +8,5 @@ interface ReadableByteStreamController {
 
     undefined close();
     undefined error(optional any e);
-    // FIXME: undefined enqueue(ArrayBufferView chunk);
+    undefined enqueue(ArrayBufferView chunk);
 };

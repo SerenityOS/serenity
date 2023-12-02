@@ -11,6 +11,7 @@
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBRequest.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::Streams {
 
@@ -65,6 +66,26 @@ void ReadableByteStreamController::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableByteStreamControllerPrototype>(realm, "ReadableByteStreamController"_fly_string));
+}
+
+// https://streams.spec.whatwg.org/#rbs-controller-enqueue
+WebIDL::ExceptionOr<void> ReadableByteStreamController::enqueue(JS::Handle<WebIDL::ArrayBufferView>& chunk)
+{
+    // 1. If chunk.[[ByteLength]] is 0, throw a TypeError exception.
+    // 2. If chunk.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is 0, throw a TypeError exception.
+    if (chunk->byte_length() == 0 || chunk->viewed_array_buffer()->byte_length() == 0)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot enqueue chunk with byte length of zero"sv };
+
+    // 3. If this.[[closeRequested]] is true, throw a TypeError exception.
+    if (m_close_requested)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Close is requested for controller"sv };
+
+    // 4. If this.[[stream]].[[state]] is not "readable", throw a TypeError exception.
+    if (!m_stream->is_readable())
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Stream is not readable"sv };
+
+    // 5. Return ? ReadableByteStreamControllerEnqueue(this, chunk).
+    return readable_byte_stream_controller_enqueue(*this, chunk->raw_object());
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-cancel
