@@ -231,7 +231,7 @@ DrawGlyphOrEmoji prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIter
     // If we didn't find a text glyph, or have an emoji variation selector or regional indicator, try to draw an emoji glyph.
     if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it)) {
         return DrawEmoji {
-            .position = point.to_type<int>(),
+            .position = point,
             .emoji = emoji,
             .font = &font,
         };
@@ -253,17 +253,6 @@ DrawGlyphOrEmoji prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIter
         .code_point = 0xFFFD,
         .font = &font,
     };
-}
-
-Vector<DrawGlyphOrEmoji> get_glyph_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, IncludeLeftBearing include_left_bearing)
-{
-    Vector<DrawGlyphOrEmoji> glyphs_or_emojis;
-    for_each_glyph_position(
-        baseline_start, string, font, [&](auto glyph_or_emoji) {
-            glyphs_or_emojis.append(glyph_or_emoji);
-        },
-        include_left_bearing);
-    return glyphs_or_emojis;
 }
 
 }

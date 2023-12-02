@@ -187,12 +187,19 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next_without_lookahead(
             };
         }
 
-        CSSPixels chunk_width;
+        Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
+        float glyph_run_width = 0;
+        Gfx::for_each_glyph_position(
+            { 0, 0 }, chunk.view, text_node.font(), [&](Gfx::DrawGlyphOrEmoji const& glyph_or_emoji) {
+                glyph_run.append(glyph_or_emoji);
+                return IterationDecision::Continue;
+            },
+            Gfx::IncludeLeftBearing::No, glyph_run_width);
 
-        if (m_text_node_context->is_last_chunk)
-            chunk_width = CSSPixels::nearest_value_for(text_node.font().width(chunk.view));
-        else
-            chunk_width = CSSPixels::nearest_value_for(text_node.font().width(chunk.view) + text_node.font().glyph_spacing());
+        if (!m_text_node_context->is_last_chunk)
+            glyph_run_width += text_node.font().glyph_spacing();
+
+        CSSPixels chunk_width = CSSPixels::nearest_value_for(glyph_run_width);
 
         // NOTE: We never consider `content: ""` to be collapsible whitespace.
         bool is_generated_empty_string = text_node.is_generated() && chunk.length == 0;
@@ -200,6 +207,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next_without_lookahead(
         Item item {
             .type = Item::Type::Text,
             .node = &text_node,
+            .glyph_run = move(glyph_run),
             .offset_in_node = chunk.start,
             .length_in_node = chunk.length,
             .width = chunk_width,

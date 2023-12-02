@@ -1422,7 +1422,7 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, F
         draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
     } else {
         auto& emoji = draw_glyph_or_emoji.get<DrawEmoji>();
-        draw_emoji(emoji.position, *emoji.emoji, *emoji.font);
+        draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
     }
 }
 
@@ -2445,7 +2445,7 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
             draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
         } else {
             auto& emoji = glyph_or_emoji.get<DrawEmoji>();
-            draw_emoji(emoji.position, *emoji.emoji, *emoji.font);
+            draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
         }
     });
 }
