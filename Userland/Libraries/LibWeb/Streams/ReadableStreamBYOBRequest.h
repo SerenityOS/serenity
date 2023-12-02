@@ -31,6 +31,8 @@ public:
 private:
     explicit ReadableStreamBYOBRequest(JS::Realm&);
 
+    virtual void initialize(JS::Realm&) override;
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://streams.spec.whatwg.org/#readablestreambyobrequest-controller

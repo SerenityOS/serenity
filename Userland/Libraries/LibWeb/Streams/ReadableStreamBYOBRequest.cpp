@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStreamBYOBRequest.h>
 #include <LibWeb/WebIDL/Buffers.h>
@@ -23,6 +24,12 @@ JS::GCPtr<WebIDL::ArrayBufferView> ReadableStreamBYOBRequest::view()
 ReadableStreamBYOBRequest::ReadableStreamBYOBRequest(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
+}
+
+void ReadableStreamBYOBRequest::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamBYOBRequestPrototype>(realm, "ReadableStreamBYOBRequest"_fly_string));
 }
 
 void ReadableStreamBYOBRequest::visit_edges(Cell::Visitor& visitor)

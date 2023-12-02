@@ -130,6 +130,8 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual void initialize(JS::Realm&) override;
+
     // https://streams.spec.whatwg.org/#readablebytestreamcontroller-autoallocatechunksize
     // A positive integer, when the automatic buffer allocation feature is enabled. In that case, this value specifies the size of buffer to allocate. It is undefined otherwise.
     Optional<u64> m_auto_allocate_chunk_size;
