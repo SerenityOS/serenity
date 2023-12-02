@@ -14,6 +14,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
+#include <LibGfx/ICC/Enums.h>
 #include <LibGfx/Vector3.h>
 #include <math.h>
 

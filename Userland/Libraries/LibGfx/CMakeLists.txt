@@ -28,6 +28,7 @@ set(SOURCES
     Font/WOFF2/Font.cpp
     GradientPainting.cpp
     ICC/BinaryWriter.cpp
+    ICC/Enums.cpp
     ICC/Profile.cpp
     ICC/Tags.cpp
     ICC/TagTypes.cpp
