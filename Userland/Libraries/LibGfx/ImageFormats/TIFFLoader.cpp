@@ -119,7 +119,23 @@ private:
             u32 read_head {};
 
             auto initializer = [&](u32 bytes) -> ErrorOr<void> {
-                decoded_bytes = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(TRY(m_stream->read_in_place<u8 const>(bytes)), 8, -1));
+                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(bytes));
+
+                if (encoded_bytes.is_empty())
+                    return Error::from_string_literal("TIFFImageDecoderPlugin: Unable to read from empty LZW strip");
+
+                // Note: AFAIK, there are two common ways to use LZW compression:
+                //          - With a LittleEndian stream and no Early-Change, this is used in the GIF format
+                //          - With a BigEndian stream and an EarlyChange of 1, this is used in the PDF format
+                //       The fun begins when they decided to change from the former to the latter when moving
+                //       from TIFF 5.0 to 6.0, and without including a way for files to be identified.
+                //       Fortunately, as the first byte of a LZW stream is a constant we can guess the endianess
+                //       and deduce the version from it. The first code is 0x100 (9-bits).
+                if (encoded_bytes[0] == 0x00)
+                    decoded_bytes = TRY(Compress::LZWDecoder<LittleEndianInputBitStream>::decode_all(encoded_bytes, 8, 0));
+                else
+                    decoded_bytes = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(encoded_bytes, 8, -1));
+
                 read_head = 0;
                 return {};
             };
