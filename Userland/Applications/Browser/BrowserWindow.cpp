@@ -238,7 +238,7 @@ void BrowserWindow::build_menus()
     m_view_source_action->set_status_tip("View source code of the current page"_string);
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
+        "Inspect &DOM Tree", { Mod_Ctrl | Mod_Shift, Key_I }, { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
