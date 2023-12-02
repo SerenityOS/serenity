@@ -104,6 +104,8 @@ def tiff_type_to_cpp(t: TIFFType, without_promotion: bool = False) -> str:
     # Note that the Value<> type doesn't include u16 for this reason
     if not without_promotion:
         t = promote_type(t)
+    if t in [TIFFType.ASCII, TIFFType.UTF8]:
+        return 'String'
     if t == TIFFType.Undefined:
         return 'ByteBuffer'
     if t == TIFFType.UnsignedShort:
@@ -119,7 +121,7 @@ def is_container(t: TIFFType) -> bool:
         An example of that are ASCII strings defined as N * byte. Let's intercept that and generate
         a nice API instead of Vector<u8>.
     """
-    return t in [TIFFType.Byte, TIFFType.Undefined]
+    return t in [TIFFType.ASCII, TIFFType.Byte, TIFFType.Undefined, TIFFType.UTF8]
 
 
 def export_promoter() -> str:
