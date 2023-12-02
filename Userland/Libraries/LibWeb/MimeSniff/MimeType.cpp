@@ -19,6 +19,7 @@ namespace Web::MimeSniff {
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
 bool is_javascript_mime_type_essence_match(StringView string)
 {
+    // A string is a JavaScript MIME type essence match if it is an ASCII case-insensitive match for one of the JavaScript MIME type essence strings.
     // NOTE: The mime type parser automatically lowercases the essence.
     auto type = MimeType::parse(string).release_value_but_fixme_should_propagate_errors();
     if (!type.has_value())
@@ -298,12 +299,14 @@ bool MimeType::is_archive() const
 // https://mimesniff.spec.whatwg.org/#xml-mime-type
 bool MimeType::is_xml() const
 {
+    // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
     return m_subtype.ends_with_bytes("+xml"sv) || essence().is_one_of("text/xml"sv, "application/xml"sv);
 }
 
 // https://mimesniff.spec.whatwg.org/#html-mime-type
 bool MimeType::is_html() const
 {
+    // An HTML MIME type is any MIME type whose essence is "text/html".
     return essence().is_one_of("text/html"sv);
 }
 
@@ -317,6 +320,23 @@ bool MimeType::is_scriptable() const
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type
 bool MimeType::is_javascript() const
 {
+    // A JavaScript MIME type is any MIME type whose essence is one of the following:
+    //    - application/ecmascript
+    //    - application/javascript
+    //    - application/x-ecmascript
+    //    - application/x-javascript
+    //    - text/ecmascript
+    //    - text/javascript
+    //    - text/javascript1.0
+    //    - text/javascript1.1
+    //    - text/javascript1.2
+    //    - text/javascript1.3
+    //    - text/javascript1.4
+    //    - text/javascript1.5
+    //    - text/jscript
+    //    - text/livescript
+    //    - text/x-ecmascript
+    //    - text/x-javascript
     return essence().is_one_of(
         "application/ecmascript"sv,
         "application/javascript"sv,
