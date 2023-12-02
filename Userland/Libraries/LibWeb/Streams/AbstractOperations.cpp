@@ -676,36 +676,20 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController& con
 
     // 4. If view has a [[TypedArrayName]] internal slot (i.e., it is not a DataView),
     if (view.bufferable_object().has<JS::NonnullGCPtr<JS::TypedArrayBase>>()) {
-        auto const& typed_array = view.bufferable_object().get<JS::NonnullGCPtr<JS::TypedArrayBase>>();
+        auto const& typed_array = *view.bufferable_object().get<JS::NonnullGCPtr<JS::TypedArrayBase>>();
 
         // 1. Set elementSize to the element size specified in the typed array constructors table for view.[[TypedArrayName]].
-        element_size = typed_array->element_size();
+        element_size = typed_array.element_size();
 
         // 2. Set ctor to the constructor specified in the typed array constructors table for view.[[TypedArrayName]].
-        if (is<JS::Int16Array>(*typed_array))
-            ctor = realm.intrinsics().int16_array_constructor();
-        else if (is<JS::Int32Array>(*typed_array))
-            ctor = realm.intrinsics().int32_array_constructor();
-        else if (is<JS::Int8Array>(*typed_array))
-            ctor = realm.intrinsics().int8_array_constructor();
-        else if (is<JS::Uint8Array>(*typed_array))
-            ctor = realm.intrinsics().uint8_array_constructor();
-        else if (is<JS::Uint16Array>(*typed_array))
-            ctor = realm.intrinsics().uint16_array_constructor();
-        else if (is<JS::Uint32Array>(*typed_array))
-            ctor = realm.intrinsics().uint32_array_constructor();
-        else if (is<JS::Uint8ClampedArray>(*typed_array))
-            ctor = realm.intrinsics().uint8_clamped_array_constructor();
-        else if (is<JS::BigInt64Array>(*typed_array))
-            ctor = realm.intrinsics().big_int64_array_constructor();
-        else if (is<JS::BigUint64Array>(*typed_array))
-            ctor = realm.intrinsics().big_uint64_array_constructor();
-        else if (is<JS::Float32Array>(*typed_array))
-            ctor = realm.intrinsics().float32_array_constructor();
-        else if (is<JS::Float64Array>(*typed_array))
-            ctor = realm.intrinsics().float64_array_constructor();
-        else
-            VERIFY_NOT_REACHED();
+        switch (typed_array.kind()) {
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    case JS::TypedArrayBase::Kind::ClassName:                                       \
+        ctor = realm.intrinsics().snake_name##_constructor();                       \
+        break;
+            JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+        }
     }
 
     // 5. Let byteOffset be view.[[ByteOffset]].
