@@ -214,7 +214,7 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
     }
 
     auto vm = MUST(JS::VM::create());
-    vm->enable_default_host_import_module_dynamically_hook();
+    vm->set_dynamic_imports_allowed(true);
 
     JS::GCPtr<JS::Realm> realm;
     JS::GCPtr<JS::Test262::GlobalObject> global_object;

@@ -1590,7 +1590,7 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
     ModuleRequest request { specifier_string, attributes };
 
     // 13. Perform HostLoadImportedModule(referrer, moduleRequest, empty, promiseCapability).
-    MUST_OR_THROW_OOM(vm.host_import_module_dynamically(referrer, move(request), promise_capability));
+    vm.host_load_imported_module(referrer, move(request), nullptr, promise_capability);
 
     // 13. Return promiseCapability.[[Promise]].
     return Value { promise_capability->promise() };
