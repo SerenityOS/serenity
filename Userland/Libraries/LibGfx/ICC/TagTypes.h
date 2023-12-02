@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/FixedPoint.h>
+#include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
@@ -17,6 +18,39 @@
 #include <math.h>
 
 namespace Gfx::ICC {
+
+// Does multi-dimensional linear interpolation over a lookup table.
+// `size(i)` should returns the number of samples in the i'th dimension.
+// `sample()` gets a vector where 0 <= i'th coordinate < size(i) and should return the value of the look-up table at that position.
+inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVector3(Vector<unsigned> const&)> sample, Vector<float> const& x)
+{
+    Vector<unsigned, 4> left_index;
+    Vector<float, 4> factor;
+    for (size_t i = 0; i < x.size(); ++i) {
+        unsigned n = size(i) - 1;
+        float ec = x[i] * n;
+        left_index.append(min(static_cast<unsigned>(ec), n - 1));
+        factor.append(ec - left_index[i]);
+    }
+
+    Vector<FloatVector3> samples;
+    samples.resize(1u << x.size());
+    // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
+    Vector<unsigned> coordinates;
+    coordinates.resize(x.size());
+    for (size_t mask = 0; mask < (1u << x.size()); ++mask) {
+        for (size_t i = 0; i < x.size(); ++i)
+            coordinates[i] = left_index[i] + ((mask >> i) & 1u);
+        samples[mask] = sample(coordinates);
+    }
+
+    for (int i = static_cast<int>(x.size() - 1); i >= 0; --i) {
+        for (size_t mask = 0; mask < (1u << i); ++mask)
+            samples[mask] = mix(samples[mask], samples[mask | (1u << i)], factor[i]);
+    }
+
+    return samples[0];
+}
 
 using S15Fixed16 = FixedPoint<16, i32>;
 using U16Fixed16 = FixedPoint<16, u32>;
@@ -1004,13 +1038,36 @@ inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ReadonlyBytes color_u8) co
         return static_cast<ParametricCurveTagData const&>(*curve).evaluate(f);
     };
 
+    FloatVector3 color;
+
     VERIFY(m_a_curves.has_value() == m_clut.has_value());
     if (m_a_curves.has_value()) {
-        // FIXME
-        return Error::from_string_literal("mAB evaluation not yet implemented for A curve and CLUT");
-    }
+        Vector<float, 4> in_color;
 
-    FloatVector3 color { color_u8[0] / 255.f, color_u8[1] / 255.f, color_u8[2] / 255.f };
+        auto const& a_curves = m_a_curves.value();
+        for (u8 c = 0; c < color_u8.size(); ++c)
+            in_color.append(evaluate_curve(a_curves[c], color_u8[c] / 255.0f));
+
+        auto const& clut = m_clut.value();
+        auto sample1 = [&clut]<typename T>(Vector<T> const& data, Vector<unsigned> const& coordinates) {
+            size_t stride = 3;
+            size_t offset = 0;
+            for (int i = coordinates.size() - 1; i >= 0; --i) {
+                offset += coordinates[i] * stride;
+                stride *= clut.number_of_grid_points_in_dimension[i];
+            }
+            return FloatVector3 { (float)data[offset], (float)data[offset + 1], (float)data[offset + 2] };
+        };
+        auto sample = [&clut, &sample1](Vector<unsigned> const& coordinates) {
+            return clut.values.visit(
+                [&](Vector<u8> const& v) { return sample1(v, coordinates) / 255.0f; },
+                [&](Vector<u16> const& v) { return sample1(v, coordinates) / 65535.0f; });
+        };
+        auto size = [&clut](size_t i) { return clut.number_of_grid_points_in_dimension[i]; };
+        color = lerp_nd(move(size), move(sample), in_color);
+    } else {
+        color = FloatVector3 { color_u8[0] / 255.f, color_u8[1] / 255.f, color_u8[2] / 255.f };
+    }
 
     VERIFY(m_m_curves.has_value() == m_e.has_value());
     if (m_m_curves.has_value()) {
