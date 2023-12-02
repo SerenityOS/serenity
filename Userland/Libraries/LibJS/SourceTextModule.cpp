@@ -18,35 +18,32 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(SourceTextModule);
 
-// 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
-static Vector<ModuleRequest::Assertion> assert_clause_to_assertions(Vector<ModuleRequest::Assertion> const& source_assertions, Vector<DeprecatedString> const& supported_import_assertions)
+// 16.2.2.2 Static Semantics: WithClauseToAttributes, https://tc39.es/proposal-import-attributes/#sec-with-clause-to-attributes
+static Vector<ImportAttribute> with_clause_to_assertions(Vector<ImportAttribute> const& source_attributes)
 {
-    // AssertClause : assert { AssertEntries ,opt }
-    // 1. Let assertions be AssertClauseToAssertions of AssertEntries.
-    Vector<ModuleRequest::Assertion> assertions;
+    // WithClause : AttributesKeyword { WithEntries , opt }
+    // 1. Let attributes be WithClauseToAttributes of WithEntries.
+    Vector<ImportAttribute> attributes;
 
     // AssertEntries : AssertionKey : StringLiteral
-    // AssertEntries : AssertionKey : StringLiteral , AssertEntries
-    // 1. Let supportedAssertions be !HostGetSupportedImportAssertions().
+    // AssertEntries : AssertionKey : StringLiteral , WithEntries
 
-    for (auto& assertion : source_assertions) {
-        // 2. Let key be StringValue of AssertionKey.
-        // 3. If supportedAssertions contains key,
-        if (supported_import_assertions.contains_slow(assertion.key)) {
-            // a. Let entry be a Record { [[Key]]: key, [[Value]]: StringValue of StringLiteral }.
-            assertions.empend(assertion);
-        }
+    for (auto const& attribute : source_attributes) {
+        // 1. Let key be the PropName of AttributeKey.
+        // 2. Let entry be the ImportAttribute Record { [[Key]]: key, [[Value]]: SV of StringLiteral }.
+        // 3. Return « entry ».
+        attributes.empend(attribute);
     }
 
-    // 2. Sort assertions by the code point order of the [[Key]] of each element. NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
+    // 2. Sort attributes according to the lexicographic order of their [[Key]] fields, treating the value of each such field as a sequence of UTF-16 code unit values. NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among attributes by the order they occur in.
     // Note: The sorting is done in construction of the ModuleRequest object.
 
-    // 3. Return assertions.
-    return assertions;
+    // 3. Return attributes.
+    return attributes;
 }
 
 // 16.2.1.3 Static Semantics: ModuleRequests, https://tc39.es/ecma262/#sec-static-semantics-modulerequests
-static Vector<ModuleRequest> module_requests(Program& program, Vector<DeprecatedString> const& supported_import_assertions)
+static Vector<ModuleRequest> module_requests(Program& program)
 {
     // A List of all the ModuleSpecifier strings used by the module represented by this record to request the importation of a module.
     // Note: The List is source text occurrence ordered!
@@ -68,7 +65,7 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<Deprecated
         }
     }
 
-    // Note: The List is source code occurrence ordered. https://tc39.es/proposal-import-assertions/#table-cyclic-module-fields
+    // Note: The List is source code occurrence ordered. https://tc39.es/proposal-import-attributes/#table-cyclic-module-fields
     quick_sort(requested_modules_with_indices, [&](RequestedModuleAndSourceIndex const& lhs, RequestedModuleAndSourceIndex const& rhs) {
         return lhs.source_offset < rhs.source_offset;
     });
@@ -76,26 +73,26 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<Deprecated
     Vector<ModuleRequest> requested_modules_in_source_order;
     requested_modules_in_source_order.ensure_capacity(requested_modules_with_indices.size());
     for (auto& module : requested_modules_with_indices) {
-        // 2.10 Static Semantics: ModuleRequests https://tc39.es/proposal-import-assertions/#sec-static-semantics-modulerequests
-        if (module.module_request->assertions.is_empty()) {
+        // 16.2.1.3 Static Semantics: ModuleRequests, https://tc39.es/proposal-import-attributes/#sec-static-semantics-modulerequests
+        if (module.module_request->attributes.is_empty()) {
             //  ExportDeclaration : export ExportFromClause FromClause ;
             //  ImportDeclaration : import ImportClause FromClause ;
 
-            // 1. Let specifier be StringValue of the StringLiteral contained in FromClause.
-            // 2. Return a ModuleRequest Record { [[Specifer]]: specifier, [[Assertions]]: an empty List }.
+            // 2. Let specifier be SV of FromClause.
+            // 3. Return a List whose sole element is the ModuleRequest Record { [[Specifer]]: specifier, [[Attributes]]: « » }.
             requested_modules_in_source_order.empend(module.module_request->module_specifier);
         } else {
-            //  ExportDeclaration : export ExportFromClause FromClause AssertClause ;
-            //  ImportDeclaration : import ImportClause FromClause AssertClause ;
+            //  ExportDeclaration : export ExportFromClause FromClause WithClause ;
+            //  ImportDeclaration : import ImportClause FromClause WithClause ;
 
-            // 1. Let specifier be StringValue of the StringLiteral contained in FromClause.
-            // 2. Let assertions be AssertClauseToAssertions of AssertClause.
-            auto assertions = assert_clause_to_assertions(module.module_request->assertions, supported_import_assertions);
-            // Note: We have to modify the assertions in place because else it might keep non supported ones
-            const_cast<ModuleRequest*>(module.module_request)->assertions = move(assertions);
+            // 1. Let specifier be the SV of FromClause.
+            // 2. Let attributes be WithClauseToAttributes of WithClause.
+            auto attributes = with_clause_to_assertions(module.module_request->attributes);
+            // NOTE: We have to modify the attributes in place because else it might keep unsupported ones.
+            const_cast<ModuleRequest*>(module.module_request)->attributes = move(attributes);
 
-            // 3. Return a ModuleRequest Record { [[Specifer]]: specifier, [[Assertions]]: assertions }.
-            requested_modules_in_source_order.empend(module.module_request->module_specifier, module.module_request->assertions);
+            // 3. Return a List whose sole element is the ModuleRequest Record { [[Specifer]]: specifier, [[Attributes]]: attributes }.
+            requested_modules_in_source_order.empend(module.module_request->module_specifier, module.module_request->attributes);
         }
     }
 
@@ -134,12 +131,8 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
     if (parser.has_errors())
         return parser.errors();
 
-    // Needed for 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
-    // 1. Let supportedAssertions be !HostGetSupportedImportAssertions().
-    auto supported_assertions = realm.vm().host_get_supported_import_assertions();
-
     // 3. Let requestedModules be the ModuleRequests of body.
-    auto requested_modules = module_requests(*body, supported_assertions);
+    auto requested_modules = module_requests(*body);
 
     // 4. Let importEntries be ImportEntries of body.
     Vector<ImportEntry> import_entries;

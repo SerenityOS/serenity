@@ -1230,7 +1230,7 @@ NonnullRefPtr<ImportCall const> Parser::parse_import_call()
     //  ImportCall[Yield, Await]:
     //      import(AssignmentExpression[+In, ?Yield, ?Await] ,opt)
     //      import(AssignmentExpression[+In, ?Yield, ?Await] ,AssignmentExpression[+In, ?Yield, ?Await] ,opt)
-    // From https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
+    // From https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call
 
     consume(TokenType::Import);
     consume(TokenType::ParenOpen);
@@ -4468,8 +4468,10 @@ void Parser::check_identifier_name_for_assignment_validity(DeprecatedFlyString c
     }
 }
 
-bool Parser::match_assert_clause() const
+bool Parser::match_with_clause() const
 {
+    if (m_state.current_token.original_value() == "with"sv)
+        return true;
     return !m_state.current_token.trivia_contains_line_terminator() && m_state.current_token.original_value() == "assert"sv;
 }
 
@@ -4495,7 +4497,7 @@ DeprecatedFlyString Parser::consume_string_value()
     return value;
 }
 
-// AssertClause, https://tc39.es/proposal-import-assertions/#prod-AssertClause
+// WithClause, https://tc39.es/proposal-import-attributes/#prod-WithClause
 ModuleRequest Parser::parse_module_request()
 {
     // Does not include the 'from' since that is not always required.
@@ -4507,10 +4509,10 @@ ModuleRequest Parser::parse_module_request()
 
     ModuleRequest request { consume_string_value() };
 
-    if (!match_assert_clause())
+    if (!match_with_clause())
         return request;
 
-    VERIFY(m_state.current_token.original_value() == "assert"sv);
+    VERIFY(m_state.current_token.original_value().is_one_of("with"sv, "assert"sv));
     consume(TokenType::Identifier);
     consume(TokenType::CurlyOpen);
 
@@ -4522,18 +4524,18 @@ ModuleRequest Parser::parse_module_request()
         } else if (match_identifier_name()) {
             key = consume().value();
         } else {
-            expected("IdentifierName or StringValue as AssertionKey");
+            expected("IdentifierName or StringValue as WithKey");
             consume();
         }
 
         consume(TokenType::Colon);
 
         if (match(TokenType::StringLiteral)) {
-            for (auto& entries : request.assertions) {
+            for (auto& entries : request.attributes) {
                 if (entries.key == key)
-                    syntax_error(DeprecatedString::formatted("Duplicate assertion clauses with name: {}", key));
+                    syntax_error(DeprecatedString::formatted("Duplicate attribute clauses with name: {}", key));
             }
-            request.add_assertion(move(key), parse_string_literal(m_state.current_token)->value().to_deprecated_string());
+            request.add_attribute(move(key), parse_string_literal(m_state.current_token)->value().to_deprecated_string());
         }
         consume(TokenType::StringLiteral);
 
@@ -4554,9 +4556,9 @@ NonnullRefPtr<ImportStatement const> Parser::parse_import_statement(Program& pro
 {
     // We use the extended syntax which adds:
     //  ImportDeclaration:
-    //      import ImportClause FromClause [no LineTerminator here] AssertClause;
-    //      import ModuleSpecifier [no LineTerminator here] AssertClause;
-    // From:  https://tc39.es/proposal-import-assertions/#prod-ImportDeclaration
+    //      import ImportClause FromClause [no LineTerminator here] WithClause;
+    //      import ModuleSpecifier [no LineTerminator here] WithClause;
+    // From:  https://tc39.es/proposal-import-attributes/#prod-ImportDeclaration
 
     auto rule_start = push_start();
     if (program.type() != Program::Type::Module)
@@ -4714,8 +4716,8 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
 {
     // We use the extended syntax which adds:
     //  ExportDeclaration:
-    //      export ExportFromClause FromClause [no LineTerminator here] AssertClause ;
-    // From:  https://tc39.es/proposal-import-assertions/#prod-ExportDeclaration
+    //      export ExportFromClause FromClause [no LineTerminator here] WithClause ;
+    // From:  https://tc39.es/proposal-import-attributes/#sec-exports
 
     auto rule_start = push_start();
     if (program.type() != Program::Type::Module)
