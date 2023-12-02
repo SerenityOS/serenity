@@ -3,6 +3,7 @@
 interface ReadableStreamBYOBRequest {
     readonly attribute ArrayBufferView? view;
 
-    // FIXME: undefined respond([EnforceRange] unsigned long long bytesWritten);
+    // FIXME: Should be unsigned long long
+    undefined respond([EnforceRange] unsigned long bytesWritten);
     // FIXME: undefined respondWithNewView(ArrayBufferView view);
 };
