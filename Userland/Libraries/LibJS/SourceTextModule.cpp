@@ -266,10 +266,13 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
 ThrowCompletionOr<Vector<DeprecatedFlyString>> SourceTextModule::get_exported_names(VM& vm, Vector<Module*> export_star_set)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] get_export_names of {}", filename());
-    // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
+    // 1. Assert: module.[[Status]] is not new.
+    VERIFY(m_status != ModuleStatus::New);
+
+    // 2. If exportStarSet is not present, set exportStarSet to a new empty List.
     // Note: This is done by default argument
 
-    // 2. If exportStarSet contains module, then
+    // 3. If exportStarSet contains module, then
     if (export_star_set.contains_slow(this)) {
         // a. Assert: We've reached the starting point of an export * circularity.
         // FIXME: How do we check that?
@@ -278,39 +281,46 @@ ThrowCompletionOr<Vector<DeprecatedFlyString>> SourceTextModule::get_exported_na
         return Vector<DeprecatedFlyString> {};
     }
 
-    // 3. Append module to exportStarSet.
+    // 4. Append module to exportStarSet.
     export_star_set.append(this);
 
-    // 4. Let exportedNames be a new empty List.
+    // 5. Let exportedNames be a new empty List.
     Vector<DeprecatedFlyString> exported_names;
 
-    // 5. For each ExportEntry Record e of module.[[LocalExportEntries]], do
+    // 6. For each ExportEntry Record e of module.[[LocalExportEntries]], do
     for (auto& entry : m_local_export_entries) {
         // a. Assert: module provides the direct binding for this export.
         // FIXME: How do we check that?
 
-        // b. Append e.[[ExportName]] to exportedNames.
+        // b. Assert: e.[[ExportName]] is not null.
+        VERIFY(!entry.export_name.is_null());
+
+        // c. Append e.[[ExportName]] to exportedNames.
         exported_names.empend(entry.export_name);
     }
 
-    // 6. For each ExportEntry Record e of module.[[IndirectExportEntries]], do
+    // 7. For each ExportEntry Record e of module.[[IndirectExportEntries]], do
     for (auto& entry : m_indirect_export_entries) {
-        // a. Assert: module provides the direct binding for this export.
+        // a. a. Assert: module imports a specific binding for this export.
         // FIXME: How do we check that?
 
-        // b. Append e.[[ExportName]] to exportedNames.
+        // b. Assert: e.[[ExportName]] is not null.
+        VERIFY(!entry.export_name.is_null());
+
+        // c. Append e.[[ExportName]] to exportedNames.
         exported_names.empend(entry.export_name);
     }
 
-    // 7. For each ExportEntry Record e of module.[[StarExportEntries]], do
+    // 8. For each ExportEntry Record e of module.[[StarExportEntries]], do
     for (auto& entry : m_star_export_entries) {
-        // a. Let requestedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
+        // a. Assert: e.[[ModuleRequest]] is not null.
+        // b. Let requestedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
         auto requested_module = TRY(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), entry.module_request()));
 
-        // b. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
+        // c. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
         auto star_names = TRY(requested_module->get_exported_names(vm, export_star_set));
 
-        // c. For each element n of starNames, do
+        // d. For each element n of starNames, do
         for (auto& name : star_names) {
             // i. If SameValue(n, "default") is false, then
             if (name != "default"sv) {
@@ -323,7 +333,7 @@ ThrowCompletionOr<Vector<DeprecatedFlyString>> SourceTextModule::get_exported_na
         }
     }
 
-    // 8. Return exportedNames.
+    // 9. Return exportedNames.
     return exported_names;
 }
 
