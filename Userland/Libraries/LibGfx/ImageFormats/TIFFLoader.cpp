@@ -96,7 +96,16 @@ private:
                 Optional<Color> last_color {};
 
                 for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
-                    auto color = Color { TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()) };
+                    Color color {};
+
+                    if (m_metadata.samples_per_pixel().value_or(3) == 3) {
+                        color = Color { TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()) };
+                    } else if (*m_metadata.samples_per_pixel() == 1) {
+                        auto luminosity = TRY(decoded_strip->template read_value<u8>());
+                        color = Color { luminosity, luminosity, luminosity };
+                    } else {
+                        return Error::from_string_literal("Unsupported number of sample per pixel");
+                    }
 
                     if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
                         color.set_red(last_color->red() + color.red());
