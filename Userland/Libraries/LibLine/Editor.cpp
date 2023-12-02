@@ -620,8 +620,10 @@ ErrorOr<void> Editor::interrupted()
     {
         auto stderr_stream = TRY(Core::File::standard_error());
         TRY(reposition_cursor(*stderr_stream, true));
-        if (TRY(m_suggestion_display->cleanup()))
+        if (TRY(m_suggestion_display->cleanup())) {
+            m_times_tab_pressed = 0;
             TRY(reposition_cursor(*stderr_stream, true));
+        }
         TRY(stderr_stream->write_until_depleted("\r"sv.bytes()));
     }
     m_buffer.clear();
