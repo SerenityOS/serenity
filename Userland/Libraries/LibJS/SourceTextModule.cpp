@@ -676,7 +676,10 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
     module_context->script_or_module = NonnullGCPtr<Module>(*this);
 
     // 5. Assert: module has been linked and declarations in its module environment have been instantiated.
-    VERIFY(m_status != ModuleStatus::Unlinked && m_status != ModuleStatus::Linking && environment());
+    VERIFY(m_status != ModuleStatus::New);
+    VERIFY(m_status != ModuleStatus::Unlinked);
+    VERIFY(m_status != ModuleStatus::Linking);
+    VERIFY(environment());
 
     // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
     module_context->variable_environment = environment();
