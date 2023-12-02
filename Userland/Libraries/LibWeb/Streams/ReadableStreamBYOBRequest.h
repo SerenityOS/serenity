@@ -28,6 +28,8 @@ public:
 
     void set_view(JS::GCPtr<WebIDL::ArrayBufferView> value) { m_view = value; }
 
+    WebIDL::ExceptionOr<void> respond(u64 bytes_written);
+
 private:
     explicit ReadableStreamBYOBRequest(JS::Realm&);
 
