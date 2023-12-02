@@ -168,6 +168,7 @@ WebIDL::ExceptionOr<void> transform_stream_error_writable_and_unblock_write(Tran
 WebIDL::ExceptionOr<void> transform_stream_set_backpressure(TransformStream&, bool backpressure);
 
 bool is_non_negative_number(JS::Value);
+bool can_transfer_array_buffer(JS::ArrayBuffer const& array_buffer);
 
 JS::Value create_close_sentinel();
 bool is_close_sentinel(JS::Value);

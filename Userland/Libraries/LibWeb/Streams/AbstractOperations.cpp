@@ -3736,6 +3736,24 @@ bool is_non_negative_number(JS::Value value)
     return true;
 }
 
+// https://streams.spec.whatwg.org/#can-transfer-array-buffer
+bool can_transfer_array_buffer(JS::ArrayBuffer const& array_buffer)
+{
+    // 1. Assert: Type(O) is Object.
+    // 2. Assert: O has an [[ArrayBufferData]] internal slot.
+
+    // 3. If ! IsDetachedBuffer(O) is true, return false.
+    if (array_buffer.is_detached())
+        return false;
+
+    // 4. If SameValue(O.[[ArrayBufferDetachKey]], undefined) is false, return false.
+    if (!JS::same_value(array_buffer.detach_key(), JS::js_undefined()))
+        return false;
+
+    // 5. Return true.
+    return true;
+}
+
 // https://streams.spec.whatwg.org/#close-sentinel
 // Non-standard function that implements the "close sentinel" value.
 JS::Value create_close_sentinel()
