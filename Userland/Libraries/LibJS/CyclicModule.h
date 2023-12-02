@@ -82,6 +82,8 @@ protected:
     virtual ThrowCompletionOr<void> initialize_environment(VM& vm);
     virtual ThrowCompletionOr<void> execute_module(VM& vm, GCPtr<PromiseCapability> capability = {});
 
+    [[nodiscard]] NonnullGCPtr<Module> get_imported_module(ModuleRequest const&);
+
     void execute_async_module(VM& vm);
     void gather_available_ancestors(Vector<CyclicModule*>& exec_list);
     void async_module_execution_fulfilled(VM& vm);
