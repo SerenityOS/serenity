@@ -68,6 +68,7 @@ private:
     ReadonlyBytes m_sample_data;
 
     Vector<float> mutable m_inputs;
+    Vector<unsigned> mutable m_left_index;
     Vector<float> mutable m_outputs;
 };
 
@@ -167,6 +168,7 @@ SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vecto
     function->m_encode = move(encode);
     function->m_decode = move(decode);
     function->m_inputs.resize(function->m_domain.size());
+    function->m_left_index.resize(function->m_domain.size());
     function->m_outputs.resize(function->m_range.size());
     return function;
 }
@@ -189,8 +191,11 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
     for (size_t i = 0; i < m_domain.size(); ++i) {
         float x = clamp(xs[i], m_domain[i].lower, m_domain[i].upper);
         float e = interpolate(x, m_domain[i].lower, m_domain[i].upper, m_encode[i].lower, m_encode[i].upper);
-        float ec = clamp(e, 0.0f, static_cast<float>(m_sizes[i] - 1));
-        m_inputs[i] = ec;
+
+        unsigned n = m_sizes[i] - 1;
+        float ec = clamp(e, 0.0f, static_cast<float>(n));
+        m_left_index[i] = min(ec, n - 1);
+        m_inputs[i] = ec - m_left_index[i];
     }
 
     for (size_t r = 0; r < m_range.size(); ++r) {
@@ -207,20 +212,14 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
         Vector<int> coordinates;
         coordinates.resize(m_domain.size());
         for (size_t mask = 0; mask < (1u << m_domain.size()); ++mask) {
-            for (size_t i = 0; i < m_domain.size(); ++i) {
-                unsigned n = m_sizes[i] - 1;
-                unsigned left_index = min(m_inputs[i], n - 1);
-                coordinates[i] = left_index + ((mask >> i) & 1u);
-            }
+            for (size_t i = 0; i < m_domain.size(); ++i)
+                coordinates[i] = m_left_index[i] + ((mask >> i) & 1u);
             samples[mask] = sample(coordinates, r);
         }
 
         for (int i = static_cast<int>(m_domain.size() - 1); i >= 0; --i) {
-            unsigned n = m_sizes[i] - 1;
-            float ec = m_inputs[i];
-            unsigned e0 = min(static_cast<unsigned>(ec), n - 1);
             for (size_t mask = 0; mask < (1u << i); ++mask)
-                samples[mask] = mix(samples[mask], samples[mask | (1 << i)], ec - e0);
+                samples[mask] = mix(samples[mask], samples[mask | (1 << i)], m_inputs[i]);
         }
 
         float result = interpolate(samples[0], 0.0f, 255.0f, m_decode[r].lower, m_decode[r].upper);
