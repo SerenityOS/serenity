@@ -1185,6 +1185,47 @@ void readable_byte_stream_controller_respond_in_closed_state(ReadableByteStreamC
     }
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-internal
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond_internal(ReadableByteStreamController& controller, u64 bytes_written)
+{
+    // 1. Let firstDescriptor be controller.[[pendingPullIntos]][0].
+    auto& first_descriptor = controller.pending_pull_intos().first();
+
+    // 2. Assert: ! CanTransferArrayBuffer(firstDescriptor’s buffer) is true.
+    VERIFY(can_transfer_array_buffer(*first_descriptor.buffer));
+
+    // 3. Perform ! ReadableByteStreamControllerInvalidateBYOBRequest(controller).
+    readable_byte_stream_controller_invalidate_byob_request(controller);
+
+    // 4. Let state be controller.[[stream]].[[state]].
+    auto state = controller.stream()->state();
+
+    // 5. If state is "closed",
+    if (state == ReadableStream::State::Closed) {
+        // 1. Assert: bytesWritten is 0.
+        VERIFY(bytes_written == 0);
+
+        // 2. Perform ! ReadableByteStreamControllerRespondInClosedState(controller, firstDescriptor).
+        readable_byte_stream_controller_respond_in_closed_state(controller, first_descriptor);
+    }
+
+    // 6. Otherwise,
+    else {
+        // 1. Assert: state is "readable".
+        VERIFY(state == ReadableStream::State::Readable);
+
+        // 2. Assert: bytesWritten > 0.
+        VERIFY(bytes_written > 0);
+
+        // 3. Perform ? ReadableByteStreamControllerRespondInReadableState(controller, bytesWritten, firstDescriptor).
+        TRY(readable_byte_stream_controller_respond_in_readable_state(controller, bytes_written, first_descriptor));
+    }
+
+    // 7. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+    MUST(readable_byte_stream_controller_call_pull_if_needed(controller));
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
 void readable_stream_default_controller_error(ReadableStreamDefaultController& controller, JS::Value error)
 {
