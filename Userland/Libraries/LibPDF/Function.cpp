@@ -193,17 +193,6 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
         m_inputs[i] = ec;
     }
 
-    auto get_bounds = [](float x, float& low, float& high) {
-        low = floorf(x);
-        high = ceilf(x);
-        if (low == high) {
-            if (low == 0.0f)
-                high = 1.0f;
-            else
-                low = high - 1.0f;
-        }
-    };
-
     for (size_t r = 0; r < m_range.size(); ++r) {
         // For 1-D input data, we need to sample 2 points, one to the left and one to the right, and then interpolate between them.
         // For 2-D input data, we need to sample 4 points (top-left, top-right, bottom-left, bottom-right),
@@ -219,24 +208,19 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
         coordinates.resize(m_domain.size());
         for (size_t mask = 0; mask < (1u << m_domain.size()); ++mask) {
             for (size_t i = 0; i < m_domain.size(); ++i) {
-                float ec = m_inputs[i];
-                float e0, e1;
-                get_bounds(ec, e0, e1);
-                if ((mask & (1u << i)) != 0)
-                    ec = e1;
-                else
-                    ec = e0;
-                coordinates[i] = static_cast<int>(ec);
+                unsigned n = m_sizes[i] - 1;
+                unsigned left_index = min(m_inputs[i], n - 1);
+                coordinates[i] = left_index + ((mask >> i) & 1u);
             }
             samples[mask] = sample(coordinates, r);
         }
 
         for (int i = static_cast<int>(m_domain.size() - 1); i >= 0; --i) {
+            unsigned n = m_sizes[i] - 1;
             float ec = m_inputs[i];
-            float e0, e1;
-            get_bounds(ec, e0, e1);
+            unsigned e0 = min(static_cast<unsigned>(ec), n - 1);
             for (size_t mask = 0; mask < (1u << i); ++mask)
-                samples[mask] = interpolate(ec, e0, e1, samples[mask], samples[mask | (1 << i)]);
+                samples[mask] = mix(samples[mask], samples[mask | (1 << i)], ec - e0);
         }
 
         float result = interpolate(samples[0], 0.0f, 255.0f, m_decode[r].lower, m_decode[r].upper);
