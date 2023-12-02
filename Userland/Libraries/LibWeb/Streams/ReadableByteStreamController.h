@@ -77,9 +77,14 @@ class ReadableByteStreamController : public Bindings::PlatformObject {
 public:
     virtual ~ReadableByteStreamController() override = default;
 
-    JS::GCPtr<ReadableStreamBYOBRequest const> byob_request() const { return m_byob_request; }
-    JS::GCPtr<ReadableStreamBYOBRequest> byob_request() { return m_byob_request; }
+    // IDL getter, returns current [[byobRequest]] (if any), and otherwise the [[byobRequest]] for the next pending pull into request
+    JS::GCPtr<ReadableStreamBYOBRequest> byob_request();
+
     void set_byob_request(JS::GCPtr<ReadableStreamBYOBRequest> request) { m_byob_request = request; }
+
+    // Raw [[byobRequest]] slot
+    JS::GCPtr<ReadableStreamBYOBRequest const> raw_byob_request() const { return m_byob_request; }
+    JS::GCPtr<ReadableStreamBYOBRequest> raw_byob_request() { return m_byob_request; }
 
     Optional<double> desired_size() const;
     WebIDL::ExceptionOr<void> close();
