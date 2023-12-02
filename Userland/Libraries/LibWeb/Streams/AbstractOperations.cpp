@@ -1159,6 +1159,32 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond_in_readable_st
     return {};
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-in-closed-state
+void readable_byte_stream_controller_respond_in_closed_state(ReadableByteStreamController& controller, PullIntoDescriptor& first_descriptor)
+{
+    // 1. Assert: the remainder after dividing firstDescriptor’s bytes filled by firstDescriptor’s element size is 0.
+    VERIFY(first_descriptor.bytes_filled % first_descriptor.element_size == 0);
+
+    // 2. If firstDescriptor’s reader type is "none", perform ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+    if (first_descriptor.reader_type == ReaderType::None)
+        readable_byte_stream_controller_shift_pending_pull_into(controller);
+
+    // 3. Let stream be controller.[[stream]].
+    auto& stream = *controller.stream();
+
+    // 4. If ! ReadableStreamHasBYOBReader(stream) is true,
+    if (readable_stream_has_default_reader(stream)) {
+        // 1. While ! ReadableStreamGetNumReadIntoRequests(stream) > 0,
+        while (readable_stream_get_num_read_requests(stream) > 0) {
+            // 1. Let pullIntoDescriptor be ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+            auto pull_into_descriptor = readable_byte_stream_controller_shift_pending_pull_into(controller);
+
+            // 2. Perform ! ReadableByteStreamControllerCommitPullIntoDescriptor(stream, pullIntoDescriptor).
+            readable_byte_stream_controller_commit_pull_into_descriptor(stream, pull_into_descriptor);
+        }
+    }
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
 void readable_stream_default_controller_error(ReadableStreamDefaultController& controller, JS::Value error)
 {
