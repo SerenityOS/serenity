@@ -378,6 +378,9 @@ private:
         case Type::ASCII:
         case Type::UTF8: {
             Vector<Value, 1> result;
+            // NOTE: No need to include the null terminator
+            if (count > 0)
+                --count;
             auto string_data = TRY(ByteBuffer::create_uninitialized(count));
             TRY(m_stream->read_until_filled(string_data));
             result.empend(TRY(String::from_utf8(StringView { string_data.bytes() })));
