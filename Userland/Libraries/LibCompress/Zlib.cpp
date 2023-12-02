@@ -28,7 +28,7 @@ ErrorOr<NonnullOwnPtr<ZlibDecompressor>> ZlibDecompressor::create(MaybeOwned<Str
     if (header.as_u16 % 31 != 0)
         return Error::from_string_literal("Zlib error correction code does not match");
 
-    auto bit_stream = make<LittleEndianInputBitStream>(move(stream));
+    auto bit_stream = make<LittleEndianInputBitStream>(move(stream), LittleEndianInputBitStream::FillWithZero);
     auto deflate_stream = TRY(Compress::DeflateDecompressor::construct(move(bit_stream)));
 
     return adopt_nonnull_own_or_enomem(new (nothrow) ZlibDecompressor(header, move(deflate_stream)));

@@ -374,7 +374,7 @@ void DeflateDecompressor::close()
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     FixedMemoryStream memory_stream { bytes };
-    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream), LittleEndianInputBitStream::FillWithZero };
     auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<LittleEndianInputBitStream>(bit_stream)));
     AllocatingMemoryStream output_stream;
 
