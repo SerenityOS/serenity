@@ -36,8 +36,9 @@ struct Destination {
     Vector<Optional<float>> parameters;
 };
 
-struct OutlineItem final : public RefCounted<OutlineItem> {
-    RefPtr<OutlineItem> parent;
+struct OutlineItem final : public RefCounted<OutlineItem>
+    , public Weakable<OutlineItem> {
+    WeakPtr<OutlineItem> parent;
     Vector<NonnullRefPtr<OutlineItem>> children;
     DeprecatedString title; // Already converted to UTF-8.
     i32 count { 0 };
