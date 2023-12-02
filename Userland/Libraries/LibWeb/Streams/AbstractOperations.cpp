@@ -1226,6 +1226,47 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond_internal(Reada
     return {};
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond(ReadableByteStreamController& controller, u64 bytes_written)
+{
+    auto& realm = controller.realm();
+
+    // 1. Assert: controller.[[pendingPullIntos]] is not empty.
+    VERIFY(!controller.pending_pull_intos().is_empty());
+
+    // 2. Let firstDescriptor be controller.[[pendingPullIntos]][0].
+    auto& first_descriptor = controller.pending_pull_intos().first();
+
+    // 3. Let state be controller.[[stream]].[[state]].
+    auto state = controller.stream()->state();
+
+    // 4. If state is "closed",
+    if (state == ReadableStream::State::Closed) {
+        // 1. If bytesWritten is not 0, throw a TypeError exception.
+        if (bytes_written != 0)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Bytes written is not zero for closed stream"sv };
+    }
+    // 5. Otherwise,
+    else {
+        // 1. Assert: state is "readable".
+        VERIFY(state == ReadableStream::State::Readable);
+
+        // 2. If bytesWritten is 0, throw a TypeError exception.
+        if (bytes_written == 0)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Bytes written is zero for stream which is not closed"sv };
+
+        // 3. If firstDescriptor’s bytes filled + bytesWritten > firstDescriptor’s byte length, throw a RangeError exception.
+        if (first_descriptor.bytes_filled + bytes_written > first_descriptor.byte_length)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Bytes written is greater than the pull requests byte length"sv };
+    }
+
+    // 6. Set firstDescriptor’s buffer to ! TransferArrayBuffer(firstDescriptor’s buffer).
+    first_descriptor.buffer = MUST(transfer_array_buffer(realm, *first_descriptor.buffer));
+
+    // 7. Perform ? ReadableByteStreamControllerRespondInternal(controller, bytesWritten).
+    return readable_byte_stream_controller_respond_internal(controller, bytes_written);
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
 void readable_stream_default_controller_error(ReadableStreamDefaultController& controller, JS::Value error)
 {
