@@ -8,10 +8,23 @@ body {
 .split-view {
     width: 100vw;
     height: 100vh;
+
+    overflow: hidden;
 }
 
 .split-view-container {
+    max-height: calc(100% - 40px);
+    min-height: 40px;
+
     overflow: scroll;
+}
+
+.split-view-separator {
+    width: 100%;
+    height: 5px;
+
+    cursor: row-resize;
+    user-select: none;
 }
 
 .tab-controls-container {
@@ -67,6 +80,10 @@ body {
         background-color: rgb(23, 23, 23);
     }
 
+    .split-view-separator {
+        background-color: dimgray;
+    }
+
     .tab-controls-container {
         background-color: rgb(57, 57, 57);
     }
@@ -88,6 +105,10 @@ body {
 @media (prefers-color-scheme: light) {
     .tab-controls-container {
         background-color: rgb(229, 229, 229);
+    }
+
+    .split-view-separator {
+        background-color: lightgray;
     }
 
     .tab-controls button {

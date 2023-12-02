@@ -210,7 +210,8 @@ void InspectorClient::load_inspector()
             <div id="dom-tree" class="tab-content html"></div>
             <div id="accessibility-tree" class="tab-content"></div>
         </div>
-        <div id="inspector-bottom" class="split-view-container" style="height: 40%">
+        <div id="inspector-separator" class="split-view-separator"></div>
+        <div id="inspector-bottom" class="split-view-container" style="height: calc(40% - 5px)">
             <div class="tab-controls-container">
                 <div class="tab-controls">
                     <button id="console-button" onclick="selectBottomTab(this, 'console')">Console</button>

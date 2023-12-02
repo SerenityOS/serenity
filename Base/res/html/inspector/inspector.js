@@ -12,6 +12,35 @@ let consoleGroupNextID = 0;
 let consoleHistory = [];
 let consoleHistoryIndex = 0;
 
+const beginSplitViewDrag = () => {
+    let inspectorTop = document.getElementById("inspector-top");
+    let inspectorBottom = document.getElementById("inspector-bottom");
+    let inspectorSeparator = document.getElementById("inspector-separator");
+
+    const windowHeight = window.innerHeight;
+    const separatorHeight = inspectorSeparator.clientHeight;
+
+    const updateSplitView = event => {
+        let position = Math.min(event.clientY, windowHeight - separatorHeight);
+        position = Math.max(position, 0);
+
+        inspectorTop.style.height = `${position}px`;
+        inspectorBottom.style.height = `${windowHeight - position - separatorHeight}px`;
+
+        event.preventDefault();
+    };
+
+    const endSplitViewDrag = () => {
+        document.removeEventListener("mousemove", updateSplitView);
+        document.removeEventListener("mouseup", endSplitViewDrag);
+        document.body.style.cursor = "";
+    };
+
+    document.addEventListener("mousemove", updateSplitView);
+    document.addEventListener("mouseup", endSplitViewDrag);
+    document.body.style.cursor = "row-resize";
+};
+
 const selectTab = (tabButton, tabID, selectedTab, selectedTabButton) => {
     let tab = document.getElementById(tabID);
 
@@ -252,6 +281,9 @@ inspector.endConsoleGroup = () => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    let inspectorSeparator = document.getElementById("inspector-separator");
+    inspectorSeparator.addEventListener("mousedown", beginSplitViewDrag);
+
     let consoleInput = document.getElementById("console-input");
     consoleInput.focus();
 
