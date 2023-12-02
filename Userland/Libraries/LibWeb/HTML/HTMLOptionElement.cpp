@@ -106,7 +106,7 @@ String HTMLOptionElement::text() const
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
 void HTMLOptionElement::set_text(String const& text)
 {
-    string_replace_all(text.to_deprecated_string());
+    string_replace_all(text);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-index
