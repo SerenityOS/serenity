@@ -254,8 +254,8 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     for (auto& required_string : m_requested_modules) {
         ModuleRequest required { required_string };
 
-        // a. Let requiredModule be ? HostResolveImportedModule(module, required).
-        auto required_module = TRY(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), required));
+        // a. Let requiredModule be GetImportedModule(module, required).
+        auto required_module = get_imported_module(required);
 
         // b. Set index to ? InnerModuleLinking(requiredModule, stack, index).
         index = TRY(required_module->inner_module_linking(vm, stack, index));
@@ -461,18 +461,17 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
     // 11. For each String required of module.[[RequestedModules]], do
     for (auto& required : m_requested_modules) {
 
-        // a. Let requiredModule be ! HostResolveImportedModule(module, required).
-        auto* required_module = MUST(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), required)).ptr();
-        // b. NOTE: Link must be completed successfully prior to invoking this method, so every requested module is guaranteed to resolve successfully.
+        // a. Let requiredModule be GetImportedModule(module, required).
+        auto required_module = get_imported_module(required);
 
-        // c. Set index to ? InnerModuleEvaluation(requiredModule, stack, index).
+        // b. Set index to ? InnerModuleEvaluation(requiredModule, stack, index).
         index = TRY(required_module->inner_module_evaluation(vm, stack, index));
 
-        // d. If requiredModule is a Cyclic Module Record, then
+        // c. If requiredModule is a Cyclic Module Record, then
         if (!is<CyclicModule>(*required_module))
             continue;
 
-        auto* cyclic_module = static_cast<CyclicModule*>(required_module);
+        JS::NonnullGCPtr<CyclicModule> cyclic_module = verify_cast<CyclicModule>(*required_module);
         // i. Assert: requiredModule.[[Status]] is either evaluating, evaluating-async, or evaluated.
         VERIFY(cyclic_module->m_status == ModuleStatus::Evaluating || cyclic_module->m_status == ModuleStatus::EvaluatingAsync || cyclic_module->m_status == ModuleStatus::Evaluated);
 
@@ -487,7 +486,8 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
         // iv. Else,
         else {
             // 1. Set requiredModule to requiredModule.[[CycleRoot]].
-            cyclic_module = cyclic_module->m_cycle_root;
+            VERIFY(cyclic_module->m_cycle_root);
+            cyclic_module = *cyclic_module->m_cycle_root;
 
             // 2. Assert: requiredModule.[[Status]] is evaluating-async or evaluated.
             VERIFY(cyclic_module->m_status == ModuleStatus::EvaluatingAsync || cyclic_module->m_status == ModuleStatus::Evaluated);
@@ -806,6 +806,28 @@ void CyclicModule::async_module_execution_rejected(VM& vm, Value error)
     }
 
     // 9. Return unused.
+}
+
+// 16.2.1.7 GetImportedModule ( referrer, specifier ), https://tc39.es/ecma262/#sec-GetImportedModule
+NonnullGCPtr<Module> CyclicModule::get_imported_module(ModuleRequest const& request)
+{
+    // 1. Assert: Exactly one element of referrer.[[LoadedModules]] is a Record whose [[Specifier]] is specifier,
+    //    since LoadRequestedModules has completed successfully on referrer prior to invoking this abstract operation.
+    size_t element_with_specifier_count = 0;
+    for (auto const& loaded_module : m_loaded_modules) {
+        if (loaded_module.specifier == request.module_specifier)
+            ++element_with_specifier_count;
+    }
+    VERIFY(element_with_specifier_count == 1);
+
+    for (auto const& loaded_module : m_loaded_modules) {
+        if (loaded_module.specifier == request.module_specifier) {
+            // 2. Let record be the Record in referrer.[[LoadedModules]] whose [[Specifier]] is specifier.
+            // 3. Return record.[[Module]].
+            return loaded_module.module;
+        }
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }
