@@ -38,14 +38,14 @@ void HTMLTitleElement::children_changed()
 DeprecatedString HTMLTitleElement::text()
 {
     // The text attribute's getter must return this title element's child text content.
-    return child_text_content();
+    return child_text_content().to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text
 void HTMLTitleElement::set_text(String const& value)
 {
     // The text attribute's setter must string replace all with the given value within this title element.
-    string_replace_all(value.to_deprecated_string());
+    string_replace_all(value);
 }
 
 }

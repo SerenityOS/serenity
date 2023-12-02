@@ -179,7 +179,7 @@ void Node::set_text_content(Optional<String> const& maybe_content)
 {
     // The textContent setter steps are to, if the given value is null, act as if it was the empty string instead,
     // and then do as described below, switching on the interface this implements:
-    auto content = maybe_content.value_or(String {}).to_deprecated_string();
+    auto content = maybe_content.value_or(String {});
 
     // If DocumentFragment or Element, string replace all with the given value within this.
     if (is<DocumentFragment>(this) || is<Element>(this)) {
@@ -190,7 +190,7 @@ void Node::set_text_content(Optional<String> const& maybe_content)
     else if (is<CharacterData>(this)) {
 
         auto* character_data_node = verify_cast<CharacterData>(this);
-        character_data_node->set_data(MUST(String::from_deprecated_string(content)));
+        character_data_node->set_data(content);
 
         // FIXME: CharacterData::set_data is not spec compliant. Make this match the spec when set_data becomes spec compliant.
         //        Do note that this will make this function able to throw an exception.
@@ -198,7 +198,7 @@ void Node::set_text_content(Optional<String> const& maybe_content)
 
     // If Attr, set an existing attribute value with this and the given value.
     if (is<Attr>(*this)) {
-        static_cast<Attr&>(*this).set_value(MUST(String::from_deprecated_string(content)));
+        static_cast<Attr&>(*this).set_value(content);
     }
 
     // Otherwise, do nothing.
@@ -278,10 +278,10 @@ void Node::invalidate_style()
     document().schedule_style_update();
 }
 
-DeprecatedString Node::child_text_content() const
+String Node::child_text_content() const
 {
     if (!is<ParentNode>(*this))
-        return DeprecatedString::empty();
+        return String {};
 
     StringBuilder builder;
     verify_cast<ParentNode>(*this).for_each_child([&](auto& child) {
@@ -291,7 +291,7 @@ DeprecatedString Node::child_text_content() const
                 builder.append(maybe_content.value());
         }
     });
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://dom.spec.whatwg.org/#concept-tree-root
@@ -1316,14 +1316,14 @@ void Node::replace_all(JS::GCPtr<Node> node)
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
-void Node::string_replace_all(DeprecatedString const& string)
+void Node::string_replace_all(String const& string)
 {
     // 1. Let node be null.
     JS::GCPtr<Node> node;
 
     // 2. If string is not the empty string, then set node to a new Text node whose data is string and node document is parent’s node document.
     if (!string.is_empty())
-        node = heap().allocate<Text>(realm(), document(), MUST(String::from_deprecated_string(string)));
+        node = heap().allocate<Text>(realm(), document(), string);
 
     // 3. Replace all with node within parent.
     replace_all(node);
@@ -1471,18 +1471,18 @@ JS::NonnullGCPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
     return root();
 }
 
-DeprecatedString Node::debug_description() const
+String Node::debug_description() const
 {
     StringBuilder builder;
     builder.append(node_name().to_deprecated_fly_string().to_lowercase());
     if (is_element()) {
-        auto& element = static_cast<DOM::Element const&>(*this);
+        auto const& element = static_cast<DOM::Element const&>(*this);
         if (auto id = element.get_attribute(HTML::AttributeNames::id); id.has_value())
             builder.appendff("#{}", id.value());
         for (auto const& class_name : element.class_names())
             builder.appendff(".{}", class_name);
     }
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://dom.spec.whatwg.org/#concept-node-length
@@ -1935,9 +1935,9 @@ ErrorOr<String> Node::accessible_description(Document const& document) const
     return builder.to_string();
 }
 
-Optional<StringView> Node::first_valid_id(DeprecatedString const& value, Document const& document)
+Optional<StringView> Node::first_valid_id(StringView value, Document const& document)
 {
-    auto id_list = value.split_view(Infra::is_ascii_whitespace);
+    auto id_list = value.split_view_if(Infra::is_ascii_whitespace);
     for (auto const& id : id_list) {
         if (document.get_element_by_id(MUST(FlyString::from_utf8(id))))
             return id;

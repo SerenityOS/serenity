@@ -720,7 +720,7 @@ DeprecatedString Document::title() const
     //    element that is a child of the document element.
     if (auto const* document_element = this->document_element(); is<SVG::SVGElement>(document_element)) {
         if (auto const* title_element = document_element->first_child_of_type<SVG::SVGTitleElement>())
-            value = title_element->child_text_content();
+            value = title_element->child_text_content().to_deprecated_string();
     }
 
     // 2. Otherwise, let value be the child text content of the title element, or the empty string if the title element
@@ -761,7 +761,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
         }
 
         // 3. String replace all with the given value within element.
-        element->string_replace_all(title.to_deprecated_string());
+        element->string_replace_all(title);
     }
 
     // -> If the document element is in the HTML namespace
@@ -790,7 +790,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
         }
 
         // 4. String replace all with the given value within element.
-        element->string_replace_all(title.to_deprecated_string());
+        element->string_replace_all(title);
     }
 
     // -> Otherwise

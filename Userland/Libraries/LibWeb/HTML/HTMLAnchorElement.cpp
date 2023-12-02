@@ -114,7 +114,7 @@ String HTMLAnchorElement::text() const
 void HTMLAnchorElement::set_text(String const& text)
 {
     // The text attribute's setter must string replace all with the given value within this element.
-    string_replace_all(text.to_deprecated_string());
+    string_replace_all(text);
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-referrerpolicy
