@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Rect.h>
+#include <LibGfx/TextLayout.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PixelUnits.h>
@@ -17,7 +18,7 @@ class LineBoxFragment {
     friend class LineBox;
 
 public:
-    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom)
+    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom, Vector<Gfx::DrawGlyphOrEmoji> glyph_run = {})
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -25,6 +26,7 @@ public:
         , m_size(size)
         , m_border_box_top(border_box_top)
         , m_border_box_bottom(border_box_bottom)
+        , m_glyph_run(move(glyph_run))
     {
     }
 
@@ -71,6 +73,8 @@ public:
 
     bool is_atomic_inline() const;
 
+    Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run() const { return m_glyph_run; }
+
 private:
     JS::NonnullGCPtr<Node const> m_layout_node;
     int m_start { 0 };
@@ -80,6 +84,7 @@ private:
     CSSPixels m_border_box_top { 0 };
     CSSPixels m_border_box_bottom { 0 };
     CSSPixels m_baseline { 0 };
+    Vector<Gfx::DrawGlyphOrEmoji> m_glyph_run;
 };
 
 }

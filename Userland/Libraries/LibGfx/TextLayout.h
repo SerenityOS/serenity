@@ -82,7 +82,7 @@ struct DrawGlyph {
 };
 
 struct DrawEmoji {
-    IntPoint position;
+    FloatPoint position;
     Gfx::Bitmap const* emoji;
     Font const* font;
 };
@@ -92,7 +92,7 @@ using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;
 Variant<DrawGlyph, DrawEmoji> prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font);
 
 template<typename Callback>
-void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, Font const& font, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No)
+void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, Font const& font, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No, Optional<float&> width = {})
 {
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
@@ -127,8 +127,9 @@ void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, Font co
         point.translate_by(glyph_width, 0);
         last_code_point = code_point;
     }
-}
 
-Vector<DrawGlyphOrEmoji> get_glyph_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No);
+    if (width.has_value())
+        *width = point.x() - font.glyph_spacing();
+}
 
 }

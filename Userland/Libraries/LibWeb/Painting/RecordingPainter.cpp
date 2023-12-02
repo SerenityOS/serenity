@@ -214,11 +214,17 @@ void RecordingPainter::draw_signed_distance_field(Gfx::IntRect const& dst_rect, 
     });
 }
 
-void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Utf8View string, Gfx::Font const& font, Color color, Gfx::IntRect const& rect)
+void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color color, Gfx::IntRect const& rect)
 {
-    auto glyph_run = Gfx::get_glyph_run(state().translation.map(baseline_start).to_type<float>(), string, font);
+    auto transformed_baseline_start = state().translation.map(baseline_start).to_type<float>();
+    Vector<Gfx::DrawGlyphOrEmoji> translated_glyph_run;
+    translated_glyph_run.ensure_capacity(glyph_run.size());
+    for (auto glyph : glyph_run) {
+        glyph.visit([&](auto& glyph) { glyph.position.translate_by(transformed_baseline_start); });
+        translated_glyph_run.append(glyph);
+    }
     push_command(DrawGlyphRun {
-        .glyph_run = glyph_run,
+        .glyph_run = move(translated_glyph_run),
         .color = color,
         .rect = state().translation.map(rect),
     });

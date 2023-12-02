@@ -33,7 +33,7 @@ CommandResult PaintingCommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOr
             painter.draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
         } else {
             auto& emoji = glyph_or_emoji.get<Gfx::DrawEmoji>();
-            painter.draw_emoji(emoji.position, *emoji.emoji, *emoji.font);
+            painter.draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
         }
     }
     return CommandResult::Continue;
