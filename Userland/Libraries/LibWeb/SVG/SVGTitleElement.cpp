@@ -42,7 +42,7 @@ void SVGTitleElement::children_changed()
     auto* document_element = document().document_element();
 
     if (document_element == parent() && is<SVGElement>(document_element))
-        page->client().page_did_change_title(document().title());
+        page->client().page_did_change_title(document().title().to_deprecated_string());
 }
 
 }

@@ -162,7 +162,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
 
     // 13. If action is the empty string, let action be the URL of the form document.
     if (action.is_empty())
-        action = form_document->url_string();
+        action = form_document->url_string().to_deprecated_string();
 
     // 14. Parse a URL given action, relative to the submitter element's node document. If this fails, return.
     // 15. Let parsed action be the resulting URL record.

@@ -151,7 +151,7 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#initialise-the-document-object
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, DeprecatedString content_type, HTML::NavigationParams& navigation_params)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, String content_type, HTML::NavigationParams& navigation_params)
 {
     // 1. Let browsingContext be navigationParams's navigable's active browsing context.
     auto browsing_context = navigation_params.navigable->active_browsing_context();
@@ -264,7 +264,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     //    and navigation id is navigationParams's id.
     auto document = HTML::HTMLDocument::create(window->realm());
     document->m_type = type;
-    document->m_content_type = MUST(String::from_deprecated_string(content_type));
+    document->m_content_type = move(content_type);
     document->set_origin(navigation_params.origin);
     document->set_browsing_context(browsing_context);
     document->m_policy_container = navigation_params.policy_container;
@@ -284,14 +284,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     // 13. If navigationParams's request is non-null, then:
     if (navigation_params.request) {
         // 1. Set document's referrer to the empty string.
-        document->m_referrer = DeprecatedString::empty();
+        document->m_referrer = String {};
 
         // 2. Let referrer be navigationParams's request's referrer.
-        auto& referrer = navigation_params.request->referrer();
+        auto const& referrer = navigation_params.request->referrer();
 
         // 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
         if (referrer.has<AK::URL>()) {
-            document->m_referrer = referrer.get<AK::URL>().serialize();
+            document->m_referrer = MUST(String::from_deprecated_string(referrer.get<AK::URL>().serialize()));
         }
     }
 
@@ -712,28 +712,28 @@ WebIDL::ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#document.title
-DeprecatedString Document::title() const
+String Document::title() const
 {
-    auto value = DeprecatedString::empty();
+    String value;
 
     // 1. If the document element is an SVG svg element, then let value be the child text content of the first SVG title
     //    element that is a child of the document element.
     if (auto const* document_element = this->document_element(); is<SVG::SVGElement>(document_element)) {
         if (auto const* title_element = document_element->first_child_of_type<SVG::SVGTitleElement>())
-            value = title_element->child_text_content().to_deprecated_string();
+            value = title_element->child_text_content();
     }
 
     // 2. Otherwise, let value be the child text content of the title element, or the empty string if the title element
     //    is null.
     else if (auto title_element = this->title_element()) {
-        value = title_element->text_content().value_or(String {}).to_deprecated_string();
+        value = title_element->text_content().value_or(String {});
     }
 
     // 3. Strip and collapse ASCII whitespace in value.
     auto title = Infra::strip_and_collapse_whitespace(value).release_value_but_fixme_should_propagate_errors();
 
     // 4. Return value.
-    return title.to_deprecated_string();
+    return title;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#document.title
@@ -1662,10 +1662,10 @@ DocumentType const* Document::doctype() const
     return first_child_of_type<DocumentType>();
 }
 
-DeprecatedString const& Document::compat_mode() const
+String const& Document::compat_mode() const
 {
-    static DeprecatedString back_compat = "BackCompat";
-    static DeprecatedString css1_compat = "CSS1Compat";
+    static String const back_compat = "BackCompat"_string;
+    static String const css1_compat = "CSS1Compat"_string;
 
     if (m_quirks_mode == QuirksMode::Yes)
         return back_compat;
@@ -1974,11 +1974,11 @@ void Document::completely_finish_loading()
     }
 }
 
-DeprecatedString Document::cookie(Cookie::Source source)
+String Document::cookie(Cookie::Source source)
 {
     if (auto* page = this->page())
-        return page->client().page_did_request_cookie(m_url, source);
-    return DeprecatedString::empty();
+        return MUST(String::from_deprecated_string(page->client().page_did_request_cookie(m_url, source)));
+    return String {};
 }
 
 void Document::set_cookie(StringView cookie_string, Cookie::Source source)
@@ -1991,14 +1991,14 @@ void Document::set_cookie(StringView cookie_string, Cookie::Source source)
         page->client().page_did_set_cookie(m_url, cookie.value(), source);
 }
 
-DeprecatedString Document::dump_dom_tree_as_json() const
+String Document::dump_dom_tree_as_json() const
 {
     StringBuilder builder;
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
     serialize_tree_as_json(json);
 
     MUST(json.finish());
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#has-a-style-sheet-that-is-blocking-scripts
@@ -2023,14 +2023,14 @@ bool Document::has_a_style_sheet_that_is_blocking_scripts() const
     return false;
 }
 
-DeprecatedString Document::referrer() const
+String Document::referrer() const
 {
     return m_referrer;
 }
 
-void Document::set_referrer(DeprecatedString referrer)
+void Document::set_referrer(String referrer)
 {
-    m_referrer = referrer;
+    m_referrer = move(referrer);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#fully-active
@@ -2512,17 +2512,17 @@ JS::NonnullGCPtr<HTML::History> Document::history() const
 }
 
 // https://html.spec.whatwg.org/multipage/origin.html#dom-document-domain
-DeprecatedString Document::domain() const
+String Document::domain() const
 {
     // 1. Let effectiveDomain be this's origin's effective domain.
     auto effective_domain = origin().effective_domain();
 
     // 2. If effectiveDomain is null, then return the empty string.
     if (!effective_domain.has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 3. Return effectiveDomain, serialized.
-    return URLParser::serialize_host(effective_domain.release_value()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return MUST(URLParser::serialize_host(effective_domain.release_value()));
 }
 
 void Document::set_domain(String const& domain)
@@ -3000,7 +3000,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
     return *this;
 }
 
-DeprecatedString Document::dump_accessibility_tree_as_json()
+String Document::dump_accessibility_tree_as_json()
 {
     StringBuilder builder;
     auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr);
@@ -3016,7 +3016,7 @@ DeprecatedString Document::dump_accessibility_tree_as_json()
     }
 
     MUST(json.finish());
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createattribute

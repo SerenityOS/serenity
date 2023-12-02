@@ -523,7 +523,7 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
     auto title = m_page_client.page().top_level_browsing_context().active_document()->title();
 
     // 4. Return success with data title.
-    return title;
+    return title.to_deprecated_string();
 }
 
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle

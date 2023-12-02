@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
@@ -90,7 +90,7 @@ public:
         HTML
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, DeprecatedString content_type, HTML::NavigationParams&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, String content_type, HTML::NavigationParams&);
 
     [[nodiscard]] static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
@@ -98,11 +98,11 @@ public:
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
-    DeprecatedString cookie(Cookie::Source = Cookie::Source::NonHttp);
+    String cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(StringView, Cookie::Source = Cookie::Source::NonHttp);
 
-    DeprecatedString referrer() const;
-    void set_referrer(DeprecatedString);
+    String referrer() const;
+    void set_referrer(String);
 
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
@@ -112,8 +112,8 @@ public:
     void update_base_element(Badge<HTML::HTMLBaseElement>);
     JS::GCPtr<HTML::HTMLBaseElement const> first_base_element_with_href_in_tree_order() const;
 
-    DeprecatedString url_string() const { return m_url.to_deprecated_string(); }
-    DeprecatedString document_uri() const { return m_url.to_deprecated_string(); }
+    String url_string() const { return MUST(m_url.to_string()); }
+    String document_uri() const { return url_string(); }
 
     HTML::Origin origin() const;
     void set_origin(HTML::Origin const& origin);
@@ -173,7 +173,7 @@ public:
 
     WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
-    DeprecatedString title() const;
+    String title() const;
     WebIDL::ExceptionOr<void> set_title(String const&);
 
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
@@ -230,8 +230,8 @@ public:
     JS::NonnullGCPtr<HTMLCollection> scripts();
     JS::NonnullGCPtr<HTMLCollection> all();
 
-    DeprecatedString const& source() const { return m_source; }
-    void set_source(DeprecatedString source) { m_source = move(source); }
+    String const& source() const { return m_source; }
+    void set_source(String source) { m_source = move(source); }
 
     HTML::EnvironmentSettingsObject& relevant_settings_object() const;
 
@@ -282,7 +282,7 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> adopt_node_binding(JS::NonnullGCPtr<Node>);
 
     DocumentType const* doctype() const;
-    DeprecatedString const& compat_mode() const;
+    String const& compat_mode() const;
 
     void set_editable(bool editable) { m_editable = editable; }
     virtual bool is_editable() const final;
@@ -353,7 +353,7 @@ public:
 
     virtual EventTarget* get_parent(Event const&) override;
 
-    DeprecatedString dump_dom_tree_as_json() const;
+    String dump_dom_tree_as_json() const;
 
     bool has_a_style_sheet_that_is_blocking_scripts() const;
 
@@ -450,7 +450,7 @@ public:
     Optional<AK::URL> about_base_url() const { return m_about_base_url; }
     void set_about_base_url(Optional<AK::URL> url) { m_about_base_url = url; }
 
-    DeprecatedString domain() const;
+    String domain() const;
     void set_domain(String const&);
 
     auto& pending_scroll_event_targets() { return m_pending_scroll_event_targets; }
@@ -507,7 +507,7 @@ public:
 
     bool query_command_supported(String const&) const;
 
-    DeprecatedString dump_accessibility_tree_as_json();
+    String dump_accessibility_tree_as_json();
 
     void make_active();
 
@@ -595,7 +595,7 @@ private:
     JS::GCPtr<HTML::HTMLParser> m_parser;
     bool m_active_parser_was_aborted { false };
 
-    DeprecatedString m_source;
+    String m_source;
 
     JS::GCPtr<HTML::HTMLScriptElement> m_pending_parsing_blocking_script;
 
@@ -686,7 +686,7 @@ private:
     HTML::CrossOriginOpenerPolicy m_cross_origin_opener_policy;
 
     // https://html.spec.whatwg.org/multipage/dom.html#the-document's-referrer
-    DeprecatedString m_referrer { "" };
+    String m_referrer;
 
     // https://dom.spec.whatwg.org/#concept-document-origin
     HTML::Origin m_origin;
