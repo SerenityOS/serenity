@@ -1107,6 +1107,58 @@ void readable_stream_default_controller_clear_algorithms(ReadableStreamDefaultCo
     // controller.set_strategy_size_algorithm({});
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-in-readable-state
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond_in_readable_state(ReadableByteStreamController& controller, u64 bytes_written, PullIntoDescriptor& pull_into_descriptor)
+{
+    // 1. Assert: pullIntoDescriptor’s bytes filled + bytesWritten ≤ pullIntoDescriptor’s byte length.
+    VERIFY(pull_into_descriptor.bytes_filled + bytes_written <= pull_into_descriptor.byte_length);
+
+    // 2. Perform ! ReadableByteStreamControllerFillHeadPullIntoDescriptor(controller, bytesWritten, pullIntoDescriptor).
+    readable_byte_stream_controller_fill_head_pull_into_descriptor(controller, bytes_written, pull_into_descriptor);
+
+    // 3. If pullIntoDescriptor’s reader type is "none",
+    if (pull_into_descriptor.reader_type == ReaderType::None) {
+        // 1. Perform ? ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(controller, pullIntoDescriptor).
+        TRY(readable_byte_stream_controller_enqueue_detached_pull_into_queue(controller, pull_into_descriptor));
+
+        // 2. Perform ! ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
+        readable_byte_stream_controller_process_pull_into_descriptors_using_queue(controller);
+
+        // 3. Return.
+        return {};
+    }
+
+    // 4. If pullIntoDescriptor’s bytes filled < pullIntoDescriptor’s minimum fill, return.
+    // FIXME: Support minimum fill.
+    if (pull_into_descriptor.bytes_filled < pull_into_descriptor.element_size)
+        return {};
+
+    // NOTE: A descriptor for a read() request that is not yet filled up to its minimum length will stay at the head of the queue, so the underlying source can keep filling it.
+
+    // 5. Perform ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+    // NOTE: We need to take a copy of pull_into_descriptor here as the shift destroys the pull into descriptor we are given.
+    auto pull_into_descriptor_copy = readable_byte_stream_controller_shift_pending_pull_into(controller);
+
+    // 6. Let remainderSize be the remainder after dividing pullIntoDescriptor’s bytes filled by pullIntoDescriptor’s element size.
+    auto remainder_size = pull_into_descriptor_copy.bytes_filled % pull_into_descriptor_copy.element_size;
+
+    // 7. If remainderSize > 0,
+    if (remainder_size > 0) {
+        // 1. Let end be pullIntoDescriptor’s byte offset + pullIntoDescriptor’s bytes filled.
+        auto end = pull_into_descriptor_copy.byte_offset + pull_into_descriptor_copy.bytes_filled;
+
+        // 2. Perform ? ReadableByteStreamControllerEnqueueClonedChunkToQueue(controller, pullIntoDescriptor’s buffer, end − remainderSize, remainderSize).
+        TRY(readable_byte_stream_controller_enqueue_cloned_chunk_to_queue(controller, *pull_into_descriptor_copy.buffer, end - remainder_size, remainder_size));
+    }
+
+    // 8. Set pullIntoDescriptor’s bytes filled to pullIntoDescriptor’s bytes filled − remainderSize.
+    pull_into_descriptor_copy.bytes_filled -= remainder_size;
+
+    // 9. Perform ! ReadableByteStreamControllerCommitPullIntoDescriptor(controller.[[stream]], pullIntoDescriptor).
+    readable_byte_stream_controller_commit_pull_into_descriptor(*controller.stream(), pull_into_descriptor_copy);
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
 void readable_stream_default_controller_error(ReadableStreamDefaultController& controller, JS::Value error)
 {
