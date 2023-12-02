@@ -34,4 +34,18 @@ void HTMLTitleElement::children_changed()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text
+DeprecatedString HTMLTitleElement::text()
+{
+    // The text attribute's getter must return this title element's child text content.
+    return child_text_content();
+}
+
+// https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text
+void HTMLTitleElement::set_text(String const& value)
+{
+    // The text attribute's setter must string replace all with the given value within this title element.
+    string_replace_all(value.to_deprecated_string());
+}
+
 }

@@ -17,6 +17,9 @@ class HTMLTitleElement final : public HTMLElement {
 public:
     virtual ~HTMLTitleElement() override;
 
+    DeprecatedString text();
+    void set_text(String const& value);
+
 private:
     HTMLTitleElement(DOM::Document&, DOM::QualifiedName);
 
