@@ -13,7 +13,7 @@ namespace Gfx::ICC {
 
 // The ICC spec uses FourCCs for many different things.
 // This is used to give FourCCs for different roles distinct types, so that they can only be compared to the correct constants.
-// (FourCCs that have only a small and fixed set of values should use an enum class instead, see e.g. DeviceClass and ColorSpace in Profile.h.)
+// (FourCCs that have only a small and fixed set of values should use an enum class instead, see e.g. DeviceClass and ColorSpace in Enums.h.)
 enum class FourCCType {
     PreferredCMMType,
     DeviceManufacturer,
