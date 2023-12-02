@@ -68,17 +68,27 @@ WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::c
         return script;
     }
 
-    // 10. For each ModuleRequest record requested of result.[[RequestedModules]]:
+    // 9. For each ModuleRequest record requested of result.[[RequestedModules]]:
     for (auto const& requested : result.value()->requested_modules()) {
         // FIXME: Clarify if this should be checked for all requested before running the steps below.
-        // 9. Assert: requested.[[Assertions]] does not contain any Record entry such that entry.[[Key]] is not "type",
-        //            because we only asked for "type" assertions in HostGetSupportedImportAssertions.
-        VERIFY(all_of(requested.assertions, [](auto const& assertion) { return assertion.key == "type"sv; }));
+        // 1. If requested.[[Attributes]] contains a Record entry such that entry.[[Key]] is not "type", then:
+        for (auto const& attribute : requested.attributes) {
+            if (attribute.key != "type"sv) {
+                // 1. Let error be a new SyntaxError exception.
+                auto error = JS::SyntaxError::create(settings_object.realm(), "Module request attributes must only contain a type attribute"_fly_string);
 
-        // 1. Let url be the result of resolving a module specifier given script and requested.[[Specifier]], catching any exceptions.
+                // 2. Set script's parse error to error.
+                script->set_parse_error(error);
+
+                // 3. Return script.
+                return script;
+            }
+        }
+
+        // 2. Let url be the result of resolving a module specifier given script and requested.[[Specifier]], catching any exceptions.
         auto url = resolve_module_specifier(*script, requested.module_specifier);
 
-        // 2. If the previous step threw an exception, then:
+        // 3. If the previous step threw an exception, then:
         if (url.is_exception()) {
             // FIXME: 1. Set script's parse error to that exception.
 
@@ -86,10 +96,10 @@ WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::c
             return script;
         }
 
-        // 3. Let moduleType be the result of running the module type from module request steps given requested.
+        // 4. Let moduleType be the result of running the module type from module request steps given requested.
         auto module_type = module_type_from_module_request(requested);
 
-        // 4. If the result of running the module type allowed steps given moduleType and settings is false, then:
+        // 5. If the result of running the module type allowed steps given moduleType and settings is false, then:
         if (!settings_object.module_type_allowed(module_type)) {
             // FIXME: 1. Let error be a new TypeError exception.
 
@@ -100,10 +110,10 @@ WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::c
         }
     }
 
-    // 11. Set script's record to result.
+    // 10. Set script's record to result.
     script->m_record = result.value();
 
-    // 12. Return script.
+    // 11. Return script.
     return script;
 }
 

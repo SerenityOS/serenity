@@ -18,13 +18,14 @@ struct ModuleWithSpecifier {
     NonnullGCPtr<Module> module; // [[Module]]
 };
 
-// 2.9 ModuleRequest Records, https://tc39.es/proposal-import-assertions/#sec-modulerequest-record
-struct ModuleRequest {
-    struct Assertion {
-        DeprecatedString key;
-        DeprecatedString value;
-    };
+// https://tc39.es/proposal-import-attributes/#importattribute-record
+struct ImportAttribute {
+    DeprecatedString key;
+    DeprecatedString value;
+};
 
+// https://tc39.es/proposal-import-attributes/#modulerequest-record
+struct ModuleRequest {
     ModuleRequest() = default;
 
     explicit ModuleRequest(DeprecatedFlyString specifier)
@@ -32,15 +33,15 @@ struct ModuleRequest {
     {
     }
 
-    ModuleRequest(DeprecatedFlyString module_specifier, Vector<Assertion> assertions);
+    ModuleRequest(DeprecatedFlyString specifier, Vector<ImportAttribute> attributes);
 
-    void add_assertion(DeprecatedString key, DeprecatedString value)
+    void add_attribute(DeprecatedString key, DeprecatedString value)
     {
-        assertions.empend(move(key), move(value));
+        attributes.empend(move(key), move(value));
     }
 
     DeprecatedFlyString module_specifier; // [[Specifier]]
-    Vector<Assertion> assertions;         // [[Assertions]]
+    Vector<ImportAttribute> attributes;   // [[Attributes]]
 };
 
 }

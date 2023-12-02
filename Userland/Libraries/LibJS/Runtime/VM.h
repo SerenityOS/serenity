@@ -18,6 +18,7 @@
 #include <LibJS/CyclicModule.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/MarkedVector.h>
+#include <LibJS/ModuleLoading.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
@@ -230,14 +231,14 @@ public:
     // 16.2.1.8 HostLoadImportedModule ( referrer, moduleRequest, hostDefined, payload ), https://tc39.es/proposal-import-attributes/#sec-HostLoadImportedModule
     Function<void(Realm&, Variant<NonnullGCPtr<Script>, NonnullGCPtr<CyclicModule>>, ModuleRequest const&, GCPtr<GraphLoadingState::HostDefined>, GraphLoadingState&)> host_load_imported_module;
 
-    Function<ThrowCompletionOr<NonnullGCPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
-    Function<ThrowCompletionOr<void>(ScriptOrModule, ModuleRequest, PromiseCapability const&)> host_import_module_dynamically;
-    Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability const&, Promise*)> host_finish_dynamic_import;
+    Function<ThrowCompletionOr<NonnullGCPtr<Module>>(ImportedModuleReferrer, ModuleRequest const&)> host_resolve_imported_module;
+    Function<ThrowCompletionOr<void>(ImportedModuleReferrer, ModuleRequest, PromiseCapability const&)> host_import_module_dynamically;
+    Function<void(ImportedModuleReferrer, ModuleRequest const&, PromiseCapability const&, Promise*)> host_finish_dynamic_import;
 
     Function<HashMap<PropertyKey, Value>(SourceTextModule&)> host_get_import_meta_properties;
     Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
 
-    Function<Vector<DeprecatedString>()> host_get_supported_import_assertions;
+    Function<Vector<DeprecatedString>()> host_get_supported_import_attributes;
 
     void enable_default_host_import_module_dynamically_hook();
 
@@ -270,11 +271,11 @@ private:
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment);
 
-    ThrowCompletionOr<NonnullGCPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
+    ThrowCompletionOr<NonnullGCPtr<Module>> resolve_imported_module(ImportedModuleReferrer, ModuleRequest const& module_request);
     ThrowCompletionOr<void> link_and_eval_module(Module& module);
 
-    ThrowCompletionOr<void> import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability);
-    void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
+    ThrowCompletionOr<void> import_module_dynamically(ImportedModuleReferrer, ModuleRequest module_request, PromiseCapability const& promise_capability);
+    void finish_dynamic_import(ImportedModuleReferrer, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
 
     void set_well_known_symbols(WellKnownSymbols well_known_symbols) { m_well_known_symbols = move(well_known_symbols); }
 
@@ -303,14 +304,14 @@ private:
     ErrorMessages m_error_messages;
 
     struct StoredModule {
-        ScriptOrModule referencing_script_or_module;
+        ImportedModuleReferrer referrer;
         DeprecatedString filename;
         DeprecatedString type;
         Handle<Module> module;
         bool has_once_started_linking { false };
     };
 
-    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, DeprecatedString const& filename, DeprecatedString const& type);
+    StoredModule* get_stored_module(ImportedModuleReferrer const& script_or_module, DeprecatedString const& filename, DeprecatedString const& type);
 
     Vector<StoredModule> m_loaded_modules;
 

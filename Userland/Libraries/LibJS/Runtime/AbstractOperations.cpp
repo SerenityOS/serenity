@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/ModuleLoading.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -1459,25 +1460,53 @@ Completion dispose_resources(VM& vm, GCPtr<DeclarativeEnvironment> disposable, C
     return completion;
 }
 
+// https://tc39.es/proposal-import-attributes/#sec-AllImportAttributesSupported
+static bool all_import_attributes_supported(VM& vm, Vector<ImportAttribute> const& attributes)
+{
+    // 1. Let supported be HostGetSupportedImportAttributes().
+    auto supported = vm.host_get_supported_import_attributes();
+
+    // 2. For each ImportAttribute Record attribute of attributes, do
+    for (auto const& attribute : attributes) {
+        // a. If supported does not contain attribute.[[Key]], return false.
+        if (!supported.contains_slow(attribute.key))
+            return false;
+    }
+
+    // 3. Return true.
+    return true;
+}
+
 ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value options_value)
 {
     auto& realm = *vm.current_realm();
 
-    // 2.1.1.1 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
-    //  1. Let referencingScriptOrModule be GetActiveScriptOrModule().
-    auto referencing_script_or_module = vm.get_active_script_or_module();
+    // 13.3.10.2 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call
+    // 1. Let referrer be GetActiveScriptOrModule().
+    auto referrer = [&]() -> ImportedModuleReferrer {
+        auto active_script_or_module = vm.get_active_script_or_module();
 
-    // 6. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+        // 2. If referrer is null, set referrer to the current Realm Record.
+        if (active_script_or_module.has<Empty>())
+            return NonnullGCPtr<Realm> { realm };
+
+        if (active_script_or_module.has<NonnullGCPtr<Script>>())
+            return active_script_or_module.get<NonnullGCPtr<Script>>();
+
+        return NonnullGCPtr<CyclicModule> { verify_cast<CyclicModule>(*active_script_or_module.get<NonnullGCPtr<Module>>()) };
+    }();
+
+    // 7. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
-    // 7. Let specifierString be Completion(ToString(specifier)).
-    // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
+    // 8. Let specifierString be Completion(ToString(specifier)).
+    // 9. IfAbruptRejectPromise(specifierString, promiseCapability).
     auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier.to_deprecated_string(vm));
 
-    // 9. Let assertions be a new empty List.
-    Vector<ModuleRequest::Assertion> assertions;
+    // 10. Let attributes be a new empty List.
+    Vector<ImportAttribute> attributes;
 
-    // 10. If options is not undefined, then
+    // 11. If options is not undefined, then
     if (!options_value.is_undefined()) {
         // a. If Type(options) is not Object,
         if (!options_value.is_object()) {
@@ -1489,14 +1518,22 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
             return Value { promise_capability->promise() };
         }
 
-        // b. Let assertionsObj be Get(options, "assert").
-        // c. IfAbruptRejectPromise(assertionsObj, promiseCapability).
-        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, options_value.get(vm, vm.names.assert));
+        // b. Let attributesObj be Completion(Get(options, "with")).
+        // c. IfAbruptRejectPromise(attributesObj, promiseCapability).
+        auto attributes_obj = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, options_value.get(vm, vm.names.with));
 
-        // d. If assertionsObj is not undefined,
-        if (!assertion_object.is_undefined()) {
-            // i. If Type(assertionsObj) is not Object,
-            if (!assertion_object.is_object()) {
+        // d. Normative Optional, Deprecated
+        // 11. If the host supports the deprecated assert keyword for import attributes and attributesObj is undefined, then
+        if (attributes_obj.is_undefined()) {
+            // i. Set attributesObj to Completion(Get(options, "assert")).
+            // ii. IfAbruptRejectPromise(attributesObj, promiseCapability).
+            attributes_obj = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, options_value.get(vm, vm.names.assert));
+        }
+
+        // e. If attributesObj is not undefined,
+        if (!attributes_obj.is_undefined()) {
+            // i. If Type(attributesObj) is not Object,
+            if (!attributes_obj.is_object()) {
                 auto error = TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions")));
                 // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
                 MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
@@ -1505,20 +1542,17 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
                 return Value { promise_capability->promise() };
             }
 
-            // ii. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
-            // iii. IfAbruptRejectPromise(keys, promiseCapability).
-            auto keys = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, assertion_object.as_object().enumerable_own_property_names(Object::PropertyKind::Key));
+            // ii. Let entries be Completion(EnumerableOwnProperties(attributesObj, key+value)).
+            // iii. IfAbruptRejectPromise(entries, promiseCapability).
+            auto entries = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, attributes_obj.as_object().enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
 
-            // iv. Let supportedAssertions be ! HostGetSupportedImportAssertions().
-            auto supported_assertions = vm.host_get_supported_import_assertions();
+            // iv. For each entry of entries, do
+            for (auto const& entry : entries) {
+                // 1. Let key be ! Get(entry, "0").
+                auto key = MUST(entry.get(vm, PropertyKey(0)));
 
-            // v. For each String key of keys,
-            for (auto const& key : keys) {
-                auto property_key = MUST(key.to_property_key(vm));
-
-                // 1. Let value be Get(assertionsObj, key).
-                // 2. IfAbruptRejectPromise(value, promiseCapability).
-                auto value = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, assertion_object.get(vm, property_key));
+                // 2. Let value be ! Get(entry, "1").
+                auto value = MUST(entry.get(vm, PropertyKey(1)));
 
                 // 3. If Type(value) is not String, then
                 if (!value.is_string()) {
@@ -1530,22 +1564,33 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
                     return Value { promise_capability->promise() };
                 }
 
-                // 4. If supportedAssertions contains key, then
-                if (supported_assertions.contains_slow(property_key.to_string())) {
-                    // a. Append { [[Key]]: key, [[Value]]: value } to assertions.
-                    assertions.empend(property_key.to_string(), value.as_string().deprecated_string());
-                }
+                // 4. Append the ImportAttribute Record { [[Key]]: key, [[Value]]: value } to attributes.
+                attributes.empend(key.as_string().deprecated_string(), value.as_string().deprecated_string());
             }
         }
-        // e. Sort assertions by the code point order of the [[Key]] of each element. NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
-        // Note: This is done when constructing the ModuleRequest.
+
+        // f. If AllImportAttributesSupported(attributes) is false, then
+        if (!all_import_attributes_supported(vm, attributes)) {
+            auto error = TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions")));
+            // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
+            MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
+
+            // ii. Return promiseCapability.[[Promise]].
+            return Value { promise_capability->promise() };
+        }
+
+        // g. Sort attributes according to the lexicographic order of their [[Key]] fields,
+        //    treating the value of each such field as a sequence of UTF-16 code unit values.
+        //    NOTE: This sorting is observable only in that hosts are prohibited from
+        //    distinguishing among attributes by the order they occur in.
+        // NOTE: This is done when constructing the ModuleRequest.
     }
 
-    // 11. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Assertions]]: assertions }.
-    ModuleRequest request { specifier_string, assertions };
+    // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
+    ModuleRequest request { specifier_string, attributes };
 
-    // 12. Perform HostImportModuleDynamically(referencingScriptOrModule, moduleRequest, promiseCapability).
-    MUST_OR_THROW_OOM(vm.host_import_module_dynamically(referencing_script_or_module, move(request), promise_capability));
+    // 13. Perform HostLoadImportedModule(referrer, moduleRequest, empty, promiseCapability).
+    MUST_OR_THROW_OOM(vm.host_import_module_dynamically(referrer, move(request), promise_capability));
 
     // 13. Return promiseCapability.[[Promise]].
     return Value { promise_capability->promise() };

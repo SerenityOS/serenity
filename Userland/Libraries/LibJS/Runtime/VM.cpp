@@ -94,11 +94,11 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
         return make_job_callback(function_object);
     };
 
-    host_resolve_imported_module = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier) {
-        return resolve_imported_module(move(referencing_script_or_module), specifier);
+    host_resolve_imported_module = [&](ImportedModuleReferrer referrer, ModuleRequest const& specifier) {
+        return resolve_imported_module(referrer, specifier);
     };
 
-    host_import_module_dynamically = [&](ScriptOrModule, ModuleRequest const&, PromiseCapability const& promise_capability) -> ThrowCompletionOr<void> {
+    host_import_module_dynamically = [&](ImportedModuleReferrer, ModuleRequest const&, PromiseCapability const& promise_capability) -> ThrowCompletionOr<void> {
         // By default, we throw on dynamic imports this is to prevent arbitrary file access by scripts.
         VERIFY(current_realm());
         auto& realm = *current_realm();
@@ -127,8 +127,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
         return {};
     };
 
-    host_finish_dynamic_import = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability const& promise_capability, Promise* promise) {
-        return finish_dynamic_import(move(referencing_script_or_module), specifier, promise_capability, promise);
+    host_finish_dynamic_import = [&](ImportedModuleReferrer referrer, ModuleRequest const& specifier, PromiseCapability const& promise_capability, Promise* promise) {
+        return finish_dynamic_import(referrer, specifier, promise_capability, promise);
     };
 
     host_get_import_meta_properties = [&](SourceTextModule const&) -> HashMap<PropertyKey, Value> {
@@ -138,7 +138,7 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     host_finalize_import_meta = [&](Object*, SourceTextModule const&) {
     };
 
-    host_get_supported_import_assertions = [&] {
+    host_get_supported_import_attributes = [&] {
         return Vector<DeprecatedString> { "type" };
     };
 
@@ -183,8 +183,8 @@ String const& VM::error_message(ErrorMessage type) const
 
 void VM::enable_default_host_import_module_dynamically_hook()
 {
-    host_import_module_dynamically = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability const& promise_capability) {
-        return import_module_dynamically(move(referencing_script_or_module), specifier, promise_capability);
+    host_import_module_dynamically = [&](ImportedModuleReferrer referrer, ModuleRequest const& specifier, PromiseCapability const& promise_capability) {
+        return import_module_dynamically(referrer, specifier, promise_capability);
     };
 }
 
@@ -760,7 +760,7 @@ ScriptOrModule VM::get_active_script_or_module() const
     return m_execution_context_stack[0]->script_or_module;
 }
 
-VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, DeprecatedString const& filename, DeprecatedString const&)
+VM::StoredModule* VM::get_stored_module(ImportedModuleReferrer const&, DeprecatedString const& filename, DeprecatedString const&)
 {
     // Note the spec says:
     // Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments
@@ -801,7 +801,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
             dbgln("Warning: Using multiple modules as entry point can lead to unexpected results");
 
         m_loaded_modules.empend(
-            NonnullGCPtr(module),
+            ImportedModuleReferrer { NonnullGCPtr { verify_cast<CyclicModule>(module) } },
             module.filename(),
             DeprecatedString {}, // Null type
             module,
@@ -866,7 +866,7 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
 }
 
 // 16.2.1.7 HostResolveImportedModule ( referencingScriptOrModule, specifier ), https://tc39.es/ecma262/#sec-hostresolveimportedmodule
-ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request)
+ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ImportedModuleReferrer referrer, ModuleRequest const& module_request)
 {
     // An implementation of HostResolveImportedModule must conform to the following requirements:
     //  - If it completes normally, the [[Value]] slot of the completion must contain an instance of a concrete subclass of Module Record.
@@ -882,18 +882,25 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     // The actual mapping semantic is host-defined but typically a normalization process is applied to specifier as part of the mapping process.
     // A typical normalization process would include actions such as alphabetic case folding and expansion of relative and abbreviated path specifiers.
 
-    // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
-    VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
-    auto module_type = module_request.assertions.is_empty() ? DeprecatedString {} : module_request.assertions.first().value;
+    DeprecatedString module_type;
+    for (auto& attribute : module_request.attributes) {
+        if (attribute.key == "type"sv) {
+            module_type = attribute.value;
+            break;
+        }
+    }
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {}", module_request.module_specifier, module_type);
 
-    StringView base_filename = referencing_script_or_module.visit(
-        [&](Empty) {
+    StringView const base_filename = referrer.visit(
+        [&](NonnullGCPtr<Realm> const&) {
             return "."sv;
         },
-        [&](auto& script_or_module) {
-            return script_or_module->filename();
+        [&](NonnullGCPtr<Script> const& script) {
+            return script->filename();
+        },
+        [&](NonnullGCPtr<Module> const& module) {
+            return module->filename();
         });
 
     LexicalPath base_path { base_filename };
@@ -907,7 +914,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolved filename: '{}'", filename);
 
 #if JS_MODULE_DEBUG
-    DeprecatedString referencing_module_string = referencing_script_or_module.visit(
+    DeprecatedString referencing_module_string = referrer.visit(
         [&](Empty) -> DeprecatedString {
             return ".";
         },
@@ -922,7 +929,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filename);
 #endif
 
-    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filename, module_type);
+    auto* loaded_module_or_end = get_stored_module(referrer, filename, module_type);
     if (loaded_module_or_end != nullptr) {
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filename, loaded_module_or_end->module.ptr());
         return NonnullGCPtr(*loaded_module_or_end->module);
@@ -970,7 +977,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     // We have to set it here already in case it references itself.
     m_loaded_modules.empend(
-        referencing_script_or_module,
+        referrer,
         filename,
         module_type,
         *module,
@@ -980,7 +987,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 }
 
 // 16.2.1.8 HostImportModuleDynamically ( referencingScriptOrModule, specifier, promiseCapability ), https://tc39.es/ecma262/#sec-hostimportmoduledynamically
-ThrowCompletionOr<void> VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability)
+ThrowCompletionOr<void> VM::import_module_dynamically(ImportedModuleReferrer referrer, ModuleRequest module_request, PromiseCapability const& promise_capability)
 {
     auto& realm = *current_realm();
 
@@ -999,24 +1006,11 @@ ThrowCompletionOr<void> VM::import_module_dynamically(ScriptOrModule referencing
     auto promise = Promise::create(realm);
 
     ScopeGuard finish_dynamic_import = [&] {
-        host_finish_dynamic_import(referencing_script_or_module, module_request, promise_capability, promise);
+        host_finish_dynamic_import(referrer, module_request, promise_capability, promise);
     };
 
-    // Generally within ECMA262 we always get a referencing_script_or_module. However, ShadowRealm gives an explicit null.
-    // To get around this is we attempt to get the active script_or_module otherwise we might start loading "random" files from the working directory.
-    if (referencing_script_or_module.has<Empty>()) {
-        referencing_script_or_module = get_active_script_or_module();
-
-        // If there is no ScriptOrModule in any of the execution contexts
-        if (referencing_script_or_module.has<Empty>()) {
-            // Throw an error for now
-            promise->reject(InternalError::create(realm, TRY_OR_THROW_OOM(*this, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier))));
-            return {};
-        }
-    }
-
     // Note: If host_resolve_imported_module returns a module it has been loaded successfully and the next call in finish_dynamic_import will retrieve it again.
-    auto module_or_error = host_resolve_imported_module(referencing_script_or_module, module_request);
+    auto module_or_error = host_resolve_imported_module(referrer, module_request);
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] HostImportModuleDynamically(..., {}) -> {}", module_request.module_specifier, module_or_error.is_error() ? "failed" : "passed");
     if (module_or_error.is_throw_completion()) {
         promise->reject(*module_or_error.throw_completion().value());
@@ -1039,19 +1033,19 @@ ThrowCompletionOr<void> VM::import_module_dynamically(ScriptOrModule referencing
 }
 
 // 16.2.1.9 FinishDynamicImport ( referencingScriptOrModule, specifier, promiseCapability, innerPromise ), https://tc39.es/ecma262/#sec-finishdynamicimport
-void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise)
+void VM::finish_dynamic_import(ImportedModuleReferrer referrer, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] finish_dynamic_import on {}", module_request.module_specifier);
 
     auto& realm = *current_realm();
 
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
-    auto fulfilled_closure = [referencing_script_or_module = move(referencing_script_or_module), module_request = move(module_request), &promise_capability](VM& vm) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [referrer = move(referrer), module_request = move(module_request), &promise_capability](VM& vm) -> ThrowCompletionOr<Value> {
         auto result = vm.argument(0);
         // a. Assert: result is undefined.
         VERIFY(result.is_undefined());
         // b. Let moduleRecord be ! HostResolveImportedModule(referencingScriptOrModule, specifier).
-        auto module_record = MUST(vm.host_resolve_imported_module(referencing_script_or_module, module_request));
+        auto module_record = MUST(vm.host_resolve_imported_module(referrer, module_request));
 
         // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
         // Note: If HostResolveImportedModule returns a module evaluate will have been called on it.

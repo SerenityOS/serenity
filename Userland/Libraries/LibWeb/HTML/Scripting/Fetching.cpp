@@ -59,8 +59,8 @@ DeprecatedString module_type_from_module_request(JS::ModuleRequest const& module
     // 1. Let moduleType be "javascript".
     DeprecatedString module_type = "javascript"sv;
 
-    // 2. If moduleRequest.[[Assertions]] has a Record entry such that entry.[[Key]] is "type", then:
-    for (auto const& entry : module_request.assertions) {
+    // 2. If moduleRequest.[[Attributes]] has a Record entry such that entry.[[Key]] is "type", then:
+    for (auto const& entry : module_request.attributes) {
         if (entry.key != "type"sv)
             continue;
 
@@ -719,7 +719,7 @@ void fetch_single_imported_module_script(JS::Realm& realm,
 {
     // 1. Assert: moduleRequest.[[Attributes]] does not contain any Record entry such that entry.[[Key]] is not "type",
     //    because we only asked for "type" attributes in HostGetSupportedImportAttributes.
-    for (auto const& entry : module_request.assertions)
+    for (auto const& entry : module_request.attributes)
         VERIFY(entry.key == "type"sv);
 
     // 2. Let moduleType be the result of running the module type from module request steps given moduleRequest.

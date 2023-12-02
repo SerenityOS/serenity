@@ -1536,9 +1536,9 @@ DeprecatedFlyString ExportStatement::local_name_for_default = "*default*";
 
 static void dump_assert_clauses(ModuleRequest const& request)
 {
-    if (!request.assertions.is_empty()) {
+    if (!request.attributes.is_empty()) {
         out("[ ");
-        for (auto& assertion : request.assertions)
+        for (auto& assertion : request.attributes)
             out("{}: {}, ", assertion.key, assertion.value);
         out(" ]");
     }
@@ -1882,15 +1882,15 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     return {};
 }
 
-ModuleRequest::ModuleRequest(DeprecatedFlyString module_specifier_, Vector<Assertion> assertions_)
+ModuleRequest::ModuleRequest(DeprecatedFlyString module_specifier_, Vector<ImportAttribute> attributes)
     : module_specifier(move(module_specifier_))
-    , assertions(move(assertions_))
+    , attributes(move(attributes))
 {
-    // Perform step 10.e. from EvaluateImportCall, https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
-    // or step 2. from 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
+    // Perform step 10.e. from EvaluateImportCall, https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call
+    // or step 2. from WithClauseToAttributes, https://tc39.es/proposal-import-attributes/#sec-with-clause-to-attributes
     // e. / 2. Sort assertions by the code point order of the [[Key]] of each element.
     // NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
-    quick_sort(assertions, [](Assertion const& lhs, Assertion const& rhs) {
+    quick_sort(this->attributes, [](ImportAttribute const& lhs, ImportAttribute const& rhs) {
         return lhs.key < rhs.key;
     });
 }

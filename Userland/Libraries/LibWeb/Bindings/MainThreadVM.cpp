@@ -397,8 +397,8 @@ ErrorOr<void> initialize_main_thread_vm()
     // FIXME: Implement 8.1.5.5.2 HostImportModuleDynamically(referencingScriptOrModule, moduleRequest, promiseCapability), https://html.spec.whatwg.org/multipage/webappapis.html#hostimportmoduledynamically(referencingscriptormodule,-modulerequest,-promisecapability)
     // FIXME: Implement 8.1.5.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
 
-    // 8.1.5.5.4 HostGetSupportedImportAssertions(), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetsupportedimportassertions
-    s_main_thread_vm->host_get_supported_import_assertions = []() -> Vector<DeprecatedString> {
+    // 8.1.6.5.2 HostGetSupportedImportAttributes(), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetsupportedimportassertions
+    s_main_thread_vm->host_get_supported_import_attributes = []() -> Vector<DeprecatedString> {
         // 1. Return « "type" ».
         return { "type"sv };
     };
@@ -515,15 +515,14 @@ ErrorOr<void> initialize_main_thread_vm()
     };
 
     // 8.1.6.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
-    s_main_thread_vm->host_resolve_imported_module = [](JS::ScriptOrModule const& referencing_string_or_module, JS::ModuleRequest const& module_request) -> JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>> {
+    s_main_thread_vm->host_resolve_imported_module = [](JS::ImportedModuleReferrer referrer, JS::ModuleRequest const& module_request) -> JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>> {
         // 1. Let moduleMap and referencingScript be null.
         Optional<HTML::ModuleMap&> module_map;
         Optional<HTML::Script&> referencing_script;
 
-        // 2. If referencingScriptOrModule is not null, then:
-        if (!referencing_string_or_module.has<Empty>()) {
+        if (referrer.has<JS::NonnullGCPtr<JS::Script>>() || referrer.has<JS::NonnullGCPtr<JS::CyclicModule>>()) {
             // 1. Set referencingScript to referencingScriptOrModule.[[HostDefined]].
-            referencing_script = verify_cast<HTML::Script>(referencing_string_or_module.has<JS::NonnullGCPtr<JS::Script>>() ? *referencing_string_or_module.get<JS::NonnullGCPtr<JS::Script>>()->host_defined() : *referencing_string_or_module.get<JS::NonnullGCPtr<JS::Module>>()->host_defined());
+            referencing_script = verify_cast<HTML::Script>(referrer.has<JS::NonnullGCPtr<JS::Script>>() ? *referrer.get<JS::NonnullGCPtr<JS::Script>>()->host_defined() : *referrer.get<JS::NonnullGCPtr<JS::CyclicModule>>()->host_defined());
 
             // 2. Set moduleMap to referencingScript's settings object's module map.
             module_map = referencing_script->settings_object().module_map();
