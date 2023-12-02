@@ -505,7 +505,7 @@ void readable_byte_stream_controller_fill_head_pull_into_descriptor(ReadableByte
     VERIFY(controller.pending_pull_intos().is_empty() || &controller.pending_pull_intos().first() == &pull_into_descriptor);
 
     // 2. Assert: controller.[[byobRequest]] is null.
-    VERIFY(!controller.byob_request());
+    VERIFY(!controller.raw_byob_request());
 
     // 3. Set pullIntoDescriptor’s bytes filled to bytes filled + size.
     pull_into_descriptor.bytes_filled += size;
@@ -1055,6 +1055,38 @@ bool readable_stream_default_controller_should_call_pull(ReadableStreamDefaultCo
 
     // 8. Return false.
     return false;
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollergetbyobrequest
+JS::GCPtr<ReadableStreamBYOBRequest> readable_byte_stream_controller_get_byob_request(JS::NonnullGCPtr<ReadableByteStreamController> controller)
+{
+    auto& vm = controller->vm();
+    auto& realm = controller->realm();
+
+    // 1. If controller.[[byobRequest]] is null and controller.[[pendingPullIntos]] is not empty,
+    if (!controller->raw_byob_request() && !controller->pending_pull_intos().is_empty()) {
+        // 1. Let firstDescriptor be controller.[[pendingPullIntos]][0].
+        auto const& first_descriptor = controller->pending_pull_intos().first();
+
+        // 2. Let view be ! Construct(%Uint8Array%, « firstDescriptor’s buffer, firstDescriptor’s byte offset + firstDescriptor’s bytes filled, firstDescriptor’s byte length − firstDescriptor’s bytes filled »).
+        auto view = MUST(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), first_descriptor.buffer, JS::Value(first_descriptor.byte_offset + first_descriptor.bytes_filled), JS::Value(first_descriptor.byte_length - first_descriptor.bytes_filled)));
+
+        // 3. Let byobRequest be a new ReadableStreamBYOBRequest.
+        auto byob_request = realm.heap().allocate<ReadableStreamBYOBRequest>(realm, realm);
+
+        // 4. Set byobRequest.[[controller]] to controller.
+        byob_request->set_controller(controller);
+
+        // 5. Set byobRequest.[[view]] to view.
+        auto array_buffer_view = vm.heap().allocate<WebIDL::ArrayBufferView>(realm, view);
+        byob_request->set_view(array_buffer_view);
+
+        // 6. Set controller.[[byobRequest]] to byobRequest.
+        controller->set_byob_request(byob_request);
+    }
+
+    // 2. Return controller.[[byobRequest]].
+    return controller->raw_byob_request();
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-clear-algorithms
@@ -1813,7 +1845,8 @@ WebIDL::ExceptionOr<void> readable_stream_enqueue(ReadableStreamController& cont
         // FIXME: 2. Assert: chunk is an ArrayBufferView.
 
         // 3. Let byobView be the current BYOB request view for stream.
-        auto byob_view = readable_byte_controller->byob_request();
+        // FIXME: This is not what the spec means by 'current BYOB request view'
+        auto byob_view = readable_byte_controller->raw_byob_request();
 
         // 4. If byobView is non-null, and chunk.[[ViewedArrayBuffer]] is byobView.[[ViewedArrayBuffer]], then:
         if (byob_view) {
@@ -2112,7 +2145,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue_cloned_chunk_t
 PullIntoDescriptor readable_byte_stream_controller_shift_pending_pull_into(ReadableByteStreamController& controller)
 {
     // 1. Assert: controller.[[byobRequest]] is null.
-    VERIFY(!controller.byob_request());
+    VERIFY(!controller.raw_byob_request());
 
     // 2. Let descriptor be controller.[[pendingPullIntos]][0].
     // 3. Remove descriptor from controller.[[pendingPullIntos]].

@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBRequest.h>
@@ -20,6 +21,13 @@ Optional<double> ReadableByteStreamController::desired_size() const
 {
     // 1. Return ! ReadableByteStreamControllerGetDesiredSize(this).
     return readable_byte_stream_controller_get_desired_size(*this);
+}
+
+// https://streams.spec.whatwg.org/#rbs-controller-byob-request
+JS::GCPtr<ReadableStreamBYOBRequest> ReadableByteStreamController::byob_request()
+{
+    // 1. Return ! ReadableByteStreamControllerGetBYOBRequest(this).
+    return readable_byte_stream_controller_get_byob_request(*this);
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-close
