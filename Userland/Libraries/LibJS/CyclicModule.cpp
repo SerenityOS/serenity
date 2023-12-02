@@ -127,7 +127,7 @@ void CyclicModule::inner_module_loading(JS::GraphLoadingState& state)
         for (auto const& loaded : state.visited) {
             // i. If loaded.[[Status]] is NEW, set loaded.[[Status]] to UNLINKED.
             if (loaded->m_status == ModuleStatus::New)
-                loaded->m_status = ModuleStatus::Linked;
+                loaded->m_status = ModuleStatus::Unlinked;
         }
 
         // c. Perform ! Call(state.[[PromiseCapability]].[[Resolve]], undefined, « undefined »).
