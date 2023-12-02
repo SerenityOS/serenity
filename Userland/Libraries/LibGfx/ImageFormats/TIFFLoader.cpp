@@ -97,7 +97,11 @@ private:
         }
 
         if (*m_metadata.samples_per_pixel() == 1) {
-            auto const luminosity = TRY(read_component(stream, bits_per_sample[0]));
+            auto luminosity = TRY(read_component(stream, bits_per_sample[0]));
+
+            if (m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero)
+                luminosity = ~luminosity;
+
             return Color(luminosity, luminosity, luminosity);
         }
 
