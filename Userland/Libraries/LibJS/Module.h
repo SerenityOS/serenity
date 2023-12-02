@@ -9,6 +9,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibJS/ModuleLoading.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Script.h>
@@ -113,6 +114,6 @@ private:
 class CyclicModule;
 struct GraphLoadingState;
 
-void finish_loading_imported_module(Realm&, Variant<NonnullGCPtr<Script>, NonnullGCPtr<CyclicModule>>, ModuleRequest const&, GraphLoadingState&, ThrowCompletionOr<Module*> const&);
+void finish_loading_imported_module(ImportedModuleReferrer, ModuleRequest const&, ImportedModulePayload, ThrowCompletionOr<NonnullGCPtr<Module>> const&);
 
 }

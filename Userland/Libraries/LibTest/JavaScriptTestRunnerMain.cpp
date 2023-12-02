@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 
     if (!g_vm) {
         g_vm = MUST(JS::VM::create());
-        g_vm->enable_default_host_import_module_dynamically_hook();
+        g_vm->set_dynamic_imports_allowed(true);
     }
 
     Test::JS::TestRunner test_runner(test_root, common_path, print_times, print_progress, print_json, per_file);

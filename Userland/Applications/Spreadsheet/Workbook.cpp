@@ -38,7 +38,7 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
     m_main_execution_context->realm = &realm;
     m_main_execution_context->is_strict_mode = true;
     m_vm->push_execution_context(*m_main_execution_context);
-    m_vm->enable_default_host_import_module_dynamically_hook();
+    m_vm->set_dynamic_imports_allowed(true);
 }
 
 bool Workbook::set_filename(DeprecatedString const& filename)

@@ -775,7 +775,7 @@ void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm,
     fetch_client.prepare_to_run_callback();
 
     // 5. Let loadingPromise be record.LoadRequestedModules(state).
-    auto& loading_promise = record->load_requested_modules(realm, state);
+    auto& loading_promise = record->load_requested_modules(state);
 
     // 6. Upon fulfillment of loadingPromise, run the following steps:
     WebIDL::upon_fulfillment(loading_promise, [&realm, record, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {

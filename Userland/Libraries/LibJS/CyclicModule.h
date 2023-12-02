@@ -65,7 +65,7 @@ public:
     virtual ThrowCompletionOr<void> link(VM& vm) override final;
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override final;
 
-    virtual PromiseCapability& load_requested_modules(Realm&, GCPtr<GraphLoadingState::HostDefined>);
+    virtual PromiseCapability& load_requested_modules(GCPtr<GraphLoadingState::HostDefined>);
     virtual void inner_module_loading(GraphLoadingState& state);
 
     Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
@@ -103,6 +103,7 @@ protected:
     Optional<u32> m_pending_async_dependencies;         // [[PendingAsyncDependencies]]
 };
 
-void continue_module_loading(Realm&, GraphLoadingState& state, ThrowCompletionOr<Module*> const&);
+void continue_module_loading(GraphLoadingState&, ThrowCompletionOr<NonnullGCPtr<Module>> const&);
+void continue_dynamic_import(NonnullGCPtr<PromiseCapability>, ThrowCompletionOr<NonnullGCPtr<Module>> const& module_completion);
 
 }
