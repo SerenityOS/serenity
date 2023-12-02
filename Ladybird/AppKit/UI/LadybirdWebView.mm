@@ -331,12 +331,10 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
             [[NSCursor arrowCursor] set];
             break;
         case Gfx::StandardCursor::ResizeColumn:
-            // FIXME: AppKit does not have a corresponding cursor, so we should make one.
-            [[NSCursor arrowCursor] set];
+            [[NSCursor resizeLeftRightCursor] set];
             break;
         case Gfx::StandardCursor::ResizeRow:
-            // FIXME: AppKit does not have a corresponding cursor, so we should make one.
-            [[NSCursor arrowCursor] set];
+            [[NSCursor resizeUpDownCursor] set];
             break;
         case Gfx::StandardCursor::Hand:
             [[NSCursor pointingHandCursor] set];
