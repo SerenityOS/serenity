@@ -503,8 +503,13 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
             auto movement = compute_mouse_event_movement(screen_position);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, screen_position, page_offset, client_offset, offset, movement, 1, buttons, modifiers).release_value_but_fixme_should_propagate_errors());
+
             m_mousemove_previous_screen_position = screen_position;
+
+            bool continue_ = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, screen_position, page_offset, client_offset, offset, movement, 1, buttons, modifiers).release_value_but_fixme_should_propagate_errors());
+            if (!continue_)
+                return false;
+
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paintable_box())
                 return true;
