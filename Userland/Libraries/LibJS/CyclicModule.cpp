@@ -170,7 +170,8 @@ ThrowCompletionOr<void> CyclicModule::link(VM& vm)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] link[{}]()", this);
     // 1. Assert: module.[[Status]] is not linking or evaluating.
-    VERIFY(m_status != ModuleStatus::Linking && m_status != ModuleStatus::Evaluating);
+    VERIFY(m_status != ModuleStatus::Linking);
+    VERIFY(m_status != ModuleStatus::Evaluating);
     // 2. Let stack be a new empty List.
     Vector<Module*> stack;
 
@@ -387,7 +388,8 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
         VERIFY(m_status == ModuleStatus::Evaluated);
 
         // c. Assert: module.[[EvaluationError]] is result.
-        VERIFY(m_evaluation_error.is_error() && same_value(*m_evaluation_error.throw_completion().value(), *result.throw_completion().value()));
+        VERIFY(m_evaluation_error.is_error());
+        VERIFY(same_value(*m_evaluation_error.throw_completion().value(), *result.throw_completion().value()));
 
         // d. Perform ! Call(capability.[[Reject]], undefined, « result.[[Value]] »).
         MUST(call(vm, *m_top_level_capability->reject(), js_undefined(), *result.throw_completion().value()));
