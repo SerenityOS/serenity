@@ -64,6 +64,7 @@ executable("WebContent") {
     "//Ladybird/Utilities.cpp",
     "//Userland/Services/WebContent/ConnectionFromClient.cpp",
     "//Userland/Services/WebContent/ConsoleGlobalEnvironmentExtensions.cpp",
+    "//Userland/Services/WebContent/PageClient.cpp",
     "//Userland/Services/WebContent/PageHost.cpp",
     "//Userland/Services/WebContent/WebContentConsoleClient.cpp",
     "//Userland/Services/WebContent/WebDriverConnection.cpp",
