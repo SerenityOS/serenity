@@ -47,7 +47,7 @@ XMLDocumentBuilder::XMLDocumentBuilder(DOM::Document& document, XMLScriptingSupp
 
 void XMLDocumentBuilder::set_source(DeprecatedString source)
 {
-    m_document->set_source(move(source));
+    m_document->set_source(MUST(String::from_deprecated_string(source)));
 }
 
 void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name, DeprecatedString> const& attributes)

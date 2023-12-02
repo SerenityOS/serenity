@@ -219,7 +219,7 @@ void HTMLParser::run()
 void HTMLParser::run(const AK::URL& url)
 {
     m_document->set_url(url);
-    m_document->set_source(m_tokenizer.source());
+    m_document->set_source(MUST(String::from_deprecated_string(m_tokenizer.source())));
     run();
     the_end();
     m_document->detach_parser({});

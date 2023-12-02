@@ -497,14 +497,14 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
 void ConnectionFromClient::get_source()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_source(doc->url(), doc->source());
+        async_did_get_source(doc->url(), doc->source().to_deprecated_string());
     }
 }
 
 void ConnectionFromClient::inspect_dom_tree()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_dom_tree(doc->dump_dom_tree_as_json());
+        async_did_get_dom_tree(doc->dump_dom_tree_as_json().to_deprecated_string());
     }
 }
 
@@ -927,7 +927,7 @@ void ConnectionFromClient::set_user_style(String const& source)
 void ConnectionFromClient::inspect_accessibility_tree()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json());
+        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json().to_deprecated_string());
     }
 }
 

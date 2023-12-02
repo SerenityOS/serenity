@@ -269,7 +269,7 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
     if (!is_supported_document_mime_type(mime_type.essence()))
         return nullptr;
 
-    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", *navigation_params).release_value_but_fixme_should_propagate_errors();
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, *navigation_params).release_value_but_fixme_should_propagate_errors();
     document->set_content_type(mime_type.essence());
 
     auto& realm = document->realm();
@@ -356,7 +356,7 @@ JS::GCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTML::Navi
     };
 
     // 5. Let document be the result of creating and initializing a Document object given "html", "text/html", and navigationParams.
-    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
 
     // 6. Either associate document with a custom rendering that is not rendered using the normal Document rendering rules, or mutate document until it represents the content the
     //    user agent wants to render.
