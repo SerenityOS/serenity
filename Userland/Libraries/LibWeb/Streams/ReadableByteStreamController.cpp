@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBRequest.h>
@@ -49,6 +51,12 @@ void ReadableByteStreamController::error(JS::Value error)
 ReadableByteStreamController::ReadableByteStreamController(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
+}
+
+void ReadableByteStreamController::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableByteStreamControllerPrototype>(realm, "ReadableByteStreamController"_fly_string));
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-cancel
