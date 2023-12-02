@@ -15,9 +15,17 @@
         println(`2c: "${titleElements[0].innerText}"`);
         println(`2d: "${document.title}"`);
 
+        // Getting and setting the title's text attribute.
+        println(`3a: "${titleElements[0].text}"`);
+        println(`3b: "${document.title}"`);
+
+        titleElements[0].text = "Another title!";
+        println(`3c: "${titleElements[0].text}"`);
+        println(`3d: "${document.title}"`);
+
         // Removing the title element sets the title back to default.
         titleElements[0].remove();
-        println(`3: "${document.title}"`);
+        println(`4: "${document.title}"`);
 
         // After adding several title elements to the body, setting the title updates the text
         // content of only the first title element.
@@ -26,17 +34,17 @@
         document.body.appendChild(document.createElement('title'));
 
         titleElements = document.getElementsByTagName('title');
-        println(`4a: ${titleElements.length}`)
-        println(`4b: "${titleElements[0].innerText}"`);
-        println(`4c: "${titleElements[1].innerText}"`);
-        println(`4d: "${titleElements[2].innerText}"`);
+        println(`5a: ${titleElements.length}`)
+        println(`5b: "${titleElements[0].innerText}"`);
+        println(`5c: "${titleElements[1].innerText}"`);
+        println(`5d: "${titleElements[2].innerText}"`);
 
         document.title = 'This is another title!';
 
         titleElements = document.getElementsByTagName('title');
-        println(`4e: ${titleElements.length}`)
-        println(`4f: "${titleElements[0].innerText}"`);
-        println(`4g: "${titleElements[1].innerText}"`);
-        println(`4h: "${titleElements[2].innerText}"`);
+        println(`5e: ${titleElements.length}`)
+        println(`5f: "${titleElements[0].innerText}"`);
+        println(`5g: "${titleElements[1].innerText}"`);
+        println(`5h: "${titleElements[2].innerText}"`);
     });
 </script>
