@@ -1340,4 +1340,47 @@ void HTMLInputElement::activation_behavior(DOM::Event const&)
     run_input_activation_behavior().release_value_but_fixme_should_propagate_errors();
 }
 
+bool HTMLInputElement::has_input_activation_behavior() const
+{
+    switch (type_state()) {
+    case TypeAttributeState::Checkbox:
+    case TypeAttributeState::Color:
+    case TypeAttributeState::FileUpload:
+    case TypeAttributeState::ImageButton:
+    case TypeAttributeState::RadioButton:
+    case TypeAttributeState::ResetButton:
+    case TypeAttributeState::SubmitButton:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:event-change-2
+bool HTMLInputElement::change_event_applies() const
+{
+    switch (type_state()) {
+    case TypeAttributeState::Checkbox:
+    case TypeAttributeState::Color:
+    case TypeAttributeState::Date:
+    case TypeAttributeState::Email:
+    case TypeAttributeState::FileUpload:
+    case TypeAttributeState::LocalDateAndTime:
+    case TypeAttributeState::Month:
+    case TypeAttributeState::Number:
+    case TypeAttributeState::Password:
+    case TypeAttributeState::RadioButton:
+    case TypeAttributeState::Range:
+    case TypeAttributeState::Search:
+    case TypeAttributeState::Telephone:
+    case TypeAttributeState::Text:
+    case TypeAttributeState::Time:
+    case TypeAttributeState::URL:
+    case TypeAttributeState::Week:
+        return true;
+    default:
+        return false;
+    }
+}
+
 }

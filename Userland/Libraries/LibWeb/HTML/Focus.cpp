@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/Focus.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 
@@ -32,13 +33,21 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
 
     // 2. For each entry entry in old chain, in order, run these substeps:
     for (auto& entry : old_chain) {
-        // FIXME: 1. If entry is an input element, and the change event applies to the element,
-        //           and the element does not have a defined activation behavior,
-        //           and the user has changed the element's value or its list of selected files
-        //           while the control was focused without committing that change
-        //           (such that it is different to what it was when the control was first focused),
-        //           then fire an event named change at the element,
-        //           with the bubbles attribute initialized to true.
+        // 1. If entry is an input element, and the change event applies to the element, and the element does not have
+        //    a defined activation behavior, and the user has changed the element's value or its list of selected files
+        //    while the control was focused without committing that change (such that it is different to what it was
+        //    when the control was first focused), then fire an event named change at the element, with the bubbles
+        //    attribute initialized to true.
+        if (is<HTMLInputElement>(*entry)) {
+            auto& input_element = static_cast<HTMLInputElement&>(*entry);
+
+            // FIXME: Spec issue: It doesn't make sense to check if the element has a defined activation behavior, as
+            //        that is always true. Instead, we check if it has an *input* activation behavior.
+            //        https://github.com/whatwg/html/issues/9973
+            if (input_element.change_event_applies() && !input_element.has_input_activation_behavior()) {
+                input_element.commit_pending_changes();
+            }
+        }
 
         JS::GCPtr<DOM::EventTarget> blur_event_target;
         if (is<DOM::Element>(*entry)) {
