@@ -62,7 +62,7 @@ public:
     void draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_immutable_bitmap(Gfx::FloatRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
 
-    void draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color);
+    void draw_glyph_run(Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color);
 
     void set_clip_rect(Gfx::IntRect);
     void clear_clip_rect();
@@ -83,6 +83,12 @@ public:
     void blit_canvas(Gfx::IntRect const& dst_rect, Canvas const&, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
     void blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
 
+    enum class BlurDirection {
+        Horizontal,
+        Vertical,
+    };
+    void blit_blurred_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, int radius, BlurDirection direction, ScalingMode = ScalingMode::NearestNeighbor);
+
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&);
 
 private:
@@ -97,6 +103,7 @@ private:
     [[nodiscard]] State const& state() const { return m_state_stack.last(); }
 
     void blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, ScalingMode, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
+    void blit_blurred_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, int radius, BlurDirection direction, ScalingMode = ScalingMode::NearestNeighbor);
     void bind_target_canvas();
 
     [[nodiscard]] Gfx::FloatRect to_clip_space(Gfx::FloatRect const& screen_rect) const;
@@ -109,6 +116,7 @@ private:
     Program m_rounded_rectangle_program;
     Program m_blit_program;
     Program m_linear_gradient_program;
+    Program m_blur_program;
 };
 
 }

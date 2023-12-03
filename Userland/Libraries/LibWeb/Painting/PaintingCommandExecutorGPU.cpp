@@ -165,9 +165,28 @@ CommandResult PaintingCommandExecutorGPU::paint_inner_box_shadow(PaintOuterBoxSh
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int, Gfx::IntRect const&, Gfx::IntRect const&, Span<Gfx::DrawGlyphOrEmoji const>, Color const&, int, Gfx::IntPoint const&)
+CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
 {
-    // FIXME
+    auto text_shadow_canvas = AccelGfx::Canvas::create(shadow_bounding_rect.size());
+    auto text_shadow_painter = AccelGfx::Painter::create();
+    text_shadow_painter->set_target_canvas(text_shadow_canvas);
+    text_shadow_painter->clear(color.with_alpha(0));
+
+    Gfx::FloatRect const shadow_location { draw_location, shadow_bounding_rect.size() };
+    Gfx::IntPoint const baseline_start(text_rect.x(), text_rect.y() + fragment_baseline);
+    text_shadow_painter->translate(baseline_start.to_type<float>());
+    text_shadow_painter->draw_glyph_run(glyph_run, color);
+    if (blur_radius == 0) {
+        painter().blit_canvas(shadow_location, *text_shadow_canvas);
+        return CommandResult::Continue;
+    }
+
+    auto horizontal_blur_canvas = AccelGfx::Canvas::create(shadow_bounding_rect.size());
+    auto horizontal_blur_painter = AccelGfx::Painter::create();
+    horizontal_blur_painter->set_target_canvas(horizontal_blur_canvas);
+    horizontal_blur_painter->clear(color.with_alpha(0));
+    horizontal_blur_painter->blit_blurred_canvas(shadow_bounding_rect.to_type<float>(), *text_shadow_canvas, blur_radius, AccelGfx::Painter::BlurDirection::Horizontal);
+    painter().blit_blurred_canvas(shadow_location, *horizontal_blur_canvas, blur_radius, AccelGfx::Painter::BlurDirection::Vertical);
     return CommandResult::Continue;
 }
 
