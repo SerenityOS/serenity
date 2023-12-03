@@ -10,6 +10,8 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/DOM/Attr.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -17,6 +19,7 @@
 #include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWebView/Attribute.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageClient.h>
 #include <WebContent/PageHost.h>
@@ -506,6 +509,31 @@ void PageClient::inspector_did_load()
 void PageClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element)
 {
     client().async_inspector_did_select_dom_node(node_id, pseudo_element);
+}
+
+void PageClient::inspector_did_set_dom_node_text(i32 node_id, String const& text)
+{
+    client().async_inspector_did_set_dom_node_text(node_id, text);
+}
+
+void PageClient::inspector_did_set_dom_node_tag(i32 node_id, String const& tag)
+{
+    client().async_inspector_did_set_dom_node_tag(node_id, tag);
+}
+
+void PageClient::inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> replacement_attributes)
+{
+    Vector<WebView::Attribute> attributes;
+    attributes.ensure_capacity(replacement_attributes->length());
+
+    for (size_t i = 0; i < replacement_attributes->length(); ++i) {
+        auto const* attribute = replacement_attributes->item(i);
+        VERIFY(attribute);
+
+        attributes.empend(attribute->name().to_string(), attribute->value());
+    }
+
+    client().async_inspector_did_replace_dom_node_attribute(node_id, name, move(attributes));
 }
 
 void PageClient::inspector_did_execute_console_script(String const& script)

@@ -1,7 +1,13 @@
+#import <DOM/NamedNodeMap.idl>
+
 [Exposed=Nobody] interface Inspector {
 
     undefined inspectorLoaded();
     undefined inspectDOMNode(long nodeID, optional long pseudoElement);
+
+    undefined setDOMNodeText(long nodeID, DOMString text);
+    undefined setDOMNodeTag(long nodeID, DOMString tag);
+    undefined replaceDOMNodeAttribute(long nodeID, DOMString name, NamedNodeMap replacementAttributes);
 
     undefined executeConsoleScript(DOMString script);
 

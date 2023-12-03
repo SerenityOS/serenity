@@ -265,6 +265,9 @@ public:
 
     virtual void inspector_did_load() { }
     virtual void inspector_did_select_dom_node([[maybe_unused]] i32 node_id, [[maybe_unused]] Optional<CSS::Selector::PseudoElement> const& pseudo_element) { }
+    virtual void inspector_did_set_dom_node_text([[maybe_unused]] i32 node_id, [[maybe_unused]] String const& text) { }
+    virtual void inspector_did_set_dom_node_tag([[maybe_unused]] i32 node_id, [[maybe_unused]] String const& tag) { }
+    virtual void inspector_did_replace_dom_node_attribute([[maybe_unused]] i32 node_id, [[maybe_unused]] String const& name, [[maybe_unused]] JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes) {};
     virtual void inspector_did_execute_console_script([[maybe_unused]] String const& script) { }
 
 protected:

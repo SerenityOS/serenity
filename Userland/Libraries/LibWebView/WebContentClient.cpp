@@ -414,6 +414,24 @@ void WebContentClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::
         m_view.on_inspector_selected_dom_node(node_id, pseudo_element);
 }
 
+void WebContentClient::inspector_did_set_dom_node_text(i32 node_id, String const& text)
+{
+    if (m_view.on_inspector_set_dom_node_text)
+        m_view.on_inspector_set_dom_node_text(node_id, text);
+}
+
+void WebContentClient::inspector_did_set_dom_node_tag(i32 node_id, String const& tag)
+{
+    if (m_view.on_inspector_set_dom_node_tag)
+        m_view.on_inspector_set_dom_node_tag(node_id, tag);
+}
+
+void WebContentClient::inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, Vector<Attribute> const& replacement_attributes)
+{
+    if (m_view.on_inspector_replaced_dom_node_attribute)
+        m_view.on_inspector_replaced_dom_node_attribute(node_id, name, replacement_attributes);
+}
+
 void WebContentClient::inspector_did_execute_console_script(String const& script)
 {
     if (m_view.on_inspector_executed_console_script)

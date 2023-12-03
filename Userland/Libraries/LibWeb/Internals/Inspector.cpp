@@ -9,6 +9,7 @@
 #include <LibWeb/Bindings/InspectorPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Internals/Inspector.h>
@@ -45,6 +46,24 @@ void Inspector::inspect_dom_node(i32 node_id, Optional<i32> const& pseudo_elemen
             return static_cast<Web::CSS::Selector::PseudoElement>(value);
         }));
     }
+}
+
+void Inspector::set_dom_node_text(i32 node_id, String const& text)
+{
+    if (auto* page = global_object().browsing_context()->page())
+        page->client().inspector_did_set_dom_node_text(node_id, text);
+}
+
+void Inspector::set_dom_node_tag(i32 node_id, String const& tag)
+{
+    if (auto* page = global_object().browsing_context()->page())
+        page->client().inspector_did_set_dom_node_tag(node_id, tag);
+}
+
+void Inspector::replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes)
+{
+    if (auto* page = global_object().browsing_context()->page())
+        page->client().inspector_did_replace_dom_node_attribute(node_id, name, replacement_attributes);
 }
 
 void Inspector::execute_console_script(String const& script)

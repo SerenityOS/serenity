@@ -120,6 +120,9 @@ private:
     virtual void page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type) override;
     virtual void inspector_did_load() override;
     virtual void inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
+    virtual void inspector_did_set_dom_node_text(i32 node_id, String const& text) override;
+    virtual void inspector_did_set_dom_node_tag(i32 node_id, String const& tag) override;
+    virtual void inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> replacement_attributes) override;
     virtual void inspector_did_execute_console_script(String const& script) override;
 
     Web::Layout::Viewport* layout_root();
