@@ -88,6 +88,9 @@ private:
     virtual void did_insert_clipboard_entry(String const& data, String const& presentation_style, String const& mime_type) override;
     virtual void inspector_did_load() override;
     virtual void inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
+    virtual void inspector_did_set_dom_node_text(i32 node_id, String const& text) override;
+    virtual void inspector_did_set_dom_node_tag(i32 node_id, String const& tag) override;
+    virtual void inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, Vector<Attribute> const& replacement_attributes) override;
     virtual void inspector_did_execute_console_script(String const& script) override;
 
     ViewImplementation& m_view;

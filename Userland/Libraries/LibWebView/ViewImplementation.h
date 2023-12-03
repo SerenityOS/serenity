@@ -153,6 +153,9 @@ public:
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
     Function<void()> on_inspector_loaded;
     Function<void(i32, Optional<Web::CSS::Selector::PseudoElement> const&)> on_inspector_selected_dom_node;
+    Function<void(i32, String const&)> on_inspector_set_dom_node_text;
+    Function<void(i32, String const&)> on_inspector_set_dom_node_tag;
+    Function<void(i32, String const&, Vector<Attribute> const&)> on_inspector_replaced_dom_node_attribute;
     Function<void(String const&)> on_inspector_executed_console_script;
 
     virtual Gfx::IntRect viewport_rect() const = 0;

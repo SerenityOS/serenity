@@ -7,6 +7,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWebView/Attribute.h>
 
 endpoint WebContentClient
 {
@@ -72,6 +73,9 @@ endpoint WebContentClient
 
     inspector_did_load() =|
     inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) =|
+    inspector_did_set_dom_node_text(i32 node_id, String text) =|
+    inspector_did_set_dom_node_tag(i32 node_id, String tag) =|
+    inspector_did_replace_dom_node_attribute(i32 node_id, String name, Vector<WebView::Attribute> replacement_attributes) =|
     inspector_did_execute_console_script(String script) =|
 
 }
