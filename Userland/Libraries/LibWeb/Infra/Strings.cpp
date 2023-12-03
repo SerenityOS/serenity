@@ -85,7 +85,7 @@ ErrorOr<String> convert_to_scalar_value_string(StringView string)
     for (u32 code_point : utf8_view) {
         if (is_unicode_surrogate(code_point))
             code_point = 0xFFFD;
-        TRY(scalar_value_builder.try_append(code_point));
+        scalar_value_builder.append_code_point(code_point);
     }
     return scalar_value_builder.to_string();
 }
