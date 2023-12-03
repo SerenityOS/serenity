@@ -94,6 +94,34 @@ def export_enum_to_cpp(e: Type[EnumWithExportName], special_name: Optional[str] 
     return output
 
 
+def export_enum_to_string_converter(enums: List[Type[EnumWithExportName]]) -> str:
+    stringifier_internals = []
+    for e in enums:
+        single_stringifier = fR"""    if constexpr (IsSame<E, {e.export_name()}>) {{
+        switch (value) {{
+            default:
+                return "Invalid value for {e.export_name()}"sv;"""
+        for entry in e:
+            single_stringifier += fR"""
+            case {e.export_name()}::{entry.name}:
+                return "{entry.name}"sv;"""
+
+        single_stringifier += R"""
+        }
+    }"""
+        stringifier_internals.append(single_stringifier)
+
+    stringifier_internals_str = '\n'.join(stringifier_internals)
+
+    out = fR"""template<Enum E>
+StringView name_for_enum_tag_value(E value) {{
+{stringifier_internals_str}
+    VERIFY_NOT_REACHED();
+}}"""
+
+    return out
+
+
 def export_tag_related_enums(tags: List[Tag]) -> str:
     exported_enums = []
     for tag in tags:
@@ -262,6 +290,8 @@ struct Rational {{
 using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>>;
 
 {export_tag_related_enums(known_tags)}
+
+{export_enum_to_string_converter([tag.associated_enum for tag in known_tags if tag.associated_enum] + [TIFFType])}
 
 {HANDLE_TAG_SIGNATURE};
 
