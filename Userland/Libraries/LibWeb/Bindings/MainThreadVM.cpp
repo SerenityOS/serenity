@@ -35,6 +35,7 @@
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
 #include <LibWeb/HTML/Scripting/Script.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
@@ -450,6 +451,7 @@ ErrorOr<void> initialize_main_thread_vm()
             auto completion = dom_exception_to_throw_completion(main_thread_vm(), url.exception());
 
             // 2. Perform FinishLoadingImportedModule(referrer, moduleRequest, payload, completion).
+            HTML::TemporaryExecutionContext context { host_defined_environment_settings_object(realm) };
             JS::finish_loading_imported_module(referrer, module_request, payload, completion);
 
             // 3. Return.
@@ -508,6 +510,7 @@ ErrorOr<void> initialize_main_thread_vm()
             }();
 
             // 5. Perform FinishLoadingImportedModule(referrer, moduleRequest, payload, completion).
+            HTML::TemporaryExecutionContext context { host_defined_environment_settings_object(realm) };
             JS::finish_loading_imported_module(referrer, module_request, payload, completion);
         });
 
