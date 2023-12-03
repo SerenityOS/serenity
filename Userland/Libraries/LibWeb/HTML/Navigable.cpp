@@ -362,7 +362,7 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
     else {
         // --> If current's active window does not have transient activation and the user agent has been configured to
         //     not show popups (i.e., the user agent has a "popup blocker" enabled)
-        if (!active_window()->has_transient_activation() && traversable_navigable()->page()->should_block_pop_ups()) {
+        if (!active_window()->has_transient_activation() && traversable_navigable()->page().should_block_pop_ups()) {
             // FIXME: The user agent may inform the user that a popup has been blocked.
             dbgln("Pop-up blocked!");
         }
@@ -418,7 +418,7 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
             else {
                 // 1. Set chosen to the result of creating a new top-level traversable given currentNavigable's active browsing context and targetName.
                 // FIXME: Make this method return WebIDL::ExceptionOr<ChosenNavigable>
-                chosen = TraversableNavigable::create_a_new_top_level_traversable(*traversable_navigable()->page(), active_browsing_context(), target_name).release_value_but_fixme_should_propagate_errors();
+                chosen = TraversableNavigable::create_a_new_top_level_traversable(traversable_navigable()->page(), active_browsing_context(), target_name).release_value_but_fixme_should_propagate_errors();
 
                 // FIXME: 2. If sandboxingFlagSet's sandboxed navigation browsing context flag is set,
                 //    then set chosen's active browsing context's one permitted sandboxed navigator to currentNavigable's active browsing context.
@@ -1978,7 +1978,7 @@ void Navigable::set_needs_display(CSSPixelRect const& rect)
         return;
 
     if (is<TraversableNavigable>(*this)) {
-        static_cast<TraversableNavigable*>(this)->page()->client().page_did_invalidate(to_top_level_rect(rect));
+        static_cast<TraversableNavigable*>(this)->page().client().page_did_invalidate(to_top_level_rect(rect));
         return;
     }
 

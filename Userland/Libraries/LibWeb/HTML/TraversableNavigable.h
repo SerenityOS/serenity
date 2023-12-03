@@ -63,8 +63,8 @@ public:
         m_session_history_traversal_queue.process();
     }
 
-    Page* page() { return m_page; }
-    Page const* page() const { return m_page; }
+    Page& page() { return m_page; }
+    Page const& page() const { return m_page; }
 
 private:
     TraversableNavigable(JS::NonnullGCPtr<Page>);

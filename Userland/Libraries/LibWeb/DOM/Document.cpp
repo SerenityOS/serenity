@@ -1900,10 +1900,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 
     if (readiness_value == HTML::DocumentReadyState::Complete && is_active() && navigable()->is_traversable()) {
         HTML::HTMLLinkElement::load_fallback_favicon_if_needed(*this).release_value_but_fixme_should_propagate_errors();
-
-        if (auto* page = navigable()->traversable_navigable()->page()) {
-            page->client().page_did_finish_loading(url());
-        }
+        navigable()->traversable_navigable()->page().client().page_did_finish_loading(url());
     }
 }
 

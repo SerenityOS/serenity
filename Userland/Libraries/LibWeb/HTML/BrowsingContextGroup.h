@@ -27,8 +27,8 @@ public:
 
     ~BrowsingContextGroup();
 
-    Page* page() { return m_page; }
-    Page const* page() const { return m_page; }
+    Page& page() { return m_page; }
+    Page const& page() const { return m_page; }
 
     auto& browsing_context_set() { return m_browsing_context_set; }
     auto const& browsing_context_set() const { return m_browsing_context_set; }
