@@ -308,6 +308,24 @@ struct AK::Formatter<Gfx::TIFF::Rational<T>> : Formatter<FormatString> {{
             static_cast<double>(value.numerator) / value.denominator, value.numerator, value.denominator);
     }}
 }};
+
+template<>
+struct AK::Formatter<Gfx::TIFF::Value> : Formatter<FormatString> {{
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::Value const& value)
+    {{
+        String content;
+        value.visit(
+            [&](ByteBuffer const& buffer) {{
+                content = MUST(String::formatted("Buffer of size: {{}}"sv, buffer.size()));
+            }},
+            [&](auto const& other) {{
+                content = MUST(String::formatted("{{}}", other));
+            }}
+        );
+
+        return Formatter<FormatString>::format(builder, "{{}}"sv, content);
+    }}
+}};
 """
     return output
 
