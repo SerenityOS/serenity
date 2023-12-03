@@ -454,7 +454,7 @@ static bool decode_favicon(ReadonlyBytes favicon_data, AK::URL const& favicon_ur
     dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
 
     if (navigable && navigable->is_traversable())
-        navigable->traversable_navigable()->page()->client().page_did_change_favicon(*favicon_bitmap);
+        navigable->traversable_navigable()->page().client().page_did_change_favicon(*favicon_bitmap);
 
     return favicon_bitmap;
 }

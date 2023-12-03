@@ -175,7 +175,7 @@ bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 void Page::set_top_level_traversable(JS::NonnullGCPtr<HTML::TraversableNavigable> navigable)
 {
     VERIFY(!m_top_level_traversable); // Replacement is not allowed!
-    VERIFY(navigable->page() == this);
+    VERIFY(&navigable->page() == this);
     m_top_level_traversable = navigable;
 }
 
