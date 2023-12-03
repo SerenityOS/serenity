@@ -141,7 +141,7 @@ void CyclicModule::inner_module_loading(JS::GraphLoadingState& state)
 void continue_module_loading(GraphLoadingState& state, ThrowCompletionOr<NonnullGCPtr<Module>> const& module_completion)
 {
     // 1. If state.[[IsLoading]] is false, return UNUSED.
-    if (state.is_loading)
+    if (!state.is_loading)
         return;
 
     // 2. If moduleCompletion is a normal completion, then
