@@ -84,6 +84,16 @@ void Internals::commit_text()
     page->handle_keydown(Key_Return, 0, 0);
 }
 
+void Internals::click(double x, double y)
+{
+    auto* page = global_object().browsing_context()->page();
+    if (!page)
+        return;
+
+    page->handle_mousedown({ x, y }, { x, y }, 1, 0, 0);
+    page->handle_mouseup({ x, y }, { x, y }, 1, 0, 0);
+}
+
 WebIDL::ExceptionOr<bool> Internals::dispatch_user_activated_event(DOM::EventTarget& target, DOM::Event& event)
 {
     event.set_is_trusted(true);

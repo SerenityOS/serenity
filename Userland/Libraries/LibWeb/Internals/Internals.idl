@@ -10,6 +10,8 @@
     undefined sendText(HTMLElement target, DOMString text);
     undefined commitText();
 
+    undefined click(double x, double y);
+
     boolean dispatchUserActivatedEvent(EventTarget target, Event event);
 
 };

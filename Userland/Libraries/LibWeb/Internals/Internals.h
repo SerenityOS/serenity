@@ -25,6 +25,8 @@ public:
     void send_text(HTML::HTMLElement&, String const&);
     void commit_text();
 
+    void click(double x, double y);
+
     WebIDL::ExceptionOr<bool> dispatch_user_activated_event(DOM::EventTarget&, DOM::Event& event);
 
 private:
