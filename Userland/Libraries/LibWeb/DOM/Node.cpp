@@ -1259,8 +1259,7 @@ bool Node::is_shadow_including_descendant_of(Node const& other) const
 
     // and A’s root’s host is a shadow-including inclusive descendant of B.
     auto& shadow_root = verify_cast<ShadowRoot>(root());
-    // NOTE: While host is nullable because of inheriting from DocumentFragment, shadow roots always have a host.
-    return shadow_root.host()->is_shadow_including_inclusive_descendant_of(other);
+    return shadow_root.host() && shadow_root.host()->is_shadow_including_inclusive_descendant_of(other);
 }
 
 // https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-descendant
