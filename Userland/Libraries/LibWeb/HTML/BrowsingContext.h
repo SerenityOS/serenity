@@ -115,8 +115,8 @@ public:
     HTML::Window* active_window();
     HTML::Window const* active_window() const;
 
-    Page* page() { return m_page; }
-    Page const* page() const { return m_page; }
+    Page& page() { return m_page; }
+    Page const& page() const { return m_page; }
 
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }

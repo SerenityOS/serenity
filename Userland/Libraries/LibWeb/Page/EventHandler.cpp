@@ -195,10 +195,9 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
             if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, screen_position, page_offset, client_offset, offset, wheel_delta_x, wheel_delta_y, button, buttons, modifiers).release_value_but_fixme_should_propagate_errors())) {
-                if (auto* page = m_browsing_context->page()) {
-                    if (m_browsing_context == &page->top_level_browsing_context())
-                        page->client().page_did_request_scroll(wheel_delta_x, wheel_delta_y);
-                }
+                auto& page = m_browsing_context->page();
+                if (m_browsing_context == &page.top_level_browsing_context())
+                    page.client().page_did_request_scroll(wheel_delta_x, wheel_delta_y);
             }
 
             handled_event = true;
@@ -286,18 +285,15 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                     auto url = document->parse_url(href);
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Middle) {
-                        if (auto* page = m_browsing_context->page())
-                            page->client().page_did_middle_click_link(url, link->target(), modifiers);
+                        m_browsing_context->page().client().page_did_middle_click_link(url, link->target(), modifiers);
                     } else if (button == GUI::MouseButton::Secondary) {
-                        if (auto* page = m_browsing_context->page())
-                            page->client().page_did_request_link_context_menu(m_browsing_context->to_top_level_position(position), url, link->target(), modifiers);
+                        m_browsing_context->page().client().page_did_request_link_context_menu(m_browsing_context->to_top_level_position(position), url, link->target(), modifiers);
                     }
                 } else if (button == GUI::MouseButton::Secondary) {
                     if (is<HTML::HTMLImageElement>(*node)) {
                         auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
                         auto image_url = image_element.document().parse_url(image_element.src());
-                        if (auto* page = m_browsing_context->page())
-                            page->client().page_did_request_image_context_menu(m_browsing_context->to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
+                        m_browsing_context->page().client().page_did_request_image_context_menu(m_browsing_context->to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
                     } else if (is<HTML::HTMLMediaElement>(*node)) {
                         auto& media_element = verify_cast<HTML::HTMLMediaElement>(*node);
 
@@ -310,10 +306,9 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                             .is_looping = media_element.has_attribute(HTML::AttributeNames::loop),
                         };
 
-                        if (auto* page = m_browsing_context->page())
-                            page->did_request_media_context_menu(media_element.unique_id(), m_browsing_context->to_top_level_position(position), "", modifiers, move(menu));
-                    } else if (auto* page = m_browsing_context->page()) {
-                        page->client().page_did_request_context_menu(m_browsing_context->to_top_level_position(position));
+                        m_browsing_context->page().did_request_media_context_menu(media_element.unique_id(), m_browsing_context->to_top_level_position(position), "", modifiers, move(menu));
+                    } else {
+                        m_browsing_context->page().client().page_did_request_context_menu(m_browsing_context->to_top_level_position(position));
                     }
                 }
             }
@@ -369,8 +364,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen
             return false;
         }
 
-        if (auto* page = m_browsing_context->page())
-            page->set_focused_browsing_context({}, m_browsing_context);
+        m_browsing_context->page().set_focused_browsing_context({}, m_browsing_context);
 
         // Search for the first parent of the hit target that's an element.
         // "The click event type MUST be dispatched on the topmost event target indicated by the pointer." (https://www.w3.org/TR/uievents/#event-type-click)
@@ -460,8 +454,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
                 return false;
 
             // FIXME: It feels a bit aggressive to always update the cursor like this.
-            if (auto* page = m_browsing_context->page())
-                page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);
+            m_browsing_context->page().client().page_did_request_cursor_change(Gfx::StandardCursor::None);
         }
 
         auto node = dom_node_for_event_dispatch(*paintable);
@@ -530,27 +523,27 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
                 }
                 document.navigable()->set_needs_display();
             }
-            if (auto* page = m_browsing_context->page())
-                page->client().page_did_change_selection();
+            m_browsing_context->page().client().page_did_change_selection();
         }
     }
 
-    if (auto* page = m_browsing_context->page()) {
-        page->client().page_did_request_cursor_change(hovered_node_cursor);
+    auto& page = m_browsing_context->page();
 
-        if (hovered_node_changed) {
-            JS::GCPtr<HTML::HTMLElement const> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
-            if (hovered_html_element && hovered_html_element->title().has_value()) {
-                page->client().page_did_enter_tooltip_area(m_browsing_context->to_top_level_position(position), hovered_html_element->title()->to_deprecated_string());
-            } else {
-                page->client().page_did_leave_tooltip_area();
-            }
-            if (is_hovering_link)
-                page->client().page_did_hover_link(document.parse_url(hovered_link_element->href()));
-            else
-                page->client().page_did_unhover_link();
+    page.client().page_did_request_cursor_change(hovered_node_cursor);
+
+    if (hovered_node_changed) {
+        JS::GCPtr<HTML::HTMLElement const> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
+        if (hovered_html_element && hovered_html_element->title().has_value()) {
+            page.client().page_did_enter_tooltip_area(m_browsing_context->to_top_level_position(position), hovered_html_element->title()->to_deprecated_string());
+        } else {
+            page.client().page_did_leave_tooltip_area();
         }
+        if (is_hovering_link)
+            page.client().page_did_hover_link(document.parse_url(hovered_link_element->href()));
+        else
+            page.client().page_did_unhover_link();
     }
+
     return true;
 }
 
