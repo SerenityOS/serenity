@@ -586,9 +586,18 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
     auto fragment_width = context.enclosing_device_pixels(fragment.width()).value();
     auto fragment_height = context.enclosing_device_pixels(fragment.height()).value();
     auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect()).to_type<int>();
-    auto text = Utf8View(fragment.text());
-    auto& font = fragment.layout_node().scaled_font(context);
+    auto const& scaled_font = fragment.layout_node().scaled_font(context);
     auto fragment_baseline = context.rounded_device_pixels(fragment.baseline()).value();
+
+    Vector<Gfx::DrawGlyphOrEmoji> scaled_glyph_run;
+    scaled_glyph_run.ensure_capacity(fragment.glyph_run().size());
+    for (auto glyph : fragment.glyph_run()) {
+        glyph.visit([&](auto& glyph) {
+            glyph.font = &scaled_font;
+            glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
+        });
+        scaled_glyph_run.append(move(glyph));
+    }
 
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& layer : shadow_layers.in_reverse()) {
@@ -613,7 +622,7 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
             draw_rect.y() + offset_y - margin
         };
 
-        context.recording_painter().paint_text_shadow(blur_radius, bounding_rect, text_rect, text, font, layer.color, fragment_baseline, draw_location);
+        context.recording_painter().paint_text_shadow(blur_radius, bounding_rect, text_rect, scaled_glyph_run, layer.color, fragment_baseline, draw_location);
     }
 }
 
