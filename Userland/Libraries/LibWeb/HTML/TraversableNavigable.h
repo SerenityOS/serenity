@@ -19,8 +19,8 @@ class TraversableNavigable final : public Navigable {
     JS_DECLARE_ALLOCATOR(TraversableNavigable);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_new_top_level_traversable(Page&, JS::GCPtr<BrowsingContext> opener, String target_name);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_fresh_top_level_traversable(Page&, AK::URL const& initial_navigation_url, Variant<Empty, String, POSTResource> = Empty {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_new_top_level_traversable(JS::NonnullGCPtr<Page>, JS::GCPtr<BrowsingContext> opener, String target_name);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_fresh_top_level_traversable(JS::NonnullGCPtr<Page>, AK::URL const& initial_navigation_url, Variant<Empty, String, POSTResource> = Empty {});
 
     virtual ~TraversableNavigable() override;
 
@@ -67,7 +67,7 @@ public:
     Page const* page() const { return m_page; }
 
 private:
-    TraversableNavigable(Page&);
+    TraversableNavigable(JS::NonnullGCPtr<Page>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -89,7 +89,7 @@ private:
 
     SessionHistoryTraversalQueue m_session_history_traversal_queue;
 
-    WeakPtr<Page> m_page;
+    JS::NonnullGCPtr<Page> m_page;
 };
 
 struct BrowsingContextAndDocument {
@@ -97,7 +97,7 @@ struct BrowsingContextAndDocument {
     JS::NonnullGCPtr<DOM::Document> document;
 };
 
-WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(Page& page);
+WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(JS::NonnullGCPtr<Page> page);
 void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace);
 
 }

@@ -20,7 +20,7 @@ static HashTable<JS::NonnullGCPtr<BrowsingContextGroup>>& user_agent_browsing_co
     return set;
 }
 
-BrowsingContextGroup::BrowsingContextGroup(Web::Page& page)
+BrowsingContextGroup::BrowsingContextGroup(JS::NonnullGCPtr<Web::Page> page)
     : m_page(page)
 {
     user_agent_browsing_context_group_set().set(*this);
@@ -40,7 +40,7 @@ void BrowsingContextGroup::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-browsing-context-group-and-document
-auto BrowsingContextGroup::create_a_new_browsing_context_group_and_document(Page& page) -> WebIDL::ExceptionOr<BrowsingContextGroupAndDocument>
+auto BrowsingContextGroup::create_a_new_browsing_context_group_and_document(JS::NonnullGCPtr<Page> page) -> WebIDL::ExceptionOr<BrowsingContextGroupAndDocument>
 {
     // 1. Let group be a new browsing context group.
     // 2. Append group to the user agent's browsing context group set.

@@ -23,7 +23,7 @@ public:
         JS::NonnullGCPtr<HTML::BrowsingContextGroup> browsing_context;
         JS::NonnullGCPtr<DOM::Document> document;
     };
-    static WebIDL::ExceptionOr<BrowsingContextGroupAndDocument> create_a_new_browsing_context_group_and_document(Page&);
+    static WebIDL::ExceptionOr<BrowsingContextGroupAndDocument> create_a_new_browsing_context_group_and_document(JS::NonnullGCPtr<Page>);
 
     ~BrowsingContextGroup();
 
@@ -36,7 +36,7 @@ public:
     void append(BrowsingContext&);
 
 private:
-    explicit BrowsingContextGroup(Web::Page&);
+    explicit BrowsingContextGroup(JS::NonnullGCPtr<Web::Page>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
