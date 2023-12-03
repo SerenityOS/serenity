@@ -141,8 +141,7 @@ struct PaintTextShadow {
     int blur_radius;
     Gfx::IntRect shadow_bounding_rect;
     Gfx::IntRect text_rect;
-    String text;
-    NonnullRefPtr<Gfx::Font> font;
+    Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
     Color color;
     int fragment_baseline;
     Gfx::IntPoint draw_location;
@@ -373,7 +372,7 @@ public:
     virtual CommandResult paint_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const&, Gfx::IntPoint const& position) = 0;
     virtual CommandResult paint_outer_box_shadow(PaintOuterBoxShadowParams const&) = 0;
     virtual CommandResult paint_inner_box_shadow(PaintOuterBoxShadowParams const&) = 0;
-    virtual CommandResult paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, String const&, Gfx::Font const&, Color const&, int fragment_baseline, Gfx::IntPoint const& draw_location) = 0;
+    virtual CommandResult paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const>, Color const&, int fragment_baseline, Gfx::IntPoint const& draw_location) = 0;
     virtual CommandResult fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
     virtual CommandResult fill_path_using_color(Gfx::Path const&, Color const& color, Gfx::Painter::WindingRule, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
     virtual CommandResult fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
@@ -493,7 +492,7 @@ public:
 
     void paint_outer_box_shadow_params(PaintOuterBoxShadowParams params);
     void paint_inner_box_shadow_params(PaintOuterBoxShadowParams params);
-    void paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Utf8View text, Gfx::Font const& font, Color color, int fragment_baseline, Gfx::IntPoint draw_location);
+    void paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color color, int fragment_baseline, Gfx::IntPoint draw_location);
 
     void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::AntiAliasingPainter::CornerRadius top_left_radius, Gfx::AntiAliasingPainter::CornerRadius top_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_left_radius);
     void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius);

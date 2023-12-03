@@ -225,7 +225,7 @@ CommandResult PaintingCommandExecutorCPU::paint_inner_box_shadow(PaintOuterBoxSh
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, String const& text, Gfx::Font const& font, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
+CommandResult PaintingCommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
 {
     // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
     auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bounding_rect.size());
@@ -237,8 +237,17 @@ CommandResult PaintingCommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx
 
     Gfx::Painter shadow_painter { *shadow_bitmap };
     // FIXME: "Spread" the shadow somehow.
-    Gfx::IntPoint baseline_start(text_rect.x(), text_rect.y() + fragment_baseline);
-    shadow_painter.draw_text_run(baseline_start, Utf8View(text), font, color);
+    Gfx::IntPoint const baseline_start(text_rect.x(), text_rect.y() + fragment_baseline);
+    shadow_painter.translate(baseline_start);
+    for (auto const& glyph_or_emoji : glyph_run) {
+        if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
+            auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
+            shadow_painter.draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
+        } else {
+            auto const& emoji = glyph_or_emoji.get<Gfx::DrawEmoji>();
+            shadow_painter.draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
+        }
+    }
 
     // Blur
     Gfx::StackBlurFilter filter(*shadow_bitmap);

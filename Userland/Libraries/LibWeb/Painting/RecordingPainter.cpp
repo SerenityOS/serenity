@@ -344,14 +344,13 @@ void RecordingPainter::paint_inner_box_shadow_params(PaintOuterBoxShadowParams p
     });
 }
 
-void RecordingPainter::paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Utf8View text, Gfx::Font const& font, Color color, int fragment_baseline, Gfx::IntPoint draw_location)
+void RecordingPainter::paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color color, int fragment_baseline, Gfx::IntPoint draw_location)
 {
     push_command(PaintTextShadow {
         .blur_radius = blur_radius,
         .shadow_bounding_rect = bounding_rect,
         .text_rect = text_rect,
-        .text = String::from_utf8(text.as_string()).release_value_but_fixme_should_propagate_errors(),
-        .font = font,
+        .glyph_run = Vector<Gfx::DrawGlyphOrEmoji> { glyph_run },
         .color = color,
         .fragment_baseline = fragment_baseline,
         .draw_location = state().translation.map(draw_location) });
@@ -497,7 +496,7 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
                 return executor.paint_inner_box_shadow(command.outer_box_shadow_params);
             },
             [&](PaintTextShadow const& command) {
-                return executor.paint_text_shadow(command.blur_radius, command.shadow_bounding_rect, command.text_rect, command.text, command.font, command.color, command.fragment_baseline, command.draw_location);
+                return executor.paint_text_shadow(command.blur_radius, command.shadow_bounding_rect, command.text_rect, command.glyph_run, command.color, command.fragment_baseline, command.draw_location);
             },
             [&](FillRectWithRoundedCorners const& command) {
                 return executor.fill_rect_with_rounded_corners(command.rect, command.color, command.top_left_radius, command.top_right_radius, command.bottom_left_radius, command.bottom_right_radius, command.aa_translation);

@@ -165,7 +165,7 @@ CommandResult PaintingCommandExecutorGPU::paint_inner_box_shadow(PaintOuterBoxSh
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int, Gfx::IntRect const&, Gfx::IntRect const&, String const&, Gfx::Font const&, Color const&, int, Gfx::IntPoint const&)
+CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int, Gfx::IntRect const&, Gfx::IntRect const&, Span<Gfx::DrawGlyphOrEmoji const>, Color const&, int, Gfx::IntPoint const&)
 {
     // FIXME
     return CommandResult::Continue;
