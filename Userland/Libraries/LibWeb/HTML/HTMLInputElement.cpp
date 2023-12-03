@@ -433,10 +433,8 @@ void HTMLInputElement::commit_pending_changes()
 
     m_has_uncommitted_changes = false;
 
-    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change, { .bubbles = true });
-        dispatch_event(change_event);
-    });
+    auto change_event = DOM::Event::create(realm(), HTML::EventNames::change, { .bubbles = true });
+    dispatch_event(change_event);
 }
 
 void HTMLInputElement::update_placeholder_visibility()
