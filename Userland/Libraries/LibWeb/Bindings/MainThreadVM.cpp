@@ -475,7 +475,7 @@ ErrorOr<void> initialize_main_thread_vm()
             fetch_client = fetch_context.fetch_client;
         }
 
-        auto on_single_fetch_complete = HTML::create_on_fetch_script_complete(realm.heap(), [referrer, &realm, load_state, &module_request, payload](JS::GCPtr<HTML::Script> const& module_script) -> void {
+        auto on_single_fetch_complete = HTML::create_on_fetch_script_complete(realm.heap(), [referrer, &realm, load_state, module_request, payload](JS::GCPtr<HTML::Script> const& module_script) -> void {
             // onSingleFetchComplete given moduleScript is the following algorithm:
             // 1. Let completion be null.
             // NOTE: Our JS::Completion does not support non JS::Value types for its [[Value]], a such we
