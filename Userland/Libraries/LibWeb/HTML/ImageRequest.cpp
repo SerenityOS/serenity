@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/ImageRequest.h>
 #include <LibWeb/HTML/ListOfAvailableImages.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
 
@@ -21,12 +22,12 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(ImageRequest);
 
-JS::NonnullGCPtr<ImageRequest> ImageRequest::create(JS::Realm& realm, Page& page)
+JS::NonnullGCPtr<ImageRequest> ImageRequest::create(JS::Realm& realm, JS::NonnullGCPtr<Page> page)
 {
     return realm.heap().allocate<ImageRequest>(realm, page);
 }
 
-ImageRequest::ImageRequest(Page& page)
+ImageRequest::ImageRequest(JS::NonnullGCPtr<Page> page)
     : m_page(page)
 {
 }
@@ -39,6 +40,7 @@ void ImageRequest::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_shared_image_request);
+    visitor.visit(m_page);
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#img-available

@@ -22,7 +22,7 @@ class ImageRequest final : public JS::Cell {
     JS_DECLARE_ALLOCATOR(ImageRequest);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<ImageRequest> create(JS::Realm&, Page&);
+    [[nodiscard]] static JS::NonnullGCPtr<ImageRequest> create(JS::Realm&, JS::NonnullGCPtr<Page>);
 
     ~ImageRequest();
 
@@ -63,9 +63,9 @@ public:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
 private:
-    explicit ImageRequest(Page&);
+    explicit ImageRequest(JS::NonnullGCPtr<Page>);
 
-    Page& m_page;
+    JS::NonnullGCPtr<Page> m_page;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
     // An image request's state is initially unavailable.
