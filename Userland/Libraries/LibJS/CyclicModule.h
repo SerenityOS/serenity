@@ -22,38 +22,6 @@ enum class ModuleStatus {
     Evaluated
 };
 
-class CyclicModule;
-
-// https://tc39.es/ecma262/#graphloadingstate-record
-struct GraphLoadingState : public Cell {
-    JS_CELL(GraphLoadingState, Cell);
-
-public:
-    struct HostDefined : Cell {
-        JS_CELL(HostDefined, Cell);
-
-    public:
-        virtual ~HostDefined() = default;
-    };
-
-    GCPtr<PromiseCapability> promise_capability; // [[PromiseCapability]]
-    bool is_loading { false };                   // [[IsLoading]]
-    size_t pending_module_count { 0 };           // [[PendingModulesCount]]
-    HashTable<CyclicModule*> visited;            // [[Visited]]
-    GCPtr<HostDefined> host_defined;             // [[HostDefined]]
-
-private:
-    GraphLoadingState(GCPtr<PromiseCapability> promise_capability, bool is_loading, size_t pending_module_count, HashTable<CyclicModule*> visited, GCPtr<HostDefined> host_defined)
-        : promise_capability(move(promise_capability))
-        , is_loading(is_loading)
-        , pending_module_count(pending_module_count)
-        , visited(move(visited))
-        , host_defined(move(host_defined))
-    {
-    }
-    virtual void visit_edges(Cell::Visitor&) override;
-};
-
 // 16.2.1.5 Cyclic Module Records, https://tc39.es/ecma262/#cyclic-module-record
 class CyclicModule : public Module {
     JS_CELL(CyclicModule, Module);
@@ -65,7 +33,7 @@ public:
     virtual ThrowCompletionOr<void> link(VM& vm) override final;
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override final;
 
-    virtual PromiseCapability& load_requested_modules(GCPtr<GraphLoadingState::HostDefined>);
+    virtual PromiseCapability& load_requested_modules(GCPtr<GraphLoadingState::HostDefined>) override;
     virtual void inner_module_loading(GraphLoadingState& state);
 
     Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
