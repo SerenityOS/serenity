@@ -137,6 +137,11 @@ details > :not(:first-child) {
     padding: 1px;
 }
 
+.dom-editor {
+    width: fit-content;
+    outline: none;
+}
+
 @media (prefers-color-scheme: dark) {
     .hoverable:hover {
         background-color: #31383e;

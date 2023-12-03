@@ -109,6 +109,25 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_inspector_web_view.run_javascript(builder.string_view());
     };
 
+    m_inspector_web_view.on_inspector_set_dom_node_text = [this](auto node_id, auto const& text) {
+        m_content_web_view.set_dom_node_text(node_id, text);
+
+        m_pending_selection = node_id;
+        inspect();
+    };
+
+    m_inspector_web_view.on_inspector_set_dom_node_tag = [this](auto node_id, auto const& tag) {
+        m_pending_selection = m_content_web_view.set_dom_node_tag(node_id, tag);
+        inspect();
+    };
+
+    m_inspector_web_view.on_inspector_replaced_dom_node_attribute = [this](auto node_id, auto const& name, auto const& replacement_attributes) {
+        m_content_web_view.replace_dom_node_attribute(node_id, name, replacement_attributes);
+
+        m_pending_selection = node_id;
+        inspect();
+    };
+
     m_inspector_web_view.on_inspector_executed_console_script = [this](auto const& script) {
         append_console_source(script);
 
@@ -128,6 +147,7 @@ InspectorClient::~InspectorClient()
 
 void InspectorClient::inspect()
 {
+    m_dom_tree_loaded = false;
     m_content_web_view.inspect_dom_tree();
     m_content_web_view.inspect_accessibility_tree();
 }
@@ -326,7 +346,7 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
                 builder.append(name);
                 builder.append("</span>"sv);
             } else {
-                builder.appendff("<span class=\"hoverable\" {}>", data_attributes.string_view());
+                builder.appendff("<span data-node-type=\"text\" class=\"hoverable editable\" {}>", data_attributes.string_view());
                 builder.append(text);
                 builder.append("</span>"sv);
             }
@@ -338,7 +358,7 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
             auto comment = node.get_deprecated_string("data"sv).release_value();
             comment = escape_html_entities(comment);
 
-            builder.appendff("<span class=\"hoverable comment\" {}>", data_attributes.string_view());
+            builder.appendff("<span data-node-type=\"comment\" class=\"hoverable editable comment\" {}>", data_attributes.string_view());
             builder.appendff("&lt;!--{}--&gt;", comment);
             builder.append("</span>"sv);
             return;
@@ -365,14 +385,16 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
 
         builder.appendff("<span class=\"hoverable\" {}>", data_attributes.string_view());
         builder.append("<span>&lt;</span>"sv);
-        builder.appendff("<span class=\"tag\">{}</span>", name.to_lowercase());
+        builder.appendff("<span data-node-type=\"tag\" class=\"editable tag\">{}</span>", name.to_lowercase());
 
         if (auto attributes = node.get_object("attributes"sv); attributes.has_value()) {
             attributes->for_each_member([&builder](auto const& name, auto const& value) {
                 builder.append("&nbsp;"sv);
+                builder.appendff("<span data-node-type=\"attribute\" data-attribute-name=\"{}\" class=\"editable\">", name);
                 builder.appendff("<span class=\"attribute-name\">{}</span>", name);
                 builder.append('=');
                 builder.appendff("<span class=\"attribute-value\">\"{}\"</span>", value);
+                builder.append("</span>"sv);
             });
         }
 
