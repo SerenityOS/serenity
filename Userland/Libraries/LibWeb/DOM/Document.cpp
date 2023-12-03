@@ -130,8 +130,7 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
     }
 
     // 3. Let newBrowsingContext be the first return value of creating a new top-level browsing context and document
-    VERIFY(browsing_context.page());
-    auto new_browsing_context = HTML::create_a_new_top_level_browsing_context_and_document(*browsing_context.page()).release_value_but_fixme_should_propagate_errors().browsing_context;
+    auto new_browsing_context = HTML::create_a_new_top_level_browsing_context_and_document(browsing_context.page()).release_value_but_fixme_should_propagate_errors().browsing_context;
 
     // FIXME: 4. If navigationCOOP's value is "same-origin-plurs-COEP", then set newBrowsingContext's group's
     //           cross-origin isolation mode to either "logical" or "concrete". The choice of which is implementation-defined.
@@ -1910,12 +1909,12 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 
 Page* Document::page()
 {
-    return m_browsing_context ? m_browsing_context->page() : nullptr;
+    return m_browsing_context ? &m_browsing_context->page() : nullptr;
 }
 
 Page const* Document::page() const
 {
-    return m_browsing_context ? m_browsing_context->page() : nullptr;
+    return m_browsing_context ? &m_browsing_context->page() : nullptr;
 }
 
 EventTarget* Document::get_parent(Event const& event)

@@ -199,7 +199,7 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
 
         // FIXME: Pass along accept attribute information https://html.spec.whatwg.org/multipage/input.html#attr-input-accept
         //    The accept attribute may be specified to provide user agents with a hint of what file types will be accepted.
-        element.document().browsing_context()->top_level_browsing_context()->page()->client().page_did_request_file_picker(weak_element, multiple);
+        element.document().browsing_context()->top_level_browsing_context()->page().client().page_did_request_file_picker(weak_element, multiple);
         return;
     }
 
@@ -211,7 +211,7 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
     //    (If this closes a file selection picker, then per the above that will lead to firing either input and change events, or a cancel event.)
     if (element.type_state() == HTMLInputElement::TypeAttributeState::Color) {
         auto weak_element = element.make_weak_ptr<HTMLInputElement>();
-        element.document().browsing_context()->top_level_browsing_context()->page()->did_request_color_picker(weak_element, Color::from_string(element.value()).value_or(Color(0, 0, 0)));
+        element.document().browsing_context()->top_level_browsing_context()->page().did_request_color_picker(weak_element, Color::from_string(element.value()).value_or(Color(0, 0, 0)));
     }
 }
 

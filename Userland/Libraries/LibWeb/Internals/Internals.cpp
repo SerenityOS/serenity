@@ -36,9 +36,7 @@ void Internals::initialize(JS::Realm& realm)
 
 void Internals::signal_text_test_is_done()
 {
-    if (auto* page = global_object().browsing_context()->page()) {
-        page->client().page_did_finish_text_test();
-    }
+    global_object().browsing_context()->page().client().page_did_finish_text_test();
 }
 
 void Internals::gc()
@@ -65,33 +63,23 @@ JS::Object* Internals::hit_test(double x, double y)
 
 void Internals::send_text(HTML::HTMLElement& target, String const& text)
 {
-    auto* page = global_object().browsing_context()->page();
-    if (!page)
-        return;
-
+    auto& page = global_object().browsing_context()->page();
     target.focus();
 
     for (auto code_point : text.code_points())
-        page->handle_keydown(code_point_to_key_code(code_point), 0, code_point);
+        page.handle_keydown(code_point_to_key_code(code_point), 0, code_point);
 }
 
 void Internals::commit_text()
 {
-    auto* page = global_object().browsing_context()->page();
-    if (!page)
-        return;
-
-    page->handle_keydown(Key_Return, 0, 0);
+    global_object().browsing_context()->page().handle_keydown(Key_Return, 0, 0);
 }
 
 void Internals::click(double x, double y)
 {
-    auto* page = global_object().browsing_context()->page();
-    if (!page)
-        return;
-
-    page->handle_mousedown({ x, y }, { x, y }, 1, 0, 0);
-    page->handle_mouseup({ x, y }, { x, y }, 1, 0, 0);
+    auto& page = global_object().browsing_context()->page();
+    page.handle_mousedown({ x, y }, { x, y }, 1, 0, 0);
+    page.handle_mouseup({ x, y }, { x, y }, 1, 0, 0);
 }
 
 WebIDL::ExceptionOr<bool> Internals::dispatch_user_activated_event(DOM::EventTarget& target, DOM::Event& event)

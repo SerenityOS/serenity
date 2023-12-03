@@ -193,8 +193,7 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
 
     // Not in the spec:
     VERIFY(active_browsing_context());
-    VERIFY(active_browsing_context()->page());
-    active_browsing_context()->page()->client().page_did_create_new_document(*new_document);
+    active_browsing_context()->page().client().page_did_create_new_document(*new_document);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
@@ -1331,8 +1330,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     }
 
     if (is_top_level_traversable()) {
-        if (auto* page = active_browsing_context()->page())
-            page->client().page_did_start_loading(url, false);
+        active_browsing_context()->page().client().page_did_start_loading(url, false);
     }
 
     // 20. In parallel, run these steps:

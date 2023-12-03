@@ -302,8 +302,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
             break;
 
         case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
-            if (auto* page = browsing_context().page())
-                page->client().page_did_leave_tooltip_area();
+            browsing_context().page().client().page_did_leave_tooltip_area();
             break;
         }
 
@@ -351,10 +350,8 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<E
             if (cached_layout_boxes.volume_rect.has_value()) {
                 set_volume(media_element, *cached_layout_boxes.volume_scrub_rect, position);
 
-                if (auto* page = browsing_context().page()) {
-                    auto volume = static_cast<u8>(media_element.volume() * 100.0);
-                    page->client().page_did_enter_tooltip_area(position, DeprecatedString::formatted("{}%", volume));
-                }
+                auto volume = static_cast<u8>(media_element.volume() * 100.0);
+                browsing_context().page().client().page_did_enter_tooltip_area(position, DeprecatedString::formatted("{}%", volume));
             }
 
             break;
