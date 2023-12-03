@@ -12,7 +12,16 @@ from pathlib import Path
 from typing import List, Optional, Type
 
 
-class TIFFType(Enum):
+class EnumWithExportName(Enum):
+    @classmethod
+    def export_name(cls) -> str:
+        return cls.__name__
+
+
+class TIFFType(EnumWithExportName):
+    @classmethod
+    def export_name(cls) -> str:
+        return "Type"
     Byte = 1
     ASCII = 2
     UnsignedShort = 3
@@ -26,12 +35,12 @@ class TIFFType(Enum):
     UTF8 = 129
 
 
-class Predictor(Enum):
+class Predictor(EnumWithExportName):
     NoPrediction = 1
     HorizontalDifferencing = 2
 
 
-class Compression(Enum):
+class Compression(EnumWithExportName):
     NoCompression = 1
     CCITT = 2
     Group3Fax = 3
@@ -74,8 +83,8 @@ LICENSE = R"""/*
  */"""
 
 
-def export_enum_to_cpp(e: Type[Enum], special_name: Optional[str] = None) -> str:
-    output = f'enum class {special_name if special_name else e.__name__} {{\n'
+def export_enum_to_cpp(e: Type[EnumWithExportName], special_name: Optional[str] = None) -> str:
+    output = f'enum class {e.export_name()} {{\n'
 
     for entry in e:
         output += f'    {entry.name} = {entry.value},\n'
@@ -237,7 +246,7 @@ class Metadata;
 
 namespace TIFF {{
 
-{export_enum_to_cpp(TIFFType, 'Type')}
+{export_enum_to_cpp(TIFFType)}
 
 template<OneOf<u32, i32> x32>
 struct Rational {{
