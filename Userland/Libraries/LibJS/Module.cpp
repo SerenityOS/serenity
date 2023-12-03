@@ -73,12 +73,13 @@ void finish_loading_imported_module(ImportedModuleReferrer referrer, ModuleReque
     if (!result.is_error()) {
         // NOTE: Only Script and CyclicModule referrers have the [[LoadedModules]] internal slot.
         if (referrer.has<NonnullGCPtr<Script>>() || referrer.has<NonnullGCPtr<CyclicModule>>()) {
-            auto loaded_modules = referrer.visit(
-                [](JS::NonnullGCPtr<JS::Script> script) -> Vector<ModuleWithSpecifier> { return script->loaded_modules(); },
-                [](JS::NonnullGCPtr<JS::CyclicModule> module) -> Vector<ModuleWithSpecifier> { return module->loaded_modules(); },
-                [](auto&) {
+            auto& loaded_modules = referrer.visit(
+                [](JS::NonnullGCPtr<JS::Realm>&) -> Vector<ModuleWithSpecifier>& {
                     VERIFY_NOT_REACHED();
-                    return Vector<ModuleWithSpecifier> {};
+                    __builtin_unreachable();
+                },
+                [](auto& script_or_module) -> Vector<ModuleWithSpecifier>& {
+                    return script_or_module->loaded_modules();
                 });
 
             bool found_record = false;

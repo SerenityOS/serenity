@@ -38,6 +38,7 @@ public:
 
     Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
     Vector<ModuleWithSpecifier> const& loaded_modules() const { return m_loaded_modules; }
+    Vector<ModuleWithSpecifier>& loaded_modules() { return m_loaded_modules; }
 
 protected:
     CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules, Script::HostDefined* host_defined);

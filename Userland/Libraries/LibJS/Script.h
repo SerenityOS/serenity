@@ -31,6 +31,7 @@ public:
 
     Realm& realm() { return *m_realm; }
     Program const& parse_node() const { return *m_parse_node; }
+    Vector<ModuleWithSpecifier>& loaded_modules() { return m_loaded_modules; }
     Vector<ModuleWithSpecifier> const& loaded_modules() const { return m_loaded_modules; }
 
     HostDefined* host_defined() const { return m_host_defined; }
