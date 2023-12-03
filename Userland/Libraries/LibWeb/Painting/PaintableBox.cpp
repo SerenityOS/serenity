@@ -662,7 +662,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
             painter.fill_rect(selection_rect, CSS::SystemColor::highlight());
             RecordingPainterStateSaver saver(painter);
             painter.add_clip_rect(selection_rect);
-            painter.draw_text_run(baseline_start.to_type<int>(), fragment.glyph_run(), CSS::SystemColor::highlight_text(), fragment_absolute_device_rect.to_type<int>());
+            painter.draw_text_run(baseline_start.to_type<int>(), scaled_glyph_run, CSS::SystemColor::highlight_text(), fragment_absolute_device_rect.to_type<int>());
         }
 
         paint_text_decoration(context, text_node, fragment);
