@@ -91,6 +91,8 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
         // FIXME: This isn't entirely right.
         if (is<DOM::Element>(*entry))
             entry->document().set_focused_element(&static_cast<DOM::Element&>(*entry));
+        else if (is<DOM::Document>(*entry))
+            entry->document().set_focused_element(static_cast<DOM::Document&>(*entry).document_element());
 
         JS::GCPtr<DOM::EventTarget> focus_event_target;
         if (is<DOM::Element>(*entry)) {
@@ -268,7 +270,7 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
 
     // 8. If topDocument's node navigable has system focus, then run the focusing steps for topDocument's viewport.
     if (top_document->navigable()->traversable_navigable()->system_visibility_state() == HTML::VisibilityState::Visible) {
-        // FIXME: run the focusing steps for topDocument's viewport (??)
+        run_focusing_steps(top_document);
     } else {
         // FIXME: Otherwise, apply any relevant platform-specific conventions for removing system focus from
         // topDocument's browsing context, and run the focus update steps with old chain, an empty list, and null
