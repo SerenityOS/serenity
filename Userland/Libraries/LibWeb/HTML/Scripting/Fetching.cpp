@@ -793,7 +793,7 @@ void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm,
     });
 
     // 7. Upon rejection of loadingPromise, run the following steps:
-    WebIDL::upon_rejection(loading_promise, [&state, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(loading_promise, [state, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. If state.[[ParseError]] is not null, set moduleScript's error to rethrow to state.[[ParseError]] and run
         //    onComplete given moduleScript.
         if (!state->parse_error.is_null()) {
