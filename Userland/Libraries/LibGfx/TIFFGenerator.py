@@ -258,12 +258,19 @@ using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>
 
 }}
 
+{generate_metadata_class(tags)}
+
+}}
+
+template<typename T>
+struct AK::Formatter<Gfx::TIFF::Rational<T>> : Formatter<FormatString> {{
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::Rational<T> value)
+    {{
+        return Formatter<FormatString>::format(builder, "{{}} ({{}}/{{}})"sv,
+            static_cast<double>(value.numerator) / value.denominator, value.numerator, value.denominator);
+    }}
+}};
 """
-
-    output += generate_metadata_class(tags)
-
-    output += '\n}\n'
-
     return output
 
 
