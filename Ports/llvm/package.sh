@@ -36,15 +36,15 @@ configure() {
     cmake ${workdir}/llvm \
         -G Ninja \
         -B llvm-build "${configopts[@]}" \
-        -DCMAKE_BUILD_TYPE=MinSizeRel \
-        -DCMAKE_FIND_ROOT_PATH="$SERENITY_BUILD_DIR"/Root \
-        -DCROSS_TOOLCHAIN_FLAGS_NATIVE="-DCMAKE_C_COMPILER=$CC;-DCMAKE_CXX_COMPILER=$CXX" \
         -DCLANG_DEFAULT_CXX_STDLIB=$stdlib \
         -DCLANG_DEFAULT_UNWINDLIB=$unwindlib \
+        -DCMAKE_BUILD_TYPE=MinSizeRel \
+        -DCMAKE_FIND_ROOT_PATH="$SERENITY_BUILD_DIR"/Root \
         -DCOMPILER_RT_BUILD_CRT=ON \
         -DCOMPILER_RT_BUILD_ORC=OFF \
         -DCOMPILER_RT_EXCLUDE_ATOMIC_BUILTIN=$exclude_atomic_builtin \
         -DCOMPILER_RT_OS_DIR=serenity \
+        -DCROSS_TOOLCHAIN_FLAGS_NATIVE="-DCMAKE_C_COMPILER=$CC;-DCMAKE_CXX_COMPILER=$CXX" \
         -DHAVE_LIBRT=OFF \
         -DLLVM_DEFAULT_TARGET_TRIPLE=$SERENITY_ARCH-pc-serenity \
         -DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt" \
@@ -52,6 +52,7 @@ configure() {
         -DLLVM_INCLUDE_BENCHMARKS=OFF \
         -DLLVM_INCLUDE_TESTS=OFF \
         -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+        -DLLVM_OCAML_INSTALL_PATH="${SERENITY_INSTALL_ROOT}/usr/local/ocaml" \
         -DLLVM_PTHREAD_LIB=pthread \
         -DLLVM_TARGETS_TO_BUILD=X86
 }
