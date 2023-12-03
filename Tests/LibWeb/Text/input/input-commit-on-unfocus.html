@@ -1,0 +1,18 @@
+<input id=input type=text>
+<script src="include.js"></script>
+<script>
+    test(() => {
+        let input = document.getElementById("input");
+
+        input.addEventListener("change", () => {
+            println(input.value);
+        });
+
+        input.addEventListener("blur", () => {
+            println("blur");
+        });
+
+        internals.sendText(input, "wfh :^)");
+        input.blur();
+    })
+</script>

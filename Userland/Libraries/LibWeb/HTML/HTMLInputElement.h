@@ -158,6 +158,9 @@ public:
     virtual bool has_activation_behavior() const override;
     virtual void activation_behavior(DOM::Event const&) override;
 
+    bool has_input_activation_behavior() const;
+    bool change_event_applies() const;
+
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
 
