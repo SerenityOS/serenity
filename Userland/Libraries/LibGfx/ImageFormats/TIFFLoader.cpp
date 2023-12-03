@@ -424,32 +424,6 @@ private:
             return read_tiff_value(type, count, offset);
         }()));
 
-        if constexpr (TIFF_DEBUG) {
-            if (tiff_value.size() == 1) {
-                tiff_value[0].visit(
-                    [&](ByteBuffer& value) {
-                        dbgln("Read tag({}), type({}): size {}", tag, to_underlying(type), value.size());
-                    },
-                    [&](auto const& value) {
-                        dbgln("Read tag({}), type({}): {}", tag, to_underlying(type), value);
-                    });
-            } else {
-                dbg("Read tag({}), type({}): [", tag, to_underlying(type));
-                for (u32 i = 0; i < tiff_value.size(); ++i) {
-                    tiff_value[i].visit(
-                        [&](ByteBuffer&) {
-                            VERIFY_NOT_REACHED();
-                        },
-                        [&](auto const& value) {
-                            dbg("{}", value);
-                        });
-                    if (i != tiff_value.size() - 1)
-                        dbg(", ");
-                }
-                dbgln("]");
-            }
-        }
-
         TRY(handle_tag(m_metadata, tag, type, count, move(tiff_value)));
 
         return {};

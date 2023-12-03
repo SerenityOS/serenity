@@ -356,6 +356,9 @@ def generate_tag_handler(tag: Tag) -> str:
 
     output = fR"""    case {tag.id}:
         // {tag.name}
+
+        dbgln_if(TIFF_DEBUG, "{tag.name}({{}}): {{}}", name_for_enum_tag_value(type), format_tiff_value(value));
+
         {pre_condition}
         {check_value}
         metadata.add_entry("{tag.name}"sv, move(value));
@@ -374,6 +377,23 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
 
 namespace Gfx::TIFF {{
 
+[[maybe_unused]] static String format_tiff_value(Vector<Value> const& values) {{
+    if (values.size() == 1)
+        return MUST(String::formatted("{{}}", values[0]));
+
+    StringBuilder builder;
+    builder.append('[');
+
+    for (u32 i = 0; i < values.size(); ++i) {{
+        builder.appendff("{{}}", values[i]);
+        if (i != values.size() - 1)
+            builder.append(", "sv);
+    }}
+
+    builder.append(']');
+    return MUST(builder.to_string());
+}}
+
 {HANDLE_TAG_SIGNATURE}
 {{
     switch (tag) {{
@@ -383,7 +403,7 @@ namespace Gfx::TIFF {{
 
     output += R"""
     default:
-        dbgln_if(TIFF_DEBUG, "Unknown tag: {}", tag);
+        dbgln_if(TIFF_DEBUG, "UnknownTag({}, {}): {}", tag, name_for_enum_tag_value(type), format_tiff_value(value));
     }
 
     return {};
