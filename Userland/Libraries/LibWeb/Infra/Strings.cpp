@@ -113,7 +113,7 @@ ErrorOr<String> to_ascii_uppercase(StringView string)
     auto utf8_view = Utf8View { string };
     for (u32 code_point : utf8_view) {
         code_point = AK::to_ascii_uppercase(code_point);
-        TRY(string_builder.try_append(code_point));
+        string_builder.append_code_point(code_point);
     }
     return string_builder.to_string();
 }
