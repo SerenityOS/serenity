@@ -20,6 +20,8 @@ public:
         RoundedRectangleProgram,
         BlitProgram,
         LinearGradientProgram,
+        BlurProgram,
+
         ProgramCount,
     };
 

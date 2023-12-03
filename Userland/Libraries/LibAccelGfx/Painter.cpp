@@ -135,6 +135,39 @@ void main() {
 }
 )";
 
+char const* blur_fragment_shader_source = R"(
+#version 330 core
+
+uniform vec2 uResolution;
+uniform int uRadius;
+uniform int uHorizontal;
+uniform sampler2D uSampler;
+
+in vec2 vTextureCoord;
+out vec4 fragColor;
+
+#define pow2(x) (x * x)
+const float pi = atan(1.0) * 4.0;
+float gaussian(vec2 i, float sigma) {
+    return 1.0 / (2.0 * pi * pow2(sigma)) * exp(-((pow2(i.x) + pow2(i.y)) / (2.0 * pow2(sigma))));
+}
+
+void main() {
+    vec2 scale = vec2(1.0) / uResolution.xy;
+    float sigma = float(uRadius);
+    vec4 col = vec4(0.0);
+    float accum = 0.0;
+    float weight = 0.0;
+    for (int i = -uRadius; i <= uRadius; i++) {
+        vec2 offset = vec2(i * uHorizontal, i * (1 - uHorizontal));
+        weight = gaussian(offset, sigma);
+        col += texture(uSampler, vTextureCoord + scale * offset) * weight;
+        accum += weight;
+    }
+    fragColor = col / accum;
+}
+)";
+
 HashMap<u32, GL::Texture> s_immutable_bitmap_texture_cache;
 
 NonnullOwnPtr<Painter> Painter::create()
@@ -149,6 +182,7 @@ Painter::Painter(Context& context)
     , m_rounded_rectangle_program(Program::create(Program::Name::RoundedRectangleProgram, vertex_shader_source, rect_with_rounded_corners_fragment_shader_source))
     , m_blit_program(Program::create(Program::Name::BlitProgram, blit_vertex_shader_source, blit_fragment_shader_source))
     , m_linear_gradient_program(Program::create(Program::Name::LinearGradientProgram, linear_gradient_vertex_shader_source, linear_gradient_fragment_shader_source))
+    , m_blur_program(Program::create(Program::Name::BlurProgram, blit_vertex_shader_source, blur_fragment_shader_source))
 {
     m_state_stack.empend(State());
 }
@@ -352,7 +386,7 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
     GL::delete_texture(texture);
 }
 
-void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+void Painter::draw_glyph_run(Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color)
 {
     bind_target_canvas();
 
@@ -665,6 +699,65 @@ void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture co
 
     GL::delete_buffer(vbo);
     GL::delete_vertex_array(vao);
+}
+
+void Painter::blit_blurred_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, int radius, BlurDirection direction, ScalingMode scaling_mode)
+{
+    bind_target_canvas();
+
+    m_blur_program.use();
+
+    auto dst_rect_in_clip_space = to_clip_space(transform().map(dst_rect));
+    auto src_rect_in_texture_space = to_texture_space(src_rect, *texture.size);
+
+    Vector<GLfloat> vertices;
+    vertices.ensure_capacity(16);
+
+    auto add_vertex = [&](auto const& p, auto const& s) {
+        vertices.append(p.x());
+        vertices.append(p.y());
+        vertices.append(s.x());
+        vertices.append(s.y());
+    };
+
+    add_vertex(dst_rect_in_clip_space.top_left(), src_rect_in_texture_space.top_left());
+    add_vertex(dst_rect_in_clip_space.bottom_left(), src_rect_in_texture_space.bottom_left());
+    add_vertex(dst_rect_in_clip_space.bottom_right(), src_rect_in_texture_space.bottom_right());
+    add_vertex(dst_rect_in_clip_space.top_right(), src_rect_in_texture_space.top_right());
+
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
+    auto vertex_position_attribute = m_blur_program.get_attribute_location("aVertexPosition");
+    GL::set_vertex_attribute(vertex_position_attribute, 0, 4);
+
+    auto resolution_uniform = m_blur_program.get_uniform_location("uResolution");
+    GL::set_uniform(resolution_uniform, dst_rect.width(), dst_rect.height());
+
+    auto radius_uniform = m_blur_program.get_uniform_location("uRadius");
+    GL::set_uniform(radius_uniform, radius);
+
+    auto direction_uniform = m_blur_program.get_uniform_location("uHorizontal");
+    GL::set_uniform(direction_uniform, direction == BlurDirection::Horizontal ? 1 : 0);
+
+    GL::bind_texture(texture);
+
+    auto scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
+    GL::set_texture_scale_mode(scaling_mode_gl);
+    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha, GL::BlendFactor::One, GL::BlendFactor::One);
+    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
+
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
+}
+
+void Painter::blit_blurred_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, int radius, BlurDirection direction, ScalingMode scaling_mode)
+{
+    blit_blurred_texture(dst_rect, canvas.framebuffer().texture, { { 0, 0 }, canvas.size() }, radius, direction, scaling_mode);
 }
 
 void Painter::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)
