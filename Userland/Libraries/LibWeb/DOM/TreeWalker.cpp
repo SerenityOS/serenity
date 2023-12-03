@@ -221,6 +221,13 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::next_node()
 
             // 4. Set temporary to temporary’s parent.
             temporary = temporary->parent();
+
+            // NON-STANDARD: If temporary is null, then return null.
+            //               This prevents us from infinite looping if the current node is not connected.
+            //               Spec bug: https://github.com/whatwg/dom/issues/1102
+            if (temporary == nullptr) {
+                return nullptr;
+            }
         }
 
         // 5. Set result to the result of filtering node within this.
