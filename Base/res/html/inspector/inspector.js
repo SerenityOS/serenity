@@ -96,6 +96,15 @@ inspector.loadDOMTree = tree => {
             event.preventDefault();
         });
     }
+
+    domNodes = domTree.querySelectorAll(".editable");
+
+    for (let domNode of domNodes) {
+        domNode.addEventListener("dblclick", event => {
+            editDOMNode(domNode);
+            event.preventDefault();
+        });
+    }
 };
 
 inspector.loadAccessibilityTree = tree => {
@@ -164,6 +173,64 @@ const inspectDOMNode = domNode => {
     selectedDOMNode = domNode;
 
     inspector.inspectDOMNode(domNode.dataset.id, domNode.dataset.pseudoElement);
+};
+
+const editDOMNode = domNode => {
+    if (selectedDOMNode === null) {
+        return;
+    }
+
+    const domNodeID = selectedDOMNode.dataset.id;
+    const type = domNode.dataset.nodeType;
+
+    selectedDOMNode.classList.remove("selected");
+
+    let input = document.createElement("input");
+    input.classList.add("dom-editor");
+    input.classList.add("selected");
+    input.value = domNode.innerText;
+
+    const handleChange = () => {
+        input.removeEventListener("change", handleChange);
+        input.removeEventListener("blur", cancelChange);
+
+        if (type === "text" || type === "comment") {
+            inspector.setDOMNodeText(domNodeID, input.value);
+        } else if (type === "tag") {
+            try {
+                const element = document.createElement(input.value);
+                inspector.setDOMNodeTag(domNodeID, input.value);
+            } catch {
+                cancelChange();
+            }
+        } else if (type === "attribute") {
+            let element = document.createElement("div");
+            element.innerHTML = `<div ${input.value}></div>`;
+
+            inspector.replaceDOMNodeAttribute(
+                domNodeID,
+                domNode.dataset.attributeName,
+                element.children[0].attributes
+            );
+        }
+    };
+
+    const cancelChange = () => {
+        selectedDOMNode.classList.add("selected");
+        input.parentNode.replaceChild(domNode, input);
+    };
+
+    input.addEventListener("change", handleChange);
+    input.addEventListener("blur", cancelChange);
+
+    domNode.parentNode.replaceChild(input, domNode);
+
+    setTimeout(() => {
+        input.focus();
+
+        // FIXME: Invoke `select` when it isn't just stubbed out.
+        // input.select();
+    });
 };
 
 const executeConsoleScript = consoleInput => {
