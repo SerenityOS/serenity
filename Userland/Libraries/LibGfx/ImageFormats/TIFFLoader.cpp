@@ -514,11 +514,3 @@ ErrorOr<Optional<ReadonlyBytes>> TIFFImageDecoderPlugin::icc_data()
 }
 
 }
-
-template<typename T>
-struct AK::Formatter<Gfx::TIFF::Rational<T>> : Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::Rational<T> value)
-    {
-        return Formatter<FormatString>::format(builder, "{} ({}/{})"sv, static_cast<double>(value.numerator) / value.denominator, value.numerator, value.denominator);
-    }
-};
