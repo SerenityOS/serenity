@@ -358,7 +358,7 @@ def generate_tag_handler(tag: Tag) -> str:
     output = fR"""    case {tag.id}:
         // {tag.name}
 
-        dbgln_if(TIFF_DEBUG, "{tag.name}({{}}): {{}}", name_for_enum_tag_value(type), format_tiff_value(value));
+        dbgln_if(TIFF_DEBUG, "{tag.name}({{}}): {{}}", name_for_enum_tag_value(type), format_tiff_value(tag, value));
 
         {pre_condition}
         {check_value}
@@ -370,6 +370,12 @@ def generate_tag_handler(tag: Tag) -> str:
 
 
 def generate_tag_handler_file(tags: List[Tag]) -> str:
+
+    formatter_for_tag_with_enum = '\n'.join([fR"""        case {tag.id}:
+            return MUST(String::from_utf8(
+                name_for_enum_tag_value(static_cast<{tag.associated_enum.export_name()}>(v.get<u32>()))));"""
+                                             for tag in tags if tag.associated_enum])
+
     output = fR"""{LICENSE}
 
 #include <AK/Debug.h>
@@ -378,15 +384,23 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
 
 namespace Gfx::TIFF {{
 
-[[maybe_unused]] static String format_tiff_value(Vector<Value> const& values) {{
+static String value_formatter(u32 tag_id, Value const& v) {{
+    switch (tag_id) {{
+{formatter_for_tag_with_enum}
+        default:
+            return MUST(String::formatted("{{}}", v));
+    }}
+}}
+
+[[maybe_unused]] static String format_tiff_value(u32 tag_id, Vector<Value> const& values) {{
     if (values.size() == 1)
-        return MUST(String::formatted("{{}}", values[0]));
+        return MUST(String::formatted("{{}}", value_formatter(tag_id, values[0])));
 
     StringBuilder builder;
     builder.append('[');
 
     for (u32 i = 0; i < values.size(); ++i) {{
-        builder.appendff("{{}}", values[i]);
+        builder.appendff("{{}}", value_formatter(tag_id, values[i]));
         if (i != values.size() - 1)
             builder.append(", "sv);
     }}
@@ -404,7 +418,8 @@ namespace Gfx::TIFF {{
 
     output += R"""
     default:
-        dbgln_if(TIFF_DEBUG, "UnknownTag({}, {}): {}", tag, name_for_enum_tag_value(type), format_tiff_value(value));
+        dbgln_if(TIFF_DEBUG, "UnknownTag({}, {}): {}",
+                tag, name_for_enum_tag_value(type), format_tiff_value(tag, value));
     }
 
     return {};
