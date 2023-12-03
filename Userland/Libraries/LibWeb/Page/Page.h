@@ -37,9 +37,7 @@ namespace Web {
 
 class PageClient;
 
-class Page final
-    : public JS::Cell
-    , public Weakable<Page> {
+class Page final : public JS::Cell {
     JS_CELL(Page, JS::Cell);
 
 public:
