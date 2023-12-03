@@ -8,6 +8,8 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ModuleEnvironment.h>
+#include <LibJS/Runtime/PromiseCapability.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/SyntheticModule.h>
 
@@ -157,6 +159,16 @@ ThrowCompletionOr<NonnullGCPtr<Module>> parse_json_module(StringView source_text
 
     // 3. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
     return SyntheticModule::create_default_export_synthetic_module(json, realm, filename);
+}
+
+// 1.2.3.1 LoadRequestedModules ( ), https://tc39.es/proposal-json-modules/#sec-smr-LoadRequestedModules
+PromiseCapability& SyntheticModule::load_requested_modules(GCPtr<GraphLoadingState::HostDefined>)
+{
+    // 1. Return ! PromiseResolve(%Promise%, undefined).
+    auto& constructor = *vm().current_realm()->intrinsics().promise_constructor();
+    auto promise_capability = MUST(new_promise_capability(vm(), &constructor));
+    MUST(call(vm(), *promise_capability->resolve(), js_undefined(), js_undefined()));
+    return promise_capability;
 }
 
 }

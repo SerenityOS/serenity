@@ -848,7 +848,7 @@ void continue_dynamic_import(NonnullGCPtr<PromiseCapability> promise_capability,
     auto& module = *module_completion.value();
 
     // 3. Let loadPromise be module.LoadRequestedModules().
-    auto& load_promise = verify_cast<CyclicModule>(module).load_requested_modules({});
+    auto& load_promise = module.load_requested_modules({});
 
     // 4. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures promiseCapability and performs the
     //    following steps when called:
