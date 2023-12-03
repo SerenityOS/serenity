@@ -212,6 +212,7 @@ void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_target,
     run_focus_update_steps(old_chain, new_chain, new_focus_target);
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#unfocusing-steps
 void run_unfocusing_steps(DOM::Node* old_focus_target)
 {
     // NOTE: The unfocusing steps do not always result in the focus changing, even when applied to the currently focused
@@ -254,11 +255,9 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
     auto old_chain = focus_chain(top_level_browsing_context->currently_focused_area());
 
     // 5. If old focus target is not one of the entries in old chain, then return.
-    for (auto& node : old_chain) {
-        if (old_focus_target != node) {
-            return;
-        }
-    }
+    auto it = old_chain.find_if([&](auto const& node) { return old_focus_target == node; });
+    if (it == old_chain.end())
+        return;
 
     // 6. If old focus target is not a focusable area, then return.
     if (!old_focus_target->is_focusable())
