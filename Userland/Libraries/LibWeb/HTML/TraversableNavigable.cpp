@@ -20,7 +20,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(TraversableNavigable);
 
-TraversableNavigable::TraversableNavigable(Page& page)
+TraversableNavigable::TraversableNavigable(JS::NonnullGCPtr<Page> page)
     : m_page(page)
 {
 }
@@ -30,6 +30,7 @@ TraversableNavigable::~TraversableNavigable() = default;
 void TraversableNavigable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_page);
     for (auto& entry : m_session_history_entries)
         visitor.visit(entry);
 }
@@ -41,7 +42,7 @@ static OrderedHashTable<TraversableNavigable*>& user_agent_top_level_traversable
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-top-level-browsing-context
-WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(Page& page)
+WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(JS::NonnullGCPtr<Page> page)
 {
     // 1. Let group and document be the result of creating a new browsing context group and document.
     auto [group, document] = TRY(BrowsingContextGroup::create_a_new_browsing_context_group_and_document(page));
@@ -51,7 +52,7 @@ WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-top-level-traversable
-WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable::create_a_new_top_level_traversable(Page& page, JS::GCPtr<HTML::BrowsingContext> opener, String target_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable::create_a_new_top_level_traversable(JS::NonnullGCPtr<Page> page, JS::GCPtr<HTML::BrowsingContext> opener, String target_name)
 {
     auto& vm = Bindings::main_thread_vm();
 
@@ -112,7 +113,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#create-a-fresh-top-level-traversable
-WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable::create_a_fresh_top_level_traversable(Page& page, AK::URL const& initial_navigation_url, Variant<Empty, String, POSTResource> initial_navigation_post_resource)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable::create_a_fresh_top_level_traversable(JS::NonnullGCPtr<Page> page, AK::URL const& initial_navigation_url, Variant<Empty, String, POSTResource> initial_navigation_post_resource)
 {
     // 1. Let traversable be the result of creating a new top-level traversable given null and the empty string.
     auto traversable = TRY(create_a_new_top_level_traversable(page, nullptr, {}));
