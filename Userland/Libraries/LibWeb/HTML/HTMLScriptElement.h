@@ -55,8 +55,8 @@ public:
     void unmark_as_already_started(Badge<DOM::Range>);
     void unmark_as_parser_inserted(Badge<DOM::Range>);
 
-    String text() { return MUST(String::from_deprecated_string(child_text_content())); }
-    void set_text(String const& text) { string_replace_all(text.to_deprecated_string()); }
+    String text() { return child_text_content(); }
+    void set_text(String const& text) { string_replace_all(text); }
 
 private:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
