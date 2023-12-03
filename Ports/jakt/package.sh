@@ -5,8 +5,8 @@ useconfigure='true'
 depends=(
     'llvm'
 )
-commit_hash='063e9767ff80db1a1cfe1a805cc8b7e2e577d9f3'
-archive_hash='0cb858291d0426e80c8378d7d5876a2a8de747467a289bb691782316c79a2f59'
+commit_hash='685ea81f7b2f6f98778ac06601bb1c678b73584d'
+archive_hash='9d1206ed137277ee9ffb24555652570d3bdb29d4d60617a63d69caaeebcc4638'
 files=(
     "https://github.com/SerenityOS/jakt/archive/${commit_hash}.tar.gz#${archive_hash}"
 )
