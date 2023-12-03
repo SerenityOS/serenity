@@ -723,15 +723,16 @@ ScriptOrModule VM::get_active_script_or_module() const
 VM::StoredModule* VM::get_stored_module(ImportedModuleReferrer const&, DeprecatedString const& filename, DeprecatedString const&)
 {
     // Note the spec says:
-    // Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments
-    // it must return the same Module Record instance if it completes normally.
-    // Currently, we ignore the referencing script or module but this might not be correct in all cases.
+    // If this operation is called multiple times with the same (referrer, specifier) pair and it performs
+    // FinishLoadingImportedModule(referrer, specifier, payload, result) where result is a normal completion,
+    // then it must perform FinishLoadingImportedModule(referrer, specifier, payload, result) with the same result each time.
 
     // Editor's Note from https://tc39.es/proposal-json-modules/#sec-hostresolveimportedmodule
     // The above text implies that is recommended but not required that hosts do not use moduleRequest.[[Assertions]]
     // as part of the module cache key. In either case, an exception thrown from an import with a given assertion list
     // does not rule out success of another import with the same specifier but a different assertion list.
 
+    // FIXME: This should probably check referrer as well.
     auto end_or_module = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
         return stored_module.filename == filename;
     });
@@ -950,10 +951,17 @@ void VM::load_imported_module(ImportedModuleReferrer referrer, ModuleRequest con
             VERIFY(module_or_errors.error().size() > 0);
             return throw_completion<SyntaxError>(module_or_errors.error().first().to_deprecated_string());
         }
-        return module_or_errors.release_value();
-    }();
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] load_imported_module(...) parsed {} to {}", filename, module);
+        auto module = module_or_errors.release_value();
+        m_loaded_modules.empend(
+            referrer,
+            module->filename(),
+            DeprecatedString {}, // Null type
+            make_handle<Module>(*module),
+            true);
+
+        return module;
+    }();
 
     finish_loading_imported_module(referrer, module_request, payload, module);
 }
