@@ -134,6 +134,8 @@ public:
     JS::NonnullGCPtr<DOM::Document const> document() const;
     String name() const;
     void set_name(String const&);
+    String status() const;
+    void set_status(String const&);
     [[nodiscard]] JS::NonnullGCPtr<Location> location();
     JS::NonnullGCPtr<History> history() const;
     JS::NonnullGCPtr<Navigation> navigation();
@@ -275,6 +277,10 @@ private:
 
     // https://streams.spec.whatwg.org/#byte-length-queuing-strategy-size-function
     JS::GCPtr<WebIDL::CallbackType> m_byte_length_queuing_strategy_size_function;
+
+    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-status
+    // When the Window object is created, the attribute must be set to the empty string. It does not do anything else.
+    String m_status;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
