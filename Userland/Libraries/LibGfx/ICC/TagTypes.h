@@ -319,6 +319,8 @@ public:
     Vector<u16> const& clut_values() const { return m_clut_values; }
     Vector<u16> const& output_tables() const { return m_output_tables; }
 
+    ErrorOr<FloatVector3> evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
+
 private:
     EMatrix3x3 m_e;
 
@@ -375,6 +377,8 @@ public:
     Vector<u8> const& input_tables() const { return m_input_tables; }
     Vector<u8> const& clut_values() const { return m_clut_values; }
     Vector<u8> const& output_tables() const { return m_output_tables; }
+
+    ErrorOr<FloatVector3> evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
 
 private:
     EMatrix3x3 m_e;
@@ -1029,6 +1033,173 @@ public:
 private:
     Vector<XYZ, 1> m_xyzs;
 };
+
+inline ErrorOr<FloatVector3> Lut16TagData::evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes color_u8) const
+{
+    // See comment at start of LutAToBTagData::evaluate() for the clipping flow.
+    VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
+    VERIFY(number_of_input_channels() == color_u8.size());
+
+    // FIXME: This will be wrong once Profile::from_pcs_b_to_a() calls this function too.
+    VERIFY(number_of_output_channels() == 3);
+
+    // ICC v4, 10.11 lut8Type
+    // "Data is processed using these elements via the following sequence:
+    //  (matrix) ⇨ (1d input tables) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (1d output tables)"
+
+    Vector<float, 4> color;
+    for (u8 c : color_u8)
+        color.append(c / 255.0f);
+
+    // "3 x 3 matrix (which shall be the identity matrix unless the input colour space is PCSXYZ)"
+    // In practice, it's usually RGB or CMYK.
+    if (input_space == ColorSpace::PCSXYZ) {
+        EMatrix3x3 const& e = m_e;
+        color = Vector<float, 4> {
+            (float)e[0] * color[0] + (float)e[1] * color[1] + (float)e[2] * color[2],
+            (float)e[3] * color[0] + (float)e[4] * color[1] + (float)e[5] * color[2],
+            (float)e[6] * color[0] + (float)e[7] * color[1] + (float)e[8] * color[2],
+        };
+    }
+
+    // "The input tables are arrays of 16-bit unsigned values. Each input table consists of a minimum of two and a maximum of 4096 uInt16Number integers.
+    //  Each input table entry is appropriately normalized to the range 0 to 65535.
+    //  The inputTable is of size (InputChannels x inputTableEntries x 2) bytes.
+    //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
+    for (size_t c = 0; c < color.size(); ++c)
+        color[c] = lerp_1d(m_input_tables.span().slice(c * m_number_of_input_table_entries, m_number_of_input_table_entries), color[c]) / 65535.0f;
+
+    // "The CLUT is organized as an i-dimensional array with a given number of grid points in each dimension,
+    //  where i is the number of input channels (input tables) in the transform.
+    //  The dimension corresponding to the first input channel varies least rapidly and
+    //  the dimension corresponding to the last input channel varies most rapidly.
+    //  Each grid point value is an o-byte array, where o is the number of output channels.
+    //  The first sequential byte of the entry contains the function value for the first output function,
+    //  the second sequential byte of the entry contains the function value for the second output function,
+    //  and so on until all the output functions have been supplied."
+    auto sample = [this](Vector<unsigned> const& coordinates) {
+        size_t stride = 3;
+        size_t offset = 0;
+        for (int i = coordinates.size() - 1; i >= 0; --i) {
+            offset += coordinates[i] * stride;
+            stride *= m_number_of_clut_grid_points;
+        }
+        return FloatVector3 { (float)m_clut_values[offset], (float)m_clut_values[offset + 1], (float)m_clut_values[offset + 2] };
+    };
+    auto size = [this](size_t) { return m_number_of_clut_grid_points; };
+    FloatVector3 output_color = lerp_nd(move(size), move(sample), color) / 65535.0f;
+
+    // "The output tables are arrays of 16-bit unsigned values. Each output table consists of a minimum of two and a maximum of 4096 uInt16Number integers.
+    //  Each output table entry is appropriately normalized to the range 0 to 65535.
+    //  The outputTable is of size (OutputChannels x outputTableEntries x 2) bytes.
+    //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
+    for (u8 c = 0; c < output_color.length(); ++c)
+        output_color[c] = lerp_1d(m_output_tables.span().slice(c * m_number_of_output_table_entries, m_number_of_output_table_entries), output_color[c]) / 65535.0f;
+
+    if (connection_space == ColorSpace::PCSXYZ) {
+        // Table 11 - PCSXYZ X, Y or Z encoding
+        output_color *= 65535 / 32768.0f;
+    } else {
+        VERIFY(connection_space == ColorSpace::PCSLAB);
+
+        // ICC v4, 10.10 lut16Type
+        // Note: lut16Type does _not_ use the encoding in 6.3.4.2 General PCS encoding!
+
+        // "To convert colour values from this tag's legacy 16-bit PCSLAB encoding to the 16-bit PCSLAB encoding defined in 6.3.4.2 (Tables 12 and 13),
+        //  multiply all values with 65 535/65 280 (i.e. FFFFh/FF00h).
+        //  Any colour values that are in the value range of legacy 16-bit PCSLAB encoding, but not in the more recent 16-bit PCSLAB encoding,
+        //  shall be clipped on a per-component basis."
+        output_color *= 65535.0f / 65280.0f;
+
+        // Table 42 — Legacy PCSLAB L* encoding
+        output_color[0] = clamp(output_color[0] * 100.0f, 0.0f, 100.0f);
+
+        // Table 43 — Legacy PCSLAB a* or PCSLAB b* encoding
+        output_color[1] = clamp(output_color[1] * 255.0f - 128.0f, -128.0f, 127.0f);
+        output_color[2] = clamp(output_color[2] * 255.0f - 128.0f, -128.0f, 127.0f);
+    }
+
+    return output_color;
+}
+
+inline ErrorOr<FloatVector3> Lut8TagData::evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes color_u8) const
+{
+    // See comment at start of LutAToBTagData::evaluate() for the clipping flow.
+    VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
+    VERIFY(number_of_input_channels() == color_u8.size());
+
+    // FIXME: This will be wrong once Profile::from_pcs_b_to_a() calls this function too.
+    VERIFY(number_of_output_channels() == 3);
+
+    // ICC v4, 10.11 lut8Type
+    // "Data is processed using these elements via the following sequence:
+    //  (matrix) ⇨ (1d input tables) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (1d output tables)"
+
+    Vector<float, 4> color;
+    for (u8 c : color_u8)
+        color.append(c / 255.0f);
+
+    // "3 x 3 matrix (which shall be the identity matrix unless the input colour space is PCSXYZ)"
+    // In practice, it's usually RGB or CMYK.
+    if (input_space == ColorSpace::PCSXYZ) {
+        EMatrix3x3 const& e = m_e;
+        color = Vector<float, 4> {
+            (float)e[0] * color[0] + (float)e[1] * color[1] + (float)e[2] * color[2],
+            (float)e[3] * color[0] + (float)e[4] * color[1] + (float)e[5] * color[2],
+            (float)e[6] * color[0] + (float)e[7] * color[1] + (float)e[8] * color[2],
+        };
+    }
+
+    // "The input tables are arrays of uInt8Number values. Each input table consists of 256 uInt8Number integers.
+    //  Each input table entry is appropriately normalized to the range 0 to 255.
+    //  The inputTable is of size (InputChannels x 256) bytes.
+    //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
+    for (size_t c = 0; c < color.size(); ++c)
+        color[c] = lerp_1d(m_input_tables.span().slice(c * 256, 256), color[c]) / 255.0f;
+
+    // "The CLUT is organized as an i-dimensional array with a given number of grid points in each dimension,
+    //  where i is the number of input channels (input tables) in the transform.
+    //  The dimension corresponding to the first input channel varies least rapidly and
+    //  the dimension corresponding to the last input channel varies most rapidly.
+    //  Each grid point value is an o-byte array, where o is the number of output channels.
+    //  The first sequential byte of the entry contains the function value for the first output function,
+    //  the second sequential byte of the entry contains the function value for the second output function,
+    //  and so on until all the output functions have been supplied."
+    auto sample = [this](Vector<unsigned> const& coordinates) {
+        size_t stride = 3;
+        size_t offset = 0;
+        for (int i = coordinates.size() - 1; i >= 0; --i) {
+            offset += coordinates[i] * stride;
+            stride *= m_number_of_clut_grid_points;
+        }
+        return FloatVector3 { (float)m_clut_values[offset], (float)m_clut_values[offset + 1], (float)m_clut_values[offset + 2] };
+    };
+    auto size = [this](size_t) { return m_number_of_clut_grid_points; };
+    FloatVector3 output_color = lerp_nd(move(size), move(sample), color) / 255.0f;
+
+    // "The output tables are arrays of uInt8Number values. Each output table consists of 256 uInt8Number integers.
+    //  Each output table entry is appropriately normalized to the range 0 to 255.
+    //  The outputTable is of size (OutputChannels x 256) bytes.
+    //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
+    for (u8 c = 0; c < output_color.length(); ++c)
+        output_color[c] = lerp_1d(m_output_tables.span().slice(c * 256, 256), output_color[c]) / 255.0f;
+
+    if (connection_space == ColorSpace::PCSXYZ) {
+        // "An 8-bit PCSXYZ encoding has not been defined, so the interpretation of a lut8Type in a profile that uses PCSXYZ is implementation specific."
+    } else {
+        VERIFY(connection_space == ColorSpace::PCSLAB);
+
+        // ICC v4, 6.3.4.2 General PCS encoding
+        // Table 12 — PCSLAB L* encoding
+        output_color[0] *= 100.0f;
+
+        // Table 13 — PCSLAB a* or PCSLAB b* encoding
+        output_color[1] = output_color[1] * 255.0f - 128.0f;
+        output_color[2] = output_color[2] * 255.0f - 128.0f;
+    }
+
+    return output_color;
+}
 
 inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_space, ReadonlyBytes color_u8) const
 {
