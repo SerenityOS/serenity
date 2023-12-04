@@ -284,15 +284,27 @@ if (current_os == "mac") {
   }
 
   bundle_data("ladybird_resources") {
+    # FIXME: We should not be listing directories here because a change to a file inside any of these directories
+    #        will not cause this action to be invoked.
     sources = [
       "//Base/res/color-palettes",
       "//Base/res/cursor-themes",
       "//Base/res/fonts",
-      "//Base/res/html",
       "//Base/res/icons",
       "//Base/res/themes",
     ]
     outputs = [ "{{bundle_resources_dir}}/res/" + "{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_web_resources") {
+    sources = [
+      "//Base/res/ladybird/directory.html",
+      "//Base/res/ladybird/error.html",
+      "//Base/res/ladybird/inspector.css",
+      "//Base/res/ladybird/inspector.js",
+      "//Base/res/ladybird/new-tab.html",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/res/ladybird/{{source_file_part}}" ]
   }
 
   bundle_data("ladybird_config_resources") {
@@ -352,6 +364,7 @@ if (current_os == "mac") {
       ":ladybird_config_resources",
       ":ladybird_icon",
       ":ladybird_resources",
+      ":ladybird_web_resources",
     ]
   }
 }
