@@ -132,7 +132,7 @@ void DedicatedWorkerHost::run()
     };
     auto perform_fetch = Web::HTML::create_perform_the_fetch_hook(inner_settings->heap(), move(perform_fetch_function));
 
-    auto on_complete_function = [inner_settings, worker_global_scope, outside_port = m_outside_port](JS::GCPtr<Web::HTML::Script> script) {
+    auto on_complete_function = [inner_settings, worker_global_scope, outside_port = m_outside_port, url = m_url](JS::GCPtr<Web::HTML::Script> script) {
         auto& realm = inner_settings->realm();
         // 1. If script is null or if script's error to rethrow is non-null, then:
         if (!script || !script->error_to_rethrow().is_null()) {
@@ -141,7 +141,7 @@ void DedicatedWorkerHost::run()
             // FIXME 2. Run the environment discarding steps for inside settings.
 
             // 3. Abort these steps.
-            dbgln("Didn't get my script :(");
+            dbgln("DedicatedWorkerHost: Unable to fetch script {} because {}", url, script ? script->error_to_rethrow().to_string_without_side_effects() : "script was null"_string);
             return;
         }
 
