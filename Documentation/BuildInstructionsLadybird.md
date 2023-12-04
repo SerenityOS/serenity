@@ -34,13 +34,22 @@ On openSUSE:
 sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-multimedia-devel qt6-tools-devel qt6-wayland-devel ccache
 ```
 
-On Nix/NixOS:
+On Nix/NixOS (using your host nixpkgs):
+```bash
+# From /path/to/serenity
+nix-shell Ladybird/ladybird.nix
+
+# With a custom entrypoint, for example your favorite shell
+nix-shell --command bash Ladybird/ladybird.nix
 ```
-nix-shell ladybird.nix
-```
+
 You can also use the nix flake in `Toolchain`:
-```
-nix develop Toolchain/#ladybird
+```bash
+# From /path/to/serenity
+nix develop ./Toolchain#ladybird
+
+# With a custom entrypoint, for example your favorite shell
+nix develop ./Toolchain#ladybird --command bash
 ```
 
 On macOS:
