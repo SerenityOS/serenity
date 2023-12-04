@@ -26,7 +26,7 @@ void set_resource_directory_url(String resource_directory_url)
     s_resource_directory_url = resource_directory_url;
 }
 
-static String s_error_page_url = "file:///res/html/error.html"_string;
+static String s_error_page_url = "file:///res/ladybird/error.html"_string;
 
 String error_page_url()
 {
@@ -38,7 +38,7 @@ void set_error_page_url(String error_page_url)
     s_error_page_url = error_page_url;
 }
 
-static String s_directory_page_url = "file:///res/html/directory.html"_string;
+static String s_directory_page_url = "file:///res/ladybird/directory.html"_string;
 
 String directory_page_url()
 {
