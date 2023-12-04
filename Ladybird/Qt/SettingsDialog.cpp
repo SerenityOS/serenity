@@ -37,11 +37,11 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_new_tab_page = make<QLineEdit>(this);
     m_new_tab_page->setText(Settings::the()->new_tab_page());
     QObject::connect(m_new_tab_page, &QLineEdit::textChanged, this, [this] {
-        auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
+        auto url_string = ak_string_from_qstring(m_new_tab_page->text());
         m_new_tab_page->setStyleSheet(URL(url_string).is_valid() ? "" : "border: 1px solid red;");
     });
     QObject::connect(m_new_tab_page, &QLineEdit::editingFinished, this, [this] {
-        auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
+        auto url_string = ak_string_from_qstring(m_new_tab_page->text());
         if (URL(url_string).is_valid())
             Settings::the()->set_new_tab_page(m_new_tab_page->text());
     });
