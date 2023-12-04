@@ -668,11 +668,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
     };
 
     m_web_view_bridge->on_theme_color_change = [self](auto color) {
-        self.backgroundColor = [NSColor colorWithRed:(color.red() / 255.0)
-                                               green:(color.green() / 255.0)
-                                                blue:(color.blue() / 255.0)
-                                               alpha:1.0];
-        [self.observer onThemeColorChange:color];
+        self.backgroundColor = Ladybird::gfx_color_to_ns_color(color);
     };
 
     m_web_view_bridge->on_insert_clipboard_entry = [](auto const& data, auto const&, auto const& mime_type) {

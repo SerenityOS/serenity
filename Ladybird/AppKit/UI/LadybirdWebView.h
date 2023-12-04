@@ -26,7 +26,6 @@
 - (void)loadURL:(URL const&)url;
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)is_redirect;
 - (void)onLoadFinish:(URL const&)url;
-- (void)onThemeColorChange:(Color)color;
 
 - (void)onTitleChange:(DeprecatedString const&)title;
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap;
