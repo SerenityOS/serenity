@@ -33,7 +33,7 @@ inline String const& default_new_tab_url()
 {
     // FIXME: Teach LibWeb how to load resource:// URLs, rather than converting to a file:// URL here.
     static auto default_new_tab_url = []() {
-        static constexpr auto url = "resource://html/misc/new-tab.html"sv;
+        static constexpr auto url = "resource://ladybird/new-tab.html"sv;
         return MUST(Core::Resource::load_from_uri(url))->file_url();
     }();
 

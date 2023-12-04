@@ -201,8 +201,8 @@ void InspectorClient::load_inspector()
     StringBuilder builder;
 
     // FIXME: Teach LibWeb how to load resource:// URIs instead of needing to read these files here.
-    auto inspector_css = MUST(Core::Resource::load_from_uri("resource://html/inspector/inspector.css"sv));
-    auto inspector_js = MUST(Core::Resource::load_from_uri("resource://html/inspector/inspector.js"sv));
+    auto inspector_css = MUST(Core::Resource::load_from_uri("resource://ladybird/inspector.css"sv));
+    auto inspector_js = MUST(Core::Resource::load_from_uri("resource://ladybird/inspector.js"sv));
 
     builder.append(R"~~~(
 <!DOCTYPE html>
