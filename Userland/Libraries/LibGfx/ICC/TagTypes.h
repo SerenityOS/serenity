@@ -20,6 +20,21 @@
 
 namespace Gfx::ICC {
 
+// Does one-dimensional linear interpolation over a lookup table.
+// Takes a span of values an x in [0.0, 1.0].
+// Finds the two values in the span closest to x (where x = 0.0 is the span's first element and x = 1.0 the span's last element),
+// and linearly interpolates between those two values, assumes all values are the same amount apart.
+template<class T>
+float lerp_1d(ReadonlySpan<T> values, float x)
+{
+    size_t n = values.size() - 1;
+    size_t i = static_cast<size_t>(x * n);
+    if (i == values.size() - 1)
+        --i;
+
+    return mix(static_cast<float>(values[i]), static_cast<float>(values[i + 1]), x * n - i);
+}
+
 // Does multi-dimensional linear interpolation over a lookup table.
 // `size(i)` should returns the number of samples in the i'th dimension.
 // `sample()` gets a vector where 0 <= i'th coordinate < size(i) and should return the value of the look-up table at that position.
@@ -207,12 +222,7 @@ public:
         if (values().size() == 1)
             return powf(x, values()[0] / (float)0x100);
 
-        size_t n = values().size() - 1;
-        size_t i = static_cast<size_t>(x * n);
-        if (i == values().size() - 1)
-            --i;
-
-        return mix(values()[i] / 65535.f, values()[i + 1] / 65535.f, x * n - i);
+        return lerp_1d(values().span(), x) / 65535.0f;
     }
 
     // y must be in [0..1].
