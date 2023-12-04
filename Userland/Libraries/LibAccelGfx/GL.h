@@ -65,7 +65,7 @@ enum class BlendFactor {
     OneMinusSrcAlpha,
     SrcAlpha,
 };
-void enable_blending(BlendFactor source, BlendFactor destination);
+void enable_blending(BlendFactor source, BlendFactor destination, BlendFactor source_alpha, BlendFactor destination_alpha);
 
 void read_pixels(Gfx::IntRect, Gfx::Bitmap&);
 
