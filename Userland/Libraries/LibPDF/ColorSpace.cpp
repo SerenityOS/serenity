@@ -506,7 +506,7 @@ PDFErrorOr<Color> ICCBasedColorSpace::color(ReadonlySpan<Value> arguments) const
 
     auto pcs = TRY(m_profile->to_pcs(bytes));
     Array<u8, 3> output;
-    TRY(s_srgb_profile->from_pcs(pcs, output.span()));
+    TRY(s_srgb_profile->from_pcs(m_profile, pcs, output.span()));
 
     return Color(output[0], output[1], output[2]);
 }
