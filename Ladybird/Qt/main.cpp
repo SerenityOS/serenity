@@ -8,7 +8,6 @@
 #include "EventLoopImplementationQt.h"
 #include "Settings.h"
 #include "WebContentView.h"
-#include <AK/OwnPtr.h>
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>

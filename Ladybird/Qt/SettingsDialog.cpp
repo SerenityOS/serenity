@@ -16,25 +16,26 @@
 namespace Ladybird {
 
 SettingsDialog::SettingsDialog(QMainWindow* window)
-    : m_window(window)
+    : QDialog(window)
+    , m_window(window)
 {
     m_layout = new QFormLayout(this);
 
-    m_enable_search = make<QCheckBox>(this);
+    m_enable_search = new QCheckBox(this);
     m_enable_search->setChecked(Settings::the()->enable_search());
 
-    m_search_engine_dropdown = make<QPushButton>(this);
+    m_search_engine_dropdown = new QPushButton(this);
     m_search_engine_dropdown->setText(qstring_from_ak_string(Settings::the()->search_engine().name));
     m_search_engine_dropdown->setMaximumWidth(200);
 
-    m_enable_autocomplete = make<QCheckBox>(this);
+    m_enable_autocomplete = new QCheckBox(this);
     m_enable_autocomplete->setChecked(Settings::the()->enable_autocomplete());
 
-    m_autocomplete_engine_dropdown = make<QPushButton>(this);
+    m_autocomplete_engine_dropdown = new QPushButton(this);
     m_autocomplete_engine_dropdown->setText(Settings::the()->autocomplete_engine().name);
     m_autocomplete_engine_dropdown->setMaximumWidth(200);
 
-    m_new_tab_page = make<QLineEdit>(this);
+    m_new_tab_page = new QLineEdit(this);
     m_new_tab_page->setText(Settings::the()->new_tab_page());
     QObject::connect(m_new_tab_page, &QLineEdit::textChanged, this, [this] {
         auto url_string = ak_string_from_qstring(m_new_tab_page->text());
@@ -60,9 +61,6 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     setWindowTitle("Settings");
     setLayout(m_layout);
     resize(600, 250);
-
-    show();
-    setFocus();
 }
 
 void SettingsDialog::setup_search_engines()

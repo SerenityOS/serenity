@@ -80,13 +80,13 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* edit_menu = menuBar()->addMenu("&Edit");
 
-    m_copy_selection_action = make<QAction>("&Copy", this);
+    m_copy_selection_action = new QAction("&Copy", this);
     m_copy_selection_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     m_copy_selection_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
     edit_menu->addAction(m_copy_selection_action);
     QObject::connect(m_copy_selection_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
 
-    m_select_all_action = make<QAction>("Select &All", this);
+    m_select_all_action = new QAction("Select &All", this);
     m_select_all_action->setIcon(load_icon_from_uri("resource://icons/16x16/select-all.png"sv));
     m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
     edit_menu->addAction(m_select_all_action);
@@ -163,7 +163,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* inspect_menu = menuBar()->addMenu("&Inspect");
 
-    m_view_source_action = make<QAction>("View &Source", this);
+    m_view_source_action = new QAction("View &Source", this);
     m_view_source_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-html.png"sv));
     m_view_source_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
     inspect_menu->addAction(m_view_source_action);
@@ -358,7 +358,12 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
     QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
-        new SettingsDialog(this);
+        if (!m_settings_dialog) {
+            m_settings_dialog = new SettingsDialog(this);
+        }
+
+        m_settings_dialog->show();
+        m_settings_dialog->setFocus();
     });
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
@@ -368,22 +373,22 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
-    m_inspect_dom_node_action = make<QAction>("&Inspect Element", this);
+    m_inspect_dom_node_action = new QAction("&Inspect Element", this);
     connect(m_inspect_dom_node_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
             m_current_tab->show_inspector_window(Tab::InspectorTarget::HoveredElement);
     });
-    m_go_back_action = make<QAction>("Go Back");
+    m_go_back_action = new QAction("Go Back", this);
     connect(m_go_back_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
             m_current_tab->back();
     });
-    m_go_forward_action = make<QAction>("Go Forward");
+    m_go_forward_action = new QAction("Go Forward", this);
     connect(m_go_forward_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
             m_current_tab->forward();
     });
-    m_reload_action = make<QAction>("&Reload");
+    m_reload_action = new QAction("&Reload", this);
     connect(m_reload_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
             m_current_tab->reload();
@@ -451,22 +456,20 @@ Tab& BrowserWindow::new_tab(StringView html, Web::HTML::ActivateTab activate_tab
 
 Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
 {
-    auto tab = make<Tab>(this, m_web_content_options, m_webdriver_content_ipc_path);
-    auto tab_ptr = tab.ptr();
-    m_tabs.append(std::move(tab));
+    auto* tab = new Tab(this, m_web_content_options, m_webdriver_content_ipc_path);
 
     if (m_current_tab == nullptr) {
-        set_current_tab(tab_ptr);
+        set_current_tab(tab);
     }
 
-    m_tabs_container->addTab(tab_ptr, "New Tab");
+    m_tabs_container->addTab(tab, "New Tab");
     if (activate_tab == Web::HTML::ActivateTab::Yes)
-        m_tabs_container->setCurrentWidget(tab_ptr);
+        m_tabs_container->setCurrentWidget(tab);
 
-    QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
-    QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
+    QObject::connect(tab, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
+    QObject::connect(tab, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 
-    QObject::connect(&tab_ptr->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
+    QObject::connect(&tab->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
         VERIFY(urls.size());
         m_current_tab->navigate(urls[0].toString());
 
@@ -474,17 +477,17 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
             new_tab(urls[i].toString(), Web::HTML::ActivateTab::No);
     });
 
-    tab_ptr->view().on_new_tab = [this](auto activate_tab) {
+    tab->view().on_new_tab = [this](auto activate_tab) {
         auto& tab = new_tab("about:blank", activate_tab);
         return tab.view().handle();
     };
 
-    tab_ptr->view().on_tab_open_request = [this](auto url, auto activate_tab) {
+    tab->view().on_tab_open_request = [this](auto url, auto activate_tab) {
         auto& tab = new_tab(qstring_from_ak_string(url.to_deprecated_string()), activate_tab);
         return tab.view().handle();
     };
 
-    tab_ptr->view().on_link_click = [this](auto url, auto target, unsigned modifiers) {
+    tab->view().on_link_click = [this](auto url, auto target, unsigned modifiers) {
         // TODO: maybe activate tabs according to some configuration, this is just normal current browser behavior
         if (modifiers == Mod_Ctrl) {
             m_current_tab->view().on_tab_open_request(url, Web::HTML::ActivateTab::No);
@@ -495,33 +498,33 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
         }
     };
 
-    tab_ptr->view().on_link_middle_click = [this](auto url, auto target, unsigned modifiers) {
+    tab->view().on_link_middle_click = [this](auto url, auto target, unsigned modifiers) {
         m_current_tab->view().on_link_click(url, target, Mod_Ctrl);
         (void)modifiers;
     };
 
-    tab_ptr->view().on_get_all_cookies = [this](auto const& url) {
+    tab->view().on_get_all_cookies = [this](auto const& url) {
         return m_cookie_jar.get_all_cookies(url);
     };
 
-    tab_ptr->view().on_get_named_cookie = [this](auto const& url, auto const& name) {
+    tab->view().on_get_named_cookie = [this](auto const& url, auto const& name) {
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    tab_ptr->view().on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
+    tab->view().on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
         return m_cookie_jar.get_cookie(url, source);
     };
 
-    tab_ptr->view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
+    tab->view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
         m_cookie_jar.set_cookie(url, cookie, source);
     };
 
-    tab_ptr->view().on_update_cookie = [this](auto const& cookie) {
+    tab->view().on_update_cookie = [this](auto const& cookie) {
         m_cookie_jar.update_cookie(cookie);
     };
 
-    tab_ptr->focus_location_editor();
-    return *tab_ptr;
+    tab->focus_location_editor();
+    return *tab;
 }
 
 void BrowserWindow::activate_tab(int index)
@@ -533,9 +536,7 @@ void BrowserWindow::close_tab(int index)
 {
     auto* tab = m_tabs_container->widget(index);
     m_tabs_container->removeTab(index);
-    m_tabs.remove_first_matching([&](auto& entry) {
-        return entry == tab;
-    });
+    tab->deleteLater();
 }
 
 void BrowserWindow::open_file()
@@ -592,23 +593,23 @@ void BrowserWindow::open_previous_tab()
 
 void BrowserWindow::enable_auto_color_scheme()
 {
-    for (auto& tab : m_tabs) {
-        tab->view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
-    }
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
+    });
 }
 
 void BrowserWindow::enable_light_color_scheme()
 {
-    for (auto& tab : m_tabs) {
-        tab->view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
-    }
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
+    });
 }
 
 void BrowserWindow::enable_dark_color_scheme()
 {
-    for (auto& tab : m_tabs) {
-        tab->view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
-    }
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
+    });
 }
 
 void BrowserWindow::zoom_in()
@@ -671,17 +672,19 @@ void BrowserWindow::copy_selected_text()
 void BrowserWindow::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    for (auto& tab : m_tabs) {
-        tab->view().set_window_size({ frameSize().width(), frameSize().height() });
-    }
+
+    for_each_tab([&](auto& tab) {
+        tab.view().set_window_size({ frameSize().width(), frameSize().height() });
+    });
 }
 
 void BrowserWindow::moveEvent(QMoveEvent* event)
 {
     QWidget::moveEvent(event);
-    for (auto& tab : m_tabs) {
-        tab->view().set_window_position({ event->pos().x(), event->pos().y() });
-    }
+
+    for_each_tab([&](auto& tab) {
+        tab.view().set_window_position({ event->pos().x(), event->pos().y() });
+    });
 }
 
 void BrowserWindow::wheelEvent(QWheelEvent* event)

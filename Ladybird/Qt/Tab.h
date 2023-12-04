@@ -72,7 +72,7 @@ private:
 
     void close_sub_widgets();
 
-    QBoxLayout* m_layout;
+    QBoxLayout* m_layout { nullptr };
     QToolBar* m_toolbar { nullptr };
     QToolButton* m_reset_zoom_button { nullptr };
     QAction* m_reset_zoom_button_action { nullptr };
@@ -83,26 +83,26 @@ private:
     QString m_title;
     QLabel* m_hover_label { nullptr };
 
-    OwnPtr<QMenu> m_page_context_menu;
+    QMenu* m_page_context_menu { nullptr };
     Optional<String> m_page_context_menu_search_text;
 
-    OwnPtr<QMenu> m_link_context_menu;
+    QMenu* m_link_context_menu { nullptr };
     URL m_link_context_menu_url;
 
-    OwnPtr<QMenu> m_image_context_menu;
+    QMenu* m_image_context_menu { nullptr };
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
 
-    OwnPtr<QMenu> m_audio_context_menu;
-    OwnPtr<QMenu> m_video_context_menu;
+    QMenu* m_audio_context_menu { nullptr };
+    QMenu* m_video_context_menu { nullptr };
     QIcon m_media_context_menu_play_icon;
     QIcon m_media_context_menu_pause_icon;
     QIcon m_media_context_menu_mute_icon;
     QIcon m_media_context_menu_unmute_icon;
-    OwnPtr<QAction> m_media_context_menu_play_pause_action;
-    OwnPtr<QAction> m_media_context_menu_mute_unmute_action;
-    OwnPtr<QAction> m_media_context_menu_controls_action;
-    OwnPtr<QAction> m_media_context_menu_loop_action;
+    QAction* m_media_context_menu_play_pause_action { nullptr };
+    QAction* m_media_context_menu_mute_unmute_action { nullptr };
+    QAction* m_media_context_menu_controls_action { nullptr };
+    QAction* m_media_context_menu_loop_action { nullptr };
     URL m_media_context_menu_url;
 
     int tab_index();
