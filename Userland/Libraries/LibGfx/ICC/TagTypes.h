@@ -28,10 +28,7 @@ template<class T>
 float lerp_1d(ReadonlySpan<T> values, float x)
 {
     size_t n = values.size() - 1;
-    size_t i = static_cast<size_t>(x * n);
-    if (i == values.size() - 1)
-        --i;
-
+    size_t i = min(static_cast<size_t>(x * n), n - 1);
     return mix(static_cast<float>(values[i]), static_cast<float>(values[i + 1]), x * n - i);
 }
 
