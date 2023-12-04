@@ -13,7 +13,8 @@ AK::DeprecatedString ak_deprecated_string_from_qstring(QString const& qstring)
 
 ErrorOr<String> ak_string_from_qstring(QString const& qstring)
 {
-    return String::from_utf8(StringView(qstring.toUtf8().data(), qstring.size()));
+    auto utf8_data = qstring.toUtf8();
+    return String::from_utf8(StringView(utf8_data.data(), utf8_data.size()));
 }
 
 QString qstring_from_ak_string(StringView ak_string)
