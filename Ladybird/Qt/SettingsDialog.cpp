@@ -24,7 +24,7 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_enable_search->setChecked(Settings::the()->enable_search());
 
     m_search_engine_dropdown = make<QPushButton>(this);
-    m_search_engine_dropdown->setText(qstring_from_ak_deprecated_string(Settings::the()->search_engine().name));
+    m_search_engine_dropdown->setText(qstring_from_ak_string(Settings::the()->search_engine().name));
     m_search_engine_dropdown->setMaximumWidth(200);
 
     m_enable_autocomplete = make<QCheckBox>(this);
@@ -76,7 +76,7 @@ void SettingsDialog::setup_search_engines()
 
     QMenu* search_engine_menu = new QMenu(this);
     for (auto const& search_engine : WebView::search_engines()) {
-        auto search_engine_name = qstring_from_ak_deprecated_string(search_engine.name);
+        auto search_engine_name = qstring_from_ak_string(search_engine.name);
         QAction* action = new QAction(search_engine_name, this);
 
         connect(action, &QAction::triggered, this, [&, search_engine_name = std::move(search_engine_name)]() {

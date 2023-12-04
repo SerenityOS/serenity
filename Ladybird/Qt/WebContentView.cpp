@@ -114,10 +114,10 @@ WebContentView::WebContentView(WebContentOptions const& web_content_options, Str
         update_cursor(cursor);
     };
 
-    on_enter_tooltip_area = [this](auto position, auto tooltip) {
+    on_enter_tooltip_area = [this](auto position, auto const& tooltip) {
         QToolTip::showText(
             mapToGlobal(QPoint(position.x(), position.y())),
-            qstring_from_ak_deprecated_string(tooltip),
+            qstring_from_ak_string(tooltip),
             this);
     };
 
