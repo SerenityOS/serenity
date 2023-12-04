@@ -39,6 +39,11 @@ void PageClient::set_use_gpu_painter()
     s_use_gpu_painter = true;
 }
 
+JS::NonnullGCPtr<PageClient> PageClient::create(JS::VM& vm, PageHost& page_host, u64 id)
+{
+    return vm.heap().allocate_without_realm<PageClient>(page_host, id);
+}
+
 PageClient::PageClient(PageHost& owner, u64 id)
     : m_owner(owner)
     , m_page(make<Web::Page>(*this))

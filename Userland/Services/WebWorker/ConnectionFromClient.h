@@ -9,10 +9,12 @@
 #include <AK/HashMap.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/Worker/WebWorkerClientEndpoint.h>
 #include <LibWeb/Worker/WebWorkerServerEndpoint.h>
+#include <Services/WebWorker/PageHost.h>
 #include <WebWorker/Forward.h>
 
 namespace WebWorker {
@@ -40,7 +42,7 @@ private:
     virtual void start_dedicated_worker(AK::URL const& url, String const&, String const&, String const&, IPC::File const&) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
 
-    NonnullOwnPtr<PageHost> m_page_host;
+    JS::Handle<PageHost> m_page_host;
 
     // FIXME: Route console messages to the Browser UI using a ConsoleClient
 

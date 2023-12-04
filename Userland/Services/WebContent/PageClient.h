@@ -17,11 +17,10 @@
 namespace WebContent {
 
 class PageClient final : public Web::PageClient {
-    AK_MAKE_NONCOPYABLE(PageClient);
-    AK_MAKE_NONMOVABLE(PageClient);
+    JS_CELL(PageClient, Web::PageClient);
 
 public:
-    PageClient(PageHost&, u64 id);
+    static JS::NonnullGCPtr<PageClient> create(JS::VM& vm, PageHost& page_host, u64 id);
 
     static void set_use_gpu_painter();
 
@@ -60,6 +59,8 @@ public:
     void set_user_style(String source);
 
 private:
+    PageClient(PageHost&, u64 id);
+
     // ^PageClient
     virtual bool is_connection_open() const override;
     virtual Gfx::Palette palette() const override;

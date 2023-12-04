@@ -14,11 +14,11 @@
 namespace WebWorker {
 
 class PageHost final : public Web::PageClient {
-    AK_MAKE_NONCOPYABLE(PageHost);
-    AK_MAKE_NONMOVABLE(PageHost);
+    JS_CELL(PageHost, Web::PageClient);
 
 public:
-    static NonnullOwnPtr<PageHost> create(ConnectionFromClient& client) { return adopt_own(*new PageHost(client)); }
+    static JS::NonnullGCPtr<PageHost> create(JS::VM& vm, ConnectionFromClient& client);
+
     virtual ~PageHost();
 
     virtual Web::Page& page() override;

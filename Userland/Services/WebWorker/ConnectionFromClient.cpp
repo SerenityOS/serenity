@@ -36,7 +36,7 @@ void ConnectionFromClient::request_file(Web::FileRequest request)
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<WebWorkerClientEndpoint, WebWorkerServerEndpoint>(*this, move(socket), 1)
-    , m_page_host(PageHost::create(*this))
+    , m_page_host(PageHost::create(Web::Bindings::main_thread_vm(), *this))
 {
 }
 

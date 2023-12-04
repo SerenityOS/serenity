@@ -4,10 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/VM.h>
 #include <WebWorker/ConnectionFromClient.h>
 #include <WebWorker/PageHost.h>
 
 namespace WebWorker {
+
+JS::NonnullGCPtr<PageHost> PageHost::create(JS::VM& vm, ConnectionFromClient& client)
+{
+    return vm.heap().allocate_without_realm<PageHost>(client);
+}
 
 PageHost::~PageHost() = default;
 
