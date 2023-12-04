@@ -366,10 +366,10 @@ protected:
     void DECDC(Parameters);
 
     // DECPNM - Set numeric keypad mode
-    void DECPNM();
+    void DECKPNM();
 
     // DECPAM - Set application keypad mode
-    void DECPAM();
+    void DECKPAM();
 
 #ifndef KERNEL
     TerminalClient& m_client;

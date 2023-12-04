@@ -941,12 +941,12 @@ void Terminal::DECDC(Parameters params)
         scroll_left(row, cursor_column(), num);
 }
 
-void Terminal::DECPNM()
+void Terminal::DECKPNM()
 {
     dbgln("FIXME: implement setting the keypad to numeric mode");
 }
 
-void Terminal::DECPAM()
+void Terminal::DECKPAM()
 {
     dbgln("FIXME: implement setting the keypad to application mode");
 }
@@ -1081,10 +1081,10 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
             DECFI();
             return;
         case '=':
-            DECPAM();
+            DECKPAM();
             return;
         case '>':
-            DECPNM();
+            DECKPNM();
             return;
         }
         unimplemented_escape_sequence(intermediates, last_byte);
