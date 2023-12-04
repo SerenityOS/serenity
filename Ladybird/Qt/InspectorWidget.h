@@ -18,7 +18,7 @@ class InspectorWidget final : public QWidget {
     Q_OBJECT
 
 public:
-    explicit InspectorWidget(WebContentView& content_view);
+    InspectorWidget(QWidget* tab, WebContentView& content_view);
     virtual ~InspectorWidget() override;
 
     void inspect();
