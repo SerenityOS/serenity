@@ -1213,12 +1213,14 @@ ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBy
     VERIFY(number_of_components_in_color_space(connection_space()) == 3);
 
     switch (tag_data.type()) {
-    case Lut16TagData::Type:
-        // FIXME
-        return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mft2 tags not yet implemented");
-    case Lut8TagData::Type:
-        // FIXME
-        return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mft1 tags not yet implemented");
+    case Lut16TagData::Type: {
+        auto const& a_to_b = static_cast<Lut16TagData const&>(tag_data);
+        return a_to_b.evaluate(data_color_space(), connection_space(), color);
+    }
+    case Lut8TagData::Type: {
+        auto const& a_to_b = static_cast<Lut8TagData const&>(tag_data);
+        return a_to_b.evaluate(data_color_space(), connection_space(), color);
+    }
     case LutAToBTagData::Type: {
         auto const& a_to_b = static_cast<LutAToBTagData const&>(tag_data);
         if (a_to_b.number_of_input_channels() != number_of_components_in_color_space(data_color_space()))
