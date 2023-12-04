@@ -184,7 +184,10 @@ TEST_CASE(from_pcs)
 
     auto sRGB_from_xyz = [&sRGB](FloatVector3 const& XYZ) {
         u8 rgb[3];
-        MUST(sRGB->from_pcs(XYZ, rgb));
+        // The first parameter, the source profile, is used to check if the PCS data is XYZ or LAB,
+        // and what the source whitepoint is. We just need any profile with an XYZ PCS space,
+        // so passing sRGB as source profile too is fine.
+        MUST(sRGB->from_pcs(sRGB, XYZ, rgb));
         return Color(rgb[0], rgb[1], rgb[2]);
     };
 

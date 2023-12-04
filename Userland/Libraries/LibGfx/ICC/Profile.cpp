@@ -1376,6 +1376,27 @@ static FloatVector3 lab_from_xyz(FloatVector3 xyz, XYZ white_point)
     return { L, a, b };
 }
 
+static FloatVector3 xyz_from_lab(FloatVector3 lab, XYZ white_point)
+{
+    // Inverse of lab_from_xyz().
+    auto L_star = lab[0];
+    auto a_star = lab[1];
+    auto b_star = lab[2];
+
+    auto L = (L_star + 16) / 116 + a_star / 500; // f(x)
+    auto M = (L_star + 16) / 116;                // f(y)
+    auto N = (L_star + 16) / 116 - b_star / 200; // f(z)
+
+    // Inverse of f in lab_from_xyz().
+    auto g = [](float x) {
+        if (x >= 6.0f / 29.0f)
+            return powf(x, 3);
+        return (x - 4.0f / 29.0f) * (3 * powf(6.f / 29.f, 2));
+    };
+
+    return { white_point.X * g(L), white_point.Y * g(M), white_point.Z * g(N) };
+}
+
 static TagSignature backward_transform_tag_for_rendering_intent(RenderingIntent rendering_intent)
 {
     // ICCv4, Table 25 — Profile type/profile tag and defined rendering intents
@@ -1408,8 +1429,19 @@ ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 con
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
+ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs, Bytes color) const
 {
+    if (source_profile.connection_space() != connection_space()) {
+        if (source_profile.connection_space() == ColorSpace::PCSLAB) {
+            VERIFY(connection_space() == ColorSpace::PCSXYZ);
+            pcs = xyz_from_lab(pcs, source_profile.pcs_illuminant());
+        } else {
+            VERIFY(source_profile.connection_space() == ColorSpace::PCSXYZ);
+            VERIFY(connection_space() == ColorSpace::PCSLAB);
+            pcs = lab_from_xyz(pcs, pcs_illuminant());
+        }
+    }
+
     // See `to_pcs()` for spec links.
     // This function is very similar, but uses BToAn instead of AToBn for LUT profiles,
     // and an inverse transform for matrix profiles.
@@ -1543,15 +1575,10 @@ ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color) const
 
 ErrorOr<void> Profile::convert_image(Gfx::Bitmap& bitmap, Profile const& source_profile) const
 {
-    // FIXME: Convert XYZ<->Lab conversion when needed.
-    //        Currently, to_pcs() and from_pcs() are only implemented for matrix profiles, which are always XYZ anyways.
-    if (connection_space() != source_profile.connection_space())
-        return Error::from_string_literal("ICC::Profile::convert_image: mismatching profile connection spaces not yet implemented");
-
     for (auto& pixel : bitmap) {
         u8 rgb[] = { Color::from_argb(pixel).red(), Color::from_argb(pixel).green(), Color::from_argb(pixel).blue() };
         auto pcs = TRY(source_profile.to_pcs(rgb));
-        TRY(from_pcs(pcs, rgb));
+        TRY(from_pcs(source_profile, pcs, rgb));
         pixel = Color(rgb[0], rgb[1], rgb[2], Color::from_argb(pixel).alpha()).value();
     }
 
