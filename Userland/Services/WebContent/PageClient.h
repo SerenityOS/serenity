@@ -61,6 +61,8 @@ public:
 private:
     PageClient(PageHost&, u64 id);
 
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
     // ^PageClient
     virtual bool is_connection_open() const override;
     virtual Gfx::Palette palette() const override;
@@ -131,7 +133,7 @@ private:
     ConnectionFromClient& client() const;
 
     PageHost& m_owner;
-    NonnullOwnPtr<Web::Page> m_page;
+    JS::NonnullGCPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Web::DevicePixelRect m_screen_rect;
     Web::DevicePixelSize m_content_size;

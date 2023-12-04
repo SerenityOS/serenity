@@ -57,7 +57,7 @@ private:
 ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& host_page, AK::URL const& url, ByteBuffer data)
 {
     auto page_client = SVGPageClient::create(Bindings::main_thread_vm(), host_page);
-    auto page = make<Page>(*page_client);
+    auto page = Page::create(Bindings::main_thread_vm(), *page_client);
     page_client->m_svg_page = page.ptr();
     page->set_top_level_traversable(MUST(Web::HTML::TraversableNavigable::create_a_fresh_top_level_traversable(*page, AK::URL("about:blank"))));
     JS::NonnullGCPtr<HTML::Navigable> navigable = page->top_level_traversable();
@@ -98,10 +98,10 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
 
     MUST(document->append_child(*svg_root));
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SVGDecodedImageData(move(page), move(page_client), move(document), move(svg_root)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SVGDecodedImageData(page, move(page_client), move(document), move(svg_root)));
 }
 
-SVGDecodedImageData::SVGDecodedImageData(NonnullOwnPtr<Page> page, JS::Handle<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
+SVGDecodedImageData::SVGDecodedImageData(JS::NonnullGCPtr<Page> page, JS::Handle<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
     : m_page(move(page))
     , m_page_client(move(page_client))
     , m_document(move(document))

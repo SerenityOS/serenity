@@ -23,12 +23,24 @@
 
 namespace Web {
 
-Page::Page(PageClient& client)
+JS::NonnullGCPtr<Page> Page::create(JS::VM& vm, JS::NonnullGCPtr<PageClient> page_client)
+{
+    return vm.heap().allocate_without_realm<Page>(page_client);
+}
+
+Page::Page(JS::NonnullGCPtr<PageClient> client)
     : m_client(client)
 {
 }
 
 Page::~Page() = default;
+
+void Page::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_top_level_traversable);
+    visitor.visit(m_client);
+}
 
 HTML::BrowsingContext& Page::focused_context()
 {
@@ -56,13 +68,13 @@ void Page::load_html(StringView html)
 
 Gfx::Palette Page::palette() const
 {
-    return m_client.palette();
+    return m_client->palette();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#web-exposed-screen-area
 CSSPixelRect Page::web_exposed_screen_area() const
 {
-    auto device_pixel_rect = m_client.screen_rect();
+    auto device_pixel_rect = m_client->screen_rect();
     auto scale = client().device_pixels_per_css_pixel();
     return {
         device_pixel_rect.x().value() / scale,
@@ -74,7 +86,7 @@ CSSPixelRect Page::web_exposed_screen_area() const
 
 CSS::PreferredColorScheme Page::preferred_color_scheme() const
 {
-    return m_client.preferred_color_scheme();
+    return m_client->preferred_color_scheme();
 }
 
 CSSPixelPoint Page::device_to_css_point(DevicePixelPoint point) const
@@ -210,12 +222,12 @@ static ResponseType spin_event_loop_until_dialog_closed(PageClient& client, Opti
 void Page::did_request_alert(String const& message)
 {
     m_pending_dialog = PendingDialog::Alert;
-    m_client.page_did_request_alert(message);
+    m_client->page_did_request_alert(message);
 
     if (!message.is_empty())
         m_pending_dialog_text = message;
 
-    spin_event_loop_until_dialog_closed(m_client, m_pending_alert_response);
+    spin_event_loop_until_dialog_closed(*m_client, m_pending_alert_response);
 }
 
 void Page::alert_closed()
@@ -230,12 +242,12 @@ void Page::alert_closed()
 bool Page::did_request_confirm(String const& message)
 {
     m_pending_dialog = PendingDialog::Confirm;
-    m_client.page_did_request_confirm(message);
+    m_client->page_did_request_confirm(message);
 
     if (!message.is_empty())
         m_pending_dialog_text = message;
 
-    return spin_event_loop_until_dialog_closed(m_client, m_pending_confirm_response);
+    return spin_event_loop_until_dialog_closed(*m_client, m_pending_confirm_response);
 }
 
 void Page::confirm_closed(bool accepted)
@@ -250,12 +262,12 @@ void Page::confirm_closed(bool accepted)
 Optional<String> Page::did_request_prompt(String const& message, String const& default_)
 {
     m_pending_dialog = PendingDialog::Prompt;
-    m_client.page_did_request_prompt(message, default_);
+    m_client->page_did_request_prompt(message, default_);
 
     if (!message.is_empty())
         m_pending_dialog_text = message;
 
-    return spin_event_loop_until_dialog_closed(m_client, m_pending_prompt_response);
+    return spin_event_loop_until_dialog_closed(*m_client, m_pending_prompt_response);
 }
 
 void Page::prompt_closed(Optional<String> response)
@@ -273,11 +285,11 @@ void Page::dismiss_dialog()
     case PendingDialog::None:
         break;
     case PendingDialog::Alert:
-        m_client.page_did_request_accept_dialog();
+        m_client->page_did_request_accept_dialog();
         break;
     case PendingDialog::Confirm:
     case PendingDialog::Prompt:
-        m_client.page_did_request_dismiss_dialog();
+        m_client->page_did_request_dismiss_dialog();
         break;
     }
 }
@@ -290,7 +302,7 @@ void Page::accept_dialog()
     case PendingDialog::Alert:
     case PendingDialog::Confirm:
     case PendingDialog::Prompt:
-        m_client.page_did_request_accept_dialog();
+        m_client->page_did_request_accept_dialog();
         break;
     }
 }
@@ -301,7 +313,7 @@ void Page::did_request_color_picker(WeakPtr<HTML::HTMLInputElement> target, Colo
         m_pending_non_blocking_dialog = PendingNonBlockingDialog::ColorPicker;
         m_pending_non_blocking_dialog_target = move(target);
 
-        m_client.page_did_request_color_picker(current_color);
+        m_client->page_did_request_color_picker(current_color);
     }
 }
 
