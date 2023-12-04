@@ -22,6 +22,7 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibIPC/Forward.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
@@ -193,7 +194,9 @@ private:
     bool m_pdf_viewer_supported { false };
 };
 
-class PageClient {
+class PageClient : public JS::Cell {
+    JS_CELL(PageClient, JS::Cell);
+
 public:
     virtual Page& page() = 0;
     virtual Page const& page() const = 0;

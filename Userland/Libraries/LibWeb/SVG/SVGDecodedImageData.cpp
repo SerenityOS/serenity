@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -23,10 +24,12 @@
 namespace Web::SVG {
 
 class SVGDecodedImageData::SVGPageClient final : public PageClient {
+    JS_CELL(SVGDecodedImageData::SVGPageClient, PageClient);
+
 public:
-    explicit SVGPageClient(Page& host_page)
-        : m_host_page(host_page)
+    static JS::NonnullGCPtr<SVGPageClient> create(JS::VM& vm, Page& page)
     {
+        return vm.heap().allocate_without_realm<SVGPageClient>(page);
     }
 
     virtual ~SVGPageClient() override = default;
@@ -43,11 +46,17 @@ public:
     virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
     virtual void request_file(FileRequest) override { }
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&) override { }
+
+private:
+    explicit SVGPageClient(Page& host_page)
+        : m_host_page(host_page)
+    {
+    }
 };
 
 ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& host_page, AK::URL const& url, ByteBuffer data)
 {
-    auto page_client = make<SVGPageClient>(host_page);
+    auto page_client = SVGPageClient::create(Bindings::main_thread_vm(), host_page);
     auto page = make<Page>(*page_client);
     page_client->m_svg_page = page.ptr();
     page->set_top_level_traversable(MUST(Web::HTML::TraversableNavigable::create_a_fresh_top_level_traversable(*page, AK::URL("about:blank"))));
@@ -92,7 +101,7 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
     return adopt_nonnull_ref_or_enomem(new (nothrow) SVGDecodedImageData(move(page), move(page_client), move(document), move(svg_root)));
 }
 
-SVGDecodedImageData::SVGDecodedImageData(NonnullOwnPtr<Page> page, NonnullOwnPtr<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
+SVGDecodedImageData::SVGDecodedImageData(NonnullOwnPtr<Page> page, JS::Handle<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
     : m_page(move(page))
     , m_page_client(move(page_client))
     , m_document(move(document))
