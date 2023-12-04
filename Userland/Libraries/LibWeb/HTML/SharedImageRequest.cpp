@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/AnimatedBitmapDecodedImageData.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/SharedImageRequest.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
 
@@ -20,7 +21,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(SharedImageRequest);
 
-JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm& realm, Page& page, AK::URL const& url)
+JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm& realm, JS::NonnullGCPtr<Page> page, AK::URL const& url)
 {
     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
     VERIFY(document);
@@ -32,7 +33,7 @@ JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm
     return request;
 }
 
-SharedImageRequest::SharedImageRequest(Page& page, AK::URL url, JS::NonnullGCPtr<DOM::Document> document)
+SharedImageRequest::SharedImageRequest(JS::NonnullGCPtr<Page> page, AK::URL url, JS::NonnullGCPtr<DOM::Document> document)
     : m_page(page)
     , m_url(move(url))
     , m_document(document)
@@ -50,6 +51,7 @@ void SharedImageRequest::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_fetch_controller);
     visitor.visit(m_document);
+    visitor.visit(m_page);
     for (auto& callback : m_callbacks) {
         visitor.visit(callback.on_finish);
         visitor.visit(callback.on_fail);

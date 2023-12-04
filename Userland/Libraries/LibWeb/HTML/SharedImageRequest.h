@@ -22,7 +22,7 @@ class SharedImageRequest : public JS::Cell {
     JS_DECLARE_ALLOCATOR(SharedImageRequest);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<SharedImageRequest> get_or_create(JS::Realm&, Page&, AK::URL const&);
+    [[nodiscard]] static JS::NonnullGCPtr<SharedImageRequest> get_or_create(JS::Realm&, JS::NonnullGCPtr<Page>, AK::URL const&);
 
     ~SharedImageRequest();
 
@@ -43,7 +43,7 @@ public:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
 private:
-    explicit SharedImageRequest(Page&, AK::URL, JS::NonnullGCPtr<DOM::Document>);
+    explicit SharedImageRequest(JS::NonnullGCPtr<Page>, AK::URL, JS::NonnullGCPtr<DOM::Document>);
 
     void handle_successful_fetch(AK::URL const&, StringView mime_type, ByteBuffer data);
     void handle_failed_fetch();
@@ -57,7 +57,7 @@ private:
 
     State m_state { State::New };
 
-    Page& m_page;
+    JS::NonnullGCPtr<Page> m_page;
 
     struct Callbacks {
         JS::GCPtr<JS::HeapFunction<void()>> on_finish;
