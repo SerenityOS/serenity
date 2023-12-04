@@ -30,7 +30,7 @@ public:
 private:
     void closeEvent(QCloseEvent*) override;
 
-    OwnPtr<WebContentView> m_inspector_view;
+    WebContentView* m_inspector_view;
     OwnPtr<WebView::InspectorClient> m_inspector_client;
 };
 

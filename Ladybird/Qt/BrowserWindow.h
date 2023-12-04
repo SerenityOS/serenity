@@ -21,6 +21,7 @@
 
 namespace Ladybird {
 
+class SettingsDialog;
 class WebContentView;
 
 class BrowserWindow : public QMainWindow {
@@ -105,18 +106,28 @@ private:
     void set_current_tab(Tab* tab);
     void update_displayed_zoom_level();
 
+    template<typename Callback>
+    void for_each_tab(Callback&& callback)
+    {
+        for (int i = 0; i < m_tabs_container->count(); ++i) {
+            auto& tab = verify_cast<Tab>(*m_tabs_container->widget(i));
+            callback(tab);
+        }
+    }
+
     QTabWidget* m_tabs_container { nullptr };
-    Vector<NonnullOwnPtr<Tab>> m_tabs;
     Tab* m_current_tab { nullptr };
     QMenu* m_zoom_menu { nullptr };
 
-    OwnPtr<QAction> m_go_back_action {};
-    OwnPtr<QAction> m_go_forward_action {};
-    OwnPtr<QAction> m_reload_action {};
-    OwnPtr<QAction> m_copy_selection_action {};
-    OwnPtr<QAction> m_select_all_action {};
-    OwnPtr<QAction> m_view_source_action {};
-    OwnPtr<QAction> m_inspect_dom_node_action {};
+    QAction* m_go_back_action { nullptr };
+    QAction* m_go_forward_action { nullptr };
+    QAction* m_reload_action { nullptr };
+    QAction* m_copy_selection_action { nullptr };
+    QAction* m_select_all_action { nullptr };
+    QAction* m_view_source_action { nullptr };
+    QAction* m_inspect_dom_node_action { nullptr };
+
+    SettingsDialog* m_settings_dialog { nullptr };
 
     WebView::CookieJar& m_cookie_jar;
 

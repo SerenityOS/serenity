@@ -309,7 +309,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         }
     });
 
-    m_page_context_menu = make<QMenu>("Context menu", this);
+    m_page_context_menu = new QMenu("Context menu", this);
     m_page_context_menu->addAction(&m_window->go_back_action());
     m_page_context_menu->addAction(&m_window->go_forward_action());
     m_page_context_menu->addAction(&m_window->reload_action());
@@ -361,7 +361,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         copy_link_url(m_link_context_menu_url);
     });
 
-    m_link_context_menu = make<QMenu>("Link context menu", this);
+    m_link_context_menu = new QMenu("Link context menu", this);
     m_link_context_menu->addAction(open_link_action);
     m_link_context_menu->addAction(open_link_in_new_tab_action);
     m_link_context_menu->addSeparator();
@@ -413,7 +413,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         copy_link_url(m_image_context_menu_url);
     });
 
-    m_image_context_menu = make<QMenu>("Image context menu", this);
+    m_image_context_menu = new QMenu("Image context menu", this);
     m_image_context_menu->addAction(open_image_action);
     m_image_context_menu->addAction(open_image_in_new_tab_action);
     m_image_context_menu->addSeparator();
@@ -435,25 +435,25 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_media_context_menu_mute_icon = load_icon_from_uri("resource://icons/16x16/audio-volume-muted.png"sv);
     m_media_context_menu_unmute_icon = load_icon_from_uri("resource://icons/16x16/audio-volume-high.png"sv);
 
-    m_media_context_menu_play_pause_action = make<QAction>("&Play", this);
+    m_media_context_menu_play_pause_action = new QAction("&Play", this);
     m_media_context_menu_play_pause_action->setIcon(m_media_context_menu_play_icon);
     QObject::connect(m_media_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
         view().toggle_media_play_state();
     });
 
-    m_media_context_menu_mute_unmute_action = make<QAction>("&Mute", this);
+    m_media_context_menu_mute_unmute_action = new QAction("&Mute", this);
     m_media_context_menu_mute_unmute_action->setIcon(m_media_context_menu_mute_icon);
     QObject::connect(m_media_context_menu_mute_unmute_action, &QAction::triggered, this, [this]() {
         view().toggle_media_mute_state();
     });
 
-    m_media_context_menu_controls_action = make<QAction>("Show &Controls", this);
+    m_media_context_menu_controls_action = new QAction("Show &Controls", this);
     m_media_context_menu_controls_action->setCheckable(true);
     QObject::connect(m_media_context_menu_controls_action, &QAction::triggered, this, [this]() {
         view().toggle_media_controls_state();
     });
 
-    m_media_context_menu_loop_action = make<QAction>("&Loop", this);
+    m_media_context_menu_loop_action = new QAction("&Loop", this);
     m_media_context_menu_loop_action->setCheckable(true);
     QObject::connect(m_media_context_menu_loop_action, &QAction::triggered, this, [this]() {
         view().toggle_media_loop_state();
@@ -477,7 +477,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         copy_link_url(m_media_context_menu_url);
     });
 
-    m_audio_context_menu = make<QMenu>("Audio context menu", this);
+    m_audio_context_menu = new QMenu("Audio context menu", this);
     m_audio_context_menu->addAction(m_media_context_menu_play_pause_action);
     m_audio_context_menu->addAction(m_media_context_menu_mute_unmute_action);
     m_audio_context_menu->addAction(m_media_context_menu_controls_action);
@@ -508,7 +508,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         copy_link_url(m_media_context_menu_url);
     });
 
-    m_video_context_menu = make<QMenu>("Video context menu", this);
+    m_video_context_menu = new QMenu("Video context menu", this);
     m_video_context_menu->addAction(m_media_context_menu_play_pause_action);
     m_video_context_menu->addAction(m_media_context_menu_mute_unmute_action);
     m_video_context_menu->addAction(m_media_context_menu_controls_action);

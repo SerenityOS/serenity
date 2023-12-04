@@ -15,7 +15,7 @@ extern bool is_using_dark_system_theme(QWidget&);
 
 InspectorWidget::InspectorWidget(WebContentView& content_view)
 {
-    m_inspector_view = make<WebContentView>(WebContentOptions {}, StringView {});
+    m_inspector_view = new WebContentView({}, {});
 
     if (is_using_dark_system_theme(*this))
         m_inspector_view->update_palette(WebContentView::PaletteMode::Dark);
@@ -23,7 +23,7 @@ InspectorWidget::InspectorWidget(WebContentView& content_view)
     m_inspector_client = make<WebView::InspectorClient>(content_view, *m_inspector_view);
 
     setLayout(new QVBoxLayout);
-    layout()->addWidget(m_inspector_view.ptr());
+    layout()->addWidget(m_inspector_view);
 
     setWindowTitle("Inspector");
     resize(875, 825);

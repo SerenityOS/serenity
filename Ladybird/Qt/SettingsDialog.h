@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
 #include <QCheckBox>
 #include <QDialog>
 #include <QFormLayout>
@@ -19,6 +18,7 @@ namespace Ladybird {
 
 class SettingsDialog : public QDialog {
     Q_OBJECT
+
 public:
     explicit SettingsDialog(QMainWindow* window);
 
@@ -27,11 +27,11 @@ private:
 
     QFormLayout* m_layout;
     QMainWindow* m_window { nullptr };
-    OwnPtr<QLineEdit> m_new_tab_page;
-    OwnPtr<QCheckBox> m_enable_search;
-    OwnPtr<QPushButton> m_search_engine_dropdown;
-    OwnPtr<QCheckBox> m_enable_autocomplete;
-    OwnPtr<QPushButton> m_autocomplete_engine_dropdown;
+    QLineEdit* m_new_tab_page { nullptr };
+    QCheckBox* m_enable_search { nullptr };
+    QPushButton* m_search_engine_dropdown { nullptr };
+    QCheckBox* m_enable_autocomplete { nullptr };
+    QPushButton* m_autocomplete_engine_dropdown { nullptr };
 };
 
 }
