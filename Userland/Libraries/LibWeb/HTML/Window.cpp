@@ -863,6 +863,20 @@ void Window::set_name(String const& name)
     navigable()->active_session_history_entry()->document_state->set_navigable_target_name(name);
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-status
+String Window::status() const
+{
+    // the status attribute on the Window object must, on getting, return the last string it was set to
+    return m_status;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-status
+void Window::set_status(String const& status)
+{
+    // on setting, must set itself to the new value.
+    m_status = status;
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location
 JS::NonnullGCPtr<Location> Window::location()
 {
