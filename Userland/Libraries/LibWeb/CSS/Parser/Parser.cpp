@@ -2554,8 +2554,13 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
         Optional<PositionEdge> vertical_edge;
         Optional<LengthPercentage> vertical_offset;
 
+        auto matches = [&]() {
+            return horizontal_edge.has_value() && vertical_edge.has_value()
+                && horizontal_offset.has_value() != vertical_offset.has_value();
+        };
+
         auto parse_horizontal = [&] {
-            // [ left | right ] <length-percentage> ]
+            // [ left | right ] <length-percentage>?
             auto transaction = tokens.begin_transaction();
             tokens.skip_whitespace();
             auto edge = parse_position_edge(tokens.next_token());
@@ -2564,16 +2569,17 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
             horizontal_edge = move(edge);
 
             tokens.skip_whitespace();
-            auto length_percentage = parse_length_percentage(tokens.next_token());
-            if (length_percentage.has_value())
+            auto length_percentage = parse_length_percentage(tokens.peek_token());
+            if (length_percentage.has_value()) {
+                (void)tokens.next_token(); // offset
                 horizontal_offset = move(length_percentage);
-
+            }
             transaction.commit();
             return true;
         };
 
         auto parse_vertical = [&] {
-            // [ top | bottom ] <length-percentage> ]
+            // [ top | bottom ] <length-percentage>?
             auto transaction = tokens.begin_transaction();
             tokens.skip_whitespace();
             auto edge = parse_position_edge(tokens.next_token());
@@ -2582,17 +2588,20 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
             vertical_edge = move(edge);
 
             tokens.skip_whitespace();
-            auto length_percentage = parse_length_percentage(tokens.next_token());
-            if (length_percentage.has_value())
+            auto length_percentage = parse_length_percentage(tokens.peek_token());
+            if (length_percentage.has_value()) {
+                (void)tokens.next_token(); // offset
                 vertical_offset = move(length_percentage);
-
+            }
             transaction.commit();
             return true;
         };
 
-        if (parse_horizontal() && parse_vertical()) {
+        if (parse_horizontal() && parse_vertical() && matches()) {
             transaction.commit();
-            return PositionStyleValue::create(EdgeStyleValue::create(*horizontal_edge, *horizontal_offset), EdgeStyleValue::create(*vertical_edge, *vertical_offset));
+            return PositionStyleValue::create(
+                EdgeStyleValue::create(*horizontal_edge, horizontal_offset.value_or(Length::make_px(0))),
+                EdgeStyleValue::create(*vertical_edge, vertical_offset.value_or(Length::make_px(0))));
         }
 
         horizontal_edge.clear();
@@ -2600,9 +2609,11 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
         vertical_edge.clear();
         vertical_offset.clear();
 
-        if (parse_vertical() && parse_horizontal()) {
+        if (parse_vertical() && parse_horizontal() && matches()) {
             transaction.commit();
-            return PositionStyleValue::create(EdgeStyleValue::create(*horizontal_edge, *horizontal_offset), EdgeStyleValue::create(*vertical_edge, *vertical_offset));
+            return PositionStyleValue::create(
+                EdgeStyleValue::create(*horizontal_edge, horizontal_offset.value_or(Length::make_px(0))),
+                EdgeStyleValue::create(*vertical_edge, vertical_offset.value_or(Length::make_px(0))));
         }
 
         return nullptr;
