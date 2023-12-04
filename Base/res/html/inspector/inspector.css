@@ -23,6 +23,9 @@ body {
     width: 100%;
     height: 5px;
 
+    display: flex;
+    justify-content: center;
+
     cursor: row-resize;
     user-select: none;
 }
@@ -84,6 +87,10 @@ body {
         background-color: dimgray;
     }
 
+    .split-view-separator circle {
+        fill: rgb(57, 57, 57);
+    }
+
     .tab-controls-container {
         background-color: rgb(57, 57, 57);
     }
@@ -103,12 +110,16 @@ body {
 }
 
 @media (prefers-color-scheme: light) {
-    .tab-controls-container {
-        background-color: rgb(229, 229, 229);
-    }
-
     .split-view-separator {
         background-color: lightgray;
+    }
+
+    .split-view-separator circle {
+        fill: white;
+    }
+
+    .tab-controls-container {
+        background-color: rgb(229, 229, 229);
     }
 
     .tab-controls button {
