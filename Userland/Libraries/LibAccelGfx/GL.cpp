@@ -36,10 +36,10 @@ static GLenum to_gl_enum(BlendFactor factor)
     VERIFY_NOT_REACHED();
 }
 
-void enable_blending(BlendFactor source, BlendFactor destination)
+void enable_blending(BlendFactor source, BlendFactor destination, BlendFactor source_alpha, BlendFactor destination_alpha)
 {
     glEnable(GL_BLEND);
-    glBlendFunc(to_gl_enum(source), to_gl_enum(destination));
+    glBlendFuncSeparate(to_gl_enum(source), to_gl_enum(destination), to_gl_enum(source_alpha), to_gl_enum(destination_alpha));
     verify_no_error();
 }
 
