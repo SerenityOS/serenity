@@ -690,7 +690,7 @@ void Tab::recreate_toolbar_icons()
 void Tab::show_inspector_window(InspectorTarget inspector_target)
 {
     if (!m_inspector_widget)
-        m_inspector_widget = new Ladybird::InspectorWidget(view());
+        m_inspector_widget = new InspectorWidget(this, view());
 
     m_inspector_widget->show();
     m_inspector_widget->activateWindow();

@@ -13,7 +13,8 @@ namespace Ladybird {
 
 extern bool is_using_dark_system_theme(QWidget&);
 
-InspectorWidget::InspectorWidget(WebContentView& content_view)
+InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
+    : QWidget(tab, Qt::Window)
 {
     m_inspector_view = new WebContentView({}, {});
 
