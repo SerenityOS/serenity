@@ -424,6 +424,7 @@ protected:
 
     bool m_swallow_current { false };
     bool m_stomp { false };
+    bool m_in_application_keypad_mode { false };
 
     CursorShape m_cursor_shape { VT::CursorShape::Block };
     CursorShape m_saved_cursor_shape { VT::CursorShape::Block };
