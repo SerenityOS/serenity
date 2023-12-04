@@ -144,7 +144,11 @@ Optional<URLParts> break_url_into_parts(StringView url_string)
     if (!url.is_valid())
         return {};
 
-    auto scheme_length = url.scheme().bytes_as_string_view().length();
+    auto const& scheme = url.scheme();
+    auto scheme_length = scheme.bytes_as_string_view().length();
+
+    if (!url_string.starts_with(scheme))
+        return {};
     if (!url_string.substring_view(scheme_length).starts_with("://"sv))
         return {};
 

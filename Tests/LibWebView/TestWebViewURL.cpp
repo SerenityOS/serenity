@@ -24,6 +24,10 @@ TEST_CASE(invalid_url)
     EXPECT(!WebView::break_url_into_parts(":/"sv).has_value());
     EXPECT(!WebView::break_url_into_parts("://"sv).has_value());
 
+    EXPECT(!WebView::break_url_into_parts("/"sv).has_value());
+    EXPECT(!WebView::break_url_into_parts("//"sv).has_value());
+    EXPECT(!WebView::break_url_into_parts("/h"sv).has_value());
+
     EXPECT(!WebView::break_url_into_parts("f"sv).has_value());
     EXPECT(!WebView::break_url_into_parts("fi"sv).has_value());
     EXPECT(!WebView::break_url_into_parts("fil"sv).has_value());
