@@ -230,7 +230,13 @@ void InspectorClient::load_inspector()
             <div id="dom-tree" class="tab-content html"></div>
             <div id="accessibility-tree" class="tab-content"></div>
         </div>
-        <div id="inspector-separator" class="split-view-separator"></div>
+        <div id="inspector-separator" class="split-view-separator">
+            <svg viewBox="0 0 16 5" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="2" cy="2.5" r="2" />
+                <circle cx="8" cy="2.5" r="2" />
+                <circle cx="14" cy="2.5" r="2" />
+            </svg>
+        </div>
         <div id="inspector-bottom" class="split-view-container" style="height: calc(40% - 5px)">
             <div class="tab-controls-container">
                 <div class="tab-controls">
