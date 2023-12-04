@@ -1227,7 +1227,7 @@ ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBy
         if (a_to_b.number_of_output_channels() != number_of_components_in_color_space(connection_space()))
             return Error::from_string_literal("ICC::Profile::to_pcs_a_to_b: mAB output channel count does not match profile connection space size");
 
-        return a_to_b.evaluate(color);
+        return a_to_b.evaluate(connection_space(), color);
     }
     }
     VERIFY_NOT_REACHED();
