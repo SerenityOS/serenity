@@ -294,8 +294,8 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* user_agent_group = new QActionGroup(this);
 
-    auto add_user_agent = [this, &user_agent_group, &spoof_user_agent_menu](auto const& name, auto const& user_agent) {
-        auto* action = new QAction(qstring_from_ak_deprecated_string(name), this);
+    auto add_user_agent = [this, &user_agent_group, &spoof_user_agent_menu](auto name, auto const& user_agent) {
+        auto* action = new QAction(qstring_from_ak_string(name), this);
         action->setCheckable(true);
         user_agent_group->addAction(action);
         spoof_user_agent_menu->addAction(action);
@@ -306,10 +306,10 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
         return action;
     };
 
-    auto* disable_spoofing = add_user_agent("Disabled", Web::default_user_agent);
+    auto* disable_spoofing = add_user_agent("Disabled"sv, Web::default_user_agent);
     disable_spoofing->setChecked(true);
     for (auto const& user_agent : WebView::user_agents)
-        add_user_agent(user_agent.key.to_deprecated_string(), user_agent.value.to_deprecated_string());
+        add_user_agent(user_agent.key, user_agent.value.to_deprecated_string());
 
     auto* custom_user_agent_action = new QAction("Custom...", this);
     custom_user_agent_action->setCheckable(true);
@@ -413,7 +413,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
 
     for (size_t i = 0; i < initial_urls.size(); ++i) {
-        auto url_string = qstring_from_ak_deprecated_string(initial_urls[i].serialize());
+        auto url_string = qstring_from_ak_string(initial_urls[i].serialize());
         new_tab(url_string, (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
     }
 
@@ -480,7 +480,7 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
     };
 
     tab_ptr->view().on_tab_open_request = [this](auto url, auto activate_tab) {
-        auto& tab = new_tab(qstring_from_ak_deprecated_string(url.to_deprecated_string()), activate_tab);
+        auto& tab = new_tab(qstring_from_ak_string(url.to_deprecated_string()), activate_tab);
         return tab.view().handle();
     };
 
@@ -665,7 +665,7 @@ void BrowserWindow::copy_selected_text()
     auto text = m_current_tab->view().selected_text();
 
     auto* clipboard = QGuiApplication::clipboard();
-    clipboard->setText(qstring_from_ak_deprecated_string(text));
+    clipboard->setText(qstring_from_ak_string(text));
 }
 
 void BrowserWindow::resizeEvent(QResizeEvent* event)

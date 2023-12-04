@@ -17,7 +17,7 @@ Settings::Settings()
     m_qsettings = make<QSettings>("SerenityOS", "Ladybird", this);
 
     auto default_search_engine = WebView::default_search_engine();
-    auto default_search_engine_name = qstring_from_ak_deprecated_string(default_search_engine.name);
+    auto default_search_engine_name = qstring_from_ak_string(default_search_engine.name);
 
     auto search_engine_name = m_qsettings->value("search_engine_name", default_search_engine_name).toString();
     auto search_engine = WebView::find_search_engine_by_name(MUST(ak_string_from_qstring(search_engine_name)));
@@ -62,7 +62,7 @@ void Settings::set_is_maximized(bool is_maximized)
 
 void Settings::set_search_engine(WebView::SearchEngine search_engine)
 {
-    m_qsettings->setValue("search_engine_name", qstring_from_ak_deprecated_string(search_engine.name));
+    m_qsettings->setValue("search_engine_name", qstring_from_ak_string(search_engine.name));
     m_search_engine = move(search_engine);
 }
 

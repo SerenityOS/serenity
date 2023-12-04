@@ -107,7 +107,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     };
 
     view().on_link_hover = [this](auto const& url) {
-        m_hover_label->setText(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
+        m_hover_label->setText(qstring_from_ak_string(url.to_deprecated_string()));
         update_hover_label();
         m_hover_label->show();
     };
@@ -148,7 +148,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
 
     view().on_title_change = [this](auto const& title) {
-        m_title = qstring_from_ak_deprecated_string(title);
+        m_title = qstring_from_ak_string(title);
         m_history.update_title(title);
 
         emit title_changed(tab_index(), m_title);
@@ -628,7 +628,7 @@ void Tab::open_link_in_new_tab(URL const& url)
 void Tab::copy_link_url(URL const& url)
 {
     auto* clipboard = QGuiApplication::clipboard();
-    clipboard->setText(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
+    clipboard->setText(qstring_from_ak_string(url.to_deprecated_string()));
 }
 
 void Tab::location_edit_return_pressed()

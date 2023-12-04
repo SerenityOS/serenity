@@ -37,7 +37,7 @@ LocationEdit::LocationEdit(QWidget* parent)
         auto query = MUST(ak_string_from_qstring(text()));
 
         if (auto url = WebView::sanitize_url(query, search_engine_url); url.has_value())
-            setText(qstring_from_ak_deprecated_string(url->serialize()));
+            setText(qstring_from_ak_string(url->serialize()));
     });
 
     connect(this, &QLineEdit::textEdited, [this] {
