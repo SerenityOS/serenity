@@ -189,7 +189,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         dialog.setTextValue(qstring_from_ak_string(default_));
 
         if (dialog.exec() == QDialog::Accepted)
-            view().prompt_closed(ak_string_from_qstring(dialog.textValue()).release_value_but_fixme_should_propagate_errors());
+            view().prompt_closed(ak_string_from_qstring(dialog.textValue()));
         else
             view().prompt_closed({});
 
@@ -295,7 +295,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     take_visible_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
         if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
-            auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
+            auto error = MUST(String::formatted("{}", result.error()));
             QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error));
         }
     });
@@ -304,7 +304,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     take_full_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(take_full_screenshot_action, &QAction::triggered, this, [this]() {
         if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full); result.is_error()) {
-            auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
+            auto error = MUST(String::formatted("{}", result.error()));
             QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error));
         }
     });
@@ -577,7 +577,7 @@ void Tab::focus_location_editor()
 
 void Tab::navigate(QString const& url_qstring)
 {
-    auto url_string = MUST(ak_string_from_qstring(url_qstring));
+    auto url_string = ak_string_from_qstring(url_qstring);
     view().load(url_string);
 }
 

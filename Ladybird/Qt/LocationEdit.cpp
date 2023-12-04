@@ -34,7 +34,7 @@ LocationEdit::LocationEdit(QWidget* parent)
         if (Settings::the()->enable_search())
             search_engine_url = Settings::the()->search_engine().query_url;
 
-        auto query = MUST(ak_string_from_qstring(text()));
+        auto query = ak_string_from_qstring(text());
 
         if (auto url = WebView::sanitize_url(query, search_engine_url); url.has_value())
             setText(qstring_from_ak_string(url->serialize()));
@@ -48,12 +48,7 @@ LocationEdit::LocationEdit(QWidget* parent)
 
         auto cursor_position = cursorPosition();
 
-        auto result = m_autocomplete->get_search_suggestions(ak_deprecated_string_from_qstring(text()));
-        if (result.is_error()) {
-            dbgln("LocationEdit::textEdited: get_search_suggestions failed: {}", result.error());
-            return;
-        }
-
+        m_autocomplete->get_search_suggestions(ak_string_from_qstring(text()));
         setCursorPosition(cursor_position);
     });
 
@@ -75,7 +70,7 @@ void LocationEdit::focusOutEvent(QFocusEvent* event)
 
 void LocationEdit::highlight_location()
 {
-    auto url = MUST(ak_string_from_qstring(text()));
+    auto url = ak_string_from_qstring(text());
     QList<QInputMethodEvent::Attribute> attributes;
 
     if (auto url_parts = WebView::break_url_into_parts(url); url_parts.has_value()) {

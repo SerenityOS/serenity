@@ -121,10 +121,10 @@ ErrorOr<void> AutoComplete::got_network_response(QNetworkReply* reply)
     return Error::from_string_view("Invalid engine name"sv);
 }
 
-ErrorOr<String> AutoComplete::auto_complete_url_from_query(StringView query)
+String AutoComplete::auto_complete_url_from_query(StringView query)
 {
-    auto autocomplete_engine = TRY(ak_string_from_qstring(Settings::the()->autocomplete_engine().url));
-    return autocomplete_engine.replace("{}"sv, AK::URL::percent_encode(query), ReplaceMode::FirstOnly);
+    auto autocomplete_engine = ak_string_from_qstring(Settings::the()->autocomplete_engine().url);
+    return MUST(autocomplete_engine.replace("{}"sv, AK::URL::percent_encode(query), ReplaceMode::FirstOnly));
 }
 
 void AutoComplete::clear_suggestions()
@@ -132,19 +132,17 @@ void AutoComplete::clear_suggestions()
     m_auto_complete_model->clear();
 }
 
-ErrorOr<void> AutoComplete::get_search_suggestions(StringView search_string)
+void AutoComplete::get_search_suggestions(String search_string)
 {
-    m_query = TRY(String::from_utf8(search_string));
+    m_query = move(search_string);
     if (m_reply)
         m_reply->abort();
 
     m_auto_complete_model->clear();
     m_auto_complete_model->add(m_query);
 
-    QNetworkRequest request { QUrl(qstring_from_ak_string(TRY(auto_complete_url_from_query(m_query)))) };
+    QNetworkRequest request { QUrl(qstring_from_ak_string(auto_complete_url_from_query(m_query))) };
     m_reply = m_manager->get(request);
-
-    return {};
 }
 
 }

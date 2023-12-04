@@ -48,6 +48,7 @@ public:
 private:
     AK::Vector<String> m_suggestions;
 };
+
 class AutoComplete final : public QCompleter {
     Q_OBJECT
 
@@ -59,14 +60,15 @@ public:
         return index.data(Qt::DisplayRole).toString();
     }
 
-    ErrorOr<void> get_search_suggestions(StringView);
+    void get_search_suggestions(String);
     void clear_suggestions();
-    static ErrorOr<String> auto_complete_url_from_query(StringView query);
 
 signals:
     void activated(QModelIndex const&);
 
 private:
+    static String auto_complete_url_from_query(StringView query);
+
     ErrorOr<void> got_network_response(QNetworkReply* reply);
 
     ErrorOr<void> parse_google_autocomplete(Vector<JsonValue> const&);

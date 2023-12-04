@@ -72,7 +72,7 @@ public:
                 break;
 
             auto const& open_event = *static_cast<QFileOpenEvent const*>(event);
-            auto file = MUST(ak_string_from_qstring(open_event.file()));
+            auto file = ak_string_from_qstring(open_event.file());
 
             if (auto file_url = WebView::sanitize_url(file); file_url.has_value())
                 on_open_file(file_url.release_value());
@@ -137,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (initial_urls.is_empty()) {
         auto new_tab_page = Ladybird::Settings::the()->new_tab_page();
-        initial_urls.append(MUST(ak_string_from_qstring(new_tab_page)));
+        initial_urls.append(ak_string_from_qstring(new_tab_page));
     }
 
     Ladybird::WebContentOptions web_content_options {

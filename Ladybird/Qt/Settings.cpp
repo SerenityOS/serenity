@@ -20,7 +20,7 @@ Settings::Settings()
     auto default_search_engine_name = qstring_from_ak_string(default_search_engine.name);
 
     auto search_engine_name = m_qsettings->value("search_engine_name", default_search_engine_name).toString();
-    auto search_engine = WebView::find_search_engine_by_name(MUST(ak_string_from_qstring(search_engine_name)));
+    auto search_engine = WebView::find_search_engine_by_name(ak_string_from_qstring(search_engine_name));
 
     if (search_engine.has_value())
         m_search_engine = search_engine.release_value();
