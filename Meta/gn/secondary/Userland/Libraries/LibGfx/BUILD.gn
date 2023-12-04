@@ -55,6 +55,7 @@ shared_library("LibGfx") {
     "Font/WOFF2/Font.cpp",
     "GradientPainting.cpp",
     "ICC/BinaryWriter.cpp",
+    "ICC/Enums.cpp",
     "ICC/Profile.cpp",
     "ICC/TagTypes.cpp",
     "ICC/Tags.cpp",
