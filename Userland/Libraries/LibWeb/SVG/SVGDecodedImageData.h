@@ -32,12 +32,12 @@ public:
 
 private:
     class SVGPageClient;
-    SVGDecodedImageData(NonnullOwnPtr<Page>, JS::Handle<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
+    SVGDecodedImageData(JS::NonnullGCPtr<Page>, JS::Handle<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
 
     RefPtr<Gfx::Bitmap> render(Gfx::IntSize) const;
     mutable RefPtr<Gfx::ImmutableBitmap> m_immutable_bitmap;
 
-    NonnullOwnPtr<Page> m_page;
+    JS::Handle<Page> m_page;
     JS::Handle<SVGPageClient> m_page_client;
 
     JS::Handle<DOM::Document> m_document;

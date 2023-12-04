@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <WebWorker/ConnectionFromClient.h>
 #include <WebWorker/PageHost.h>
 
@@ -75,9 +76,15 @@ void PageHost::request_file(Web::FileRequest request)
 
 PageHost::PageHost(ConnectionFromClient& client)
     : m_client(client)
-    , m_page(make<Web::Page>(*this))
+    , m_page(Web::Page::create(Web::Bindings::main_thread_vm(), *this))
 {
     setup_palette();
+}
+
+void PageHost::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_page);
 }
 
 }

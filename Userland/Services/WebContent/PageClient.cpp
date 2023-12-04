@@ -8,6 +8,7 @@
 
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Attr.h>
@@ -46,7 +47,7 @@ JS::NonnullGCPtr<PageClient> PageClient::create(JS::VM& vm, PageHost& page_host,
 
 PageClient::PageClient(PageHost& owner, u64 id)
     : m_owner(owner)
-    , m_page(make<Web::Page>(*this))
+    , m_page(Web::Page::create(Web::Bindings::main_thread_vm(), *this))
     , m_id(id)
 {
     setup_palette();
@@ -54,6 +55,12 @@ PageClient::PageClient(PageHost& owner, u64 id)
         client().async_did_invalidate_content_rect({ m_invalidation_rect.x().value(), m_invalidation_rect.y().value(), m_invalidation_rect.width().value(), m_invalidation_rect.height().value() });
         m_invalidation_rect = {};
     });
+}
+
+void PageClient::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_page);
 }
 
 ConnectionFromClient& PageClient::client() const

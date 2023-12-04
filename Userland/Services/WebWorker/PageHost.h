@@ -33,11 +33,12 @@ public:
 
 private:
     explicit PageHost(ConnectionFromClient&);
+    virtual void visit_edges(JS::Cell::Visitor&) override;
 
     void setup_palette();
 
     ConnectionFromClient& m_client;
-    NonnullOwnPtr<Web::Page> m_page;
+    JS::NonnullGCPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
 };
 

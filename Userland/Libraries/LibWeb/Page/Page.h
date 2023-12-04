@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,12 +37,14 @@ namespace Web {
 
 class PageClient;
 
-class Page : public Weakable<Page> {
-    AK_MAKE_NONCOPYABLE(Page);
-    AK_MAKE_NONMOVABLE(Page);
+class Page final
+    : public JS::Cell
+    , public Weakable<Page> {
+    JS_CELL(Page, JS::Cell);
 
 public:
-    explicit Page(PageClient&);
+    static JS::NonnullGCPtr<Page> create(JS::VM&, JS::NonnullGCPtr<PageClient>);
+
     ~Page();
 
     PageClient& client() { return m_client; }
@@ -152,13 +155,16 @@ public:
     bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
 
 private:
+    explicit Page(JS::NonnullGCPtr<PageClient>);
+    virtual void visit_edges(Visitor&) override;
+
     JS::GCPtr<HTML::HTMLMediaElement> media_context_menu_element();
 
-    PageClient& m_client;
+    JS::NonnullGCPtr<PageClient> m_client;
 
     WeakPtr<HTML::BrowsingContext> m_focused_context;
 
-    JS::Handle<HTML::TraversableNavigable> m_top_level_traversable;
+    JS::GCPtr<HTML::TraversableNavigable> m_top_level_traversable;
 
     // FIXME: Enable this by default once CORS preflight checks are supported.
     bool m_same_origin_policy_enabled { false };
