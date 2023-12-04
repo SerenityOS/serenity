@@ -943,12 +943,12 @@ void Terminal::DECDC(Parameters params)
 
 void Terminal::DECKPNM()
 {
-    dbgln("FIXME: implement setting the keypad to numeric mode");
+    m_in_application_keypad_mode = false;
 }
 
 void Terminal::DECKPAM()
 {
-    dbgln("FIXME: implement setting the keypad to application mode");
+    m_in_application_keypad_mode = true;
 }
 
 void Terminal::DSR(Parameters params)
@@ -1327,6 +1327,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     bool ctrl = flags & Mod_Ctrl;
     bool alt = flags & Mod_Alt;
     bool shift = flags & Mod_Shift;
+    bool keypad = flags & Mod_Keypad;
     unsigned modifier_mask = int(shift) + (int(alt) << 1) + (int(ctrl) << 2);
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
@@ -1346,6 +1347,10 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
             MUST(builder.try_appendff("\e[{}~", num)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
         emit_string(builder.string_view());
     };
+
+    if (keypad && m_in_application_keypad_mode) {
+        return;
+    }
 
     switch (key) {
     case KeyCode::Key_Up:
