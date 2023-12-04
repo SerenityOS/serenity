@@ -1348,7 +1348,61 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         emit_string(builder.string_view());
     };
 
+    auto emit_application_code = [this](KeyCode key) {
+        // The table providing mapping from numeric keys to application keys can be found at https://vt100.net/docs/vt100-ug/chapter3.html#T3-7
+        StringBuilder builder;
+        builder.append("\x1bO"sv);
+        switch (key) {
+        case KeyCode::Key_0:
+            builder.append('p');
+            break;
+        case KeyCode::Key_1:
+            builder.append('q');
+            break;
+        case KeyCode::Key_2:
+            builder.append('r');
+            break;
+        case KeyCode::Key_3:
+            builder.append('s');
+            break;
+        case KeyCode::Key_4:
+            builder.append('t');
+            break;
+        case KeyCode::Key_5:
+            builder.append('u');
+            break;
+        case KeyCode::Key_6:
+            builder.append('v');
+            break;
+        case KeyCode::Key_7:
+            builder.append('w');
+            break;
+        case KeyCode::Key_8:
+            builder.append('x');
+            break;
+        case KeyCode::Key_9:
+            builder.append('y');
+            break;
+        case KeyCode::Key_Minus:
+            builder.append('m');
+            break;
+        case KeyCode::Key_Comma:
+            builder.append('l');
+            break;
+        case KeyCode::Key_Period:
+            builder.append('n');
+            break;
+        case KeyCode::Key_Return:
+            builder.append('M');
+            break;
+        default:
+            break;
+        }
+        emit_string(builder.string_view());
+    };
+
     if (keypad && m_in_application_keypad_mode) {
+        emit_application_code(key);
         return;
     }
 
