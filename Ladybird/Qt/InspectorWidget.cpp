@@ -5,8 +5,11 @@
  */
 
 #include "InspectorWidget.h"
+#include <Ladybird/Qt/StringUtils.h>
 #include <LibWebView/InspectorClient.h>
+#include <QAction>
 #include <QCloseEvent>
+#include <QMenu>
 #include <QVBoxLayout>
 
 namespace Ladybird {
@@ -22,6 +25,55 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
         m_inspector_view->update_palette(WebContentView::PaletteMode::Dark);
 
     m_inspector_client = make<WebView::InspectorClient>(content_view, *m_inspector_view);
+
+    m_edit_node_action = new QAction("&Edit node", this);
+    connect(m_edit_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_edit_dom_node(); });
+
+    m_delete_node_action = new QAction("&Delete node", this);
+    connect(m_delete_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_remove_dom_node(); });
+
+    m_add_attribute_action = new QAction("&Add attribute", this);
+    connect(m_add_attribute_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_add_dom_node_attribute(); });
+
+    m_remove_attribute_action = new QAction("&Remove attribute", this);
+    connect(m_remove_attribute_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_remove_dom_node_attribute(); });
+
+    m_dom_node_text_context_menu = new QMenu("DOM text context menu", this);
+    m_dom_node_text_context_menu->addAction(m_edit_node_action);
+    m_dom_node_text_context_menu->addSeparator();
+    m_dom_node_text_context_menu->addAction(m_delete_node_action);
+
+    m_dom_node_tag_context_menu = new QMenu("DOM tag context menu", this);
+    m_dom_node_tag_context_menu->addAction(m_edit_node_action);
+    m_dom_node_tag_context_menu->addSeparator();
+    m_dom_node_tag_context_menu->addAction(m_add_attribute_action);
+    m_dom_node_tag_context_menu->addAction(m_delete_node_action);
+
+    m_dom_node_attribute_context_menu = new QMenu("DOM attribute context menu", this);
+    m_dom_node_attribute_context_menu->addAction(m_edit_node_action);
+    m_dom_node_attribute_context_menu->addAction(m_remove_attribute_action);
+    m_dom_node_attribute_context_menu->addSeparator();
+    m_dom_node_attribute_context_menu->addAction(m_add_attribute_action);
+    m_dom_node_attribute_context_menu->addAction(m_delete_node_action);
+
+    m_inspector_client->on_requested_dom_node_text_context_menu = [this](auto position) {
+        m_edit_node_action->setText("&Edit text");
+
+        m_dom_node_text_context_menu->exec(to_widget_position(position));
+    };
+
+    m_inspector_client->on_requested_dom_node_tag_context_menu = [this](auto position, auto const& tag) {
+        m_edit_node_action->setText(qstring_from_ak_string(MUST(String::formatted("&Edit \"{}\"", tag))));
+
+        m_dom_node_tag_context_menu->exec(to_widget_position(position));
+    };
+
+    m_inspector_client->on_requested_dom_node_attribute_context_menu = [this](auto position, auto const& attribute) {
+        m_edit_node_action->setText(qstring_from_ak_string(MUST(String::formatted("&Edit attribute \"{}\"", attribute))));
+        m_remove_attribute_action->setText(qstring_from_ak_string(MUST(String::formatted("&Remove attribute \"{}\"", attribute))));
+
+        m_dom_node_attribute_context_menu->exec(to_widget_position(position));
+    };
 
     setLayout(new QVBoxLayout);
     layout()->addWidget(m_inspector_view);
@@ -56,6 +108,12 @@ void InspectorWidget::closeEvent(QCloseEvent* event)
 {
     event->accept();
     m_inspector_client->clear_selection();
+}
+
+QPoint InspectorWidget::to_widget_position(Gfx::IntPoint position) const
+{
+    auto widget_position = m_inspector_view->mapTo(this, QPoint { position.x(), position.y() });
+    return mapToGlobal(widget_position);
 }
 
 }
