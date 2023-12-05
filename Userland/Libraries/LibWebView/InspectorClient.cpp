@@ -141,6 +141,13 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         inspect();
     };
 
+    m_inspector_web_view.on_inspector_added_dom_node_attributes = [this](auto node_id, auto const& attributes) {
+        m_content_web_view.add_dom_node_attributes(node_id, attributes);
+
+        m_pending_selection = node_id;
+        inspect();
+    };
+
     m_inspector_web_view.on_inspector_replaced_dom_node_attribute = [this](auto node_id, auto const& name, auto const& replacement_attributes) {
         m_content_web_view.replace_dom_node_attribute(node_id, name, replacement_attributes);
 
@@ -214,6 +221,55 @@ void InspectorClient::select_node(i32 node_id)
 
     auto script = MUST(String::formatted("inspector.inspectDOMNodeID({});", node_id));
     m_inspector_web_view.run_javascript(script);
+}
+
+void InspectorClient::context_menu_edit_dom_node()
+{
+    VERIFY(m_context_menu_dom_node_id.has_value());
+
+    auto script = MUST(String::formatted("inspector.editDOMNodeID({});", *m_context_menu_dom_node_id));
+    m_inspector_web_view.run_javascript(script);
+
+    m_context_menu_dom_node_id.clear();
+    m_context_menu_tag_or_attribute_name.clear();
+}
+
+void InspectorClient::context_menu_remove_dom_node()
+{
+    VERIFY(m_context_menu_dom_node_id.has_value());
+
+    m_content_web_view.remove_dom_node(*m_context_menu_dom_node_id);
+
+    m_pending_selection = m_body_node_id;
+    inspect();
+
+    m_context_menu_dom_node_id.clear();
+    m_context_menu_tag_or_attribute_name.clear();
+}
+
+void InspectorClient::context_menu_add_dom_node_attribute()
+{
+    VERIFY(m_context_menu_dom_node_id.has_value());
+
+    auto script = MUST(String::formatted("inspector.addAttributeToDOMNodeID({});", *m_context_menu_dom_node_id));
+    m_inspector_web_view.run_javascript(script);
+
+    m_context_menu_dom_node_id.clear();
+    m_context_menu_tag_or_attribute_name.clear();
+}
+
+void InspectorClient::context_menu_remove_dom_node_attribute()
+{
+    VERIFY(m_context_menu_dom_node_id.has_value());
+    VERIFY(m_context_menu_tag_or_attribute_name.has_value());
+
+    m_content_web_view.replace_dom_node_attribute(*m_context_menu_dom_node_id, *m_context_menu_tag_or_attribute_name, {});
+
+    m_pending_selection = m_context_menu_dom_node_id;
+    inspect();
+
+    m_context_menu_dom_node_id.clear();
+    m_context_menu_tag_or_attribute_name.clear();
 }
 
 void InspectorClient::load_inspector()

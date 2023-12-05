@@ -26,6 +26,11 @@ public:
     void select_default_node();
     void clear_selection();
 
+    void context_menu_edit_dom_node();
+    void context_menu_remove_dom_node();
+    void context_menu_add_dom_node_attribute();
+    void context_menu_remove_dom_node_attribute();
+
     Function<void(Gfx::IntPoint)> on_requested_dom_node_text_context_menu;
     Function<void(Gfx::IntPoint, String const&)> on_requested_dom_node_tag_context_menu;
     Function<void(Gfx::IntPoint, String const&)> on_requested_dom_node_attribute_context_menu;
