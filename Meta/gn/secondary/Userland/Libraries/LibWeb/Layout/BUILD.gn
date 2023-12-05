@@ -32,7 +32,6 @@ source_set("Layout") {
     "ListItemBox.cpp",
     "ListItemMarkerBox.cpp",
     "Node.cpp",
-    "Progress.cpp",
     "RadioButton.cpp",
     "ReplacedBox.cpp",
     "SVGBox.cpp",

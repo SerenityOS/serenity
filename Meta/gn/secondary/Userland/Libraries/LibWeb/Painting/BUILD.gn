@@ -26,7 +26,6 @@ source_set("Painting") {
     "Paintable.cpp",
     "PaintableBox.cpp",
     "PaintingCommandExecutorCPU.cpp",
-    "ProgressPaintable.cpp",
     "RadioButtonPaintable.cpp",
     "RecordingPainter.cpp",
     "SVGGraphicsPaintable.cpp",

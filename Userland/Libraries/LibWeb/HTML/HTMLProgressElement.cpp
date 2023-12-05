@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,9 +10,6 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/HTML/Numbers.h>
-#include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Layout/Node.h>
-#include <LibWeb/Layout/Progress.h>
 
 namespace Web::HTML {
 
@@ -30,26 +28,10 @@ void HTMLProgressElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLProgressElementPrototype>(realm, "HTMLProgressElement"_fly_string));
 }
 
-JS::GCPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+void HTMLProgressElement::visit_edges(Cell::Visitor& visitor)
 {
-    if (style->appearance().value_or(CSS::Appearance::Auto) == CSS::Appearance::None)
-        return HTMLElement::create_layout_node(style);
-    return heap().allocate_without_realm<Layout::Progress>(document(), *this, move(style));
-}
-
-bool HTMLProgressElement::using_system_appearance() const
-{
-    if (layout_node())
-        return is<Layout::Progress>(*layout_node());
-    return false;
-}
-
-void HTMLProgressElement::progress_position_updated()
-{
-    if (using_system_appearance())
-        layout_node()->set_needs_display();
-    else
-        document().invalidate_layout();
+    Base::visit_edges(visitor);
+    visitor.visit(m_progress_value_element);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-progress-value
@@ -70,7 +52,8 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
         return {};
 
     TRY(set_attribute(HTML::AttributeNames::value, MUST(String::number(value))));
-    progress_position_updated();
+    update_progress_value_element();
+    document().invalidate_layout();
     return {};
 }
 
@@ -92,7 +75,8 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_max(double value)
         return {};
 
     TRY(set_attribute(HTML::AttributeNames::max, MUST(String::number(value))));
-    progress_position_updated();
+    update_progress_value_element();
+    document().invalidate_layout();
     return {};
 }
 
@@ -102,6 +86,37 @@ double HTMLProgressElement::position() const
         return -1;
 
     return value() / max();
+}
+
+void HTMLProgressElement::inserted()
+{
+    create_shadow_tree_if_needed();
+}
+
+void HTMLProgressElement::removed_from(DOM::Node*)
+{
+    set_shadow_root(nullptr);
+}
+
+void HTMLProgressElement::create_shadow_tree_if_needed()
+{
+    if (shadow_root_internal())
+        return;
+
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
+    set_shadow_root(shadow_root);
+
+    auto progress_bar_element = heap().allocate<ProgressBarElement>(realm(), document());
+    MUST(shadow_root->append_child(*progress_bar_element));
+
+    m_progress_value_element = heap().allocate<ProgressValueElement>(realm(), document());
+    MUST(progress_bar_element->append_child(*m_progress_value_element));
+    update_progress_value_element();
+}
+
+void HTMLProgressElement::update_progress_value_element()
+{
+    MUST(m_progress_value_element->set_attribute(HTML::AttributeNames::style, MUST(String::formatted("width: {}%;", position() * 100))));
 }
 
 }

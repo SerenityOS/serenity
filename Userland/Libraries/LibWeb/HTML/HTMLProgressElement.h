@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,9 +8,33 @@
 #pragma once
 
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
+
+class ProgressBarElement final : public HTMLDivElement {
+    JS_CELL(ProgressBarElement, HTMLDivElement);
+
+public:
+    ProgressBarElement(DOM::Document& document)
+        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
+    {
+    }
+    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::ProgressBar; }
+};
+
+class ProgressValueElement final : public HTMLDivElement {
+    JS_CELL(ProgressValueElement, HTMLDivElement);
+
+public:
+    ProgressValueElement(DOM::Document& document)
+        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
+    {
+    }
+    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::ProgressValue; }
+};
 
 class HTMLProgressElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLProgressElement, HTMLElement);
@@ -17,8 +42,6 @@ class HTMLProgressElement final : public HTMLElement {
 
 public:
     virtual ~HTMLProgressElement() override;
-
-    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     double value() const;
     WebIDL::ExceptionOr<void> set_value(double);
@@ -29,10 +52,11 @@ public:
     double position() const;
 
     // ^HTMLElement
+    virtual void inserted() override;
+    virtual void removed_from(DOM::Node*) override;
+
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
-
-    bool using_system_appearance() const;
 
     // https://www.w3.org/TR/html-aria/#el-progress
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::progressbar; }
@@ -44,10 +68,15 @@ private:
     virtual bool is_html_progress_element() const final { return true; }
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
-    void progress_position_updated();
+    void create_shadow_tree_if_needed();
+
+    void update_progress_value_element();
 
     bool is_determinate() const { return has_attribute(HTML::AttributeNames::value); }
+
+    JS::GCPtr<ProgressValueElement> m_progress_value_element;
 };
 
 }
