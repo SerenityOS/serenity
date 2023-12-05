@@ -12,19 +12,25 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 
+namespace CharacterMap {
 class CharacterSearchWidget final : public GUI::Widget {
     C_OBJECT(CharacterSearchWidget);
 
 public:
     virtual ~CharacterSearchWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<CharacterSearchWidget>> try_create();
+
+    ErrorOr<void> initialize_fallibles();
     Function<void(u32)> on_character_selected;
 
 private:
-    CharacterSearchWidget();
+    CharacterSearchWidget() = default;
 
     void search();
 
     RefPtr<GUI::TextBox> m_search_input;
     RefPtr<GUI::TableView> m_results_table;
 };
+
+}

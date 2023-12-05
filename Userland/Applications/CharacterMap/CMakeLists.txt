@@ -4,19 +4,16 @@ serenity_component(
     TARGETS CharacterMap
 )
 
-stringify_gml(CharacterMapWindow.gml CharacterMapWindowGML.h character_map_window_gml)
-stringify_gml(CharacterSearchWindow.gml CharacterSearchWindowGML.h character_search_window_gml)
+compile_gml(CharacterMapWidget.gml CharacterMapWidgetGML.cpp)
+compile_gml(CharacterSearchWidget.gml CharacterSearchWidgetGML.cpp)
 
 set(SOURCES
     CharacterMapWidget.cpp
+    CharacterMapWidgetGML.cpp
     CharacterSearchWidget.cpp
+    CharacterSearchWidgetGML.cpp
     SearchCharacters.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    CharacterMapWindowGML.h
-    CharacterSearchWindowGML.h
 )
 
 serenity_app(CharacterMap ICON app-character-map)

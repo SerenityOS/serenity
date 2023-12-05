@@ -8,7 +8,6 @@
 #include "CharacterMapWidget.h"
 #include "CharacterSearchWidget.h"
 #include <AK/StringUtils.h>
-#include <Applications/CharacterMap/CharacterMapWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -25,10 +24,14 @@
 #include <LibGUI/Toolbar.h>
 #include <LibUnicode/CharacterTypes.h>
 
+namespace CharacterMap {
+
 CharacterMapWidget::CharacterMapWidget()
 {
-    load_from_gml(character_map_window_gml).release_value_but_fixme_should_propagate_errors();
+}
 
+ErrorOr<void> CharacterMapWidget::initialize_fallibles()
+{
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_font_name_label = find_descendant_of_type_named<GUI::Label>("font_name");
     m_glyph_map = find_descendant_of_type_named<GUI::GlyphMapWidget>("glyph_map");
@@ -37,7 +40,7 @@ CharacterMapWidget::CharacterMapWidget()
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_unicode_block_listview = find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
 
-    m_choose_font_action = GUI::Action::create("Change &Font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_choose_font_action = GUI::Action::create("Change &Font...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)), [&](auto&) {
         auto font_picker = GUI::FontPicker::construct(window(), &font(), false);
         if (font_picker->exec() == GUI::Dialog::ExecResult::OK) {
             auto& font = *font_picker->font();
@@ -58,17 +61,17 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_copy_selection_action->set_status_tip("Copy the highlighted characters to the clipboard"_string);
 
-    m_previous_glyph_action = GUI::Action::create("&Previous Glyph", { Mod_Alt, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_previous_glyph_action = GUI::Action::create("&Previous Glyph", { Mod_Alt, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
         m_glyph_map->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph"_string);
 
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
         m_glyph_map->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip("Seek the next visible glyph"_string);
 
-    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to Glyph"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
@@ -83,10 +86,12 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point"_string);
 
-    m_find_glyphs_action = GUI::Action::create("&Find Glyphs...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_find_glyphs_action = GUI::Action::create("&Find Glyphs...", { Mod_Ctrl, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
         if (m_find_window.is_null()) {
             m_find_window = GUI::Window::construct(window());
-            auto search_widget = m_find_window->set_main_widget<CharacterSearchWidget>();
+            auto search_widget = MUST(CharacterSearchWidget::try_create());
+            MUST(search_widget->initialize_fallibles());
+            m_find_window->set_main_widget(search_widget);
             search_widget->on_character_selected = [&](auto code_point) {
                 m_glyph_map->set_active_glyph(code_point);
                 m_glyph_map->scroll_to_glyph(code_point);
@@ -155,6 +160,7 @@ CharacterMapWidget::CharacterMapWidget()
 
     did_change_font();
     update_statusbar();
+    return {};
 }
 
 ErrorOr<void> CharacterMapWidget::initialize_menubar(GUI::Window& window)
@@ -188,4 +194,6 @@ void CharacterMapWidget::update_statusbar()
     if (auto display_name = Unicode::code_point_display_name(code_point); display_name.has_value())
         builder.appendff(" - {}", display_name.value());
     m_statusbar->set_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
+}
+
 }

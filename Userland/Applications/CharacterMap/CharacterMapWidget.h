@@ -11,12 +11,16 @@
 #include <LibGUI/GlyphMapWidget.h>
 #include <LibGUI/Statusbar.h>
 
+namespace CharacterMap {
 class CharacterMapWidget final : public GUI::Widget {
     C_OBJECT(CharacterMapWidget);
 
 public:
     virtual ~CharacterMapWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<CharacterMapWidget>> try_create();
+
+    ErrorOr<void> initialize_fallibles();
     ErrorOr<void> initialize_menubar(GUI::Window& window);
 
 private:
@@ -45,3 +49,4 @@ private:
     Vector<DeprecatedString> m_unicode_block_list;
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
 };
+}

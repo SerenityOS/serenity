@@ -17,6 +17,8 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 
+using namespace CharacterMap;
+
 static void search_and_print_results(DeprecatedString const& query)
 {
     outln("Searching for '{}'", query);
@@ -69,7 +71,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(600, 400);
 
-    auto character_map_widget = window->set_main_widget<CharacterMapWidget>();
+    auto character_map_widget = TRY(CharacterMapWidget::try_create());
+    window->set_main_widget(character_map_widget);
+    TRY(character_map_widget->initialize_fallibles());
     TRY(character_map_widget->initialize_menubar(*window));
 
     auto font_query = Config::read_string("CharacterMap"sv, "History"sv, "Font"sv, Gfx::FontDatabase::the().default_font_query());

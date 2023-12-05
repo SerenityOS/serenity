@@ -1,4 +1,4 @@
-@GUI::Frame {
+@CharacterMap::CharacterSearchWidget {
     layout: @GUI::VerticalBoxLayout {
         margins: [2, 0, 0, 0]
     }
