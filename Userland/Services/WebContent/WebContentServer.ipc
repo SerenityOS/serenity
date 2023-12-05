@@ -50,6 +50,7 @@ endpoint WebContentServer
     set_dom_node_tag(i32 node_id, String name) => (Optional<i32> node_id)
     add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> attributes) =|
     replace_dom_node_attribute(i32 node_id, String name, Vector<WebView::Attribute> replacement_attributes) =|
+    remove_dom_node(i32 node_id) =|
 
     take_document_screenshot() => (Gfx::ShareableBitmap data)
 
