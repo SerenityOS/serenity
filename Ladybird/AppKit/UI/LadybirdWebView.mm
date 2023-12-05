@@ -11,6 +11,7 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
+#include <LibWebView/URL.h>
 #include <UI/LadybirdWebViewBridge.h>
 
 #import <Application/ApplicationDelegate.h>
@@ -27,6 +28,7 @@ static constexpr NSInteger CONTEXT_MENU_MUTE_UNMUTE_TAG = 2;
 static constexpr NSInteger CONTEXT_MENU_CONTROLS_TAG = 3;
 static constexpr NSInteger CONTEXT_MENU_LOOP_TAG = 4;
 static constexpr NSInteger CONTEXT_MENU_SEARCH_SELECTED_TEXT_TAG = 5;
+static constexpr NSInteger CONTEXT_MENU_COPY_LINK_TAG = 6;
 
 // Calls to [NSCursor hide] and [NSCursor unhide] must be balanced. We use this struct to ensure
 // we only call [NSCursor hide] once and to ensure that we do call [NSCursor unhide].
@@ -450,6 +452,20 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
     m_web_view_bridge->on_link_context_menu_request = [self](auto const& url, auto position) {
         TemporaryChange change_url { m_context_menu_url, url };
 
+        auto* copy_link_menu_item = [self.link_context_menu itemWithTag:CONTEXT_MENU_COPY_LINK_TAG];
+
+        switch (WebView::url_type(url)) {
+        case WebView::URLType::Email:
+            [copy_link_menu_item setTitle:@"Copy Email Address"];
+            break;
+        case WebView::URLType::Telephone:
+            [copy_link_menu_item setTitle:@"Copy Phone Number"];
+            break;
+        case WebView::URLType::Other:
+            [copy_link_menu_item setTitle:@"Copy URL"];
+            break;
+        }
+
         auto* event = Ladybird::create_context_menu_mouse_event(self, position);
         [NSMenu popUpContextMenu:self.link_context_menu withEvent:event forView:self];
     };
@@ -739,7 +755,8 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 
 - (void)copyLink:(id)sender
 {
-    copy_data_to_clipboard(m_context_menu_url.serialize(), NSPasteboardTypeString);
+    auto link = WebView::url_text_to_copy(m_context_menu_url);
+    copy_data_to_clipboard(link, NSPasteboardTypeString);
 }
 
 - (void)copyImage:(id)sender
@@ -846,9 +863,11 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
                                                         keyEquivalent:@""]];
         [_link_context_menu addItem:[NSMenuItem separatorItem]];
 
-        [_link_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy URL"
+        auto* copy_link_menu_item = [[NSMenuItem alloc] initWithTitle:@"Copy URL"
                                                                action:@selector(copyLink:)
-                                                        keyEquivalent:@""]];
+                                                        keyEquivalent:@""];
+        [copy_link_menu_item setTag:CONTEXT_MENU_COPY_LINK_TAG];
+        [_link_context_menu addItem:copy_link_menu_item];
         [_link_context_menu addItem:[NSMenuItem separatorItem]];
 
         [_link_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Inspect Element"
