@@ -311,7 +311,11 @@ void Renderer::end_path_paint()
 RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
-    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().ctm.x_scale() * state().line_width);
+    if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().ctm.x_scale() * state().line_width);
+    } else {
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), state().ctm.x_scale() * state().line_width);
+    }
     end_path_paint();
     return {};
 }
@@ -327,7 +331,11 @@ RENDERER_HANDLER(path_fill_nonzero)
 {
     begin_path_paint();
     m_current_path.close_all_subpaths();
-    m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
+    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::Painter::WindingRule::Nonzero);
+    } else {
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::Painter::WindingRule::Nonzero);
+    }
     end_path_paint();
     return {};
 }
@@ -341,20 +349,32 @@ RENDERER_HANDLER(path_fill_evenodd)
 {
     begin_path_paint();
     m_current_path.close_all_subpaths();
-    m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
+    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::Painter::WindingRule::EvenOdd);
+    } else {
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::Painter::WindingRule::EvenOdd);
+    }
     end_path_paint();
     return {};
 }
 
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
-    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().ctm.x_scale() * state().line_width);
+    if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().ctm.x_scale() * state().line_width);
+    } else {
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), state().ctm.x_scale() * state().line_width);
+    }
     return handle_path_fill_nonzero(args);
 }
 
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
-    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().ctm.x_scale() * state().line_width);
+    if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().ctm.x_scale() * state().line_width);
+    } else {
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), state().ctm.x_scale() * state().line_width);
+    }
     return handle_path_fill_evenodd(args);
 }
 
@@ -590,7 +610,7 @@ RENDERER_HANDLER(set_painting_space)
 
 RENDERER_HANDLER(set_stroking_color)
 {
-    state().stroke_color = TRY(state().stroke_color_space->color(args));
+    state().stroke_style = TRY(state().stroke_color_space->style(args));
     return {};
 }
 
@@ -603,13 +623,13 @@ RENDERER_HANDLER(set_stroking_color_extended)
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     }
 
-    state().stroke_color = TRY(state().stroke_color_space->color(args));
+    state().stroke_style = TRY(state().stroke_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color)
 {
-    state().paint_color = TRY(state().paint_color_space->color(args));
+    state().paint_style = TRY(state().paint_color_space->style(args));
     return {};
 }
 
@@ -622,49 +642,49 @@ RENDERER_HANDLER(set_painting_color_extended)
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     }
 
-    state().paint_color = TRY(state().paint_color_space->color(args));
+    state().paint_style = TRY(state().paint_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
     state().stroke_color_space = DeviceGrayColorSpace::the();
-    state().stroke_color = TRY(state().stroke_color_space->color(args));
+    state().stroke_style = TRY(state().stroke_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_gray)
 {
     state().paint_color_space = DeviceGrayColorSpace::the();
-    state().paint_color = TRY(state().paint_color_space->color(args));
+    state().paint_style = TRY(state().paint_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_rgb)
 {
     state().stroke_color_space = DeviceRGBColorSpace::the();
-    state().stroke_color = TRY(state().stroke_color_space->color(args));
+    state().stroke_style = TRY(state().stroke_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 {
     state().paint_color_space = DeviceRGBColorSpace::the();
-    state().paint_color = TRY(state().paint_color_space->color(args));
+    state().paint_style = TRY(state().paint_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 {
     state().stroke_color_space = DeviceCMYKColorSpace::the();
-    state().stroke_color = TRY(state().stroke_color_space->color(args));
+    state().stroke_style = TRY(state().stroke_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 {
     state().paint_color_space = DeviceCMYKColorSpace::the();
-    state().paint_color = TRY(state().paint_color_space->color(args));
+    state().paint_style = TRY(state().paint_color_space->style(args));
     return {};
 }
 
@@ -956,8 +976,16 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
             sample = sample.slice(bytes_per_component);
             component_values[i] = Value { component_value_decoders[i].interpolate(component[0]) };
         }
-        auto color = TRY(color_space->color(component_values));
-        bitmap->set_pixel(x, y, color);
+        auto color = TRY(color_space->style(component_values));
+        if (color.has<Color>()) {
+            auto c = color.get<Color>();
+            bitmap->set_pixel(x, y, c);
+        } else {
+            auto paint_style = color.get<NonnullRefPtr<Gfx::PaintStyle>>();
+            paint_style->paint(bitmap->rect(), [&](auto sample) {
+                bitmap->set_pixel(x, y, sample(Gfx::IntPoint(x, y)));
+            });
+        }
         ++x;
         if (x == width) {
             x = 0;

@@ -74,8 +74,8 @@ struct GraphicsState {
     ClippingPaths clipping_paths;
     RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
-    Gfx::Color stroke_color { Gfx::Color::NamedColor::Black };
-    Gfx::Color paint_color { Gfx::Color::NamedColor::Black };
+    ColorOrStyle stroke_style { Color::Black };
+    ColorOrStyle paint_style { Color::Black };
     DeprecatedString color_rendering_intent { "RelativeColorimetric"sv };
     float flatness_tolerance { 0.0f };
     float line_width { 1.0f };
@@ -286,8 +286,16 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         StringBuilder builder;
         builder.append("GraphicsState {\n"sv);
         builder.appendff("  ctm={}\n", state.ctm);
-        builder.appendff("  stroke_color={}\n", state.stroke_color);
-        builder.appendff("  paint_color={}\n", state.paint_color);
+        if (state.stroke_style.has<Color>()) {
+            builder.appendff("  stroke_style={}\n", state.stroke_style.get<Color>());
+        } else {
+            builder.appendff("  stroke_style={}\n", state.stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>());
+        }
+        if (state.paint_style.has<Color>()) {
+            builder.appendff("  paint_style={}\n", state.paint_style.get<Color>());
+        } else {
+            builder.appendff("  paint_style={}\n", state.paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>());
+        }
         builder.appendff("  color_rendering_intent={}\n", state.color_rendering_intent);
         builder.appendff("  flatness_tolerance={}\n", state.flatness_tolerance);
         builder.appendff("  line_width={}\n", state.line_width);

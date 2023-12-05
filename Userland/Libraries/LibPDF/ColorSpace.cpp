@@ -101,7 +101,7 @@ NonnullRefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
     return instance;
 }
 
-PDFErrorOr<Color> DeviceGrayColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> DeviceGrayColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 1);
     auto gray = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -119,7 +119,7 @@ NonnullRefPtr<DeviceRGBColorSpace> DeviceRGBColorSpace::the()
     return instance;
 }
 
-PDFErrorOr<Color> DeviceRGBColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> DeviceRGBColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto r = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -139,7 +139,7 @@ NonnullRefPtr<DeviceCMYKColorSpace> DeviceCMYKColorSpace::the()
     return instance;
 }
 
-PDFErrorOr<Color> DeviceCMYKColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> DeviceCMYKColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 4);
     auto c = arguments[0].to_float();
@@ -197,7 +197,7 @@ DeviceNColorSpace::DeviceNColorSpace(NonnullRefPtr<ColorSpace> alternate_space, 
 {
 }
 
-PDFErrorOr<Color> DeviceNColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> DeviceNColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     // FIXME: Does this need handling for the special colorant name "None"?
     // FIXME: When drawing to a printer, do something else.
@@ -211,7 +211,7 @@ PDFErrorOr<Color> DeviceNColorSpace::color(ReadonlySpan<Value> arguments) const
     for (size_t i = 0; i < tint_output.size(); ++i)
         m_tint_output_values[i] = tint_output[i];
 
-    return m_alternate_space->color(m_tint_output_values);
+    return m_alternate_space->style(m_tint_output_values);
 }
 
 int DeviceNColorSpace::number_of_components() const
@@ -347,7 +347,7 @@ PDFErrorOr<NonnullRefPtr<CalGrayColorSpace>> CalGrayColorSpace::create(Document*
     return color_space;
 }
 
-PDFErrorOr<Color> CalGrayColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> CalGrayColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 1);
     auto a = clamp(arguments[0].to_float(), 0.0f, 1.0f);
@@ -433,7 +433,7 @@ PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* d
     return color_space;
 }
 
-PDFErrorOr<Color> CalRGBColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> CalRGBColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto a = clamp(arguments[0].to_float(), 0.0f, 1.0f);
@@ -493,7 +493,7 @@ ICCBasedColorSpace::ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile> profile)
 {
 }
 
-PDFErrorOr<Color> ICCBasedColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     if (!s_srgb_profile)
         s_srgb_profile = TRY(Gfx::ICC::sRGB());
@@ -593,7 +593,7 @@ PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document* documen
     return color_space;
 }
 
-PDFErrorOr<Color> LabColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> LabColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto L_star = clamp(arguments[0].to_float(), 0.0f, 100.0f);
@@ -692,7 +692,7 @@ IndexedColorSpace::IndexedColorSpace(NonnullRefPtr<ColorSpace> base)
 {
 }
 
-PDFErrorOr<Color> IndexedColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> IndexedColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 1);
 
@@ -705,7 +705,7 @@ PDFErrorOr<Color> IndexedColorSpace::color(ReadonlySpan<Value> arguments) const
     for (size_t i = 0; i < n; ++i)
         TRY(components.try_append(Value(m_lookup[index * n + i] / 255.0f)));
 
-    return m_base->color(components);
+    return m_base->style(components);
 }
 
 Vector<float> IndexedColorSpace::default_decode() const
@@ -748,7 +748,7 @@ SeparationColorSpace::SeparationColorSpace(NonnullRefPtr<ColorSpace> alternate_s
 {
 }
 
-PDFErrorOr<Color> SeparationColorSpace::color(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> SeparationColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     // "For an additive device such as a computer display, a Separation color space never applies a process colorant directly;
     //  it always reverts to the alternate color space as described below."
@@ -765,12 +765,11 @@ PDFErrorOr<Color> SeparationColorSpace::color(ReadonlySpan<Value> arguments) con
     for (size_t i = 0; i < tint_output.size(); ++i)
         m_tint_output_values[i] = tint_output[i];
 
-    return m_alternate_space->color(m_tint_output_values);
+    return m_alternate_space->style(m_tint_output_values);
 }
 
 Vector<float> SeparationColorSpace::default_decode() const
 {
     return { 0.0f, 1.0f };
 }
-
 }

@@ -67,12 +67,19 @@ void Type1Font::set_font_size(float font_size)
 
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
-    auto color = renderer.state().paint_color;
+    auto style = renderer.state().paint_style;
 
     if (!m_font_program) {
         // Account for the reversed font baseline
         auto position = point.translated(0, -m_font->baseline());
-        painter.draw_glyph(position, char_code, *m_font, color);
+        // FIXME: Bounding box and sample point look to be pretty wrong
+        if (style.has<Color>()) {
+            painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
+        } else {
+            style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
+                painter.draw_glyph(position, char_code, *m_font, sample(Gfx::IntPoint(position.x(), position.y())));
+            });
+        }
         return {};
     }
 
@@ -97,9 +104,18 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
         m_glyph_cache.set(index, bitmap);
     }
 
-    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
-        return pixel.multiply(color);
-    });
+    if (style.has<Color>()) {
+        painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
+            return pixel.multiply(style.get<Color>());
+        });
+    } else {
+        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(bitmap->physical_rect(), [&](auto sample) {
+            painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [&](Color pixel) -> Color {
+                // FIXME: Presumably we need to sample at every point in the glyph, not just the top left?
+                return pixel.multiply(sample(glyph_position.blit_position));
+            });
+        });
+    }
     return {};
 }
 }
