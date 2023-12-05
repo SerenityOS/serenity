@@ -310,7 +310,7 @@ Tab::Tab(BrowserWindow& window)
         view().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Copy URL", g_icon_bag.copy, [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("Copy &URL", g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
     }));
     m_link_context_menu->add_separator();
