@@ -1528,7 +1528,7 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& target, Bindings:
     Vector<DOM::Node&> scrollable_nodes;
     while (ancestor) {
         if (ancestor->paintable_box() && ancestor->paintable_box()->has_scrollable_overflow())
-            scrollable_nodes.append(*static_cast<DOM::Element*>(ancestor));
+            scrollable_nodes.append(*ancestor);
         ancestor = ancestor->parent();
     }
 
