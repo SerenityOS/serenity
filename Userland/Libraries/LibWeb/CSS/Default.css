@@ -90,6 +90,24 @@ meter::-webkit-meter-even-less-good-value {
     background-color: hsl(348, 100%, 61%);
 }
 
+/* Custom <progress> styles */
+progress {
+    display: inline-block;
+    width: 300px;
+    height: 12px;
+}
+progress::-webkit-progress-bar, progress::-webkit-progress-value {
+    display: block;
+    height: 100%;
+}
+progress::-webkit-progress-bar {
+    background-color: hsl(0, 0%, 96%);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+}
+progress::-webkit-progress-value {
+    background-color: hsl(204, 86%, 53%);
+}
+
 /* 15.3.1 Hidden elements
  * https://html.spec.whatwg.org/multipage/rendering.html#hidden-elements
  */
@@ -795,25 +813,4 @@ progress {
     video {
         filter: invert(100%);
     }
-}
-
-/* This is the same as default intrinsic size of a <progress> element */
-progress {
-    width: 300px;
-    height: 12px;
-}
-
-/* The default progress-value/bar CSS below is the same as Blink/WebKit.
- * Note: Setting any more than the backgrond-color may have unintended consequences, as sites don't expect to unset more than that.
- */
-
-progress::-webkit-progress-bar {
-    width: inherit;
-    height: inherit;
-    background-color: hsl(0, 0%, 96%);
-}
-
-progress::-webkit-progress-value {
-    height: inherit;
-    background-color: hsl(204, 86%, 53%);
 }

@@ -22,12 +22,10 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLLIElement.h>
 #include <LibWeb/HTML/HTMLOListElement.h>
-#include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Layout/Progress.h>
 #include <LibWeb/Layout/TableGrid.h>
 #include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -311,7 +309,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
         // Special path for elements that use pseudo selectors.
         // FIXME: This is very hackish. Find a better way to architect this.
-        if (element.pseudo_element() == CSS::Selector::PseudoElement::Placeholder || element.pseudo_element() == CSS::Selector::PseudoElement::MeterBar || element.pseudo_element() == CSS::Selector::PseudoElement::MeterOptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterSuboptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterEvenLessGoodValue) {
+        if (element.pseudo_element() == CSS::Selector::PseudoElement::Placeholder || element.pseudo_element() == CSS::Selector::PseudoElement::MeterBar || element.pseudo_element() == CSS::Selector::PseudoElement::MeterOptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterSuboptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterEvenLessGoodValue || element.pseudo_element() == CSS::Selector::PseudoElement::ProgressBar || element.pseudo_element() == CSS::Selector::PseudoElement::ProgressValue) {
             auto& parent_element = verify_cast<HTML::HTMLElement>(*element.root().parent_or_shadow_host());
             style = TRY(style_computer.compute_style(parent_element, element.pseudo_element()));
             display = style->display();
@@ -320,7 +318,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
                 if (!input_element.placeholder_value().has_value())
                     display = CSS::Display::from_short(CSS::Display::Short::None);
             }
-            if (element.pseudo_element() == CSS::Selector::PseudoElement::MeterOptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterSuboptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterEvenLessGoodValue) {
+            if (element.pseudo_element() == CSS::Selector::PseudoElement::MeterOptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterSuboptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterEvenLessGoodValue || element.pseudo_element() == CSS::Selector::PseudoElement::ProgressValue) {
                 auto computed_style = element.computed_css_values();
                 style->set_property(CSS::PropertyID::Width, computed_style->property(CSS::PropertyID::Width));
             }
@@ -399,29 +397,6 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         }
 
         pop_parent();
-    }
-
-    if (is<HTML::HTMLProgressElement>(dom_node)) {
-        auto& progress = static_cast<HTML::HTMLProgressElement&>(dom_node);
-        if (!progress.using_system_appearance()) {
-            auto bar_style = TRY(style_computer.compute_style(progress, CSS::Selector::PseudoElement::ProgressBar));
-            bar_style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::FlowRoot)));
-            auto value_style = TRY(style_computer.compute_style(progress, CSS::Selector::PseudoElement::ProgressValue));
-            value_style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)));
-            value_style->set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage(progress.position() * 100)));
-            auto bar_display = bar_style->display();
-            auto value_display = value_style->display();
-            auto progress_bar = DOM::Element::create_layout_node_for_display_type(document, bar_display, bar_style, nullptr);
-            auto progress_value = DOM::Element::create_layout_node_for_display_type(document, value_display, value_style, nullptr);
-            push_parent(verify_cast<NodeWithStyle>(*layout_node));
-            push_parent(verify_cast<NodeWithStyle>(*progress_bar));
-            insert_node_into_inline_or_block_ancestor(*progress_value, value_display, AppendOrPrepend::Append);
-            pop_parent();
-            insert_node_into_inline_or_block_ancestor(*progress_bar, bar_display, AppendOrPrepend::Append);
-            pop_parent();
-            progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressBar, progress_bar);
-            progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressValue, progress_value);
-        }
     }
 
     // https://html.spec.whatwg.org/multipage/rendering.html#button-layout
