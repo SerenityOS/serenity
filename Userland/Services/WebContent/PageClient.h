@@ -125,6 +125,7 @@ private:
     virtual void inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
     virtual void inspector_did_set_dom_node_text(i32 node_id, String const& text) override;
     virtual void inspector_did_set_dom_node_tag(i32 node_id, String const& tag) override;
+    virtual void inspector_did_add_dom_node_attributes(i32 node_id, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> attributes) override;
     virtual void inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> replacement_attributes) override;
     virtual void inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag_or_attribute_name) override;
     virtual void inspector_did_execute_console_script(String const& script) override;
