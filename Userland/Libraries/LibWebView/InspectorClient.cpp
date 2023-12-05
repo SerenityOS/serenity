@@ -81,6 +81,26 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_content_web_view.js_console_request_messages(0);
     };
 
+    m_inspector_web_view.on_inspector_requested_dom_tree_context_menu = [this](auto node_id, auto position, auto const& type, auto const& tag_or_attribute_name) {
+        m_context_menu_dom_node_id = node_id;
+        m_context_menu_tag_or_attribute_name = tag_or_attribute_name;
+
+        if (type.is_one_of("text"sv, "comment"sv)) {
+            if (on_requested_dom_node_text_context_menu)
+                on_requested_dom_node_text_context_menu(position);
+        } else if (type == "tag"sv) {
+            VERIFY(m_context_menu_tag_or_attribute_name.has_value());
+
+            if (on_requested_dom_node_tag_context_menu)
+                on_requested_dom_node_tag_context_menu(position, *m_context_menu_tag_or_attribute_name);
+        } else if (type == "attribute"sv) {
+            VERIFY(m_context_menu_tag_or_attribute_name.has_value());
+
+            if (on_requested_dom_node_attribute_context_menu)
+                on_requested_dom_node_attribute_context_menu(position, *m_context_menu_tag_or_attribute_name);
+        }
+    };
+
     m_inspector_web_view.on_inspector_selected_dom_node = [this](auto node_id, auto const& pseudo_element) {
         auto inspected_node_properties = m_content_web_view.inspect_dom_node(node_id, pseudo_element);
 

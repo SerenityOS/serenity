@@ -5,6 +5,7 @@ let selectedBottomTab = null;
 let selectedBottomTabButton = null;
 
 let selectedDOMNode = null;
+let pendingEditDOMNode = null;
 
 let consoleGroupStack = [];
 let consoleGroupNextID = 0;
@@ -233,6 +234,34 @@ const editDOMNode = domNode => {
     });
 };
 
+const requestContextMenu = (clientX, clientY, domNode) => {
+    pendingEditDOMNode = null;
+
+    if (typeof domNode.dataset.nodeType === "undefined") {
+        if (domNode.parentNode !== null) {
+            domNode = domNode.parentNode;
+        }
+    }
+
+    const domNodeID = domNode.closest(".hoverable")?.dataset.id;
+    const type = domNode.dataset.nodeType;
+
+    if (typeof domNodeID === "undefined" || typeof type === "undefined") {
+        return;
+    }
+
+    let tagOrAttributeName = null;
+    pendingEditDOMNode = domNode;
+
+    if (type === "tag") {
+        tagOrAttributeName = domNode.innerText;
+    } else if (type === "attribute") {
+        tagOrAttributeName = domNode.dataset.attributeName;
+    }
+
+    inspector.requestDOMTreeContextMenu(domNodeID, clientX, clientY, type, tagOrAttributeName);
+};
+
 const executeConsoleScript = consoleInput => {
     const script = consoleInput.value;
 
@@ -369,6 +398,11 @@ document.addEventListener("DOMContentLoaded", () => {
             executeConsoleScript(consoleInput);
             event.preventDefault();
         }
+    });
+
+    document.addEventListener("contextmenu", event => {
+        requestContextMenu(event.clientX, event.clientY, event.target);
+        event.preventDefault();
     });
 
     inspector.inspectorLoaded();

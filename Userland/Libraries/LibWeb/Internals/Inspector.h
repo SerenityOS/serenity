@@ -25,6 +25,8 @@ public:
     void set_dom_node_tag(i32 node_id, String const& tag);
     void replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes);
 
+    void request_dom_tree_context_menu(i32 node_id, i32 client_x, i32 client_y, String const& type, Optional<String> const& tag_or_attribute_name);
+
     void execute_console_script(String const& script);
 
 private:

@@ -548,6 +548,11 @@ void PageClient::inspector_did_replace_dom_node_attribute(i32 node_id, String co
     client().async_inspector_did_replace_dom_node_attribute(node_id, name, move(attributes));
 }
 
+void PageClient::inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag_or_attribute_name)
+{
+    client().async_inspector_did_request_dom_tree_context_menu(node_id, page().css_to_device_point(position).to_type<int>(), type, tag_or_attribute_name);
+}
+
 void PageClient::inspector_did_execute_console_script(String const& script)
 {
     client().async_inspector_did_execute_console_script(script);
