@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLMeterElement.h>
@@ -186,6 +185,11 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_optimum(double value)
 void HTMLMeterElement::inserted()
 {
     create_shadow_tree_if_needed();
+}
+
+void HTMLMeterElement::removed_from(DOM::Node*)
+{
+    set_shadow_root(nullptr);
 }
 
 void HTMLMeterElement::create_shadow_tree_if_needed()
