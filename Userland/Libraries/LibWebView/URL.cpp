@@ -160,4 +160,26 @@ Optional<URLParts> break_url_into_parts(StringView url_string)
     return {};
 }
 
+URLType url_type(URL const& url)
+{
+    if (url.scheme() == "mailto"sv)
+        return URLType::Email;
+    if (url.scheme() == "tel"sv)
+        return URLType::Telephone;
+    return URLType::Other;
+}
+
+String url_text_to_copy(URL const& url)
+{
+    auto url_text = MUST(url.to_string());
+
+    if (url.scheme() == "mailto"sv)
+        return MUST(url_text.substring_from_byte_offset("mailto:"sv.length()));
+
+    if (url.scheme() == "tel"sv)
+        return MUST(url_text.substring_from_byte_offset("tel:"sv.length()));
+
+    return url_text;
+}
+
 }

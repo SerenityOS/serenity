@@ -28,4 +28,13 @@ struct URLParts {
 };
 Optional<URLParts> break_url_into_parts(StringView url);
 
+// These are both used for the "right-click -> copy FOO" interaction for links.
+enum class URLType {
+    Email,
+    Telephone,
+    Other,
+};
+URLType url_type(URL const&);
+String url_text_to_copy(URL const&);
+
 }
