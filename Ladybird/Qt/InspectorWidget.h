@@ -7,8 +7,12 @@
 #pragma once
 
 #include "WebContentView.h"
+#include <LibGfx/Point.h>
 #include <LibWebView/Forward.h>
 #include <QWidget>
+
+class QAction;
+class QMenu;
 
 namespace Ladybird {
 
@@ -30,8 +34,19 @@ public:
 private:
     void closeEvent(QCloseEvent*) override;
 
+    QPoint to_widget_position(Gfx::IntPoint) const;
+
     WebContentView* m_inspector_view;
     OwnPtr<WebView::InspectorClient> m_inspector_client;
+
+    QMenu* m_dom_node_text_context_menu { nullptr };
+    QMenu* m_dom_node_tag_context_menu { nullptr };
+    QMenu* m_dom_node_attribute_context_menu { nullptr };
+
+    QAction* m_edit_node_action { nullptr };
+    QAction* m_delete_node_action { nullptr };
+    QAction* m_add_attribute_action { nullptr };
+    QAction* m_remove_attribute_action { nullptr };
 };
 
 }
