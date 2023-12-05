@@ -41,6 +41,7 @@ public:
 private:
     CSS::Selector::PseudoElement m_pseudo_element;
 };
+
 class HTMLMeterElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLMeterElement, HTMLElement);
     JS_DECLARE_ALLOCATOR(HTMLMeterElement);
@@ -63,6 +64,7 @@ public:
 
     // ^HTMLElement
     virtual void inserted() override;
+    virtual void removed_from(DOM::Node*) override;
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
