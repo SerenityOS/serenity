@@ -14,6 +14,8 @@ $ GameOfLife
 
 GameOfLife is an implementation of John Conway's Game of Life.
 
+Wikipedia: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+
 The game is a cellular automaton where each cell is either dead (grey) or alive (yellow) and will change state in the next tick if any of the following rules are fulfilled:
 
 * An alive cell will die by underpopulation if it has fewer than two neighbors.
