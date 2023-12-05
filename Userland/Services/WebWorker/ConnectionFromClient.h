@@ -14,8 +14,8 @@
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/Worker/WebWorkerClientEndpoint.h>
 #include <LibWeb/Worker/WebWorkerServerEndpoint.h>
-#include <Services/WebWorker/PageHost.h>
 #include <WebWorker/Forward.h>
+#include <WebWorker/PageHost.h>
 
 namespace WebWorker {
 
