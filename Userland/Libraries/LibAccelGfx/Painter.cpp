@@ -604,6 +604,7 @@ void Painter::bind_target_canvas()
 {
     m_target_canvas->bind();
     GL::set_viewport({ 0, 0, m_target_canvas->size().width(), m_target_canvas->size().height() });
+    GL::enable_scissor_test(state().clip_rect);
 }
 
 void Painter::set_target_canvas(NonnullRefPtr<Canvas> canvas)
