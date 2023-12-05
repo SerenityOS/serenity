@@ -310,9 +310,10 @@ Tab::Tab(BrowserWindow& window)
         view().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("Copy &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
-    }));
+    m_link_copy_action = GUI::Action::create("Copy &URL", g_icon_bag.copy, [this](auto&) {
+        GUI::Clipboard::the().set_plain_text(WebView::url_text_to_copy(m_link_context_menu_url));
+    });
+    m_link_context_menu->add_action(*m_link_copy_action);
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
         start_download(m_link_context_menu_url);
@@ -322,6 +323,18 @@ Tab::Tab(BrowserWindow& window)
 
     view().on_link_context_menu_request = [this](auto& url, auto widget_position) {
         m_link_context_menu_url = url;
+
+        switch (WebView::url_type(url)) {
+        case WebView::URLType::Email:
+            m_link_copy_action->set_text("Copy &Email Address");
+            break;
+        case WebView::URLType::Telephone:
+            m_link_copy_action->set_text("Copy &Phone Number");
+            break;
+        case WebView::URLType::Other:
+            m_link_copy_action->set_text("Copy &URL");
+            break;
+        }
 
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);

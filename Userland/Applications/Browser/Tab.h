@@ -132,6 +132,7 @@ private:
 
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;
+    RefPtr<GUI::Action> m_link_copy_action;
     URL m_link_context_menu_url;
 
     RefPtr<GUI::Menu> m_image_context_menu;
