@@ -9,6 +9,8 @@
     undefined setDOMNodeTag(long nodeID, DOMString tag);
     undefined replaceDOMNodeAttribute(long nodeID, DOMString name, NamedNodeMap replacementAttributes);
 
+    undefined requestDOMTreeContextMenu(long nodeID, long clientX, long clientY, DOMString type, DOMString? tagOrAttributeName);
+
     undefined executeConsoleScript(DOMString script);
 
 };

@@ -61,6 +61,11 @@ void Inspector::replace_dom_node_attribute(i32 node_id, String const& name, JS::
     global_object().browsing_context()->page().client().inspector_did_replace_dom_node_attribute(node_id, name, replacement_attributes);
 }
 
+void Inspector::request_dom_tree_context_menu(i32 node_id, i32 client_x, i32 client_y, String const& type, Optional<String> const& tag_or_attribute_name)
+{
+    global_object().browsing_context()->page().client().inspector_did_request_dom_tree_context_menu(node_id, { client_x, client_y }, type, tag_or_attribute_name);
+}
+
 void Inspector::execute_console_script(String const& script)
 {
     global_object().browsing_context()->page().client().inspector_did_execute_console_script(script);

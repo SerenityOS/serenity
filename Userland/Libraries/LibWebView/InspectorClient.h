@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Function.h>
 #include <AK/JsonValue.h>
 #include <AK/StringView.h>
+#include <LibGfx/Point.h>
 #include <LibWebView/ViewImplementation.h>
 
 #pragma once
@@ -23,6 +25,10 @@ public:
     void select_hovered_node();
     void select_default_node();
     void clear_selection();
+
+    Function<void(Gfx::IntPoint)> on_requested_dom_node_text_context_menu;
+    Function<void(Gfx::IntPoint, String const&)> on_requested_dom_node_tag_context_menu;
+    Function<void(Gfx::IntPoint, String const&)> on_requested_dom_node_attribute_context_menu;
 
 private:
     void load_inspector();
@@ -49,6 +55,9 @@ private:
     Optional<i32> m_pending_selection;
 
     bool m_dom_tree_loaded { false };
+
+    Optional<i32> m_context_menu_dom_node_id;
+    Optional<String> m_context_menu_tag_or_attribute_name;
 
     i32 m_highest_notified_message_index { -1 };
     i32 m_highest_received_message_index { -1 };
