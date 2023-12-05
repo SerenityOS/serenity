@@ -686,6 +686,18 @@ Messages::WebContentServer::SetDomNodeTagResponse ConnectionFromClient::set_dom_
     return new_element->unique_id();
 }
 
+void ConnectionFromClient::add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> const& attributes)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node || !dom_node->is_element())
+        return;
+
+    auto& element = static_cast<Web::DOM::Element&>(*dom_node);
+
+    for (auto const& attribute : attributes)
+        element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
+}
+
 void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
