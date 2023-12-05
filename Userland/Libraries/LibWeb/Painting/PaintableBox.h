@@ -219,7 +219,7 @@ private:
     Optional<CSSPixelRect> mutable m_clip_rect;
 
     mutable bool m_clipping_overflow { false };
-    RefPtr<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
+    mutable Optional<u32> m_corner_clipper_id;
 
     Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;

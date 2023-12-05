@@ -18,7 +18,7 @@ enum class CornerClip {
 
 class BorderRadiusCornerClipper : public RefCounted<BorderRadiusCornerClipper> {
 public:
-    static ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> create(CornerRadii const&, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip = CornerClip::Outside);
+    static ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> create(CornerRadii const&, DevicePixelRect const& border_rect, CornerClip corner_clip = CornerClip::Outside);
 
     void sample_under_corners(Gfx::Painter& page_painter);
     void blit_corner_clipping(Gfx::Painter& page_painter);
@@ -63,6 +63,9 @@ struct ScopedCornerRadiusClip {
 private:
     PaintContext& m_context;
     RefPtr<BorderRadiusCornerClipper> m_corner_clipper;
+    u32 m_id;
+    bool m_has_radius { false };
+    Gfx::IntRect m_border_rect;
 };
 
 }

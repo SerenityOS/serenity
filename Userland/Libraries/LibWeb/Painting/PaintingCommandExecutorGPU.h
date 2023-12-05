@@ -44,8 +44,8 @@ public:
     CommandResult paint_radial_gradient(Gfx::IntRect const& rect, Web::Painting::RadialGradientData const& radial_gradient_data, Gfx::IntPoint const& center, Gfx::IntSize const& size) override;
     CommandResult paint_conic_gradient(Gfx::IntRect const& rect, Web::Painting::ConicGradientData const& conic_gradient_data, Gfx::IntPoint const& position) override;
     CommandResult draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const&, int amplitude, int thickness) override;
-    CommandResult sample_under_corners(BorderRadiusCornerClipper&) override;
-    CommandResult blit_corner_clipping(BorderRadiusCornerClipper&) override;
+    CommandResult sample_under_corners(u32 id, CornerRadii const&, Gfx::IntRect const&, CornerClip) override;
+    CommandResult blit_corner_clipping(u32) override;
     CommandResult paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data) override;
 
     bool would_be_fully_clipped_by_painter(Gfx::IntRect) const override;

@@ -40,6 +40,11 @@ struct CornerRadii {
     CornerRadius top_right;
     CornerRadius bottom_right;
     CornerRadius bottom_left;
+
+    inline bool has_any_radius() const
+    {
+        return top_left || top_right || bottom_right || bottom_left;
+    }
 };
 
 struct BorderRadiiData {

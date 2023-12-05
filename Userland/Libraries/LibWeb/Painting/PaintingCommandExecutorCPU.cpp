@@ -414,15 +414,19 @@ CommandResult PaintingCommandExecutorCPU::draw_triangle_wave(Gfx::IntPoint const
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::sample_under_corners(BorderRadiusCornerClipper& corner_clipper)
+CommandResult PaintingCommandExecutorCPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip corner_clip)
 {
-    corner_clipper.sample_under_corners(painter());
+    m_corner_clippers.resize(id + 1);
+    auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect.to_type<DevicePixels>(), corner_clip);
+    m_corner_clippers[id] = clipper.release_value_but_fixme_should_propagate_errors();
+    m_corner_clippers[id]->sample_under_corners(painter());
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::blit_corner_clipping(BorderRadiusCornerClipper& corner_clipper)
+CommandResult PaintingCommandExecutorCPU::blit_corner_clipping(u32 id)
 {
-    corner_clipper.blit_corner_clipping(painter());
+    m_corner_clippers[id]->blit_corner_clipping(painter());
+    m_corner_clippers[id] = nullptr;
     return CommandResult::Continue;
 }
 

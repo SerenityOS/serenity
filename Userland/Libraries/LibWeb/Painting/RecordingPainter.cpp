@@ -16,22 +16,26 @@ Gfx::IntRect PaintOuterBoxShadow::bounding_rect() const
 
 Gfx::IntRect SampleUnderCorners::bounding_rect() const
 {
-    return corner_clipper->border_rect().to_type<int>();
+    return border_rect;
 }
 
 Gfx::IntRect BlitCornerClipping::bounding_rect() const
 {
-    return corner_clipper->border_rect().to_type<int>();
+    return border_rect;
 }
 
-void RecordingPainter::sample_under_corners(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper)
+void RecordingPainter::sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip)
 {
-    push_command(SampleUnderCorners { corner_clipper });
+    push_command(SampleUnderCorners {
+        id,
+        corner_radii,
+        border_rect,
+        corner_clip });
 }
 
-void RecordingPainter::blit_corner_clipping(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper)
+void RecordingPainter::blit_corner_clipping(u32 id, Gfx::IntRect border_rect)
 {
-    push_command(BlitCornerClipping { corner_clipper });
+    push_command(BlitCornerClipping { id, border_rect });
 }
 
 void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
@@ -541,10 +545,10 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
                 return executor.draw_triangle_wave(command.p1, command.p2, command.color, command.amplitude, command.thickness);
             },
             [&](SampleUnderCorners const& command) {
-                return executor.sample_under_corners(command.corner_clipper);
+                return executor.sample_under_corners(command.id, command.corner_radii, command.border_rect, command.corner_clip);
             },
             [&](BlitCornerClipping const& command) {
-                return executor.blit_corner_clipping(command.corner_clipper);
+                return executor.blit_corner_clipping(command.id);
             },
             [&](PaintBorders const& command) {
                 return executor.paint_borders(command.border_rect, command.corner_radii, command.borders_data);
