@@ -542,53 +542,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             }
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
-                char const* pseudo_element_description = "";
-                switch (simple_selector.pseudo_element()) {
-                case CSS::Selector::PseudoElement::Before:
-                    pseudo_element_description = "before";
-                    break;
-                case CSS::Selector::PseudoElement::After:
-                    pseudo_element_description = "after";
-                    break;
-                case CSS::Selector::PseudoElement::FirstLine:
-                    pseudo_element_description = "first-line";
-                    break;
-                case CSS::Selector::PseudoElement::FirstLetter:
-                    pseudo_element_description = "first-letter";
-                    break;
-                case CSS::Selector::PseudoElement::Marker:
-                    pseudo_element_description = "marker";
-                    break;
-                case CSS::Selector::PseudoElement::MeterBar:
-                    pseudo_element_description = "-webkit-meter-bar";
-                    break;
-                case CSS::Selector::PseudoElement::MeterEvenLessGoodValue:
-                    pseudo_element_description = "-webkit-meter-even-less-good-value";
-                    break;
-                case CSS::Selector::PseudoElement::MeterOptimumValue:
-                    pseudo_element_description = "-webkit-meter-optimum-value";
-                    break;
-                case CSS::Selector::PseudoElement::MeterSuboptimumValue:
-                    pseudo_element_description = "-webkit-meter-suboptimum-value";
-                    break;
-                case CSS::Selector::PseudoElement::ProgressBar:
-                    pseudo_element_description = "-webkit-progress-bar";
-                    break;
-                case CSS::Selector::PseudoElement::ProgressValue:
-                    pseudo_element_description = "-webkit-progress-value";
-                    break;
-                case CSS::Selector::PseudoElement::Placeholder:
-                    pseudo_element_description = "placeholder";
-                    break;
-                case CSS::Selector::PseudoElement::Selection:
-                    pseudo_element_description = "selection";
-                    break;
-                case CSS::Selector::PseudoElement::PseudoElementCount:
-                    VERIFY_NOT_REACHED();
-                    break;
-                }
-
-                builder.appendff(" pseudo_element={}", pseudo_element_description);
+                builder.appendff(" pseudo_element={}", CSS::pseudo_element_name(simple_selector.pseudo_element()));
             }
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Attribute) {
