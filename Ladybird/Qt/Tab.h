@@ -87,6 +87,7 @@ private:
     Optional<String> m_page_context_menu_search_text;
 
     QMenu* m_link_context_menu { nullptr };
+    QAction* m_link_context_menu_copy_url_action { nullptr };
     URL m_link_context_menu_url;
 
     QMenu* m_image_context_menu { nullptr };

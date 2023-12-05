@@ -355,9 +355,9 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         open_link_in_new_tab(m_link_context_menu_url);
     });
 
-    auto* copy_url_action = new QAction("Copy &URL", this);
-    copy_url_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
-    QObject::connect(copy_url_action, &QAction::triggered, this, [this]() {
+    m_link_context_menu_copy_url_action = new QAction("Copy &URL", this);
+    m_link_context_menu_copy_url_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
+    QObject::connect(m_link_context_menu_copy_url_action, &QAction::triggered, this, [this]() {
         copy_link_url(m_link_context_menu_url);
     });
 
@@ -365,12 +365,24 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_link_context_menu->addAction(open_link_action);
     m_link_context_menu->addAction(open_link_in_new_tab_action);
     m_link_context_menu->addSeparator();
-    m_link_context_menu->addAction(copy_url_action);
+    m_link_context_menu->addAction(m_link_context_menu_copy_url_action);
     m_link_context_menu->addSeparator();
     m_link_context_menu->addAction(&m_window->inspect_dom_node_action());
 
     view().on_link_context_menu_request = [this](auto const& url, Gfx::IntPoint) {
         m_link_context_menu_url = url;
+
+        switch (WebView::url_type(url)) {
+        case WebView::URLType::Email:
+            m_link_context_menu_copy_url_action->setText("Copy &Email Address");
+            break;
+        case WebView::URLType::Telephone:
+            m_link_context_menu_copy_url_action->setText("Copy &Phone Number");
+            break;
+        case WebView::URLType::Other:
+            m_link_context_menu_copy_url_action->setText("Copy &URL");
+            break;
+        }
 
         auto screen_position = QCursor::pos();
         m_link_context_menu->exec(screen_position);
@@ -628,7 +640,7 @@ void Tab::open_link_in_new_tab(URL const& url)
 void Tab::copy_link_url(URL const& url)
 {
     auto* clipboard = QGuiApplication::clipboard();
-    clipboard->setText(qstring_from_ak_string(url.to_deprecated_string()));
+    clipboard->setText(qstring_from_ak_string(WebView::url_text_to_copy(url)));
 }
 
 void Tab::location_edit_return_pressed()
