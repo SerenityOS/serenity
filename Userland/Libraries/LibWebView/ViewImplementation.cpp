@@ -201,6 +201,11 @@ void ViewImplementation::replace_dom_node_attribute(i32 node_id, String name, Ve
     client().async_replace_dom_node_attribute(node_id, move(name), move(replacement_attributes));
 }
 
+void ViewImplementation::remove_dom_node(i32 node_id)
+{
+    client().async_remove_dom_node(node_id);
+}
+
 void ViewImplementation::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     client().async_debug_request(request, argument);

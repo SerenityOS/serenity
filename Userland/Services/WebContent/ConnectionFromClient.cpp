@@ -711,6 +711,24 @@ void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const&
         element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
 }
 
+void ConnectionFromClient::remove_dom_node(i32 node_id)
+{
+    auto* active_document = page().page().top_level_browsing_context().active_document();
+    if (!active_document)
+        return;
+
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node)
+        return;
+
+    dom_node->remove();
+
+    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
+    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
+    //        which really hurts performance.
+    active_document->force_layout();
+}
+
 void ConnectionFromClient::initialize_js_console(Badge<PageClient>, Web::DOM::Document& document)
 {
     auto& realm = document.realm();
