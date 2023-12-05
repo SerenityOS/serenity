@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto preview_mode = "auto"sv;
     StringView file_to_edit;
     Core::ArgsParser parser;
-    parser.add_option(preview_mode, "Preview mode, one of 'none', 'html', 'markdown', 'auto'", "preview-mode", '\0', "mode");
+    parser.add_option(preview_mode, "Preview mode, one of 'none', 'html', 'markdown', 'auto'", "preview-mode", 'p', "mode");
     parser.add_positional_argument(file_to_edit, "File to edit, with optional starting line and column number", "file[:line[:column]]", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 
