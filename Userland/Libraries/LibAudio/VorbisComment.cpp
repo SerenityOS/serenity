@@ -178,9 +178,9 @@ ErrorOr<void> write_vorbis_comment(Metadata const& metadata, Stream& target)
     auto vorbis_user_comments = TRY(make_vorbis_user_comments(metadata));
     TRY(target.write_value<LittleEndian<u32>>(vorbis_user_comments.size()));
     for (auto const& field : vorbis_user_comments) {
-        auto const serialized_field = TRY(String::formatted("{}={}", field.field_name, field.contents)).bytes();
-        TRY(target.write_value<LittleEndian<u32>>(serialized_field.size()));
-        TRY(target.write_until_depleted(serialized_field));
+        auto const serialized_field = TRY(String::formatted("{}={}", field.field_name, field.contents));
+        TRY(target.write_value<LittleEndian<u32>>(serialized_field.bytes().size()));
+        TRY(target.write_until_depleted(serialized_field.bytes()));
     }
 
     return {};
