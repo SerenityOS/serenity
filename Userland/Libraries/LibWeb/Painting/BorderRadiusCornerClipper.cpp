@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::create(CornerRadii const& corner_radii, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
+ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::create(CornerRadii const& corner_radii, DevicePixelRect const& border_rect, CornerClip corner_clip)
 {
-    VERIFY(border_radii.has_any_radius());
+    VERIFY(corner_radii.has_any_radius());
 
     auto top_left = corner_radii.top_left;
     auto top_right = corner_radii.top_right;
@@ -105,27 +105,26 @@ void BorderRadiusCornerClipper::blit_corner_clipping(Gfx::Painter& painter)
 
 ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
     : m_context(context)
+    , m_id(context.allocate_corner_clipper_id())
+    , m_has_radius(border_radii.has_any_radius())
+    , m_border_rect(border_rect)
 {
-    if (border_radii.has_any_radius()) {
-        CornerRadii corner_radii {
-            .top_left = border_radii.top_left.as_corner(context),
-            .top_right = border_radii.top_right.as_corner(context),
-            .bottom_right = border_radii.bottom_right.as_corner(context),
-            .bottom_left = border_radii.bottom_left.as_corner(context)
-        };
-        auto clipper = BorderRadiusCornerClipper::create(corner_radii, context.recording_painter().state().translation.map(border_rect.to_type<int>()).to_type<DevicePixels>(), border_radii, corner_clip);
-        if (!clipper.is_error()) {
-            m_corner_clipper = clipper.release_value();
-            m_context.recording_painter().sample_under_corners(*m_corner_clipper);
-        }
-    }
+    if (!m_has_radius)
+        return;
+    CornerRadii const corner_radii {
+        .top_left = border_radii.top_left.as_corner(context),
+        .top_right = border_radii.top_right.as_corner(context),
+        .bottom_right = border_radii.bottom_right.as_corner(context),
+        .bottom_left = border_radii.bottom_left.as_corner(context)
+    };
+    m_context.recording_painter().sample_under_corners(m_id, corner_radii, context.recording_painter().state().translation.map(border_rect.to_type<int>()), corner_clip);
 }
 
 ScopedCornerRadiusClip::~ScopedCornerRadiusClip()
 {
-    if (m_corner_clipper) {
-        m_context.recording_painter().blit_corner_clipping(*m_corner_clipper);
-    }
+    if (!m_has_radius)
+        return;
+    m_context.recording_painter().blit_corner_clipping(m_id, m_border_rect);
 }
 
 }

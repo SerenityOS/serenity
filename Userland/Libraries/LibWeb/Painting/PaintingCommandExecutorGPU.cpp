@@ -299,13 +299,13 @@ CommandResult PaintingCommandExecutorGPU::draw_triangle_wave(Gfx::IntPoint const
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::sample_under_corners(BorderRadiusCornerClipper&)
+CommandResult PaintingCommandExecutorGPU::sample_under_corners(u32, CornerRadii const&, Gfx::IntRect const&, CornerClip)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(BorderRadiusCornerClipper&)
+CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(u32)
 {
     // FIXME
     return CommandResult::Continue;

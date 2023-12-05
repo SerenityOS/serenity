@@ -71,6 +71,8 @@ public:
     CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
     void translate_scroll_offset_by(CSSPixelPoint offset) { m_scroll_offset.translate_by(offset); }
 
+    u32 allocate_corner_clipper_id() { return m_next_corner_clipper_id++; }
+
 private:
     Painting::RecordingPainter& m_recording_painter;
     Palette m_palette;
@@ -80,6 +82,7 @@ private:
     bool m_focus { false };
     CSSPixelPoint m_scroll_offset;
     Gfx::AffineTransform m_svg_transform;
+    u32 m_next_corner_clipper_id { 0 };
 };
 
 }

@@ -299,13 +299,17 @@ struct DrawTriangleWave {
 };
 
 struct SampleUnderCorners {
-    NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper;
+    u32 id;
+    CornerRadii corner_radii;
+    Gfx::IntRect border_rect;
+    CornerClip corner_clip;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
 };
 
 struct BlitCornerClipping {
-    NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper;
+    u32 id;
+    Gfx::IntRect border_rect;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
 };
@@ -387,8 +391,8 @@ public:
     virtual CommandResult apply_backdrop_filter(Gfx::IntRect const& backdrop_region, Web::CSS::ResolvedBackdropFilter const& backdrop_filter) = 0;
     virtual CommandResult draw_rect(Gfx::IntRect const& rect, Color const&, bool rough) = 0;
     virtual CommandResult draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const& color, int amplitude, int thickness) = 0;
-    virtual CommandResult sample_under_corners(BorderRadiusCornerClipper&) = 0;
-    virtual CommandResult blit_corner_clipping(BorderRadiusCornerClipper&) = 0;
+    virtual CommandResult sample_under_corners(u32 id, CornerRadii const&, Gfx::IntRect const&, CornerClip) = 0;
+    virtual CommandResult blit_corner_clipping(u32 id) = 0;
     virtual CommandResult paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data) = 0;
 
     virtual bool would_be_fully_clipped_by_painter(Gfx::IntRect) const = 0;
@@ -482,8 +486,8 @@ public:
     void push_stacking_context(PushStackingContextParams params);
     void pop_stacking_context();
 
-    void sample_under_corners(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper);
-    void blit_corner_clipping(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper);
+    void sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip);
+    void blit_corner_clipping(u32 id, Gfx::IntRect border_rect);
 
     void paint_progressbar(Gfx::IntRect frame_rect, Gfx::IntRect progress_rect, Palette palette, int min, int max, int value, StringView text);
     void paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style);
