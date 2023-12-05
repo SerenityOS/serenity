@@ -33,6 +33,7 @@
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ProxyMappings.h>
@@ -705,10 +706,17 @@ void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const&
         return;
 
     auto& element = static_cast<Web::DOM::Element&>(*dom_node);
-    element.remove_attribute(name);
+    bool should_remove_attribute = true;
 
-    for (auto const& attribute : replacement_attributes)
+    for (auto const& attribute : replacement_attributes) {
+        if (should_remove_attribute && Web::Infra::is_ascii_case_insensitive_match(name, attribute.name))
+            should_remove_attribute = false;
+
         element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
+    }
+
+    if (should_remove_attribute)
+        element.remove_attribute(name);
 }
 
 void ConnectionFromClient::remove_dom_node(i32 node_id)
