@@ -181,17 +181,11 @@ void StackingContext::paint_child(PaintContext& context, StackingContext const& 
     auto parent_paintable = child.paintable_box().parent();
     if (parent_paintable)
         parent_paintable->before_children_paint(context, PaintPhase::Foreground);
-    auto containing_block = child.paintable_box().containing_block();
-    auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
-    if (containing_block_paintable)
-        containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
 
     child.paint(context);
 
     if (parent_paintable)
         parent_paintable->after_children_paint(context, PaintPhase::Foreground);
-    if (containing_block_paintable)
-        containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
 }
 
 void StackingContext::paint_internal(PaintContext& context) const
@@ -259,8 +253,14 @@ void StackingContext::paint_internal(PaintContext& context) const
     for (auto* child : m_children) {
         if (!child->paintable_box().is_positioned())
             continue;
+        auto containing_block = child->paintable_box().containing_block();
+        auto const* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
+        if (containing_block_paintable)
+            containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
         if (child->paintable_box().computed_values().z_index().has_value() && child->paintable_box().computed_values().z_index().value() >= 1)
             paint_child(context, *child);
+        if (containing_block_paintable)
+            containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
     }
 
     paint_node(paintable_box(), context, PaintPhase::Outline);
