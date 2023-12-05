@@ -533,19 +533,29 @@ void PageClient::inspector_did_set_dom_node_tag(i32 node_id, String const& tag)
     client().async_inspector_did_set_dom_node_tag(node_id, tag);
 }
 
-void PageClient::inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> replacement_attributes)
+static Vector<WebView::Attribute> named_node_map_to_vector(JS::NonnullGCPtr<Web::DOM::NamedNodeMap> map)
 {
     Vector<WebView::Attribute> attributes;
-    attributes.ensure_capacity(replacement_attributes->length());
+    attributes.ensure_capacity(map->length());
 
-    for (size_t i = 0; i < replacement_attributes->length(); ++i) {
-        auto const* attribute = replacement_attributes->item(i);
+    for (size_t i = 0; i < map->length(); ++i) {
+        auto const* attribute = map->item(i);
         VERIFY(attribute);
 
         attributes.empend(attribute->name().to_string(), attribute->value());
     }
 
-    client().async_inspector_did_replace_dom_node_attribute(node_id, name, move(attributes));
+    return attributes;
+}
+
+void PageClient::inspector_did_add_dom_node_attributes(i32 node_id, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> attributes)
+{
+    client().async_inspector_did_add_dom_node_attributes(node_id, named_node_map_to_vector(attributes));
+}
+
+void PageClient::inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> replacement_attributes)
+{
+    client().async_inspector_did_replace_dom_node_attribute(node_id, name, named_node_map_to_vector(replacement_attributes));
 }
 
 void PageClient::inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag_or_attribute_name)

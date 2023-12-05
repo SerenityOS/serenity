@@ -426,6 +426,12 @@ void WebContentClient::inspector_did_set_dom_node_tag(i32 node_id, String const&
         m_view.on_inspector_set_dom_node_tag(node_id, tag);
 }
 
+void WebContentClient::inspector_did_add_dom_node_attributes(i32 node_id, Vector<Attribute> const& attributes)
+{
+    if (m_view.on_inspector_added_dom_node_attributes)
+        m_view.on_inspector_added_dom_node_attributes(node_id, attributes);
+}
+
 void WebContentClient::inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, Vector<Attribute> const& replacement_attributes)
 {
     if (m_view.on_inspector_replaced_dom_node_attribute)

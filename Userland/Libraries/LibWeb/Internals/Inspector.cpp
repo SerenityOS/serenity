@@ -56,6 +56,11 @@ void Inspector::set_dom_node_tag(i32 node_id, String const& tag)
     global_object().browsing_context()->page().client().inspector_did_set_dom_node_tag(node_id, tag);
 }
 
+void Inspector::add_dom_node_attributes(i32 node_id, JS::NonnullGCPtr<DOM::NamedNodeMap> attributes)
+{
+    global_object().browsing_context()->page().client().inspector_did_add_dom_node_attributes(node_id, attributes);
+}
+
 void Inspector::replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes)
 {
     global_object().browsing_context()->page().client().inspector_did_replace_dom_node_attribute(node_id, name, replacement_attributes);
