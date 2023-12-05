@@ -191,6 +191,11 @@ Optional<i32> ViewImplementation::set_dom_node_tag(i32 node_id, String name)
     return client().set_dom_node_tag(node_id, move(name));
 }
 
+void ViewImplementation::add_dom_node_attributes(i32 node_id, Vector<Attribute> attributes)
+{
+    client().async_add_dom_node_attributes(node_id, move(attributes));
+}
+
 void ViewImplementation::replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes)
 {
     client().async_replace_dom_node_attribute(node_id, move(name), move(replacement_attributes));
