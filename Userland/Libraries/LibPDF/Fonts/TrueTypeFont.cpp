@@ -48,13 +48,20 @@ void TrueTypeFont::set_font_size(float font_size)
     m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
-PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u8 char_code, Renderer const& renderer)
+PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
-    auto color = renderer.state().paint_color;
+    auto style = renderer.state().paint_style;
 
     // Account for the reversed font baseline
     auto position = point.translated(0, -m_font->baseline());
-    painter.draw_glyph(position, char_code, *m_font, color);
+    if (style.has<Color>()) {
+        painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
+    } else {
+        // FIXME: Bounding box and sample point look to be pretty wrong
+        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
+            painter.draw_glyph(position, char_code, *m_font, sample(Gfx::IntPoint(position.x(), position.y())));
+        });
+    }
     return {};
 }
 
