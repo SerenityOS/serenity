@@ -136,6 +136,28 @@ inspector.clearInspectedDOMNode = () => {
     }
 };
 
+inspector.editDOMNodeID = nodeID => {
+    if (pendingEditDOMNode === null) {
+        return;
+    }
+
+    inspector.inspectDOMNodeID(nodeID);
+    editDOMNode(pendingEditDOMNode);
+
+    pendingEditDOMNode = null;
+};
+
+inspector.addAttributeToDOMNodeID = nodeID => {
+    if (pendingEditDOMNode === null) {
+        return;
+    }
+
+    inspector.inspectDOMNodeID(nodeID);
+    addAttributeToDOMNode(pendingEditDOMNode);
+
+    pendingEditDOMNode = null;
+};
+
 inspector.createPropertyTables = (computedStyle, resolvedStyle, customProperties) => {
     const createPropertyTable = (tableID, properties) => {
         let oldTable = document.getElementById(tableID);
@@ -176,55 +198,34 @@ const inspectDOMNode = domNode => {
     inspector.inspectDOMNode(domNode.dataset.id, domNode.dataset.pseudoElement);
 };
 
-const editDOMNode = domNode => {
-    if (selectedDOMNode === null) {
-        return;
-    }
-
-    const domNodeID = selectedDOMNode.dataset.id;
-    const type = domNode.dataset.nodeType;
-
+const createDOMEditor = (onHandleChange, onCancelChange) => {
     selectedDOMNode.classList.remove("selected");
 
     let input = document.createElement("input");
     input.classList.add("dom-editor");
     input.classList.add("selected");
-    input.value = domNode.innerText;
 
     const handleChange = () => {
         input.removeEventListener("change", handleChange);
         input.removeEventListener("blur", cancelChange);
 
-        if (type === "text" || type === "comment") {
-            inspector.setDOMNodeText(domNodeID, input.value);
-        } else if (type === "tag") {
-            try {
-                const element = document.createElement(input.value);
-                inspector.setDOMNodeTag(domNodeID, input.value);
-            } catch {
-                cancelChange();
-            }
-        } else if (type === "attribute") {
-            let element = document.createElement("div");
-            element.innerHTML = `<div ${input.value}></div>`;
-
-            inspector.replaceDOMNodeAttribute(
-                domNodeID,
-                domNode.dataset.attributeName,
-                element.children[0].attributes
-            );
+        try {
+            onHandleChange(input.value);
+        } catch {
+            cancelChange();
         }
     };
 
     const cancelChange = () => {
+        input.removeEventListener("change", handleChange);
+        input.removeEventListener("blur", cancelChange);
+
         selectedDOMNode.classList.add("selected");
-        input.parentNode.replaceChild(domNode, input);
+        onCancelChange(input);
     };
 
     input.addEventListener("change", handleChange);
     input.addEventListener("blur", cancelChange);
-
-    domNode.parentNode.replaceChild(input, domNode);
 
     setTimeout(() => {
         input.focus();
@@ -232,6 +233,75 @@ const editDOMNode = domNode => {
         // FIXME: Invoke `select` when it isn't just stubbed out.
         // input.select();
     });
+
+    return input;
+};
+
+const parseDOMAttributes = value => {
+    let element = document.createElement("div");
+    element.innerHTML = `<div ${value}></div>`;
+
+    return element.children[0].attributes;
+};
+
+const editDOMNode = domNode => {
+    if (selectedDOMNode === null) {
+        return;
+    }
+
+    const domNodeID = selectedDOMNode.dataset.id;
+
+    const handleChange = value => {
+        const type = domNode.dataset.nodeType;
+
+        if (type === "text" || type === "comment") {
+            inspector.setDOMNodeText(domNodeID, value);
+        } else if (type === "tag") {
+            const element = document.createElement(value);
+            inspector.setDOMNodeTag(domNodeID, value);
+        } else if (type === "attribute") {
+            const attributes = parseDOMAttributes(value);
+            inspector.replaceDOMNodeAttribute(domNodeID, domNode.dataset.attributeName, attributes);
+        }
+    };
+
+    const cancelChange = editor => {
+        editor.parentNode.replaceChild(domNode, editor);
+    };
+
+    let editor = createDOMEditor(handleChange, cancelChange);
+    editor.value = domNode.innerText;
+
+    domNode.parentNode.replaceChild(editor, domNode);
+};
+
+const addAttributeToDOMNode = domNode => {
+    if (selectedDOMNode === null) {
+        return;
+    }
+
+    const domNodeID = selectedDOMNode.dataset.id;
+
+    const handleChange = value => {
+        const attributes = parseDOMAttributes(value);
+        inspector.addDOMNodeAttributes(domNodeID, attributes);
+    };
+
+    const cancelChange = () => {
+        container.remove();
+    };
+
+    let editor = createDOMEditor(handleChange, cancelChange);
+    editor.placeholder = 'name="value"';
+
+    let nbsp = document.createElement("span");
+    nbsp.innerHTML = "&nbsp;";
+
+    let container = document.createElement("span");
+    container.appendChild(nbsp);
+    container.appendChild(editor);
+
+    domNode.parentNode.insertBefore(container, domNode.parentNode.lastChild);
 };
 
 const requestContextMenu = (clientX, clientY, domNode) => {
