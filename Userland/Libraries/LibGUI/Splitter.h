@@ -22,6 +22,9 @@ public:
 
     virtual ~Splitter() override = default;
 
+    OpportunisticResizee opportunistic_resizee() const { return m_opportunistic_resizee; }
+    void set_opportunistic_resizee(OpportunisticResizee resizee) { m_opportunistic_resizee = resizee; }
+
 protected:
     explicit Splitter(Gfx::Orientation);
 
@@ -34,9 +37,6 @@ protected:
 
     virtual void did_layout() override;
     virtual void custom_layout() override;
-
-    OpportunisticResizee opportunistic_resizee() const { return m_opportunistic_resizee; }
-    void set_opportunistic_resizee(OpportunisticResizee resizee) { m_opportunistic_resizee = resizee; }
 
 private:
     void override_cursor(bool do_override);

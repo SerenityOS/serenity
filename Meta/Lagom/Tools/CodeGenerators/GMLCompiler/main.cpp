@@ -173,10 +173,12 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
     static HashMap<StringView, StringView> enum_properties = {
         { "text_alignment"sv, "Gfx::TextAlignment"sv },
         { "focus_policy"sv, "GUI::FocusPolicy"sv },
+        { "background_role"sv, "Gfx::ColorRole"sv },
         { "foreground_role"sv, "Gfx::ColorRole"sv },
         { "frame_style"sv, "Gfx::FrameStyle"sv },
         { "text_wrapping"sv, "Gfx::TextWrapping"sv },
         { "button_style"sv, "Gfx::ButtonStyle"sv },
+        { "opportunistic_resizee"sv, "GUI::Splitter::OpportunisticResizee"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
@@ -197,7 +199,7 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
             if (auto const enum_value = TRY(generate_enum_initializer_for(*property_name, value)); enum_value.has_value())
                 return String::formatted("{}", *enum_value);
 
-            if (*property_name == "bitmap"sv)
+            if (*property_name == "bitmap"sv || *property_name == "icon"sv)
                 return String::formatted(R"~~~(TRY(Gfx::Bitmap::load_from_file("{}"sv)))~~~", TRY(escape_string(value)));
         }
 
