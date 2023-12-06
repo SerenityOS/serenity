@@ -831,12 +831,14 @@ enum UpsampleMode {
     StoreValuesUnchanged,
     UpsampleTo8Bit,
 };
-static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int bits_per_component, UpsampleMode mode)
+static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int samples_per_line, int bits_per_component, UpsampleMode mode)
 {
     VERIFY(bits_per_component == 1 || bits_per_component == 2 || bits_per_component == 4);
     Vector<u8> upsampled_storage;
     upsampled_storage.ensure_capacity(content.size() * 8 / bits_per_component);
     u8 const mask = (1 << bits_per_component) - 1;
+
+    int x = 0;
     for (auto byte : content) {
         for (int i = 0; i < 8; i += bits_per_component) {
             auto value = (byte >> (8 - bits_per_component - i)) & mask;
@@ -844,6 +846,13 @@ static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int bits_per_componen
                 upsampled_storage.append(value * (255 / mask));
             else
                 upsampled_storage.append(value);
+            ++x;
+
+            // "Byte boundaries are ignored, except that each row of sample data must begin on a byte boundary."
+            if (x == samples_per_line) {
+                x = 0;
+                break;
+            }
         }
     }
     return upsampled_storage;
@@ -900,10 +909,12 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     }
     auto content = image->bytes();
 
+    int const n_components = color_space->number_of_components();
+
     Vector<u8> upsampled_storage;
     if (bits_per_component < 8) {
         UpsampleMode mode = color_space->family() == ColorSpaceFamily::Indexed ? UpsampleMode::StoreValuesUnchanged : UpsampleMode::UpsampleTo8Bit;
-        upsampled_storage = upsample_to_8_bit(content, bits_per_component, mode);
+        upsampled_storage = upsample_to_8_bit(content, width * n_components, bits_per_component, mode);
         content = upsampled_storage;
         bits_per_component = 8;
     }
@@ -934,7 +945,6 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }));
     int x = 0;
     int y = 0;
-    int const n_components = color_space->number_of_components();
     auto const bytes_per_component = bits_per_component / 8;
     Vector<Value> component_values;
     component_values.resize(n_components);
