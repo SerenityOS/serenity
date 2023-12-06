@@ -10,6 +10,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
+#include <LibWebView/Attribute.h>
 #include <LibWebView/InspectorClient.h>
 #include <LibWebView/OutOfProcessWebView.h>
 
@@ -63,9 +64,9 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
         m_dom_node_tag_context_menu->popup(to_widget_position(position));
     };
 
-    m_inspector_client->on_requested_dom_node_attribute_context_menu = [this](auto position, auto const& attribute) {
-        m_edit_node_action->set_text(DeprecatedString::formatted("&Edit attribute \"{}\"", attribute));
-        m_remove_attribute_action->set_text(DeprecatedString::formatted("&Remove attribute \"{}\"", attribute));
+    m_inspector_client->on_requested_dom_node_attribute_context_menu = [this](auto position, auto const&, auto const& attribute) {
+        m_edit_node_action->set_text(DeprecatedString::formatted("&Edit attribute \"{}\"", attribute.name));
+        m_remove_attribute_action->set_text(DeprecatedString::formatted("&Remove attribute \"{}\"", attribute.name));
 
         m_dom_node_attribute_context_menu->popup(to_widget_position(position));
     };

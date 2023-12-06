@@ -6,6 +6,7 @@
 
 #include "InspectorWidget.h"
 #include <Ladybird/Qt/StringUtils.h>
+#include <LibWebView/Attribute.h>
 #include <LibWebView/InspectorClient.h>
 #include <QAction>
 #include <QCloseEvent>
@@ -68,9 +69,9 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
         m_dom_node_tag_context_menu->exec(to_widget_position(position));
     };
 
-    m_inspector_client->on_requested_dom_node_attribute_context_menu = [this](auto position, auto const& attribute) {
-        m_edit_node_action->setText(qstring_from_ak_string(MUST(String::formatted("&Edit attribute \"{}\"", attribute))));
-        m_remove_attribute_action->setText(qstring_from_ak_string(MUST(String::formatted("&Remove attribute \"{}\"", attribute))));
+    m_inspector_client->on_requested_dom_node_attribute_context_menu = [this](auto position, auto const&, auto const& attribute) {
+        m_edit_node_action->setText(qstring_from_ak_string(MUST(String::formatted("&Edit attribute \"{}\"", attribute.name))));
+        m_remove_attribute_action->setText(qstring_from_ak_string(MUST(String::formatted("&Remove attribute \"{}\"", attribute.name))));
 
         m_dom_node_attribute_context_menu->exec(to_widget_position(position));
     };

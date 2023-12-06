@@ -127,7 +127,7 @@ private:
     virtual void inspector_did_set_dom_node_tag(i32 node_id, String const& tag) override;
     virtual void inspector_did_add_dom_node_attributes(i32 node_id, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> attributes) override;
     virtual void inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<Web::DOM::NamedNodeMap> replacement_attributes) override;
-    virtual void inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag_or_attribute_name) override;
+    virtual void inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag, Optional<String> const& attribute_name, Optional<String> const& attribute_value) override;
     virtual void inspector_did_execute_console_script(String const& script) override;
 
     Web::Layout::Viewport* layout_root();

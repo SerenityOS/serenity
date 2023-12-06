@@ -10,7 +10,7 @@
     undefined addDOMNodeAttributes(long nodeID, NamedNodeMap attributes);
     undefined replaceDOMNodeAttribute(long nodeID, DOMString name, NamedNodeMap replacementAttributes);
 
-    undefined requestDOMTreeContextMenu(long nodeID, long clientX, long clientY, DOMString type, DOMString? tagOrAttributeName);
+    undefined requestDOMTreeContextMenu(long nodeID, long clientX, long clientY, DOMString type, DOMString? tag, DOMString? attributeName, DOMString? attributeValue);
 
     undefined executeConsoleScript(DOMString script);
 

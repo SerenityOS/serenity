@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWebView/Attribute.h>
 #include <LibWebView/InspectorClient.h>
 #include <LibWebView/ViewImplementation.h>
 
@@ -91,14 +92,14 @@ static constexpr NSInteger CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG = 2;
             [NSMenu popUpContextMenu:strong_self.dom_node_tag_context_menu withEvent:event forView:strong_self.web_view];
         };
 
-        m_inspector_client->on_requested_dom_node_attribute_context_menu = [weak_self](auto position, auto const& attribute) {
+        m_inspector_client->on_requested_dom_node_attribute_context_menu = [weak_self](auto position, auto const&, auto const& attribute) {
             Inspector* strong_self = weak_self;
             if (strong_self == nil) {
                 return;
             }
 
-            auto edit_attribute_text = MUST(String::formatted("Edit attribute \"{}\"", attribute));
-            auto remove_attribute_text = MUST(String::formatted("Remove attribute \"{}\"", attribute));
+            auto edit_attribute_text = MUST(String::formatted("Edit attribute \"{}\"", attribute.name));
+            auto remove_attribute_text = MUST(String::formatted("Remove attribute \"{}\"", attribute.name));
 
             auto* edit_node_menu_item = [strong_self.dom_node_attribute_context_menu itemWithTag:CONTEXT_MENU_EDIT_NODE_TAG];
             [edit_node_menu_item setTitle:Ladybird::string_to_ns_string(edit_attribute_text)];

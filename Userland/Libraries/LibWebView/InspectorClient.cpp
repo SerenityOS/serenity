@@ -81,23 +81,23 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_content_web_view.js_console_request_messages(0);
     };
 
-    m_inspector_web_view.on_inspector_requested_dom_tree_context_menu = [this](auto node_id, auto position, auto const& type, auto const& tag_or_attribute_name) {
-        m_context_menu_dom_node_id = node_id;
-        m_context_menu_tag_or_attribute_name = tag_or_attribute_name;
+    m_inspector_web_view.on_inspector_requested_dom_tree_context_menu = [this](auto node_id, auto position, auto const& type, auto const& tag, auto const& attribute) {
+        m_context_menu_data = ContextMenuData { node_id, tag, attribute };
 
         if (type.is_one_of("text"sv, "comment"sv)) {
             if (on_requested_dom_node_text_context_menu)
                 on_requested_dom_node_text_context_menu(position);
         } else if (type == "tag"sv) {
-            VERIFY(m_context_menu_tag_or_attribute_name.has_value());
+            VERIFY(tag.has_value());
 
             if (on_requested_dom_node_tag_context_menu)
-                on_requested_dom_node_tag_context_menu(position, *m_context_menu_tag_or_attribute_name);
+                on_requested_dom_node_tag_context_menu(position, *tag);
         } else if (type == "attribute"sv) {
-            VERIFY(m_context_menu_tag_or_attribute_name.has_value());
+            VERIFY(tag.has_value());
+            VERIFY(attribute.has_value());
 
             if (on_requested_dom_node_attribute_context_menu)
-                on_requested_dom_node_attribute_context_menu(position, *m_context_menu_tag_or_attribute_name);
+                on_requested_dom_node_attribute_context_menu(position, *tag, *attribute);
         }
     };
 
@@ -225,51 +225,47 @@ void InspectorClient::select_node(i32 node_id)
 
 void InspectorClient::context_menu_edit_dom_node()
 {
-    VERIFY(m_context_menu_dom_node_id.has_value());
+    VERIFY(m_context_menu_data.has_value());
 
-    auto script = MUST(String::formatted("inspector.editDOMNodeID({});", *m_context_menu_dom_node_id));
+    auto script = MUST(String::formatted("inspector.editDOMNodeID({});", m_context_menu_data->dom_node_id));
     m_inspector_web_view.run_javascript(script);
 
-    m_context_menu_dom_node_id.clear();
-    m_context_menu_tag_or_attribute_name.clear();
+    m_context_menu_data.clear();
 }
 
 void InspectorClient::context_menu_remove_dom_node()
 {
-    VERIFY(m_context_menu_dom_node_id.has_value());
+    VERIFY(m_context_menu_data.has_value());
 
-    m_content_web_view.remove_dom_node(*m_context_menu_dom_node_id);
+    m_content_web_view.remove_dom_node(m_context_menu_data->dom_node_id);
 
     m_pending_selection = m_body_node_id;
     inspect();
 
-    m_context_menu_dom_node_id.clear();
-    m_context_menu_tag_or_attribute_name.clear();
+    m_context_menu_data.clear();
 }
 
 void InspectorClient::context_menu_add_dom_node_attribute()
 {
-    VERIFY(m_context_menu_dom_node_id.has_value());
+    VERIFY(m_context_menu_data.has_value());
 
-    auto script = MUST(String::formatted("inspector.addAttributeToDOMNodeID({});", *m_context_menu_dom_node_id));
+    auto script = MUST(String::formatted("inspector.addAttributeToDOMNodeID({});", m_context_menu_data->dom_node_id));
     m_inspector_web_view.run_javascript(script);
 
-    m_context_menu_dom_node_id.clear();
-    m_context_menu_tag_or_attribute_name.clear();
+    m_context_menu_data.clear();
 }
 
 void InspectorClient::context_menu_remove_dom_node_attribute()
 {
-    VERIFY(m_context_menu_dom_node_id.has_value());
-    VERIFY(m_context_menu_tag_or_attribute_name.has_value());
+    VERIFY(m_context_menu_data.has_value());
+    VERIFY(m_context_menu_data->attribute.has_value());
 
-    m_content_web_view.replace_dom_node_attribute(*m_context_menu_dom_node_id, *m_context_menu_tag_or_attribute_name, {});
+    m_content_web_view.replace_dom_node_attribute(m_context_menu_data->dom_node_id, m_context_menu_data->attribute->name, {});
 
-    m_pending_selection = m_context_menu_dom_node_id;
+    m_pending_selection = m_context_menu_data->dom_node_id;
     inspect();
 
-    m_context_menu_dom_node_id.clear();
-    m_context_menu_tag_or_attribute_name.clear();
+    m_context_menu_data.clear();
 }
 
 void InspectorClient::load_inspector()
@@ -465,14 +461,16 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
         if (name.equals_ignoring_ascii_case("BODY"sv))
             m_body_node_id = node.get_integer<i32>("id"sv).value();
 
+        auto tag = name.to_lowercase();
+
         builder.appendff("<span class=\"hoverable\" {}>", data_attributes.string_view());
         builder.append("<span>&lt;</span>"sv);
-        builder.appendff("<span data-node-type=\"tag\" class=\"editable tag\">{}</span>", name.to_lowercase());
+        builder.appendff("<span data-node-type=\"tag\" data-tag=\"{0}\" class=\"editable tag\">{0}</span>", tag);
 
         if (auto attributes = node.get_object("attributes"sv); attributes.has_value()) {
-            attributes->for_each_member([&builder](auto const& name, auto const& value) {
+            attributes->for_each_member([&](auto const& name, auto const& value) {
                 builder.append("&nbsp;"sv);
-                builder.appendff("<span data-node-type=\"attribute\" data-attribute-name=\"{}\" class=\"editable\">", name);
+                builder.appendff("<span data-node-type=\"attribute\"  data-tag=\"{}\" data-attribute-name=\"{}\" data-attribute-value=\"{}\" class=\"editable\">", tag, name, value);
                 builder.appendff("<span class=\"attribute-name\">{}</span>", name);
                 builder.append('=');
                 builder.appendff("<span class=\"attribute-value\">\"{}\"</span>", value);
