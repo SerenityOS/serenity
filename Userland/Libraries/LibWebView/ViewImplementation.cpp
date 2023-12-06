@@ -374,6 +374,22 @@ void ViewImplementation::handle_web_content_process_crash()
     load_html(builder.to_deprecated_string());
 }
 
+static ErrorOr<void> save_screenshot(Gfx::ShareableBitmap const& bitmap)
+{
+    if (!bitmap.is_valid())
+        return Error::from_string_view("Failed to take a screenshot"sv);
+
+    LexicalPath path { Core::StandardPaths::downloads_directory() };
+    path = path.append(TRY(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
+
+    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
+
+    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
+    TRY(screenshot_file->write_until_depleted(encoded));
+
+    return {};
+}
+
 ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
 {
     Gfx::ShareableBitmap bitmap;
@@ -388,16 +404,14 @@ ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
         break;
     }
 
-    if (!bitmap.is_valid())
-        return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
+    TRY(save_screenshot(bitmap));
+    return {};
+}
 
-    LexicalPath path { Core::StandardPaths::downloads_directory() };
-    path = path.append(TRY(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
-
-    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
-
-    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
-    TRY(screenshot_file->write_until_depleted(encoded));
+ErrorOr<void> ViewImplementation::take_dom_node_screenshot(i32 node_id)
+{
+    auto bitmap = client().take_dom_node_screenshot(node_id);
+    TRY(save_screenshot(bitmap));
 
     return {};
 }

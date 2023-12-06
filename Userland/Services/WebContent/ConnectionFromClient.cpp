@@ -825,6 +825,20 @@ Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient:
     return { bitmap->to_shareable_bitmap() };
 }
 
+Messages::WebContentServer::TakeDomNodeScreenshotResponse ConnectionFromClient::take_dom_node_screenshot(i32 node_id)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node || !dom_node->paintable_box())
+        return { {} };
+
+    auto rect = page().page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
+
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
+    page().paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
+
+    return { bitmap->to_shareable_bitmap() };
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
     return page().page().focused_context().selected_text();
