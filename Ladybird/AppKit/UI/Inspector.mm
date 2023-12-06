@@ -166,6 +166,11 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
     m_inspector_client->context_menu_edit_dom_node();
 }
 
+- (void)copyDOMNode:(id)sender
+{
+    m_inspector_client->context_menu_copy_dom_node();
+}
+
 - (void)deleteDOMNode:(id)sender
 {
     m_inspector_client->context_menu_remove_dom_node();
@@ -196,6 +201,9 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
         [_dom_node_text_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Edit text"
                                                                         action:@selector(editDOMNode:)
                                                                  keyEquivalent:@""]];
+        [_dom_node_text_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy text"
+                                                                        action:@selector(copyDOMNode:)
+                                                                 keyEquivalent:@""]];
 
         [_dom_node_text_context_menu addItem:[NSMenuItem separatorItem]];
 
@@ -225,6 +233,12 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
                                                                 keyEquivalent:@""]];
         [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Delete node"
                                                                        action:@selector(deleteDOMNode:)
+                                                                keyEquivalent:@""]];
+
+        [_dom_node_tag_context_menu addItem:[NSMenuItem separatorItem]];
+
+        [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy HTML"
+                                                                       action:@selector(copyDOMNode:)
                                                                 keyEquivalent:@""]];
     }
 
@@ -261,6 +275,12 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
                                                                       keyEquivalent:@""]];
         [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Delete node"
                                                                              action:@selector(deleteDOMNode:)
+                                                                      keyEquivalent:@""]];
+
+        [_dom_node_attribute_context_menu addItem:[NSMenuItem separatorItem]];
+
+        [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy HTML"
+                                                                             action:@selector(copyDOMNode:)
                                                                       keyEquivalent:@""]];
     }
 
