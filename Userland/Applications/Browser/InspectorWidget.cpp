@@ -33,6 +33,7 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
     m_delete_node_action = GUI::Action::create("&Delete node"sv, [this](auto&) { m_inspector_client->context_menu_remove_dom_node(); });
     m_add_attribute_action = GUI::Action::create("&Add attribute"sv, [this](auto&) { m_inspector_client->context_menu_add_dom_node_attribute(); });
     m_remove_attribute_action = GUI::Action::create("&Remove attribute"sv, [this](auto&) { m_inspector_client->context_menu_remove_dom_node_attribute(); });
+    m_copy_attribute_value_action = GUI::Action::create("Copy attribute &value"sv, [this](auto&) { m_inspector_client->context_menu_copy_dom_node_attribute_value(); });
 
     m_dom_node_text_context_menu = GUI::Menu::construct();
     m_dom_node_text_context_menu->add_action(*m_edit_node_action);
@@ -47,6 +48,7 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
 
     m_dom_node_attribute_context_menu = GUI::Menu::construct();
     m_dom_node_attribute_context_menu->add_action(*m_edit_node_action);
+    m_dom_node_attribute_context_menu->add_action(*m_copy_attribute_value_action);
     m_dom_node_attribute_context_menu->add_action(*m_remove_attribute_action);
     m_dom_node_attribute_context_menu->add_separator();
     m_dom_node_attribute_context_menu->add_action(*m_add_attribute_action);
@@ -65,8 +67,13 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
     };
 
     m_inspector_client->on_requested_dom_node_attribute_context_menu = [this](auto position, auto const&, auto const& attribute) {
+        static constexpr size_t MAX_ATTRIBUTE_VALUE_LENGTH = 32;
+
         m_edit_node_action->set_text(DeprecatedString::formatted("&Edit attribute \"{}\"", attribute.name));
         m_remove_attribute_action->set_text(DeprecatedString::formatted("&Remove attribute \"{}\"", attribute.name));
+        m_copy_attribute_value_action->set_text(DeprecatedString::formatted("Copy attribute &value \"{:.{}}{}\"",
+            attribute.value, MAX_ATTRIBUTE_VALUE_LENGTH,
+            attribute.value.bytes_as_string_view().length() > MAX_ATTRIBUTE_VALUE_LENGTH ? "..."sv : ""sv));
 
         m_dom_node_attribute_context_menu->popup(to_widget_position(position));
     };

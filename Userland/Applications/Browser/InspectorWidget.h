@@ -43,6 +43,7 @@ private:
     RefPtr<GUI::Action> m_delete_node_action;
     RefPtr<GUI::Action> m_add_attribute_action;
     RefPtr<GUI::Action> m_remove_attribute_action;
+    RefPtr<GUI::Action> m_copy_attribute_value_action;
 };
 
 }

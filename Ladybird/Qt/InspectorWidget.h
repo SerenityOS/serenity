@@ -47,6 +47,7 @@ private:
     QAction* m_delete_node_action { nullptr };
     QAction* m_add_attribute_action { nullptr };
     QAction* m_remove_attribute_action { nullptr };
+    QAction* m_copy_attribute_value_action { nullptr };
 };
 
 }

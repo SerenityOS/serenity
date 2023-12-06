@@ -23,6 +23,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 825;
 
 static constexpr NSInteger CONTEXT_MENU_EDIT_NODE_TAG = 1;
 static constexpr NSInteger CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG = 2;
+static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
 
 @interface Inspector ()
 {
@@ -98,14 +99,22 @@ static constexpr NSInteger CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG = 2;
                 return;
             }
 
+            static constexpr size_t MAX_ATTRIBUTE_VALUE_LENGTH = 32;
+
             auto edit_attribute_text = MUST(String::formatted("Edit attribute \"{}\"", attribute.name));
             auto remove_attribute_text = MUST(String::formatted("Remove attribute \"{}\"", attribute.name));
+            auto copy_attribute_value_text = MUST(String::formatted("Copy attribute value \"{:.{}}{}\"",
+                attribute.value, MAX_ATTRIBUTE_VALUE_LENGTH,
+                attribute.value.bytes_as_string_view().length() > MAX_ATTRIBUTE_VALUE_LENGTH ? "..."sv : ""sv));
 
             auto* edit_node_menu_item = [strong_self.dom_node_attribute_context_menu itemWithTag:CONTEXT_MENU_EDIT_NODE_TAG];
             [edit_node_menu_item setTitle:Ladybird::string_to_ns_string(edit_attribute_text)];
 
             auto* remove_attribute_menu_item = [strong_self.dom_node_attribute_context_menu itemWithTag:CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG];
             [remove_attribute_menu_item setTitle:Ladybird::string_to_ns_string(remove_attribute_text)];
+
+            auto* copy_attribute_value_menu_item = [strong_self.dom_node_attribute_context_menu itemWithTag:CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG];
+            [copy_attribute_value_menu_item setTitle:Ladybird::string_to_ns_string(copy_attribute_value_text)];
 
             auto* event = Ladybird::create_context_menu_mouse_event(strong_self.web_view, position);
             [NSMenu popUpContextMenu:strong_self.dom_node_attribute_context_menu withEvent:event forView:strong_self.web_view];
@@ -172,6 +181,11 @@ static constexpr NSInteger CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG = 2;
     m_inspector_client->context_menu_remove_dom_node_attribute();
 }
 
+- (void)copyDOMAttributeValue:(id)sender
+{
+    m_inspector_client->context_menu_copy_dom_node_attribute_value();
+}
+
 #pragma mark - Properties
 
 - (NSMenu*)dom_node_text_context_menu
@@ -233,6 +247,12 @@ static constexpr NSInteger CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG = 2;
                                                                keyEquivalent:@""];
         [remove_attribute_menu_item setTag:CONTEXT_MENU_REMOVE_ATTRIBUTE_TAG];
         [_dom_node_attribute_context_menu addItem:remove_attribute_menu_item];
+
+        auto* copy_attribute_value_menu_item = [[NSMenuItem alloc] initWithTitle:@"Copy attribute value"
+                                                                          action:@selector(copyDOMAttributeValue:)
+                                                                   keyEquivalent:@""];
+        [copy_attribute_value_menu_item setTag:CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG];
+        [_dom_node_attribute_context_menu addItem:copy_attribute_value_menu_item];
 
         [_dom_node_attribute_context_menu addItem:[NSMenuItem separatorItem]];
 
