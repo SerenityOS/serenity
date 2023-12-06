@@ -208,6 +208,7 @@ const createDOMEditor = (onHandleChange, onCancelChange) => {
     const handleChange = () => {
         input.removeEventListener("change", handleChange);
         input.removeEventListener("blur", cancelChange);
+        input.removeEventListener("keydown", handleInput);
 
         try {
             onHandleChange(input.value);
@@ -219,13 +220,24 @@ const createDOMEditor = (onHandleChange, onCancelChange) => {
     const cancelChange = () => {
         input.removeEventListener("change", handleChange);
         input.removeEventListener("blur", cancelChange);
+        input.removeEventListener("keydown", handleInput);
 
         selectedDOMNode.classList.add("selected");
         onCancelChange(input);
     };
 
+    const handleInput = event => {
+        const ESCAPE_KEYCODE = 27;
+
+        if (event.keyCode === ESCAPE_KEYCODE) {
+            cancelChange();
+            event.preventDefault();
+        }
+    };
+
     input.addEventListener("change", handleChange);
     input.addEventListener("blur", cancelChange);
+    input.addEventListener("keydown", handleInput);
 
     setTimeout(() => {
         input.focus();
