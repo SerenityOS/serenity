@@ -198,6 +198,15 @@ private:
     bool m_pdf_viewer_supported { false };
 };
 
+struct PaintOptions {
+    enum class PaintOverlay {
+        No,
+        Yes,
+    };
+
+    PaintOverlay paint_overlay { PaintOverlay::Yes };
+};
+
 class PageClient : public JS::Cell {
     JS_CELL(PageClient, JS::Cell);
 
@@ -209,7 +218,7 @@ public:
     virtual DevicePixelRect screen_rect() const = 0;
     virtual double device_pixels_per_css_pixel() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
-    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&) = 0;
+    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, PaintOptions = {}) = 0;
     virtual void page_did_change_title(DeprecatedString const&) { }
     virtual void page_did_request_navigate_back() { }
     virtual void page_did_request_navigate_forward() { }

@@ -26,6 +26,9 @@ public:
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
+    bool should_paint_overlay() const { return m_should_paint_overlay; }
+    void set_should_paint_overlay(bool should_paint_overlay) { m_should_paint_overlay = should_paint_overlay; }
+
     DevicePixelRect device_viewport_rect() const { return m_device_viewport_rect; }
     void set_device_viewport_rect(DevicePixelRect const& rect) { m_device_viewport_rect = rect; }
     CSSPixelRect css_viewport_rect() const;
@@ -62,6 +65,7 @@ public:
         auto clone = PaintContext(painter, m_palette, m_device_pixels_per_css_pixel);
         clone.m_device_viewport_rect = m_device_viewport_rect;
         clone.m_should_show_line_box_borders = m_should_show_line_box_borders;
+        clone.m_should_paint_overlay = m_should_paint_overlay;
         clone.m_focus = m_focus;
         return clone;
     }
@@ -79,6 +83,7 @@ private:
     double m_device_pixels_per_css_pixel { 0 };
     DevicePixelRect m_device_viewport_rect;
     bool m_should_show_line_box_borders { false };
+    bool m_should_paint_overlay { true };
     bool m_focus { false };
     CSSPixelPoint m_scroll_offset;
     Gfx::AffineTransform m_svg_transform;
