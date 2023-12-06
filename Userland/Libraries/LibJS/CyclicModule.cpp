@@ -165,13 +165,12 @@ void continue_module_loading(GraphLoadingState& state, ThrowCompletionOr<Nonnull
     // 4. Return UNUSED.
 }
 
-// 16.2.1.5.1 Link ( ), https://tc39.es/ecma262/#sec-moduledeclarationlinking
+// 16.2.1.5.2 Link ( ), https://tc39.es/ecma262/#sec-moduledeclarationlinking
 ThrowCompletionOr<void> CyclicModule::link(VM& vm)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] link[{}]()", this);
-    // 1. Assert: module.[[Status]] is not linking or evaluating.
-    VERIFY(m_status != ModuleStatus::Linking);
-    VERIFY(m_status != ModuleStatus::Evaluating);
+    // 1. Assert: module.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
+    VERIFY(m_status == ModuleStatus::Unlinked || m_status == ModuleStatus::Linked || m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated);
     // 2. Let stack be a new empty List.
     Vector<Module*> stack;
 
@@ -194,11 +193,11 @@ ThrowCompletionOr<void> CyclicModule::link(VM& vm)
         // b. Assert: module.[[Status]] is unlinked.
         VERIFY(m_status == ModuleStatus::Unlinked);
 
-        // c. Return result.
+        // c. Return ? result.
         return result.release_error();
     }
 
-    // 5. Assert: module.[[Status]] is linked, evaluating-async, or evaluated.
+    // 5. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
     VERIFY(m_status == ModuleStatus::Linked || m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated);
     // 6. Assert: stack is empty.
     VERIFY(stack.is_empty());
