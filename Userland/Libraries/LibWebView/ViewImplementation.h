@@ -68,6 +68,7 @@ public:
     void add_dom_node_attributes(i32 node_id, Vector<Attribute> attributes);
     void replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes);
     void remove_dom_node(i32 node_id);
+    Optional<String> get_dom_node_html(i32 node_id);
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 

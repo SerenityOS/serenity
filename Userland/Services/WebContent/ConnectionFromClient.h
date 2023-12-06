@@ -81,6 +81,7 @@ private:
     virtual void add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> const& attributes) override;
     virtual void replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes) override;
     virtual void remove_dom_node(i32 node_id) override;
+    virtual Messages::WebContentServer::GetDomNodeHtmlResponse get_dom_node_html(i32 node_id) override;
 
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
     virtual Messages::WebContentServer::DumpPaintTreeResponse dump_paint_tree() override;
