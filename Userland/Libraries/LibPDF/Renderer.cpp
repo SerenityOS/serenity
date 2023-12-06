@@ -827,7 +827,11 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
     return {};
 }
 
-static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int bits_per_component)
+enum UpsampleMode {
+    StoreValuesUnchanged,
+    UpsampleTo8Bit,
+};
+static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int bits_per_component, UpsampleMode mode)
 {
     VERIFY(bits_per_component == 1 || bits_per_component == 2 || bits_per_component == 4);
     Vector<u8> upsampled_storage;
@@ -836,7 +840,10 @@ static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int bits_per_componen
     for (auto byte : content) {
         for (int i = 0; i < 8; i += bits_per_component) {
             auto value = (byte >> (8 - bits_per_component - i)) & mask;
-            upsampled_storage.append(value * (255 / mask));
+            if (mode == UpsampleMode::UpsampleTo8Bit)
+                upsampled_storage.append(value * (255 / mask));
+            else
+                upsampled_storage.append(value);
         }
     }
     return upsampled_storage;
@@ -895,7 +902,8 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
 
     Vector<u8> upsampled_storage;
     if (bits_per_component < 8) {
-        upsampled_storage = upsample_to_8_bit(content, bits_per_component);
+        UpsampleMode mode = color_space->family() == ColorSpaceFamily::Indexed ? UpsampleMode::StoreValuesUnchanged : UpsampleMode::UpsampleTo8Bit;
+        upsampled_storage = upsample_to_8_bit(content, bits_per_component, mode);
         content = upsampled_storage;
         bits_per_component = 8;
     }
