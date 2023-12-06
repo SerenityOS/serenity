@@ -49,6 +49,9 @@ public:
 
     void make_method(Object& home_object);
 
+    [[nodiscard]] bool is_module_wrapper() const { return m_is_module_wrapper; }
+    void set_is_module_wrapper(bool b) { m_is_module_wrapper = b; }
+
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
     Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; }
 
@@ -153,6 +156,7 @@ private:
     HashTable<DeprecatedFlyString> m_parameter_names;
     Vector<FunctionDeclaration const&> m_functions_to_initialize;
     bool m_arguments_object_needed { false };
+    bool m_is_module_wrapper { false };
     Vector<VariableNameToInitialize> m_var_names_to_initialize_binding;
     Vector<DeprecatedFlyString> m_function_names_to_initialize_binding;
 

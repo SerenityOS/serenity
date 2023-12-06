@@ -9,9 +9,11 @@
 #include <AK/QuickSort.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/AsyncFunctionDriverWrapper.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ModuleEnvironment.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/SourceTextModule.h>
 
 namespace JS {
@@ -748,7 +750,29 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         VERIFY(capability != nullptr);
 
         // b. Perform AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleContext).
-        async_block_start<NonnullRefPtr<Statement const>>(vm, m_ecmascript_code, *capability, *module_context);
+
+        // AD-HOC: We implement asynchronous execution via synthetic generator functions,
+        //         so we fake "AsyncBlockStart" here by creating an async function to wrap
+        //         the top-level module code.
+        // FIXME: Improve this situation, so we can match the spec better.
+
+        auto module_wrapper_function = ECMAScriptFunctionObject::create(
+            realm(), "module code with top-level await", StringView {}, this->m_ecmascript_code,
+            {}, 0, {}, environment(), nullptr, FunctionKind::Async, true, false, false);
+        module_wrapper_function->set_is_module_wrapper(true);
+
+        // AD-HOC: We push/pop the moduleContext around the call to ensure that the async execution context
+        //         captures the module execution context.
+        vm.push_execution_context(*module_context);
+        auto result = call(vm, Value { module_wrapper_function }, js_undefined(), ReadonlySpan<Value> {});
+        vm.pop_execution_context();
+
+        // AD-HOC: This is basically analogous to what AsyncBlockStart would do.
+        if (result.is_throw_completion()) {
+            MUST(call(vm, *capability->reject(), js_undefined(), result.throw_completion().value().value()));
+        } else {
+            MUST(call(vm, *capability->resolve(), js_undefined(), result.value()));
+        }
     }
 
     // 11. Return unused.
