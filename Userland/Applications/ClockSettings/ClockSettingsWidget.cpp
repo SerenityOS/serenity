@@ -6,7 +6,6 @@
  */
 
 #include "ClockSettingsWidget.h"
-#include <Applications/ClockSettings/ClockSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/CheckBox.h>
@@ -14,22 +13,14 @@
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 
+namespace ClockSettings {
 constexpr auto time_format_12h = "%I:%M %p"sv;
 constexpr auto time_format_12h_seconds = "%r"sv;
 constexpr auto time_format_24h = "%R"sv;
 constexpr auto time_format_24h_seconds = "%T"sv;
 
-ErrorOr<NonnullRefPtr<ClockSettingsWidget>> ClockSettingsWidget::try_create()
+ErrorOr<void> ClockSettingsWidget::initialize_fallibles()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ClockSettingsWidget()));
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> ClockSettingsWidget::setup()
-{
-    TRY(load_from_gml(clock_settings_widget_gml));
-
     m_24_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("24hour_radio");
     auto& twelve_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("12hour_radio");
     m_show_seconds_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("seconds_checkbox");
@@ -129,4 +120,6 @@ void ClockSettingsWidget::update_time_format_string()
 void ClockSettingsWidget::update_clock_preview()
 {
     m_clock_preview->set_text(Core::DateTime::now().to_string(m_time_format).release_value_but_fixme_should_propagate_errors());
+}
+
 }

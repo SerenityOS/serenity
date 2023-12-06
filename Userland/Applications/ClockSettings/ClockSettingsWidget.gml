@@ -1,4 +1,4 @@
-@GUI::Frame {
+@ClockSettings::ClockSettingsWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
@@ -63,7 +63,7 @@
             }
 
             @GUI::Label {
-                style: "SunkenContainer"
+                frame_style: "SunkenContainer"
                 name: "clock_preview"
                 text: "12:34:56"
             }

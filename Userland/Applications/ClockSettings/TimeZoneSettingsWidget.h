@@ -13,13 +13,16 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
+namespace ClockSettings {
 class TimeZoneSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(TimeZoneSettingsWidget)
 public:
-    static ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> create();
+    static ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> try_create();
+
+    ErrorOr<void> initialize_fallibles();
 
 private:
-    TimeZoneSettingsWidget();
+    TimeZoneSettingsWidget() = default;
 
     virtual void second_paint_event(GUI::PaintEvent&) override;
 
@@ -38,3 +41,5 @@ private:
     Optional<Gfx::FloatPoint> m_time_zone_location;
     DeprecatedString m_time_zone_text;
 };
+
+}

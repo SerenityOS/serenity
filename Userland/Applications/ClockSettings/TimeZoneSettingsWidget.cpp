@@ -6,7 +6,6 @@
 
 #include "TimeZoneSettingsWidget.h"
 #include <AK/Time.h>
-#include <Applications/ClockSettings/TimeZoneSettingsWidgetGML.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/ImageWidget.h>
@@ -24,6 +23,7 @@
 #include <spawn.h>
 #include <unistd.h>
 
+namespace ClockSettings {
 static constexpr auto PI_OVER_180 = M_PIf32 / 180.0f;
 static constexpr auto PI_OVER_4 = M_PIf32 / 4.0f;
 static constexpr auto TAU = M_PIf32 * 2.0f;
@@ -38,29 +38,8 @@ static constexpr auto TIME_ZONE_TEXT_HEIGHT = 40;
 static constexpr auto TIME_ZONE_TEXT_PADDING = 5;
 static constexpr auto TIME_ZONE_TEXT_COLOR = Gfx::Color::from_rgb(0xeaf688);
 
-ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
+ErrorOr<void> TimeZoneSettingsWidget::initialize_fallibles()
 {
-    auto timezonesettings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TimeZoneSettingsWidget));
-
-    auto time_zone_map_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/map.png"sv));
-    auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
-    time_zone_map_bitmap = TRY(time_zone_map_bitmap->cropped(time_zone_rect));
-
-    timezonesettings_widget->m_time_zone_map = *timezonesettings_widget->find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
-    timezonesettings_widget->m_time_zone_map->set_bitmap(time_zone_map_bitmap);
-
-    auto time_zone_marker = TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/ladyball.png"sv));
-    timezonesettings_widget->m_time_zone_marker = TRY(time_zone_marker->scaled(0.75f, 0.75f));
-
-    timezonesettings_widget->set_time_zone_location();
-
-    return timezonesettings_widget;
-}
-
-TimeZoneSettingsWidget::TimeZoneSettingsWidget()
-{
-    load_from_gml(time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
-
     static auto time_zones = []() {
         Vector<StringView> time_zones;
 
@@ -81,6 +60,19 @@ TimeZoneSettingsWidget::TimeZoneSettingsWidget()
     m_time_zone_combo_box->on_change = [&](auto, auto) {
         set_modified(true);
     };
+
+    auto time_zone_map_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/map.png"sv));
+    auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
+    time_zone_map_bitmap = TRY(time_zone_map_bitmap->cropped(time_zone_rect));
+
+    m_time_zone_map = *find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
+    m_time_zone_map->set_bitmap(time_zone_map_bitmap);
+
+    auto time_zone_marker = TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/ladyball.png"sv));
+    m_time_zone_marker = TRY(time_zone_marker->scaled(0.75f, 0.75f));
+
+    set_time_zone_location();
+    return {};
 }
 
 void TimeZoneSettingsWidget::second_paint_event(GUI::PaintEvent& event)
@@ -175,4 +167,6 @@ Optional<Gfx::FloatPoint> TimeZoneSettingsWidget::compute_time_zone_location() c
 void TimeZoneSettingsWidget::set_time_zone()
 {
     GUI::Process::spawn_or_show_error(window(), "/bin/timezone"sv, Array { m_time_zone.characters() });
+}
+
 }

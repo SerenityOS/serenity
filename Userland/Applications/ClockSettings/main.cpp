@@ -14,6 +14,8 @@
 #include <LibGUI/SettingsWindow.h>
 #include <LibMain/Main.h>
 
+using namespace ClockSettings;
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix proc exec"));
@@ -36,8 +38,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-analog-clock"sv); // FIXME: Create a ClockSettings icon.
 
     auto window = TRY(GUI::SettingsWindow::create("Clock Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<ClockSettingsWidget>("Clock"_string, "clock"sv));
-    auto timezonesettings_widget = TRY(TimeZoneSettingsWidget::create());
+    auto clock_settings = TRY(ClockSettingsWidget::try_create());
+    TRY(clock_settings->initialize_fallibles());
+    (void)TRY(window->add_tab(clock_settings, "Clock"_string, "clock"sv));
+    auto timezonesettings_widget = TRY(TimeZoneSettingsWidget::try_create());
+    TRY(timezonesettings_widget->initialize_fallibles());
     TRY(window->add_tab(timezonesettings_widget, "Time Zone"_string, "time-zone"sv));
 
     window->set_icon(app_icon.bitmap_for_size(16));

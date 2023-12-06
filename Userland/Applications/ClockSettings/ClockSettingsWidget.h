@@ -9,15 +9,18 @@
 #include <AK/RefPtr.h>
 #include <LibGUI/SettingsWindow.h>
 
+namespace ClockSettings {
+
 class ClockSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ClockSettingsWidget)
 
 public:
     static ErrorOr<NonnullRefPtr<ClockSettingsWidget>> try_create();
 
+    ErrorOr<void> initialize_fallibles();
+
 private:
     ClockSettingsWidget() = default;
-    ErrorOr<void> setup();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
@@ -34,3 +37,5 @@ private:
 
     DeprecatedString m_time_format;
 };
+
+}
