@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='curl'
-version='8.4.0'
+version='8.5.0'
 useconfigure='true'
 files=(
-    "https://curl.se/download/curl-${version}.tar.bz2#e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6"
+    "https://curl.se/download/curl-${version}.tar.bz2#ce4b6a6655431147624aaf582632a36fe1ade262d5fab385c60f78942dd8d87b"
 )
 depends=(
     'ca-certificates'
@@ -26,8 +26,7 @@ configure() {
         -DCURL_DISABLE_NTLM='ON' \
         -DCURL_DISABLE_SOCKETPAIR='ON' \
         -DCURL_DISABLE_TESTS='ON' \
-        -DCURL_HIDDEN_SYMBOLS='OFF' \
-        -DHAVE_GETADDRINFO_THREADSAFE=1
+        -DCURL_HIDDEN_SYMBOLS='OFF'
 }
 
 build() {
