@@ -107,22 +107,22 @@ struct X86_64Assembler {
 
         bool fits_in_u8() const
         {
-            VERIFY(type == Type::Imm);
+            VERIFY(type == Type::Imm || type == Type::Mem64BaseAndOffset);
             return offset_or_immediate <= NumericLimits<u8>::max();
         }
         bool fits_in_u32() const
         {
-            VERIFY(type == Type::Imm);
+            VERIFY(type == Type::Imm || type == Type::Mem64BaseAndOffset);
             return offset_or_immediate <= NumericLimits<u32>::max();
         }
         bool fits_in_i8() const
         {
-            VERIFY(type == Type::Imm);
+            VERIFY(type == Type::Imm || type == Type::Mem64BaseAndOffset);
             return (offset_or_immediate <= NumericLimits<i8>::max()) || (((~offset_or_immediate) & NumericLimits<i8>::min()) == 0);
         }
         bool fits_in_i32() const
         {
-            VERIFY(type == Type::Imm);
+            VERIFY(type == Type::Imm || type == Type::Mem64BaseAndOffset);
             return (offset_or_immediate <= NumericLimits<i32>::max()) || (((~offset_or_immediate) & NumericLimits<i32>::min()) == 0);
         }
     };
@@ -214,21 +214,17 @@ struct X86_64Assembler {
             break;
         case Operand::Type::Mem64BaseAndOffset: {
             auto disp = rm.offset_or_immediate;
-            if (patchable == Patchable::Yes) {
+            if (patchable == Patchable::Yes || !rm.fits_in_i8()) {
                 raw.mode = ModRM::MemDisp32;
                 emit8(raw.raw);
                 emit32(disp);
             } else if (disp == 0) {
                 raw.mode = ModRM::Mem;
                 emit8(raw.raw);
-            } else if (static_cast<i64>(disp) >= -128 && disp <= 127) {
+            } else {
                 raw.mode = ModRM::MemDisp8;
                 emit8(raw.raw);
                 emit8(disp & 0xff);
-            } else {
-                raw.mode = ModRM::MemDisp32;
-                emit8(raw.raw);
-                emit32(disp);
             }
             break;
         }
