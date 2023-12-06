@@ -233,6 +233,18 @@ void InspectorClient::context_menu_edit_dom_node()
     m_context_menu_data.clear();
 }
 
+void InspectorClient::context_menu_copy_dom_node()
+{
+    VERIFY(m_context_menu_data.has_value());
+
+    if (auto html = m_content_web_view.get_dom_node_html(m_context_menu_data->dom_node_id); html.has_value()) {
+        if (m_content_web_view.on_insert_clipboard_entry)
+            m_content_web_view.on_insert_clipboard_entry(*html, "unspecified"_string, "text/plain"_string);
+    }
+
+    m_context_menu_data.clear();
+}
+
 void InspectorClient::context_menu_remove_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());
