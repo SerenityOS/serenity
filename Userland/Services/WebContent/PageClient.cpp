@@ -558,9 +558,13 @@ void PageClient::inspector_did_replace_dom_node_attribute(i32 node_id, String co
     client().async_inspector_did_replace_dom_node_attribute(node_id, name, named_node_map_to_vector(replacement_attributes));
 }
 
-void PageClient::inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag_or_attribute_name)
+void PageClient::inspector_did_request_dom_tree_context_menu(i32 node_id, Web::CSSPixelPoint position, String const& type, Optional<String> const& tag, Optional<String> const& attribute_name, Optional<String> const& attribute_value)
 {
-    client().async_inspector_did_request_dom_tree_context_menu(node_id, page().css_to_device_point(position).to_type<int>(), type, tag_or_attribute_name);
+    Optional<WebView::Attribute> attribute;
+    if (attribute_name.has_value() && attribute_value.has_value())
+        attribute = WebView::Attribute { *attribute_name, *attribute_value };
+
+    client().async_inspector_did_request_dom_tree_context_menu(node_id, page().css_to_device_point(position).to_type<int>(), type, tag, move(attribute));
 }
 
 void PageClient::inspector_did_execute_console_script(String const& script)

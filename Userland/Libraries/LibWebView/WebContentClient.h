@@ -92,7 +92,7 @@ private:
     virtual void inspector_did_set_dom_node_tag(i32 node_id, String const& tag) override;
     virtual void inspector_did_add_dom_node_attributes(i32 node_id, Vector<Attribute> const& attributes) override;
     virtual void inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, Vector<Attribute> const& replacement_attributes) override;
-    virtual void inspector_did_request_dom_tree_context_menu(i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag_or_attribute_name) override;
+    virtual void inspector_did_request_dom_tree_context_menu(i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag, Optional<Attribute> const& attribute) override;
     virtual void inspector_did_execute_console_script(String const& script) override;
 
     ViewImplementation& m_view;

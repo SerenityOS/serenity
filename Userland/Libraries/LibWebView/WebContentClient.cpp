@@ -438,10 +438,10 @@ void WebContentClient::inspector_did_replace_dom_node_attribute(i32 node_id, Str
         m_view.on_inspector_replaced_dom_node_attribute(node_id, name, replacement_attributes);
 }
 
-void WebContentClient::inspector_did_request_dom_tree_context_menu(i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag_or_attribute_name)
+void WebContentClient::inspector_did_request_dom_tree_context_menu(i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag, Optional<Attribute> const& attribute)
 {
     if (m_view.on_inspector_requested_dom_tree_context_menu)
-        m_view.on_inspector_requested_dom_tree_context_menu(node_id, m_view.to_widget_position(position), type, tag_or_attribute_name);
+        m_view.on_inspector_requested_dom_tree_context_menu(node_id, m_view.to_widget_position(position), type, tag, attribute);
 }
 
 void WebContentClient::inspector_did_execute_console_script(String const& script)

@@ -332,16 +332,29 @@ const requestContextMenu = (clientX, clientY, domNode) => {
         return;
     }
 
-    let tagOrAttributeName = null;
-    pendingEditDOMNode = domNode;
+    let tag = null;
+    let attributeName = null;
+    let attributeValue = null;
 
     if (type === "tag") {
-        tagOrAttributeName = domNode.innerText;
+        tag = domNode.dataset.tag;
     } else if (type === "attribute") {
-        tagOrAttributeName = domNode.dataset.attributeName;
+        tag = domNode.dataset.tag;
+        attributeName = domNode.dataset.attributeName;
+        attributeValue = domNode.dataset.attributeValue;
     }
 
-    inspector.requestDOMTreeContextMenu(domNodeID, clientX, clientY, type, tagOrAttributeName);
+    pendingEditDOMNode = domNode;
+
+    inspector.requestDOMTreeContextMenu(
+        domNodeID,
+        clientX,
+        clientY,
+        type,
+        tag,
+        attributeName,
+        attributeValue
+    );
 };
 
 const executeConsoleScript = consoleInput => {
