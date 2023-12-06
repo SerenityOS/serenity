@@ -171,6 +171,11 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
     m_inspector_client->context_menu_copy_dom_node();
 }
 
+- (void)screenshotDOMNode:(id)sender
+{
+    m_inspector_client->context_menu_screenshot_dom_node();
+}
+
 - (void)deleteDOMNode:(id)sender
 {
     m_inspector_client->context_menu_remove_dom_node();
@@ -240,6 +245,9 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
         [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy HTML"
                                                                        action:@selector(copyDOMNode:)
                                                                 keyEquivalent:@""]];
+        [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Take node screenshot"
+                                                                       action:@selector(screenshotDOMNode:)
+                                                                keyEquivalent:@""]];
     }
 
     return _dom_node_tag_context_menu;
@@ -281,6 +289,9 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
 
         [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy HTML"
                                                                              action:@selector(copyDOMNode:)
+                                                                      keyEquivalent:@""]];
+        [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Take node screenshot"
+                                                                             action:@selector(screenshotDOMNode:)
                                                                       keyEquivalent:@""]];
     }
 

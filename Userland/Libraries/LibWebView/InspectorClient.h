@@ -28,6 +28,7 @@ public:
 
     void context_menu_edit_dom_node();
     void context_menu_copy_dom_node();
+    void context_menu_screenshot_dom_node();
     void context_menu_remove_dom_node();
     void context_menu_add_dom_node_attribute();
     void context_menu_remove_dom_node_attribute();
