@@ -245,6 +245,15 @@ void InspectorClient::context_menu_copy_dom_node()
     m_context_menu_data.clear();
 }
 
+void InspectorClient::context_menu_screenshot_dom_node()
+{
+    VERIFY(m_context_menu_data.has_value());
+
+    m_content_web_view.take_dom_node_screenshot(m_context_menu_data->dom_node_id).release_value_but_fixme_should_propagate_errors();
+
+    m_context_menu_data.clear();
+}
+
 void InspectorClient::context_menu_remove_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());

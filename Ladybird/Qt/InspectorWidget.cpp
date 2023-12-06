@@ -33,6 +33,9 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_copy_node_action = new QAction("&Copy HTML", this);
     connect(m_copy_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_copy_dom_node(); });
 
+    m_screenshot_node_action = new QAction("Take node &screenshot", this);
+    connect(m_screenshot_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_screenshot_dom_node(); });
+
     m_delete_node_action = new QAction("&Delete node", this);
     connect(m_delete_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_remove_dom_node(); });
 
@@ -58,6 +61,7 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_dom_node_tag_context_menu->addAction(m_delete_node_action);
     m_dom_node_tag_context_menu->addSeparator();
     m_dom_node_tag_context_menu->addAction(m_copy_node_action);
+    m_dom_node_tag_context_menu->addAction(m_screenshot_node_action);
 
     m_dom_node_attribute_context_menu = new QMenu("DOM attribute context menu", this);
     m_dom_node_attribute_context_menu->addAction(m_edit_node_action);
@@ -68,6 +72,7 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_dom_node_attribute_context_menu->addAction(m_delete_node_action);
     m_dom_node_attribute_context_menu->addSeparator();
     m_dom_node_attribute_context_menu->addAction(m_copy_node_action);
+    m_dom_node_attribute_context_menu->addAction(m_screenshot_node_action);
 
     m_inspector_client->on_requested_dom_node_text_context_menu = [this](auto position) {
         m_edit_node_action->setText("&Edit text");
