@@ -2872,8 +2872,6 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
         // iv. Perform ForDeclarationBindingInstantiation of lhs with argument iterationEnv.
         // v. Set the running execution context's LexicalEnvironment to iterationEnv.
-        generator.begin_variable_scope();
-        has_lexical_binding = true;
 
         // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
         // 1. Assert: environment is a declarative Environment Record.
@@ -2881,24 +2879,35 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         auto& variable_declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode const>>());
         // 2. For each element name of the BoundNames of ForBinding, do
         // NOTE: Nothing in the callback throws an exception.
-        MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
-            if (identifier.is_local())
-                return;
-            auto interned_identifier = generator.intern_identifier(identifier.string());
-            // a. If IsConstantDeclaration of LetOrConst is true, then
-            if (variable_declaration.is_constant_declaration()) {
-                // i. Perform ! environment.CreateImmutableBinding(name, true).
-                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, true, false, true);
-            }
-            // b. Else,
-            else {
-                // i. Perform ! environment.CreateMutableBinding(name, false).
-                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-            }
-        }));
-        // 3. Return unused.
-        // NOTE: No need to do that as we've inlined this.
 
+        auto has_non_local_variables = false;
+        MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+            if (!identifier.is_local())
+                has_non_local_variables = true;
+        }));
+
+        if (has_non_local_variables) {
+            generator.begin_variable_scope();
+            has_lexical_binding = true;
+
+            MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                if (identifier.is_local())
+                    return;
+                auto interned_identifier = generator.intern_identifier(identifier.string());
+                // a. If IsConstantDeclaration of LetOrConst is true, then
+                if (variable_declaration.is_constant_declaration()) {
+                    // i. Perform ! environment.CreateImmutableBinding(name, true).
+                    generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, true, false, true);
+                }
+                // b. Else,
+                else {
+                    // i. Perform ! environment.CreateMutableBinding(name, false).
+                    generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                }
+            }));
+            // 3. Return unused.
+            // NOTE: No need to do that as we've inlined this.
+        }
         // vi. If destructuring is false, then
         if (!destructuring) {
             // 1. Assert: lhs binds a single name.
@@ -2906,7 +2915,10 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
             auto lhs_name = variable_declaration.declarations().first()->target().get<NonnullRefPtr<Identifier const>>();
             // 3. Let lhsRef be ! ResolveBinding(lhsName).
             // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
-            generator.emit_set_variable(*lhs_name, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+            if (lhs_name->is_local())
+                generator.emit<Bytecode::Op::SetLocal>(lhs_name->local_variable_index());
+            else
+                generator.emit_set_variable(*lhs_name, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
         }
     }
     // i. If destructuring is false, then
