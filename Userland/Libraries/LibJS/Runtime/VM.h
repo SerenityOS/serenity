@@ -268,7 +268,7 @@ private:
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment);
 
     void load_imported_module(ImportedModuleReferrer, ModuleRequest const&, GCPtr<GraphLoadingState::HostDefined>, ImportedModulePayload);
-    ThrowCompletionOr<void> link_and_eval_module(Module& module);
+    ThrowCompletionOr<void> link_and_eval_module(CyclicModule&);
 
     void set_well_known_symbols(WellKnownSymbols well_known_symbols) { m_well_known_symbols = move(well_known_symbols); }
 

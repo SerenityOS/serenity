@@ -746,36 +746,10 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Badge<Bytecode::Interpreter>, S
     return link_and_eval_module(module);
 }
 
-ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
+ThrowCompletionOr<void> VM::link_and_eval_module(CyclicModule& module)
 {
     auto filename = module.filename();
-
-    auto module_or_end = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
-        return stored_module.module.ptr() == &module;
-    });
-
-    StoredModule* stored_module;
-
-    if (module_or_end.is_end()) {
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Warning introducing module via link_and_eval_module {}", module.filename());
-        if (m_loaded_modules.size() > 0)
-            dbgln("Warning: Using multiple modules as entry point can lead to unexpected results");
-
-        m_loaded_modules.empend(
-            ImportedModuleReferrer { NonnullGCPtr { verify_cast<CyclicModule>(module) } },
-            module.filename(),
-            DeprecatedString {}, // Null type
-            module,
-            true);
-        stored_module = &m_loaded_modules.last();
-    } else {
-        stored_module = module_or_end.operator->();
-        if (stored_module->has_once_started_linking) {
-            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Module already has started linking once {}", module.filename());
-            return {};
-        }
-        stored_module->has_once_started_linking = true;
-    }
+    module.load_requested_modules(nullptr);
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking module {}", filename);
     auto linked_or_error = module.link(*this);
