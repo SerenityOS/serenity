@@ -701,7 +701,7 @@ PDFErrorOr<Color> IndexedColorSpace::color(ReadonlySpan<Value> arguments) const
 
 Vector<float> IndexedColorSpace::default_decode() const
 {
-    return { 0.0, static_cast<float>(m_hival) };
+    return { 0.0, 255.0 };
 }
 
 PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document* document, Vector<Value>&& parameters)
