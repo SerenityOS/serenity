@@ -1657,7 +1657,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
 
     // The results of DirIterator are in the order they appear on-disk.
     // Instead, return suggestions in lexicographical order.
-    quick_sort(suggestions, [](auto& a, auto& b) { return a.text_string < b.text_string; });
+    quick_sort(suggestions, [](auto& a, auto& b) { return a.text_string() < b.text_string(); });
 
     return suggestions;
 }
