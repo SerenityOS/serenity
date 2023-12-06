@@ -38,6 +38,7 @@
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
@@ -735,6 +736,19 @@ void ConnectionFromClient::remove_dom_node(i32 node_id)
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
     //        which really hurts performance.
     active_document->force_layout();
+}
+
+Messages::WebContentServer::GetDomNodeHtmlResponse ConnectionFromClient::get_dom_node_html(i32 node_id)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node)
+        return OptionalNone {};
+
+    // FIXME: Implement Element's outerHTML attribute.
+    auto container = Web::DOM::create_element(dom_node->document(), Web::HTML::TagNames::div, Web::Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    container->append_child(dom_node->clone_node(nullptr, true)).release_value_but_fixme_should_propagate_errors();
+
+    return container->inner_html().release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::initialize_js_console(Badge<PageClient>, Web::DOM::Document& document)
