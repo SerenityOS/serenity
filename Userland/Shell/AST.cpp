@@ -349,7 +349,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Node::complete_for_editor(Shell& she
         auto set_results_trivia = [enclosure_type](Vector<Line::CompletionSuggestion>&& suggestions) {
             if (enclosure_type != StringLiteral::EnclosureType::None) {
                 for (auto& entry : suggestions)
-                    entry.trailing_trivia = { static_cast<u32>(enclosure_type == StringLiteral::EnclosureType::SingleQuotes ? '\'' : '"') };
+                    entry.trailing_trivia = String::from_code_point(static_cast<u32>(enclosure_type == StringLiteral::EnclosureType::SingleQuotes ? '\'' : '"'));
             }
             return suggestions;
         };

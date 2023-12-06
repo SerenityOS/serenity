@@ -150,7 +150,7 @@ Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get
     auto completions = const_cast<::Shell::AST::Node*>(document.node.ptr())->complete_for_editor(shell(), offset_in_file, hit_test).release_value_but_fixme_should_propagate_errors();
     Vector<CodeComprehension::AutocompleteResultEntry> entries;
     for (auto& completion : completions)
-        entries.append({ completion.text_string, completion.input_offset });
+        entries.append({ completion.text_string(), completion.input_offset });
 
     return entries;
 }

@@ -1176,7 +1176,7 @@ ErrorOr<void> Editor::handle_read_event()
             m_chars_touched_in_the_middle++;
 
             for (auto& view : completion_result.insert)
-                insert(view);
+                insert(view.as_string());
 
             auto stderr_stream = TRY(Core::File::standard_error());
             TRY(reposition_cursor(*stderr_stream));
