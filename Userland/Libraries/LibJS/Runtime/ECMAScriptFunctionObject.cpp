@@ -1192,7 +1192,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         }
     }
 
-    auto declaration_result = function_declaration_instantiation();
+    auto declaration_result = [&]() -> ThrowCompletionOr<void> {
+        if (is_module_wrapper())
+            return {};
+        return function_declaration_instantiation();
+    }();
 
     if (m_kind == FunctionKind::Normal || m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) {
         if (declaration_result.is_error())
