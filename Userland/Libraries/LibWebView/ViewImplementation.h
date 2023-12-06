@@ -91,6 +91,7 @@ public:
         Full,
     };
     ErrorOr<void> take_screenshot(ScreenshotType);
+    ErrorOr<void> take_dom_node_screenshot(i32);
 
     void set_user_style_sheet(String source);
     // Load Native.css as the User style sheet, which attempts to make WebView content look as close to
