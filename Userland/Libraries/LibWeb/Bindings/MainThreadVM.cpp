@@ -480,18 +480,22 @@ ErrorOr<void> initialize_main_thread_vm()
             // 1. Let completion be null.
             // NOTE: Our JS::Completion does not support non JS::Value types for its [[Value]], a such we
             //       use JS::ThrowCompletionOr here.
+
+            auto& vm = realm.vm();
+            JS::GCPtr<JS::Module> module = nullptr;
+
             auto completion = [&]() -> JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>> {
                 // 2. If moduleScript is null, then set completion to Completion Record { [[Type]]: throw, [[Value]]: a new TypeError, [[Target]]: empty }.
                 if (!module_script) {
                     return JS::throw_completion(JS::TypeError::create(realm, DeprecatedString::formatted("Loading imported module '{}' failed.", module_request.module_specifier)));
                 }
                 // 3. Otherwise, if moduleScript's parse error is not null, then:
-                else if (!module_script->parse_error().is_empty()) {
+                else if (!module_script->parse_error().is_null()) {
                     // 1. Let parseError be moduleScript's parse error.
                     auto parse_error = module_script->parse_error();
 
                     // 2. Set completion to Completion Record { [[Type]]: throw, [[Value]]: parseError, [[Target]]: empty }.
-                    return JS::throw_completion(parse_error);
+                    auto completion = JS::throw_completion(parse_error);
 
                     // 3. If loadState is not undefined and loadState.[[ParseError]] is null, set loadState.[[ParseError]] to parseError.
                     if (load_state) {
@@ -500,18 +504,28 @@ ErrorOr<void> initialize_main_thread_vm()
                             load_state_as_fetch_context.parse_error = parse_error;
                         }
                     }
+
+                    return completion;
                 }
                 // 4. Otherwise, set completion to Completion Record { [[Type]]: normal, [[Value]]: result's record, [[Target]]: empty }.
                 else {
-                    auto* record = static_cast<HTML::JavaScriptModuleScript&>(*module_script).record();
-
-                    return JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>>(*record);
+                    module = static_cast<HTML::JavaScriptModuleScript&>(*module_script).record();
+                    return JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>>(*module);
                 }
             }();
 
             // 5. Perform FinishLoadingImportedModule(referrer, moduleRequest, payload, completion).
-            HTML::TemporaryExecutionContext context { host_defined_environment_settings_object(realm) };
+            // NON-STANDARD: To ensure that LibJS can find the module on the stack, we push a new execution context.
+
+            auto module_execution_context = JS::ExecutionContext::create(realm.heap());
+            module_execution_context->realm = realm;
+            if (module)
+                module_execution_context->script_or_module = JS::NonnullGCPtr { *module };
+            vm.push_execution_context(*module_execution_context);
+
             JS::finish_loading_imported_module(referrer, module_request, payload, completion);
+
+            vm.pop_execution_context();
         });
 
         // 13. Fetch a single imported module script given url, fetchClient, destination, fetchOptions, settingsObject, fetchReferrer,

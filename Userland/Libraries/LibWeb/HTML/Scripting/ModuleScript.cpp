@@ -147,6 +147,12 @@ JS::Promise* JavaScriptModuleScript::run(PreventErrorReporting)
         auto record = m_record;
         VERIFY(record);
 
+        // NON-STANDARD: To ensure that LibJS can find the module on the stack, we push a new execution context.
+        auto module_execution_context = JS::ExecutionContext::create(heap());
+        module_execution_context->realm = &settings.realm();
+        module_execution_context->script_or_module = JS::NonnullGCPtr<JS::Module> { *record };
+        vm().push_execution_context(*module_execution_context);
+
         // 2. Set evaluationPromise to record.Evaluate().
         auto elevation_promise_or_error = record->evaluate(vm());
 
@@ -161,6 +167,9 @@ JS::Promise* JavaScriptModuleScript::run(PreventErrorReporting)
         } else {
             evaluation_promise = elevation_promise_or_error.value();
         }
+
+        // NON-STANDARD: Pop the execution context mentioned above.
+        vm().pop_execution_context();
     }
 
     // FIXME: 7. If preventErrorReporting is false, then upon rejection of evaluationPromise with reason, report the exception given by reason for script.
