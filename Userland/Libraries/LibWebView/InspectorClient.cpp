@@ -268,6 +268,17 @@ void InspectorClient::context_menu_remove_dom_node_attribute()
     m_context_menu_data.clear();
 }
 
+void InspectorClient::context_menu_copy_dom_node_attribute_value()
+{
+    VERIFY(m_context_menu_data.has_value());
+    VERIFY(m_context_menu_data->attribute.has_value());
+
+    if (m_content_web_view.on_insert_clipboard_entry)
+        m_content_web_view.on_insert_clipboard_entry(m_context_menu_data->attribute->value, "unspecified"_string, "text/plain"_string);
+
+    m_context_menu_data.clear();
+}
+
 void InspectorClient::load_inspector()
 {
     StringBuilder builder;
