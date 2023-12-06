@@ -264,8 +264,11 @@ void StackingContext::paint_internal(PaintContext& context) const
     }
 
     paint_node(paintable_box(), context, PaintPhase::Outline);
-    paint_node(paintable_box(), context, PaintPhase::Overlay);
-    paint_descendants(context, paintable_box(), StackingContextPaintPhase::FocusAndOverlay);
+
+    if (context.should_paint_overlay()) {
+        paint_node(paintable_box(), context, PaintPhase::Overlay);
+        paint_descendants(context, paintable_box(), StackingContextPaintPhase::FocusAndOverlay);
+    }
 }
 
 Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transformation> const& transformations) const

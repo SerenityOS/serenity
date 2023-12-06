@@ -140,7 +140,7 @@ Gfx::Color PageClient::background_color() const
     return document->background_color();
 }
 
-void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target)
+void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
 {
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
 
@@ -162,6 +162,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
         return;
 
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
+    context.set_should_paint_overlay(paint_options.paint_overlay == Web::PaintOptions::PaintOverlay::Yes);
     context.set_device_viewport_rect(content_rect);
     context.set_has_focus(m_has_focus);
     document->paintable()->paint_all_phases(context);
