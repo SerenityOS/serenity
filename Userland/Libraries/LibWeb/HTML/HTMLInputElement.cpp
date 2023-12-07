@@ -1180,6 +1180,28 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_size(unsigned value)
     return set_attribute(HTML::AttributeNames::size, MUST(String::number(value)));
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-value-string-number
+Optional<double> HTMLInputElement::convert_string_to_number(StringView input) const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-value-string-number
+    if (type_state() == TypeAttributeState::Number)
+        return parse_floating_point_number(input);
+
+    dbgln("HTMLInputElement::convert_string_to_number() not implemented for input type {}", type());
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-value-string-number
+String HTMLInputElement::covert_number_to_string(double input) const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-value-number-string
+    if (type_state() == TypeAttributeState::Number)
+        return MUST(String::number(input));
+
+    dbgln("HTMLInputElement::covert_number_to_string() not implemented for input type {}", type());
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasnumber
 WebIDL::ExceptionOr<double> HTMLInputElement::value_as_number() const
 {
@@ -1187,8 +1209,9 @@ WebIDL::ExceptionOr<double> HTMLInputElement::value_as_number() const
     if (type_state() != TypeAttributeState::Date || type_state() != TypeAttributeState::Month || type_state() != TypeAttributeState::Week || type_state() != TypeAttributeState::Time || type_state() != TypeAttributeState::LocalDateAndTime || type_state() != TypeAttributeState::Number || type_state() != TypeAttributeState::Range)
         return NAN;
 
-    // Otherwise, run the algorithm to convert a string to a number defined for that state to the element's value; if the algorithm returned a number, then return it, otherwise, return a Not-a-Number (NaN) value.
-    return value().bytes_as_string_view().to_double().value_or(NAN);
+    // Otherwise, run the algorithm to convert a string to a number defined for that state to the element's value;
+    // if the algorithm returned a number, then return it, otherwise, return a Not-a-Number (NaN) value.
+    return convert_string_to_number(value()).value_or(NAN);
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasnumber
@@ -1204,12 +1227,12 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_number(double value)
 
     // Otherwise, if the new value is a Not-a-Number (NaN) value, then set the value of the element to the empty string.
     if (value == NAN) {
-        m_value = String {};
+        TRY(set_value(String {}));
         return {};
     }
 
     // Otherwise, run the algorithm to convert a number to a string, as defined for that state, on the new value, and set the value of the element to the resulting string.
-    m_value = MUST(String::number(value));
+    TRY(set_value(covert_number_to_string(value)));
     return {};
 }
 

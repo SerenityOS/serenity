@@ -180,6 +180,9 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
+    Optional<double> convert_string_to_number(StringView input) const;
+    String covert_number_to_string(double input) const;
+
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
     void create_text_input_shadow_tree();
