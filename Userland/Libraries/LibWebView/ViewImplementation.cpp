@@ -211,6 +211,11 @@ Optional<i32> ViewImplementation::create_child_text_node(i32 node_id)
     return client().create_child_text_node(node_id);
 }
 
+Optional<i32> ViewImplementation::clone_dom_node(i32 node_id)
+{
+    return client().clone_dom_node(node_id);
+}
+
 void ViewImplementation::remove_dom_node(i32 node_id)
 {
     client().async_remove_dom_node(node_id);

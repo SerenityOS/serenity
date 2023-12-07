@@ -69,6 +69,7 @@ public:
     void replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes);
     Optional<i32> create_child_element(i32 node_id);
     Optional<i32> create_child_text_node(i32 node_id);
+    Optional<i32> clone_dom_node(i32 node_id);
     void remove_dom_node(i32 node_id);
     Optional<String> get_dom_node_html(i32 node_id);
 

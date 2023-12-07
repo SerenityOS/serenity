@@ -52,6 +52,7 @@ endpoint WebContentServer
     replace_dom_node_attribute(i32 node_id, String name, Vector<WebView::Attribute> replacement_attributes) =|
     create_child_element(i32 node_id) => (Optional<i32> node_id)
     create_child_text_node(i32 node_id) => (Optional<i32> node_id)
+    clone_dom_node(i32 node_id) => (Optional<i32> node_id)
     remove_dom_node(i32 node_id) =|
     get_dom_node_html(i32 node_id) => (Optional<String> html)
 
