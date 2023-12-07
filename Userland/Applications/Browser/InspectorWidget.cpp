@@ -34,6 +34,7 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
     m_screenshot_node_action = GUI::Action::create("Take node &screenshot"sv, [this](auto&) { m_inspector_client->context_menu_screenshot_dom_node(); });
     m_create_child_element_action = GUI::Action::create("Create child &element"sv, [this](auto&) { m_inspector_client->context_menu_create_child_element(); });
     m_create_child_text_node_action = GUI::Action::create("Create child &text node"sv, [this](auto&) { m_inspector_client->context_menu_create_child_text_node(); });
+    m_clone_node_action = GUI::Action::create("C&lone node"sv, [this](auto&) { m_inspector_client->context_menu_clone_dom_node(); });
     m_delete_node_action = GUI::Action::create("&Delete node"sv, [this](auto&) { m_inspector_client->context_menu_remove_dom_node(); });
     m_add_attribute_action = GUI::Action::create("&Add attribute"sv, [this](auto&) { m_inspector_client->context_menu_add_dom_node_attribute(); });
     m_remove_attribute_action = GUI::Action::create("&Remove attribute"sv, [this](auto&) { m_inspector_client->context_menu_remove_dom_node_attribute(); });
@@ -56,6 +57,7 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
     m_dom_node_tag_context_menu->add_separator();
     m_dom_node_tag_context_menu->add_action(*m_add_attribute_action);
     add_create_child_menu(*m_dom_node_tag_context_menu);
+    m_dom_node_tag_context_menu->add_action(*m_clone_node_action);
     m_dom_node_tag_context_menu->add_action(*m_delete_node_action);
     m_dom_node_tag_context_menu->add_separator();
     m_dom_node_tag_context_menu->add_action(*m_copy_node_action);
@@ -68,6 +70,7 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
     m_dom_node_attribute_context_menu->add_separator();
     m_dom_node_attribute_context_menu->add_action(*m_add_attribute_action);
     add_create_child_menu(*m_dom_node_attribute_context_menu);
+    m_dom_node_attribute_context_menu->add_action(*m_clone_node_action);
     m_dom_node_attribute_context_menu->add_action(*m_delete_node_action);
     m_dom_node_attribute_context_menu->add_separator();
     m_dom_node_attribute_context_menu->add_action(*m_copy_node_action);

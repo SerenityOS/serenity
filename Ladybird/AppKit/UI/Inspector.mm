@@ -186,6 +186,11 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
     m_inspector_client->context_menu_create_child_text_node();
 }
 
+- (void)cloneDOMNode:(id)sender
+{
+    m_inspector_client->context_menu_clone_dom_node();
+}
+
 - (void)deleteDOMNode:(id)sender
 {
     m_inspector_client->context_menu_remove_dom_node();
@@ -265,6 +270,9 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
                                                                        action:@selector(addDOMAttribute:)
                                                                 keyEquivalent:@""]];
         [_dom_node_tag_context_menu addItem:[Inspector make_create_child_menu]];
+        [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Clone node"
+                                                                       action:@selector(cloneDOMNode:)
+                                                                keyEquivalent:@""]];
         [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Delete node"
                                                                        action:@selector(deleteDOMNode:)
                                                                 keyEquivalent:@""]];
@@ -311,6 +319,9 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
                                                                              action:@selector(addDOMAttribute:)
                                                                       keyEquivalent:@""]];
         [_dom_node_attribute_context_menu addItem:[Inspector make_create_child_menu]];
+        [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Clone node"
+                                                                             action:@selector(cloneDOMNode:)
+                                                                      keyEquivalent:@""]];
         [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Delete node"
                                                                              action:@selector(deleteDOMNode:)
                                                                       keyEquivalent:@""]];

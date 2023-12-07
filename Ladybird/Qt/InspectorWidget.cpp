@@ -42,6 +42,9 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_create_child_text_node_action = new QAction("Create child &text node", this);
     connect(m_create_child_text_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_create_child_text_node(); });
 
+    m_clone_node_action = new QAction("C&lone node", this);
+    connect(m_clone_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_clone_dom_node(); });
+
     m_delete_node_action = new QAction("&Delete node", this);
     connect(m_delete_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_remove_dom_node(); });
 
@@ -69,6 +72,7 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_dom_node_tag_context_menu->addSeparator();
     m_dom_node_tag_context_menu->addAction(m_add_attribute_action);
     m_dom_node_tag_context_menu->addMenu(create_child_menu);
+    m_dom_node_tag_context_menu->addAction(m_clone_node_action);
     m_dom_node_tag_context_menu->addAction(m_delete_node_action);
     m_dom_node_tag_context_menu->addSeparator();
     m_dom_node_tag_context_menu->addAction(m_copy_node_action);
@@ -81,6 +85,7 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_dom_node_attribute_context_menu->addSeparator();
     m_dom_node_attribute_context_menu->addAction(m_add_attribute_action);
     m_dom_node_attribute_context_menu->addMenu(create_child_menu);
+    m_dom_node_attribute_context_menu->addAction(m_clone_node_action);
     m_dom_node_attribute_context_menu->addAction(m_delete_node_action);
     m_dom_node_attribute_context_menu->addSeparator();
     m_dom_node_attribute_context_menu->addAction(m_copy_node_action);
