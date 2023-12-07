@@ -42,6 +42,8 @@ private:
     RefPtr<GUI::Action> m_edit_node_action;
     RefPtr<GUI::Action> m_copy_node_action;
     RefPtr<GUI::Action> m_screenshot_node_action;
+    RefPtr<GUI::Action> m_create_child_element_action;
+    RefPtr<GUI::Action> m_create_child_text_node_action;
     RefPtr<GUI::Action> m_delete_node_action;
     RefPtr<GUI::Action> m_add_attribute_action;
     RefPtr<GUI::Action> m_remove_attribute_action;
