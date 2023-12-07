@@ -1206,7 +1206,7 @@ String HTMLInputElement::covert_number_to_string(double input) const
 WebIDL::ExceptionOr<double> HTMLInputElement::value_as_number() const
 {
     // On getting, if the valueAsNumber attribute does not apply, as defined for the input element's type attribute's current state, then return a Not-a-Number (NaN) value.
-    if (type_state() != TypeAttributeState::Date || type_state() != TypeAttributeState::Month || type_state() != TypeAttributeState::Week || type_state() != TypeAttributeState::Time || type_state() != TypeAttributeState::LocalDateAndTime || type_state() != TypeAttributeState::Number || type_state() != TypeAttributeState::Range)
+    if (!value_as_number_applies())
         return NAN;
 
     // Otherwise, run the algorithm to convert a string to a number defined for that state to the element's value;
@@ -1222,7 +1222,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_number(double value)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "valueAsNumber: Value is infinite"sv };
 
     // Otherwise, if the valueAsNumber attribute does not apply, as defined for the input element's type attribute's current state, then throw an "InvalidStateError" DOMException.
-    if (type_state() != TypeAttributeState::Date || type_state() != TypeAttributeState::Month || type_state() != TypeAttributeState::Week || type_state() != TypeAttributeState::Time || type_state() != TypeAttributeState::LocalDateAndTime || type_state() != TypeAttributeState::Number || type_state() != TypeAttributeState::Range)
+    if (!value_as_number_applies())
         return WebIDL::InvalidStateError::create(realm(), "valueAsNumber: Invalid input type used"_fly_string);
 
     // Otherwise, if the new value is a Not-a-Number (NaN) value, then set the value of the element to the empty string.
@@ -1405,6 +1405,23 @@ bool HTMLInputElement::change_event_applies() const
     case TypeAttributeState::Time:
     case TypeAttributeState::URL:
     case TypeAttributeState::Week:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:dom-input-valueasnumber-3
+bool HTMLInputElement::value_as_number_applies() const
+{
+    switch (type_state()) {
+    case TypeAttributeState::Date:
+    case TypeAttributeState::Month:
+    case TypeAttributeState::Week:
+    case TypeAttributeState::Time:
+    case TypeAttributeState::LocalDateAndTime:
+    case TypeAttributeState::Number:
+    case TypeAttributeState::Range:
         return true;
     default:
         return false;
