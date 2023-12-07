@@ -160,6 +160,7 @@ public:
 
     bool has_input_activation_behavior() const;
     bool change_event_applies() const;
+    bool value_as_number_applies() const;
 
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
