@@ -1202,6 +1202,115 @@ String HTMLInputElement::covert_number_to_string(double input) const
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-min
+Optional<double> HTMLInputElement::min() const
+{
+    // If the element has a min attribute, and the result of applying the algorithm to convert a string to a number to
+    // the value of the min attribute is a number, then that number is the element's minimum; otherwise, if the type
+    // attribute's current state defines a default minimum, then that is the minimum; otherwise, the element has no minimum.
+    if (auto min_string = get_attribute(HTML::AttributeNames::min); min_string.has_value()) {
+        if (auto min = convert_string_to_number(*min_string); min.has_value())
+            return *min;
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-min-default
+    if (type_state() == TypeAttributeState::Range)
+        return 0;
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-max
+Optional<double> HTMLInputElement::max() const
+{
+    // If the element has a max attribute, and the result of applying the algorithm to convert a string to a number to the
+    // value of the max attribute is a number, then that number is the element's maximum; otherwise, if the type attribute's
+    // current state defines a default maximum, then that is the maximum; otherwise, the element has no maximum.
+    if (auto max_string = get_attribute(HTML::AttributeNames::max); max_string.has_value()) {
+        if (auto max = convert_string_to_number(*max_string); max.has_value())
+            return *max;
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-max-default
+    if (type_state() == TypeAttributeState::Range)
+        return 100;
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-step-default
+double HTMLInputElement::default_step() const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-step-default
+    if (type_state() == TypeAttributeState::Number)
+        return 1;
+
+    dbgln("HTMLInputElement::default_step() not implemented for input type {}", type());
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-step-scale
+double HTMLInputElement::step_scale_factor() const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-step-default
+    if (type_state() == TypeAttributeState::Number)
+        return 1;
+
+    dbgln("HTMLInputElement::step_scale_factor() not implemented for input type {}", type());
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-step
+Optional<double> HTMLInputElement::allowed_value_step() const
+{
+    // 1. If the attribute does not apply, then there is no allowed value step.
+    if (!step_applies())
+        return {};
+
+    // 2. Otherwise, if the attribute is absent, then the allowed value step is the default step multiplied by the step scale factor.
+    auto maybe_step_string = get_attribute(AttributeNames::step);
+    if (!maybe_step_string.has_value())
+        return default_step() * step_scale_factor();
+    auto step_string = *maybe_step_string;
+
+    // 3. Otherwise, if the attribute's value is an ASCII case-insensitive match for the string "any", then there is no allowed value step.
+    if (Infra::is_ascii_case_insensitive_match(step_string, "any"_string))
+        return {};
+
+    // 4. Otherwise, if the rules for parsing floating-point number values, when they are applied to the attribute's value, return an error,
+    // zero, or a number less than zero, then the allowed value step is the default step multiplied by the step scale factor.
+    auto maybe_step = parse_floating_point_number(step_string);
+    if (!maybe_step.has_value() || *maybe_step == 0 || *maybe_step < 0)
+        return default_step() * step_scale_factor();
+
+    // 5. Otherwise, the allowed value step is the number returned by the rules for parsing floating-point number values when they are applied
+    // to the attribute's value, multiplied by the step scale factor.
+    return *maybe_step * step_scale_factor();
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-min-zero
+double HTMLInputElement::step_base() const
+{
+    // 1. If the element has a min content attribute, and the result of applying the algorithm to convert a string to a number to the value of
+    // the min content attribute is not an error, then return that result.
+    if (auto min = this->min(); min.has_value())
+        return *min;
+
+    // 2. If the element has a value content attribute, and the result of applying the algorithm to convert a string to a number to the value of
+    // the value content attribute is not an error, then return that result.
+    if (auto value = convert_string_to_number(this->value()); value.has_value())
+        return *value;
+
+    // 3. If a default step base is defined for this element given its type attribute's state, then return it.
+    if (type_state() == TypeAttributeState::Week) {
+        // The default step base is −259,200,000 (the start of week 1970-W01).
+        return -259'200'000;
+    }
+
+    // 4. Return zero.
+    return 0;
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasnumber
 WebIDL::ExceptionOr<double> HTMLInputElement::value_as_number() const
 {
@@ -1233,6 +1342,100 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_number(double value)
 
     // Otherwise, run the algorithm to convert a number to a string, as defined for that state, on the new value, and set the value of the element to the resulting string.
     TRY(set_value(covert_number_to_string(value)));
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-stepup
+WebIDL::ExceptionOr<void> HTMLInputElement::step_up(long n)
+{
+    return step_up_or_down(false, n);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-stepdown
+WebIDL::ExceptionOr<void> HTMLInputElement::step_down(long n)
+{
+    return step_up_or_down(true, n);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-stepup
+WebIDL::ExceptionOr<void> HTMLInputElement::step_up_or_down(bool is_down, long n)
+{
+    // 1. If the stepDown() and stepUp() methods do not apply, as defined for the input element's type attribute's current state, then throw an "InvalidStateError" DOMException.
+    if (!step_up_or_down_applies())
+        return WebIDL::InvalidStateError::create(realm(), MUST(String::formatted("{}: Invalid input type used", is_down ? "stepDown()" : "stepUp()")));
+
+    // 2. If the element has no allowed value step, then throw an "InvalidStateError" DOMException.
+    auto maybe_allowed_value_step = allowed_value_step();
+    if (!maybe_allowed_value_step.has_value())
+        return WebIDL::InvalidStateError::create(realm(), "element has no allowed value step"_fly_string);
+    double allowed_value_step = *maybe_allowed_value_step;
+
+    // 3. If the element has a minimum and a maximum and the minimum is greater than the maximum, then return.
+    auto maybe_minimum = min();
+    auto maybe_maximum = max();
+    if (maybe_minimum.has_value() && maybe_maximum.has_value() && *maybe_minimum > *maybe_maximum)
+        return {};
+
+    // FIXME: 4. If the element has a minimum and a maximum and there is no value greater than or equal to the element's minimum and less than
+    // or equal to the element's maximum that, when subtracted from the step base, is an integral multiple of the allowed value step, then return.
+
+    // 5. If applying the algorithm to convert a string to a number to the string given by the element's value does not result in an error,
+    // then let value be the result of that algorithm. Otherwise, let value be zero.
+    double value = convert_string_to_number(this->value()).value_or(0);
+
+    // 6. Let valueBeforeStepping be value.
+    double value_before_stepping = value;
+
+    // 7. If value subtracted from the step base is not an integral multiple of the allowed value step, then set value to the nearest value that,
+    // when subtracted from the step base, is an integral multiple of the allowed value step, and that is less than value if the method invoked was the stepDown() method, and more than value otherwise.
+    if (fmod(step_base() - value, allowed_value_step) != 0) {
+        double diff = step_base() - value;
+        if (is_down) {
+            value = diff - fmod(diff, allowed_value_step);
+        } else {
+            value = diff + fmod(diff, allowed_value_step);
+        }
+    } else {
+        // 1. Let n be the argument.
+        // 2. Let delta be the allowed value step multiplied by n.
+        double delta = allowed_value_step * n;
+
+        // 3. If the method invoked was the stepDown() method, negate delta.
+        if (is_down)
+            delta = -delta;
+
+        // 4. Let value be the result of adding delta to value.
+        value += delta;
+    }
+
+    // 8. If the element has a minimum, and value is less than that minimum, then set value to the smallest value that,
+    // when subtracted from the step base, is an integral multiple of the allowed value step, and that is more than or equal to minimum.
+    if (maybe_minimum.has_value() && value < *maybe_minimum) {
+        value = AK::max(value, *maybe_minimum);
+    }
+
+    // 9. If the element has a maximum, and value is greater than that maximum, then set value to the largest value that,
+    // when subtracted from the step base, is an integral multiple of the allowed value step, and that is less than or equal to maximum.
+    if (maybe_maximum.has_value() && value > *maybe_maximum) {
+        value = AK::min(value, *maybe_maximum);
+    }
+
+    // 10. If either the method invoked was the stepDown() method and value is greater than valueBeforeStepping,
+    // or the method invoked was the stepUp() method and value is less than valueBeforeStepping, then return.
+    if (is_down) {
+        if (value > value_before_stepping)
+            return {};
+    } else {
+        if (value < value_before_stepping)
+            return {};
+    }
+
+    // 11. Let value as string be the result of running the algorithm to convert a number to a string,
+    // as defined for the input element's type attribute's current state, on value.
+    auto value_as_string = covert_number_to_string(value);
+
+    // 12. Set the value of the element to value as string.
+    TRY(set_value(value_as_string));
     return {};
 }
 
@@ -1426,6 +1629,18 @@ bool HTMLInputElement::value_as_number_applies() const
     default:
         return false;
     }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-step-3
+bool HTMLInputElement::step_applies() const
+{
+    return value_as_number_applies();
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:dom-input-stepup-3
+bool HTMLInputElement::step_up_or_down_applies() const
+{
+    return value_as_number_applies();
 }
 
 }
