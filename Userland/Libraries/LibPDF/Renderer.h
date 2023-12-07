@@ -97,6 +97,8 @@ struct RenderingPreferences {
 };
 
 class Renderer {
+    friend class PatternColorSpace;
+
 public:
     static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences preferences);
 

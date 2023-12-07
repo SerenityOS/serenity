@@ -252,4 +252,24 @@ private:
     NonnullRefPtr<Function> m_tint_transform;
     Vector<Value> mutable m_tint_output_values;
 };
+
+class PatternColorSpace final : public ColorSpace {
+public:
+    static NonnullRefPtr<PatternColorSpace> create(Renderer& renderer);
+    ~PatternColorSpace() override = default;
+
+    PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const override;
+    int number_of_components() const override;
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Pattern; }
+
+private:
+    PatternColorSpace(Renderer& renderer)
+        : m_renderer(renderer)
+    {
+    }
+
+    Renderer& m_renderer;
+};
+
 }
