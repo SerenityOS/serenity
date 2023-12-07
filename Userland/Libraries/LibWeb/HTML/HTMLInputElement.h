@@ -103,6 +103,9 @@ public:
     WebIDL::ExceptionOr<double> value_as_number() const;
     WebIDL::ExceptionOr<void> set_value_as_number(double value);
 
+    WebIDL::ExceptionOr<void> step_up(long n = 1);
+    WebIDL::ExceptionOr<void> step_down(long n = 1);
+
     WebIDL::ExceptionOr<bool> check_validity();
     WebIDL::ExceptionOr<bool> report_validity();
     void set_custom_validity(String const&);
@@ -161,6 +164,8 @@ public:
     bool has_input_activation_behavior() const;
     bool change_event_applies() const;
     bool value_as_number_applies() const;
+    bool step_applies() const;
+    bool step_up_or_down_applies() const;
 
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
@@ -183,6 +188,14 @@ private:
 
     Optional<double> convert_string_to_number(StringView input) const;
     String covert_number_to_string(double input) const;
+
+    Optional<double> min() const;
+    Optional<double> max() const;
+    double default_step() const;
+    double step_scale_factor() const;
+    Optional<double> allowed_value_step() const;
+    double step_base() const;
+    WebIDL::ExceptionOr<void> step_up_or_down(bool is_down, long n);
 
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
