@@ -333,7 +333,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
-        if (!iterator_record.done)
+        if (!iterator_record->done)
             result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
@@ -367,7 +367,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
-        if (!iterator_record.done)
+        if (!iterator_record->done)
             result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
-        if (!iterator_record.done)
+        if (!iterator_record->done)
             result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
@@ -435,7 +435,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
-        if (!iterator_record.done)
+        if (!iterator_record->done)
             result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).

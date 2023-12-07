@@ -1225,8 +1225,21 @@ ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interprete
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto iterator = TRY(get_iterator(vm, interpreter.accumulator(), m_hint));
-    interpreter.accumulator() = iterator_to_object(vm, iterator);
+    interpreter.accumulator() = TRY(get_iterator(vm, interpreter.accumulator(), m_hint));
+    return {};
+}
+
+ThrowCompletionOr<void> GetObjectFromIteratorRecord::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.reg(m_iterator_record).as_object());
+    interpreter.reg(m_object) = iterator_record.iterator;
+    return {};
+}
+
+ThrowCompletionOr<void> GetNextMethodFromIteratorRecord::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.reg(m_iterator_record).as_object());
+    interpreter.reg(m_next_method) = iterator_record.next_method;
     return {};
 }
 
@@ -1248,8 +1261,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
 ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, iterator_object);
+    auto& iterator = verify_cast<IteratorRecord>(interpreter.accumulator().as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
@@ -1259,8 +1271,7 @@ ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> AsyncIteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, iterator_object);
+    auto& iterator = verify_cast<IteratorRecord>(interpreter.accumulator().as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY(async_iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
@@ -1270,8 +1281,7 @@ ThrowCompletionOr<void> AsyncIteratorClose::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, iterator_object);
+    auto& iterator = verify_cast<IteratorRecord>(interpreter.accumulator().as_object());
 
     interpreter.accumulator() = TRY(iterator_next(vm, iterator));
     return {};
@@ -1816,6 +1826,16 @@ DeprecatedString ImportCall::to_deprecated_string_impl(Bytecode::Executable cons
 DeprecatedString Catch::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "Catch"sv;
+}
+
+DeprecatedString GetObjectFromIteratorRecord::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("GetObjectFromIteratorRecord object:{} <- iterator_record:{}", m_object, m_iterator_record);
+}
+
+DeprecatedString GetNextMethodFromIteratorRecord::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("GetNextMethodFromIteratorRecord next_method:{} <- iterator_record:{}", m_next_method, m_iterator_record);
 }
 
 }

@@ -187,7 +187,7 @@ struct ImportEntry;
 class ImportStatement;
 class Identifier;
 class Intrinsics;
-struct IteratorRecord;
+class IteratorRecord;
 class MemberExpression;
 class MetaProperty;
 class Module;

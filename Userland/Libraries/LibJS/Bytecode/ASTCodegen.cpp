@@ -1749,16 +1749,11 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // 5. Let iterator be iteratorRecord.[[Iterator]].
         auto iterator_register = generator.allocate_register();
-        auto iterator_identifier = generator.intern_identifier("iterator");
-        generator.emit_get_by_id(iterator_identifier);
-        generator.emit<Bytecode::Op::Store>(iterator_register);
+        generator.emit<Bytecode::Op::GetObjectFromIteratorRecord>(iterator_register, iterator_record_register);
 
         // Cache iteratorRecord.[[NextMethod]] for use in step 7.a.i.
         auto next_method_register = generator.allocate_register();
-        auto next_method_identifier = generator.intern_identifier("next");
-        generator.emit<Bytecode::Op::Load>(iterator_record_register);
-        generator.emit_get_by_id(next_method_identifier);
-        generator.emit<Bytecode::Op::Store>(next_method_register);
+        generator.emit<Bytecode::Op::GetNextMethodFromIteratorRecord>(next_method_register, iterator_record_register);
 
         // 6. Let received be NormalCompletion(undefined).
         // See get_received_completion_type_and_value above.

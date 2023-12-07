@@ -654,31 +654,9 @@ ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM& vm, V
     return result;
 }
 
-// FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
-// Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
-Object* iterator_to_object(VM& vm, IteratorRecord iterator)
-{
-    auto& realm = *vm.current_realm();
-    auto object = Object::create(realm, nullptr);
-    object->define_direct_property(vm.names.iterator, iterator.iterator, 0);
-    object->define_direct_property(vm.names.next, iterator.next_method, 0);
-    object->define_direct_property(vm.names.done, Value(iterator.done), 0);
-    return object;
-}
-
-IteratorRecord object_to_iterator(VM& vm, Object& object)
-{
-    return IteratorRecord {
-        .iterator = &MUST(object.get(vm.names.iterator)).as_object(),
-        .next_method = MUST(object.get(vm.names.next)),
-        .done = MUST(object.get(vm.names.done)).as_bool()
-    };
-}
-
 ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM& vm, Value iterator)
 {
-    auto iterator_object = TRY(iterator.to_object(vm));
-    auto iterator_record = object_to_iterator(vm, iterator_object);
+    auto& iterator_record = verify_cast<IteratorRecord>(iterator.as_object());
 
     auto array = MUST(Array::create(*vm.current_realm(), 0));
     size_t index = 0;
@@ -832,47 +810,42 @@ ThrowCompletionOr<Object*> get_object_property_iterator(VM& vm, Value value)
                 properties.set(move(property_key));
         }
     }
-    IteratorRecord iterator {
-        .iterator = object,
-        .next_method = NativeFunction::create(
-            *vm.current_realm(),
-            [items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
-                auto& realm = *vm.current_realm();
-                auto iterated_object_value = vm.this_value();
-                if (!iterated_object_value.is_object())
-                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next"sv);
+    auto& realm = *vm.current_realm();
+    auto callback = NativeFunction::create(
+        *vm.current_realm(), [items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
+            auto& realm = *vm.current_realm();
+            auto iterated_object_value = vm.this_value();
+            if (!iterated_object_value.is_object())
+                return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next"sv);
 
-                auto& iterated_object = iterated_object_value.as_object();
-                auto result_object = Object::create(realm, nullptr);
-                while (true) {
-                    if (items.is_empty()) {
-                        result_object->define_direct_property(vm.names.done, JS::Value(true), default_attributes);
-                        return result_object;
-                    }
-
-                    auto key = items.take_first();
-
-                    // If the property is deleted, don't include it (invariant no. 2)
-                    if (!TRY(iterated_object.has_property(key)))
-                        continue;
-
-                    result_object->define_direct_property(vm.names.done, JS::Value(false), default_attributes);
-
-                    if (key.is_number())
-                        result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::number(key.as_number()))), default_attributes);
-                    else if (key.is_string())
-                        result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, key.as_string()), default_attributes);
-                    else
-                        VERIFY_NOT_REACHED(); // We should not have non-string/number keys.
-
+            auto& iterated_object = iterated_object_value.as_object();
+            auto result_object = Object::create(realm, nullptr);
+            while (true) {
+                if (items.is_empty()) {
+                    result_object->define_direct_property(vm.names.done, JS::Value(true), default_attributes);
                     return result_object;
                 }
-            },
-            1,
-            vm.names.next),
-        .done = false,
-    };
-    return iterator_to_object(vm, move(iterator));
+
+                auto key = items.take_first();
+
+                // If the property is deleted, don't include it (invariant no. 2)
+                if (!TRY(iterated_object.has_property(key)))
+                    continue;
+
+                result_object->define_direct_property(vm.names.done, JS::Value(false), default_attributes);
+
+                if (key.is_number())
+                    result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::number(key.as_number()))), default_attributes);
+                else if (key.is_string())
+                    result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, key.as_string()), default_attributes);
+                else
+                    VERIFY_NOT_REACHED(); // We should not have non-string/number keys.
+
+                return result_object;
+            }
+        },
+        1, vm.names.next);
+    return vm.heap().allocate<IteratorRecord>(realm, realm, object, callback, false).ptr();
 }
 
 }

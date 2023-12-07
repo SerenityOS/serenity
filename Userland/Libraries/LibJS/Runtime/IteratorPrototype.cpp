@@ -318,7 +318,7 @@ class FlatMapIterator : public Cell {
 public:
     ThrowCompletionOr<Value> next(VM& vm, IteratorRecord const& iterated, IteratorHelper& iterator, FunctionObject& mapper)
     {
-        if (m_inner_iterator.has_value())
+        if (m_inner_iterator)
             return next_inner_iterator(vm, iterated, iterator, mapper);
         return next_outer_iterator(vm, iterated, iterator, mapper);
     }
@@ -326,7 +326,7 @@ public:
     // NOTE: This implements step 5.b.ix.4.d of Iterator.prototype.flatMap.
     ThrowCompletionOr<Value> on_abrupt_completion(VM& vm, IteratorHelper& iterator, Completion const& completion)
     {
-        VERIFY(m_inner_iterator.has_value());
+        VERIFY(m_inner_iterator);
 
         // d. If completion is an abrupt completion, then
 
@@ -347,9 +347,7 @@ private:
     virtual void visit_edges(Visitor& visitor) override
     {
         Base::visit_edges(visitor);
-
-        if (m_inner_iterator.has_value())
-            visitor.visit(m_inner_iterator->iterator);
+        visitor.visit(m_inner_iterator);
     }
 
     ThrowCompletionOr<Value> next_outer_iterator(VM& vm, IteratorRecord const& iterated, IteratorHelper& iterator, FunctionObject& mapper)
@@ -391,7 +389,7 @@ private:
 
     ThrowCompletionOr<Value> next_inner_iterator(VM& vm, IteratorRecord const& iterated, IteratorHelper& iterator, FunctionObject& mapper)
     {
-        VERIFY(m_inner_iterator.has_value());
+        VERIFY(m_inner_iterator);
 
         // 1. Let innerNext be Completion(IteratorStep(innerIterator)).
         auto inner_next = iterator_step(vm, *m_inner_iterator);
@@ -403,7 +401,7 @@ private:
         // 3. If innerNext is false, then
         if (!inner_next.value()) {
             // a. Set innerAlive to false.
-            m_inner_iterator.clear();
+            m_inner_iterator = nullptr;
 
             return next_outer_iterator(vm, iterated, iterator, mapper);
         }
@@ -422,7 +420,7 @@ private:
         }
     }
 
-    Optional<IteratorRecord> m_inner_iterator;
+    GCPtr<IteratorRecord> m_inner_iterator;
 };
 
 JS_DEFINE_ALLOCATOR(FlatMapIterator);

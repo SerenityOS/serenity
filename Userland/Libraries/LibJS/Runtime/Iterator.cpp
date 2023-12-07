@@ -17,25 +17,26 @@
 namespace JS {
 
 JS_DEFINE_ALLOCATOR(Iterator);
+JS_DEFINE_ALLOCATOR(IteratorRecord);
 
-NonnullGCPtr<Iterator> Iterator::create(Realm& realm, Object& prototype, IteratorRecord iterated)
+NonnullGCPtr<Iterator> Iterator::create(Realm& realm, Object& prototype, NonnullGCPtr<IteratorRecord> iterated)
 {
     return realm.heap().allocate<Iterator>(realm, prototype, move(iterated));
 }
 
-Iterator::Iterator(Object& prototype, IteratorRecord iterated)
+Iterator::Iterator(Object& prototype, NonnullGCPtr<IteratorRecord> iterated)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_iterated(move(iterated))
 {
 }
 
 Iterator::Iterator(Object& prototype)
-    : Iterator(prototype, {})
+    : Iterator(prototype, prototype.heap().allocate<IteratorRecord>(prototype.shape().realm(), prototype.shape().realm(), nullptr, js_undefined(), false))
 {
 }
 
 // 7.4.2 GetIteratorFromMethod ( obj, method ), https://tc39.es/ecma262/#sec-getiteratorfrommethod
-ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM& vm, Value object, NonnullGCPtr<FunctionObject> method)
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_from_method(VM& vm, Value object, NonnullGCPtr<FunctionObject> method)
 {
     // 1. Let iterator be ? Call(method, obj).
     auto iterator = TRY(call(vm, *method, object));
@@ -48,14 +49,15 @@ ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM& vm, Value object,
     auto next_method = TRY(iterator.get(vm, vm.names.next));
 
     // 4. Let iteratorRecord be the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    auto iterator_record = IteratorRecord { .iterator = &iterator.as_object(), .next_method = next_method, .done = false };
+    auto& realm = *vm.current_realm();
+    auto iterator_record = vm.heap().allocate<IteratorRecord>(realm, realm, iterator.as_object(), next_method, false);
 
     // 5. Return iteratorRecord.
     return iterator_record;
 }
 
 // 7.4.3 GetIterator ( obj, kind ), https://tc39.es/ecma262/#sec-getiterator
-ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHint kind)
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator(VM& vm, Value object, IteratorHint kind)
 {
     JS::GCPtr<FunctionObject> method;
 
@@ -95,20 +97,19 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
 }
 
 // 2.1.1 GetIteratorDirect ( obj ), https://tc39.es/proposal-iterator-helpers/#sec-getiteratorflattenable
-ThrowCompletionOr<IteratorRecord> get_iterator_direct(VM& vm, Object& object)
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_direct(VM& vm, Object& object)
 {
     // 1. Let nextMethod be ? Get(obj, "next").
     auto next_method = TRY(object.get(vm.names.next));
 
     // 2. Let iteratorRecord be Record { [[Iterator]]: obj, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    IteratorRecord iterator_record { .iterator = object, .next_method = next_method, .done = false };
-
     // 3. Return iteratorRecord.
-    return iterator_record;
+    auto& realm = *vm.current_realm();
+    return vm.heap().allocate<IteratorRecord>(realm, realm, object, next_method, false);
 }
 
 // 2.1.2 GetIteratorFlattenable ( obj, stringHandling ), https://tc39.es/proposal-iterator-helpers/#sec-getiteratorflattenable
-ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM& vm, Value object, StringHandling string_handling)
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_flattenable(VM& vm, Value object, StringHandling string_handling)
 {
     // 1. If obj is not an Object, then
     if (!object.is_object()) {
@@ -318,6 +319,19 @@ Completion get_iterator_values(VM& vm, Value iterable, IteratorValueCallback cal
         if (auto completion = callback(next_value); completion.has_value())
             return iterator_close(vm, iterator_record, completion.release_value());
     }
+}
+
+void Iterator::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_iterated);
+}
+
+void IteratorRecord::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(iterator);
+    visitor.visit(next_method);
 }
 
 }

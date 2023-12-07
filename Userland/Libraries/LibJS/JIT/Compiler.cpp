@@ -3059,8 +3059,7 @@ void Compiler::compile_super_call_with_argument_array(Bytecode::Op::SuperCallWit
 
 static Value cxx_get_iterator(VM& vm, Value value, IteratorHint hint)
 {
-    auto iterator = TRY_OR_SET_EXCEPTION(get_iterator(vm, value, hint));
-    return Bytecode::iterator_to_object(vm, iterator);
+    return TRY_OR_SET_EXCEPTION(get_iterator(vm, value, hint));
 }
 
 void Compiler::compile_get_iterator(Bytecode::Op::GetIterator const& op)
@@ -3074,10 +3073,33 @@ void Compiler::compile_get_iterator(Bytecode::Op::GetIterator const& op)
     check_exception();
 }
 
+static Value cxx_get_object_from_iterator_record(VM&, Value value)
+{
+    return verify_cast<IteratorRecord>(value.as_object()).iterator;
+}
+
+void Compiler::compile_get_object_from_iterator_record(Bytecode::Op::GetObjectFromIteratorRecord const& op)
+{
+    load_vm_register(ARG1, op.iterator_record());
+    native_call((void*)cxx_get_object_from_iterator_record);
+    store_vm_register(op.object(), RET);
+}
+
+static Value cxx_next_method_from_iterator_record(VM&, Value value)
+{
+    return verify_cast<IteratorRecord>(value.as_object()).next_method;
+}
+
+void Compiler::compile_get_next_method_from_iterator_record(Bytecode::Op::GetNextMethodFromIteratorRecord const& op)
+{
+    load_vm_register(ARG1, op.iterator_record());
+    native_call((void*)cxx_next_method_from_iterator_record);
+    store_vm_register(op.next_method(), RET);
+}
+
 static Value cxx_iterator_next(VM& vm, Value iterator)
 {
-    auto iterator_object = TRY_OR_SET_EXCEPTION(iterator.to_object(vm));
-    auto iterator_record = Bytecode::object_to_iterator(vm, iterator_object);
+    auto& iterator_record = verify_cast<IteratorRecord>(iterator.as_object());
     return TRY_OR_SET_EXCEPTION(iterator_next(vm, iterator_record));
 }
 
@@ -3147,8 +3169,7 @@ void Compiler::compile_iterator_result_value(Bytecode::Op::IteratorResultValue c
 
 static Value cxx_iterator_close(VM& vm, Value iterator, Completion::Type completion_type, Optional<Value> const& completion_value)
 {
-    auto iterator_object = TRY_OR_SET_EXCEPTION(iterator.to_object(vm));
-    auto iterator_record = Bytecode::object_to_iterator(vm, iterator_object);
+    auto& iterator_record = verify_cast<IteratorRecord>(iterator.as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY_OR_SET_EXCEPTION(iterator_close(vm, iterator_record, Completion { completion_type, completion_value, {} }));
@@ -3565,8 +3586,7 @@ void Compiler::compile_copy_object_excluding_properties(Bytecode::Op::CopyObject
 
 static Value cxx_async_iterator_close(VM& vm, Value iterator, Completion::Type completion_type, Optional<Value> const& completion_value)
 {
-    auto iterator_object = TRY_OR_SET_EXCEPTION(iterator.to_object(vm));
-    auto iterator_record = Bytecode::object_to_iterator(vm, iterator_object);
+    auto& iterator_record = verify_cast<IteratorRecord>(iterator.as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that completion_value can be empty!)
     TRY_OR_SET_EXCEPTION(async_iterator_close(vm, iterator_record, Completion { completion_type, completion_value, {} }));
