@@ -1287,25 +1287,6 @@ ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interp
     return {};
 }
 
-ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    auto& vm = interpreter.vm();
-    auto iterator_result = TRY(interpreter.accumulator().to_object(vm));
-
-    auto complete = TRY(iterator_complete(vm, iterator_result));
-    interpreter.accumulator() = Value(complete);
-    return {};
-}
-
-ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    auto& vm = interpreter.vm();
-    auto iterator_result = TRY(interpreter.accumulator().to_object(vm));
-
-    interpreter.accumulator() = TRY(iterator_value(vm, iterator_result));
-    return {};
-}
-
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = TRY(new_class(interpreter.vm(), interpreter.accumulator(), m_class_expression, m_lhs_name));
@@ -1766,16 +1747,6 @@ DeprecatedString AsyncIteratorClose::to_deprecated_string_impl(Bytecode::Executa
 DeprecatedString IteratorNext::to_deprecated_string_impl(Executable const&) const
 {
     return "IteratorNext";
-}
-
-DeprecatedString IteratorResultDone::to_deprecated_string_impl(Executable const&) const
-{
-    return "IteratorResultDone";
-}
-
-DeprecatedString IteratorResultValue::to_deprecated_string_impl(Executable const&) const
-{
-    return "IteratorResultValue";
 }
 
 DeprecatedString ResolveThisBinding::to_deprecated_string_impl(Bytecode::Executable const&) const

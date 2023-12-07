@@ -117,10 +117,8 @@ private:
         O(GetObjectFromIteratorRecord, get_object_from_iterator_record)          \
         O(GetNextMethodFromIteratorRecord, get_next_method_from_iterator_record) \
         O(IteratorNext, iterator_next)                                           \
-        O(IteratorResultDone, iterator_result_done)                              \
         O(ThrowIfNotObject, throw_if_not_object)                                 \
         O(ThrowIfNullish, throw_if_nullish)                                      \
-        O(IteratorResultValue, iterator_result_value)                            \
         O(IteratorClose, iterator_close)                                         \
         O(IteratorToArray, iterator_to_array)                                    \
         O(Append, append)                                                        \

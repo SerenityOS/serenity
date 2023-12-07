@@ -1492,28 +1492,6 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
-class IteratorResultDone final : public Instruction {
-public:
-    IteratorResultDone()
-        : Instruction(Type::IteratorResultDone, sizeof(*this))
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
-};
-
-class IteratorResultValue final : public Instruction {
-public:
-    IteratorResultValue()
-        : Instruction(Type::IteratorResultValue, sizeof(*this))
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
-};
-
 class ResolveThisBinding final : public Instruction {
 public:
     explicit ResolveThisBinding()

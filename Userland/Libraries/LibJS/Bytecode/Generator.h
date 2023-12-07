@@ -234,6 +234,9 @@ public:
     void emit_get_by_id(IdentifierTableIndex);
     void emit_get_by_id_with_this(IdentifierTableIndex, Register);
 
+    void emit_iterator_value();
+    void emit_iterator_complete();
+
     [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
     [[nodiscard]] size_t next_environment_variable_cache() { return m_next_environment_variable_cache++; }
     [[nodiscard]] size_t next_property_lookup_cache() { return m_next_property_lookup_cache++; }
