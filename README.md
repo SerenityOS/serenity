@@ -130,6 +130,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Andi Gallo** - [axgallo](https://github.com/axgallo)
 * **Simon Wanner** - [skyrising](https://github.com/skyrising)
 * **FalseHonesty** - [FalseHonesty](https://github.com/FalseHonesty)
+* **Bastiaan van der Plaat** - [bplaat](https://github.com/bplaat)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
