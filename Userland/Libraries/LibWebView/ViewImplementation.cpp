@@ -201,6 +201,16 @@ void ViewImplementation::replace_dom_node_attribute(i32 node_id, String name, Ve
     client().async_replace_dom_node_attribute(node_id, move(name), move(replacement_attributes));
 }
 
+Optional<i32> ViewImplementation::create_child_element(i32 node_id)
+{
+    return client().create_child_element(node_id);
+}
+
+Optional<i32> ViewImplementation::create_child_text_node(i32 node_id)
+{
+    return client().create_child_text_node(node_id);
+}
+
 void ViewImplementation::remove_dom_node(i32 node_id)
 {
     client().async_remove_dom_node(node_id);
