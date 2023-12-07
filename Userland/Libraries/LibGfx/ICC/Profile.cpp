@@ -1416,7 +1416,7 @@ static TagSignature backward_transform_tag_for_rendering_intent(RenderingIntent 
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const
+ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const& pcs, Bytes out_bytes) const
 {
     switch (tag_data.type()) {
     case Lut16TagData::Type:
@@ -1425,9 +1425,16 @@ ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 con
     case Lut8TagData::Type:
         // FIXME
         return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mft1 tags not yet implemented");
-    case LutBToATagData::Type:
-        // FIXME
-        return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mBA tags not yet implemented");
+    case LutBToATagData::Type: {
+        auto const& b_to_a = static_cast<LutBToATagData const&>(tag_data);
+        if (b_to_a.number_of_input_channels() != number_of_components_in_color_space(connection_space()))
+            return Error::from_string_literal("ICC::Profile::from_pcs_b_to_a: mBA input channel count does not match color space size");
+
+        if (b_to_a.number_of_output_channels() != number_of_components_in_color_space(data_color_space()))
+            return Error::from_string_literal("ICC::Profile::from_pcs_b_to_a: mBA output channel count does not match profile connection space size");
+
+        return b_to_a.evaluate(connection_space(), pcs, out_bytes);
+    }
     }
     VERIFY_NOT_REACHED();
 }

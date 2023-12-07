@@ -519,6 +519,9 @@ public:
     Optional<CLUTData> const& clut() const { return m_clut; }
     Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
 
+    // Returns the result of the LUT pipeline for u8 outputs.
+    ErrorOr<void> evaluate(ColorSpace connection_space, FloatVector3 const&, Bytes) const;
+
 private:
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
@@ -1298,6 +1301,15 @@ inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_spac
         output_color[2] = output_color[2] * 255.0f - 128.0f;
     }
     return output_color;
+}
+
+inline ErrorOr<void> LutBToATagData::evaluate(ColorSpace connection_space, FloatVector3 const&, Bytes out_bytes) const
+{
+    VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
+    VERIFY(number_of_input_channels() == 3);
+    VERIFY(number_of_output_channels() == out_bytes.size());
+
+    return Error::from_string_literal("LutBToATagData::evaluate: Not yet implemented");
 }
 
 }
