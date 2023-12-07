@@ -1166,11 +1166,9 @@ i32 HTMLInputElement::default_tab_index_value() const
 unsigned HTMLInputElement::size() const
 {
     // The size IDL attribute is limited to only positive numbers and has a default value of 20.
-    auto maybe_size_string = get_attribute(HTML::AttributeNames::size);
-    if (maybe_size_string.has_value()) {
-        auto maybe_size = parse_non_negative_integer(maybe_size_string.value());
-        if (maybe_size.has_value())
-            return maybe_size.value();
+    if (auto size_string = get_attribute(HTML::AttributeNames::size); size_string.has_value()) {
+        if (auto size = parse_non_negative_integer(*size_string); size.has_value())
+            return *size;
     }
     return 20;
 }

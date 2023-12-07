@@ -37,13 +37,11 @@ void HTMLProgressElement::visit_edges(Cell::Visitor& visitor)
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-progress-value
 double HTMLProgressElement::value() const
 {
-    auto maybe_value_string = get_attribute(HTML::AttributeNames::value);
-    if (!maybe_value_string.has_value())
-        return 0;
-    auto maybe_value = parse_floating_point_number(maybe_value_string.value());
-    if (!maybe_value.has_value())
-        return 0;
-    return clamp(maybe_value.value(), 0, max());
+    if (auto value_string = get_attribute(HTML::AttributeNames::value); value_string.has_value()) {
+        if (auto value = parse_floating_point_number(*value_string); value.has_value())
+            return clamp(*value, 0, max());
+    }
+    return 0;
 }
 
 WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
@@ -60,13 +58,11 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-progress-max
 double HTMLProgressElement::max() const
 {
-    auto maybe_max_string = get_attribute(HTML::AttributeNames::max);
-    if (!maybe_max_string.has_value())
-        return 1;
-    auto maybe_max = parse_floating_point_number(maybe_max_string.value());
-    if (!maybe_max.has_value())
-        return 1;
-    return AK::max(maybe_max.value(), 0);
+    if (auto max_string = get_attribute(HTML::AttributeNames::max); max_string.has_value()) {
+        if (auto max = parse_floating_point_number(*max_string); max.has_value())
+            return AK::max(*max, 0);
+    }
+    return 1;
 }
 
 WebIDL::ExceptionOr<void> HTMLProgressElement::set_max(double value)

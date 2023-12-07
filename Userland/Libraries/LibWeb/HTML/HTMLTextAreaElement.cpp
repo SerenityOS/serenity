@@ -100,11 +100,9 @@ void HTMLTextAreaElement::form_associated_element_was_removed(DOM::Node*)
 unsigned HTMLTextAreaElement::cols() const
 {
     // The cols and rows attributes are limited to only positive numbers with fallback. The cols IDL attribute's default value is 20.
-    auto maybe_cols_string = get_attribute(HTML::AttributeNames::cols);
-    if (maybe_cols_string.has_value()) {
-        auto maybe_cols = parse_non_negative_integer(maybe_cols_string.value());
-        if (maybe_cols.has_value())
-            return maybe_cols.value();
+    if (auto cols_string = get_attribute(HTML::AttributeNames::cols); cols_string.has_value()) {
+        if (auto cols = parse_non_negative_integer(*cols_string); cols.has_value())
+            return *cols;
     }
     return 20;
 }
@@ -118,11 +116,9 @@ WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_cols(unsigned value)
 unsigned HTMLTextAreaElement::rows() const
 {
     // The cols and rows attributes are limited to only positive numbers with fallback. The rows IDL attribute's default value is 2.
-    auto maybe_rows_string = get_attribute(HTML::AttributeNames::rows);
-    if (maybe_rows_string.has_value()) {
-        auto maybe_rows = parse_non_negative_integer(maybe_rows_string.value());
-        if (maybe_rows.has_value())
-            return maybe_rows.value();
+    if (auto rows_string = get_attribute(HTML::AttributeNames::rows); rows_string.has_value()) {
+        if (auto rows = parse_non_negative_integer(*rows_string); rows.has_value())
+            return *rows;
     }
     return 2;
 }
