@@ -10,6 +10,8 @@
 #include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Painting/BorderRadiiData.h>
+#include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/SVGPathPaintable.h>
 
 namespace Web::Layout {
@@ -215,6 +217,125 @@ static void build_paint_tree(Node& node, Painting::Paintable* parent_paintable =
     }
 }
 
+static Painting::BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)
+{
+    Painting::BorderRadiusData bottom_left_radius_px {};
+    Painting::BorderRadiusData bottom_right_radius_px {};
+    Painting::BorderRadiusData top_left_radius_px {};
+    Painting::BorderRadiusData top_right_radius_px {};
+
+    bottom_left_radius_px.horizontal_radius = bottom_left_radius.horizontal_radius.to_px(node, rect.width());
+    bottom_right_radius_px.horizontal_radius = bottom_right_radius.horizontal_radius.to_px(node, rect.width());
+    top_left_radius_px.horizontal_radius = top_left_radius.horizontal_radius.to_px(node, rect.width());
+    top_right_radius_px.horizontal_radius = top_right_radius.horizontal_radius.to_px(node, rect.width());
+
+    bottom_left_radius_px.vertical_radius = bottom_left_radius.vertical_radius.to_px(node, rect.height());
+    bottom_right_radius_px.vertical_radius = bottom_right_radius.vertical_radius.to_px(node, rect.height());
+    top_left_radius_px.vertical_radius = top_left_radius.vertical_radius.to_px(node, rect.height());
+    top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.to_px(node, rect.height());
+
+    // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
+    // Let f = min(Li/Si), where i ∈ {top, right, bottom, left},
+    // Si is the sum of the two corresponding radii of the corners on side i,
+    // and Ltop = Lbottom = the width of the box, and Lleft = Lright = the height of the box.
+    auto l_top = rect.width();
+    auto l_bottom = l_top;
+    auto l_left = rect.height();
+    auto l_right = l_left;
+    auto s_top = (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius);
+    auto s_right = (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius);
+    auto s_bottom = (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius);
+    auto s_left = (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius);
+    CSSPixelFraction f = 1;
+    f = min(f, l_top / s_top);
+    f = min(f, l_right / s_right);
+    f = min(f, l_bottom / s_bottom);
+    f = min(f, l_left / s_left);
+
+    // If f < 1, then all corner radii are reduced by multiplying them by f.
+    if (f < 1) {
+        top_left_radius_px.horizontal_radius *= f;
+        top_left_radius_px.vertical_radius *= f;
+        top_right_radius_px.horizontal_radius *= f;
+        top_right_radius_px.vertical_radius *= f;
+        bottom_right_radius_px.horizontal_radius *= f;
+        bottom_right_radius_px.vertical_radius *= f;
+        bottom_left_radius_px.horizontal_radius *= f;
+        bottom_left_radius_px.vertical_radius *= f;
+    }
+
+    return Painting::BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
+}
+
+void LayoutState::resolve_border_radii()
+{
+    Vector<Painting::InlinePaintable&> inline_paintables;
+
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        auto& node = const_cast<NodeWithStyle&>(used_values.node());
+
+        auto* paintable = node.paintable();
+
+        if (paintable && is<Painting::InlinePaintable>(*paintable)) {
+            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
+            inline_paintables.append(inline_paintable);
+        }
+
+        if (paintable && is<Painting::PaintableBox>(*paintable)) {
+            auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
+
+            CSSPixelRect const content_rect { 0, 0, used_values.content_width(), used_values.content_height() };
+            auto border_rect = content_rect.inflated(used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left);
+
+            auto const& border_top_left_radius = node.computed_values().border_top_left_radius();
+            auto const& border_top_right_radius = node.computed_values().border_top_right_radius();
+            auto const& border_bottom_right_radius = node.computed_values().border_bottom_right_radius();
+            auto const& border_bottom_left_radius = node.computed_values().border_bottom_left_radius();
+
+            auto radii_data = normalized_border_radii_data(node, border_rect, border_top_left_radius, border_top_right_radius, border_bottom_right_radius, border_bottom_left_radius);
+            paintable_box.set_border_radii_data(radii_data);
+        }
+    }
+
+    for (auto& inline_paintable : inline_paintables) {
+        Vector<Layout::LineBoxFragment&> fragments;
+        verify_cast<Painting::PaintableWithLines>(*inline_paintable.containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
+            if (inline_paintable.layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
+                fragments.append(const_cast<Layout::LineBoxFragment&>(fragment));
+            return IterationDecision::Continue;
+        });
+
+        auto const& top_left_border_radius = inline_paintable.computed_values().border_top_left_radius();
+        auto const& top_right_border_radius = inline_paintable.computed_values().border_top_right_radius();
+        auto const& bottom_right_border_radius = inline_paintable.computed_values().border_bottom_right_radius();
+        auto const& bottom_left_border_radius = inline_paintable.computed_values().border_bottom_left_radius();
+
+        auto containing_block_position_in_absolute_coordinates = inline_paintable.containing_block()->paintable_box()->absolute_position();
+        for (size_t i = 0; i < fragments.size(); ++i) {
+            auto is_first_fragment = i == 0;
+            auto is_last_fragment = i == fragments.size() - 1;
+            auto& fragment = fragments[i];
+
+            CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
+
+            if (is_first_fragment) {
+                auto extra_start_width = inline_paintable.box_model().padding.left;
+                absolute_fragment_rect.translate_by(-extra_start_width, 0);
+                absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_start_width);
+            }
+
+            if (is_last_fragment) {
+                auto extra_end_width = inline_paintable.box_model().padding.right;
+                absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
+            }
+
+            auto border_radii_data = normalized_border_radii_data(inline_paintable.layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            fragment.set_border_radii_data(border_radii_data);
+        }
+    }
+}
+
 void LayoutState::commit(Box& root)
 {
     // Only the top-level LayoutState should ever be committed.
@@ -309,6 +430,8 @@ void LayoutState::commit(Box& root)
         auto const& box = static_cast<Layout::Box const&>(used_values.node());
         measure_scrollable_overflow(box);
     }
+
+    resolve_border_radii();
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)

@@ -188,6 +188,9 @@ public:
 
     BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
+    BorderRadiiData const& border_radii_data() const { return m_border_radii_data; }
+    void set_border_radii_data(BorderRadiiData const& border_radii_data) { m_border_radii_data = border_radii_data; }
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 
@@ -223,6 +226,8 @@ private:
 
     Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;
+
+    BorderRadiiData m_border_radii_data;
 };
 
 class PaintableWithLines : public PaintableBox {

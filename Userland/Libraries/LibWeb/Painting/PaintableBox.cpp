@@ -393,15 +393,10 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
 
 BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const
 {
-    auto border_radius_data = Painting::normalized_border_radii_data(layout_box(),
-        absolute_border_box_rect(),
-        computed_values().border_top_left_radius(),
-        computed_values().border_top_right_radius(),
-        computed_values().border_bottom_right_radius(),
-        computed_values().border_bottom_left_radius());
+    auto border_radii_data = this->border_radii_data();
     if (shrink == ShrinkRadiiForBorders::Yes)
-        border_radius_data.shrink(computed_values().border_top().width, computed_values().border_right().width, computed_values().border_bottom().width, computed_values().border_left().width);
-    return border_radius_data;
+        border_radii_data.shrink(computed_values().border_top().width, computed_values().border_right().width, computed_values().border_bottom().width, computed_values().border_left().width);
+    return border_radii_data;
 }
 
 Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const

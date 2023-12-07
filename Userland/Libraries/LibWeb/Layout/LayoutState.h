@@ -186,6 +186,7 @@ struct LayoutState {
 
 private:
     void resolve_relative_positions(Vector<Painting::PaintableWithLines&> const&);
+    void resolve_border_radii();
 };
 
 }
