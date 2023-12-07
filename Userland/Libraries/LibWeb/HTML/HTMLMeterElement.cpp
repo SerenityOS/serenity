@@ -38,11 +38,9 @@ double HTMLMeterElement::value() const
 {
     // If the value attribute is specified and a value could be parsed out of it, then that value is the candidate actual value. Otherwise, the candidate actual value is zero.
     double candidate_value = 0.0;
-    auto maybe_value_string = get_attribute(HTML::AttributeNames::value);
-    if (maybe_value_string.has_value()) {
-        auto maybe_value = parse_floating_point_number(maybe_value_string.value());
-        if (maybe_value.has_value())
-            candidate_value = maybe_value.value();
+    if (auto value_string = get_attribute(HTML::AttributeNames::value); value_string.has_value()) {
+        if (auto value = parse_floating_point_number(*value_string); value.has_value())
+            candidate_value = *value;
     }
 
     // If the candidate actual value is less than the minimum value, then the actual value is the minimum value.
@@ -63,11 +61,9 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_value(double value)
 double HTMLMeterElement::min() const
 {
     // If the min attribute is specified and a value could be parsed out of it, then the minimum value is that value. Otherwise, the minimum value is zero.
-    auto maybe_min_string = get_attribute(HTML::AttributeNames::min);
-    if (maybe_min_string.has_value()) {
-        auto maybe_min = parse_floating_point_number(maybe_min_string.value());
-        if (maybe_min.has_value())
-            return maybe_min.value();
+    if (auto min_string = get_attribute(HTML::AttributeNames::min); min_string.has_value()) {
+        if (auto min = parse_floating_point_number(*min_string); min.has_value())
+            return *min;
     }
     return 0;
 }
@@ -85,11 +81,9 @@ double HTMLMeterElement::max() const
 {
     // If the max attribute is specified and a value could be parsed out of it, then the candidate maximum value is that value. Otherwise, the candidate maximum value is 1.0.
     double candidate_max = 1.0;
-    auto maybe_max_string = get_attribute(HTML::AttributeNames::max);
-    if (maybe_max_string.has_value()) {
-        auto maybe_max = parse_floating_point_number(maybe_max_string.value());
-        if (maybe_max.has_value())
-            candidate_max = maybe_max.value();
+    if (auto max_string = get_attribute(HTML::AttributeNames::max); max_string.has_value()) {
+        if (auto max = parse_floating_point_number(*max_string); max.has_value())
+            candidate_max = *max;
     }
 
     // If the candidate maximum value is greater than or equal to the minimum value, then the maximum value is the candidate maximum value. Otherwise, the maximum value is the same as the minimum value.
@@ -109,11 +103,9 @@ double HTMLMeterElement::low() const
 {
     // If the low attribute is specified and a value could be parsed out of it, then the candidate low boundary is that value. Otherwise, the candidate low boundary is the same as the minimum value.
     double candidate_low = min();
-    auto maybe_low_string = get_attribute(HTML::AttributeNames::low);
-    if (maybe_low_string.has_value()) {
-        auto maybe_low = parse_floating_point_number(maybe_low_string.value());
-        if (maybe_low.has_value())
-            candidate_low = maybe_low.value();
+    if (auto low_string = get_attribute(HTML::AttributeNames::low); low_string.has_value()) {
+        if (auto low = parse_floating_point_number(*low_string); low.has_value())
+            candidate_low = *low;
     }
 
     // If the candidate low boundary is less than the minimum value, then the low boundary is the minimum value.
@@ -135,11 +127,9 @@ double HTMLMeterElement::high() const
 {
     // If the high attribute is specified and a value could be parsed out of it, then the candidate high boundary is that value. Otherwise, the candidate high boundary is the same as the maximum value.
     double candidate_high = max();
-    auto maybe_high_string = get_attribute(HTML::AttributeNames::high);
-    if (maybe_high_string.has_value()) {
-        auto maybe_high = parse_floating_point_number(maybe_high_string.value());
-        if (maybe_high.has_value())
-            candidate_high = maybe_high.value();
+    if (auto high_string = get_attribute(HTML::AttributeNames::high); high_string.has_value()) {
+        if (auto high = parse_floating_point_number(*high_string); high.has_value())
+            candidate_high = *high;
     }
 
     // If the candidate high boundary is less than the low boundary, then the high boundary is the low boundary.
@@ -161,11 +151,9 @@ double HTMLMeterElement::optimum() const
 {
     // If the optimum attribute is specified and a value could be parsed out of it, then the candidate optimum point is that value. Otherwise, the candidate optimum point is the midpoint between the minimum value and the maximum value.
     double candidate_optimum = (max() + min()) / 2;
-    auto maybe_optimum_string = get_attribute(HTML::AttributeNames::optimum);
-    if (maybe_optimum_string.has_value()) {
-        auto maybe_optimum = parse_floating_point_number(maybe_optimum_string.value());
-        if (maybe_optimum.has_value())
-            candidate_optimum = maybe_optimum.value();
+    if (auto optimum_string = get_attribute(HTML::AttributeNames::optimum); optimum_string.has_value()) {
+        if (auto optimum = parse_floating_point_number(*optimum_string); optimum.has_value())
+            candidate_optimum = *optimum;
     }
 
     // If the candidate optimum point is less than the minimum value, then the optimum point is the minimum value.
@@ -246,5 +234,4 @@ void HTMLMeterElement::update_meter_value_element()
     double position = (value - min) / (max - min) * 100;
     MUST(m_meter_value_element->set_attribute(HTML::AttributeNames::style, MUST(String::formatted("width: {}%;", position))));
 }
-
 }

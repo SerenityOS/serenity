@@ -29,11 +29,9 @@ void HTMLTableColElement::initialize(JS::Realm& realm)
 unsigned int HTMLTableColElement::span() const
 {
     // The span IDL attribute must reflect the content attribute of the same name. It is clamped to the range [1, 1000], and its default value is 1.
-    auto maybe_span_string = get_attribute(HTML::AttributeNames::span);
-    if (maybe_span_string.has_value()) {
-        auto maybe_span = parse_non_negative_integer(maybe_span_string.value());
-        if (maybe_span.has_value())
-            return clamp(maybe_span.value(), 1, 1000);
+    if (auto span_string = get_attribute(HTML::AttributeNames::span); span_string.has_value()) {
+        if (auto span = parse_non_negative_integer(*span_string); span.has_value())
+            return clamp(*span, 1, 1000);
     }
     return 1;
 }
