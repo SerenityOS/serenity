@@ -5652,18 +5652,18 @@ bool block_contains_var_or_attr(Block const& block)
     return false;
 }
 
-Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
+Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& unprocessed_tokens)
 {
     m_context.set_current_property_id(property_id);
     Vector<ComponentValue> component_values;
     bool contains_var_or_attr = false;
     bool const property_accepts_custom_ident = property_accepts_type(property_id, ValueType::CustomIdent);
 
-    while (tokens.has_next_token()) {
-        auto const& token = tokens.next_token();
+    while (unprocessed_tokens.has_next_token()) {
+        auto const& token = unprocessed_tokens.next_token();
 
         if (token.is(Token::Type::Semicolon)) {
-            tokens.reconsume_current_input_token();
+            unprocessed_tokens.reconsume_current_input_token();
             break;
         }
 
@@ -5697,6 +5697,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     }
 
     // Special-case property handling
+    auto tokens = TokenStream { component_values };
     switch (property_id) {
     case PropertyID::AspectRatio:
         if (auto parsed_value = parse_aspect_ratio_value(component_values))
@@ -5778,8 +5779,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::FontFamily: {
-        auto tokens_without_whitespace = TokenStream { component_values };
-        if (auto parsed_value = parse_font_family_value(tokens_without_whitespace))
+        if (auto parsed_value = parse_font_family_value(tokens))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     }
