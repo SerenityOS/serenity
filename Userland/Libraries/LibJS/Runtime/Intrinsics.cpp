@@ -190,6 +190,16 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
     m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
+    // OPTIMIZATION: A lot of runtime algorithms create an "iterator result" object.
+    //               We pre-bake a shape for these objects and remember the property offsets.
+    //               This allows us to construct them very quickly.
+    m_iterator_result_object_shape = heap().allocate_without_realm<Shape>(realm);
+    m_iterator_result_object_shape->set_prototype_without_transition(m_object_prototype);
+    m_iterator_result_object_shape->add_property_without_transition(vm.names.value, Attribute::Writable | Attribute::Configurable | Attribute::Enumerable);
+    m_iterator_result_object_shape->add_property_without_transition(vm.names.done, Attribute::Writable | Attribute::Configurable | Attribute::Enumerable);
+    m_iterator_result_object_value_offset = m_iterator_result_object_shape->lookup(vm.names.value.to_string_or_symbol()).value().offset;
+    m_iterator_result_object_done_offset = m_iterator_result_object_shape->lookup(vm.names.done.to_string_or_symbol()).value().offset;
+
     // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_realm().
     m_function_prototype->initialize(realm);
     m_object_prototype->initialize(realm);
@@ -358,6 +368,7 @@ void Intrinsics::visit_edges(Visitor& visitor)
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
+    visitor.visit(m_iterator_result_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_async_from_sync_iterator_prototype);
     visitor.visit(m_async_generator_prototype);

@@ -264,13 +264,13 @@ NonnullGCPtr<Object> create_iterator_result_object(VM& vm, Value value, bool don
     auto& realm = *vm.current_realm();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto object = Object::create(realm, realm.intrinsics().object_prototype());
+    auto object = Object::create_with_premade_shape(realm.intrinsics().iterator_result_object_shape());
 
     // 2. Perform ! CreateDataPropertyOrThrow(obj, "value", value).
-    MUST(object->create_data_property_or_throw(vm.names.value, value));
+    object->put_direct(realm.intrinsics().iterator_result_object_value_offset(), value);
 
     // 3. Perform ! CreateDataPropertyOrThrow(obj, "done", done).
-    MUST(object->create_data_property_or_throw(vm.names.done, Value(done)));
+    object->put_direct(realm.intrinsics().iterator_result_object_done_offset(), Value(done));
 
     // 4. Return obj.
     return object;

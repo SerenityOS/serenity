@@ -37,6 +37,11 @@ NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
     return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
 }
 
+NonnullGCPtr<Object> Object::create_with_premade_shape(Shape& shape)
+{
+    return shape.heap().allocate<Object>(shape.realm(), shape);
+}
+
 Object::Object(GlobalObjectTag, Realm& realm, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
     : m_may_interfere_with_indexed_property_access(may_interfere_with_indexed_property_access == MayInterfereWithIndexedPropertyAccess::Yes)
 {
