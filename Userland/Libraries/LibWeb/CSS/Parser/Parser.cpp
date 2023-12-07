@@ -3200,28 +3200,31 @@ RefPtr<StyleValue> Parser::parse_border_value(PropertyID property_id, Vector<Com
         { border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull() });
 }
 
-RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_values.size() == 2) {
-        auto horizontal = parse_dimension(component_values[0]);
-        auto vertical = parse_dimension(component_values[1]);
-        if (horizontal.has_value() && horizontal->is_length_percentage() && vertical.has_value() && vertical->is_length_percentage())
+    if (tokens.remaining_token_count() == 2) {
+        auto transaction = tokens.begin_transaction();
+        auto horizontal = parse_dimension(tokens.next_token());
+        auto vertical = parse_dimension(tokens.next_token());
+        if (horizontal.has_value() && horizontal->is_length_percentage() && vertical.has_value() && vertical->is_length_percentage()) {
+            transaction.commit();
             return BorderRadiusStyleValue::create(horizontal->length_percentage(), vertical->length_percentage());
-
-        return nullptr;
+        }
     }
 
-    if (component_values.size() == 1) {
-        auto radius = parse_dimension(component_values[0]);
-        if (radius.has_value() && radius->is_length_percentage())
+    if (tokens.remaining_token_count() == 1) {
+        auto transaction = tokens.begin_transaction();
+        auto radius = parse_dimension(tokens.next_token());
+        if (radius.has_value() && radius->is_length_percentage()) {
+            transaction.commit();
             return BorderRadiusStyleValue::create(radius->length_percentage(), radius->length_percentage());
-        return nullptr;
+        }
     }
 
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(TokenStream<ComponentValue>& tokens)
 {
     auto top_left = [&](Vector<LengthPercentage>& radii) { return radii[0]; };
     auto top_right = [&](Vector<LengthPercentage>& radii) {
@@ -3265,9 +3268,11 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
     Vector<LengthPercentage> horizontal_radii;
     Vector<LengthPercentage> vertical_radii;
     bool reading_vertical = false;
+    auto transaction = tokens.begin_transaction();
 
-    for (auto const& value : component_values) {
-        if (value.is_delim('/')) {
+    while (tokens.has_next_token()) {
+        auto& token = tokens.next_token();
+        if (token.is_delim('/')) {
             if (reading_vertical || horizontal_radii.is_empty())
                 return nullptr;
 
@@ -3275,7 +3280,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
             continue;
         }
 
-        auto maybe_dimension = parse_dimension(value);
+        auto maybe_dimension = parse_dimension(token);
         if (!maybe_dimension.has_value() || !maybe_dimension->is_length_percentage())
             return nullptr;
         if (reading_vertical) {
@@ -3299,6 +3304,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
     auto bottom_left_radius = BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
         vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii));
 
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::BorderRadius,
         { PropertyID::BorderTopLeftRadius, PropertyID::BorderTopRightRadius, PropertyID::BorderBottomRightRadius, PropertyID::BorderBottomLeftRadius },
         { move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius) });
@@ -5750,11 +5756,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BorderTopRightRadius:
     case PropertyID::BorderBottomRightRadius:
     case PropertyID::BorderBottomLeftRadius:
-        if (auto parsed_value = parse_border_radius_value(component_values))
+        if (auto parsed_value = parse_border_radius_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BorderRadius:
-        if (auto parsed_value = parse_border_radius_shorthand_value(component_values))
+        if (auto parsed_value = parse_border_radius_shorthand_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BoxShadow:
