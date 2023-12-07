@@ -27,6 +27,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -718,6 +719,30 @@ void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const&
 
     if (should_remove_attribute)
         element.remove_attribute(name);
+}
+
+Messages::WebContentServer::CreateChildElementResponse ConnectionFromClient::create_child_element(i32 node_id)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node)
+        return OptionalNone {};
+
+    auto element = Web::DOM::create_element(dom_node->document(), Web::HTML::TagNames::div, Web::Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    dom_node->append_child(element).release_value_but_fixme_should_propagate_errors();
+
+    return element->unique_id();
+}
+
+Messages::WebContentServer::CreateChildTextNodeResponse ConnectionFromClient::create_child_text_node(i32 node_id)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node)
+        return OptionalNone {};
+
+    auto text_node = dom_node->heap().allocate<Web::DOM::Text>(dom_node->realm(), dom_node->document(), "text"_string);
+    dom_node->append_child(text_node).release_value_but_fixme_should_propagate_errors();
+
+    return text_node->unique_id();
 }
 
 void ConnectionFromClient::remove_dom_node(i32 node_id)

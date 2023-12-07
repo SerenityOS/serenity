@@ -80,6 +80,8 @@ private:
     virtual Messages::WebContentServer::SetDomNodeTagResponse set_dom_node_tag(i32 node_id, String const& name) override;
     virtual void add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> const& attributes) override;
     virtual void replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes) override;
+    virtual Messages::WebContentServer::CreateChildElementResponse create_child_element(i32 node_id) override;
+    virtual Messages::WebContentServer::CreateChildTextNodeResponse create_child_text_node(i32 node_id) override;
     virtual void remove_dom_node(i32 node_id) override;
     virtual Messages::WebContentServer::GetDomNodeHtmlResponse get_dom_node_html(i32 node_id) override;
 
