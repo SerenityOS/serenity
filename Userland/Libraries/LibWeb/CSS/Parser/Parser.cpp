@@ -3635,12 +3635,14 @@ RefPtr<StyleValue> Parser::parse_display_value(TokenStream<ComponentValue>& toke
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_filter_value_list_value(TokenStream<ComponentValue>& tokens)
 {
-    TokenStream tokens { component_values };
+    auto transaction = tokens.begin_transaction();
 
-    if (contains_single_none_ident(tokens))
+    if (contains_single_none_ident(tokens)) {
+        transaction.commit();
         return parse_identifier_value(tokens.next_token());
+    }
 
     // FIXME: <url>s are ignored for now
     // <filter-value-list> = [ <filter-function> | <url> ]+
@@ -3810,6 +3812,7 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> 
     if (filter_value_list.is_empty())
         return nullptr;
 
+    transaction.commit();
     return FilterValueListStyleValue::create(move(filter_value_list));
 }
 
@@ -5737,7 +5740,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackdropFilter:
-        if (auto parsed_value = parse_filter_value_list_value(component_values))
+        if (auto parsed_value = parse_filter_value_list_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Background:
