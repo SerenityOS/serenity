@@ -745,6 +745,18 @@ Messages::WebContentServer::CreateChildTextNodeResponse ConnectionFromClient::cr
     return text_node->unique_id();
 }
 
+Messages::WebContentServer::CloneDomNodeResponse ConnectionFromClient::clone_dom_node(i32 node_id)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node || !dom_node->parent_node())
+        return OptionalNone {};
+
+    auto dom_node_clone = dom_node->clone_node(nullptr, true);
+    dom_node->parent_node()->insert_before(dom_node_clone, dom_node->next_sibling());
+
+    return dom_node_clone->unique_id();
+}
+
 void ConnectionFromClient::remove_dom_node(i32 node_id)
 {
     auto* active_document = page().page().top_level_browsing_context().active_document();
