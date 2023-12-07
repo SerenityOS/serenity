@@ -227,7 +227,7 @@ private:
     RefPtr<StyleValue> parse_simple_comma_separated_value_list(PropertyID, TokenStream<ComponentValue>&);
 
     RefPtr<StyleValue> parse_aspect_ratio_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_background_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_background_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);
     RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_single_background_size_value(TokenStream<ComponentValue>&);
