@@ -5312,12 +5312,13 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
 }
 
 // https://www.w3.org/TR/css-grid-1/#grid-auto-flow-property
-RefPtr<GridAutoFlowStyleValue> Parser::parse_grid_auto_flow_value(Vector<ComponentValue> const& component_values)
+RefPtr<GridAutoFlowStyleValue> Parser::parse_grid_auto_flow_value(TokenStream<ComponentValue>& tokens)
 {
     // [ row | column ] || dense
-    TokenStream<ComponentValue> tokens { component_values };
     if (!tokens.has_next_token())
         return nullptr;
+
+    auto transaction = tokens.begin_transaction();
 
     auto parse_axis = [&]() -> Optional<GridAutoFlowStyleValue::Axis> {
         auto transaction = tokens.begin_transaction();
@@ -5359,6 +5360,7 @@ RefPtr<GridAutoFlowStyleValue> Parser::parse_grid_auto_flow_value(Vector<Compone
     if (tokens.has_next_token())
         return nullptr;
 
+    transaction.commit();
     return GridAutoFlowStyleValue::create(axis.value_or(GridAutoFlowStyleValue::Axis::Row), dense.value_or(GridAutoFlowStyleValue::Dense::No));
 }
 
@@ -5826,7 +5828,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoFlow:
-        if (auto parsed_value = parse_grid_auto_flow_value(component_values))
+        if (auto parsed_value = parse_grid_auto_flow_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateAreas:
