@@ -5557,7 +5557,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID
             template_columns_tokens.append(component_values[x]);
     }
 
-    auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_tokens);
+    TokenStream template_area_token_stream { template_area_tokens };
+    auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_token_stream);
     auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_tokens, true);
     auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_tokens);
     return ShorthandStyleValue::create(property_id,
@@ -5651,19 +5652,27 @@ RefPtr<StyleValue> Parser::parse_grid_shorthand_value(Vector<ComponentValue> con
     return parse_grid_track_size_list_shorthand_value(PropertyID::Grid, component_value);
 }
 
-RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
+// https://www.w3.org/TR/css-grid-1/#grid-template-areas-property
+RefPtr<StyleValue> Parser::parse_grid_template_areas_value(TokenStream<ComponentValue>& tokens)
 {
+    // none | <string>+
     Vector<Vector<String>> grid_area_rows;
-    for (auto& component_value : component_values) {
+
+    if (contains_single_none_ident(tokens)) {
+        (void)tokens.next_token(); // none
+        return GridTemplateAreaStyleValue::create(move(grid_area_rows));
+    }
+
+    auto transaction = tokens.begin_transaction();
+    while (tokens.has_next_token() && tokens.peek_token().is(Token::Type::String)) {
         Vector<String> grid_area_columns;
-        if (component_value.is(Token::Type::String)) {
-            auto const parts = MUST(MUST(String::from_utf8(component_value.token().string())).split(' '));
-            for (auto& part : parts) {
-                grid_area_columns.append(part);
-            }
+        auto const parts = MUST(MUST(String::from_utf8(tokens.next_token().token().string())).split(' '));
+        for (auto& part : parts) {
+            grid_area_columns.append(part);
         }
         grid_area_rows.append(move(grid_area_columns));
     }
+    transaction.commit();
     return GridTemplateAreaStyleValue::create(grid_area_rows);
 }
 
@@ -5831,10 +5840,6 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_grid_auto_flow_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    case PropertyID::GridTemplateAreas:
-        if (auto parsed_value = parse_grid_template_areas_value(component_values))
-            return parsed_value.release_nonnull();
-        return ParseError::SyntaxError;
     case PropertyID::GridColumn:
         if (auto parsed_value = parse_grid_track_placement_shorthand_value(property_id, tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
@@ -5865,6 +5870,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridTemplate:
         if (auto parsed_value = parse_grid_track_size_list_shorthand_value(property_id, component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridTemplateAreas:
+        if (auto parsed_value = parse_grid_template_areas_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
