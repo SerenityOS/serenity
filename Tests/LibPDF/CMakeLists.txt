@@ -15,6 +15,7 @@ set(TEST_FILES
     non-linearized.pdf
     oss-fuzz-testcase-62065.pdf
     password-is-sup.pdf
+    pattern.pdf
     text.pdf
     type1.pdf
     type3.pdf
