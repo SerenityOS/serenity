@@ -84,6 +84,15 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 
 namespace Web::CSS::Parser {
 
+static bool contains_single_none_ident(TokenStream<ComponentValue>& tokens)
+{
+    if (tokens.remaining_token_count() > 1)
+        return false;
+    if (auto token = tokens.peek_token(); token.is_ident("none"sv))
+        return true;
+    return false;
+}
+
 ErrorOr<Parser> Parser::create(ParsingContext const& context, StringView input, StringView encoding)
 {
     auto tokens = TRY(Tokenizer::tokenize(input, encoding));
@@ -3300,11 +3309,8 @@ RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& comp
     TokenStream tokens { component_values };
 
     // "none"
-    if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = parse_identifier_value(component_values.first());
-        if (ident && ident->to_identifier() == ValueID::None)
-            return ident;
-    }
+    if (contains_single_none_ident(tokens))
+        return parse_identifier_value(tokens.next_token());
 
     return parse_comma_separated_value_list(tokens, [this, allow_inset_keyword](auto& tokens) {
         return parse_single_shadow_value(tokens, allow_inset_keyword);
@@ -3604,13 +3610,10 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
 
 RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> const& component_values)
 {
-    if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = parse_identifier_value(component_values.first());
-        if (ident && ident->to_identifier() == ValueID::None)
-            return ident;
-    }
-
     TokenStream tokens { component_values };
+
+    if (contains_single_none_ident(tokens))
+        return parse_identifier_value(tokens.next_token());
 
     // FIXME: <url>s are ignored for now
     // <filter-value-list> = [ <filter-function> | <url> ]+
@@ -5230,17 +5233,16 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 
 RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values, bool allow_separate_line_name_blocks)
 {
-    if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = parse_identifier_value(component_values.first());
-        if (ident && ident->to_identifier() == ValueID::None) {
-            return GridTrackSizeListStyleValue::make_none();
-        }
+    TokenStream tokens { component_values };
+
+    if (contains_single_none_ident(tokens)) {
+        tokens.next_token();
+        return GridTrackSizeListStyleValue::make_none();
     }
 
     Vector<CSS::ExplicitGridTrack> track_list;
     Vector<Vector<String>> line_names_list;
     auto last_object_was_line_names = false;
-    TokenStream tokens { component_values };
     while (tokens.has_next_token()) {
         auto token = tokens.next_token();
         if (token.is_block()) {
