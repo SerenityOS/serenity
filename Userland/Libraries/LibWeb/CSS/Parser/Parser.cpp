@@ -3129,11 +3129,8 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
     return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value());
 }
 
-RefPtr<StyleValue> Parser::parse_border_value(PropertyID property_id, Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    if (component_values.size() > 3)
-        return nullptr;
-
     RefPtr<StyleValue> border_width;
     RefPtr<StyleValue> border_color;
     RefPtr<StyleValue> border_style;
@@ -3173,8 +3170,8 @@ RefPtr<StyleValue> Parser::parse_border_value(PropertyID property_id, Vector<Com
     }
 
     auto remaining_longhands = Vector { width_property, color_property, style_property };
+    auto transaction = tokens.begin_transaction();
 
-    auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.has_value())
@@ -3203,6 +3200,7 @@ RefPtr<StyleValue> Parser::parse_border_value(PropertyID property_id, Vector<Com
     if (!border_color)
         border_color = property_initial_value(m_context.realm(), color_property);
 
+    transaction.commit();
     return ShorthandStyleValue::create(property_id,
         { width_property, style_property, color_property },
         { border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull() });
@@ -5779,7 +5777,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BorderLeft:
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
-        if (auto parsed_value = parse_border_value(property_id, component_values))
+        if (auto parsed_value = parse_border_value(property_id, tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BorderTopLeftRadius:
