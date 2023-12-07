@@ -669,8 +669,15 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
         return Error { Error::Type::MalformedPDF, "Indexed color space expects stream or string for third arg" };
     }
 
-    if (static_cast<int>(lookup.size()) != (hival + 1) * base->number_of_components())
+    size_t needed_size = (hival + 1) * base->number_of_components();
+    if (lookup.size() - 1 == needed_size) {
+        // FIXME: Could do this if lookup.size() > needed_size generally, but so far I've only seen files that had one byte too much.
+        lookup.resize(needed_size);
+    }
+    if (lookup.size() != needed_size) {
+        dbgln("lookup size {} doesn't match hival {} and base components {}", lookup.size(), hival, base->number_of_components());
         return Error { Error::Type::MalformedPDF, "Indexed color space lookup table doesn't match size" };
+    }
 
     auto color_space = adopt_ref(*new IndexedColorSpace(move(base)));
     color_space->m_hival = hival;
