@@ -559,6 +559,9 @@ void Menu::did_activate(MenuItem& item, bool leave_menu_open)
     if (item.type() == MenuItem::Type::Separator)
         return;
 
+    if (m_client)
+        m_client->async_menu_item_activated(m_menu_id, item.identifier());
+
     if (!leave_menu_open)
         start_activation_animation(item);
 
@@ -567,9 +570,6 @@ void Menu::did_activate(MenuItem& item, bool leave_menu_open)
 
     if (!leave_menu_open)
         MenuManager::the().close_everyone();
-
-    if (m_client)
-        m_client->async_menu_item_activated(m_menu_id, item.identifier());
 }
 
 bool Menu::activate_default()
