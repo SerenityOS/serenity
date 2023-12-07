@@ -649,6 +649,8 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
     // "The hival parameter is an integer that specifies the maximum valid index value. In other words,
     // the color table is to be indexed by integers in the range 0 to hival. hival can be no greater than 255"
     auto hival = TRY(document->resolve_to<int>(parameters[1]));
+    if (hival < 0 || hival > 255)
+        return Error { Error::Type::MalformedPDF, "Indexed color space hival out of range" };
 
     // "The color table is defined by the lookup parameter, which can be either a stream or (in PDF 1.2) a byte string.
     //  It provides the mapping between index values and the corresponding colors in the base color space.
