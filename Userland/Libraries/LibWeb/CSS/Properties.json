@@ -1127,9 +1127,9 @@
   },
   "grid-template-areas": {
     "inherited": false,
-    "initial": "auto",
+    "initial": "none",
     "valid-identifiers": [
-      "auto"
+      "none"
     ],
     "valid-types": [
       "string"
