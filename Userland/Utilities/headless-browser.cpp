@@ -20,6 +20,7 @@
 #include <AK/Vector.h>
 #include <Ladybird/Types.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
@@ -160,8 +161,24 @@ enum class TestMode {
 enum class TestResult {
     Pass,
     Fail,
+    Skipped,
     Timeout,
 };
+
+static StringView test_result_to_string(TestResult result)
+{
+    switch (result) {
+    case TestResult::Pass:
+        return "Pass"sv;
+    case TestResult::Fail:
+        return "Fail"sv;
+    case TestResult::Skipped:
+        return "Skipped"sv;
+    case TestResult::Timeout:
+        return "Timeout"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
 
 static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = DEFAULT_TIMEOUT_MS)
 {
@@ -315,6 +332,33 @@ struct Test {
     Optional<TestResult> result;
 };
 
+static Vector<DeprecatedString> s_skipped_tests;
+
+static ErrorOr<void> load_test_config(StringView test_root_path)
+{
+    auto config_path = LexicalPath::join(test_root_path, "TestConfig.ini"sv);
+    auto config_or_error = Core::ConfigFile::open(config_path.string());
+
+    if (config_or_error.is_error()) {
+        if (config_or_error.error().code() == ENOENT)
+            return {};
+        dbgln("Unable to open test config {}", config_path);
+        return config_or_error.release_error();
+    }
+
+    auto config = config_or_error.release_value();
+
+    for (auto const& group : config->groups()) {
+        if (group == "Skipped"sv) {
+            for (auto& key : config->keys(group))
+                s_skipped_tests.append(LexicalPath::join(test_root_path, key).string());
+        } else {
+            warnln("Unknown group '{}' in config {}", group, config_path);
+        }
+    }
+    return {};
+}
+
 static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, StringView trail, TestMode mode)
 {
     Core::DirIterator it(TRY(String::formatted("{}/input/{}", path, trail)).to_deprecated_string(), Core::DirIterator::Flags::SkipDots);
@@ -352,6 +396,8 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
 {
     view.clear_content_filters();
 
+    TRY(load_test_config(test_root_path));
+
     Vector<Test> tests;
     TRY(collect_dump_tests(tests, TRY(String::formatted("{}/Layout", test_root_path)), "."sv, TestMode::Layout));
     TRY(collect_dump_tests(tests, TRY(String::formatted("{}/Text", test_root_path)), "."sv, TestMode::Text));
@@ -360,6 +406,7 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
     size_t pass_count = 0;
     size_t fail_count = 0;
     size_t timeout_count = 0;
+    size_t skipped_count = 0;
 
     bool is_tty = isatty(STDOUT_FILENO);
 
@@ -379,6 +426,12 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
         else
             outln("");
 
+        if (s_skipped_tests.contains_slow(test.input_path.bytes_as_string_view())) {
+            test.result = TestResult::Skipped;
+            ++skipped_count;
+            continue;
+        }
+
         test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode, dump_failed_ref_tests));
         switch (*test.result) {
         case TestResult::Pass:
@@ -390,6 +443,9 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
         case TestResult::Timeout:
             ++timeout_count;
             break;
+        case TestResult::Skipped:
+            VERIFY_NOT_REACHED();
+            break;
         }
     }
 
@@ -397,12 +453,12 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
         outln("\33[2K\rDone!");
 
     outln("==================================================");
-    outln("Pass: {}, Fail: {}, Timeout: {}", pass_count, fail_count, timeout_count);
+    outln("Pass: {}, Fail: {}, Skipped: {}, Timeout: {}", pass_count, fail_count, skipped_count, timeout_count);
     outln("==================================================");
     for (auto& test : tests) {
         if (*test.result == TestResult::Pass)
             continue;
-        outln("{}: {}", *test.result == TestResult::Fail ? "Fail" : "Timeout", test.input_path);
+        outln("{}: {}", test_result_to_string(*test.result), test.input_path);
     }
 
     if (timeout_count == 0 && fail_count == 0)
