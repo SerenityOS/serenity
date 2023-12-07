@@ -35,8 +35,6 @@ MarkedVector<Value> argument_list_evaluation(VM&, Value arguments);
 ThrowCompletionOr<void> create_variable(VM&, DeprecatedFlyString const& name, Op::EnvironmentMode, bool is_global, bool is_immutable, bool is_strict);
 ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM&, Value super_class, ClassExpression const&, Optional<IdentifierTableIndex> const& lhs_name);
 ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM&, Value argument_array, bool is_synthetic);
-Object* iterator_to_object(VM&, IteratorRecord);
-IteratorRecord object_to_iterator(VM&, Object&);
 ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM&, Value iterator);
 ThrowCompletionOr<void> append(VM& vm, Value lhs, Value rhs, bool is_spread);
 ThrowCompletionOr<Value> delete_by_id(Bytecode::Interpreter&, Value base, IdentifierTableIndex identifier);

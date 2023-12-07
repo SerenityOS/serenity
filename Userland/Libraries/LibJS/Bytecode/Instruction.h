@@ -46,8 +46,10 @@
     O(GetByValueWithThis)              \
     O(GetCalleeAndThisFromEnvironment) \
     O(GetIterator)                     \
+    O(GetObjectFromIteratorRecord)     \
     O(GetMethod)                       \
     O(GetNewTarget)                    \
+    O(GetNextMethodFromIteratorRecord) \
     O(GetImportMeta)                   \
     O(GetObjectPropertyIterator)       \
     O(GetPrivateById)                  \

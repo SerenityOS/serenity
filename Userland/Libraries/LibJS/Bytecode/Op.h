@@ -1373,6 +1373,46 @@ private:
     IteratorHint m_hint { IteratorHint::Sync };
 };
 
+class GetObjectFromIteratorRecord final : public Instruction {
+public:
+    GetObjectFromIteratorRecord(Register object, Register iterator_record)
+        : Instruction(Type::GetObjectFromIteratorRecord, sizeof(*this))
+        , m_object(object)
+        , m_iterator_record(iterator_record)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+
+    Register object() const { return m_object; }
+    Register iterator_record() const { return m_iterator_record; }
+
+private:
+    Register m_object;
+    Register m_iterator_record;
+};
+
+class GetNextMethodFromIteratorRecord final : public Instruction {
+public:
+    GetNextMethodFromIteratorRecord(Register next_method, Register iterator_record)
+        : Instruction(Type::GetNextMethodFromIteratorRecord, sizeof(*this))
+        , m_next_method(next_method)
+        , m_iterator_record(iterator_record)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+
+    Register next_method() const { return m_next_method; }
+    Register iterator_record() const { return m_iterator_record; }
+
+private:
+    Register m_next_method;
+    Register m_iterator_record;
+};
+
 class GetMethod final : public Instruction {
 public:
     GetMethod(IdentifierTableIndex property)
@@ -1551,7 +1591,6 @@ public:
 private:
     size_t m_index;
 };
-
 }
 
 namespace JS::Bytecode {

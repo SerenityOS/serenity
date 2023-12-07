@@ -18,7 +18,7 @@ class AsyncFromSyncIterator final : public Object {
     JS_DECLARE_ALLOCATOR(AsyncFromSyncIterator);
 
 public:
-    static NonnullGCPtr<AsyncFromSyncIterator> create(Realm&, IteratorRecord sync_iterator_record);
+    static NonnullGCPtr<AsyncFromSyncIterator> create(Realm&, NonnullGCPtr<IteratorRecord> sync_iterator_record);
 
     virtual ~AsyncFromSyncIterator() override = default;
 
@@ -28,9 +28,9 @@ public:
     IteratorRecord const& sync_iterator_record() const { return m_sync_iterator_record; }
 
 private:
-    AsyncFromSyncIterator(Realm&, IteratorRecord sync_iterator_record);
+    AsyncFromSyncIterator(Realm&, NonnullGCPtr<IteratorRecord> sync_iterator_record);
 
-    IteratorRecord m_sync_iterator_record; // [[SyncIteratorRecord]]
+    NonnullGCPtr<IteratorRecord> m_sync_iterator_record; // [[SyncIteratorRecord]]
 };
 
 }

@@ -338,7 +338,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
         }
 
         // e. Let iteratorRecord be undefined.
-        Optional<IteratorRecord> iterator_record;
+        GCPtr<IteratorRecord> iterator_record;
 
         // f. If usingAsyncIterator is not undefined, then
         if (using_async_iterator) {
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
         }
 
         // h. If iteratorRecord is not undefined, then
-        if (iterator_record.has_value()) {
+        if (iterator_record) {
             GCPtr<Object> array;
 
             // i. If IsConstructor(C) is true, then
@@ -377,7 +377,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
                     auto error = vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
 
                     // b. Return ? AsyncIteratorClose(iteratorRecord, error).
-                    return *TRY(async_iterator_close(vm, iterator_record.value(), move(error)));
+                    return *TRY(async_iterator_close(vm, *iterator_record, move(error)));
                 }
 
                 // 2. Let Pk be ! ToString(𝔽(k)).
@@ -433,7 +433,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
 
                     // b. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
                     if (mapped_value_or_error.is_error()) {
-                        TRY(async_iterator_close(vm, iterator_record.value(), mapped_value_or_error));
+                        TRY(async_iterator_close(vm, *iterator_record, mapped_value_or_error));
                         return mapped_value_or_error;
                     }
 
@@ -442,7 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
 
                     // d. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
                     if (mapped_value_or_error.is_error()) {
-                        TRY(async_iterator_close(vm, iterator_record.value(), mapped_value_or_error));
+                        TRY(async_iterator_close(vm, *iterator_record, mapped_value_or_error));
                         return mapped_value_or_error;
                     }
 
@@ -458,7 +458,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
 
                 // 9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
                 if (define_status.is_error())
-                    return *TRY(iterator_close(vm, iterator_record.value(), define_status.release_error()));
+                    return *TRY(iterator_close(vm, *iterator_record, define_status.release_error()));
 
                 // 10. Set k to k + 1.
             }

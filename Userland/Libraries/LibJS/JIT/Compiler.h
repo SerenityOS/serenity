@@ -114,6 +114,8 @@ private:
         O(BlockDeclarationInstantiation, block_declaration_instantiation)        \
         O(SuperCallWithArgumentArray, super_call_with_argument_array)            \
         O(GetIterator, get_iterator)                                             \
+        O(GetObjectFromIteratorRecord, get_object_from_iterator_record)          \
+        O(GetNextMethodFromIteratorRecord, get_next_method_from_iterator_record) \
         O(IteratorNext, iterator_next)                                           \
         O(IteratorResultDone, iterator_result_done)                              \
         O(ThrowIfNotObject, throw_if_not_object)                                 \

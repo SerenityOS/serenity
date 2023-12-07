@@ -13,12 +13,12 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(IteratorHelper);
 
-ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
+ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, NonnullGCPtr<IteratorRecord> underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
 {
     return realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure), move(abrupt_closure));
 }
 
-IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
+IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, NonnullGCPtr<IteratorRecord> underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
     : GeneratorObject(realm, prototype, realm.vm().running_execution_context().copy(), "Iterator Helper"sv)
     , m_underlying_iterator(move(underlying_iterator))
     , m_closure(move(closure))
@@ -29,7 +29,7 @@ IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, IteratorRecord u
 void IteratorHelper::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_underlying_iterator.iterator);
+    visitor.visit(m_underlying_iterator);
 }
 
 Value IteratorHelper::result(Value value)

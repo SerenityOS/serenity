@@ -17,26 +17,47 @@
 namespace JS {
 
 // 7.4.1 Iterator Records, https://tc39.es/ecma262/#sec-iterator-records
-struct IteratorRecord {
+class IteratorRecord final : public Object {
+    JS_OBJECT(IteratorRecord, Object);
+    JS_DECLARE_ALLOCATOR(IteratorRecord);
+
+public:
+    IteratorRecord(Realm& realm, GCPtr<Object> iterator, Value next_method, bool done)
+        : Object(ConstructWithoutPrototypeTag::Tag, realm)
+        , iterator(iterator)
+        , next_method(next_method)
+        , done(done)
+    {
+    }
+
     GCPtr<Object> iterator; // [[Iterator]]
     Value next_method;      // [[NextMethod]]
     bool done { false };    // [[Done]]
+
+private:
+    virtual void visit_edges(Cell::Visitor&) override;
+    virtual bool is_iterator_record() const override { return true; }
 };
+
+template<>
+inline bool Object::fast_is<IteratorRecord>() const { return is_iterator_record(); }
 
 class Iterator : public Object {
     JS_OBJECT(Iterator, Object);
     JS_DECLARE_ALLOCATOR(Iterator);
 
 public:
-    static NonnullGCPtr<Iterator> create(Realm&, Object& prototype, IteratorRecord iterated);
+    static NonnullGCPtr<Iterator> create(Realm&, Object& prototype, NonnullGCPtr<IteratorRecord> iterated);
 
     IteratorRecord const& iterated() const { return m_iterated; }
 
 private:
-    Iterator(Object& prototype, IteratorRecord iterated);
+    Iterator(Object& prototype, NonnullGCPtr<IteratorRecord> iterated);
     explicit Iterator(Object& prototype);
 
-    IteratorRecord m_iterated; // [[Iterated]]
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    NonnullGCPtr<IteratorRecord> m_iterated; // [[Iterated]]
 };
 
 enum class IteratorHint {
@@ -49,10 +70,10 @@ enum class StringHandling {
     RejectStrings,
 };
 
-ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM&, Value, NonnullGCPtr<FunctionObject>);
-ThrowCompletionOr<IteratorRecord> get_iterator(VM&, Value, IteratorHint);
-ThrowCompletionOr<IteratorRecord> get_iterator_direct(VM&, Object&);
-ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM&, Value, StringHandling);
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_from_method(VM&, Value, NonnullGCPtr<FunctionObject>);
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator(VM&, Value, IteratorHint);
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_direct(VM&, Object&);
+ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_flattenable(VM&, Value, StringHandling);
 ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, IteratorRecord const&, Optional<Value> = {});
 ThrowCompletionOr<GCPtr<Object>> iterator_step(VM&, IteratorRecord const&);
 ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);

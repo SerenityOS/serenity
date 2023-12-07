@@ -226,7 +226,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
         auto result = iterator_binding_initialization(*target, iterator_record, environment);
 
         // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
-        if (!iterator_record.done) {
+        if (!iterator_record->done) {
             // iterator_close() always returns a Completion, which ThrowCompletionOr will interpret as a throw
             // completion. So only return the result of iterator_close() if it is indeed a throw completion.
             auto completion = result.is_throw_completion() ? result.release_error() : normal_completion({});
