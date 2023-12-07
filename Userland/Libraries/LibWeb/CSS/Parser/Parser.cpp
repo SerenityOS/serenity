@@ -3967,7 +3967,7 @@ static bool is_generic_font_family(ValueID identifier)
     }
 }
 
-RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_font_value(TokenStream<ComponentValue>& tokens)
 {
     RefPtr<StyleValue> font_stretch;
     RefPtr<StyleValue> font_style;
@@ -3983,8 +3983,8 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     // So, we have to handle that separately.
     int normal_count = 0;
 
-    auto tokens = TokenStream { component_values };
     auto remaining_longhands = Vector { PropertyID::FontSize, PropertyID::FontStretch, PropertyID::FontStyle, PropertyID::FontVariant, PropertyID::FontWeight };
+    auto transaction = tokens.begin_transaction();
 
     while (tokens.has_next_token()) {
         auto& peek_token = tokens.peek_token();
@@ -4071,6 +4071,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!line_height)
         line_height = property_initial_value(m_context.realm(), PropertyID::LineHeight);
 
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::Font,
         { PropertyID::FontStyle, PropertyID::FontVariant, PropertyID::FontWeight, PropertyID::FontStretch, PropertyID::FontSize, PropertyID::LineHeight, PropertyID::FontFamily },
         { font_style.release_nonnull(), font_variant.release_nonnull(), font_weight.release_nonnull(), font_stretch.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull() });
@@ -5810,7 +5811,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Font:
-        if (auto parsed_value = parse_font_value(component_values))
+        if (auto parsed_value = parse_font_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::FontFamily: {
