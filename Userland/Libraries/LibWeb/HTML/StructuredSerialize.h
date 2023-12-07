@@ -50,6 +50,7 @@ WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& v
 
 WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<DeserializationMemory>);
 
-// TODO: structured_[de]serialize_with_transfer
+WebIDL::ExceptionOr<SerializedTransferRecord> structured_serialize_with_transfer(JS::VM& vm, JS::Value value, JS::MarkedVector<JS::Value> transfer_list);
+WebIDL::ExceptionOr<DeserializedTransferRecord> structured_deserialize_with_transfer(JS::VM& vm, SerializedTransferRecord const&);
 
 }

@@ -10,6 +10,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibIPC/File.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -27,6 +28,9 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/Transferable.h>
+#include <LibWeb/HTML/MessagePort.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -915,6 +919,174 @@ private:
         return JS::BigInt::create(vm, ::Crypto::SignedBigInteger::from_base(10, string_view.substring_view(0, string_view.length() - 1)));
     }
 };
+
+// https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializewithtransfer
+WebIDL::ExceptionOr<SerializedTransferRecord> structured_serialize_with_transfer(JS::VM& vm, JS::Value value, JS::MarkedVector<JS::Value> transfer_list)
+{
+    // 1. Let memory be an empty map.
+    SerializationMemory memory = {};
+
+    // 2. For each transferable of transferList:
+    for (auto const& transferable : transfer_list) {
+
+        // 1. If transferable has neither an [[ArrayBufferData]] internal slot nor a [[Detached]] internal slot, then throw a "DataCloneError" DOMException.
+        // FIXME: Handle transferring ArrayBufferData objects
+        if (!transferable.is_object() || !is<Bindings::Transferable>(transferable.as_object())) {
+            return WebIDL::DataCloneError::create(*vm.current_realm(), "Cannot transfer type"_fly_string);
+        }
+
+        // FIXME: 2. If transferable has an [[ArrayBufferData]] internal slot and IsSharedArrayBuffer(transferable) is true, then throw a "DataCloneError" DOMException.
+
+        // 3. If memory[transferable] exists, then throw a "DataCloneError" DOMException.
+        if (memory.contains(transferable)) {
+            return WebIDL::DataCloneError::create(*vm.current_realm(), "Cannot transfer value twice"_fly_string);
+        }
+
+        // 4. Set memory[transferable] to { [[Type]]: an uninitialized value }.
+        memory.set(JS::make_handle(transferable), NumericLimits<u32>::max());
+    }
+
+    // 3. Let serialized be ? StructuredSerializeInternal(value, false, memory).
+    auto serialized = TRY(structured_serialize_internal(vm, value, false, memory));
+
+    // 4. Let transferDataHolders be a new empty List.
+    Vector<TransferDataHolder> transfer_data_holders;
+    transfer_data_holders.ensure_capacity(transfer_list.size());
+
+    // 5. For each transferable of transferList:
+    for (auto& transferable : transfer_list) {
+        // 1. FIXME: If transferable has an [[ArrayBufferData]] internal slot and IsDetachedBuffer(transferable) is true, then throw a "DataCloneError" DOMException.
+
+        // 2. If transferable has a [[Detached]] internal slot and transferable.[[Detached]] is true, then throw a "DataCloneError" DOMException.
+        if (transferable.is_object() && is<Bindings::Transferable>(transferable.as_object())) {
+            auto& transferable_object = dynamic_cast<Bindings::Transferable&>(transferable.as_object());
+            if (transferable_object.is_detached()) {
+                return WebIDL::DataCloneError::create(*vm.current_realm(), "Value already transferred"_fly_string);
+            }
+        }
+
+        // 3. Let dataHolder be memory[transferable].
+        // IMPLEMENTATION DEFINED: We just create a data holder here, our memory holds indices into the SerializationRecord
+        TransferDataHolder data_holder;
+
+        // FIXME 4. If transferable has an [[ArrayBufferData]] internal slot, then:
+        if (false) {
+        }
+
+        // 5. Otherwise:
+        else {
+            // 1. Assert: transferable is a platform object that is a transferable object.
+            auto& transferable_object = dynamic_cast<Bindings::Transferable&>(transferable.as_object());
+            VERIFY(is<Bindings::PlatformObject>(transferable.as_object()));
+
+            // 2. Let interfaceName be the identifier of the primary interface of transferable.
+            auto interface_name = transferable_object.primary_interface();
+
+            // 3. Set dataHolder.[[Type]] to interfaceName.
+            data_holder.data.append(to_underlying(interface_name));
+
+            // 4. Perform the appropriate transfer steps for the interface identified by interfaceName, given transferable and dataHolder.
+            TRY(transferable_object.transfer_steps(data_holder));
+
+            // 5. Set transferable.[[Detached]] to true.
+            transferable_object.set_detached(true);
+        }
+
+        // 6. Append dataHolder to transferDataHolders.
+        transfer_data_holders.append(move(data_holder));
+    }
+
+    // 6. Return { [[Serialized]]: serialized, [[TransferDataHolders]]: transferDataHolders }.
+    return SerializedTransferRecord { .serialized = move(serialized), .transfer_data_holders = move(transfer_data_holders) };
+}
+
+static bool is_interface_exposed_on_target_realm(u8 name, JS::Realm& realm)
+{
+    auto const& intrinsics = Bindings::host_defined_intrinsics(realm);
+    switch (static_cast<TransferType>(name)) {
+    case TransferType::MessagePort:
+        return intrinsics.is_exposed("MessagePort"sv);
+        break;
+    default:
+        dbgln("Unknown interface type for transfer: {}", name);
+        break;
+    }
+    return false;
+}
+
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_transferred_value(TransferType name, JS::Realm& target_realm, TransferDataHolder const& transfer_data_holder)
+{
+    switch (name) {
+    case TransferType::MessagePort: {
+        auto message_port = HTML::MessagePort::create(target_realm);
+        TRY(message_port->transfer_receiving_steps(transfer_data_holder));
+        return message_port;
+    }
+    }
+    VERIFY_NOT_REACHED();
+}
+
+// https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserializewithtransfer
+WebIDL::ExceptionOr<DeserializedTransferRecord> structured_deserialize_with_transfer(JS::VM& vm, SerializedTransferRecord const& serialize_with_transfer_result)
+{
+    auto& target_realm = *vm.current_realm();
+
+    // 1. Let memory be an empty map.
+    auto memory = DeserializationMemory(vm.heap());
+
+    // 2. Let transferredValues be a new empty List.
+    auto transferred_values = JS::MarkedVector<JS::Value>(vm.heap());
+
+    // 3. For each transferDataHolder of serializeWithTransferResult.[[TransferDataHolders]]:
+    for (auto& transfer_data_holder : serialize_with_transfer_result.transfer_data_holders) {
+        // 1. Let value be an uninitialized value.
+        JS::Value value;
+
+        // FIXME: 2. If transferDataHolder.[[Type]] is "ArrayBuffer", then set value to a new ArrayBuffer object in targetRealm
+        //    whose [[ArrayBufferData]] internal slot value is transferDataHolder.[[ArrayBufferData]], and
+        //    whose [[ArrayBufferByteLength]] internal slot value is transferDataHolder.[[ArrayBufferByteLength]].
+        // NOTE: In cases where the original memory occupied by [[ArrayBufferData]] is accessible during the deserialization,
+        //       this step is unlikely to throw an exception, as no new memory needs to be allocated: the memory occupied by
+        //       [[ArrayBufferData]] is instead just getting transferred into the new ArrayBuffer. This could be true, for example,
+        //       when both the source and target realms are in the same process.
+        if (false) {
+        }
+
+        // FIXME: 3. Otherwise, if transferDataHolder.[[Type]] is "ResizableArrayBuffer", then set value to a new ArrayBuffer object
+        //     in targetRealm whose [[ArrayBufferData]] internal slot value is transferDataHolder.[[ArrayBufferData]], whose
+        //     [[ArrayBufferByteLength]] internal slot value is transferDataHolder.[[ArrayBufferByteLength]], and whose
+        //     [[ArrayBufferMaxByteLength]] internal slot value is transferDataHolder.[[ArrayBufferMaxByteLength]].
+        // NOTE: For the same reason as the previous step, this step is also unlikely to throw an exception.
+        else if (false) {
+        }
+
+        // 4. Otherwise:
+        else {
+            // 1. Let interfaceName be transferDataHolder.[[Type]].
+            u8 const interface_name = transfer_data_holder.data[0];
+
+            // 2. If the interface identified by interfaceName is not exposed in targetRealm, then throw a "DataCloneError" DOMException.
+            if (!is_interface_exposed_on_target_realm(interface_name, target_realm))
+                return WebIDL::DataCloneError::create(target_realm, "Unknown type transferred"_fly_string);
+
+            // 3. Set value to a new instance of the interface identified by interfaceName, created in targetRealm.
+            // 4. Perform the appropriate transfer-receiving steps for the interface identified by interfaceName given transferDataHolder and value.
+            value = TRY(create_transferred_value(static_cast<TransferType>(interface_name), target_realm, transfer_data_holder));
+        }
+
+        // 5. Set memory[transferDataHolder] to value.
+        memory.append(value);
+
+        // 6. Append value to transferredValues.
+        transferred_values.append(value);
+    }
+
+    // 4. Let deserialized be ? StructuredDeserialize(serializeWithTransferResult.[[Serialized]], targetRealm, memory).
+    auto deserialized = TRY(structured_deserialize(vm, serialize_with_transfer_result.serialized, target_realm, memory));
+
+    // 5. Return { [[Deserialized]]: deserialized, [[TransferredValues]]: transferredValues }.
+    return DeserializedTransferRecord { .deserialized = move(deserialized), .transferred_values = move(transferred_values) };
+}
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserialize
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize(JS::VM& vm, JS::Value value)

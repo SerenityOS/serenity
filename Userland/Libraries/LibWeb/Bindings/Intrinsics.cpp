@@ -27,4 +27,9 @@ void Intrinsics::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_realm);
 }
 
+bool Intrinsics::is_exposed(StringView name) const
+{
+    return m_constructors.contains(name) || m_prototypes.contains(name) || m_namespaces.contains(name);
+}
+
 }
