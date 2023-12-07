@@ -3815,17 +3815,18 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(TokenStream<ComponentVa
     return FilterValueListStyleValue::create(move(filter_value_list));
 }
 
-RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_value(TokenStream<ComponentValue>& tokens)
 {
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
 
     auto make_flex_shorthand = [&](NonnullRefPtr<StyleValue> flex_grow, NonnullRefPtr<StyleValue> flex_shrink, NonnullRefPtr<StyleValue> flex_basis) {
+        transaction.commit();
         return ShorthandStyleValue::create(PropertyID::Flex,
             { PropertyID::FlexGrow, PropertyID::FlexShrink, PropertyID::FlexBasis },
             { move(flex_grow), move(flex_shrink), move(flex_basis) });
     };
 
-    if (component_values.size() == 1) {
+    if (tokens.remaining_token_count() == 1) {
         // One-value syntax: <flex-grow> | <flex-basis> | none
         auto properties = Array { PropertyID::FlexGrow, PropertyID::FlexBasis, PropertyID::Flex };
         auto property_and_value = parse_css_value_for_properties(properties, tokens);
@@ -5802,7 +5803,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Flex:
-        if (auto parsed_value = parse_flex_value(component_values))
+        if (auto parsed_value = parse_flex_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::FlexFlow:
