@@ -8,6 +8,7 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
+#include <LibWeb/Bindings/Transferable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 
@@ -23,7 +24,8 @@ struct StructuredSerializeOptions {
 };
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports
-class MessagePort final : public DOM::EventTarget {
+class MessagePort final : public DOM::EventTarget
+    , public Bindings::Transferable {
     WEB_PLATFORM_OBJECT(MessagePort, DOM::EventTarget);
     JS_DECLARE_ALLOCATOR(MessagePort);
 
@@ -49,6 +51,11 @@ public:
     ENUMERATE_MESSAGE_PORT_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
+    // ^Transferable
+    virtual WebIDL::ExceptionOr<void> transfer_steps(HTML::TransferDataHolder&) override;
+    virtual WebIDL::ExceptionOr<void> transfer_receiving_steps(HTML::TransferDataHolder const&) override;
+    virtual HTML::TransferType primary_interface() const override { return HTML::TransferType::MessagePort; }
+
 private:
     explicit MessagePort(JS::Realm&);
 
@@ -63,9 +70,6 @@ private:
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#has-been-shipped
     bool m_has_been_shipped { false };
-
-    // This is TransferableObject.[[Detached]]
-    bool m_detached { false };
 };
 
 }

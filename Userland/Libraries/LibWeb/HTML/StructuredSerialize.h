@@ -10,6 +10,7 @@
 #include <AK/Result.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibIPC/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -23,6 +24,25 @@ namespace Web::HTML {
 using SerializationRecord = Vector<u32>;
 using SerializationMemory = HashMap<JS::Handle<JS::Value>, u32>;
 using DeserializationMemory = JS::MarkedVector<JS::Value>;
+
+struct TransferDataHolder {
+    Vector<u8> data;
+    Vector<IPC::File> fds;
+};
+
+struct SerializedTransferRecord {
+    SerializationRecord serialized;
+    Vector<TransferDataHolder> transfer_data_holders;
+};
+
+struct DeserializedTransferRecord {
+    JS::Value deserialized;
+    JS::MarkedVector<JS::Value> transferred_values;
+};
+
+enum class TransferType : u8 {
+    MessagePort,
+};
 
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize(JS::VM& vm, JS::Value);
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM& vm, JS::Value);

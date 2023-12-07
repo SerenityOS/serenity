@@ -40,6 +40,47 @@ void MessagePort::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_remote_port);
 }
 
+// https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports:transfer-steps
+WebIDL::ExceptionOr<void> MessagePort::transfer_steps(HTML::TransferDataHolder&)
+{
+    // 1. Set value's has been shipped flag to true.
+    m_has_been_shipped = true;
+
+    // FIXME: 2. Set dataHolder.[[PortMessageQueue]] to value's port message queue.
+    // FIXME: Support delivery of messages that haven't been delivered yet on the other side
+
+    // 3. If value is entangled with another port remotePort, then:
+    if (is_entangled()) {
+        // 1. Set remotePort's has been shipped flag to true.
+        m_remote_port->m_has_been_shipped = true;
+
+        // 2. Set dataHolder.[[RemotePort]] to remotePort.
+        // FIXME: Append an IPC::File to the dataHolder
+    }
+
+    // 4. Otherwise, set dataHolder.[[RemotePort]] to null.
+    else {
+        // FIXME: Note in the dataHolder that there are no fds
+    }
+
+    return {};
+}
+
+WebIDL::ExceptionOr<void> MessagePort::transfer_receiving_steps(HTML::TransferDataHolder const&)
+{
+    // 1. Set value's has been shipped flag to true.
+    m_has_been_shipped = true;
+
+    // FIXME 2. Move all the tasks that are to fire message events in dataHolder.[[PortMessageQueue]] to the port message queue of value,
+    //     if any, leaving value's port message queue in its initial disabled state, and, if value's relevant global object is a Window,
+    //     associating the moved tasks with value's relevant global object's associated Document.
+
+    // FIXME: 3. If dataHolder.[[RemotePort]] is not null, then entangle dataHolder.[[RemotePort]] and value.
+    //     (This will disentangle dataHolder.[[RemotePort]] from the original port that was transferred.)
+
+    return {};
+}
+
 void MessagePort::disentangle()
 {
     m_remote_port->m_remote_port = nullptr;
@@ -112,7 +153,7 @@ void MessagePort::start()
 void MessagePort::close()
 {
     // 1. Set this MessagePort object's [[Detached]] internal slot value to true.
-    m_detached = true;
+    set_detached(true);
 
     // 2. If this MessagePort object is entangled, disentangle it.
     if (is_entangled())
