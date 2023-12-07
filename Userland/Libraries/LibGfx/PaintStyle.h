@@ -83,6 +83,63 @@ private:
     IntPoint m_offset;
 };
 
+class RepeatingBitmapPaintStyle : public Gfx::PaintStyle {
+public:
+    static ErrorOr<NonnullRefPtr<RepeatingBitmapPaintStyle>> create(Gfx::Bitmap const& bitmap, Gfx::IntPoint steps, Color fallback)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) RepeatingBitmapPaintStyle(bitmap, steps, fallback));
+    }
+
+    virtual Color sample_color(Gfx::IntPoint point) const override
+    {
+        point.set_x(point.x() % m_steps.x());
+        point.set_y(point.y() % m_steps.y());
+        if (point.x() < 0 || point.y() < 0 || point.x() >= m_bitmap->width() || point.y() >= m_bitmap->height())
+            return m_fallback;
+        auto px = m_bitmap->get_pixel(point);
+        return px;
+    }
+
+private:
+    RepeatingBitmapPaintStyle(Gfx::Bitmap const& bitmap, Gfx::IntPoint steps, Color fallback)
+        : m_bitmap(bitmap)
+        , m_steps(steps)
+        , m_fallback(fallback)
+    {
+    }
+
+    NonnullRefPtr<Gfx::Bitmap const> m_bitmap;
+    Gfx::IntPoint m_steps;
+    Color m_fallback;
+};
+
+class OffsetPaintStyle : public Gfx::PaintStyle {
+public:
+    static ErrorOr<NonnullRefPtr<OffsetPaintStyle>> create(RefPtr<PaintStyle> other, Gfx::AffineTransform transform)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) OffsetPaintStyle(move(other), transform));
+    }
+
+    virtual void paint(Gfx::IntRect physical_bounding_box, PaintFunction paint) const override
+    {
+        m_other->paint(m_transform.map(physical_bounding_box), [=, this, paint = move(paint)](SamplerFunction sampler) {
+            paint([=, this, sampler = move(sampler)](Gfx::IntPoint point) {
+                return sampler(m_transform.map(point));
+            });
+        });
+    }
+
+private:
+    OffsetPaintStyle(RefPtr<PaintStyle> other, Gfx::AffineTransform transform)
+        : m_other(move(other))
+        , m_transform(transform)
+    {
+    }
+
+    RefPtr<PaintStyle> m_other;
+    Gfx::AffineTransform m_transform;
+};
+
 class GradientPaintStyle : public PaintStyle {
 public:
     ErrorOr<void> add_color_stop(float position, Color color, Optional<float> transition_hint = {})
