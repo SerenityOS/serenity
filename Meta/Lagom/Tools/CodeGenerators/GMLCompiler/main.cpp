@@ -312,7 +312,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         auto child_variable_name = TRY(next_child_name());
         child_generator.set("child_variable_name", child_variable_name.bytes_as_string_view());
         child_generator.set("child_class_name", child.name());
-        TRY(append(child_generator, "RefPtr<@child_class_name@> @child_variable_name@;"));
+        TRY(append(child_generator, "RefPtr<::@child_class_name@> @child_variable_name@;"));
         TRY(generate_loader_for_object(child, child_generator.fork(), child_variable_name, indentation + 1, UseObjectConstructor::Yes));
 
         // Handle the current two special cases of child adding.
