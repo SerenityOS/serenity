@@ -3430,9 +3430,11 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
     return ShadowStyleValue::create(color.release_value(), offset_x.release_nonnull(), offset_y.release_nonnull(), blur_radius.release_nonnull(), spread_distance.release_nonnull(), placement.release_value());
 }
 
-RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_content_value(TokenStream<ComponentValue>& tokens)
 {
     // FIXME: `content` accepts several kinds of function() type, which we don't handle in property_accepts_value() yet.
+
+    auto transaction = tokens.begin_transaction();
 
     auto is_single_value_identifier = [](ValueID identifier) -> bool {
         switch (identifier) {
@@ -3444,10 +3446,13 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
         }
     };
 
-    if (component_values.size() == 1) {
-        if (auto identifier = parse_identifier_value(component_values.first())) {
-            if (is_single_value_identifier(identifier->to_identifier()))
+    if (tokens.remaining_token_count() == 1) {
+        if (auto identifier = parse_identifier_value(tokens.peek_token())) {
+            if (is_single_value_identifier(identifier->to_identifier())) {
+                (void)tokens.next_token();
+                transaction.commit();
                 return identifier;
+            }
         }
     }
 
@@ -3455,7 +3460,6 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
     StyleValueVector alt_text_values;
     bool in_alt_text = false;
 
-    auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto& next = tokens.peek_token();
         if (next.is_delim('/')) {
@@ -3490,6 +3494,7 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
     if (!alt_text_values.is_empty())
         alt_text = StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space);
 
+    transaction.commit();
     return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
 }
 
@@ -5768,7 +5773,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Content:
-        if (auto parsed_value = parse_content_value(component_values))
+        if (auto parsed_value = parse_content_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Display:
