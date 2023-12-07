@@ -2731,8 +2731,10 @@ RefPtr<StyleValue> Parser::parse_aspect_ratio_value(TokenStream<ComponentValue>&
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_value(TokenStream<ComponentValue>& tokens)
 {
+    auto transaction = tokens.begin_transaction();
+
     auto make_background_shorthand = [&](auto background_color, auto background_image, auto background_position, auto background_size, auto background_repeat, auto background_attachment, auto background_origin, auto background_clip) {
         return ShorthandStyleValue::create(PropertyID::Background,
             { PropertyID::BackgroundColor, PropertyID::BackgroundImage, PropertyID::BackgroundPosition, PropertyID::BackgroundSize, PropertyID::BackgroundRepeat, PropertyID::BackgroundAttachment, PropertyID::BackgroundOrigin, PropertyID::BackgroundClip },
@@ -2823,7 +2825,6 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         remaining_layer_properties.unchecked_append(PropertyID::BackgroundRepeat);
     };
 
-    auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         if (tokens.peek_token().is(Token::Type::Comma)) {
             has_multiple_layers = true;
@@ -2875,11 +2876,11 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
             background_position = value.release_nonnull();
 
             // Attempt to parse `/ <background-size>`
-            auto transaction = tokens.begin_transaction();
+            auto background_size_transaction = tokens.begin_transaction();
             auto& maybe_slash = tokens.next_token();
             if (maybe_slash.is_delim('/')) {
                 if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
-                    transaction.commit();
+                    background_size_transaction.commit();
                     background_size = maybe_background_size.release_nonnull();
                     continue;
                 }
@@ -2913,6 +2914,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
 
         if (!background_color)
             background_color = initial_background_color;
+        transaction.commit();
         return make_background_shorthand(
             background_color.release_nonnull(),
             StyleValueList::create(move(background_images), StyleValueList::Separator::Comma),
@@ -2944,6 +2946,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         background_clip = background_origin;
     }
 
+    transaction.commit();
     return make_background_shorthand(
         background_color.release_nonnull(),
         background_image.release_nonnull(),
@@ -5744,7 +5747,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Background:
-        if (auto parsed_value = parse_background_value(component_values))
+        if (auto parsed_value = parse_background_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundAttachment:
