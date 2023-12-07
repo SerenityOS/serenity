@@ -176,6 +176,16 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
     m_inspector_client->context_menu_screenshot_dom_node();
 }
 
+- (void)createChildElement:(id)sender
+{
+    m_inspector_client->context_menu_create_child_element();
+}
+
+- (void)createChildTextNode:(id)sender
+{
+    m_inspector_client->context_menu_create_child_text_node();
+}
+
 - (void)deleteDOMNode:(id)sender
 {
     m_inspector_client->context_menu_remove_dom_node();
@@ -197,6 +207,24 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
 }
 
 #pragma mark - Properties
+
++ (NSMenuItem*)make_create_child_menu
+{
+    auto* create_child_menu = [[NSMenu alloc] init];
+    [create_child_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Create child element"
+                                                          action:@selector(createChildElement:)
+                                                   keyEquivalent:@""]];
+    [create_child_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Create child text node"
+                                                          action:@selector(createChildTextNode:)
+                                                   keyEquivalent:@""]];
+
+    auto* create_child_menu_item = [[NSMenuItem alloc] initWithTitle:@"Create child"
+                                                              action:nil
+                                                       keyEquivalent:@""];
+    [create_child_menu_item setSubmenu:create_child_menu];
+
+    return create_child_menu_item;
+}
 
 - (NSMenu*)dom_node_text_context_menu
 {
@@ -236,6 +264,7 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
         [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Add attribute"
                                                                        action:@selector(addDOMAttribute:)
                                                                 keyEquivalent:@""]];
+        [_dom_node_tag_context_menu addItem:[Inspector make_create_child_menu]];
         [_dom_node_tag_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Delete node"
                                                                        action:@selector(deleteDOMNode:)
                                                                 keyEquivalent:@""]];
@@ -281,6 +310,7 @@ static constexpr NSInteger CONTEXT_MENU_COPY_ATTRIBUTE_VALUE_TAG = 3;
         [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Add attribute"
                                                                              action:@selector(addDOMAttribute:)
                                                                       keyEquivalent:@""]];
+        [_dom_node_attribute_context_menu addItem:[Inspector make_create_child_menu]];
         [_dom_node_attribute_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Delete node"
                                                                              action:@selector(deleteDOMNode:)
                                                                       keyEquivalent:@""]];

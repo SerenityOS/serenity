@@ -36,6 +36,12 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_screenshot_node_action = new QAction("Take node &screenshot", this);
     connect(m_screenshot_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_screenshot_dom_node(); });
 
+    m_create_child_element_action = new QAction("Create child &element", this);
+    connect(m_create_child_element_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_create_child_element(); });
+
+    m_create_child_text_node_action = new QAction("Create child &text node", this);
+    connect(m_create_child_text_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_create_child_text_node(); });
+
     m_delete_node_action = new QAction("&Delete node", this);
     connect(m_delete_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_remove_dom_node(); });
 
@@ -54,10 +60,15 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_dom_node_text_context_menu->addSeparator();
     m_dom_node_text_context_menu->addAction(m_delete_node_action);
 
+    auto* create_child_menu = new QMenu("Create child", this);
+    create_child_menu->addAction(m_create_child_element_action);
+    create_child_menu->addAction(m_create_child_text_node_action);
+
     m_dom_node_tag_context_menu = new QMenu("DOM tag context menu", this);
     m_dom_node_tag_context_menu->addAction(m_edit_node_action);
     m_dom_node_tag_context_menu->addSeparator();
     m_dom_node_tag_context_menu->addAction(m_add_attribute_action);
+    m_dom_node_tag_context_menu->addMenu(create_child_menu);
     m_dom_node_tag_context_menu->addAction(m_delete_node_action);
     m_dom_node_tag_context_menu->addSeparator();
     m_dom_node_tag_context_menu->addAction(m_copy_node_action);
@@ -69,6 +80,7 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     m_dom_node_attribute_context_menu->addAction(m_remove_attribute_action);
     m_dom_node_attribute_context_menu->addSeparator();
     m_dom_node_attribute_context_menu->addAction(m_add_attribute_action);
+    m_dom_node_attribute_context_menu->addMenu(create_child_menu);
     m_dom_node_attribute_context_menu->addAction(m_delete_node_action);
     m_dom_node_attribute_context_menu->addSeparator();
     m_dom_node_attribute_context_menu->addAction(m_copy_node_action);
