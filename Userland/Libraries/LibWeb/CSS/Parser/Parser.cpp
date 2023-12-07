@@ -3499,15 +3499,19 @@ RefPtr<StyleValue> Parser::parse_content_value(TokenStream<ComponentValue>& toke
 }
 
 // https://www.w3.org/TR/css-display-3/#the-display-properties
-RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_display_value(TokenStream<ComponentValue>& tokens)
 {
-    auto parse_single_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
-        if (auto identifier_value = parse_identifier_value(component_values.first())) {
+    auto parse_single_component_display = [this](TokenStream<ComponentValue>& tokens) -> Optional<Display> {
+        auto transaction = tokens.begin_transaction();
+        if (auto identifier_value = parse_identifier_value(tokens.next_token())) {
             auto identifier = identifier_value->to_identifier();
-            if (identifier == ValueID::ListItem)
+            if (identifier == ValueID::ListItem) {
+                transaction.commit();
                 return Display::from_short(Display::Short::ListItem);
+            }
 
             if (auto display_outside = value_id_to_display_outside(identifier); display_outside.has_value()) {
+                transaction.commit();
                 switch (display_outside.value()) {
                 case DisplayOutside::Block:
                     return Display::from_short(Display::Short::Block);
@@ -3519,6 +3523,7 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
             }
 
             if (auto display_inside = value_id_to_display_inside(identifier); display_inside.has_value()) {
+                transaction.commit();
                 switch (display_inside.value()) {
                 case DisplayInside::Flow:
                     return Display::from_short(Display::Short::Flow);
@@ -3538,10 +3543,12 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
             }
 
             if (auto display_internal = value_id_to_display_internal(identifier); display_internal.has_value()) {
+                transaction.commit();
                 return Display { display_internal.value() };
             }
 
             if (auto display_box = value_id_to_display_box(identifier); display_box.has_value()) {
+                transaction.commit();
                 switch (display_box.value()) {
                 case DisplayBox::Contents:
                     return Display::from_short(Display::Short::Contents);
@@ -3551,6 +3558,7 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
             }
 
             if (auto display_legacy = value_id_to_display_legacy(identifier); display_legacy.has_value()) {
+                transaction.commit();
                 switch (display_legacy.value()) {
                 case DisplayLegacy::InlineBlock:
                     return Display::from_short(Display::Short::InlineBlock);
@@ -3566,13 +3574,15 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
         return OptionalNone {};
     };
 
-    auto parse_multi_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
+    auto parse_multi_component_display = [this](TokenStream<ComponentValue>& tokens) -> Optional<Display> {
         auto list_item = Display::ListItem::No;
         Optional<DisplayInside> inside;
         Optional<DisplayOutside> outside;
 
-        for (size_t i = 0; i < component_values.size(); ++i) {
-            if (auto value = parse_identifier_value(component_values[i])) {
+        auto transaction = tokens.begin_transaction();
+        while (tokens.has_next_token()) {
+            auto& token = tokens.next_token();
+            if (auto value = parse_identifier_value(token)) {
                 auto identifier = value->to_identifier();
                 if (identifier == ValueID::ListItem) {
                     if (list_item == Display::ListItem::Yes)
@@ -3595,7 +3605,7 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
             }
 
             // Not a display value, abort.
-            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized display value: `{}`", component_values[i].to_string());
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized display value: `{}`", token.to_string());
             return {};
         }
 
@@ -3604,14 +3614,15 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
         if (list_item == Display::ListItem::Yes && inside.has_value() && inside != DisplayInside::Flow && inside != DisplayInside::FlowRoot)
             return {};
 
+        transaction.commit();
         return Display { outside.value_or(DisplayOutside::Block), inside.value_or(DisplayInside::Flow), list_item };
     };
 
     Optional<Display> display;
-    if (component_values.size() == 1)
-        display = parse_single_component_display(component_values);
+    if (tokens.remaining_token_count() == 1)
+        display = parse_single_component_display(tokens);
     else
-        display = parse_multi_component_display(component_values);
+        display = parse_multi_component_display(tokens);
 
     if (display.has_value())
         return DisplayStyleValue::create(display.value());
@@ -5777,7 +5788,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Display:
-        if (auto parsed_value = parse_display_value(component_values))
+        if (auto parsed_value = parse_display_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Flex:
