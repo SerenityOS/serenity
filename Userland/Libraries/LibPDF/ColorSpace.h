@@ -60,9 +60,9 @@ private:
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<Object>);
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&);
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<Object>, Renderer&);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&, Renderer&);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>, Renderer&);
 
     virtual ~ColorSpace() = default;
 
@@ -119,7 +119,7 @@ private:
 
 class DeviceNColorSpace final : public ColorSpace {
 public:
-    static PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> create(Document*, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
     ~DeviceNColorSpace() override = default;
 
@@ -179,7 +179,7 @@ private:
 
 class ICCBasedColorSpace final : public ColorSpace {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
     ~ICCBasedColorSpace() override = default;
 
@@ -216,7 +216,7 @@ private:
 
 class IndexedColorSpace final : public ColorSpace {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
     ~IndexedColorSpace() override = default;
 
@@ -235,7 +235,7 @@ private:
 
 class SeparationColorSpace final : public ColorSpace {
 public:
-    static PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> create(Document*, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
     ~SeparationColorSpace() override = default;
 

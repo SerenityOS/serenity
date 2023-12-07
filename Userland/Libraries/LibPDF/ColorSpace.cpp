@@ -9,6 +9,7 @@
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/ObjectDerivatives.h>
+#include <LibPDF/Renderer.h>
 
 namespace PDF {
 
@@ -31,20 +32,20 @@ PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& fa
     return Error(Error::Type::MalformedPDF, "Unknown ColorSpace family"_string);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<Object> color_space_object)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<Object> color_space_object, Renderer& renderer)
 {
     // "A color space is defined by an array object whose first element is a name object identifying the color space family.
     //  The remaining array elements, if any, are parameters that further characterize the color space;
     //  their number and types vary according to the particular family.
     //  For families that do not require parameters, the color space can be specified simply by the family name itself instead of an array."
     if (color_space_object->is<NameObject>())
-        return ColorSpace::create(color_space_object->cast<NameObject>()->name());
+        return ColorSpace::create(color_space_object->cast<NameObject>()->name(), renderer);
     if (color_space_object->is<ArrayObject>())
-        return ColorSpace::create(document, color_space_object->cast<ArrayObject>());
+        return ColorSpace::create(document, color_space_object->cast<ArrayObject>(), renderer);
     return Error { Error::Type::MalformedPDF, "Color space must be name or array" };
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name, Renderer&)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -58,7 +59,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
     VERIFY_NOT_REACHED();
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array, Renderer& renderer)
 {
     auto color_space_name = TRY(color_space_array->get_name_at(document, 0))->name();
 
@@ -74,13 +75,13 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
         return TRY(CalRGBColorSpace::create(document, move(parameters)));
 
     if (color_space_name == CommonNames::DeviceN)
-        return TRY(DeviceNColorSpace::create(document, move(parameters)));
+        return TRY(DeviceNColorSpace::create(document, move(parameters), renderer));
 
     if (color_space_name == CommonNames::ICCBased)
-        return TRY(ICCBasedColorSpace::create(document, move(parameters)));
+        return TRY(ICCBasedColorSpace::create(document, move(parameters), renderer));
 
     if (color_space_name == CommonNames::Indexed)
-        return TRY(IndexedColorSpace::create(document, move(parameters)));
+        return TRY(IndexedColorSpace::create(document, move(parameters), renderer));
 
     if (color_space_name == CommonNames::Lab)
         return TRY(LabColorSpace::create(document, move(parameters)));
@@ -89,7 +90,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
 
     if (color_space_name == CommonNames::Separation)
-        return TRY(SeparationColorSpace::create(document, move(parameters)));
+        return TRY(SeparationColorSpace::create(document, move(parameters), renderer));
 
     dbgln("Unknown color space: {}", color_space_name);
     return Error::rendering_unsupported_error("unknown color space");
@@ -154,7 +155,7 @@ Vector<float> DeviceCMYKColorSpace::default_decode() const
     return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
-PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document* document, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document* document, Vector<Value>&& parameters, Renderer& renderer)
 {
     // "[ /DeviceN names alternateSpace tintTransform ]
     //  or
@@ -173,7 +174,7 @@ PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document*
     // "The alternateSpace parameter is an array or name object that can be any device or CIE-based color space
     //  but not another special color space (Pattern, Indexed, Separation, or DeviceN)."
     auto alternate_space_object = TRY(document->resolve_to<Object>(parameters[1]));
-    auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object));
+    auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object, renderer));
 
     auto family = alternate_space->family();
     if (family == ColorSpaceFamily::Pattern || family == ColorSpaceFamily::Indexed || family == ColorSpaceFamily::Separation || family == ColorSpaceFamily::DeviceN)
@@ -465,7 +466,7 @@ Vector<float> CalRGBColorSpace::default_decode() const
     return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, Vector<Value>&& parameters, Renderer& renderer)
 {
     if (parameters.is_empty())
         return Error { Error::Type::MalformedPDF, "ICCBased color space expected one parameter" };
@@ -480,7 +481,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
     if (dict->contains(CommonNames::Alternate)) {
         auto alternate_color_space_object = MUST(dict->get_object(document, CommonNames::Alternate));
         if (alternate_color_space_object->is<NameObject>())
-            return ColorSpace::create(alternate_color_space_object->cast<NameObject>()->name());
+            return ColorSpace::create(alternate_color_space_object->cast<NameObject>()->name(), renderer);
 
         return Error { Error::Type::Internal, "Alternate color spaces in array format are not supported" };
     }
@@ -631,7 +632,7 @@ Vector<float> LabColorSpace::default_decode() const
     return { 0.0f, 100.0f, m_range[0], m_range[1], m_range[2], m_range[3] };
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* document, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* document, Vector<Value>&& parameters, Renderer& renderer)
 {
     if (parameters.size() != 3)
         return Error { Error::Type::MalformedPDF, "Indexed color space expected three parameters" };
@@ -641,7 +642,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
     //  a Separation or DeviceN space, but not a Pattern space or another Indexed space."
 
     auto base_object = TRY(document->resolve_to<Object>(parameters[0]));
-    auto base = TRY(ColorSpace::create(document, base_object));
+    auto base = TRY(ColorSpace::create(document, base_object, renderer));
 
     if (base->family() == ColorSpaceFamily::Pattern || base->family() == ColorSpaceFamily::Indexed)
         return Error { Error::Type::MalformedPDF, "Indexed color space has invalid base color space" };
@@ -713,7 +714,7 @@ Vector<float> IndexedColorSpace::default_decode() const
     return { 0.0, 255.0 };
 }
 
-PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document* document, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document* document, Vector<Value>&& parameters, Renderer& renderer)
 {
     if (parameters.size() != 3)
         return Error { Error::Type::MalformedPDF, "Separation color space expected three parameters" };
@@ -727,7 +728,7 @@ PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Doc
     //  which can be any device or CIE-based color space but not another special color space
     //  (Pattern, Indexed, Separation, or DeviceN)."
     auto alternate_space_object = TRY(document->resolve_to<Object>(parameters[1]));
-    auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object));
+    auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object, renderer));
 
     auto family = alternate_space->family();
     if (family == ColorSpaceFamily::Pattern || family == ColorSpaceFamily::Indexed || family == ColorSpaceFamily::Separation || family == ColorSpaceFamily::DeviceN)
