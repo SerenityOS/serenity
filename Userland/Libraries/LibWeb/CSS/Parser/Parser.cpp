@@ -4579,23 +4579,25 @@ RefPtr<StyleValue> Parser::parse_place_self_value(Vector<ComponentValue> const& 
         { *maybe_align_self_value, *maybe_justify_self_value });
 }
 
-RefPtr<StyleValue> Parser::parse_quotes_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_quotes_value(TokenStream<ComponentValue>& tokens)
 {
     // https://www.w3.org/TR/css-content-3/#quotes-property
     // auto | none | [ <string> <string> ]+
+    auto transaction = tokens.begin_transaction();
 
-    if (component_values.size() == 1) {
-        auto identifier = parse_identifier_value(component_values.first());
-        if (identifier && property_accepts_identifier(PropertyID::Quotes, identifier->to_identifier()))
+    if (tokens.remaining_token_count() == 1) {
+        auto identifier = parse_identifier_value(tokens.next_token());
+        if (identifier && property_accepts_identifier(PropertyID::Quotes, identifier->to_identifier())) {
+            transaction.commit();
             return identifier;
+        }
         return nullptr;
     }
 
     // Parse an even number of <string> values.
-    if (component_values.size() % 2 != 0)
+    if (tokens.remaining_token_count() % 2 != 0)
         return nullptr;
 
-    auto tokens = TokenStream { component_values };
     StyleValueVector string_values;
     while (tokens.has_next_token()) {
         auto maybe_string = parse_string_value(tokens.next_token());
@@ -4605,6 +4607,7 @@ RefPtr<StyleValue> Parser::parse_quotes_value(Vector<ComponentValue> const& comp
         string_values.append(maybe_string.release_nonnull());
     }
 
+    transaction.commit();
     return StyleValueList::create(move(string_values), StyleValueList::Separator::Space);
 }
 
@@ -5893,7 +5896,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Quotes:
-        if (auto parsed_value = parse_quotes_value(component_values))
+        if (auto parsed_value = parse_quotes_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecoration:
