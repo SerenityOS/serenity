@@ -3411,6 +3411,24 @@ void HTMLParser::handle_in_select(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is "hr"
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::hr) {
+        // If the current node is an option element, pop that node from the stack of open elements.
+        if (current_node().local_name() == HTML::TagNames::option) {
+            (void)m_stack_of_open_elements.pop();
+        }
+        // If the current node is an optgroup element, pop that node from the stack of open elements.
+        if (current_node().local_name() == HTML::TagNames::optgroup) {
+            (void)m_stack_of_open_elements.pop();
+        }
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
+        (void)insert_html_element(token);
+        (void)m_stack_of_open_elements.pop();
+        // Acknowledge the token's self-closing flag, if it is set.
+        token.acknowledge_self_closing_flag_if_set();
+        return;
+    }
+
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::optgroup) {
         if (current_node().local_name() == HTML::TagNames::option && node_before_current_node().local_name() == HTML::TagNames::optgroup)
             (void)m_stack_of_open_elements.pop();
