@@ -221,8 +221,8 @@ private:
     };
     RefPtr<PositionStyleValue> parse_position_value(TokenStream<ComponentValue>&, PositionParsingMode = PositionParsingMode::Normal);
     template<typename ParseFunction>
-    RefPtr<StyleValue> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
-    RefPtr<StyleValue> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_comma_separated_value_list(TokenStream<ComponentValue>&, ParseFunction);
+    RefPtr<StyleValue> parse_simple_comma_separated_value_list(PropertyID, TokenStream<ComponentValue>&);
 
     RefPtr<StyleValue> parse_filter_value_list_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_aspect_ratio_value(Vector<ComponentValue> const&);

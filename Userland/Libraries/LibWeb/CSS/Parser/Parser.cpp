@@ -2634,9 +2634,8 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
 }
 
 template<typename ParseFunction>
-RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValue> const& component_values, ParseFunction parse_one_value)
+RefPtr<StyleValue> Parser::parse_comma_separated_value_list(TokenStream<ComponentValue>& tokens, ParseFunction parse_one_value)
 {
-    auto tokens = TokenStream { component_values };
     auto first = parse_one_value(tokens);
     if (!first || !tokens.has_next_token())
         return first;
@@ -2658,9 +2657,9 @@ RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValu
     return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
-RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(PropertyID property_id, Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> RefPtr<StyleValue> {
+    return parse_comma_separated_value_list(tokens, [this, property_id](auto& tokens) -> RefPtr<StyleValue> {
         if (auto value = parse_css_value_for_property(property_id, tokens))
             return value;
         tokens.reconsume_current_input_token();
@@ -3298,6 +3297,8 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
 
 RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)
 {
+    TokenStream tokens { component_values };
+
     // "none"
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
         auto ident = parse_identifier_value(component_values.first());
@@ -3305,7 +3306,7 @@ RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& comp
             return ident;
     }
 
-    return parse_comma_separated_value_list(component_values, [this, allow_inset_keyword](auto& tokens) {
+    return parse_comma_separated_value_list(tokens, [this, allow_inset_keyword](auto& tokens) {
         return parse_single_shadow_value(tokens, allow_inset_keyword);
     });
 }
@@ -5715,24 +5716,24 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BackgroundClip:
     case PropertyID::BackgroundImage:
     case PropertyID::BackgroundOrigin:
-        if (auto parsed_value = parse_simple_comma_separated_value_list(property_id, component_values))
+        if (auto parsed_value = parse_simple_comma_separated_value_list(property_id, tokens))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPosition:
-        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_position_value(tokens, PositionParsingMode::BackgroundPosition); }))
+        if (auto parsed_value = parse_comma_separated_value_list(tokens, [this](auto& tokens) { return parse_position_value(tokens, PositionParsingMode::BackgroundPosition); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPositionX:
     case PropertyID::BackgroundPositionY:
-        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this, property_id](auto& tokens) { return parse_single_background_position_x_or_y_value(tokens, property_id); }))
+        if (auto parsed_value = parse_comma_separated_value_list(tokens, [this, property_id](auto& tokens) { return parse_single_background_position_x_or_y_value(tokens, property_id); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundRepeat:
-        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_repeat_value(tokens); }))
+        if (auto parsed_value = parse_comma_separated_value_list(tokens, [this](auto& tokens) { return parse_single_background_repeat_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundSize:
-        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_size_value(tokens); }))
+        if (auto parsed_value = parse_comma_separated_value_list(tokens, [this](auto& tokens) { return parse_single_background_size_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Border:
