@@ -1059,7 +1059,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
     if (!maybe_color_space_family.is_error()) {
         auto color_space_family = maybe_color_space_family.release_value();
         if (color_space_family.may_be_specified_directly()) {
-            return ColorSpace::create(color_space_name);
+            return ColorSpace::create(color_space_name, *this);
         }
     }
     auto color_space_resource_dict = TRY(resources->get_dict(m_document, CommonNames::ColorSpace));
@@ -1072,7 +1072,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object)
 {
-    return ColorSpace::create(m_document, color_space_object);
+    return ColorSpace::create(m_document, color_space_object, *this);
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
