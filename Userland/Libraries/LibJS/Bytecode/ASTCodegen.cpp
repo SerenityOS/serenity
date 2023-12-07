@@ -1344,7 +1344,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
 
         generator.emit<Bytecode::Op::IteratorNext>();
         generator.emit<Bytecode::Op::Store>(temp_iterator_result_reg);
-        generator.emit<Bytecode::Op::IteratorResultDone>();
+        generator.emit_iterator_complete();
         generator.emit<Bytecode::Op::Store>(is_iterator_exhausted_register);
 
         // We still have to check for exhaustion here. If the iterator is exhausted,
@@ -1358,7 +1358,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
 
         // Get the next value in the iterator
         generator.emit<Bytecode::Op::Load>(temp_iterator_result_reg);
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
 
         auto& create_binding_block = generator.make_block();
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { create_binding_block });
@@ -1798,7 +1798,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit<Bytecode::Op::Store>(inner_result_register);
 
         // iv. Let done be ? IteratorComplete(innerResult).
-        generator.emit<Bytecode::Op::IteratorResultDone>();
+        generator.emit_iterator_complete();
 
         // v. If done is true, then
         auto& type_is_normal_done_block = generator.make_block();
@@ -1811,7 +1811,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // 1. Return ? IteratorValue(innerResult).
         generator.emit<Bytecode::Op::Load>(inner_result_register);
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { loop_end_block });
 
         generator.switch_to_basic_block(type_is_normal_not_done_block);
@@ -1822,7 +1822,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // FIXME: Yield currently only accepts a Value, not an object conforming to the IteratorResult interface, so we have to do an observable lookup of `value` here.
         //        This only matters for non-async generators.
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
 
         generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::No);
 
@@ -1871,7 +1871,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit<Bytecode::Op::Store>(inner_result_register);
 
         // 5. Let done be ? IteratorComplete(innerResult).
-        generator.emit<Bytecode::Op::IteratorResultDone>();
+        generator.emit_iterator_complete();
 
         // 6. If done is true, then
         auto& type_is_throw_done_block = generator.make_block();
@@ -1884,7 +1884,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // a. Return ? IteratorValue(innerResult).
         generator.emit<Bytecode::Op::Load>(inner_result_register);
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { loop_end_block });
 
         generator.switch_to_basic_block(type_is_throw_not_done_block);
@@ -1895,7 +1895,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // FIXME: Yield currently only accepts a Value, not an object conforming to the IteratorResult interface, so we have to do an observable lookup of `value` here.
         //        This only matters for non-async generators.
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
 
         generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::No);
 
@@ -1970,7 +1970,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit<Bytecode::Op::Store>(inner_return_result_register);
 
         // vii. Let done be ? IteratorComplete(innerReturnResult).
-        generator.emit<Bytecode::Op::IteratorResultDone>();
+        generator.emit_iterator_complete();
 
         // viii. If done is true, then
         auto& type_is_return_done_block = generator.make_block();
@@ -1983,7 +1983,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // 1. Let value be ? IteratorValue(innerReturnResult).
         generator.emit<Bytecode::Op::Load>(inner_result_register);
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
 
         // 2. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
         generator.perform_needed_unwinds<Bytecode::Op::Yield>();
@@ -1997,7 +1997,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // FIXME: Yield currently only accepts a Value, not an object conforming to the IteratorResult interface, so we have to do an observable lookup of `value` here.
         //        This only matters for non-async generators.
-        generator.emit<Bytecode::Op::IteratorResultValue>();
+        generator.emit_iterator_value();
 
         generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::No);
 
@@ -2825,8 +2825,8 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     // d. Let done be ? IteratorComplete(nextResult).
     auto iterator_result_register = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(iterator_result_register);
+    generator.emit_iterator_complete();
 
-    generator.emit<Bytecode::Op::IteratorResultDone>();
     // e. If done is true, return V.
     auto& loop_continue = generator.make_block();
     generator.emit<Bytecode::Op::JumpConditional>(
@@ -2836,7 +2836,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
 
     // f. Let nextValue be ? IteratorValue(nextResult).
     generator.emit<Bytecode::Op::Load>(iterator_result_register);
-    generator.emit<Bytecode::Op::IteratorResultValue>();
+    generator.emit_iterator_value();
 
     // g. If lhsKind is either assignment or varBinding, then
     if (head_result.lhs_kind != LHSKind::LexicalBinding) {

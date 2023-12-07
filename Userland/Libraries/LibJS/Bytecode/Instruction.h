@@ -65,8 +65,6 @@
     O(InstanceOf)                      \
     O(IteratorClose)                   \
     O(IteratorNext)                    \
-    O(IteratorResultDone)              \
-    O(IteratorResultValue)             \
     O(IteratorToArray)                 \
     O(Jump)                            \
     O(JumpConditional)                 \

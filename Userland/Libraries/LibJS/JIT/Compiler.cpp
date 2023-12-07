@@ -3111,20 +3111,6 @@ void Compiler::compile_iterator_next(Bytecode::Op::IteratorNext const&)
     check_exception();
 }
 
-static Value cxx_iterator_result_done(VM& vm, Value iterator)
-{
-    auto iterator_result = TRY_OR_SET_EXCEPTION(iterator.to_object(vm));
-    return Value(TRY_OR_SET_EXCEPTION(iterator_complete(vm, iterator_result)));
-}
-
-void Compiler::compile_iterator_result_done(Bytecode::Op::IteratorResultDone const&)
-{
-    load_accumulator(ARG1);
-    native_call((void*)cxx_iterator_result_done);
-    store_accumulator(RET);
-    check_exception();
-}
-
 static Value cxx_throw_if_not_object(VM& vm, Value value)
 {
     if (!value.is_object())
@@ -3150,20 +3136,6 @@ void Compiler::compile_throw_if_nullish(Bytecode::Op::ThrowIfNullish const&)
 {
     load_accumulator(ARG1);
     native_call((void*)cxx_throw_if_nullish);
-    check_exception();
-}
-
-static Value cxx_iterator_result_value(VM& vm, Value iterator)
-{
-    auto iterator_result = TRY_OR_SET_EXCEPTION(iterator.to_object(vm));
-    return TRY_OR_SET_EXCEPTION(iterator_value(vm, iterator_result));
-}
-
-void Compiler::compile_iterator_result_value(Bytecode::Op::IteratorResultValue const&)
-{
-    load_accumulator(ARG1);
-    native_call((void*)cxx_iterator_result_value);
-    store_accumulator(RET);
     check_exception();
 }
 

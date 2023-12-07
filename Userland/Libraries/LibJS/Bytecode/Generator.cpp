@@ -584,4 +584,14 @@ void Generator::emit_get_by_id_with_this(IdentifierTableIndex id, Register this_
     emit<Op::GetByIdWithThis>(id, this_reg, m_next_property_lookup_cache++);
 }
 
+void Generator::emit_iterator_value()
+{
+    emit_get_by_id(intern_identifier("value"sv));
+}
+
+void Generator::emit_iterator_complete()
+{
+    emit_get_by_id(intern_identifier("done"sv));
+}
+
 }
