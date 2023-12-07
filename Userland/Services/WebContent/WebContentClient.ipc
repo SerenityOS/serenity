@@ -6,6 +6,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWebView/Attribute.h>
 
@@ -62,6 +63,7 @@ endpoint WebContentClient
     did_request_fullscreen_window() => (Gfx::IntRect window_rect)
     did_request_file(DeprecatedString path, i32 request_id) =|
     did_request_color_picker(Color current_color) =|
+    did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) =|
     did_finish_handling_input_event(bool event_was_accepted) =|
     did_change_theme_color(Gfx::Color color) =|
     did_insert_clipboard_entry(String data, String presentation_style, String mime_type) =|

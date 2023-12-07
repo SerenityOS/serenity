@@ -62,6 +62,7 @@ struct HideCursor {
 @property (nonatomic, strong) NSMenu* image_context_menu;
 @property (nonatomic, strong) NSMenu* audio_context_menu;
 @property (nonatomic, strong) NSMenu* video_context_menu;
+@property (nonatomic, strong) NSMenu* select_dropdown;
 @property (nonatomic, strong) NSTextField* status_label;
 @property (nonatomic, strong) NSAlert* dialog;
 
@@ -608,6 +609,21 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [panel makeKeyAndOrderFront:nil];
     };
 
+    self.select_dropdown = [[NSMenu alloc] initWithTitle:@"Select Dropdown"];
+    [self.select_dropdown setDelegate:self];
+
+    m_web_view_bridge->on_request_select_dropdown = [self](Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) {
+        [self.select_dropdown removeAllItems];
+        self.select_dropdown.minimumWidth = minimum_width;
+        for (auto const& item : items) {
+            [self selectDropdownAdd:self.select_dropdown
+                               item:item];
+        }
+
+        auto* event = Ladybird::create_context_menu_mouse_event(self, content_position);
+        [NSMenu popUpContextMenu:self.select_dropdown withEvent:event forView:self];
+    };
+
     m_web_view_bridge->on_get_all_cookies = [](auto const& url) {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         return [delegate cookieJar].get_all_cookies(url);
@@ -701,6 +717,48 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         if (pasteboard_type)
             copy_data_to_clipboard(data, pasteboard_type);
     };
+}
+
+- (void)selectDropdownAdd:(NSMenu*)menu item:(Web::HTML::SelectItem const&)item
+{
+    if (item.type == Web::HTML::SelectItem::Type::OptionGroup) {
+        NSMenuItem* subtitle = [[NSMenuItem alloc]
+            initWithTitle:Ladybird::string_to_ns_string(item.label.value_or(""_string))
+                   action:nil
+            keyEquivalent:@""];
+        subtitle.enabled = false;
+        [menu addItem:subtitle];
+
+        for (auto const& item : *item.items) {
+            [self selectDropdownAdd:menu
+                               item:item];
+        }
+    }
+    if (item.type == Web::HTML::SelectItem::Type::Option) {
+        NSMenuItem* menuItem = [[NSMenuItem alloc]
+            initWithTitle:Ladybird::string_to_ns_string(item.label.value_or(""_string))
+                   action:@selector(selectDropdownAction:)
+            keyEquivalent:@""];
+        [menuItem setRepresentedObject:Ladybird::string_to_ns_string(item.value.value_or(""_string))];
+        [menuItem setEnabled:YES];
+        [menuItem setState:item.selected ? NSControlStateValueOn : NSControlStateValueOff];
+        [menu addItem:menuItem];
+    }
+    if (item.type == Web::HTML::SelectItem::Type::Separator) {
+        [menu addItem:[NSMenuItem separatorItem]];
+    }
+}
+
+- (void)selectDropdownAction:(NSMenuItem*)menuItem
+{
+    auto value = Ladybird::ns_string_to_string([menuItem representedObject]);
+    m_web_view_bridge->select_dropdown_closed(value);
+}
+
+- (void)menuDidClose:(NSMenu*)menu
+{
+    if (!menu.highlightedItem)
+        m_web_view_bridge->select_dropdown_closed({});
 }
 
 - (void)colorPickerClosed:(NSNotification*)notification

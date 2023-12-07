@@ -578,6 +578,23 @@ Tab::Tab(BrowserWindow& window)
         m_dialog = nullptr;
     };
 
+    m_select_dropdown = GUI::Menu::construct();
+    m_select_dropdown->on_visibility_change = [this](bool visible) {
+        if (!visible && !m_select_dropdown_closed_by_action)
+            view().select_dropdown_closed({});
+    };
+
+    view().on_request_select_dropdown = [this](Gfx::IntPoint content_position, i32, Vector<Web::HTML::SelectItem> items) {
+        m_select_dropdown_closed_by_action = false;
+        m_select_dropdown->remove_all_actions();
+        // FIXME: Set menu minimum width
+        for (auto const& item : items) {
+            select_dropdown_add_item(*m_select_dropdown, item);
+        }
+
+        m_select_dropdown->popup(view().screen_relative_rect().location().translated(content_position));
+    };
+
     view().on_received_source = [this](auto& url, auto& source) {
         view_source(url, source);
     };
@@ -697,6 +714,31 @@ Tab::Tab(BrowserWindow& window)
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_page_context_menu->popup(screen_position);
     };
+}
+
+void Tab::select_dropdown_add_item(GUI::Menu& menu, Web::HTML::SelectItem const& item)
+{
+    if (item.type == Web::HTML::SelectItem::Type::OptionGroup) {
+        auto subtitle = GUI::Action::create(MUST(DeprecatedString::from_utf8(item.label.value_or(""_string))), nullptr);
+        subtitle->set_enabled(false);
+        menu.add_action(subtitle);
+
+        for (auto const& item : *item.items) {
+            select_dropdown_add_item(menu, item);
+        }
+    }
+    if (item.type == Web::HTML::SelectItem::Type::Option) {
+        auto action = GUI::Action::create(MUST(DeprecatedString::from_utf8(item.label.value_or(""_string))), [this, item](GUI::Action&) {
+            m_select_dropdown_closed_by_action = true;
+            view().select_dropdown_closed(item.value.value_or(""_string));
+        });
+        action->set_checkable(true);
+        action->set_checked(item.selected);
+        menu.add_action(action);
+    }
+    if (item.type == Web::HTML::SelectItem::Type::Separator) {
+        menu.add_separator();
+    }
 }
 
 void Tab::update_reset_zoom_button()

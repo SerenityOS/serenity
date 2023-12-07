@@ -36,7 +36,7 @@
 
 @end
 
-@interface LadybirdWebView : NSClipView
+@interface LadybirdWebView : NSClipView <NSMenuDelegate>
 
 - (instancetype)init:(id<LadybirdWebViewObserver>)observer;
 

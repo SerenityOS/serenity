@@ -54,12 +54,15 @@ public:
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
+    void select_dropdown_action();
 
 signals:
     void title_changed(int id, QString);
     void favicon_changed(int id, QIcon);
 
 private:
+    void select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item);
+
     virtual void resizeEvent(QResizeEvent*) override;
     virtual bool event(QEvent*) override;
 
@@ -105,6 +108,8 @@ private:
     QAction* m_media_context_menu_controls_action { nullptr };
     QAction* m_media_context_menu_loop_action { nullptr };
     URL m_media_context_menu_url;
+
+    QMenu* m_select_dropdown { nullptr };
 
     int tab_index();
 

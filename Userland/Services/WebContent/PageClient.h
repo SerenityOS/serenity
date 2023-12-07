@@ -53,6 +53,7 @@ public:
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
     void color_picker_closed(Optional<Color> picked_color);
+    void select_dropdown_closed(Optional<String> value);
 
     [[nodiscard]] Gfx::Color background_color() const;
 
@@ -118,6 +119,7 @@ private:
     virtual void page_did_close_browsing_context(Web::HTML::BrowsingContext const&) override;
     virtual void request_file(Web::FileRequest) override;
     virtual void page_did_request_color_picker(Color current_color) override;
+    virtual void page_did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) override;
     virtual void page_did_finish_text_test() override;
     virtual void page_did_change_theme_color(Gfx::Color color) override;
     virtual void page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type) override;

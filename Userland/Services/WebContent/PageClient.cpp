@@ -403,6 +403,11 @@ void PageClient::color_picker_closed(Optional<Color> picked_color)
     page().color_picker_closed(picked_color);
 }
 
+void PageClient::select_dropdown_closed(Optional<String> value)
+{
+    page().select_dropdown_closed(value);
+}
+
 Web::WebIDL::ExceptionOr<void> PageClient::toggle_media_play_state()
 {
     return page().toggle_media_play_state();
@@ -501,6 +506,11 @@ void PageClient::request_file(Web::FileRequest file_request)
 void PageClient::page_did_request_color_picker(Color current_color)
 {
     client().async_did_request_color_picker(current_color);
+}
+
+void PageClient::page_did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)
+{
+    client().async_did_request_select_dropdown(content_position, minimum_width, items);
 }
 
 void PageClient::page_did_change_theme_color(Gfx::Color color)

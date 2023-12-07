@@ -236,6 +236,11 @@ void ViewImplementation::color_picker_closed(Optional<Color> picked_color)
     client().async_color_picker_closed(picked_color);
 }
 
+void ViewImplementation::select_dropdown_closed(Optional<String> value)
+{
+    client().async_select_dropdown_closed(value);
+}
+
 void ViewImplementation::toggle_media_play_state()
 {
     client().async_toggle_media_play_state();

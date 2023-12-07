@@ -84,6 +84,7 @@ endpoint WebContentServer
     confirm_closed(bool accepted) =|
     prompt_closed(Optional<String> response) =|
     color_picker_closed(Optional<Color> picked_color) =|
+    select_dropdown_closed(Optional<String> value) =|
 
     toggle_media_play_state() =|
     toggle_media_mute_state() =|

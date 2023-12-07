@@ -1,15 +1,27 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
+#include <LibWeb/HTML/HTMLHRElement.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/Infra/Strings.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Namespace.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
@@ -32,6 +44,17 @@ void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_options);
+    visitor.visit(m_inner_text_element);
+}
+
+JS::GCPtr<Layout::Node> HTMLSelectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+{
+    // AD-HOC: We rewrite `display: inline` to `display: inline-block`.
+    //         This is required for the internal shadow tree to work correctly in layout.
+    if (style->display().is_inline_outside() && style->display().is_flow_inside())
+        style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
+
+    return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-options
@@ -177,6 +200,39 @@ Optional<ARIA::Role> HTMLSelectElement::default_role() const
     return ARIA::Role::combobox;
 }
 
+String HTMLSelectElement::value() const
+{
+    for (auto const& option_element : list_of_options())
+        if (option_element->selected())
+            return option_element->value();
+    return ""_string;
+}
+
+WebIDL::ExceptionOr<void> HTMLSelectElement::set_value(String const& value)
+{
+    for (auto const& option_element : list_of_options())
+        option_element->set_selected(option_element->value() == value);
+    update_inner_text_element();
+    document().invalidate_layout();
+
+    // When the user agent is to send select update notifications, queue an element task on the user interaction task source given the select element to run these steps:
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+        // FIXME: 1. Set the select element's user interacted to true.
+
+        // 2. Fire an event named input at the select element, with the bubbles and composed attributes initialized to true.
+        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input);
+        input_event->set_bubbles(true);
+        input_event->set_composed(true);
+        dispatch_event(input_event);
+
+        // 3. Fire an event named change at the select element, with the bubbles attribute initialized to true.
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
+        change_event->set_bubbles(true);
+        dispatch_event(*change_event);
+    });
+    return {};
+}
+
 void HTMLSelectElement::set_is_open(bool open)
 {
     if (open == m_is_open)
@@ -184,6 +240,141 @@ void HTMLSelectElement::set_is_open(bool open)
 
     m_is_open = open;
     invalidate_style();
+}
+
+bool HTMLSelectElement::has_activation_behavior() const
+{
+    return true;
+}
+
+static Optional<String> strip_newlines(Optional<String> string)
+{
+    // FIXME: Move this to a more general function
+    if (!string.has_value())
+        return {};
+
+    StringBuilder builder;
+    for (auto c : string.value().bytes_as_string_view()) {
+        if (c == '\r' || c == '\n') {
+            builder.append(' ');
+        } else {
+            builder.append(c);
+        }
+    }
+    return MUST(Infra::strip_and_collapse_whitespace(MUST(builder.to_string())));
+}
+
+void HTMLSelectElement::activation_behavior(DOM::Event const&)
+{
+    // Populate select items
+    Vector<SelectItem> items;
+    for (auto const& child : children_as_vector()) {
+        if (is<HTMLOptGroupElement>(*child)) {
+            auto& opt_group_element = verify_cast<HTMLOptGroupElement>(*child);
+            Vector<SelectItem> opt_group_items;
+            for (auto const& child : opt_group_element.children_as_vector()) {
+                if (is<HTMLOptionElement>(*child)) {
+                    auto& option_element = verify_cast<HTMLOptionElement>(*child);
+                    auto option_value = option_element.value();
+                    opt_group_items.append(SelectItem { SelectItem::Type::Option, strip_newlines(option_element.text_content()), option_value, {}, option_element.selected() });
+                }
+                if (is<HTMLHRElement>(*child)) {
+                    opt_group_items.append(SelectItem { SelectItem::Type::Separator });
+                }
+            }
+            items.append(SelectItem { SelectItem::Type::OptionGroup, opt_group_element.get_attribute(AttributeNames::label), {}, opt_group_items });
+        }
+
+        if (is<HTMLOptionElement>(*child)) {
+            auto& option_element = verify_cast<HTMLOptionElement>(*child);
+            auto option_value = option_element.value();
+            items.append(SelectItem { SelectItem::Type::Option, strip_newlines(option_element.text_content()), option_value, {}, option_element.selected() });
+        }
+        if (is<HTMLHRElement>(*child)) {
+            items.append(SelectItem { SelectItem::Type::Separator });
+        }
+    }
+
+    // Request select dropdown
+    auto weak_element = make_weak_ptr<HTMLSelectElement>();
+    auto rect = get_bounding_client_rect();
+    document().browsing_context()->top_level_browsing_context()->page().did_request_select_dropdown(weak_element, Gfx::IntPoint { rect->x(), rect->y() }, rect->width(), items);
+    set_is_open(true);
+}
+
+void HTMLSelectElement::did_select_value(Optional<String> value)
+{
+    set_is_open(false);
+    if (value.has_value()) {
+        MUST(set_value(*value));
+    }
+}
+
+void HTMLSelectElement::form_associated_element_was_inserted()
+{
+    create_shadow_tree_if_needed();
+
+    // Wait until children are ready
+    queue_an_element_task(HTML::Task::Source::Microtask, [this] {
+        // Select first option when no other option is selected
+        if (selected_index() == -1) {
+            auto options = list_of_options();
+            if (options.size() > 0) {
+                options.at(0)->set_selected(true);
+                update_inner_text_element();
+                document().invalidate_layout();
+            }
+        }
+    });
+}
+
+void HTMLSelectElement::form_associated_element_was_removed(DOM::Node*)
+{
+    set_shadow_root(nullptr);
+}
+
+void HTMLSelectElement::create_shadow_tree_if_needed()
+{
+    if (shadow_root_internal())
+        return;
+
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
+    set_shadow_root(shadow_root);
+
+    auto border = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(border->set_attribute(HTML::AttributeNames::style, R"~~~(
+        display: flex;
+        justify-content: center;
+        height: 100%;
+        padding: 4px;
+        border: 1px solid ButtonBorder;
+        background-color: ButtonFace;
+)~~~"_string));
+    MUST(shadow_root->append_child(border));
+
+    m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(m_inner_text_element->set_attribute(HTML::AttributeNames::style, R"~~~(
+        flex: 1;
+)~~~"_string));
+    MUST(border->append_child(*m_inner_text_element));
+
+    // FIXME: Find better way to add chevron icon
+    auto chevron_icon_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(chevron_icon_element->set_inner_html("<svg style=\"width: 16px; height: 16px;\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z\" /></svg>"sv));
+    MUST(border->append_child(*chevron_icon_element));
+
+    update_inner_text_element();
+}
+
+void HTMLSelectElement::update_inner_text_element()
+{
+    // Update inner text element to text content of selected option
+    for (auto const& option_element : list_of_options()) {
+        if (option_element->selected()) {
+            m_inner_text_element->set_text_content(strip_newlines(option_element->text_content()));
+            return;
+        }
+    }
 }
 
 }

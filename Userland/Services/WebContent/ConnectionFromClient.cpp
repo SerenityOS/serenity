@@ -949,6 +949,11 @@ void ConnectionFromClient::color_picker_closed(Optional<Color> const& picked_col
     page().page().color_picker_closed(picked_color);
 }
 
+void ConnectionFromClient::select_dropdown_closed(Optional<String> const& value)
+{
+    page().page().select_dropdown_closed(value);
+}
+
 void ConnectionFromClient::toggle_media_play_state()
 {
     page().page().toggle_media_play_state().release_value_but_fixme_should_propagate_errors();

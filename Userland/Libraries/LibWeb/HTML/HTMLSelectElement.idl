@@ -31,7 +31,7 @@ interface HTMLSelectElement : HTMLElement {
 
     // FIXME: [SameObject] readonly attribute HTMLCollection selectedOptions;
     attribute long selectedIndex;
-    // FIXME: attribute DOMString value;
+    attribute DOMString value;
 
     // FIXME: readonly attribute boolean willValidate;
     // FIXME: readonly attribute ValidityState validity;

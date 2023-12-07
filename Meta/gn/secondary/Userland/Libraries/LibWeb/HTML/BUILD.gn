@@ -140,6 +140,7 @@ source_set("HTML") {
     "PotentialCORSRequest.cpp",
     "PromiseRejectionEvent.cpp",
     "RemoteBrowsingContext.cpp",
+    "SelectItem.cpp",
     "SessionHistoryEntry.cpp",
     "SharedImageRequest.cpp",
     "SourceSet.cpp",

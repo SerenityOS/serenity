@@ -1,0 +1,67 @@
+<script src="include.js"></script>
+<script>
+    test(() => {
+        let testCounter = 1;
+        function testPart(part) {
+            println(`${testCounter++}. ${JSON.stringify(part())}`);
+        }
+
+        // 1. Get select value of unedited
+        testPart(() => {
+            const select = document.createElement('select');
+            // FIXME: Remove selected attribute (currently this is needed because the DIN children are not loaded to select first item in test run)
+            select.innerHTML = `
+                <option value="one" selected>One</option>
+                <option value="two">Two</option>
+                <option value="three">Three</option>
+            `;
+            return select.value;
+        });
+
+        // 2. Get select selectedIndex
+        testPart(() => {
+            const select = document.createElement('select');
+            // FIXME: Remove selected attribute (currently this is needed because the DIN children are not loaded to select first item in test run)
+            select.innerHTML = `
+                <option value="one" selected>One</option>
+                <option value="two">Two</option>
+                <option value="three">Three</option>
+            `;
+            return select.selectedIndex;
+        });
+
+        // 3. Get select value of selectedIndex
+        testPart(() => {
+            const select = document.createElement('select');
+            select.innerHTML = `
+                <option value="one">One</option>
+                <option value="two">Two</option>
+                <option value="three">Three</option>
+            `;
+            select.selectedIndex = 1;
+            return select.value;
+        });
+
+        // 4. Get select length
+        testPart(() => {
+            const select = document.createElement('select');
+            select.innerHTML = `
+                <option value="one">One</option>
+                <option value="two">Two</option>
+                <option value="three">Three</option>
+            `;
+            return select.length;
+        });
+
+        // 5. Get select value of init selected
+        testPart(() => {
+            const select = document.createElement('select');
+            select.innerHTML = `
+                <option value="one">One</option>
+                <option value="two">Two</option>
+                <option value="three" selected>Three</option>
+            `;
+            return select.value;
+        });
+    });
+</script>
