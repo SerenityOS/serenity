@@ -5563,9 +5563,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID
         { parsed_template_areas_values.release_nonnull(), parsed_template_rows_values.release_nonnull(), parsed_template_columns_values.release_nonnull() });
 }
 
-RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(TokenStream<ComponentValue>& tokens)
 {
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
 
     auto parse_placement_tokens = [&](Vector<ComponentValue>& placement_tokens, bool check_for_delimiter = true) -> void {
         auto current_token = tokens.next_token();
@@ -5635,6 +5635,7 @@ RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue
     else
         column_end = row_end;
 
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::GridArea,
         { PropertyID::GridRowStart, PropertyID::GridColumnStart, PropertyID::GridRowEnd, PropertyID::GridColumnEnd },
         { GridTrackPlacementStyleValue::create(row_start), GridTrackPlacementStyleValue::create(column_start), GridTrackPlacementStyleValue::create(row_end), GridTrackPlacementStyleValue::create(column_end) });
@@ -5821,7 +5822,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridArea:
-        if (auto parsed_value = parse_grid_area_shorthand_value(component_values))
+        if (auto parsed_value = parse_grid_area_shorthand_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoFlow:
