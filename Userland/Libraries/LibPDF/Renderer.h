@@ -98,7 +98,7 @@ struct RenderingPreferences {
 
 class Renderer {
 public:
-    static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences preferences);
+    static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences preferences);
 
     struct FontCacheKey {
         NonnullRefPtr<DictObject> font_dictionary;
@@ -115,7 +115,7 @@ public:
     PDFErrorOr<void> render_type3_glyph(Gfx::FloatPoint, StreamObject const&, Gfx::AffineTransform const&, Optional<NonnullRefPtr<DictObject>>);
 
 private:
-    Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences);
+    Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences);
 
     PDFErrorsOr<void> render();
 

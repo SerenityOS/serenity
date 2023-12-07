@@ -45,9 +45,9 @@ private:
     size_t m_starting_stack_depth;
 };
 
-PDFErrorsOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
+PDFErrorsOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, Color background_color, RenderingPreferences rendering_preferences)
 {
-    return Renderer(document, page, bitmap, rendering_preferences).render();
+    return Renderer(document, page, bitmap, background_color, rendering_preferences).render();
 }
 
 static void rect_path(Gfx::Path& path, float x, float y, float width, float height)
@@ -73,7 +73,7 @@ static Gfx::Path rect_path(Gfx::Rect<T> const& rect)
     return path;
 }
 
-Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
+Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, Color background_color, RenderingPreferences rendering_preferences)
     : m_document(document)
     , m_bitmap(bitmap)
     , m_page(page)
@@ -104,7 +104,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     auto initial_clipping_path = rect_path(userspace_matrix.map(Gfx::FloatRect(0, 0, width, height)));
     m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path, initial_clipping_path } });
 
-    m_bitmap->fill(Gfx::Color::NamedColor::White);
+    m_bitmap->fill(background_color);
 }
 
 PDFErrorsOr<void> Renderer::render()

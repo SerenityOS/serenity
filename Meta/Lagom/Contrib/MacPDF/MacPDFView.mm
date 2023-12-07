@@ -29,7 +29,7 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
-    auto errors = PDF::Renderer::render(document, page, bitmap, PDF::RenderingPreferences {});
+    auto errors = PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {});
     if (errors.is_error()) {
         for (auto const& error : errors.error().errors())
             NSLog(@"warning: %@", @(error.message().characters()));

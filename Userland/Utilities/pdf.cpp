@@ -55,7 +55,7 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& do
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
-    auto errors = PDF::Renderer::render(document, page, bitmap, PDF::RenderingPreferences {});
+    auto errors = PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {});
     if (errors.is_error()) {
         for (auto const& error : errors.error().errors())
             warnln("warning: {}", error.message());
@@ -128,7 +128,7 @@ static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document, bool
         auto page = TRY(document.get_page(page_number - 1));
         auto page_size = Gfx::IntSize { 200, round_to<int>(200 * page.media_box.height() / page.media_box.width()) };
         auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
-        auto errors = PDF::Renderer::render(document, page, bitmap, PDF::RenderingPreferences {});
+        auto errors = PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {});
         if (errors.is_error()) {
             for (auto const& error : errors.error().errors())
                 diags_to_pages.ensure(error.message()).append(page_number);
