@@ -233,7 +233,7 @@ private:
     RefPtr<StyleValue> parse_border_value(PropertyID, Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_border_radius_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_content_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_content_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_display_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_flex_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_flex_flow_value(Vector<ComponentValue> const&);
