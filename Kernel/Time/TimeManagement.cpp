@@ -19,6 +19,7 @@
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
 #elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/Timer.h>
 #else
 #    error Unknown architecture
 #endif
@@ -207,7 +208,10 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
         s_the.ensure_instance();
     }
 #elif ARCH(RISCV64)
-    TODO_RISCV64();
+    if (cpu == 0) {
+        VERIFY(!s_the.is_initialized());
+        s_the.ensure_instance();
+    }
 #else
 #    error Unknown architecture
 #endif
@@ -484,7 +488,31 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 #elif ARCH(RISCV64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 {
-    TODO_RISCV64();
+    m_hardware_timers.append(RISCV64::Timer::initialize());
+    m_system_timer = m_hardware_timers[0];
+    m_time_ticks_per_second = m_system_timer->frequency();
+
+    m_system_timer->set_callback([this](RegisterState const& regs) {
+        auto seconds_since_boot = m_seconds_since_boot;
+        auto ticks_this_second = m_ticks_this_second;
+        auto delta_ns = static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
+
+        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+        m_seconds_since_boot = seconds_since_boot;
+        m_ticks_this_second = ticks_this_second;
+
+        m_epoch_time += Duration::from_nanoseconds(delta_ns);
+
+        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+
+        update_time_page();
+
+        system_timer_tick(regs);
+    });
+
+    m_time_keeper_timer = m_system_timer;
+
+    return true;
 }
 #else
 #    error Unknown architecture
