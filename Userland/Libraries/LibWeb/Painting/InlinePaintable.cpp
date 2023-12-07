@@ -34,10 +34,6 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
     auto& painter = context.recording_painter();
 
     if (phase == PaintPhase::Background) {
-        auto top_left_border_radius = computed_values().border_top_left_radius();
-        auto top_right_border_radius = computed_values().border_top_right_radius();
-        auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
-        auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
         auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
@@ -54,7 +50,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
-            auto border_radii_data = normalized_border_radii_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto const& border_radii_data = fragment.border_radii_data();
             paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), computed_values().image_rendering(), &computed_values().background_layers(), border_radii_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
@@ -87,11 +83,6 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
     }
 
     auto paint_border_or_outline = [&](Optional<BordersData> outline_data = {}, CSSPixels outline_offset = 0) {
-        auto top_left_border_radius = computed_values().border_top_left_radius();
-        auto top_right_border_radius = computed_values().border_top_right_radius();
-        auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
-        auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
-
         auto borders_data = BordersData {
             .top = computed_values().border_top(),
             .right = computed_values().border_right(),
@@ -116,7 +107,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
             }
 
             auto borders_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-            auto border_radii_data = normalized_border_radii_data(layout_node(), borders_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto border_radii_data = fragment.border_radii_data();
 
             if (outline_data.has_value()) {
                 auto outline_offset_x = outline_offset;

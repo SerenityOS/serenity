@@ -16,8 +16,6 @@
 
 namespace Web::Painting {
 
-BorderRadiiData normalized_border_radii_data(Layout::Node const&, CSSPixelRect const&, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius);
-
 enum class BorderEdge {
     Top,
     Right,
