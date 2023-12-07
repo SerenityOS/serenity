@@ -16,8 +16,17 @@ namespace Kernel {
 void handle_crash(Kernel::RegisterState const& regs, char const* description, int signal, bool out_of_memory)
 {
     auto* current_thread = Thread::current();
-    if (!current_thread)
-        PANIC("{} with !Thread::current()", description);
+    if (!current_thread) {
+        VERIFY(regs.previous_mode() == ExecutionMode::Kernel);
+
+        dbgln("CRASH: CPU #{} {} in kernel", Processor::current_id(), description);
+
+        dump_registers(regs);
+        if (Memory::MemoryManager::is_initialized())
+            MM.dump_kernel_regions();
+
+        PANIC("Crash in kernel with !Thread::current()");
+    }
 
     auto crashed_in_kernel = regs.previous_mode() == ExecutionMode::Kernel;
     if (!crashed_in_kernel && current_thread->has_signal_handler(signal) && !current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
