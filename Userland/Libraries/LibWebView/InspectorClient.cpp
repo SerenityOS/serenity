@@ -274,6 +274,16 @@ void InspectorClient::context_menu_create_child_text_node()
     m_context_menu_data.clear();
 }
 
+void InspectorClient::context_menu_clone_dom_node()
+{
+    VERIFY(m_context_menu_data.has_value());
+
+    m_pending_selection = m_content_web_view.clone_dom_node(m_context_menu_data->dom_node_id);
+    inspect();
+
+    m_context_menu_data.clear();
+}
+
 void InspectorClient::context_menu_remove_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());
