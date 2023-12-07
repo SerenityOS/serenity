@@ -3909,16 +3909,14 @@ RefPtr<StyleValue> Parser::parse_flex_value(TokenStream<ComponentValue>& tokens)
     return make_flex_shorthand(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_flow_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_values.size() > 2)
-        return nullptr;
-
     RefPtr<StyleValue> flex_direction;
     RefPtr<StyleValue> flex_wrap;
 
     auto remaining_longhands = Vector { PropertyID::FlexDirection, PropertyID::FlexWrap };
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
+
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.has_value())
@@ -3945,6 +3943,7 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& c
     if (!flex_wrap)
         flex_wrap = property_initial_value(m_context.realm(), PropertyID::FlexWrap);
 
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::FlexFlow,
         { PropertyID::FlexDirection, PropertyID::FlexWrap },
         { flex_direction.release_nonnull(), flex_wrap.release_nonnull() });
@@ -5807,7 +5806,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::FlexFlow:
-        if (auto parsed_value = parse_flex_flow_value(component_values))
+        if (auto parsed_value = parse_flex_flow_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Font:
