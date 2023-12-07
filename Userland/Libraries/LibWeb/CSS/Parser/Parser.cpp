@@ -5814,11 +5814,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_font_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    case PropertyID::FontFamily: {
-        if (auto parsed_value = parse_font_family_value(tokens))
+    case PropertyID::FontFamily:
+        if (auto parsed_value = parse_font_family_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    }
     case PropertyID::GridColumn:
         if (auto parsed_value = parse_grid_track_placement_shorthand_value(property_id, component_values))
             return parsed_value.release_nonnull();
