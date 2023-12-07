@@ -5469,12 +5469,12 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(span_or_position_value));
 }
 
-RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID property_id, Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     auto start_property = (property_id == PropertyID::GridColumn) ? PropertyID::GridColumnStart : PropertyID::GridRowStart;
     auto end_property = (property_id == PropertyID::GridColumn) ? PropertyID::GridColumnEnd : PropertyID::GridRowEnd;
 
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
     auto current_token = tokens.next_token();
 
     Vector<ComponentValue> track_start_placement_tokens;
@@ -5500,6 +5500,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID
 
     auto parsed_start_value = parse_grid_track_placement(track_start_placement_tokens);
     if (parsed_start_value && track_end_placement_tokens.is_empty()) {
+        transaction.commit();
         return ShorthandStyleValue::create(property_id,
             { start_property, end_property },
             { parsed_start_value.release_nonnull(), GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto()) });
@@ -5507,6 +5508,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID
 
     auto parsed_end_value = parse_grid_track_placement(track_end_placement_tokens);
     if (parsed_start_value && parsed_end_value) {
+        transaction.commit();
         return ShorthandStyleValue::create(property_id,
             { start_property, end_property },
             { parsed_start_value.release_nonnull(), parsed_end_value.release_nonnull() });
@@ -5818,10 +5820,6 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_font_family_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    case PropertyID::GridColumn:
-        if (auto parsed_value = parse_grid_track_placement_shorthand_value(property_id, component_values))
-            return parsed_value.release_nonnull();
-        return ParseError::SyntaxError;
     case PropertyID::GridArea:
         if (auto parsed_value = parse_grid_area_shorthand_value(component_values))
             return parsed_value.release_nonnull();
@@ -5834,6 +5832,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_grid_template_areas_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
+    case PropertyID::GridColumn:
+        if (auto parsed_value = parse_grid_track_placement_shorthand_value(property_id, tokens); parsed_value && !tokens.has_next_token())
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     case PropertyID::GridColumnEnd:
         if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
@@ -5843,7 +5845,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRow:
-        if (auto parsed_value = parse_grid_track_placement_shorthand_value(property_id, component_values))
+        if (auto parsed_value = parse_grid_track_placement_shorthand_value(property_id, tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRowEnd:
