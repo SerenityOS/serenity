@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/SelectItem.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
@@ -82,6 +83,7 @@ private:
     virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;
     virtual void did_request_file(DeprecatedString const& path, i32) override;
     virtual void did_request_color_picker(Color const& current_color) override;
+    virtual void did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> const& items) override;
     virtual void did_finish_handling_input_event(bool event_was_accepted) override;
     virtual void did_finish_text_test() override;
     virtual void did_change_theme_color(Gfx::Color color) override;

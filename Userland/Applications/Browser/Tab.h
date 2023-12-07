@@ -115,6 +115,8 @@ private:
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
+    void select_dropdown_add_item(GUI::Menu& menu, Web::HTML::SelectItem const& item);
+
     WebView::History m_history;
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
@@ -154,6 +156,9 @@ private:
 
     RefPtr<GUI::Menu> m_go_back_context_menu;
     RefPtr<GUI::Menu> m_go_forward_context_menu;
+
+    RefPtr<GUI::Menu> m_select_dropdown;
+    bool m_select_dropdown_closed_by_action { false };
 
     DeprecatedString m_title;
     RefPtr<Gfx::Bitmap const> m_icon;

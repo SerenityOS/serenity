@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
+#include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
@@ -323,7 +324,30 @@ void Page::color_picker_closed(Optional<Color> picked_color)
         m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
 
         if (m_pending_non_blocking_dialog_target) {
-            m_pending_non_blocking_dialog_target->did_pick_color(picked_color);
+            auto& input_element = verify_cast<HTML::HTMLInputElement>(*m_pending_non_blocking_dialog_target);
+            input_element.did_pick_color(move(picked_color));
+            m_pending_non_blocking_dialog_target.clear();
+        }
+    }
+}
+
+void Page::did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)
+{
+    if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::None) {
+        m_pending_non_blocking_dialog = PendingNonBlockingDialog::Select;
+        m_pending_non_blocking_dialog_target = move(target);
+        m_client->page_did_request_select_dropdown(content_position, minimum_width, move(items));
+    }
+}
+
+void Page::select_dropdown_closed(Optional<String> value)
+{
+    if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::Select) {
+        m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
+
+        if (m_pending_non_blocking_dialog_target) {
+            auto& select_element = verify_cast<HTML::HTMLSelectElement>(*m_pending_non_blocking_dialog_target);
+            select_element.did_select_value(move(value));
             m_pending_non_blocking_dialog_target.clear();
         }
     }

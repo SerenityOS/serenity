@@ -110,6 +110,7 @@ private:
     virtual void confirm_closed(bool accepted) override;
     virtual void prompt_closed(Optional<String> const& response) override;
     virtual void color_picker_closed(Optional<Color> const& picked_color) override;
+    virtual void select_dropdown_closed(Optional<String> const& value) override;
 
     virtual void toggle_media_play_state() override;
     virtual void toggle_media_mute_state() override;

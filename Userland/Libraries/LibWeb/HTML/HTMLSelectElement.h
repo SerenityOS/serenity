@@ -2,6 +2,7 @@
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +25,8 @@ class HTMLSelectElement final
 public:
     virtual ~HTMLSelectElement() override;
 
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+
     JS::GCPtr<HTMLOptionsCollection> const& options();
 
     size_t length();
@@ -33,6 +36,9 @@ public:
 
     int selected_index() const;
     void set_selected_index(int);
+
+    virtual String value() const override;
+    WebIDL::ExceptionOr<void> set_value(String const&);
 
     bool is_open() const { return m_is_open; }
     void set_is_open(bool);
@@ -66,6 +72,14 @@ public:
 
     virtual Optional<ARIA::Role> default_role() const override;
 
+    virtual bool has_activation_behavior() const override;
+    virtual void activation_behavior(DOM::Event const&) override;
+
+    virtual void form_associated_element_was_inserted() override;
+    virtual void form_associated_element_was_removed(DOM::Node*) override;
+
+    void did_select_value(Optional<String> value);
+
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
 
@@ -75,8 +89,12 @@ private:
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 
+    void create_shadow_tree_if_needed();
+    void update_inner_text_element();
+
     JS::GCPtr<HTMLOptionsCollection> m_options;
     bool m_is_open { false };
+    JS::GCPtr<DOM::Element> m_inner_text_element;
 };
 
 }
