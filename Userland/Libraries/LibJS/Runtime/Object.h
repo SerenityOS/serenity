@@ -58,6 +58,7 @@ class Object : public Cell {
 
 public:
     static NonnullGCPtr<Object> create(Realm&, Object* prototype);
+    static NonnullGCPtr<Object> create_with_premade_shape(Shape&);
 
     virtual void initialize(Realm&) override;
     virtual ~Object();

@@ -23,6 +23,10 @@ public:
     NonnullGCPtr<Shape> new_object_shape() { return *m_new_object_shape; }
     NonnullGCPtr<Shape> new_ordinary_function_prototype_object_shape() { return *m_new_ordinary_function_prototype_object_shape; }
 
+    [[nodiscard]] NonnullGCPtr<Shape> iterator_result_object_shape() { return *m_iterator_result_object_shape; }
+    [[nodiscard]] u32 iterator_result_object_value_offset() { return m_iterator_result_object_value_offset; }
+    [[nodiscard]] u32 iterator_result_object_done_offset() { return m_iterator_result_object_done_offset; }
+
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     NonnullGCPtr<ProxyConstructor> proxy_constructor() { return *m_proxy_constructor; }
 
@@ -122,6 +126,10 @@ private:
     GCPtr<Shape> m_empty_object_shape;
     GCPtr<Shape> m_new_object_shape;
     GCPtr<Shape> m_new_ordinary_function_prototype_object_shape;
+
+    GCPtr<Shape> m_iterator_result_object_shape;
+    u32 m_iterator_result_object_value_offset { 0 };
+    u32 m_iterator_result_object_done_offset { 0 };
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     GCPtr<ProxyConstructor> m_proxy_constructor;
