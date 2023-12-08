@@ -87,6 +87,10 @@ ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM&, FunctionObject& func
 // 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
 ThrowCompletionOr<size_t> length_of_array_like(VM& vm, Object const& object)
 {
+    // OPTIMIZATION: For Array objects with a magical "length" property, it should always reflect the size of indexed property storage.
+    if (object.has_magical_length_property())
+        return object.indexed_properties().array_like_size();
+
     // 1. Return ℝ(? ToLength(? Get(obj, "length"))).
     return TRY(object.get(vm.names.length)).to_length(vm);
 }
