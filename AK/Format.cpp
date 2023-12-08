@@ -21,9 +21,11 @@
 #    include <Kernel/Tasks/Thread.h>
 #    include <Kernel/Time/TimeManagement.h>
 #else
+#    include <AK/LexicalPath.h>
 #    include <math.h>
 #    include <stdio.h>
 #    include <string.h>
+#    include <time.h>
 #endif
 
 #if defined(AK_OS_ANDROID)
@@ -1127,11 +1129,62 @@ void vout(LogLevel log_level, StringView fmtstr, TypeErasedFormatParams& params,
 
 #endif
 
+#ifndef KERNEL
+// FIXME: Deduplicate with Core::Process:get_name()
+[[gnu::used]] static DeprecatedString process_name_helper()
+{
+#    if defined(AK_OS_SERENITY)
+    char buffer[BUFSIZ] = {};
+    int rc = get_process_name(buffer, BUFSIZ);
+    if (rc != 0)
+        return DeprecatedString {};
+    return StringView { buffer, strlen(buffer) };
+#    elif defined(AK_LIBC_GLIBC) || (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID))
+    return StringView { program_invocation_name, strlen(program_invocation_name) };
+#    elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_HAIKU)
+    auto const* progname = getprogname();
+    return StringView { progname, strlen(progname) };
+#    else
+    // FIXME: Implement process_name_helper() for other platforms.
+    return StringView {};
+#    endif
+}
+
+static StringView process_name_for_logging()
+{
+    // NOTE: We use AK::Format in the DynamicLoader and LibC, which cannot use thread-safe statics
+    // Also go to extraordinary lengths here to avoid strlen() on the process name every call to dbgln
+    static char process_name_buf[256] = {};
+    static StringView process_name;
+    static bool process_name_retrieved = false;
+    if (!process_name_retrieved) {
+        auto path = LexicalPath(process_name_helper());
+        process_name_retrieved = true;
+        (void)path.basename().copy_characters_to_buffer(process_name_buf, sizeof(process_name_buf));
+        process_name = { process_name_buf, strlen(process_name_buf) };
+    }
+    return process_name;
+}
+#endif
+
 static bool is_debug_enabled = true;
 
 void set_debug_enabled(bool value)
 {
     is_debug_enabled = value;
+}
+
+// On Serenity, dbgln goes to a non-stderr output
+static bool is_rich_debug_enabled =
+#if defined(AK_OS_SERENITY)
+    true;
+#else
+    false;
+#endif
+
+void set_rich_debug_enabled(bool value)
+{
+    is_rich_debug_enabled = value;
 }
 
 void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
@@ -1141,37 +1194,43 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 
     StringBuilder builder;
 
-#ifdef AK_OS_SERENITY
-#    ifdef KERNEL
-    if (Kernel::Processor::is_initialized() && TimeManagement::is_initialized()) {
-        auto time = TimeManagement::the().monotonic_time(TimePrecision::Coarse);
-        if (Kernel::Thread::current()) {
-            auto& thread = *Kernel::Thread::current();
-            thread.process().name().with([&](auto& process_name) {
-                builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name.representable_view(), thread.pid().value(), thread.tid().value());
-            });
+    if (is_rich_debug_enabled) {
+#ifdef KERNEL
+        if (Kernel::Processor::is_initialized() && TimeManagement::is_initialized()) {
+            auto time = TimeManagement::the().monotonic_time(TimePrecision::Coarse);
+            if (Kernel::Thread::current()) {
+                auto& thread = *Kernel::Thread::current();
+                thread.process().name().with([&](auto& process_name) {
+                    builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name.representable_view(), thread.pid().value(), thread.tid().value());
+                });
+            } else {
+                builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id());
+            }
         } else {
-            builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id());
+            builder.appendff("\033[34;1m[Kernel]\033[0m: ");
         }
-    } else {
-        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
-    }
-#    else
-    static TriState got_process_name = TriState::Unknown;
-    static char process_name_buffer[256];
-
-    if (got_process_name == TriState::Unknown) {
-        if (get_process_name(process_name_buffer, sizeof(process_name_buffer)) == 0)
-            got_process_name = TriState::True;
-        else
-            got_process_name = TriState::False;
-    }
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-    if (got_process_name == TriState::True)
-        builder.appendff("{}.{:03} \033[33;1m{}({}:{})\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name_buffer, getpid(), gettid());
+#else
+        auto process_name = process_name_for_logging();
+        if (!process_name.is_empty()) {
+            struct timespec ts = {};
+            clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+            auto pid = getpid();
+#    ifndef AK_OS_MACOS
+            // Darwin doesn't handle thread IDs the same way other Unixes do
+            auto tid = gettid();
+            if (pid == tid)
 #    endif
+            {
+                builder.appendff("{}.{:03} \033[33;1m{}({})\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name, pid);
+            }
+#    ifndef AK_OS_MACOS
+            else {
+                builder.appendff("{}.{:03} \033[33;1m{}({}:{})\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name, pid, tid);
+            }
+#    endif
+        }
 #endif
+    }
 
     MUST(vformat(builder, fmtstr, params));
     if (newline)
