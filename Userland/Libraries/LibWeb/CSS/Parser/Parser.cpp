@@ -4535,16 +4535,17 @@ RefPtr<StyleValue> Parser::parse_place_content_value(TokenStream<ComponentValue>
         { maybe_align_content_value.release_nonnull(), maybe_justify_content_value.release_nonnull() });
 }
 
-RefPtr<StyleValue> Parser::parse_place_items_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_place_items_value(TokenStream<ComponentValue>& tokens)
 {
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
     auto maybe_align_items_value = parse_css_value_for_property(PropertyID::AlignItems, tokens);
     if (!maybe_align_items_value)
         return nullptr;
 
-    if (component_values.size() == 1) {
+    if (!tokens.has_next_token()) {
         if (!property_accepts_identifier(PropertyID::JustifyItems, maybe_align_items_value->to_identifier()))
             return nullptr;
+        transaction.commit();
         return ShorthandStyleValue::create(PropertyID::PlaceItems,
             { PropertyID::AlignItems, PropertyID::JustifyItems },
             { *maybe_align_items_value, *maybe_align_items_value });
@@ -4553,6 +4554,7 @@ RefPtr<StyleValue> Parser::parse_place_items_value(Vector<ComponentValue> const&
     auto maybe_justify_items_value = parse_css_value_for_property(PropertyID::JustifyItems, tokens);
     if (!maybe_justify_items_value)
         return nullptr;
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::PlaceItems,
         { PropertyID::AlignItems, PropertyID::JustifyItems },
         { *maybe_align_items_value, *maybe_justify_items_value });
@@ -5915,7 +5917,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceItems:
-        if (auto parsed_value = parse_place_items_value(component_values))
+        if (auto parsed_value = parse_place_items_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceSelf:
