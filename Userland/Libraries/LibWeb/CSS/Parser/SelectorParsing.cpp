@@ -295,8 +295,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         dbgln_if(CSS_PARSER_DEBUG, "Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
         return ParseError::SyntaxError;
     }
-    auto value_string_view = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
-    simple_selector.attribute().value = String::from_utf8(value_string_view).release_value_but_fixme_should_propagate_errors();
+    auto const& value_string = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
+    simple_selector.attribute().value = value_string.to_string();
 
     attribute_tokens.skip_whitespace();
     // Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case

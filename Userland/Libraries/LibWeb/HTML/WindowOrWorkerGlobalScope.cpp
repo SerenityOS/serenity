@@ -343,7 +343,7 @@ void WindowOrWorkerGlobalScopeMixin::queue_performance_entry(JS::NonnullGCPtr<Pe
         //    or whose type member equals to entryType:
         auto iterator = registered_observer->options_list().find_if([&entry_type](PerformanceTimeline::PerformanceObserverInit const& entry) {
             if (entry.entry_types.has_value())
-                return entry.entry_types->contains_slow(String::from_utf8(entry_type).release_value_but_fixme_should_propagate_errors());
+                return entry.entry_types->contains_slow(entry_type.to_string());
 
             VERIFY(entry.type.has_value());
             return entry.type.value() == entry_type;

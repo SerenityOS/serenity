@@ -131,7 +131,7 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_d
     }
     auto allocated_suffix_index = possible_allocated_suffix_index.release_value();
 
-    auto path = TRY(String::from_utf8(path_pattern));
+    auto path = path_pattern;
     if (match.path_pattern.contains("%digit"sv)) {
         auto replacement = TRY(build_suffix_with_numbers(allocated_suffix_index));
         path = TRY(path.replace("%digit"sv, replacement, ReplaceMode::All));

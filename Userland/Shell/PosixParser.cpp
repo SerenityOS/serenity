@@ -213,7 +213,7 @@ void Parser::handle_heredoc_contents()
 
             return make_ref_counted<AST::StringLiteral>(
                 token.position.value_or(empty_position()),
-                TRY(String::from_utf8(token.value)),
+                token.value,
                 AST::StringLiteral::EnclosureType::None);
         }();
 
@@ -929,7 +929,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_function_definition()
 
     return make_ref_counted<AST::FunctionDeclaration>(
         name.position.value_or(empty_position()).with_end(peek().position.value_or(empty_position())),
-        AST::NameWithPosition { TRY(String::from_utf8(name.value)), name.position.value_or(empty_position()) },
+        AST::NameWithPosition { name.value, name.position.value_or(empty_position()) },
         Vector<AST::NameWithPosition> {},
         body.release_nonnull());
 }
@@ -1603,7 +1603,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
                     token.position.value_or(empty_position()),
                     make_ref_counted<AST::StringLiteral>(
                         token.position.value_or(empty_position()),
-                        TRY(String::from_utf8(x.source_expression)),
+                        x.source_expression,
                         AST::StringLiteral::EnclosureType::DoubleQuotes)),
             },
             Optional<AST::Position> {});

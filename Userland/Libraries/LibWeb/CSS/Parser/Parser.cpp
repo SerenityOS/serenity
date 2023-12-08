@@ -2283,7 +2283,7 @@ RefPtr<StyleValue> Parser::parse_ratio_value(TokenStream<ComponentValue>& tokens
 RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
-        return StringStyleValue::create(MUST(String::from_utf8(component_value.token().string())));
+        return StringStyleValue::create(component_value.token().string().to_string());
 
     return nullptr;
 }
@@ -4099,7 +4099,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(TokenStream<ComponentValue>& 
             (void)tokens.next_token(); // String
             if (!next_is_comma_or_eof())
                 return nullptr;
-            font_families.append(StringStyleValue::create(MUST(String::from_utf8(peek.token().string()))));
+            font_families.append(StringStyleValue::create(peek.token().string().to_string()));
             (void)tokens.next_token(); // Comma
             continue;
         }
@@ -5178,10 +5178,7 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
-                auto maybe_string = String::from_utf8(current_block_token.token().ident());
-                if (maybe_string.is_error())
-                    return {};
-                line_names.append(maybe_string.value());
+                line_names.append(current_block_token.token().ident().to_string());
                 block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
@@ -5289,10 +5286,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
             block_tokens.skip_whitespace();
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
-                auto maybe_string = String::from_utf8(current_block_token.token().ident());
-                if (maybe_string.is_error())
-                    return nullptr;
-                line_names.append(maybe_string.value());
+                line_names.append(current_block_token.token().ident().to_string());
                 block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
@@ -5415,11 +5409,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(1));
         if (is_valid_integer(current_token))
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(current_token.token().number_value()), {}));
-        if (is_identifier(current_token)) {
-            auto maybe_string = String::from_utf8(current_token.token().ident());
-            if (!maybe_string.is_error())
-                return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line({}, maybe_string.value()));
-        }
+        if (is_identifier(current_token))
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line({}, current_token.token().to_string()));
         return nullptr;
     }
 
@@ -5443,10 +5434,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         }
         if (is_identifier(current_token)) {
             if (identifier_value.is_empty()) {
-                auto maybe_string = String::from_utf8(current_token.token().ident());
-                if (maybe_string.is_error())
-                    return nullptr;
-                identifier_value = maybe_string.release_value();
+                identifier_value = current_token.token().ident().to_string();
             } else {
                 return nullptr;
             }
@@ -5666,7 +5654,7 @@ RefPtr<StyleValue> Parser::parse_grid_template_areas_value(TokenStream<Component
     auto transaction = tokens.begin_transaction();
     while (tokens.has_next_token() && tokens.peek_token().is(Token::Type::String)) {
         Vector<String> grid_area_columns;
-        auto const parts = MUST(MUST(String::from_utf8(tokens.next_token().token().string())).split(' '));
+        auto const parts = MUST(tokens.next_token().token().string().to_string().split(' '));
         for (auto& part : parts) {
             grid_area_columns.append(part);
         }
@@ -6147,7 +6135,7 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
 
     if (peek_token.is(Token::Type::String)) {
         if (auto property = any_property_accepts_type(property_ids, ValueType::String); property.has_value())
-            return PropertyAndValue { *property, StringStyleValue::create(MUST(String::from_utf8(tokens.next_token().token().string()))) };
+            return PropertyAndValue { *property, StringStyleValue::create(tokens.next_token().token().string().to_string()) };
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Url); property.has_value()) {
