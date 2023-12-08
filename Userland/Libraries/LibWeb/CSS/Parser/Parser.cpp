@@ -4492,29 +4492,22 @@ RefPtr<StyleValue> Parser::parse_math_depth_value(TokenStream<ComponentValue>& t
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_overflow_value(TokenStream<ComponentValue>& tokens)
 {
-    auto tokens = TokenStream { component_values };
-    if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value_for_property(PropertyID::Overflow, tokens);
-        if (!maybe_value)
-            return nullptr;
-        return ShorthandStyleValue::create(PropertyID::Overflow,
-            { PropertyID::OverflowX, PropertyID::OverflowY },
-            { *maybe_value, *maybe_value });
-    }
-
-    if (component_values.size() == 2) {
-        auto maybe_x_value = parse_css_value_for_property(PropertyID::OverflowX, tokens);
-        auto maybe_y_value = parse_css_value_for_property(PropertyID::OverflowY, tokens);
-        if (!maybe_x_value || !maybe_y_value)
-            return nullptr;
+    auto transaction = tokens.begin_transaction();
+    auto maybe_x_value = parse_css_value_for_property(PropertyID::OverflowX, tokens);
+    if (!maybe_x_value)
+        return nullptr;
+    auto maybe_y_value = parse_css_value_for_property(PropertyID::OverflowY, tokens);
+    transaction.commit();
+    if (maybe_y_value) {
         return ShorthandStyleValue::create(PropertyID::Overflow,
             { PropertyID::OverflowX, PropertyID::OverflowY },
             { maybe_x_value.release_nonnull(), maybe_y_value.release_nonnull() });
     }
-
-    return nullptr;
+    return ShorthandStyleValue::create(PropertyID::Overflow,
+        { PropertyID::OverflowX, PropertyID::OverflowY },
+        { *maybe_x_value, *maybe_x_value });
 }
 
 RefPtr<StyleValue> Parser::parse_place_content_value(Vector<ComponentValue> const& component_values)
@@ -5915,7 +5908,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Overflow:
-        if (auto parsed_value = parse_overflow_value(component_values))
+        if (auto parsed_value = parse_overflow_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceContent:
