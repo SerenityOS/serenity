@@ -4617,7 +4617,7 @@ RefPtr<StyleValue> Parser::parse_quotes_value(TokenStream<ComponentValue>& token
     return StyleValueList::create(move(string_values), StyleValueList::Separator::Space);
 }
 
-RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_text_decoration_value(TokenStream<ComponentValue>& tokens)
 {
     RefPtr<StyleValue> decoration_line;
     RefPtr<StyleValue> decoration_thickness;
@@ -4626,7 +4626,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
 
     auto remaining_longhands = Vector { PropertyID::TextDecorationColor, PropertyID::TextDecorationLine, PropertyID::TextDecorationStyle, PropertyID::TextDecorationThickness };
 
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.has_value())
@@ -4673,6 +4673,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
     if (!decoration_color)
         decoration_color = property_initial_value(m_context.realm(), PropertyID::TextDecorationColor);
 
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::TextDecoration,
         { PropertyID::TextDecorationLine, PropertyID::TextDecorationThickness, PropertyID::TextDecorationStyle, PropertyID::TextDecorationColor },
         { decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull() });
@@ -5931,7 +5932,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecoration:
-        if (auto parsed_value = parse_text_decoration_value(component_values))
+        if (auto parsed_value = parse_text_decoration_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecorationLine: {

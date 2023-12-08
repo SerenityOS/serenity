@@ -253,7 +253,7 @@ private:
     };
     RefPtr<StyleValue> parse_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
     RefPtr<StyleValue> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
-    RefPtr<StyleValue> parse_text_decoration_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_text_decoration_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_easing_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
