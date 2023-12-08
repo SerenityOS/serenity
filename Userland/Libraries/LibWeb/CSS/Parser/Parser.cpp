@@ -4814,25 +4814,18 @@ RefPtr<StyleValue> Parser::parse_easing_value(TokenStream<ComponentValue>& token
     return EasingStyleValue::create(function, move(values));
 }
 
-RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& tokens)
 {
+    if (contains_single_none_ident(tokens)) {
+        tokens.next_token(); // none
+        return IdentifierStyleValue::create(ValueID::None);
+    }
+
     StyleValueVector transformations;
-    auto tokens = TokenStream { component_values };
-    tokens.skip_whitespace();
+    auto transaction = tokens.begin_transaction();
 
     while (tokens.has_next_token()) {
-        tokens.skip_whitespace();
         auto const& part = tokens.next_token();
-
-        if (part.is_ident("none"sv)) {
-            if (!transformations.is_empty())
-                return nullptr;
-            tokens.skip_whitespace();
-            if (tokens.has_next_token())
-                return nullptr;
-            return IdentifierStyleValue::create(ValueID::None);
-        }
-
         if (!part.is_function())
             return nullptr;
         auto maybe_function = transform_function_from_string(part.function().name());
@@ -4936,6 +4929,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
 
         transformations.append(TransformationStyleValue::create(function, move(values)));
     }
+    transaction.commit();
     return StyleValueList::create(move(transformations), StyleValueList::Separator::Space);
 }
 
@@ -5944,7 +5938,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Transform:
-        if (auto parsed_value = parse_transform_value(component_values))
+        if (auto parsed_value = parse_transform_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TransformOrigin:

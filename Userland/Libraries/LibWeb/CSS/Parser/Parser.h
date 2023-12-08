@@ -256,7 +256,7 @@ private:
     RefPtr<StyleValue> parse_text_decoration_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_easing_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_transform_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
     RefPtr<StyleValue> parse_grid_auto_track_sizes(Vector<ComponentValue> const&);
