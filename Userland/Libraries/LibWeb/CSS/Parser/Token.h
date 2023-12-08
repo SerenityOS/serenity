@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/Utf8View.h>
 #include <LibWeb/CSS/Number.h>
 
 namespace Web::CSS::Parser {
@@ -74,7 +73,7 @@ public:
     u32 delim() const
     {
         VERIFY(m_type == Type::Delim);
-        return *Utf8View(m_value.bytes_as_string_view()).begin();
+        return *m_value.code_points().begin();
     }
 
     FlyString const& string() const
