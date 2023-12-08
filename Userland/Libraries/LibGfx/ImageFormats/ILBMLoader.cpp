@@ -46,6 +46,13 @@ enum class ViewportMode : u32 {
     HAM = 0x800
 };
 
+enum class Format : u8 {
+    // Amiga interleaved format
+    ILBM = 0,
+    // PC-DeluxePaint chunky format
+    PBM = 1
+};
+
 AK_ENUM_BITWISE_OPERATORS(ViewportMode);
 
 struct ChunkHeader {
@@ -96,6 +103,8 @@ struct ILBMLoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 
     BMHDHeader bm_header;
+
+    Format format;
 };
 
 static ErrorOr<void> decode_iff_ilbm_header(ILBMLoadingContext& context)
@@ -107,8 +116,11 @@ static ErrorOr<void> decode_iff_ilbm_header(ILBMLoadingContext& context)
         return Error::from_string_literal("Missing IFF header");
 
     auto& header = *bit_cast<IFFHeader const*>(context.data.data());
-    if (header.form != FourCC("FORM") || header.format != FourCC("ILBM"))
+
+    if (header.form != FourCC("FORM") || (header.format != FourCC("ILBM") && header.format != FourCC("PBM ")))
         return Error::from_string_literal("Invalid IFF-ILBM header");
+
+    context.format = header.format == FourCC("ILBM") ? Format::ILBM : Format::PBM;
 
     return {};
 }
@@ -292,9 +304,15 @@ static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& con
 
     if (context.bm_header.compression == CompressionType::ByteRun) {
         auto plane_data = TRY(uncompress_byte_run(body_chunk.data, context));
-        pixel_data = TRY(planar_to_chunky(plane_data, context));
+        if (context.format == Format::ILBM)
+            pixel_data = TRY(planar_to_chunky(plane_data, context));
+        else
+            pixel_data = plane_data;
     } else {
-        pixel_data = TRY(planar_to_chunky(body_chunk.data, context));
+        if (context.format == Format::ILBM)
+            pixel_data = TRY(planar_to_chunky(body_chunk.data, context));
+        else
+            pixel_data = TRY(ByteBuffer::copy(body_chunk.data.data(), body_chunk.data.size()));
     }
 
     // Some files already have 64 colors defined in the palette,

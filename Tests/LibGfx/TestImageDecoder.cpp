@@ -149,6 +149,17 @@ TEST_CASE(test_ilbm_ham6)
     EXPECT_EQ(frame.image->get_pixel(77, 107), Gfx::Color(0xf0, 0x40, 0x40, 0xff));
 }
 
+TEST_CASE(test_ilbm_dos)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/serenity.lbm"sv)));
+    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 640, 480 }));
+
+    EXPECT_EQ(frame.image->get_pixel(315, 134), Gfx::Color::NamedColor::Red);
+}
+
 TEST_CASE(test_ilbm_malformed_header)
 {
     Array test_inputs = {
