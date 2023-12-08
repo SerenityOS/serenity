@@ -5376,8 +5376,12 @@ RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(Vector<ComponentValue> co
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, {}));
 }
 
-RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_placement(TokenStream<ComponentValue>& tokens)
 {
+    // FIXME: This shouldn't be needed. Right now, the below code returns a StyleValue even if no tokens are consumed!
+    if (!tokens.has_next_token())
+        return nullptr;
+
     // https://www.w3.org/TR/css-grid-2/#line-placement
     // Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
     // <grid-line> =
@@ -5391,59 +5395,65 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return true;
         return false;
     };
-    auto is_identifier = [](auto& token) -> bool {
+    auto is_custom_ident = [](auto& token) -> bool {
         // The <custom-ident> additionally excludes the keywords span and auto.
-        if (token.is(Token::Type::Ident) && !token.token().ident().equals_ignoring_ascii_case("span"sv) && !token.token().ident().equals_ignoring_ascii_case("auto"sv))
+        if (token.is(Token::Type::Ident) && !token.is_ident("span"sv) && !token.is_ident("auto"sv))
             return true;
         return false;
     };
 
-    auto tokens = TokenStream { component_values };
-    tokens.skip_whitespace();
-    auto current_token = tokens.next_token();
+    auto transaction = tokens.begin_transaction();
 
-    if (!tokens.has_next_token()) {
-        if (current_token.is_ident("auto"sv))
+    // FIXME: Handle the single-token case inside the loop instead, so that we can more easily call this from
+    //        `parse_grid_area_shorthand_value()` using a single TokenStream.
+    if (tokens.remaining_token_count() == 1) {
+        auto& token = tokens.next_token();
+        if (token.is_ident("auto"sv)) {
+            transaction.commit();
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto());
-        if (current_token.is_ident("span"sv))
+        }
+        if (token.is_ident("span"sv)) {
+            transaction.commit();
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(1));
-        if (is_valid_integer(current_token))
-            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(current_token.token().number_value()), {}));
-        if (is_identifier(current_token))
-            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line({}, current_token.token().to_string()));
+        }
+        if (is_valid_integer(token)) {
+            transaction.commit();
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(token.token().number_value()), {}));
+        }
+        if (is_custom_ident(token)) {
+            transaction.commit();
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line({}, token.token().ident().to_string()));
+        }
         return nullptr;
     }
 
     auto span_value = false;
     auto span_or_position_value = 0;
     String identifier_value;
-    while (true) {
-        if (current_token.is_ident("auto"sv))
+    while (tokens.has_next_token()) {
+        auto& token = tokens.peek_token();
+        if (token.is_ident("auto"sv))
             return nullptr;
-        if (current_token.is_ident("span"sv)) {
-            if (span_value == false)
-                span_value = true;
-            else
+        if (token.is_ident("span"sv)) {
+            if (span_value)
                 return nullptr;
+            (void)tokens.next_token(); // span
+            span_value = true;
+            continue;
         }
-        if (is_valid_integer(current_token)) {
-            if (span_or_position_value == 0)
-                span_or_position_value = static_cast<int>(current_token.token().number_value());
-            else
+        if (is_valid_integer(token)) {
+            if (span_or_position_value != 0)
                 return nullptr;
+            span_or_position_value = static_cast<int>(tokens.next_token().token().to_integer());
+            continue;
         }
-        if (is_identifier(current_token)) {
-            if (identifier_value.is_empty()) {
-                identifier_value = current_token.token().ident().to_string();
-            } else {
+        if (is_custom_ident(token)) {
+            if (!identifier_value.is_empty())
                 return nullptr;
-            }
+            identifier_value = tokens.next_token().token().ident().to_string();
+            continue;
         }
-        tokens.skip_whitespace();
-        if (tokens.has_next_token())
-            current_token = tokens.next_token();
-        else
-            break;
+        break;
     }
 
     // Negative integers or zero are invalid.
@@ -5454,6 +5464,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     if (span_or_position_value == 0)
         span_or_position_value = 1;
 
+    transaction.commit();
     if (!identifier_value.is_empty())
         return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(span_or_position_value, identifier_value));
     return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(span_or_position_value));
@@ -5488,7 +5499,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID
         }
     }
 
-    auto parsed_start_value = parse_grid_track_placement(track_start_placement_tokens);
+    TokenStream track_start_placement_token_stream { track_start_placement_tokens };
+    auto parsed_start_value = parse_grid_track_placement(track_start_placement_token_stream);
     if (parsed_start_value && track_end_placement_tokens.is_empty()) {
         transaction.commit();
         return ShorthandStyleValue::create(property_id,
@@ -5496,7 +5508,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID
             { parsed_start_value.release_nonnull(), GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto()) });
     }
 
-    auto parsed_end_value = parse_grid_track_placement(track_end_placement_tokens);
+    TokenStream track_end_placement_token_stream { track_end_placement_tokens };
+    auto parsed_end_value = parse_grid_track_placement(track_end_placement_token_stream);
     if (parsed_start_value && parsed_end_value) {
         transaction.commit();
         return ShorthandStyleValue::create(property_id,
@@ -5559,15 +5572,11 @@ RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(TokenStream<Component
     auto transaction = tokens.begin_transaction();
 
     auto parse_placement_tokens = [&](Vector<ComponentValue>& placement_tokens, bool check_for_delimiter = true) -> void {
-        auto current_token = tokens.next_token();
-        while (true) {
+        while (tokens.has_next_token()) {
+            auto& current_token = tokens.next_token();
             if (check_for_delimiter && current_token.is_delim('/'))
                 break;
             placement_tokens.append(current_token);
-            tokens.skip_whitespace();
-            if (!tokens.has_next_token())
-                break;
-            current_token = tokens.next_token();
         }
     };
 
@@ -5589,10 +5598,25 @@ RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(TokenStream<Component
     // https://www.w3.org/TR/css-grid-2/#placement-shorthands
     // The grid-area property is a shorthand for grid-row-start, grid-column-start, grid-row-end and
     // grid-column-end.
-    auto row_start_style_value = parse_grid_track_placement(row_start_placement_tokens);
-    auto column_start_style_value = parse_grid_track_placement(column_start_placement_tokens);
-    auto row_end_style_value = parse_grid_track_placement(row_end_placement_tokens);
-    auto column_end_style_value = parse_grid_track_placement(column_end_placement_tokens);
+    TokenStream row_start_placement_token_stream { row_start_placement_tokens };
+    auto row_start_style_value = parse_grid_track_placement(row_start_placement_token_stream);
+    if (row_start_placement_token_stream.has_next_token())
+        return nullptr;
+
+    TokenStream column_start_placement_token_stream { column_start_placement_tokens };
+    auto column_start_style_value = parse_grid_track_placement(column_start_placement_token_stream);
+    if (column_start_placement_token_stream.has_next_token())
+        return nullptr;
+
+    TokenStream row_end_placement_token_stream { row_end_placement_tokens };
+    auto row_end_style_value = parse_grid_track_placement(row_end_placement_token_stream);
+    if (row_end_placement_token_stream.has_next_token())
+        return nullptr;
+
+    TokenStream column_end_placement_token_stream { column_end_placement_tokens };
+    auto column_end_style_value = parse_grid_track_placement(column_end_placement_token_stream);
+    if (column_end_placement_token_stream.has_next_token())
+        return nullptr;
 
     // If four <grid-line> values are specified, grid-row-start is set to the first value, grid-column-start
     // is set to the second value, grid-row-end is set to the third value, and grid-column-end is set to the
@@ -5833,11 +5857,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridColumnEnd:
-        if (auto parsed_value = parse_grid_track_placement(component_values))
+        if (auto parsed_value = parse_grid_track_placement(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridColumnStart:
-        if (auto parsed_value = parse_grid_track_placement(component_values))
+        if (auto parsed_value = parse_grid_track_placement(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRow:
@@ -5845,11 +5869,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRowEnd:
-        if (auto parsed_value = parse_grid_track_placement(component_values))
+        if (auto parsed_value = parse_grid_track_placement(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRowStart:
-        if (auto parsed_value = parse_grid_track_placement(component_values))
+        if (auto parsed_value = parse_grid_track_placement(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Grid:
