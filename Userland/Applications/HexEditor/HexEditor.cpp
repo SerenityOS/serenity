@@ -477,7 +477,13 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
         move_and_update_cursor_by(-m_position);
         return;
     }
-    
+
+    if (event.key() == KeyCode::Key_End) {
+        if (m_position + 1 < m_document->size())
+            move_and_update_cursor_by(m_document->size() - m_position - 1);
+        return;
+    }
+
     if (event.key() == KeyCode::Key_PageDown) {
         auto cursor_location_change = min(bytes_per_row() * floor(visible_content_rect().height() / line_height()), (m_document->size() - 1) - m_position);
         if (cursor_location_change > 0)
