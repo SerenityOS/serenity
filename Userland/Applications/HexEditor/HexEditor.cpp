@@ -545,6 +545,7 @@ ErrorOr<void> HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
             if (m_position + 1 < m_document->size())
                 m_position++;
             m_cursor_at_low_nibble = false;
+            m_selection_start = m_selection_end = m_position;
         }
 
         reset_cursor_blink_state();
@@ -573,6 +574,7 @@ ErrorOr<void> HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
     if (m_position + 1 < m_document->size())
         m_position++;
     m_cursor_at_low_nibble = false;
+    m_selection_start = m_selection_end = m_position;
 
     reset_cursor_blink_state();
     update();
