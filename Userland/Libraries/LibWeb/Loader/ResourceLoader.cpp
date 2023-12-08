@@ -166,12 +166,12 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
     auto id = resource_id++;
     auto url_for_logging = sanitized_url_for_logging(url);
     emit_signpost(DeprecatedString::formatted("Starting load: {}", url_for_logging), id);
-    dbgln("ResourceLoader: Starting load of: \"{}\"", url_for_logging);
+    dbgln_if(SPAM_DEBUG, "ResourceLoader: Starting load of: \"{}\"", url_for_logging);
 
     auto const log_success = [url_for_logging, id](auto const& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
         emit_signpost(DeprecatedString::formatted("Finished load: {}", url_for_logging), id);
-        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
+        dbgln_if(SPAM_DEBUG, "ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
     auto const log_failure = [url_for_logging, id](auto const& request, auto const& error_message) {
