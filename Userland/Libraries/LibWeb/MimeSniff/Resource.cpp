@@ -446,11 +446,13 @@ ErrorOr<void> Resource::supplied_mime_type_detection_algorithm(StringView scheme
     // NOTE: Non-standard but this algorithm expects the caller to handle step 2.1.1.
     if (supplied_type.has_value()) {
         if (Fetch::Infrastructure::is_http_or_https_scheme(scheme)) {
+            // NOTE: The spec expects a space between the semicolon and the start of the charset parameter. However, we will lose this
+            //       space because MimeType::parse() ignores any spaces found there.
             static Array<StringView, 4> constexpr apache_bug_mime_types = {
                 "text/plain"sv,
-                "text/plain; charset=ISO-8859-1"sv,
-                "text/plain; charset=iso-8859-1"sv,
-                "text/plain; charset=UTF-8"sv
+                "text/plain;charset=ISO-8859-1"sv,
+                "text/plain;charset=iso-8859-1"sv,
+                "text/plain;charset=UTF-8"sv
             };
 
             auto serialized_supplied_type = TRY(supplied_type->serialized());
@@ -517,7 +519,7 @@ ErrorOr<void> Resource::mime_type_sniffing_algorithm()
     // 3. If the check-for-apache-bug flag is set, execute the rules for distinguishing
     //    if a resource is text or binary and abort these steps.
     if (m_check_for_apache_bug_flag) {
-        // FIXME: Execute the rules for distinguishing if a resource is text or binary and abort these steps.
+        TRY(rules_for_distinguishing_if_a_resource_is_text_or_binary());
         return {};
     }
 
@@ -561,6 +563,46 @@ ErrorOr<void> Resource::mime_type_sniffing_algorithm()
     // 10. The computed MIME type is the supplied MIME type.
     m_computed_mime_type = m_supplied_mime_type.value();
 
+    return {};
+}
+
+// https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource
+ErrorOr<void> Resource::rules_for_distinguishing_if_a_resource_is_text_or_binary()
+{
+    // 1. Let length be the number of bytes in the resource header.
+    auto length = m_resource_header.size();
+
+    // 2. If length is greater than or equal to 2 and the first 2 bytes of the
+    //    resource header are equal to 0xFE 0xFF (UTF-16BE BOM) or 0xFF 0xFE (UTF-16LE BOM), the computed MIME type is "text/plain".
+    //    Abort these steps.
+    auto resource_header_span = m_resource_header.span();
+    auto utf_16_be_bom = "\xFE\xFF"sv.bytes();
+    auto utf_16_le_bom = "\xFF\xFE"sv.bytes();
+    if (length >= 2
+        && (resource_header_span.starts_with(utf_16_be_bom)
+            || resource_header_span.starts_with(utf_16_le_bom))) {
+        m_computed_mime_type = TRY(MimeType::create("text"_string, "plain"_string));
+        return {};
+    }
+
+    // 3. If length is greater than or equal to 3 and the first 3 bytes of the resource header are equal to 0xEF 0xBB 0xBF (UTF-8 BOM),
+    //    the computed MIME type is "text/plain".
+    //    Abort these steps.
+    auto utf_8_bom = "\xEF\xBB\xBF"sv.bytes();
+    if (length >= 3 && resource_header_span.starts_with(utf_8_bom)) {
+        m_computed_mime_type = TRY(MimeType::create("text"_string, "plain"_string));
+        return {};
+    }
+
+    // 4. If the resource header contains no binary data bytes, the computed MIME type is "text/plain".
+    //    Abort these steps.
+    if (!any_of(resource_header(), is_binary_data_byte)) {
+        m_computed_mime_type = TRY(MimeType::create("text"_string, "plain"_string));
+        return {};
+    }
+
+    // 5. The computed MIME type is "application/octet-stream".
+    // NOTE: This is the default MIME type of the computed MIME type.
     return {};
 }
 

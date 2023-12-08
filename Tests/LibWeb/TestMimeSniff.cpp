@@ -31,11 +31,13 @@ TEST_CASE(determine_computed_mime_type_given_no_sniff_is_unset)
     auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff("\x00"sv.bytes(), Web::MimeSniff::SniffingConfiguration { .supplied_type = supplied_type }));
 
     EXPECT_EQ("application/octet-stream"sv, MUST(computed_mime_type.serialized()));
+}
 
-    // Make sure we cover the XML code path in the mime type sniffing algorithm.
+TEST_CASE(determine_computed_mime_type_given_xml_mime_type_as_supplied_type)
+{
     auto xml_mime_type = "application/rss+xml"sv;
-    supplied_type = MUST(Web::MimeSniff::MimeType::parse(xml_mime_type)).release_value();
-    computed_mime_type = MUST(Web::MimeSniff::Resource::sniff("\x00"sv.bytes(), Web::MimeSniff::SniffingConfiguration { .supplied_type = supplied_type }));
+    auto supplied_type = MUST(Web::MimeSniff::MimeType::parse(xml_mime_type)).release_value();
+    auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff("\x00"sv.bytes(), Web::MimeSniff::SniffingConfiguration { .supplied_type = supplied_type }));
 
     EXPECT_EQ(xml_mime_type, MUST(computed_mime_type.serialized()));
 }
@@ -58,6 +60,53 @@ static void set_audio_or_video_type_mappings(HashMap<StringView, Vector<StringVi
     mime_type_to_headers_map.set("audio/midi"sv, { "MThd\x00\x00\x00\x06"sv });
     mime_type_to_headers_map.set("video/avi"sv, { "RIFF\x00\x00\x00\x00\x41\x56\x49\x20"sv });
     mime_type_to_headers_map.set("audio/wave"sv, { "RIFF\x00\x00\x00\x00WAVE"sv });
+}
+
+static void set_text_plain_type_mappings(HashMap<StringView, Vector<StringView>>& mime_type_to_headers_map)
+{
+    mime_type_to_headers_map.set("text/plain"sv, {
+                                                     "\xFE\xFF\x00\x00"sv,
+                                                     "\xFF\xFE\x00\x00"sv,
+                                                     "\xEF\xBB\xBF\x00"sv,
+                                                     "Hello world!"sv,
+                                                 });
+}
+
+TEST_CASE(determine_computed_mime_type_given_supplied_type_that_is_an_apache_bug_mime_type)
+{
+    Vector<StringView> apache_bug_mime_types = {
+        "text/plain"sv,
+        "text/plain; charset=ISO-8859-1"sv,
+        "text/plain; charset=iso-8859-1"sv,
+        "text/plain; charset=UTF-8"sv
+    };
+
+    // Cover all Apache bug MIME types.
+    for (auto const& apache_bug_mime_type : apache_bug_mime_types) {
+        auto supplied_type = MUST(Web::MimeSniff::MimeType::parse(apache_bug_mime_type)).release_value();
+        auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff("Hello world!"sv.bytes(),
+            Web::MimeSniff::SniffingConfiguration { .scheme = "http"sv, .supplied_type = supplied_type }));
+
+        EXPECT_EQ("text/plain"sv, MUST(computed_mime_type.serialized()));
+    }
+
+    // Cover all code paths in "rules for distinguishing if a resource is text or binary".
+    HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
+    mime_type_to_headers_map.set("application/octet-stream"sv, { "\x00"sv });
+
+    set_text_plain_type_mappings(mime_type_to_headers_map);
+
+    auto supplied_type = MUST(Web::MimeSniff::MimeType::create("text"_string, "plain"_string));
+    for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
+        auto mime_type = mime_type_to_headers.key;
+
+        for (auto const& header : mime_type_to_headers.value) {
+            auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff(header.bytes(),
+                Web::MimeSniff::SniffingConfiguration { .scheme = "http"sv, .supplied_type = supplied_type }));
+
+            EXPECT_EQ(mime_type, MUST(computed_mime_type.serialized()));
+        }
+    }
 }
 
 TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_context)
@@ -87,13 +136,8 @@ TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_contex
     mime_type_to_headers_map.set("text/xml"sv, { "<?xml"sv });
     mime_type_to_headers_map.set("application/pdf"sv, { "%PDF-"sv });
     mime_type_to_headers_map.set("application/postscript"sv, { "%!PS-Adobe-"sv });
-    mime_type_to_headers_map.set("text/plain"sv, {
-                                                     "\xFE\xFF\x00\x00"sv,
-                                                     "\xFF\xFE\x00\x00"sv,
-                                                     "\xEF\xBB\xBF\x00"sv,
-                                                     "Hello world!"sv,
-                                                 });
 
+    set_text_plain_type_mappings(mime_type_to_headers_map);
     set_image_type_mappings(mime_type_to_headers_map);
     set_audio_or_video_type_mappings(mime_type_to_headers_map);
 
