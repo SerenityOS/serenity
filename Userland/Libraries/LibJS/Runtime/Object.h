@@ -224,6 +224,7 @@ public:
     static FlatPtr may_interfere_with_indexed_property_access_offset() { return OFFSET_OF(Object, m_may_interfere_with_indexed_property_access); }
     static FlatPtr indexed_properties_offset() { return OFFSET_OF(Object, m_indexed_properties); }
 
+    [[nodiscard]] bool has_magical_length_property() const { return m_has_magical_length_property; }
     static FlatPtr has_magical_length_property_offset() { return OFFSET_OF(Object, m_has_magical_length_property); }
 
     [[nodiscard]] bool is_typed_array() const { return m_is_typed_array; }
