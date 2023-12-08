@@ -9,6 +9,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -700,7 +701,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     // 10. Set this’s send() flag.
     m_send = true;
 
-    dbgln("{}XHR send from {} to {}", m_synchronous ? "\033[33;1mSynchronous\033[0m " : "", HTML::relevant_settings_object(*this).creation_url, m_request_url);
+    dbgln_if(SPAM_DEBUG, "{}XHR send from {} to {}", m_synchronous ? "\033[33;1mSynchronous\033[0m " : "", HTML::relevant_settings_object(*this).creation_url, m_request_url);
 
     // 11. If this’s synchronous flag is unset, then:
     if (!m_synchronous) {
