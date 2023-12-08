@@ -5935,13 +5935,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_text_decoration_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    case PropertyID::TextDecorationLine: {
-        TokenStream value_tokens { component_values };
-        auto parsed_value = parse_text_decoration_line_value(value_tokens);
-        if (parsed_value && !value_tokens.has_next_token())
+    case PropertyID::TextDecorationLine:
+        if (auto parsed_value = parse_text_decoration_line_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    }
     case PropertyID::TextShadow:
         if (auto parsed_value = parse_shadow_value(tokens, AllowInsetKeyword::No); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
