@@ -28,11 +28,15 @@ private:
 
     ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype);
 
+    virtual bool is_array_iterator() const override { return true; }
     virtual void visit_edges(Cell::Visitor&) override;
 
     Value m_array;
     Object::PropertyKind m_iteration_kind;
     size_t m_index { 0 };
 };
+
+template<>
+inline bool Object::fast_is<ArrayIterator>() const { return is_array_iterator(); }
 
 }

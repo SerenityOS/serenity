@@ -191,6 +191,7 @@ public:
     virtual bool is_native_function() const { return false; }
     virtual bool is_ecmascript_function_object() const { return false; }
     virtual bool is_iterator_record() const { return false; }
+    virtual bool is_array_iterator() const { return false; }
 
     // B.3.7 The [[IsHTMLDDA]] Internal Slot, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
     virtual bool is_htmldda() const { return false; }
