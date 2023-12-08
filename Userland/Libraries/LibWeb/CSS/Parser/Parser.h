@@ -245,7 +245,7 @@ private:
     RefPtr<StyleValue> parse_overflow_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_place_content_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_place_items_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_place_self_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_place_self_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_quotes_value(TokenStream<ComponentValue>&);
     enum class AllowInsetKeyword {
         No,

@@ -4560,16 +4560,17 @@ RefPtr<StyleValue> Parser::parse_place_items_value(TokenStream<ComponentValue>& 
         { *maybe_align_items_value, *maybe_justify_items_value });
 }
 
-RefPtr<StyleValue> Parser::parse_place_self_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_place_self_value(TokenStream<ComponentValue>& tokens)
 {
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
     auto maybe_align_self_value = parse_css_value_for_property(PropertyID::AlignSelf, tokens);
     if (!maybe_align_self_value)
         return nullptr;
 
-    if (component_values.size() == 1) {
+    if (!tokens.has_next_token()) {
         if (!property_accepts_identifier(PropertyID::JustifySelf, maybe_align_self_value->to_identifier()))
             return nullptr;
+        transaction.commit();
         return ShorthandStyleValue::create(PropertyID::PlaceSelf,
             { PropertyID::AlignSelf, PropertyID::JustifySelf },
             { *maybe_align_self_value, *maybe_align_self_value });
@@ -4578,6 +4579,7 @@ RefPtr<StyleValue> Parser::parse_place_self_value(Vector<ComponentValue> const& 
     auto maybe_justify_self_value = parse_css_value_for_property(PropertyID::JustifySelf, tokens);
     if (!maybe_justify_self_value)
         return nullptr;
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::PlaceSelf,
         { PropertyID::AlignSelf, PropertyID::JustifySelf },
         { *maybe_align_self_value, *maybe_justify_self_value });
@@ -5921,7 +5923,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceSelf:
-        if (auto parsed_value = parse_place_self_value(component_values))
+        if (auto parsed_value = parse_place_self_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Quotes:
