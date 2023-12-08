@@ -70,7 +70,16 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     if (iteration_kind == Object::PropertyKind::Key)
         return create_iterator_result_object(vm, Value(static_cast<i32>(index)), false);
 
-    auto value = TRY(array.get(index));
+    auto value = TRY([&]() -> ThrowCompletionOr<Value> {
+        // OPTIMIZATION: For objects that don't interfere with indexed property access, we try looking directly at storage.
+        if (!array.may_interfere_with_indexed_property_access() && array.indexed_properties().has_index(index)) {
+            auto value = array.indexed_properties().get(index)->value;
+            if (!value.is_accessor()) {
+                return value;
+            }
+        }
+        return array.get(index);
+    }());
 
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(vm, value, false);
