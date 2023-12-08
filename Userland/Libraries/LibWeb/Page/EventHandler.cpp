@@ -465,6 +465,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
             return false;
         }
 
+        auto const cursor = paintable->computed_values().cursor();
         auto pointer_events = paintable->computed_values().pointer_events();
         // FIXME: Handle other values for pointer-events.
         VERIFY(pointer_events != CSS::PointerEvents::None);
@@ -482,13 +483,11 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
                 is_hovering_link = true;
 
             if (node->is_text()) {
-                auto cursor = paintable->computed_values().cursor();
                 if (cursor == CSS::Cursor::Auto)
                     hovered_node_cursor = Gfx::StandardCursor::IBeam;
                 else
                     hovered_node_cursor = cursor_css_to_gfx(cursor);
             } else if (node->is_element()) {
-                auto cursor = paintable->computed_values().cursor();
                 if (cursor == CSS::Cursor::Auto)
                     hovered_node_cursor = Gfx::StandardCursor::Arrow;
                 else
