@@ -240,7 +240,7 @@ private:
     RefPtr<StyleValue> parse_flex_flow_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_font_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_font_family_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_list_style_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_list_style_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_math_depth_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_overflow_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_place_content_value(Vector<ComponentValue> const&);

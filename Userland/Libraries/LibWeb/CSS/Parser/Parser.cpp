@@ -4366,11 +4366,8 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
     return supported_sources;
 }
 
-RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_list_style_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_values.size() > 3)
-        return nullptr;
-
     RefPtr<StyleValue> list_position;
     RefPtr<StyleValue> list_image;
     RefPtr<StyleValue> list_type;
@@ -4378,7 +4375,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
 
     Vector<PropertyID> remaining_longhands { PropertyID::ListStyleImage, PropertyID::ListStylePosition, PropertyID::ListStyleType };
 
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
     while (tokens.has_next_token()) {
         if (auto peek = tokens.peek_token(); peek.is_ident("none"sv)) {
             (void)tokens.next_token();
@@ -4440,6 +4437,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
     if (!list_type)
         list_type = property_initial_value(m_context.realm(), PropertyID::ListStyleType);
 
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::ListStyle,
         { PropertyID::ListStylePosition, PropertyID::ListStyleImage, PropertyID::ListStyleType },
         { list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull() });
@@ -5905,7 +5903,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
-        if (auto parsed_value = parse_list_style_value(component_values))
+        if (auto parsed_value = parse_list_style_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::MathDepth:
