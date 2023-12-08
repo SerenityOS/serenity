@@ -4510,19 +4510,17 @@ RefPtr<StyleValue> Parser::parse_overflow_value(TokenStream<ComponentValue>& tok
         { *maybe_x_value, *maybe_x_value });
 }
 
-RefPtr<StyleValue> Parser::parse_place_content_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_place_content_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_values.size() > 2)
-        return nullptr;
-
-    auto tokens = TokenStream { component_values };
+    auto transaction = tokens.begin_transaction();
     auto maybe_align_content_value = parse_css_value_for_property(PropertyID::AlignContent, tokens);
     if (!maybe_align_content_value)
         return nullptr;
 
-    if (component_values.size() == 1) {
+    if (!tokens.has_next_token()) {
         if (!property_accepts_identifier(PropertyID::JustifyContent, maybe_align_content_value->to_identifier()))
             return nullptr;
+        transaction.commit();
         return ShorthandStyleValue::create(PropertyID::PlaceContent,
             { PropertyID::AlignContent, PropertyID::JustifyContent },
             { *maybe_align_content_value, *maybe_align_content_value });
@@ -4531,6 +4529,7 @@ RefPtr<StyleValue> Parser::parse_place_content_value(Vector<ComponentValue> cons
     auto maybe_justify_content_value = parse_css_value_for_property(PropertyID::JustifyContent, tokens);
     if (!maybe_justify_content_value)
         return nullptr;
+    transaction.commit();
     return ShorthandStyleValue::create(PropertyID::PlaceContent,
         { PropertyID::AlignContent, PropertyID::JustifyContent },
         { maybe_align_content_value.release_nonnull(), maybe_justify_content_value.release_nonnull() });
@@ -5912,7 +5911,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceContent:
-        if (auto parsed_value = parse_place_content_value(component_values))
+        if (auto parsed_value = parse_place_content_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceItems:
