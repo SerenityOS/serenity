@@ -95,9 +95,9 @@ install(
 )
 
 install(DIRECTORY
-    "${SERENITY_SOURCE_DIR}/Base/res/html"
     "${SERENITY_SOURCE_DIR}/Base/res/fonts"
     "${SERENITY_SOURCE_DIR}/Base/res/icons"
+    "${SERENITY_SOURCE_DIR}/Base/res/ladybird"
     "${SERENITY_SOURCE_DIR}/Base/res/themes"
     "${SERENITY_SOURCE_DIR}/Base/res/color-palettes"
     "${SERENITY_SOURCE_DIR}/Base/res/cursor-themes"
