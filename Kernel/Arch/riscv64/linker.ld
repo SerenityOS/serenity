@@ -36,7 +36,6 @@ SECTIONS
         end_of_safemem_atomic_text = .;
 
         *(.text*)
-        end_of_kernel_text = .;
     } :text
 
     .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
@@ -44,6 +43,15 @@ SECTIONS
         driver_init_table_start = .;
         *(.driver_init)
         driver_init_table_end = .;
+    } :text
+
+    .unmap_after_init ALIGN(4K) :
+    {
+        start_of_unmap_after_init = .;
+        *(.unmap_after_init*);
+        end_of_unmap_after_init = .;
+
+        end_of_kernel_text = .;
     } :text
 
     .rodata ALIGN(4K) :
@@ -64,6 +72,13 @@ SECTIONS
         start_of_kernel_data = .;
         *(.sdata* .data*)
         end_of_kernel_data = .;
+    } :data
+
+    .ro_after_init ALIGN(4K) :
+    {
+        start_of_ro_after_init = .;
+        *(.ro_after_init);
+        end_of_ro_after_init = .;
     } :data
 
     .ksyms ALIGN(4K) :
@@ -87,12 +102,6 @@ SECTIONS
         FIXME: 8MB is enough space for all of the tables required to identity map
                physical memory. 8M is wasteful, so this should be properly calculated.
     */
-
-    /* FIXME: Placeholder to satisfy linker */
-    start_of_unmap_after_init = .;
-    end_of_unmap_after_init = .;
-    start_of_ro_after_init = .;
-    end_of_ro_after_init = .;
 
     . = ALIGN(4K);
     page_tables_phys_start = .;
