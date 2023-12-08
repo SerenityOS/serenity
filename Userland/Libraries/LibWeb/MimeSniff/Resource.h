@@ -14,7 +14,8 @@ enum class SniffingContext {
     None,
     Browsing,
     Image,
-    AudioOrVideo
+    AudioOrVideo,
+    Font,
 };
 
 struct SniffingConfiguration {
@@ -44,6 +45,7 @@ private:
     ErrorOr<void> context_specific_sniffing_algorithm(SniffingContext sniffing_context);
     ErrorOr<void> rules_for_sniffing_images_specifically();
     ErrorOr<void> rules_for_sniffing_audio_or_video_specifically();
+    ErrorOr<void> rules_for_sniffing_fonts_specifically();
 
     // https://mimesniff.spec.whatwg.org/#supplied-mime-type
     // A supplied MIME type, the MIME type determined by the supplied MIME type detection algorithm.

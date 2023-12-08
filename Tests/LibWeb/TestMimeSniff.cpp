@@ -202,3 +202,44 @@ TEST_CASE(determine_computed_mime_type_in_audio_or_video_sniffing_context)
 
     EXPECT_EQ(mime_type, computed_mime_type.essence());
 }
+
+TEST_CASE(determine_computed_mime_type_in_a_font_context)
+{
+    // Cover case where supplied type is an XML MIME type.
+    auto mime_type = "application/rss+xml"sv;
+    auto supplied_type = MUST(Web::MimeSniff::MimeType::parse(mime_type)).release_value();
+    auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff(""sv.bytes(), Web::MimeSniff::SniffingConfiguration {
+                                                                                     .sniffing_context = Web::MimeSniff::SniffingContext::Font,
+                                                                                     .supplied_type = supplied_type,
+                                                                                 }));
+
+    EXPECT_EQ(mime_type, MUST(computed_mime_type.serialized()));
+
+    HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
+    mime_type_to_headers_map.set("application/octet-stream"sv, { "\x00"sv });
+    mime_type_to_headers_map.set("application/vnd.ms-fontobject"sv, { "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00LP"sv });
+    mime_type_to_headers_map.set("font/ttf"sv, { "\x00\x01\x00\x00"sv });
+    mime_type_to_headers_map.set("font/otf"sv, { "OTTO"sv });
+    mime_type_to_headers_map.set("font/collection"sv, { "ttcf"sv });
+    mime_type_to_headers_map.set("font/woff"sv, { "wOFF"sv });
+    mime_type_to_headers_map.set("font/woff2"sv, { "wOF2"sv });
+
+    for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
+        auto mime_type = mime_type_to_headers.key;
+
+        for (auto const& header : mime_type_to_headers.value) {
+            auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff(header.bytes(), Web::MimeSniff::SniffingConfiguration { .sniffing_context = Web::MimeSniff::SniffingContext::Font }));
+            EXPECT_EQ(mime_type, computed_mime_type.essence());
+        }
+    }
+
+    // Cover case where we aren't dealing with a font MIME type.
+    mime_type = "text/html"sv;
+    supplied_type = MUST(Web::MimeSniff::MimeType::parse("text/html"sv)).release_value();
+    computed_mime_type = MUST(Web::MimeSniff::Resource::sniff(""sv.bytes(), Web::MimeSniff::SniffingConfiguration {
+                                                                                .sniffing_context = Web::MimeSniff::SniffingContext::Font,
+                                                                                .supplied_type = supplied_type,
+                                                                            }));
+
+    EXPECT_EQ(mime_type, computed_mime_type.essence());
+}

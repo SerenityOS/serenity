@@ -182,6 +182,50 @@ ErrorOr<Optional<MimeType>> match_an_audio_or_video_type_pattern(ReadonlyBytes i
     return OptionalNone {};
 }
 
+// https://mimesniff.spec.whatwg.org/#matching-a-font-type-pattern
+ErrorOr<Optional<MimeType>> match_a_font_type_pattern(ReadonlyBytes input)
+{
+    // 1. Execute the following steps for each row row in the following table:
+    static Array<BytePatternTableRow, 6> constexpr pattern_table {
+        // 34 bytes followed by the string "LP", the Embedded OpenType signature.
+        BytePatternTableRow {
+            .byte_pattern = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x4C\x50"sv,
+            .pattern_mask = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF"sv,
+            .ignored_leading_bytes = no_ignored_bytes,
+            .mime_type = "application/vnd.ms-fontobject"sv,
+        },
+
+        // 4 bytes representing the version number 1.0, a TrueType signature.
+        BytePatternTableRow { "\x00\x01\x00\x00"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "font/ttf"sv },
+
+        // The string "OTTO", the OpenType signature.
+        BytePatternTableRow { "\x4F\x54\x54\x4F"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "font/otf"sv },
+
+        // The string "ttcf", the TrueType Collection signature.
+        BytePatternTableRow { "\x74\x74\x63\x66"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "font/collection"sv },
+
+        // The string "wOFF", the Web Open Font Format 1.0 signature.
+        BytePatternTableRow { "\x77\x4F\x46\x46"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "font/woff"sv },
+
+        // The string "wOF2", the Web Open Font Format 2.0 signature.
+        BytePatternTableRow { "\x77\x4F\x46\x32"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "font/woff2"sv },
+    };
+
+    for (auto const& row : pattern_table) {
+        // 1. Let patternMatched be the result of the pattern matching algorithm given input, the
+        //    value in the first column of row, the value in the second column of row, and the
+        //    value in the third column of row.
+        auto pattern_matched = pattern_matching_algorithm(input, row.byte_pattern.bytes(), row.pattern_mask.bytes(), row.ignored_leading_bytes);
+
+        // 2. If patternMatched is true, return the value in the fourth column of row.
+        if (pattern_matched)
+            return MimeType::parse(row.mime_type);
+    }
+
+    // 2. Return undefined.
+    return OptionalNone {};
+}
+
 // https://mimesniff.spec.whatwg.org/#matching-an-archive-type-pattern
 ErrorOr<Optional<MimeType>> match_an_archive_type_pattern(ReadonlyBytes input)
 {
@@ -542,6 +586,8 @@ ErrorOr<void> Resource::context_specific_sniffing_algorithm(SniffingContext snif
         return rules_for_sniffing_images_specifically();
     if (sniffing_context == SniffingContext::AudioOrVideo)
         return rules_for_sniffing_audio_or_video_specifically();
+    if (sniffing_context == SniffingContext::Font)
+        return rules_for_sniffing_fonts_specifically();
 
     return {};
 }
@@ -597,6 +643,38 @@ ErrorOr<void> Resource::rules_for_sniffing_audio_or_video_specifically()
     //    Abort these steps.
     if (audio_or_video_type_matched.has_value()) {
         m_computed_mime_type = audio_or_video_type_matched.release_value();
+        return {};
+    }
+
+    // 4. The computed MIME type is the supplied MIME type.
+    // NOTE: Non-standard but due to the mime type detection algorithm we need this sanity check.
+    if (m_supplied_mime_type.has_value()) {
+        m_computed_mime_type = m_supplied_mime_type.value();
+    }
+
+    // NOTE: Non-standard but if the supplied mime type is undefined, we use computed mime type's default value.
+    return {};
+}
+
+// https://mimesniff.spec.whatwg.org/#sniffing-in-a-font-context
+ErrorOr<void> Resource::rules_for_sniffing_fonts_specifically()
+{
+    // 1. If the supplied MIME type is an XML MIME type, the computed MIME type is the supplied MIME type.
+    //    Abort these steps.
+    // NOTE: Non-standard but due to the mime type detection algorithm we need this sanity check.
+    if (m_supplied_mime_type.has_value() && m_supplied_mime_type->is_xml()) {
+        m_computed_mime_type = m_supplied_mime_type.value();
+        return {};
+    }
+
+    // 2. Let font-type-matched be the result of executing the font type pattern matching algorithm with the
+    //    resource header as the byte sequence to be matched.
+    auto font_type_matched = TRY(match_a_font_type_pattern(resource_header()));
+
+    // 3. If font-type-matched is not undefined, the computed MIME type is font-type-matched.
+    //    Abort these steps.
+    if (font_type_matched.has_value()) {
+        m_computed_mime_type = font_type_matched.release_value();
         return {};
     }
 
