@@ -256,7 +256,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_remove_suffix(AST::ImmediateExpressi
     Vector<NonnullRefPtr<AST::Node>> nodes;
 
     for (auto& value_str : values) {
-        String removed = TRY(String::from_utf8(value_str));
+        String removed = value_str;
 
         if (value_str.bytes_as_string_view().ends_with(suffix_str))
             removed = TRY(removed.substring_from_byte_offset(0, value_str.bytes_as_string_view().length() - suffix_str.bytes_as_string_view().length()));
@@ -288,7 +288,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_remove_prefix(AST::ImmediateExpressi
     Vector<NonnullRefPtr<AST::Node>> nodes;
 
     for (auto& value_str : values) {
-        String removed = TRY(String::from_utf8(value_str));
+        String removed = value_str;
 
         if (value_str.bytes_as_string_view().starts_with(prefix_str))
             removed = TRY(removed.substring_from_byte_offset(prefix_str.bytes_as_string_view().length()));
