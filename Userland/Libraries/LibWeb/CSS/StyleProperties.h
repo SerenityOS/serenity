@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibGfx/Font/Font.h>
+#include <LibGfx/FontCascadeList.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/LengthBox.h>
@@ -21,8 +22,6 @@ public:
     StyleProperties() = default;
 
     static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
-
-    NonnullRefPtr<StyleProperties> clone() const;
 
     template<typename Callback>
     inline void for_each_property(Callback callback) const
@@ -128,15 +127,17 @@ public:
     float stroke_opacity() const;
     Optional<CSS::FillRule> fill_rule() const;
 
-    Gfx::Font const& computed_font() const
+    Gfx::Font const& first_available_computed_font() const { return m_font_list->first(); }
+
+    Gfx::FontCascadeList const& computed_font_list() const
     {
-        VERIFY(m_font);
-        return *m_font;
+        VERIFY(m_font_list);
+        return *m_font_list;
     }
 
-    void set_computed_font(NonnullRefPtr<Gfx::Font const> font)
+    void set_computed_font_list(NonnullRefPtr<Gfx::FontCascadeList> font_list) const
     {
-        m_font = move(font);
+        m_font_list = move(font_list);
     }
 
     CSSPixels line_height(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
@@ -162,7 +163,7 @@ private:
     Vector<CSS::ShadowData> shadow(CSS::PropertyID, Layout::Node const&) const;
 
     int m_math_depth { InitialValues::math_depth() };
-    mutable RefPtr<Gfx::Font const> m_font;
+    mutable RefPtr<Gfx::FontCascadeList> m_font_list;
 };
 
 }

@@ -492,7 +492,7 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
 {
     Element::RequiredInvalidationAfterStyleChange invalidation;
 
-    if (&old_style.computed_font() != &new_style.computed_font())
+    if (!old_style.computed_font_list().equals(new_style.computed_font_list()))
         invalidation.relayout = true;
 
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {

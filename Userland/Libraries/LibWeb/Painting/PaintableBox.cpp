@@ -531,7 +531,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     auto fragment_rect = fragment.absolute_rect();
 
     CSSPixelRect cursor_rect {
-        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position()->offset() - fragment.start()))),
+        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.first_available_font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position()->offset() - fragment.start()))),
         fragment_rect.top(),
         1,
         fragment_rect.height()
@@ -545,7 +545,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
 static void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
 {
     auto& painter = context.recording_painter();
-    auto& font = fragment.layout_node().font();
+    auto& font = fragment.layout_node().first_available_font();
     auto fragment_box = fragment.absolute_rect();
     CSSPixels glyph_height = CSSPixels::nearest_value_for(font.pixel_size());
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
@@ -650,7 +650,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         }
         painter.draw_text_run(baseline_start.to_type<int>(), scaled_glyph_run, text_node.computed_values().color(), fragment_absolute_device_rect.to_type<int>());
 
-        auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
+        auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.first_available_font())).to_type<int>();
         if (!selection_rect.is_empty()) {
             painter.fill_rect(selection_rect, CSS::SystemColor::highlight());
             RecordingPainterStateSaver saver(painter);
@@ -720,7 +720,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                                 layer.spread_distance.to_px(layout_box()),
                                 ShadowPlacement::Outer);
                         }
-                        context.recording_painter().set_font(fragment.layout_node().font());
+                        context.recording_painter().set_font(fragment.layout_node().first_available_font());
                         paint_text_shadow(context, fragment, resolved_shadow_data);
                     }
                 }

@@ -47,7 +47,7 @@ int LineBoxFragment::text_index_at(CSSPixels x) const
     if (!is<TextNode>(layout_node()))
         return 0;
     auto& layout_text = verify_cast<TextNode>(layout_node());
-    auto& font = layout_text.font();
+    auto& font = layout_text.first_available_font();
     Utf8View view(text());
 
     CSSPixels relative_x = x - absolute_x();

@@ -1093,17 +1093,17 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         image_height = list_style_image->natural_height().value_or(0);
     }
 
-    CSSPixels default_marker_width = max(4, marker.font().pixel_size_rounded_up() - 4);
+    CSSPixels default_marker_width = max(4, marker.first_available_font().pixel_size_rounded_up() - 4);
 
     auto marker_text = marker.text().value_or("");
     if (marker_text.is_empty()) {
         marker_state.set_content_width(image_width + default_marker_width);
     } else {
-        auto text_width = marker.font().width(marker_text);
+        auto text_width = marker.first_available_font().width(marker_text);
         marker_state.set_content_width(image_width + CSSPixels::nearest_value_for(text_width));
     }
 
-    marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1));
+    marker_state.set_content_height(max(image_height, marker.first_available_font().pixel_size_rounded_up() + 1));
 
     auto final_marker_width = marker_state.content_width() + default_marker_width;
 

@@ -74,7 +74,7 @@ public:
 
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
-    RefPtr<Gfx::Font const> compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch, int math_depth = 0) const;
+    RefPtr<Gfx::FontCascadeList const> compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch, int math_depth = 0) const;
 
     struct AnimationKey {
         CSS::CSSStyleDeclaration const* source_declaration;
@@ -123,9 +123,9 @@ private:
 
     ErrorOr<RefPtr<StyleProperties>> compute_style_impl(DOM::Element&, Optional<CSS::Selector::PseudoElement>, ComputeStyleMode) const;
     ErrorOr<void> compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>, bool& did_match_any_pseudo_element_rules, ComputeStyleMode) const;
-    static RefPtr<Gfx::Font const> find_matching_font_weight_ascending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive);
-    static RefPtr<Gfx::Font const> find_matching_font_weight_descending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive);
-    RefPtr<Gfx::Font const> font_matching_algorithm(FontFaceKey const& key, float font_size_in_pt) const;
+    static RefPtr<Gfx::FontCascadeList const> find_matching_font_weight_ascending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive);
+    static RefPtr<Gfx::FontCascadeList const> find_matching_font_weight_descending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive);
+    RefPtr<Gfx::FontCascadeList const> font_matching_algorithm(FontFaceKey const& key, float font_size_in_pt) const;
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
     void compute_math_depth(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
     void compute_defaulted_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
@@ -186,7 +186,8 @@ private:
 
     mutable FontCache m_font_cache;
 
-    HashMap<FontFaceKey, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
+    using FontLoaderList = Vector<NonnullOwnPtr<FontLoader>>;
+    HashMap<FontFaceKey, FontLoaderList> m_loaded_fonts;
 
     Length::FontMetrics m_default_font_metrics;
     Length::FontMetrics m_root_element_font_metrics;

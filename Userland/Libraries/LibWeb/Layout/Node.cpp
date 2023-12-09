@@ -349,7 +349,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     // NOTE: We have to be careful that font-related properties get set in the right order.
     //       m_font is used by Length::to_px() when resolving sizes against this layout node.
     //       That's why it has to be set before everything else.
-    m_font = computed_style.computed_font();
+    m_font_list = computed_style.computed_font_list();
     computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this));
     computed_values.set_font_weight(round_to<int>(computed_style.property(CSS::PropertyID::FontWeight)->as_number().number()));
     m_line_height = computed_style.line_height(*this);
@@ -930,7 +930,7 @@ JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());
     static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::DisplayOutside::Block, CSS::DisplayInside::Flow));
-    wrapper->m_font = m_font;
+    wrapper->m_font_list = m_font_list;
     wrapper->m_line_height = m_line_height;
     return *wrapper;
 }
