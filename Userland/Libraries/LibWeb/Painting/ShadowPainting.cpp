@@ -593,7 +593,7 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
     scaled_glyph_run.ensure_capacity(fragment.glyph_run().size());
     for (auto glyph : fragment.glyph_run()) {
         glyph.visit([&](auto& glyph) {
-            glyph.font = &scaled_font;
+            glyph.font = scaled_font;
             glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
         });
         scaled_glyph_run.append(move(glyph));

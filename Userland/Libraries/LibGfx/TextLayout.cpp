@@ -224,7 +224,7 @@ DrawGlyphOrEmoji prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIter
         return DrawGlyph {
             .position = point,
             .code_point = code_point,
-            .font = &font,
+            .font = font,
         };
     }
 
@@ -233,7 +233,7 @@ DrawGlyphOrEmoji prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIter
         return DrawEmoji {
             .position = point,
             .emoji = emoji,
-            .font = &font,
+            .font = font,
         };
     }
 
@@ -242,7 +242,7 @@ DrawGlyphOrEmoji prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIter
         return DrawGlyph {
             .position = point,
             .code_point = code_point,
-            .font = &font,
+            .font = font,
         };
     }
 
@@ -251,7 +251,7 @@ DrawGlyphOrEmoji prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIter
     return DrawGlyph {
         .position = point,
         .code_point = 0xFFFD,
-        .font = &font,
+        .font = font,
     };
 }
 

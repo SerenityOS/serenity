@@ -78,13 +78,13 @@ enum class IncludeLeftBearing {
 struct DrawGlyph {
     FloatPoint position;
     u32 code_point;
-    Font const* font;
+    NonnullRefPtr<Font const> font;
 };
 
 struct DrawEmoji {
     FloatPoint position;
     Gfx::Bitmap const* emoji;
-    Font const* font;
+    NonnullRefPtr<Font const> font;
 };
 
 using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;
