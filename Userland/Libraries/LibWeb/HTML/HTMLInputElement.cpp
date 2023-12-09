@@ -7,11 +7,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -563,8 +565,10 @@ void HTMLInputElement::create_shadow_tree_if_needed()
 void HTMLInputElement::create_text_input_shadow_tree()
 {
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
+    set_shadow_root(shadow_root);
+
     auto initial_value = m_value;
-    auto element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    auto element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
     MUST(element->set_attribute(HTML::AttributeNames::style, R"~~~(
         display: flex;
         height: 100%;
@@ -572,37 +576,78 @@ void HTMLInputElement::create_text_input_shadow_tree()
         white-space: pre;
         border: none;
         padding: 1px 2px;
-)~~~"_string));
+    )~~~"_string));
+    MUST(shadow_root->append_child(element));
 
     m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document());
-    MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
+    MUST(m_placeholder_element->set_attribute(HTML::AttributeNames::style, R"~~~(
+        flex: 1;
+        height: 1lh;
+    )~~~"_string));
+    MUST(element->append_child(*m_placeholder_element));
 
     m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
     m_placeholder_text_node->set_data(attribute(HTML::AttributeNames::placeholder).value_or(String {}));
     m_placeholder_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
-    MUST(element->append_child(*m_placeholder_element));
 
-    m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
+    m_inner_text_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    MUST(m_inner_text_element->set_attribute(HTML::AttributeNames::style, R"~~~(
+        flex: 1;
+        height: 1lh;
+    )~~~"_string));
+    MUST(element->append_child(*m_inner_text_element));
 
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), move(initial_value));
-    if (m_type == TypeAttributeState::FileUpload) {
+    if (type_state() == TypeAttributeState::FileUpload) {
         // NOTE: file upload state is mutable, but we don't allow the text node to be modifed
         m_text_node->set_always_editable(false);
     } else {
         handle_readonly_attribute(attribute(HTML::AttributeNames::readonly));
     }
-
     m_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
-
-    if (m_type == TypeAttributeState::Password)
+    if (type_state() == TypeAttributeState::Password)
         m_text_node->set_is_password_input({}, true);
-
     MUST(m_inner_text_element->append_child(*m_text_node));
-    MUST(element->append_child(*m_inner_text_element));
-    MUST(shadow_root->append_child(element));
-    set_shadow_root(shadow_root);
+
+    if (type_state() == TypeAttributeState::Number) {
+        // Up button
+        auto up_button = MUST(DOM::create_element(document(), HTML::TagNames::button, Namespace::HTML));
+        // FIXME: This cursor property doesn't work
+        MUST(up_button->set_attribute(HTML::AttributeNames::style, R"~~~(
+            padding: 0;
+            cursor: default;
+        )~~~"_string));
+        MUST(up_button->set_inner_html("<svg style=\"width: 1em; height: 1em;\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z\" /></svg>"sv));
+        MUST(element->append_child(up_button));
+
+        auto up_callback_function = JS::NativeFunction::create(
+            realm(), [this](JS::VM&) {
+                (void)step_up();
+                return JS::js_undefined();
+            },
+            0, "", &realm());
+        auto up_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*up_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+        up_button->add_event_listener_without_options("click"_fly_string, DOM::IDLEventListener::create(realm(), up_callback));
+
+        // Down button
+        auto down_button = MUST(DOM::create_element(document(), HTML::TagNames::button, Namespace::HTML));
+        MUST(down_button->set_attribute(HTML::AttributeNames::style, R"~~~(
+            padding: 0;
+            cursor: default;
+        )~~~"_string));
+        MUST(down_button->set_inner_html("<svg style=\"width: 1em; height: 1em;\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z\" /></svg>"sv));
+        MUST(element->append_child(down_button));
+
+        auto down_callback_function = JS::NativeFunction::create(
+            realm(), [this](JS::VM&) {
+                (void)step_down();
+                return JS::js_undefined();
+            },
+            0, "", &realm());
+        auto down_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*down_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+        down_button->add_event_listener_without_options("click"_fly_string, DOM::IDLEventListener::create(realm(), down_callback));
+    }
 }
 
 void HTMLInputElement::create_color_input_shadow_tree()
