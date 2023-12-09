@@ -360,7 +360,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
                 return;
 
             m_selection_end = offset;
-            m_position = offset;
+            m_position = (offset + 1 > m_document->size()) ? offset - 1 : offset;
             scroll_position_into_view(offset);
         }
 
@@ -375,7 +375,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
                 return;
 
             m_selection_end = offset;
-            m_position = offset;
+            m_position = (offset + 1 > m_document->size()) ? offset - 1 : offset;
             scroll_position_into_view(offset);
         }
         update_status();
