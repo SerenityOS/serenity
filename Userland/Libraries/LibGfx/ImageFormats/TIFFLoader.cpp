@@ -76,6 +76,34 @@ private:
         BigEndian,
     };
 
+    static ErrorOr<u8> read_component(BigEndianInputBitStream& stream, u8 bits)
+    {
+        // FIXME: This function truncates everything to 8-bits
+        auto const value = TRY(stream.read_bits<u32>(bits));
+
+        if (bits > 8)
+            return value >> (bits - 8);
+        return value << (8 - bits);
+    }
+
+    ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
+    {
+        auto bits_per_sample = *m_metadata.bits_per_sample();
+        if (m_metadata.samples_per_pixel().value_or(3) == 3) {
+            auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
+            auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
+            auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
+            return Color(first_component, second_component, third_component);
+        }
+
+        if (*m_metadata.samples_per_pixel() == 1) {
+            auto const luminosity = TRY(read_component(stream, bits_per_sample[0]));
+            return Color(luminosity, luminosity, luminosity);
+        }
+
+        return Error::from_string_literal("Unsupported number of sample per pixel");
+    }
+
     template<CallableAs<ErrorOr<ReadonlyBytes>, u32> StripDecoder>
     ErrorOr<void> loop_over_pixels(StripDecoder&& strip_decoder)
     {
@@ -87,6 +115,7 @@ private:
 
             auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index]));
             auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
+            auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
 
             for (u32 row = 0; row < *m_metadata.rows_per_strip(); row++) {
                 auto const scanline = row + *m_metadata.rows_per_strip() * strip_index;
@@ -96,16 +125,7 @@ private:
                 Optional<Color> last_color {};
 
                 for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
-                    Color color {};
-
-                    if (m_metadata.samples_per_pixel().value_or(3) == 3) {
-                        color = Color { TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()), TRY(decoded_strip->template read_value<u8>()) };
-                    } else if (*m_metadata.samples_per_pixel() == 1) {
-                        auto luminosity = TRY(decoded_strip->template read_value<u8>());
-                        color = Color { luminosity, luminosity, luminosity };
-                    } else {
-                        return Error::from_string_literal("Unsupported number of sample per pixel");
-                    }
+                    auto color = TRY(read_color(*decoded_stream));
 
                     if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
                         color.set_red(last_color->red() + color.red());
@@ -116,6 +136,8 @@ private:
                     last_color = color;
                     m_bitmap->set_pixel(column, scanline, color);
                 }
+
+                decoded_stream->align_to_byte_boundary();
             }
         }
 
