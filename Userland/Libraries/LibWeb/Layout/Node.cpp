@@ -304,7 +304,6 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     , m_computed_values(move(computed_values))
 {
     m_has_style = true;
-    m_font = Platform::FontPlugin::the().default_font();
 }
 
 void NodeWithStyle::visit_edges(Visitor& visitor)
