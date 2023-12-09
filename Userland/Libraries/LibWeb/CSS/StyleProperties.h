@@ -20,8 +20,6 @@ class StyleProperties : public RefCounted<StyleProperties> {
 public:
     StyleProperties() = default;
 
-    explicit StyleProperties(StyleProperties const&);
-
     static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
 
     NonnullRefPtr<StyleProperties> clone() const;

@@ -35,21 +35,6 @@
 
 namespace Web::CSS {
 
-StyleProperties::StyleProperties(StyleProperties const& other)
-    : m_property_values(other.m_property_values)
-{
-    if (other.m_font) {
-        m_font = other.m_font->clone();
-    } else {
-        m_font = nullptr;
-    }
-}
-
-NonnullRefPtr<StyleProperties> StyleProperties::clone() const
-{
-    return adopt_ref(*new StyleProperties(*this));
-}
-
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration)
 {
     m_property_values[to_underlying(id)] = StyleAndSourceDeclaration { move(value), source_declaration };
