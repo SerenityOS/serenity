@@ -262,10 +262,9 @@ const editDOMNode = domNode => {
     }
 
     const domNodeID = selectedDOMNode.dataset.id;
+    const type = domNode.dataset.nodeType;
 
     const handleChange = value => {
-        const type = domNode.dataset.nodeType;
-
         if (type === "text" || type === "comment") {
             inspector.setDOMNodeText(domNodeID, value);
         } else if (type === "tag") {
@@ -282,7 +281,12 @@ const editDOMNode = domNode => {
     };
 
     let editor = createDOMEditor(handleChange, cancelChange);
-    editor.value = domNode.innerText;
+
+    if (type === "text") {
+        editor.value = domNode.dataset.text;
+    } else {
+        editor.value = domNode.innerText;
+    }
 
     domNode.parentNode.replaceChild(editor, domNode);
 };
