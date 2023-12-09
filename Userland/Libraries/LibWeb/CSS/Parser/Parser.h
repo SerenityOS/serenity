@@ -10,6 +10,7 @@
 #include <AK/Error.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
+#include <LibGfx/Font/UnicodeRange.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
@@ -31,7 +32,6 @@
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/Supports.h>
-#include <LibWeb/CSS/UnicodeRange.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS::Parser {
@@ -176,8 +176,8 @@ private:
     Optional<Length> parse_length(ComponentValue const&);
     [[nodiscard]] Optional<LengthOrCalculated> parse_source_size_value(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
-    Optional<UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
-    Optional<UnicodeRange> parse_unicode_range(StringView);
+    Optional<Gfx::UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
+    Optional<Gfx::UnicodeRange> parse_unicode_range(StringView);
     Optional<GridSize> parse_grid_size(ComponentValue const&);
     Optional<GridMinMax> parse_min_max(Vector<ComponentValue> const&);
     Optional<GridRepeat> parse_repeat(Vector<ComponentValue> const&);

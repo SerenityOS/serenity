@@ -186,7 +186,6 @@ class TimeStyleValue;
 class Transformation;
 class TransformationStyleValue;
 class URLStyleValue;
-class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
 class VisualViewport;

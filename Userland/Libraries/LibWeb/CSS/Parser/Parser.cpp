@@ -1661,7 +1661,7 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
 }
 
 // https://www.w3.org/TR/css-syntax-3/#urange-syntax
-Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& tokens)
+Optional<Gfx::UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& tokens)
 {
     auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
@@ -1687,7 +1687,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
             || component_value.is(Token::Type::Whitespace);
     };
 
-    auto create_unicode_range = [&](StringView text, auto& local_transaction) -> Optional<UnicodeRange> {
+    auto create_unicode_range = [&](StringView text, auto& local_transaction) -> Optional<Gfx::UnicodeRange> {
         auto maybe_unicode_range = parse_unicode_range(text);
         if (maybe_unicode_range.has_value()) {
             local_transaction.commit();
@@ -1769,9 +1769,9 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
     return {};
 }
 
-Optional<UnicodeRange> Parser::parse_unicode_range(StringView text)
+Optional<Gfx::UnicodeRange> Parser::parse_unicode_range(StringView text)
 {
-    auto make_valid_unicode_range = [&](u32 start_value, u32 end_value) -> Optional<UnicodeRange> {
+    auto make_valid_unicode_range = [&](u32 start_value, u32 end_value) -> Optional<Gfx::UnicodeRange> {
         // https://www.w3.org/TR/css-syntax-3/#maximum-allowed-code-point
         constexpr u32 maximum_allowed_code_point = 0x10FFFF;
 
@@ -1790,7 +1790,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(StringView text)
         }
 
         // 3. Otherwise, the <urange> represents a contiguous range of codepoints from start value to end value, inclusive.
-        return UnicodeRange { start_value, end_value };
+        return Gfx::UnicodeRange { start_value, end_value };
     };
 
     // 1. Skipping the first u token, concatenate the representations of all the tokens in the production together.
@@ -4160,7 +4160,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 
     Optional<FlyString> font_family;
     Vector<FontFace::Source> src;
-    Vector<UnicodeRange> unicode_range;
+    Vector<Gfx::UnicodeRange> unicode_range;
     Optional<int> weight;
     Optional<int> slope;
 
@@ -4237,7 +4237,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             continue;
         }
         if (declaration.name().equals_ignoring_ascii_case("unicode-range"sv)) {
-            Vector<UnicodeRange> unicode_ranges;
+            Vector<Gfx::UnicodeRange> unicode_ranges;
             bool unicode_range_invalid = false;
             TokenStream all_tokens { declaration.values() };
             auto range_token_lists = parse_a_comma_separated_list_of_component_values(all_tokens);
