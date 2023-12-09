@@ -132,11 +132,11 @@ private:
     };
 
     // Fast cache for GlyphPage #0 (code points 0-255) to avoid hash lookups for all of ASCII and Latin-1.
-    mutable OwnPtr<GlyphPage> m_glyph_page_zero;
+    OwnPtr<GlyphPage> mutable m_glyph_page_zero;
 
-    mutable HashMap<size_t, NonnullOwnPtr<GlyphPage>> m_glyph_pages;
+    HashMap<size_t, NonnullOwnPtr<GlyphPage>> mutable m_glyph_pages;
 
-    mutable HashMap<u32, i16> m_kerning_cache;
+    HashMap<u32, i16> mutable m_kerning_cache;
 
     Optional<String> mutable m_family;
     Optional<u16> mutable m_width;
