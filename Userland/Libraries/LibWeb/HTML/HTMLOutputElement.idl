@@ -11,8 +11,8 @@ interface HTMLOutputElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString name;
 
     readonly attribute DOMString type;
-    // FIXME: [CEReactions] attribute DOMString defaultValue;
-    // FIXME: [CEReactions] attribute DOMString value;
+    [CEReactions] attribute DOMString defaultValue;
+    [CEReactions] attribute DOMString value;
 
     // FIXME: readonly attribute boolean willValidate;
     // FIXME: readonly attribute ValidityState validity;

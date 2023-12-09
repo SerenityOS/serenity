@@ -29,6 +29,12 @@ public:
         return output;
     }
 
+    String default_value() const;
+    void set_default_value(String const&);
+
+    String value() const override;
+    void set_value(String const&);
+
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
     virtual bool is_listed() const override { return true; }
@@ -52,6 +58,8 @@ private:
     HTMLOutputElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+
+    Optional<String> m_default_value_override {};
 };
 
 }
