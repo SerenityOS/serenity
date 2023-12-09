@@ -128,9 +128,9 @@ void serialize_a_local(StringBuilder& builder, StringView path)
 }
 
 // NOTE: No spec currently exists for serializing a <'unicode-range'>.
-void serialize_unicode_ranges(StringBuilder& builder, Vector<UnicodeRange> const& unicode_ranges)
+void serialize_unicode_ranges(StringBuilder& builder, Vector<Gfx::UnicodeRange> const& unicode_ranges)
 {
-    serialize_a_comma_separated_list(builder, unicode_ranges, [](auto& builder, UnicodeRange unicode_range) -> void {
+    serialize_a_comma_separated_list(builder, unicode_ranges, [](auto& builder, Gfx::UnicodeRange unicode_range) -> void {
         return serialize_a_string(builder, unicode_range.to_string());
     });
 }

@@ -11,7 +11,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
-#include <LibWeb/CSS/UnicodeRange.h>
+#include <LibGfx/Font/UnicodeRange.h>
 
 namespace Web::CSS {
 
@@ -21,7 +21,7 @@ void serialize_an_identifier(StringBuilder&, StringView ident);
 void serialize_a_string(StringBuilder&, StringView string);
 void serialize_a_url(StringBuilder&, StringView url);
 void serialize_a_local(StringBuilder&, StringView path);
-void serialize_unicode_ranges(StringBuilder&, Vector<UnicodeRange> const& unicode_ranges);
+void serialize_unicode_ranges(StringBuilder&, Vector<Gfx::UnicodeRange> const& unicode_ranges);
 void serialize_a_srgb_value(StringBuilder&, Color color);
 
 String escape_a_character(u32 character);

@@ -9,9 +9,8 @@
 #include <AK/Assertions.h>
 #include <AK/String.h>
 
-namespace Web::CSS {
+namespace Gfx {
 
-// https://www.w3.org/TR/css-syntax-3/#urange-syntax
 class UnicodeRange {
 public:
     UnicodeRange(u32 min_code_point, u32 max_code_point)
