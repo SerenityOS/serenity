@@ -638,12 +638,12 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         auto text = text_node.text_for_rendering();
 
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
-        auto const& scaled_font = fragment.layout_node().scaled_font(context);
         Vector<Gfx::DrawGlyphOrEmoji> scaled_glyph_run;
         scaled_glyph_run.ensure_capacity(fragment.glyph_run().size());
+        auto& font_cache = text_node.document().style_computer().font_cache();
         for (auto glyph : fragment.glyph_run()) {
             glyph.visit([&](auto& glyph) {
-                glyph.font = scaled_font;
+                glyph.font = font_cache.scaled_font(*glyph.font, context.device_pixels_per_css_pixel());
                 glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
             });
             scaled_glyph_run.append(move(glyph));

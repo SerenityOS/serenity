@@ -2439,7 +2439,9 @@ void Painter::draw_text_run(IntPoint baseline_start, Utf8View const& string, Fon
 
 void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, Color color)
 {
-    for_each_glyph_position(baseline_start, string, font, [&](DrawGlyphOrEmoji glyph_or_emoji) {
+    auto font_list = Gfx::FontCascadeList::create();
+    font_list->add(font);
+    for_each_glyph_position(baseline_start, string, font_list, [&](DrawGlyphOrEmoji glyph_or_emoji) {
         if (glyph_or_emoji.has<DrawGlyph>()) {
             auto& glyph = glyph_or_emoji.get<DrawGlyph>();
             draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);

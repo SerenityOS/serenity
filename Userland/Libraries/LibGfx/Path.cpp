@@ -170,8 +170,10 @@ void Path::text(Utf8View text, Font const& font)
     }
 
     auto& scaled_font = static_cast<ScaledFont const&>(font);
+    auto font_list = Gfx::FontCascadeList::create();
+    font_list->add(scaled_font);
     for_each_glyph_position(
-        last_point(), text, font, [&](DrawGlyphOrEmoji glyph_or_emoji) {
+        last_point(), text, font_list, [&](DrawGlyphOrEmoji glyph_or_emoji) {
             if (glyph_or_emoji.has<DrawGlyph>()) {
                 auto& glyph = glyph_or_emoji.get<DrawGlyph>();
                 move_to(glyph.position);
