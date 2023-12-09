@@ -484,16 +484,15 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
             auto deprecated_text = node.get_deprecated_string("text"sv).release_value();
             deprecated_text = escape_html_entities(deprecated_text);
 
-            if (auto text = MUST(Web::Infra::strip_and_collapse_whitespace(deprecated_text)); text.is_empty()) {
-                builder.appendff("<span class=\"hoverable internal\" {}>", data_attributes.string_view());
-                builder.append(name);
-                builder.append("</span>"sv);
-            } else {
-                builder.appendff("<span data-node-type=\"text\" class=\"hoverable editable\" {}>", data_attributes.string_view());
-                builder.append(text);
-                builder.append("</span>"sv);
-            }
+            auto text = MUST(Web::Infra::strip_and_collapse_whitespace(deprecated_text));
+            builder.appendff("<span data-node-type=\"text\" data-text=\"{}\" class=\"hoverable editable\" {}>", text, data_attributes.string_view());
 
+            if (text.is_empty())
+                builder.appendff("<span class=\"internal\">{}</span>", name);
+            else
+                builder.append(text);
+
+            builder.append("</span>"sv);
             return;
         }
 
