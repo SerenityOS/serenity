@@ -14,6 +14,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGfx/Font/Font.h>
+#include <LibGfx/FontCascadeList.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/TextElision.h>
@@ -92,34 +93,35 @@ using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;
 Variant<DrawGlyph, DrawEmoji> prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font);
 
 template<typename Callback>
-void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, Font const& font, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No, Optional<float&> width = {})
+void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, FontCascadeList const& font_list, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No, Optional<float&> width = {})
 {
-    float space_width = font.glyph_width(' ') + font.glyph_spacing();
+    float space_width = font_list.first().glyph_width(' ') + font_list.first().glyph_spacing();
 
     u32 last_code_point = 0;
 
     auto point = baseline_start;
-    point.translate_by(0, -font.pixel_metrics().ascent);
-
     for (auto code_point_iterator = string.begin(); code_point_iterator != string.end(); ++code_point_iterator) {
+        auto it = code_point_iterator; // The callback function will advance the iterator, so create a copy for this lookup.
         auto code_point = *code_point_iterator;
+        RefPtr<Gfx::Font const> font = font_list.font_for_code_point(code_point);
+
+        point.set_y(baseline_start.y() - font->pixel_metrics().ascent);
+
         if (should_paint_as_space(code_point)) {
             point.translate_by(space_width, 0);
             last_code_point = code_point;
             continue;
         }
 
-        auto kerning = font.glyphs_horizontal_kerning(last_code_point, code_point);
+        auto kerning = font->glyphs_horizontal_kerning(last_code_point, code_point);
         if (kerning != 0.0f)
             point.translate_by(kerning, 0);
 
-        auto it = code_point_iterator; // The callback function will advance the iterator, so create a copy for this lookup.
-        auto glyph_width = font.glyph_or_emoji_width(it) + font.glyph_spacing();
-
-        auto glyph_or_emoji = prepare_draw_glyph_or_emoji(point, code_point_iterator, font);
+        auto glyph_width = font->glyph_or_emoji_width(it) + font->glyph_spacing();
+        auto glyph_or_emoji = prepare_draw_glyph_or_emoji(point, code_point_iterator, *font);
         if (include_left_bearing == IncludeLeftBearing::Yes) {
             if (glyph_or_emoji.has<DrawGlyph>())
-                glyph_or_emoji.get<DrawGlyph>().position += FloatPoint(font.glyph_left_bearing(code_point), 0);
+                glyph_or_emoji.get<DrawGlyph>().position += FloatPoint(font->glyph_left_bearing(code_point), 0);
         }
 
         callback(glyph_or_emoji);
@@ -129,7 +131,7 @@ void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, Font co
     }
 
     if (width.has_value())
-        *width = point.x() - font.glyph_spacing();
+        *width = point.x() - font_list.first().glyph_spacing();
 }
 
 }
