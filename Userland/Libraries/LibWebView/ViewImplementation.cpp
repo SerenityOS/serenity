@@ -5,7 +5,6 @@
  */
 
 #include <AK/Error.h>
-#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/StandardPaths.h>
@@ -394,7 +393,7 @@ void ViewImplementation::handle_web_content_process_crash()
     load_html(builder.to_deprecated_string());
 }
 
-static ErrorOr<void> save_screenshot(Gfx::ShareableBitmap const& bitmap)
+static ErrorOr<LexicalPath> save_screenshot(Gfx::ShareableBitmap const& bitmap)
 {
     if (!bitmap.is_valid())
         return Error::from_string_view("Failed to take a screenshot"sv);
@@ -407,10 +406,10 @@ static ErrorOr<void> save_screenshot(Gfx::ShareableBitmap const& bitmap)
     auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
     TRY(screenshot_file->write_until_depleted(encoded));
 
-    return {};
+    return path;
 }
 
-ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
+ErrorOr<LexicalPath> ViewImplementation::take_screenshot(ScreenshotType type)
 {
     Gfx::ShareableBitmap bitmap;
 
@@ -424,16 +423,13 @@ ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
         break;
     }
 
-    TRY(save_screenshot(bitmap));
-    return {};
+    return save_screenshot(bitmap);
 }
 
-ErrorOr<void> ViewImplementation::take_dom_node_screenshot(i32 node_id)
+ErrorOr<LexicalPath> ViewImplementation::take_dom_node_screenshot(i32 node_id)
 {
     auto bitmap = client().take_dom_node_screenshot(node_id);
-    TRY(save_screenshot(bitmap));
-
-    return {};
+    return save_screenshot(bitmap);
 }
 
 void ViewImplementation::set_user_style_sheet(String source)

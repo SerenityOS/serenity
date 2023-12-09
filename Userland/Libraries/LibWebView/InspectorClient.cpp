@@ -249,7 +249,10 @@ void InspectorClient::context_menu_screenshot_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());
 
-    m_content_web_view.take_dom_node_screenshot(m_context_menu_data->dom_node_id).release_value_but_fixme_should_propagate_errors();
+    if (auto result = m_content_web_view.take_dom_node_screenshot(m_context_menu_data->dom_node_id); result.is_error())
+        append_console_warning(MUST(String::formatted("Warning: {}", result.error())));
+    else
+        append_console_message(MUST(String::formatted("Screenshot saved to: {}", result.value())));
 
     m_context_menu_data.clear();
 }
@@ -645,9 +648,26 @@ void InspectorClient::handle_console_messages(i32 start_index, ReadonlySpan<Depr
 void InspectorClient::append_console_source(StringView source)
 {
     StringBuilder builder;
-
     builder.append("<span class=\"console-prompt\">&gt;&nbsp;</span>"sv);
     builder.append(MUST(JS::MarkupGenerator::html_from_source(source)));
+
+    append_console_output(builder.string_view());
+}
+
+void InspectorClient::append_console_message(StringView message)
+{
+    StringBuilder builder;
+    builder.append("<span class=\"console-prompt\">#&nbsp;</span>"sv);
+    builder.appendff("<span class=\"console-message\">{}</span>", message);
+
+    append_console_output(builder.string_view());
+}
+
+void InspectorClient::append_console_warning(StringView warning)
+{
+    StringBuilder builder;
+    builder.append("<span class=\"console-prompt\">#&nbsp;</span>"sv);
+    builder.appendff("<span class=\"console-warning\">{}</span>", warning);
 
     append_console_output(builder.string_view());
 }

@@ -53,6 +53,8 @@ private:
     void handle_console_messages(i32 start_index, ReadonlySpan<DeprecatedString> message_types, ReadonlySpan<DeprecatedString> messages);
 
     void append_console_source(StringView);
+    void append_console_message(StringView);
+    void append_console_warning(StringView);
     void append_console_output(StringView);
     void clear_console_output();
 
