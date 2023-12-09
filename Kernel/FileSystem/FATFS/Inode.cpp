@@ -326,9 +326,17 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
 
     // FIXME: Read only the needed blocks instead of the whole file
     auto blocks = TRY(const_cast<FATInode&>(*this).read_block_list());
-    TRY(buffer.write(blocks->data() + offset, min(size, m_block_list.size() * fs().m_device_block_size - offset)));
 
-    return min(size, m_block_list.size() * fs().m_device_block_size - offset);
+    // Take the minimum of the:
+    //   1. User-specified size parameter
+    //   2. The file size.
+    //   3. The number of blocks returned for reading.
+    size_t read_size = min(
+        min(size, m_metadata.size - offset),
+        (m_block_list.size() * fs().m_device_block_size) - offset);
+    TRY(buffer.write(blocks->data() + offset, read_size));
+
+    return read_size;
 }
 
 InodeMetadata FATInode::metadata() const
