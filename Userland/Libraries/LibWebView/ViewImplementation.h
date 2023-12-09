@@ -9,6 +9,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/StandardCursor.h>
@@ -95,8 +96,8 @@ public:
         Visible,
         Full,
     };
-    ErrorOr<void> take_screenshot(ScreenshotType);
-    ErrorOr<void> take_dom_node_screenshot(i32);
+    ErrorOr<LexicalPath> take_screenshot(ScreenshotType);
+    ErrorOr<LexicalPath> take_dom_node_screenshot(i32);
 
     void set_user_style_sheet(String source);
     // Load Native.css as the User style sheet, which attempts to make WebView content look as close to

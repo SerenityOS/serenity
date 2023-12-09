@@ -204,6 +204,14 @@ details > :not(:first-child) {
         color: cyan;
     }
 
+    .console-message {
+        color: lightskyblue;
+    }
+
+    .console-warning {
+        color: orange;
+    }
+
     .console-input {
         background-color: rgb(57, 57, 57);
     }
@@ -216,6 +224,14 @@ details > :not(:first-child) {
 @media (prefers-color-scheme: light) {
     .console-prompt {
         color: blue;
+    }
+
+    .console-message {
+        color: blue;
+    }
+
+    .console-warning {
+        color: darkorange;
     }
 
     .console-input {
