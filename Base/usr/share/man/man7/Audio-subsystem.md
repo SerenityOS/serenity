@@ -82,7 +82,7 @@ SerenityOS's audio system uses a variety of sample rates in different layers of 
 
 * [/dev/audio](help://man/4/audio)
 * AudioApplet and AudioServer have settings which are managed by ConfigServer.
-* `/tmp/user/%uid/portal/audio`: AudioServer's client IPC socket
+* `/tmp/session/%sid/portal/audio`: AudioServer's client IPC socket
 
 ## See also
 
