@@ -143,7 +143,8 @@ public:
 
     bool can_contain_boxes_with_position_absolute() const;
 
-    Gfx::Font const& font() const;
+    Gfx::FontCascadeList const& font_list() const;
+    Gfx::Font const& first_available_font() const;
     Gfx::Font const& scaled_font(PaintContext&) const;
     Gfx::Font const& scaled_font(float scale_factor) const;
 
@@ -217,10 +218,11 @@ public:
 
     void apply_style(const CSS::StyleProperties&);
 
-    Gfx::Font const& font() const { return *m_font; }
+    Gfx::Font const& first_available_font() const;
+    Gfx::FontCascadeList const& font_list() const { return *m_font_list; }
     CSSPixels line_height() const { return m_line_height; }
     void set_line_height(CSSPixels line_height) { m_line_height = line_height; }
-    void set_font(Gfx::Font const& font) { m_font = font; }
+    void set_font_list(Gfx::FontCascadeList const& font_list) { m_font_list = font_list; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }
 
@@ -238,7 +240,7 @@ private:
     void reset_table_box_computed_values_used_by_wrapper_to_init_values();
 
     CSS::ComputedValues m_computed_values;
-    RefPtr<Gfx::Font const> m_font;
+    RefPtr<Gfx::FontCascadeList const> m_font_list;
     CSSPixels m_line_height { 0 };
     RefPtr<CSS::AbstractImageStyleValue const> m_list_style_image;
 };
@@ -275,13 +277,20 @@ inline bool Node::has_style_or_parent_with_style() const
     return m_has_style || (parent() != nullptr && parent()->has_style_or_parent_with_style());
 }
 
-inline Gfx::Font const& Node::font() const
+inline Gfx::Font const& Node::first_available_font() const
 {
     VERIFY(has_style_or_parent_with_style());
-
     if (m_has_style)
-        return static_cast<NodeWithStyle const*>(this)->font();
-    return parent()->font();
+        return static_cast<NodeWithStyle const*>(this)->first_available_font();
+    return parent()->first_available_font();
+}
+
+inline Gfx::FontCascadeList const& Node::font_list() const
+{
+    VERIFY(has_style_or_parent_with_style());
+    if (m_has_style)
+        return static_cast<NodeWithStyle const*>(this)->font_list();
+    return parent()->font_list();
 }
 
 inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
@@ -291,7 +300,7 @@ inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
 
 inline Gfx::Font const& Node::scaled_font(float scale_factor) const
 {
-    return document().style_computer().font_cache().scaled_font(font(), scale_factor);
+    return document().style_computer().font_cache().scaled_font(first_available_font(), scale_factor);
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
@@ -320,6 +329,14 @@ inline NodeWithStyle const* Node::parent() const
 inline NodeWithStyle* Node::parent()
 {
     return static_cast<NodeWithStyle*>(TreeNode<Node>::parent());
+}
+
+inline Gfx::Font const& NodeWithStyle::first_available_font() const
+{
+    // https://drafts.csswg.org/css-fonts/#first-available-font
+    // FIXME: Should be be the first font for which the character U+0020 (space) instead of
+    //        any first font in the list
+    return m_font_list->first();
 }
 
 }

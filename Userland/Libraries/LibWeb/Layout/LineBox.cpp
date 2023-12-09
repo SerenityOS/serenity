@@ -70,7 +70,8 @@ void LineBox::trim_trailing_whitespace()
         if (!is_ascii_space(last_character))
             break;
 
-        int last_character_width = last_fragment->layout_node().font().glyph_width(last_character);
+        // FIXME: Use fragment's glyph run to determine the width of the last character.
+        int last_character_width = last_fragment->layout_node().first_available_font().glyph_width(last_character);
         last_fragment->m_length -= 1;
         last_fragment->set_width(last_fragment->width() - last_character_width);
         m_width -= last_character_width;

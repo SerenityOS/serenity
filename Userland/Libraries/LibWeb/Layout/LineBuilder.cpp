@@ -192,7 +192,7 @@ void LineBuilder::update_last_line()
     }
 
     auto strut_baseline = [&] {
-        auto& font = m_context.containing_block().font();
+        auto& font = m_context.containing_block().first_available_font();
         auto const line_height = m_context.containing_block().line_height();
         auto const font_metrics = font.pixel_metrics();
         auto const typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
@@ -204,7 +204,7 @@ void LineBuilder::update_last_line()
     auto line_box_baseline = [&] {
         CSSPixels line_box_baseline = strut_baseline;
         for (auto& fragment : line_box.fragments()) {
-            auto const& font = fragment.layout_node().font();
+            auto const& font = fragment.layout_node().first_available_font();
             auto const line_height = fragment.layout_node().line_height();
             auto const font_metrics = font.pixel_metrics();
             auto const typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
@@ -301,7 +301,7 @@ void LineBuilder::update_last_line()
                 top_of_inline_box = (fragment.offset().y() - fragment_box_state.margin_box_top());
                 bottom_of_inline_box = (fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom());
             } else {
-                auto font_metrics = fragment.layout_node().font().pixel_metrics();
+                auto font_metrics = fragment.layout_node().first_available_font().pixel_metrics();
                 auto typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
                 auto leading = fragment.layout_node().line_height() - typographic_height;
                 auto half_leading = leading / 2;

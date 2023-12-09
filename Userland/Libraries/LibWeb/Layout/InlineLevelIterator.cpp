@@ -190,14 +190,14 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next_without_lookahead(
         Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
         float glyph_run_width = 0;
         Gfx::for_each_glyph_position(
-            { 0, 0 }, chunk.view, text_node.font(), [&](Gfx::DrawGlyphOrEmoji const& glyph_or_emoji) {
+            { 0, 0 }, chunk.view, text_node.first_available_font(), [&](Gfx::DrawGlyphOrEmoji const& glyph_or_emoji) {
                 glyph_run.append(glyph_or_emoji);
                 return IterationDecision::Continue;
             },
             Gfx::IncludeLeftBearing::No, glyph_run_width);
 
         if (!m_text_node_context->is_last_chunk)
-            glyph_run_width += text_node.font().glyph_spacing();
+            glyph_run_width += text_node.first_available_font().glyph_spacing();
 
         CSSPixels chunk_width = CSSPixels::nearest_value_for(glyph_run_width);
 
