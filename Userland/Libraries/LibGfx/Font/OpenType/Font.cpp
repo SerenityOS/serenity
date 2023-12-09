@@ -495,10 +495,15 @@ u16 Font::units_per_em() const
 
 String Font::family() const
 {
-    auto string = m_name.typographic_family_name();
-    if (!string.is_empty())
-        return string;
-    return m_name.family_name();
+    if (!m_family.has_value()) {
+        m_family = [&] {
+            auto string = m_name.typographic_family_name();
+            if (!string.is_empty())
+                return string;
+            return m_name.family_name();
+        }();
+    }
+    return *m_family;
 }
 
 String Font::variant() const
@@ -511,40 +516,51 @@ String Font::variant() const
 
 u16 Font::weight() const
 {
-    constexpr u16 bold_bit { 1 };
-    if (m_os2.has_value() && m_os2->weight_class())
-        return m_os2->weight_class();
-    if (m_head.style() & bold_bit)
-        return 700;
-
-    return 400;
+    if (!m_weight.has_value()) {
+        m_weight = [&]() -> u16 {
+            constexpr u16 bold_bit { 1 };
+            if (m_os2.has_value() && m_os2->weight_class())
+                return m_os2->weight_class();
+            if (m_head.style() & bold_bit)
+                return 700;
+            return 400;
+        }();
+    }
+    return *m_weight;
 }
 
 u16 Font::width() const
 {
-    if (m_os2.has_value()) {
-        return m_os2->width_class();
+    if (!m_width.has_value()) {
+        m_width = [&]() -> u16 {
+            if (m_os2.has_value())
+                return m_os2->width_class();
+            return Gfx::FontWidth::Normal;
+        }();
     }
-
-    return Gfx::FontWidth::Normal;
+    return *m_width;
 }
 
 u8 Font::slope() const
 {
-    // https://docs.microsoft.com/en-us/typography/opentype/spec/os2
-    constexpr u16 italic_selection_bit { 1 };
-    constexpr u16 oblique_selection_bit { 512 };
-    // https://docs.microsoft.com/en-us/typography/opentype/spec/head
-    constexpr u16 italic_style_bit { 2 };
+    if (!m_slope.has_value()) {
+        m_slope = [&]() -> u8 {
+            // https://docs.microsoft.com/en-us/typography/opentype/spec/os2
+            constexpr u16 italic_selection_bit { 1 };
+            constexpr u16 oblique_selection_bit { 512 };
+            // https://docs.microsoft.com/en-us/typography/opentype/spec/head
+            constexpr u16 italic_style_bit { 2 };
 
-    if (m_os2.has_value() && m_os2->selection() & oblique_selection_bit)
-        return 2;
-    if (m_os2.has_value() && m_os2->selection() & italic_selection_bit)
-        return 1;
-    if (m_head.style() & italic_style_bit)
-        return 1;
-
-    return 0;
+            if (m_os2.has_value() && m_os2->selection() & oblique_selection_bit)
+                return 2;
+            if (m_os2.has_value() && m_os2->selection() & italic_selection_bit)
+                return 1;
+            if (m_head.style() & italic_style_bit)
+                return 1;
+            return 0;
+        }();
+    }
+    return *m_slope;
 }
 
 bool Font::is_fixed_width() const

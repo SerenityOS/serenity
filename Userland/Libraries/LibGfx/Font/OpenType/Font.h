@@ -138,6 +138,11 @@ private:
 
     mutable HashMap<u32, i16> m_kerning_cache;
 
+    Optional<String> mutable m_family;
+    Optional<u16> mutable m_width;
+    Optional<u16> mutable m_weight;
+    Optional<u8> mutable m_slope;
+
     GlyphPage const& glyph_page(size_t page_index) const;
     void populate_glyph_page(GlyphPage&, size_t page_index) const;
 };
