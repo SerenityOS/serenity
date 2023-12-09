@@ -643,7 +643,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         scaled_glyph_run.ensure_capacity(fragment.glyph_run().size());
         for (auto glyph : fragment.glyph_run()) {
             glyph.visit([&](auto& glyph) {
-                glyph.font = &scaled_font;
+                glyph.font = scaled_font;
                 glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
             });
             scaled_glyph_run.append(move(glyph));

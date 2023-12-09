@@ -399,18 +399,18 @@ void Painter::draw_glyph_run(Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color 
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
             auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
 
-            auto const* font = glyph.font;
+            auto const& font = *glyph.font;
             auto code_point = glyph.code_point;
             auto point = glyph.position;
 
-            auto maybe_texture_rect = glyph_atlas.get_glyph_rect(font, code_point);
+            auto maybe_texture_rect = glyph_atlas.get_glyph_rect(&font, code_point);
             if (!maybe_texture_rect.has_value()) {
                 continue;
             }
 
             auto texture_rect = to_texture_space(maybe_texture_rect.value().to_type<float>(), *glyph_atlas.texture().size);
 
-            auto glyph_position = point + Gfx::FloatPoint(font->glyph_left_bearing(code_point), 0);
+            auto glyph_position = point + Gfx::FloatPoint(font.glyph_left_bearing(code_point), 0);
             auto glyph_size = maybe_texture_rect->size().to_type<float>();
             auto glyph_rect = transform().map(Gfx::FloatRect { glyph_position, glyph_size });
             auto rect_in_clip_space = to_clip_space(glyph_rect);
