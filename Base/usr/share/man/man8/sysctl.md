@@ -26,7 +26,7 @@ Available parameters are listed under /sys/kernel/conf/.
 
 ## Files
 
-* `/proc/sys` - source of kernel parameters
+* `/sys/kernel/conf` - source of kernel parameters
 
 ## Examples
 
