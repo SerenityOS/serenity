@@ -402,12 +402,6 @@ void DynamicLoader::load_program_headers()
 
     m_base_address = VirtualAddress { reservation };
 
-    // Then we unmap the reservation.
-    if (munmap(reservation, total_mapping_size) < 0) {
-        perror("munmap reservation");
-        VERIFY_NOT_REACHED();
-    }
-
     // Most binaries have four loadable regions, three of which are mapped
     // (symbol tables/relocation information, executable instructions, read-only data)
     // and one of which is copied (modifiable data).
@@ -448,18 +442,30 @@ void DynamicLoader::load_program_headers()
     quick_sort(map_regions, compare_load_address);
     quick_sort(copy_regions, compare_load_address);
 
+    // Pre-allocate any malloc memory needed before unmapping the reservation.
+    // We don't want any future malloc to accidentally mmap a reserved address!
+    DeprecatedString text_segment_name = DeprecatedString::formatted("{}: .text", m_filepath);
+    DeprecatedString rodata_segment_name = DeprecatedString::formatted("{}: .rodata", m_filepath);
+    DeprecatedString data_segment_name = DeprecatedString::formatted("{}: .data", m_filepath);
+
+    m_text_segments.ensure_capacity(map_regions.size());
+
+    // Finally, we unmap the reservation.
+    if (munmap(reservation, total_mapping_size) < 0) {
+        perror("munmap reservation");
+        VERIFY_NOT_REACHED();
+    }
+
+    // WARNING: Allocating after this point has the possibility of malloc stealing our reserved
+    // virtual memory addresses. Be careful not to malloc below!
+
     // Process regions in order: .text, .data, .tls
     for (auto& region : map_regions) {
         FlatPtr ph_desired_base = region.desired_load_address().get();
         FlatPtr ph_base = region.desired_load_address().page_base().get();
         FlatPtr ph_end = ph_base + round_up_to_power_of_two(region.size_in_memory() + region.desired_load_address().get() - ph_base, PAGE_SIZE);
 
-        StringBuilder builder;
-        builder.append(m_filepath);
-        if (region.is_executable())
-            builder.append(": .text"sv);
-        else
-            builder.append(": .rodata"sv);
+        char const* const segment_name = region.is_executable() ? text_segment_name.characters() : rodata_segment_name.characters();
 
         // Now we can map the text segment at the reserved address.
         auto* segment_base = (u8*)mmap_with_name(
@@ -469,15 +475,16 @@ void DynamicLoader::load_program_headers()
             MAP_SHARED | MAP_FIXED,
             m_image_fd,
             VirtualAddress { region.offset() }.page_base().get(),
-            builder.to_deprecated_string().characters());
+            segment_name);
 
         if (segment_base == MAP_FAILED) {
             perror("mmap non-writable");
             VERIFY_NOT_REACHED();
         }
 
+        // NOTE: Capacity ensured above the line of no malloc above
         if (region.is_executable())
-            m_text_segments.append({ VirtualAddress { segment_base }, ph_end - ph_base });
+            m_text_segments.unchecked_append({ VirtualAddress { segment_base }, ph_end - ph_base });
     }
 
     VERIFY(requested_load_address == nullptr || requested_load_address == reservation);
@@ -507,7 +514,7 @@ void DynamicLoader::load_program_headers()
             MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
             0,
             0,
-            DeprecatedString::formatted("{}: .data", m_filepath).characters());
+            data_segment_name.characters());
 
         if (MAP_FAILED == data_segment) {
             perror("mmap writable");
