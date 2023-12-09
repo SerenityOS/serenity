@@ -501,8 +501,10 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
             auto comment = node.get_deprecated_string("data"sv).release_value();
             comment = escape_html_entities(comment);
 
-            builder.appendff("<span data-node-type=\"comment\" class=\"hoverable editable comment\" {}>", data_attributes.string_view());
-            builder.appendff("&lt;!--{}--&gt;", comment);
+            builder.appendff("<span class=\"hoverable comment\" {}>", data_attributes.string_view());
+            builder.append("<span>&lt;!--</span>"sv);
+            builder.appendff("<span data-node-type=\"comment\" class=\"editable\">{}</span>", comment);
+            builder.append("<span>--&gt;</span>"sv);
             builder.append("</span>"sv);
             return;
         }
