@@ -538,6 +538,9 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
             visitor.visit(property_key_ptr->as_symbol());
     }
 
+    for (auto& private_element : m_private_methods)
+        visitor.visit(private_element.value);
+
     m_script_or_module.visit(
         [](Empty) {},
         [&](auto& script_or_module) {

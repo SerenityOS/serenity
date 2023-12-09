@@ -519,7 +519,7 @@ ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value
         m_private_elements = make<Vector<PrivateElement>>();
 
     // 4. Append PrivateElement { [[Key]]: P, [[Kind]]: field, [[Value]]: value } to O.[[PrivateElements]].
-    m_private_elements->empend(name, PrivateElement::Kind::Field, make_handle(value));
+    m_private_elements->empend(name, PrivateElement::Kind::Field, value);
 
     // 5. Return unused.
     return {};
@@ -570,14 +570,14 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
     // 3. If entry.[[Kind]] is either field or method, then
     if (entry->kind != PrivateElement::Kind::Accessor) {
         // a. Return entry.[[Value]].
-        return value.value();
+        return value;
     }
 
     // Assert: entry.[[Kind]] is accessor.
-    VERIFY(value.value().is_accessor());
+    VERIFY(value.is_accessor());
 
     // 6. Let getter be entry.[[Get]].
-    auto* getter = value.value().as_accessor().getter();
+    auto* getter = value.as_accessor().getter();
 
     // 5. If entry.[[Get]] is undefined, throw a TypeError exception.
     if (!getter)
@@ -602,7 +602,7 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     // 3. If entry.[[Kind]] is field, then
     if (entry->kind == PrivateElement::Kind::Field) {
         // a. Set entry.[[Value]] to value.
-        entry->value = make_handle(value);
+        entry->value = value;
         return {};
     }
     // 4. Else if entry.[[Kind]] is method, then
@@ -617,10 +617,10 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     VERIFY(entry->kind == PrivateElement::Kind::Accessor);
 
     auto& accessor = entry->value;
-    VERIFY(accessor.value().is_accessor());
+    VERIFY(accessor.is_accessor());
 
     // c. Let setter be entry.[[Set]].
-    auto* setter = accessor.value().as_accessor().setter();
+    auto* setter = accessor.as_accessor().setter();
 
     // b. If entry.[[Set]] is undefined, throw a TypeError exception.
     if (!setter)
@@ -1386,6 +1386,11 @@ void Object::visit_edges(Cell::Visitor& visitor)
     m_indexed_properties.for_each_value([&visitor](auto& value) {
         visitor.visit(value);
     });
+
+    if (m_private_elements) {
+        for (auto& private_element : *m_private_elements)
+            visitor.visit(private_element.value);
+    }
 }
 
 // 7.1.1.1 OrdinaryToPrimitive ( O, hint ), https://tc39.es/ecma262/#sec-ordinarytoprimitive

@@ -37,7 +37,7 @@ struct PrivateElement {
 
     PrivateName key;
     Kind kind { Kind::Field };
-    Handle<Value> value;
+    Value value;
 };
 
 // Non-standard: This is information optionally returned by object property access functions.
