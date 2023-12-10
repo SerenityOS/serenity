@@ -1124,7 +1124,7 @@ Layout::Viewport* Document::layout_node()
     return static_cast<Layout::Viewport*>(Node::layout_node());
 }
 
-void Document::set_inspected_node(Node* node, Optional<CSS::Selector::PseudoElement> pseudo_element)
+void Document::set_inspected_node(Node* node, Optional<CSS::Selector::PseudoElement::Type> pseudo_element)
 {
     if (m_inspected_node.ptr() == node && m_inspected_pseudo_element == pseudo_element)
         return;

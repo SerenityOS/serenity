@@ -414,7 +414,7 @@ void WebContentClient::inspector_did_load()
         m_view.on_inspector_loaded();
 }
 
-void WebContentClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element)
+void WebContentClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
 {
     if (m_view.on_inspector_selected_dom_node)
         m_view.on_inspector_selected_dom_node(node_id, pseudo_element);

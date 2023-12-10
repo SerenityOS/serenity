@@ -346,7 +346,7 @@ String Selector::serialize() const
             // append "::" followed by the name of the pseudo-element, to s.
             if (compound_selector.simple_selectors.last().type == Selector::SimpleSelector::Type::PseudoElement) {
                 s.append("::"sv);
-                s.append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element()));
+                s.append(compound_selector.simple_selectors.last().pseudo_element().name());
             }
         }
     }
@@ -361,34 +361,69 @@ String serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& sel
     return MUST(String::join(", "sv, selectors));
 }
 
-Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
+StringView Selector::PseudoElement::name(Selector::PseudoElement::Type pseudo_element)
+{
+    switch (pseudo_element) {
+    case Selector::PseudoElement::Type::Before:
+        return "before"sv;
+    case Selector::PseudoElement::Type::After:
+        return "after"sv;
+    case Selector::PseudoElement::Type::FirstLine:
+        return "first-line"sv;
+    case Selector::PseudoElement::Type::FirstLetter:
+        return "first-letter"sv;
+    case Selector::PseudoElement::Type::Marker:
+        return "marker"sv;
+    case Selector::PseudoElement::Type::MeterBar:
+        return "-webkit-meter-bar"sv;
+    case Selector::PseudoElement::Type::MeterEvenLessGoodValue:
+        return "-webkit-meter-even-less-good-value"sv;
+    case Selector::PseudoElement::Type::MeterOptimumValue:
+        return "-webkit-meter-optimum-value"sv;
+    case Selector::PseudoElement::Type::MeterSuboptimumValue:
+        return "-webkit-meter-suboptimum-value"sv;
+    case Selector::PseudoElement::Type::ProgressBar:
+        return "-webkit-progress-bar"sv;
+    case Selector::PseudoElement::Type::ProgressValue:
+        return "-webkit-progress-value"sv;
+    case Selector::PseudoElement::Type::Placeholder:
+        return "placeholder"sv;
+    case Selector::PseudoElement::Type::Selection:
+        return "selection"sv;
+    case Selector::PseudoElement::Type::PseudoElementCount:
+        break;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+Optional<Selector::PseudoElement> Selector::PseudoElement::from_string(FlyString const& name)
 {
     if (name.equals_ignoring_ascii_case("after"sv)) {
-        return Selector::PseudoElement::After;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::After };
     } else if (name.equals_ignoring_ascii_case("before"sv)) {
-        return Selector::PseudoElement::Before;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::Before };
     } else if (name.equals_ignoring_ascii_case("first-letter"sv)) {
-        return Selector::PseudoElement::FirstLetter;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::FirstLetter };
     } else if (name.equals_ignoring_ascii_case("first-line"sv)) {
-        return Selector::PseudoElement::FirstLine;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::FirstLine };
     } else if (name.equals_ignoring_ascii_case("marker"sv)) {
-        return Selector::PseudoElement::Marker;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::Marker };
     } else if (name.equals_ignoring_ascii_case("-webkit-meter-bar"sv)) {
-        return Selector::PseudoElement::MeterBar;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::MeterBar };
     } else if (name.equals_ignoring_ascii_case("-webkit-meter-even-less-good-value"sv)) {
-        return Selector::PseudoElement::MeterEvenLessGoodValue;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::MeterEvenLessGoodValue };
     } else if (name.equals_ignoring_ascii_case("-webkit-meter-optimum-value"sv)) {
-        return Selector::PseudoElement::MeterOptimumValue;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::MeterOptimumValue };
     } else if (name.equals_ignoring_ascii_case("-webkit-meter-suboptimum-value"sv)) {
-        return Selector::PseudoElement::MeterSuboptimumValue;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::MeterSuboptimumValue };
     } else if (name.equals_ignoring_ascii_case("-webkit-progress-bar"sv)) {
-        return Selector::PseudoElement::ProgressBar;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::ProgressBar };
     } else if (name.equals_ignoring_ascii_case("-webkit-progress-value"sv)) {
-        return Selector::PseudoElement::ProgressValue;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::ProgressValue };
     } else if (name.equals_ignoring_ascii_case("placeholder"sv)) {
-        return Selector::PseudoElement::Placeholder;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::Placeholder };
     } else if (name.equals_ignoring_ascii_case("selection"sv)) {
-        return Selector::PseudoElement::Selection;
+        return Selector::PseudoElement { Selector::PseudoElement::Type::Selection };
     }
     return {};
 }

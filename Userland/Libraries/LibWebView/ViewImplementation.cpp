@@ -156,7 +156,7 @@ void ViewImplementation::inspect_accessibility_tree()
     client().async_inspect_accessibility_tree();
 }
 
-ErrorOr<ViewImplementation::DOMNodeProperties> ViewImplementation::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
+ErrorOr<ViewImplementation::DOMNodeProperties> ViewImplementation::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element)
 {
     auto response = client().inspect_dom_node(node_id, pseudo_element);
     if (!response.has_style())

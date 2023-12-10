@@ -49,7 +49,7 @@ private:
         Prepend,
     };
     void insert_node_into_inline_or_block_ancestor(Layout::Node&, CSS::Display, AppendOrPrepend);
-    ErrorOr<void> create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement, AppendOrPrepend);
+    ErrorOr<void> create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement::Type, AppendOrPrepend);
 
     JS::GCPtr<Layout::Node> m_layout_root;
     Vector<JS::NonnullGCPtr<Layout::NodeWithStyle>> m_ancestor_stack;

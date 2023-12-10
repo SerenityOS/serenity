@@ -1838,8 +1838,8 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
             // i. Set the accumulated text to the empty string.
             total_accumulated_text.clear();
             // ii. Check for CSS generated textual content associated with the current node and include it in the accumulated text. The CSS :before and :after pseudo elements [CSS2] can provide textual content for elements that have a content model.
-            auto before = element->get_pseudo_element_node(CSS::Selector::PseudoElement::Before);
-            auto after = element->get_pseudo_element_node(CSS::Selector::PseudoElement::After);
+            auto before = element->get_pseudo_element_node(CSS::Selector::PseudoElement::Type::Before);
+            auto after = element->get_pseudo_element_node(CSS::Selector::PseudoElement::Type::After);
             // - For :before pseudo elements, User agents MUST prepend CSS textual content, without a space, to the textual content of the current node.
             if (before)
                 TRY(Node::prepend_without_space(total_accumulated_text, before->computed_values().content().data));

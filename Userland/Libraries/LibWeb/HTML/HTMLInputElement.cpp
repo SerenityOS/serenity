@@ -571,7 +571,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
     MUST(shadow_root->append_child(element));
 
     m_placeholder_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
-    m_placeholder_element->set_use_pseudo_element(CSS::Selector::PseudoElement::Placeholder);
+    m_placeholder_element->set_use_pseudo_element(CSS::Selector::PseudoElement::Type::Placeholder);
     MUST(m_placeholder_element->set_attribute(HTML::AttributeNames::style, R"~~~(
         flex: 1;
         height: 1lh;
