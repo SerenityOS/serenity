@@ -831,10 +831,20 @@ static bool is_valid_time_string(StringView value)
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#week-number-of-the-last-day
-static u32 week_number_of_the_last_day(u64)
+static u32 week_number_of_the_last_day(u64 year)
 {
-    // FIXME: sometimes return 53 (!)
     // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#weeks
+    // NOTE: A year is considered to have 53 weeks if either of the following conditions are satisfied:
+    // - January 1 of that year is a Thursday.
+    // - January 1 of that year is a Wednesday and the year is divisible by 400, or divisible by 4, but not 100.
+
+    // Note: Gauss's algorithm for determining the day of the week with D = 1, and M = 0
+    // https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week#Gauss's_algorithm
+    u8 day_of_week = (1 + 5 * ((year - 1) % 4) + 4 * ((year - 1) % 100) + 6 * ((year - 1) % 400)) % 7;
+
+    if (day_of_week == 4 || (day_of_week == 3 && (year % 400 == 0 || (year % 4 == 0 && year % 100 != 0))))
+        return 53;
+
     return 52;
 }
 
