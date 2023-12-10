@@ -71,6 +71,7 @@ public:
 
     void commit_pending_changes();
 
+    String placeholder() const;
     Optional<DeprecatedString> placeholder_value() const;
 
     bool checked() const { return m_checked; }
