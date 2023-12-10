@@ -44,6 +44,7 @@ public:
     int offset_left() const;
     int offset_width() const;
     int offset_height() const;
+    JS::GCPtr<Element> offset_parent() const;
 
     bool cannot_navigate() const;
 

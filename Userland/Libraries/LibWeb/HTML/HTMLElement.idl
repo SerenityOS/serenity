@@ -37,7 +37,7 @@ interface HTMLElement : Element {
     // FIXME: [CEReactions] attribute DOMString? popover;
 
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
-    // FIXME: readonly attribute Element? offsetParent;
+    readonly attribute Element? offsetParent;
     readonly attribute long offsetTop;
     readonly attribute long offsetLeft;
     readonly attribute long offsetWidth;
