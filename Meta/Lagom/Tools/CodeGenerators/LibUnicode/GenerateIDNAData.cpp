@@ -106,13 +106,7 @@ static ErrorOr<void> generate_idna_data_header(Core::InputBufferedFile& file, ID
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/Optional.h>
-#include <LibUnicode/IDNA.h>
-
 namespace Unicode::IDNA {
-
-Optional<Mapping> get_idna_mapping(u32 code_point);
-
 }
 )~~~");
 
@@ -128,11 +122,12 @@ static ErrorOr<void> generate_idna_data_implementation(Core::InputBufferedFile& 
     generator.set("idna_table_size", TRY(String::number(idna_data.mapping_table.size())));
 
     generator.append(R"~~~(
-
 #include <AK/BinarySearch.h>
+#include <AK/Optional.h>
 #include <AK/Utf32View.h>
-#include <LibUnicode/IDNAData.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/IDNA.h>
+#include <LibUnicode/IDNAData.h>
 
 namespace Unicode::IDNA {
 

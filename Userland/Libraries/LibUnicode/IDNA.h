@@ -73,5 +73,6 @@ struct ToAsciiOptions {
 };
 
 ErrorOr<String> to_ascii(Utf8View domain_name, ToAsciiOptions const& = {});
+Optional<Mapping> get_idna_mapping(u32 code_point);
 
 }
