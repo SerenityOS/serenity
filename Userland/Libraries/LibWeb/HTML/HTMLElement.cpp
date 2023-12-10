@@ -155,30 +155,111 @@ String HTMLElement::inner_text()
     return MUST(builder.to_string());
 }
 
-// // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsettop
-int HTMLElement::offset_top() const
+// https://www.w3.org/TR/cssom-view-1/#dom-htmlelement-offsetparent
+JS::GCPtr<DOM::Element> HTMLElement::offset_parent() const
 {
-    // NOTE: Ensure that layout is up-to-date before looking at metrics.
     const_cast<DOM::Document&>(document()).update_layout();
 
-    if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
-        return 0;
-    auto position = layout_node()->box_type_agnostic_position();
-    auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
-    return position.y().to_int() - parent_position.y().to_int();
+    // 1. If any of the following holds true return null and terminate this algorithm:
+    //    - The element does not have an associated CSS layout box.
+    //    - The element is the root element.
+    //    - The element is the HTML body element.
+    //    - The element’s computed value of the position property is fixed.
+    if (!layout_node())
+        return nullptr;
+    if (is_document_element())
+        return nullptr;
+    if (is<HTML::HTMLBodyElement>(*this))
+        return nullptr;
+    if (layout_node()->is_fixed_position())
+        return nullptr;
+
+    // 2. Return the nearest ancestor element of the element for which at least one of the following is true
+    //    and terminate this algorithm if such an ancestor is found:
+    //    - The computed value of the position property is not static.
+    //    - It is the HTML body element.
+    //    - The computed value of the position property of the element is static
+    //      and the ancestor is one of the following HTML elements: td, th, or table.
+
+    for (auto* ancestor = parent_element(); ancestor; ancestor = ancestor->parent_element()) {
+        if (!ancestor->layout_node())
+            continue;
+        if (ancestor->layout_node()->is_positioned())
+            return const_cast<Element*>(ancestor);
+        if (is<HTML::HTMLBodyElement>(*ancestor))
+            return const_cast<Element*>(ancestor);
+        if (!ancestor->layout_node()->is_positioned() && ancestor->local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th, HTML::TagNames::table))
+            return const_cast<Element*>(ancestor);
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
-// https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetleft
-int HTMLElement::offset_left() const
+// https://www.w3.org/TR/cssom-view-1/#dom-htmlelement-offsettop
+int HTMLElement::offset_top() const
 {
+    // 1. If the element is the HTML body element or does not have any associated CSS layout box
+    //    return zero and terminate this algorithm.
+    if (is<HTML::HTMLBodyElement>(*this))
+        return 0;
+
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
     const_cast<DOM::Document&>(document()).update_layout();
 
-    if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
+    if (!layout_node())
         return 0;
+
+    // 2. If the offsetParent of the element is null
+    //    return the y-coordinate of the top border edge of the first CSS layout box associated with the element,
+    //    relative to the initial containing block origin,
+    //    ignoring any transforms that apply to the element and its ancestors, and terminate this algorithm.
+    auto offset_parent = this->offset_parent();
+    if (!offset_parent || !offset_parent->layout_node()) {
+        auto position = layout_node()->box_type_agnostic_position();
+        return position.y().to_int();
+    }
+
+    // 3. Return the result of subtracting the y-coordinate of the top padding edge
+    //    of the first box associated with the offsetParent of the element
+    //    from the y-coordinate of the top border edge of the first box associated with the element,
+    //    relative to the initial containing block origin,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    auto offset_parent_position = offset_parent->layout_node()->box_type_agnostic_position();
     auto position = layout_node()->box_type_agnostic_position();
-    auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
-    return position.x().to_int() - parent_position.x().to_int();
+    return position.y().to_int() - offset_parent_position.y().to_int();
+}
+
+// https://www.w3.org/TR/cssom-view-1/#dom-htmlelement-offsetleft
+int HTMLElement::offset_left() const
+{
+    // 1. If the element is the HTML body element or does not have any associated CSS layout box return zero and terminate this algorithm.
+    if (is<HTML::HTMLBodyElement>(*this))
+        return 0;
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<DOM::Document&>(document()).update_layout();
+
+    if (!layout_node())
+        return 0;
+
+    // 2. If the offsetParent of the element is null
+    //    return the x-coordinate of the left border edge of the first CSS layout box associated with the element,
+    //    relative to the initial containing block origin,
+    //    ignoring any transforms that apply to the element and its ancestors, and terminate this algorithm.
+    auto offset_parent = this->offset_parent();
+    if (!offset_parent || !offset_parent->layout_node()) {
+        auto position = layout_node()->box_type_agnostic_position();
+        return position.x().to_int();
+    }
+
+    // 3. Return the result of subtracting the x-coordinate of the left padding edge
+    //    of the first CSS layout box associated with the offsetParent of the element
+    //    from the x-coordinate of the left border edge of the first CSS layout box associated with the element,
+    //    relative to the initial containing block origin,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    auto offset_parent_position = offset_parent->layout_node()->box_type_agnostic_position();
+    auto position = layout_node()->box_type_agnostic_position();
+    return position.x().to_int() - offset_parent_position.x().to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetwidth
