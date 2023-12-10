@@ -557,12 +557,13 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 // FIXME: Check for ASCIIHexDecode and ASCII85Decode.
                 m_reader.consume(1);
 
-                // FIXME: `EI` can be part of the image data, e.g. on page 3 of 0000450.pdf of 0000.zip of the RGBA dataset.
                 while (!m_reader.done()) {
-                    if (m_reader.matches("EI")) {
+                    // FIXME: Should we allow EI after matches_delimiter() too?
+                    bool expecting_ei = m_reader.matches_whitespace();
+                    m_reader.consume();
+                    if (expecting_ei && m_reader.matches("EI")) {
                         break;
                     }
-                    m_reader.consume();
                 }
 
                 if (m_reader.done())
