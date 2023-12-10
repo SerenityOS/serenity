@@ -557,6 +557,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 // FIXME: Check for ASCIIHexDecode and ASCII85Decode.
                 m_reader.consume(1);
 
+                // FIMXE: PDF 2.0 added support for `/L` / `/Length` in inline image dicts. If that's present, we don't have to scan for `EI`.
                 while (!m_reader.done()) {
                     // FIXME: Should we allow EI after matches_delimiter() too?
                     bool expecting_ei = m_reader.matches_whitespace();
