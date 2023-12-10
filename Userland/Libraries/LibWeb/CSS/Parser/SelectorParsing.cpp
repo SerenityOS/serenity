@@ -352,21 +352,20 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
         }
 
         auto pseudo_name = name_token.token().ident();
-        auto pseudo_element = pseudo_element_from_string(pseudo_name);
 
         // Note: We allow the "ignored" -webkit prefix here for -webkit-progress-bar/-webkit-progress-bar
-        if (!pseudo_element.has_value() && has_ignored_vendor_prefix(pseudo_name))
-            return ParseError::IncludesIgnoredVendorPrefix;
-
-        if (!pseudo_element.has_value()) {
-            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
-            return ParseError::SyntaxError;
+        if (auto pseudo_element = pseudo_element_from_string(pseudo_name); pseudo_element.has_value()) {
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoElement,
+                .value = pseudo_element.release_value()
+            };
         }
 
-        return Selector::SimpleSelector {
-            .type = Selector::SimpleSelector::Type::PseudoElement,
-            .value = pseudo_element.value()
-        };
+        if (has_ignored_vendor_prefix(pseudo_name))
+            return ParseError::IncludesIgnoredVendorPrefix;
+
+        dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
+        return ParseError::SyntaxError;
     }
 
     if (peek_token_ends_selector())
