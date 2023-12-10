@@ -404,22 +404,29 @@ PDFErrorOr<NonnullRefPtr<ArrayObject>> Parser::parse_array()
     return make_object<ArrayObject>(values);
 }
 
-PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
+PDFErrorOr<HashMap<DeprecatedFlyString, Value>> Parser::parse_dict_contents_until(char const* end)
 {
-    if (!m_reader.consume('<') || !m_reader.consume('<'))
-        return error("Expected dict to start with \"<<\"");
-
     m_reader.consume_whitespace();
     HashMap<DeprecatedFlyString, Value> map;
 
     while (!m_reader.done()) {
         parse_comment();
-        if (m_reader.matches(">>"))
+        if (m_reader.matches(end))
             break;
         auto name = TRY(parse_name())->name();
         auto value = TRY(parse_value());
         map.set(name, value);
     }
+
+    return map;
+}
+
+PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
+{
+    if (!m_reader.consume('<') || !m_reader.consume('<'))
+        return error("Expected dict to start with \"<<\"");
+
+    HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until(">>"));
 
     if (!m_reader.consume('>') || !m_reader.consume('>'))
         return error("Expected dict to end with \">>\"");
