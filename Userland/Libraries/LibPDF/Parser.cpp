@@ -560,6 +560,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 m_reader.consume(1);
 
                 // FIMXE: PDF 2.0 added support for `/L` / `/Length` in inline image dicts. If that's present, we don't have to scan for `EI`.
+                auto stream_start = m_reader.offset();
                 while (!m_reader.done()) {
                     // FIXME: Should we allow EI after matches_delimiter() too?
                     bool expecting_ei = m_reader.matches_whitespace();
@@ -572,11 +573,17 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 if (m_reader.done())
                     return error("operator stream ended inside inline image");
 
+                // Points one past the end of the stream data.
+                // FIXME: If we add matches_delimiter() to expecting_ei above, this has to be 1 larger in the delimiter case.
+                auto stream_end = m_reader.offset();
+
                 m_reader.consume(2); // "EI"
                 m_reader.consume_whitespace();
 
+                auto stream_bytes = m_reader.bytes().slice(stream_start, stream_end - stream_start);
                 // FIXME: Do more with inline images than just skipping them.
                 (void)map;
+                (void)stream_bytes;
             }
 
             operators.append(Operator(operator_type, move(operator_args)));
