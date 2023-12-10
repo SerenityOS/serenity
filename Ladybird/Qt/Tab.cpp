@@ -750,6 +750,8 @@ void Tab::show_inspector_window(InspectorTarget inspector_target)
 {
     if (!m_inspector_widget)
         m_inspector_widget = new InspectorWidget(this, view());
+    else
+        m_inspector_widget->inspect();
 
     m_inspector_widget->show();
     m_inspector_widget->activateWindow();

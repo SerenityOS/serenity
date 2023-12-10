@@ -923,6 +923,8 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         };
 
         m_dom_inspector_widget = window->set_main_widget<InspectorWidget>(*m_web_content_view);
+    } else {
+        m_dom_inspector_widget->inspect();
     }
 
     if (inspector_target == InspectorTarget::HoveredElement) {

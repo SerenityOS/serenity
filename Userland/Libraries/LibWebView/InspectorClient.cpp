@@ -174,7 +174,9 @@ InspectorClient::~InspectorClient()
 
 void InspectorClient::inspect()
 {
-    m_dom_tree_loaded = false;
+    if (m_dom_tree_loaded)
+        return;
+
     m_content_web_view.inspect_dom_tree();
     m_content_web_view.inspect_accessibility_tree();
 }
