@@ -550,6 +550,15 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 if (!operator_args.is_empty())
                     return error("operator args not empty on start of inline image");
 
+                HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until("ID"));
+                m_reader.consume(2); // "ID"
+
+                // "Unless the image uses ASCIIHexDecode or ASCII85Decode as one of its filters,
+                // the ID operator should be followed by a single white-space character,
+                // and the next character is interpreted as the first byte of image data."
+                // FIXME: Check for ASCIIHexDecode and ASCII85Decode.
+                m_reader.consume(1);
+
                 // FIXME: `EI` can be part of the image data, e.g. on page 3 of 0000450.pdf of 0000.zip of the RGBA dataset.
                 while (!m_reader.done()) {
                     if (m_reader.matches("EI")) {
@@ -565,6 +574,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 m_reader.consume_whitespace();
 
                 // FIXME: Do more with inline images than just skipping them.
+                (void)map;
             }
 
             operators.append(Operator(operator_type, move(operator_args)));
