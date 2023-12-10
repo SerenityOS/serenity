@@ -501,6 +501,23 @@ static bool is_allowed_to_have_placeholder(HTML::HTMLInputElement::TypeAttribute
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-placeholder
+String HTMLInputElement::placeholder() const
+{
+    auto maybe_placeholder = get_attribute(HTML::AttributeNames::placeholder);
+    if (!maybe_placeholder.has_value())
+        return String {};
+    auto placeholder = *maybe_placeholder;
+
+    // The attribute, if specified, must have a value that contains no U+000A LINE FEED (LF) or U+000D CARRIAGE RETURN (CR) characters.
+    StringBuilder builder;
+    for (auto c : placeholder.bytes_as_string_view()) {
+        if (c != '\r' && c != '\n')
+            builder.append(c);
+    }
+    return MUST(builder.to_string());
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-placeholder
 Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
 {
     if (!m_text_node || !m_text_node->data().is_empty())
@@ -509,19 +526,7 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
         return {};
     if (!has_attribute(HTML::AttributeNames::placeholder))
         return {};
-
-    auto placeholder = deprecated_attribute(HTML::AttributeNames::placeholder);
-
-    if (placeholder.contains('\r') || placeholder.contains('\n')) {
-        StringBuilder builder;
-        for (auto ch : placeholder) {
-            if (ch != '\r' && ch != '\n')
-                builder.append(ch);
-        }
-        placeholder = builder.to_deprecated_string();
-    }
-
-    return placeholder;
+    return placeholder().to_deprecated_string();
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()
@@ -573,8 +578,8 @@ void HTMLInputElement::create_text_input_shadow_tree()
     )~~~"_string));
     MUST(element->append_child(*m_placeholder_element));
 
-    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
-    m_placeholder_text_node->set_data(attribute(HTML::AttributeNames::placeholder).value_or(String {}));
+    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), String {});
+    m_placeholder_text_node->set_data(placeholder());
     m_placeholder_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
 
@@ -596,6 +601,8 @@ void HTMLInputElement::create_text_input_shadow_tree()
     if (type_state() == TypeAttributeState::Password)
         m_text_node->set_is_password_input({}, true);
     MUST(m_inner_text_element->append_child(*m_text_node));
+
+    update_placeholder_visibility();
 
     if (type_state() == TypeAttributeState::Number) {
         // Up button
@@ -718,7 +725,7 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String>
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
-            m_placeholder_text_node->set_data(value.value_or(String {}));
+            m_placeholder_text_node->set_data(placeholder());
     } else if (name == HTML::AttributeNames::readonly) {
         handle_readonly_attribute(value);
     }
