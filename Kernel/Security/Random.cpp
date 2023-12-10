@@ -77,6 +77,15 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             current_time += 0x40b2u;
         }
     }
+#elif ARCH(RISCV64)
+    // Fallback to TimeManagement as entropy
+    dmesgln("KernelRng: Using bad entropy source TimeManagement");
+    auto current_time = static_cast<u64>(TimeManagement::now().milliseconds_since_epoch());
+    for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+        add_random_event(current_time, i % 32);
+        current_time *= 0x574au;
+        current_time += 0x40b2u;
+    }
 #else
     dmesgln("KernelRng: No entropy source available!");
 #endif
