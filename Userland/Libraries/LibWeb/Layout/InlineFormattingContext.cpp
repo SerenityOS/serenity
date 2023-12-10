@@ -275,7 +275,12 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             auto& box = verify_cast<Layout::Box>(*item.node);
             compute_inset(box);
             if (containing_block().computed_values().white_space() != CSS::WhiteSpace::Nowrap) {
-                line_builder.break_if_needed(item.border_box_width());
+                auto minimum_space_needed_on_line = item.border_box_width();
+                if (item.margin_start < 0)
+                    minimum_space_needed_on_line += item.margin_start;
+                if (item.margin_end < 0)
+                    minimum_space_needed_on_line += item.margin_end;
+                line_builder.break_if_needed(minimum_space_needed_on_line);
             }
             line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end, item.margin_start, item.margin_end);
             break;
