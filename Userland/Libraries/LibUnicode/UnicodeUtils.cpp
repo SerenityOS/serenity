@@ -266,7 +266,7 @@ ErrorOr<void> build_uppercase_string([[maybe_unused]] Utf8View code_points, [[ma
 }
 
 // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34078
-ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale, TrailingCodePointTransformation trailing_code_point_transformation)
+ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale, [[maybe_unused]] TrailingCodePointTransformation trailing_code_point_transformation)
 {
 #if ENABLE_UNICODE_DATA
     // toTitlecase(X): Find the word boundaries in X according to Unicode Standard Annex #29,
