@@ -1,0 +1,39 @@
+<script src="include.js"></script>
+<script>
+    test(() => {
+        let testCounter = 1;
+        function testPart(part) {
+            println(`${testCounter++}. ${JSON.stringify(part())}`);
+        }
+
+        // 1. Textarea get value
+        testPart(() => {
+            const textarea = document.createElement('textarea');
+            textarea.textContent = 'PASS';
+            return textarea.value;
+        });
+
+        // 2. Textarea set value
+        testPart(() => {
+            const textarea = document.createElement('textarea');
+            textarea.textContent = 'PASS';
+            textarea.value = 'FAIL';
+            return textarea.textContent;
+        });
+
+        // 3. Textarea set default value
+        testPart(() => {
+            const textarea = document.createElement('textarea');
+            textarea.textContent = 'FAIL';
+            textarea.defaultValue = 'PASS';
+            return textarea.textContent;
+        });
+
+        // 4. Textarea text length
+        testPart(() => {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = 'PASS';
+            return textarea.textLength;
+        });
+    });
+</script>

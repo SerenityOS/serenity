@@ -21,9 +21,9 @@ interface HTMLTextAreaElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString wrap;
 
     readonly attribute DOMString type;
-    // FIXME: [CEReactions] attribute DOMString defaultValue;
-    // FIXME: attribute [LegacyNullToEmptyString] DOMString value;
-    // FIXME: readonly attribute unsigned long textLength;
+    [CEReactions] attribute DOMString defaultValue;
+    [LegacyNullToEmptyString] attribute DOMString value;
+    readonly attribute unsigned long textLength;
 
     // FIXME: readonly attribute boolean willValidate;
     // FIXME: readonly attribute ValidityState validity;
