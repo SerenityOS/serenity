@@ -98,6 +98,51 @@ void HTMLTextAreaElement::form_associated_element_was_removed(DOM::Node*)
     set_shadow_root(nullptr);
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-defaultvalue
+String HTMLTextAreaElement::default_value() const
+{
+    // The defaultValue attribute's getter must return the element's child text content.
+    return child_text_content();
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-defaultvalue
+void HTMLTextAreaElement::set_default_value(String const& default_value)
+{
+    // The defaultValue attribute's setter must string replace all with the given value within this element.
+    string_replace_all(default_value);
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-value
+String HTMLTextAreaElement::value() const
+{
+    // The value IDL attribute must, on getting, return the element's API value.
+    return m_raw_value;
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-output-value
+void HTMLTextAreaElement::set_value(String const& value)
+{
+    // FIXME: 1. Let oldAPIValue be this element's API value.
+
+    // 2. Set this element's raw value to the new value.
+    m_raw_value = value;
+
+    // 3. Set this element's dirty value flag to true.
+    m_dirty = true;
+
+    // FIXME: 4. If the new API value is different from oldAPIValue, then move the text entry cursor position to the end of the text control, unselecting any selected text and resetting the selection direction to "none".
+    update_placeholder_visibility();
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-textlength
+u32 HTMLTextAreaElement::text_length() const
+{
+    // The textLength IDL attribute must return the length of the element's API value.
+    // FIXME: This is inefficient!
+    auto utf16_data = MUST(AK::utf8_to_utf16(m_raw_value));
+    return Utf16View { utf16_data }.length_in_code_units();
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-cols
 unsigned HTMLTextAreaElement::cols() const
 {
@@ -109,9 +154,9 @@ unsigned HTMLTextAreaElement::cols() const
     return 20;
 }
 
-WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_cols(unsigned value)
+WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_cols(unsigned cols)
 {
-    return set_attribute(HTML::AttributeNames::cols, MUST(String::number(value)));
+    return set_attribute(HTML::AttributeNames::cols, MUST(String::number(cols)));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-rows
@@ -125,9 +170,9 @@ unsigned HTMLTextAreaElement::rows() const
     return 2;
 }
 
-WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_rows(unsigned value)
+WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_rows(unsigned rows)
 {
-    return set_attribute(HTML::AttributeNames::rows, MUST(String::number(value)));
+    return set_attribute(HTML::AttributeNames::rows, MUST(String::number(rows)));
 }
 
 void HTMLTextAreaElement::create_shadow_tree_if_needed()
