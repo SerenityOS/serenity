@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Checked.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
-
-constexpr size_t block_size = 256 * KiB;
 
 static ErrorOr<void> seek_and_read(size_t offset, ByteBuffer& buffer, Core::File& file)
 {
@@ -26,7 +25,7 @@ static ErrorOr<void> seek_and_write(size_t offset, ByteBuffer& buffer, Core::Fil
     return {};
 }
 
-static ErrorOr<void> process_file(Core::File& file, size_t file_size, size_t file_size_rounded)
+static ErrorOr<void> process_file(Core::File& file, size_t block_size, size_t file_size, size_t file_size_rounded)
 {
     size_t head = 0;
     size_t tail = file_size_rounded - block_size;
@@ -79,10 +78,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio cpath rpath wpath"));
     StringView path;
 
+    size_t block_size_in_kib = 256;
+
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print file to stdout, while progressively deleting read segments.");
+    args_parser.add_option(block_size_in_kib, "Base Block size in KiB, defaults to 256 KiB", "block-size", 'b', "base block size");
     args_parser.add_positional_argument(path, "File path", "path", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
+
+    if (block_size_in_kib < 1)
+        return Error::from_string_literal("Invalid block size");
+    if (Checked<size_t>::multiplication_would_overflow(block_size_in_kib, KiB))
+        return Error::from_string_literal("Overflow in block size");
+
+    size_t block_size = block_size_in_kib * KiB;
 
     if (!FileSystem::exists(path))
         return Error::from_errno(ENOENT);
@@ -94,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     size_t file_size_rounded = TRY(file->seek(ceil_div(file_size, block_size) * block_size, SeekMode::SetPosition));
 
-    TRY(process_file(*file, file_size, file_size_rounded));
+    TRY(process_file(*file, block_size, file_size, file_size_rounded));
 
     TRY(FileSystem::remove(path, FileSystem::RecursionMode::Disallowed));
 
