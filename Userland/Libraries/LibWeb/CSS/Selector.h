@@ -21,23 +21,47 @@ using SelectorList = Vector<NonnullRefPtr<class Selector>>;
 // This is a <complex-selector> in the spec. https://www.w3.org/TR/selectors-4/#complex
 class Selector : public RefCounted<Selector> {
 public:
-    enum class PseudoElement {
-        Before,
-        After,
-        FirstLine,
-        FirstLetter,
-        Marker,
-        MeterBar,
-        MeterEvenLessGoodValue,
-        MeterOptimumValue,
-        MeterSuboptimumValue,
-        ProgressValue,
-        ProgressBar,
-        Placeholder,
-        Selection,
+    class PseudoElement {
+    public:
+        enum class Type {
+            Before,
+            After,
+            FirstLine,
+            FirstLetter,
+            Marker,
+            MeterBar,
+            MeterEvenLessGoodValue,
+            MeterOptimumValue,
+            MeterSuboptimumValue,
+            ProgressValue,
+            ProgressBar,
+            Placeholder,
+            Selection,
 
-        // Keep this last.
-        PseudoElementCount,
+            // Keep this last.
+            PseudoElementCount,
+        };
+
+        explicit PseudoElement(Type type)
+            : m_type(type)
+        {
+        }
+
+        constexpr bool operator==(PseudoElement const&) const = default;
+
+        static Optional<PseudoElement> from_string(FlyString const&);
+
+        static StringView name(Selector::PseudoElement::Type pseudo_element);
+
+        StringView name() const
+        {
+            return name(m_type);
+        }
+
+        Type type() const { return m_type; }
+
+    private:
+        Type m_type;
     };
 
     struct SimpleSelector {
@@ -207,43 +231,6 @@ private:
     mutable Optional<u32> m_specificity;
     Optional<Selector::PseudoElement> m_pseudo_element;
 };
-
-constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
-{
-    switch (pseudo_element) {
-    case Selector::PseudoElement::Before:
-        return "before"sv;
-    case Selector::PseudoElement::After:
-        return "after"sv;
-    case Selector::PseudoElement::FirstLine:
-        return "first-line"sv;
-    case Selector::PseudoElement::FirstLetter:
-        return "first-letter"sv;
-    case Selector::PseudoElement::Marker:
-        return "marker"sv;
-    case Selector::PseudoElement::MeterBar:
-        return "-webkit-meter-bar"sv;
-    case Selector::PseudoElement::MeterEvenLessGoodValue:
-        return "-webkit-meter-even-less-good-value"sv;
-    case Selector::PseudoElement::MeterOptimumValue:
-        return "-webkit-meter-optimum-value"sv;
-    case Selector::PseudoElement::MeterSuboptimumValue:
-        return "-webkit-meter-suboptimum-value"sv;
-    case Selector::PseudoElement::ProgressBar:
-        return "-webkit-progress-bar"sv;
-    case Selector::PseudoElement::ProgressValue:
-        return "-webkit-progress-value"sv;
-    case Selector::PseudoElement::Placeholder:
-        return "placeholder"sv;
-    case Selector::PseudoElement::Selection:
-        return "selection"sv;
-    case Selector::PseudoElement::PseudoElementCount:
-        break;
-    }
-    VERIFY_NOT_REACHED();
-}
-
-Optional<Selector::PseudoElement> pseudo_element_from_string(StringView);
 
 String serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors);
 

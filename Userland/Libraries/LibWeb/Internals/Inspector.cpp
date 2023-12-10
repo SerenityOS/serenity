@@ -41,8 +41,8 @@ void Inspector::inspect_dom_node(i32 node_id, Optional<i32> const& pseudo_elemen
 {
     auto& page = global_object().browsing_context()->page();
     page.client().inspector_did_select_dom_node(node_id, pseudo_element.map([](auto value) {
-        VERIFY(value < to_underlying(Web::CSS::Selector::PseudoElement::PseudoElementCount));
-        return static_cast<Web::CSS::Selector::PseudoElement>(value);
+        VERIFY(value < to_underlying(Web::CSS::Selector::PseudoElement::Type::PseudoElementCount));
+        return static_cast<Web::CSS::Selector::PseudoElement::Type>(value);
     }));
 }
 

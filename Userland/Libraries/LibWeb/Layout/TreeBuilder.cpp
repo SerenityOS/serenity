@@ -182,7 +182,7 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
     }
 }
 
-ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Selector::PseudoElement pseudo_element, AppendOrPrepend mode)
+ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Selector::PseudoElement::Type pseudo_element, AppendOrPrepend mode)
 {
     auto& document = element.document();
     auto& style_computer = document.style_computer();
@@ -207,9 +207,9 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
         return {};
 
     auto generated_for = Node::GeneratedFor::NotGenerated;
-    if (pseudo_element == CSS::Selector::PseudoElement::Before) {
+    if (pseudo_element == CSS::Selector::PseudoElement::Type::Before) {
         generated_for = Node::GeneratedFor::PseudoBefore;
-    } else if (pseudo_element == CSS::Selector::PseudoElement::After) {
+    } else if (pseudo_element == CSS::Selector::PseudoElement::Type::After) {
         generated_for = Node::GeneratedFor::PseudoAfter;
     } else {
         VERIFY_NOT_REACHED();
@@ -368,7 +368,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     if (is<DOM::Element>(dom_node) && layout_node->can_have_children()) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend));
+        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Type::Before, AppendOrPrepend::Prepend));
         pop_parent();
     }
 
@@ -388,10 +388,10 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     if (is<ListItemBox>(*layout_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
-        auto marker_style = TRY(style_computer.compute_style(element, CSS::Selector::PseudoElement::Marker));
+        auto marker_style = TRY(style_computer.compute_style(element, CSS::Selector::PseudoElement::Type::Marker));
         auto list_item_marker = document.heap().allocate_without_realm<ListItemMarkerBox>(document, layout_node->computed_values().list_style_type(), layout_node->computed_values().list_style_position(), calculate_list_item_index(dom_node), *marker_style);
         static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
-        element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Marker, list_item_marker);
+        element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Type::Marker, list_item_marker);
         layout_node->append_child(*list_item_marker);
     }
 
@@ -460,7 +460,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     if (is<DOM::Element>(dom_node) && layout_node->can_have_children()) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::After, AppendOrPrepend::Append));
+        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Type::After, AppendOrPrepend::Append));
         pop_parent();
     }
 

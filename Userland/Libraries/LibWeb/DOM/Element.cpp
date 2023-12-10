@@ -960,7 +960,7 @@ void Element::children_changed()
     set_needs_style_update(true);
 }
 
-void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement pseudo_element, JS::GCPtr<Layout::Node> pseudo_element_node)
+void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement::Type pseudo_element, JS::GCPtr<Layout::Node> pseudo_element_node)
 {
     if (!m_pseudo_element_nodes) {
         if (!pseudo_element_node)
@@ -971,7 +971,7 @@ void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector:
     (*m_pseudo_element_nodes)[to_underlying(pseudo_element)] = pseudo_element_node;
 }
 
-JS::GCPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement pseudo_element) const
+JS::GCPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement::Type pseudo_element) const
 {
     if (!m_pseudo_element_nodes)
         return nullptr;
@@ -992,7 +992,7 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
         if (!pseudo_element_node)
             continue;
         auto object = MUST(children_array.add_object());
-        MUST(object.add("name"sv, DeprecatedString::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
+        MUST(object.add("name"sv, MUST(String::formatted("::{}", CSS::Selector::PseudoElement::name(static_cast<CSS::Selector::PseudoElement::Type>(i))))));
         MUST(object.add("type"sv, "pseudo-element"));
         MUST(object.add("parent-id"sv, unique_id()));
         MUST(object.add("pseudo-element"sv, i));
@@ -2057,7 +2057,7 @@ auto Element::pseudo_element_custom_properties() const -> PseudoElementCustomPro
     return *m_pseudo_element_custom_properties;
 }
 
-void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement> pseudo_element, HashMap<FlyString, CSS::StyleProperty> custom_properties)
+void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement::Type> pseudo_element, HashMap<FlyString, CSS::StyleProperty> custom_properties)
 {
     if (!pseudo_element.has_value()) {
         m_custom_properties = move(custom_properties);
@@ -2066,7 +2066,7 @@ void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement> pseud
     pseudo_element_custom_properties()[to_underlying(pseudo_element.value())] = move(custom_properties);
 }
 
-HashMap<FlyString, CSS::StyleProperty> const& Element::custom_properties(Optional<CSS::Selector::PseudoElement> pseudo_element) const
+HashMap<FlyString, CSS::StyleProperty> const& Element::custom_properties(Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
 {
     if (!pseudo_element.has_value())
         return m_custom_properties;

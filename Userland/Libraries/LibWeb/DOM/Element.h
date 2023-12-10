@@ -173,8 +173,8 @@ public:
 
     RequiredInvalidationAfterStyleChange recompute_style();
 
-    Optional<CSS::Selector::PseudoElement> use_pseudo_element() const { return m_use_pseudo_element; }
-    void set_use_pseudo_element(Optional<CSS::Selector::PseudoElement> use_pseudo_element) { m_use_pseudo_element = use_pseudo_element; }
+    Optional<CSS::Selector::PseudoElement::Type> use_pseudo_element() const { return m_use_pseudo_element; }
+    void set_use_pseudo_element(Optional<CSS::Selector::PseudoElement::Type> use_pseudo_element) { m_use_pseudo_element = move(use_pseudo_element); }
 
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;
@@ -207,8 +207,8 @@ public:
     ShadowRoot const* shadow_root_internal() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
-    void set_custom_properties(Optional<CSS::Selector::PseudoElement>, HashMap<FlyString, CSS::StyleProperty> custom_properties);
-    [[nodiscard]] HashMap<FlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement>) const;
+    void set_custom_properties(Optional<CSS::Selector::PseudoElement::Type>, HashMap<FlyString, CSS::StyleProperty> custom_properties);
+    [[nodiscard]] HashMap<FlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement::Type>) const;
 
     int queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
@@ -225,8 +225,8 @@ public:
 
     static JS::GCPtr<Layout::Node> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
 
-    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement, JS::GCPtr<Layout::Node>);
-    JS::GCPtr<Layout::Node> get_pseudo_element_node(CSS::Selector::PseudoElement) const;
+    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement::Type, JS::GCPtr<Layout::Node>);
+    JS::GCPtr<Layout::Node> get_pseudo_element_node(CSS::Selector::PseudoElement::Type) const;
     void clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>);
     void serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const;
 
@@ -410,18 +410,18 @@ private:
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
-    using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)>;
+    using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::Type::PseudoElementCount)>;
     mutable OwnPtr<PseudoElementCustomProperties> m_pseudo_element_custom_properties;
     PseudoElementCustomProperties& pseudo_element_custom_properties() const;
 
-    Optional<CSS::Selector::PseudoElement> m_use_pseudo_element {};
+    Optional<CSS::Selector::PseudoElement::Type> m_use_pseudo_element;
 
     Vector<FlyString> m_classes;
     Optional<Dir> m_dir;
 
     Optional<FlyString> m_id;
 
-    using PseudoElementLayoutNodes = Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)>;
+    using PseudoElementLayoutNodes = Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::Type::PseudoElementCount)>;
     OwnPtr<PseudoElementLayoutNodes> m_pseudo_element_nodes;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reaction-queue

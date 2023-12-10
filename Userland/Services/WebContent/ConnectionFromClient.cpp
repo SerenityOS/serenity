@@ -516,7 +516,7 @@ void ConnectionFromClient::inspect_dom_tree()
     }
 }
 
-Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element)
+Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
 {
     auto& top_context = page().page().top_level_browsing_context();
 
@@ -552,7 +552,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             return builder.to_deprecated_string();
         };
 
-        auto serialize_custom_properties_json = [](Web::DOM::Element const& element, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) -> DeprecatedString {
+        auto serialize_custom_properties_json = [](Web::DOM::Element const& element, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) -> DeprecatedString {
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             HashTable<FlyString> seen_properties;

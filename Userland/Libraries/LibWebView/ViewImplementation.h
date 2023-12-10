@@ -61,7 +61,7 @@ public:
 
     void inspect_dom_tree();
     void inspect_accessibility_tree();
-    ErrorOr<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
+    ErrorOr<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element);
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
@@ -163,7 +163,7 @@ public:
     Function<void(Gfx::Color)> on_theme_color_change;
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
     Function<void()> on_inspector_loaded;
-    Function<void(i32, Optional<Web::CSS::Selector::PseudoElement> const&)> on_inspector_selected_dom_node;
+    Function<void(i32, Optional<Web::CSS::Selector::PseudoElement::Type> const&)> on_inspector_selected_dom_node;
     Function<void(i32, String const&)> on_inspector_set_dom_node_text;
     Function<void(i32, String const&)> on_inspector_set_dom_node_tag;
     Function<void(i32, Vector<Attribute> const&)> on_inspector_added_dom_node_attributes;
