@@ -390,8 +390,10 @@ StringView Selector::PseudoElement::name(Selector::PseudoElement::Type pseudo_el
         return "placeholder"sv;
     case Selector::PseudoElement::Type::Selection:
         return "selection"sv;
-    case Selector::PseudoElement::Type::PseudoElementCount:
+    case Selector::PseudoElement::Type::KnownPseudoElementCount:
         break;
+    case Selector::PseudoElement::Type::UnknownWebKit:
+        VERIFY_NOT_REACHED();
     }
     VERIFY_NOT_REACHED();
 }

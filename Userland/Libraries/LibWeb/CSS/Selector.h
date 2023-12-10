@@ -39,15 +39,26 @@ public:
             Selection,
 
             // Keep this last.
-            PseudoElementCount,
+            KnownPseudoElementCount,
+
+            // https://www.w3.org/TR/selectors-4/#compat
+            // NOTE: This is not last as the 'unknown -webkit- pseudo-elements' are not stored as part of any Element.
+            UnknownWebKit,
         };
 
         explicit PseudoElement(Type type)
             : m_type(type)
         {
+            VERIFY(type != Type::UnknownWebKit);
         }
 
-        constexpr bool operator==(PseudoElement const&) const = default;
+        PseudoElement(Type type, String name)
+            : m_type(type)
+            , m_name(move(name))
+        {
+        }
+
+        bool operator==(PseudoElement const&) const = default;
 
         static Optional<PseudoElement> from_string(FlyString const&);
 
@@ -55,6 +66,9 @@ public:
 
         StringView name() const
         {
+            if (!m_name.is_empty())
+                return m_name;
+
             return name(m_type);
         }
 
@@ -62,6 +76,7 @@ public:
 
     private:
         Type m_type;
+        String m_name;
     };
 
     struct SimpleSelector {
