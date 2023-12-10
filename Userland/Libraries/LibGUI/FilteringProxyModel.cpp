@@ -94,7 +94,7 @@ void FilteringProxyModel::filter()
 
 void FilteringProxyModel::set_filter_term(StringView term)
 {
-    if (m_filter_term == term)
+    if (m_filter_term == term && !term.is_empty())
         return;
     m_filter_term = term;
     invalidate();
