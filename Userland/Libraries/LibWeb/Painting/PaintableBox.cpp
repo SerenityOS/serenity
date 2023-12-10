@@ -805,7 +805,7 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
 
 Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
 {
-    if (!layout_box().children_are_inline())
+    if (!layout_box().children_are_inline() || m_line_boxes.is_empty())
         return PaintableBox::hit_test(position, type);
 
     Optional<HitTestResult> last_good_candidate;
