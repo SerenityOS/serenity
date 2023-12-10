@@ -421,7 +421,7 @@ NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     // NOTE: We create the Rule fully initialized when we return it instead.
-    auto at_rule_name = FlyString::from_utf8(((Token)name_ident).at_keyword()).release_value_but_fixme_should_propagate_errors();
+    auto at_rule_name = ((Token)name_ident).at_keyword();
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
 
@@ -704,7 +704,7 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
     // NOTE: We create the Function fully initialized when we return it instead.
-    auto function_name = FlyString::from_utf8(((Token)name_ident).function()).release_value_but_fixme_should_propagate_errors();
+    auto function_name = ((Token)name_ident).function();
     Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
@@ -759,7 +759,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
     // NOTE: We create a fully-initialized Declaration just before returning it instead.
-    auto declaration_name = FlyString::from_utf8(((Token)token).ident()).release_value_but_fixme_should_propagate_errors();
+    auto declaration_name = ((Token)token).ident();
     Vector<ComponentValue> declaration_values;
     Important declaration_important = Important::No;
 
@@ -6064,7 +6064,7 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
         // Custom idents
         if (auto property = any_property_accepts_type(property_ids, ValueType::CustomIdent); property.has_value()) {
             (void)tokens.next_token();
-            return PropertyAndValue { *property, CustomIdentStyleValue::create(MUST(FlyString::from_utf8(peek_token.token().ident()))) };
+            return PropertyAndValue { *property, CustomIdentStyleValue::create(peek_token.token().ident()) };
         }
     }
 
@@ -6726,7 +6726,7 @@ bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoEl
             TokenStream source_function_contents { source_function.values() };
             if (!expand_variables(element, pseudo_element, property_name, dependencies, source_function_contents, function_values))
                 return false;
-            NonnullRefPtr<Function> function = Function::create(FlyString::from_utf8(source_function.name()).release_value_but_fixme_should_propagate_errors(), move(function_values));
+            NonnullRefPtr<Function> function = Function::create(source_function.name(), move(function_values));
             dest.empend(function);
             continue;
         }
@@ -6748,13 +6748,13 @@ bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoEl
         // but rebuilding it every time.
         if (custom_property_name == property_name)
             return false;
-        auto parent = get_dependency_node(FlyString::from_utf8(property_name).release_value_but_fixme_should_propagate_errors());
-        auto child = get_dependency_node(FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors());
+        auto parent = get_dependency_node(MUST(FlyString::from_utf8(property_name)));
+        auto child = get_dependency_node(custom_property_name);
         parent->add_child(child);
         if (parent->has_cycles())
             return false;
 
-        if (auto custom_property_value = get_custom_property(element, pseudo_element, FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors())) {
+        if (auto custom_property_value = get_custom_property(element, pseudo_element, custom_property_name)) {
             VERIFY(custom_property_value->is_unresolved());
             TokenStream custom_property_tokens { custom_property_value->as_unresolved().values() };
             if (!expand_variables(element, pseudo_element, custom_property_name, dependencies, custom_property_tokens, dest))
@@ -6867,7 +6867,7 @@ bool Parser::substitute_attr_function(DOM::Element& element, StringView property
     // - Attribute type (optional)
     auto attribute_type = "string"_fly_string;
     if (attr_contents.peek_token().is(Token::Type::Ident)) {
-        attribute_type = MUST(FlyString::from_utf8(attr_contents.next_token().token().ident()));
+        attribute_type = attr_contents.next_token().token().ident();
         attr_contents.skip_whitespace();
     }
 
