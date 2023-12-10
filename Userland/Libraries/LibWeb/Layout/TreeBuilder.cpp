@@ -307,21 +307,23 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
 
-        // Special path for elements that use pseudo selectors.
-        // FIXME: This is very hackish. Find a better way to architect this.
-        if (element.pseudo_element() == CSS::Selector::PseudoElement::Placeholder || element.pseudo_element() == CSS::Selector::PseudoElement::MeterBar || element.pseudo_element() == CSS::Selector::PseudoElement::MeterOptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterSuboptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterEvenLessGoodValue || element.pseudo_element() == CSS::Selector::PseudoElement::ProgressBar || element.pseudo_element() == CSS::Selector::PseudoElement::ProgressValue) {
+        // Special path for elements that use pseudo element as style selector.
+        if (element.use_pseudo_element().has_value()) {
+            // Get base psuedo element selector style properties
             auto& parent_element = verify_cast<HTML::HTMLElement>(*element.root().parent_or_shadow_host());
-            style = TRY(style_computer.compute_style(parent_element, element.pseudo_element()));
+            style = TRY(style_computer.compute_style(parent_element, *element.use_pseudo_element()));
+
+            // Merge back inline styles
+            auto const* inline_style = element.inline_style();
+            if (inline_style) {
+                auto const& computed_style = element.computed_css_values();
+                for (size_t i = 0; i < inline_style->length(); i++) {
+                    auto property_id = inline_style->property_id_by_index(i);
+                    if (auto property = computed_style->maybe_null_property(property_id); property)
+                        style->set_property(property_id, *property);
+                }
+            }
             display = style->display();
-            if (element.pseudo_element() == CSS::Selector::PseudoElement::Placeholder) {
-                auto& input_element = verify_cast<HTML::HTMLInputElement>(parent_element);
-                if (!input_element.placeholder_value().has_value())
-                    display = CSS::Display::from_short(CSS::Display::Short::None);
-            }
-            if (element.pseudo_element() == CSS::Selector::PseudoElement::MeterOptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterSuboptimumValue || element.pseudo_element() == CSS::Selector::PseudoElement::MeterEvenLessGoodValue || element.pseudo_element() == CSS::Selector::PseudoElement::ProgressValue) {
-                auto computed_style = element.computed_css_values();
-                style->set_property(CSS::PropertyID::Width, computed_style->property(CSS::PropertyID::Width));
-            }
         }
         // Common path: this is a regular DOM element. Style should be present already, thanks to Document::update_style().
         else {

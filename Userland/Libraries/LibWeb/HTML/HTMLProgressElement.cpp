@@ -7,9 +7,11 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/HTML/Numbers.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
 
@@ -102,17 +104,19 @@ void HTMLProgressElement::create_shadow_tree_if_needed()
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
     set_shadow_root(shadow_root);
 
-    auto progress_bar_element = heap().allocate<ProgressBarElement>(realm(), document());
+    auto progress_bar_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    progress_bar_element->set_use_pseudo_element(CSS::Selector::PseudoElement::ProgressBar);
     MUST(shadow_root->append_child(*progress_bar_element));
 
-    m_progress_value_element = heap().allocate<ProgressValueElement>(realm(), document());
+    m_progress_value_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    m_progress_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::ProgressValue);
     MUST(progress_bar_element->append_child(*m_progress_value_element));
     update_progress_value_element();
 }
 
 void HTMLProgressElement::update_progress_value_element()
 {
-    MUST(m_progress_value_element->set_attribute(HTML::AttributeNames::style, MUST(String::formatted("width: {}%;", position() * 100))));
+    MUST(m_progress_value_element->style_for_bindings()->set_property(CSS::PropertyID::Width, MUST(String::formatted("{}%", position() * 100))));
 }
 
 }

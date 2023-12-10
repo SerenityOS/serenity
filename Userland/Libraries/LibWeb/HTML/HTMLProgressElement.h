@@ -8,33 +8,9 @@
 #pragma once
 
 #include <LibWeb/ARIA/Roles.h>
-#include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
-
-class ProgressBarElement final : public HTMLDivElement {
-    JS_CELL(ProgressBarElement, HTMLDivElement);
-
-public:
-    ProgressBarElement(DOM::Document& document)
-        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
-    {
-    }
-    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::ProgressBar; }
-};
-
-class ProgressValueElement final : public HTMLDivElement {
-    JS_CELL(ProgressValueElement, HTMLDivElement);
-
-public:
-    ProgressValueElement(DOM::Document& document)
-        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
-    {
-    }
-    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::ProgressValue; }
-};
 
 class HTMLProgressElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLProgressElement, HTMLElement);
@@ -76,7 +52,7 @@ private:
 
     bool is_determinate() const { return has_attribute(HTML::AttributeNames::value); }
 
-    JS::GCPtr<ProgressValueElement> m_progress_value_element;
+    JS::GCPtr<DOM::Element> m_progress_value_element;
 };
 
 }

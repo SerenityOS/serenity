@@ -6,9 +6,11 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLMeterElement.h>
 #include <LibWeb/HTML/Numbers.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
 
@@ -188,10 +190,11 @@ void HTMLMeterElement::create_shadow_tree_if_needed()
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
     set_shadow_root(shadow_root);
 
-    auto meter_bar_element = heap().allocate<MeterBarElement>(realm(), document());
+    auto meter_bar_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    meter_bar_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterBar);
     MUST(shadow_root->append_child(*meter_bar_element));
 
-    m_meter_value_element = heap().allocate<MeterValueElement>(realm(), document());
+    m_meter_value_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
     MUST(meter_bar_element->append_child(*m_meter_value_element));
     update_meter_value_element();
 }
@@ -212,26 +215,26 @@ void HTMLMeterElement::update_meter_value_element()
     // If the optimum point is equal to the low boundary or the high boundary, or anywhere in between them, then the region between the low and high boundaries of the gauge must be treated as the optimum region, and the low and high parts, if any, must be treated as suboptimal.
     if (optimum >= low && optimum <= high) {
         if (value >= low && value <= high)
-            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterOptimumValue);
+            m_meter_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterOptimumValue);
         else
-            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
+            m_meter_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
     }
     // Otherwise, if the optimum point is less than the low boundary, then the region between the minimum value and the low boundary must be treated as the optimum region, the region from the low boundary up to the high boundary must be treated as a suboptimal region, and the remaining region must be treated as an even less good region.
     else if (optimum < low) {
         if (value >= low && value <= high)
-            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
+            m_meter_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
         else
-            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterEvenLessGoodValue);
+            m_meter_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterEvenLessGoodValue);
     }
     // Finally, if the optimum point is higher than the high boundary, then the situation is reversed; the region between the high boundary and the maximum value must be treated as the optimum region, the region from the high boundary down to the low boundary must be treated as a suboptimal region, and the remaining region must be treated as an even less good region.
     else {
         if (value >= low && value <= high)
-            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
+            m_meter_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
         else
-            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterEvenLessGoodValue);
+            m_meter_value_element->set_use_pseudo_element(CSS::Selector::PseudoElement::MeterEvenLessGoodValue);
     }
 
     double position = (value - min) / (max - min) * 100;
-    MUST(m_meter_value_element->set_attribute(HTML::AttributeNames::style, MUST(String::formatted("width: {}%;", position))));
+    MUST(m_meter_value_element->style_for_bindings()->set_property(CSS::PropertyID::Width, MUST(String::formatted("{}%", position))));
 }
 }

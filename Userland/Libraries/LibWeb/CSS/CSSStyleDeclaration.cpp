@@ -59,6 +59,11 @@ String PropertyOwningCSSStyleDeclaration::item(size_t index) const
     return MUST(String::from_utf8(CSS::string_from_property_id(m_properties[index].property_id)));
 }
 
+CSS::PropertyID PropertyOwningCSSStyleDeclaration::property_id_by_index(size_t index) const
+{
+    return m_properties[index].property_id;
+}
+
 JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)
 {
     auto& realm = element.realm();
