@@ -12,7 +12,7 @@ interface HTMLFieldSetElement : HTMLElement {
 
     readonly attribute DOMString type;
 
-    // FIXME: [SameObject] readonly attribute HTMLCollection elements;
+    [SameObject] readonly attribute HTMLCollection elements;
 
     // FIXME: readonly attribute boolean willValidate;
     // FIXME: [SameObject] readonly attribute ValidityState validity;
