@@ -135,6 +135,8 @@ ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_k
                     return fast_integer_indexed_element_get<i16>(typed_array, index);
                 case TypedArrayBase::Kind::Int32Array:
                     return fast_integer_indexed_element_get<i32>(typed_array, index);
+                case TypedArrayBase::Kind::Uint8ClampedArray:
+                    return fast_integer_indexed_element_get<u8>(typed_array, index);
                 default:
                     // FIXME: Support more TypedArray kinds.
                     break;
@@ -422,6 +424,9 @@ ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_valu
                     return {};
                 case TypedArrayBase::Kind::Int32Array:
                     fast_integer_indexed_element_set<i32>(typed_array, index, value.as_i32());
+                    return {};
+                case TypedArrayBase::Kind::Uint8ClampedArray:
+                    fast_integer_indexed_element_set<u8>(typed_array, index, clamp(value.as_i32(), 0, 255));
                     return {};
                 default:
                     // FIXME: Support more TypedArray kinds.
