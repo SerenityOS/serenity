@@ -9,38 +9,9 @@
 #pragma once
 
 #include <LibWeb/ARIA/Roles.h>
-#include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
-
-class MeterBarElement final : public HTMLDivElement {
-    JS_CELL(MeterBarElement, HTMLDivElement);
-
-public:
-    MeterBarElement(DOM::Document& document)
-        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
-    {
-    }
-    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::MeterBar; }
-};
-
-class MeterValueElement final : public HTMLDivElement {
-    JS_CELL(MeterValueElement, HTMLDivElement);
-
-public:
-    MeterValueElement(DOM::Document& document)
-        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
-    {
-    }
-    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return m_pseudo_element; }
-
-    void set_pseudo_element(CSS::Selector::PseudoElement pseudo_element) { m_pseudo_element = pseudo_element; }
-
-private:
-    CSS::Selector::PseudoElement m_pseudo_element;
-};
 
 class HTMLMeterElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLMeterElement, HTMLElement);
@@ -82,7 +53,7 @@ private:
 
     void update_meter_value_element();
 
-    JS::GCPtr<MeterValueElement> m_meter_value_element;
+    JS::GCPtr<DOM::Element> m_meter_value_element;
 };
 
 }

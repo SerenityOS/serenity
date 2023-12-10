@@ -173,7 +173,8 @@ public:
 
     RequiredInvalidationAfterStyleChange recompute_style();
 
-    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const { return {}; }
+    Optional<CSS::Selector::PseudoElement> use_pseudo_element() const { return m_use_pseudo_element; }
+    void set_use_pseudo_element(Optional<CSS::Selector::PseudoElement> use_pseudo_element) { m_use_pseudo_element = use_pseudo_element; }
 
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;
@@ -412,6 +413,8 @@ private:
     using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)>;
     mutable OwnPtr<PseudoElementCustomProperties> m_pseudo_element_custom_properties;
     PseudoElementCustomProperties& pseudo_element_custom_properties() const;
+
+    Optional<CSS::Selector::PseudoElement> m_use_pseudo_element {};
 
     Vector<FlyString> m_classes;
     Optional<Dir> m_dir;

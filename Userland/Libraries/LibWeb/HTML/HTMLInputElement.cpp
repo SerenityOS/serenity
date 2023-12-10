@@ -524,20 +524,6 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
     return placeholder;
 }
 
-class PlaceholderElement final : public HTMLDivElement {
-    JS_CELL(PlaceholderElement, HTMLDivElement);
-    JS_DECLARE_ALLOCATOR(PlaceholderElement);
-
-public:
-    PlaceholderElement(DOM::Document& document)
-        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""_fly_string, Namespace::HTML })
-    {
-    }
-    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::Placeholder; }
-};
-
-JS_DEFINE_ALLOCATOR(PlaceholderElement);
-
 void HTMLInputElement::create_shadow_tree_if_needed()
 {
     if (shadow_root_internal())
@@ -579,7 +565,8 @@ void HTMLInputElement::create_text_input_shadow_tree()
     )~~~"_string));
     MUST(shadow_root->append_child(element));
 
-    m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document());
+    m_placeholder_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    m_placeholder_element->set_use_pseudo_element(CSS::Selector::PseudoElement::Placeholder);
     MUST(m_placeholder_element->set_attribute(HTML::AttributeNames::style, R"~~~(
         flex: 1;
         height: 1lh;

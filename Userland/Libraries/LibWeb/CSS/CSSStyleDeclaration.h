@@ -24,6 +24,7 @@ public:
 
     virtual size_t length() const = 0;
     virtual String item(size_t index) const = 0;
+    virtual CSS::PropertyID property_id_by_index(size_t index) const = 0;
 
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
 
@@ -63,6 +64,7 @@ public:
 
     virtual size_t length() const override;
     virtual String item(size_t index) const override;
+    virtual CSS::PropertyID property_id_by_index(size_t index) const override;
 
     virtual Optional<StyleProperty> property(PropertyID) const override;
 

@@ -21,6 +21,8 @@ public:
 
     virtual size_t length() const override;
     virtual String item(size_t index) const override;
+    virtual CSS::PropertyID property_id_by_index(size_t index) const override;
+
     virtual Optional<StyleProperty> property(PropertyID) const override;
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority) override;
     virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) override;
