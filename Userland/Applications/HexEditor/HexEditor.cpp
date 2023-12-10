@@ -420,6 +420,8 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
 
     auto move_and_update_cursor_by = [&](i64 cursor_location_change) {
         size_t new_position = m_position + cursor_location_change;
+        VERIFY(new_position < m_document->size());
+
         if (event.modifiers() & Mod_Shift) {
             size_t selection_pivot = m_position == m_selection_end ? m_selection_start : m_selection_end;
             m_position = new_position;
