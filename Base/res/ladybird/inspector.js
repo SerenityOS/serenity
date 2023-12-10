@@ -85,6 +85,19 @@ const scrollToElement = element => {
     window.scrollTo(0, position);
 };
 
+inspector.reset = () => {
+    let domTree = document.getElementById("dom-tree");
+    domTree.innerHTML = "";
+
+    let accessibilityTree = document.getElementById("accessibility-tree");
+    accessibilityTree.innerHTML = "";
+
+    selectedDOMNode = null;
+    pendingEditDOMNode = null;
+
+    inspector.clearConsoleOutput();
+};
+
 inspector.loadDOMTree = tree => {
     let domTree = document.getElementById("dom-tree");
     domTree.innerHTML = atob(tree);

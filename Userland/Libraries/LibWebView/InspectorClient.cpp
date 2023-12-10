@@ -181,12 +181,13 @@ void InspectorClient::inspect()
 
 void InspectorClient::reset()
 {
+    static constexpr auto script = "inspector.reset();"sv;
+    m_inspector_web_view.run_javascript(script);
+
     m_body_node_id.clear();
     m_pending_selection.clear();
-
     m_dom_tree_loaded = false;
 
-    clear_console_output();
     m_highest_notified_message_index = -1;
     m_highest_received_message_index = -1;
     m_waiting_for_messages = false;
