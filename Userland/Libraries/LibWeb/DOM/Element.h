@@ -410,7 +410,7 @@ private:
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
-    using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::Type::PseudoElementCount)>;
+    using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount)>;
     mutable OwnPtr<PseudoElementCustomProperties> m_pseudo_element_custom_properties;
     PseudoElementCustomProperties& pseudo_element_custom_properties() const;
 
@@ -421,7 +421,7 @@ private:
 
     Optional<FlyString> m_id;
 
-    using PseudoElementLayoutNodes = Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::Type::PseudoElementCount)>;
+    using PseudoElementLayoutNodes = Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount)>;
     OwnPtr<PseudoElementLayoutNodes> m_pseudo_element_nodes;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reaction-queue

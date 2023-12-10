@@ -10,6 +10,7 @@
 
 #include <AK/Debug.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS::Parser {
 
@@ -358,6 +359,19 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoElement,
                 .value = pseudo_element.release_value()
+            };
+        }
+
+        // https://www.w3.org/TR/selectors-4/#compat
+        // All other pseudo-elements whose names begin with the string “-webkit-” (matched ASCII case-insensitively)
+        // and that are not functional notations must be treated as valid at parse time. (That is, ::-webkit-asdf is
+        // valid at parse time, but ::-webkit-jkl() is not.) If they’re not otherwise recognized and supported, they
+        // must be treated as matching nothing, and are unknown -webkit- pseudo-elements.
+        if (pseudo_name.starts_with_bytes("-webkit-"sv, CaseSensitivity::CaseInsensitive)) {
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoElement,
+                // Unknown -webkit- pseudo-elements must be serialized in ASCII lowercase.
+                .value = Selector::PseudoElement { Selector::PseudoElement::Type::UnknownWebKit, MUST(Infra::to_ascii_lowercase(pseudo_name.to_string())) },
             };
         }
 
