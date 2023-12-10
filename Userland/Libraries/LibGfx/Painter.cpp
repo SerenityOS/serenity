@@ -22,6 +22,7 @@
 #include <AK/Memory.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
+#include <AK/Stack.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
@@ -2135,14 +2136,14 @@ void Painter::for_each_line_segment_on_bezier_curve(FloatPoint control_point, Fl
         auto new_segment = po1_midpoint + po2_midpoint;
         new_segment /= 2;
 
-        segments.enqueue({ po1_midpoint, p1, new_segment });
-        segments.enqueue({ po2_midpoint, new_segment, p2 });
+        segments.append({ po2_midpoint, new_segment, p2 });
+        segments.append({ po1_midpoint, p1, new_segment });
     };
 
-    Queue<SegmentDescriptor> segments;
-    segments.enqueue({ control_point, p1, p2 });
+    Vector<SegmentDescriptor> segments;
+    segments.append({ control_point, p1, p2 });
     while (!segments.is_empty()) {
-        auto segment = segments.dequeue();
+        auto segment = segments.take_last();
 
         if (can_approximate_bezier_curve(segment.p1, segment.p2, segment.control_point))
             callback(segment.p1, segment.p2);
@@ -2218,14 +2219,14 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_poi
         };
         auto level_3_midpoint = (level_2_midpoints[0] + level_2_midpoints[1]) / 2;
 
-        segments.enqueue({ { level_1_midpoints[0], level_2_midpoints[0] }, p1, level_3_midpoint });
-        segments.enqueue({ { level_2_midpoints[1], level_1_midpoints[2] }, level_3_midpoint, p2 });
+        segments.append({ { level_2_midpoints[1], level_1_midpoints[2] }, level_3_midpoint, p2 });
+        segments.append({ { level_1_midpoints[0], level_2_midpoints[0] }, p1, level_3_midpoint });
     };
 
-    Queue<SegmentDescriptor> segments;
-    segments.enqueue({ { control_point_0, control_point_1 }, p1, p2 });
+    Vector<SegmentDescriptor> segments;
+    segments.append({ { control_point_0, control_point_1 }, p1, p2 });
     while (!segments.is_empty()) {
-        auto segment = segments.dequeue();
+        auto segment = segments.take_last();
 
         if (can_approximate_cubic_bezier_curve(segment.p1, segment.p2, segment.control_points.control_point_0, segment.control_points.control_point_1))
             callback(segment.p1, segment.p2);
