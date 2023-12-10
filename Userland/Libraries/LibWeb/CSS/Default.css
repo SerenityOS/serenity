@@ -47,19 +47,23 @@ input::placeholder {
     color: GrayText;
 }
 
-button, input[type=submit], input[type=button], input[type=reset] {
+button, input[type=submit], input[type=button], input[type=reset], select {
     padding: 1px 4px;
     background-color: ButtonFace;
     border: 1px solid ButtonBorder;
     color: ButtonText;
 }
 
-button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover {
+button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover, select:hover {
     /* FIXME: There isn't a <system-color> keyword for this, so this is a slightly lightened
      *        version of our light ButtonFace color. Once we support `color-scheme: dark`
      *        we'll need to use a different color for that.
      */
     background-color: #e5e0d7;
+}
+
+select {
+    padding-right: 2px;
 }
 
 option {
