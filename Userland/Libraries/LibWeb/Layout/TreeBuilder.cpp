@@ -121,9 +121,16 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
     // Parent block has inline-level children (our siblings).
     // First move these siblings into an anonymous wrapper block.
     Vector<JS::Handle<Layout::Node>> children;
-    while (JS::GCPtr<Layout::Node> child = layout_parent.first_child()) {
-        layout_parent.remove_child(*child);
-        children.append(*child);
+    {
+        JS::GCPtr<Layout::Node> next;
+        for (JS::GCPtr<Layout::Node> child = layout_parent.first_child(); child; child = next) {
+            next = child->next_sibling();
+            // NOTE: We let out-of-flow children stay in the parent, to preserve tree structure.
+            if (child->is_floating() || child->is_absolutely_positioned())
+                continue;
+            layout_parent.remove_child(*child);
+            children.append(*child);
+        }
     }
     layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     layout_parent.set_children_are_inline(false);
