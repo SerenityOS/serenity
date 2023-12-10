@@ -396,6 +396,8 @@ static bool is_form_control(DOM::Element const& element)
         return true;
     }
 
+    // FIXME: Form-associated custom elements return also true
+
     return false;
 }
 
