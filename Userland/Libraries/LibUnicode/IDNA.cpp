@@ -18,14 +18,7 @@
 
 namespace Unicode::IDNA {
 
-#if not ENABLE_UNICODE_DATA
-
-Optional<Mapping> get_idna_mapping(u32)
-{
-    return {};
-}
-
-#endif
+Optional<Mapping> __attribute__((weak)) get_idna_mapping(u32) { return {}; }
 
 struct ProcessingResult {
     Vector<String> result {};
