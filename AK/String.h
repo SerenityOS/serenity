@@ -67,7 +67,7 @@ public:
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
     template<typename T>
-    requires(IsOneOf<RemoveCVReference<T>, DeprecatedString, DeprecatedFlyString>)
+    requires(IsOneOf<RemoveCVReference<T>, DeprecatedString, DeprecatedFlyString, FlyString, String>)
     static ErrorOr<String> from_utf8(T&&) = delete;
 
     // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
