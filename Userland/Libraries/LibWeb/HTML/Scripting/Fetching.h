@@ -58,10 +58,10 @@ class FetchContext : public JS::GraphLoadingState::HostDefined {
     JS_CELL(FetchContext, JS::GraphLoadingState::HostDefined);
 
 public:
-    JS::Value parse_error;                                   // [[ParseError]]
-    Fetch::Infrastructure::Request::Destination destination; // [[Destination]]
-    JS::GCPtr<JS::Promise> perform_fetch;                    // [[PerformFetch]]
-    EnvironmentSettingsObject& fetch_client;                 // [[FetchClient]]
+    JS::Value parse_error;                                    // [[ParseError]]
+    Fetch::Infrastructure::Request::Destination destination;  // [[Destination]]
+    JS::GCPtr<JS::Promise> perform_fetch;                     // [[PerformFetch]]
+    JS::NonnullGCPtr<EnvironmentSettingsObject> fetch_client; // [[FetchClient]]
 
 private:
     FetchContext(JS::Value parse_error, Fetch::Infrastructure::Request::Destination destination, JS::GCPtr<JS::Promise> perform_fetch, EnvironmentSettingsObject& fetch_client)

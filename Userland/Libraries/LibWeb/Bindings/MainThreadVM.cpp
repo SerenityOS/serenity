@@ -462,7 +462,7 @@ ErrorOr<void> initialize_main_thread_vm()
         auto destination = Fetch::Infrastructure::Request::Destination::Script;
 
         // 11. Let fetchClient be settingsObject.
-        Optional<HTML::EnvironmentSettingsObject&> fetch_client = *settings_object;
+        JS::NonnullGCPtr fetch_client { *settings_object };
 
         // 12. If loadState is not undefined, then:
         if (load_state) {

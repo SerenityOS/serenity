@@ -144,7 +144,7 @@ private:
     NonnullRefPtr<ResourceLoaderConnector> m_connector;
     String m_user_agent;
     String m_platform;
-    Optional<Page&> m_page {};
+    Optional<JS::GCPtr<Page>> m_page {};
 };
 
 }

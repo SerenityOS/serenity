@@ -42,7 +42,7 @@ protected:
     // A ReadableStream instance that owns this reader
     JS::GCPtr<ReadableStream> m_stream;
 
-    JS::Realm& m_realm;
+    JS::NonnullGCPtr<JS::Realm> m_realm;
 };
 
 }

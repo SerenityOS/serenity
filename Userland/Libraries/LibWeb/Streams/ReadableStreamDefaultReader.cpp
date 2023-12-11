@@ -126,12 +126,12 @@ public:
 
     virtual void on_chunk(JS::Value chunk) override
     {
-        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm.vm(), chunk, false));
+        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm->vm(), chunk, false));
     }
 
     virtual void on_close() override
     {
-        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm.vm(), JS::js_undefined(), true));
+        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm->vm(), JS::js_undefined(), true));
     }
 
     virtual void on_error(JS::Value error) override
@@ -147,7 +147,7 @@ private:
         visitor.visit(m_promise);
     }
 
-    JS::Realm& m_realm;
+    JS::NonnullGCPtr<JS::Realm> m_realm;
     WebIDL::Promise& m_promise;
 };
 

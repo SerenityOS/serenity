@@ -535,7 +535,7 @@ public:
 
     void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactive, size_t script_history_length, size_t script_history_index);
 
-    HashMap<AK::URL, HTML::SharedImageRequest*>& shared_image_requests();
+    HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
 
     JS::NonnullGCPtr<Animations::DocumentTimeline> timeline();
 
@@ -754,7 +754,7 @@ private:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#latest-entry
     JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
 
-    HashMap<AK::URL, HTML::SharedImageRequest*> m_shared_image_requests;
+    HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>> m_shared_image_requests;
 
     // https://www.w3.org/TR/web-animations-1/#timeline-associated-with-a-document
     HashTable<JS::NonnullGCPtr<Animations::AnimationTimeline>> m_associated_animation_timelines;

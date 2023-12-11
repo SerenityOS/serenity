@@ -53,8 +53,8 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     JS::VM& m_vm;
-    JS::Realm& m_realm;
-    ReadableStreamDefaultReader& m_reader;
+    JS::NonnullGCPtr<JS::Realm> m_realm;
+    JS::NonnullGCPtr<ReadableStreamDefaultReader> m_reader;
     ByteBuffer m_bytes;
     SuccessSteps m_success_steps;
     FailureSteps m_failure_steps;
