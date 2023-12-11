@@ -90,6 +90,7 @@ void StackingContext::paint_node_as_stacking_context(Paintable const& paintable,
 
 void StackingContext::paint_descendants(PaintContext& context, Paintable const& paintable, StackingContextPaintPhase phase)
 {
+    paintable.apply_scroll_offset(context, to_paint_phase(phase));
     paintable.before_children_paint(context, to_paint_phase(phase));
     paintable.apply_clip_overflow_rect(context, to_paint_phase(phase));
 
@@ -174,6 +175,7 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
 
     paintable.clear_clip_overflow_rect(context, to_paint_phase(phase));
     paintable.after_children_paint(context, to_paint_phase(phase));
+    paintable.reset_scroll_offset(context, to_paint_phase(phase));
 }
 
 void StackingContext::paint_child(PaintContext& context, StackingContext const& child)

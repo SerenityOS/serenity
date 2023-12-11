@@ -430,14 +430,14 @@ Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
     return m_clip_rect;
 }
 
-void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::apply_scroll_offset(PaintContext& context, PaintPhase) const
 {
     auto scroll_offset = -this->scroll_offset();
     context.translate_scroll_offset_by(scroll_offset);
     context.recording_painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
 }
 
-void PaintableBox::after_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::reset_scroll_offset(PaintContext& context, PaintPhase) const
 {
     auto scroll_offset = this->scroll_offset();
     context.translate_scroll_offset_by(scroll_offset);

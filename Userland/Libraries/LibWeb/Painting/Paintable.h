@@ -117,6 +117,9 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
+    virtual void apply_scroll_offset(PaintContext&, PaintPhase) const { }
+    virtual void reset_scroll_offset(PaintContext&, PaintPhase) const { }
+
     virtual void apply_clip_overflow_rect(PaintContext&, PaintPhase) const { }
     virtual void clear_clip_overflow_rect(PaintContext&, PaintPhase) const { }
 
