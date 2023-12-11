@@ -126,6 +126,12 @@ void Shape::visit_edges(Cell::Visitor& visitor)
             it.key.visit_edges(visitor);
     }
     visitor.ignore(m_prototype_transitions);
+
+    // FIXME: The forward transition keys should be weak, but we have to mark them for now in case they go stale.
+    if (m_forward_transitions) {
+        for (auto& it : *m_forward_transitions)
+            it.key.property_key.visit_edges(visitor);
+    }
 }
 
 Optional<PropertyMetadata> Shape::lookup(StringOrSymbol const& property_key) const
