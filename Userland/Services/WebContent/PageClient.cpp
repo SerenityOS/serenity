@@ -403,9 +403,9 @@ void PageClient::prompt_closed(Optional<String> response)
     page().prompt_closed(move(response));
 }
 
-void PageClient::color_picker_closed(Optional<Color> picked_color)
+void PageClient::color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state)
 {
-    page().color_picker_closed(picked_color);
+    page().color_picker_update(picked_color, state);
 }
 
 void PageClient::select_dropdown_closed(Optional<String> value)

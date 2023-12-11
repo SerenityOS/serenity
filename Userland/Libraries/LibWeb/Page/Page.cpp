@@ -318,15 +318,17 @@ void Page::did_request_color_picker(WeakPtr<HTML::HTMLInputElement> target, Colo
     }
 }
 
-void Page::color_picker_closed(Optional<Color> picked_color)
+void Page::color_picker_update(Optional<Color> picked_color, HTML::ColorPickerUpdateState state)
 {
     if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::ColorPicker) {
-        m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
+        if (state == HTML::ColorPickerUpdateState::Closed)
+            m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
 
         if (m_pending_non_blocking_dialog_target) {
             auto& input_element = verify_cast<HTML::HTMLInputElement>(*m_pending_non_blocking_dialog_target);
             input_element.did_pick_color(move(picked_color));
-            m_pending_non_blocking_dialog_target.clear();
+            if (state == HTML::ColorPickerUpdateState::Closed)
+                m_pending_non_blocking_dialog_target.clear();
         }
     }
 }

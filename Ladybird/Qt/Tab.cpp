@@ -217,11 +217,14 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
         dialog.setWindowTitle("Ladybird");
         dialog.setOption(QColorDialog::ShowAlphaChannel, false);
+        QObject::connect(&dialog, &QColorDialog::currentColorChanged, this, [this](const QColor& color) {
+            view().color_picker_update(Color(color.red(), color.green(), color.blue()), Web::HTML::ColorPickerUpdateState::Update);
+        });
 
         if (dialog.exec() == QDialog::Accepted)
-            view().color_picker_closed(Color(dialog.selectedColor().red(), dialog.selectedColor().green(), dialog.selectedColor().blue()));
+            view().color_picker_update(Color(dialog.selectedColor().red(), dialog.selectedColor().green(), dialog.selectedColor().blue()), Web::HTML::ColorPickerUpdateState::Closed);
         else
-            view().color_picker_closed({});
+            view().color_picker_update({}, Web::HTML::ColorPickerUpdateState::Closed);
 
         m_dialog = nullptr;
     };

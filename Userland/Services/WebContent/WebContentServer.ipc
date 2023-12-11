@@ -5,6 +5,7 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWebView/Attribute.h>
 
@@ -92,7 +93,7 @@ endpoint WebContentServer
     alert_closed() =|
     confirm_closed(bool accepted) =|
     prompt_closed(Optional<String> response) =|
-    color_picker_closed(Optional<Color> picked_color) =|
+    color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state) =|
     select_dropdown_closed(Optional<String> value) =|
 
     toggle_media_play_state() =|

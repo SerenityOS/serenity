@@ -569,11 +569,14 @@ Tab::Tab(BrowserWindow& window)
 
         dialog.set_icon(window.icon());
         dialog.set_color_has_alpha_channel(false);
+        dialog.on_color_changed = [this](Color color) {
+            view().color_picker_update(color, Web::HTML::ColorPickerUpdateState::Update);
+        };
 
         if (dialog.exec() == GUI::ColorPicker::ExecResult::OK)
-            view().color_picker_closed(dialog.color());
+            view().color_picker_update(dialog.color(), Web::HTML::ColorPickerUpdateState::Closed);
         else
-            view().color_picker_closed({});
+            view().color_picker_update({}, Web::HTML::ColorPickerUpdateState::Closed);
 
         m_dialog = nullptr;
     };

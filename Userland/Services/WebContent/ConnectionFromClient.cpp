@@ -1044,9 +1044,9 @@ void ConnectionFromClient::prompt_closed(Optional<String> const& response)
     page().page().prompt_closed(response);
 }
 
-void ConnectionFromClient::color_picker_closed(Optional<Color> const& picked_color)
+void ConnectionFromClient::color_picker_update(Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state)
 {
-    page().page().color_picker_closed(picked_color);
+    page().page().color_picker_update(picked_color, state);
 }
 
 void ConnectionFromClient::select_dropdown_closed(Optional<String> const& value)
