@@ -14,7 +14,7 @@
 namespace JS::Bytecode {
 
 struct UnwindInfo {
-    Executable const* executable;
+    JS::GCPtr<Executable const> executable;
     JS::GCPtr<Environment> lexical_environment;
 
     bool handler_called { false };

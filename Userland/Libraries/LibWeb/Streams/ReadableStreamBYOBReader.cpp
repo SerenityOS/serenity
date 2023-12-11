@@ -74,14 +74,14 @@ public:
     virtual void on_chunk(JS::Value chunk) override
     {
         // 1. Resolve promise with «[ "value" → chunk, "done" → false ]».
-        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm.vm(), chunk, false));
+        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm->vm(), chunk, false));
     }
 
     // close steps, given chunk
     virtual void on_close(JS::Value chunk) override
     {
         // 1. Resolve promise with «[ "value" → chunk, "done" → true ]».
-        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm.vm(), chunk, true));
+        WebIDL::resolve_promise(m_realm, m_promise, JS::create_iterator_result_object(m_realm->vm(), chunk, true));
     }
 
     // error steps, given e
@@ -99,7 +99,7 @@ private:
         visitor.visit(m_promise);
     }
 
-    JS::Realm& m_realm;
+    JS::NonnullGCPtr<JS::Realm> m_realm;
     WebIDL::Promise& m_promise;
 };
 

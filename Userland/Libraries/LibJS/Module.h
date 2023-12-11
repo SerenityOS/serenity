@@ -71,11 +71,11 @@ public:
     GCPtr<PromiseCapability> promise_capability; // [[PromiseCapability]]
     bool is_loading { false };                   // [[IsLoading]]
     size_t pending_module_count { 0 };           // [[PendingModulesCount]]
-    HashTable<CyclicModule*> visited;            // [[Visited]]
+    HashTable<JS::GCPtr<CyclicModule>> visited;  // [[Visited]]
     GCPtr<HostDefined> host_defined;             // [[HostDefined]]
 
 private:
-    GraphLoadingState(GCPtr<PromiseCapability> promise_capability, bool is_loading, size_t pending_module_count, HashTable<CyclicModule*> visited, GCPtr<HostDefined> host_defined)
+    GraphLoadingState(GCPtr<PromiseCapability> promise_capability, bool is_loading, size_t pending_module_count, HashTable<JS::GCPtr<CyclicModule>> visited, GCPtr<HostDefined> host_defined)
         : promise_capability(move(promise_capability))
         , is_loading(is_loading)
         , pending_module_count(pending_module_count)

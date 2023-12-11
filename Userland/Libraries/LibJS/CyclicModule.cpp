@@ -40,8 +40,8 @@ void GraphLoadingState::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(promise_capability);
     visitor.visit(host_defined);
-    for (auto* module : visited)
-        visitor.visit(*module);
+    for (auto module : visited)
+        visitor.visit(module);
 }
 
 // 16.2.1.5.1 LoadRequestedModules ( [ hostDefined ] ), https://tc39.es/ecma262/#sec-LoadRequestedModules
@@ -54,7 +54,7 @@ PromiseCapability& CyclicModule::load_requested_modules(GCPtr<GraphLoadingState:
     auto promise_capability = MUST(new_promise_capability(vm(), vm().current_realm()->intrinsics().promise_constructor()));
 
     // 3. Let state be the GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
-    auto state = heap().allocate_without_realm<GraphLoadingState>(promise_capability, true, 1, HashTable<CyclicModule*> {}, move(host_defined));
+    auto state = heap().allocate_without_realm<GraphLoadingState>(promise_capability, true, 1, HashTable<JS::GCPtr<CyclicModule>> {}, move(host_defined));
 
     // 4. Perform InnerModuleLoading(state, module).
     inner_module_loading(state);
