@@ -247,6 +247,7 @@ set(SOURCES
     HTML/CustomElements/CustomElementName.cpp
     HTML/CustomElements/CustomElementReactionNames.cpp
     HTML/CustomElements/CustomElementRegistry.cpp
+    HTML/Dates.cpp
     HTML/DecodedImageData.cpp
     HTML/DocumentState.cpp
     HTML/DOMParser.cpp

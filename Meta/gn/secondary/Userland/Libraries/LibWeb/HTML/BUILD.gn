@@ -25,6 +25,7 @@ source_set("HTML") {
     "CloseEvent.cpp",
     "DOMParser.cpp",
     "DOMStringMap.cpp",
+    "Dates.cpp",
     "DecodedImageData.cpp",
     "DocumentState.cpp",
     "ErrorEvent.cpp",
