@@ -430,6 +430,9 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
+    if (active_tool() == nullptr)
+        return;
+
     auto image_event = event_with_pan_and_scale_applied(event);
     if (on_image_mouse_position_change) {
         on_image_mouse_position_change(image_event.position());
