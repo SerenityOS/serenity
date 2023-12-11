@@ -70,9 +70,12 @@ void ToolboxWidget::setup_tools()
         tool->set_action(action);
         m_tools.append(move(tool));
         if (is_default_tool) {
-            VERIFY(m_active_tool == nullptr);
-            m_active_tool = m_tools[m_tools.size() - 1];
             action->set_checked(true);
+            auto default_tool_index = m_tools.size() - 1;
+            deferred_invoke([&, default_tool_index]() {
+                VERIFY(m_active_tool == nullptr);
+                on_tool_selection(m_tools[default_tool_index]);
+            });
         }
     };
 
