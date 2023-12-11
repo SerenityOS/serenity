@@ -43,7 +43,7 @@ public:
     void start_timer() { m_load_timer.start(); }
     Duration load_time() const { return m_load_timer.elapsed_time(); }
 
-    JS::GCPtr<Page> page() { return m_page; }
+    JS::GCPtr<Page> page() { return m_page.ptr(); }
     void set_page(Page& page) { m_page = page; }
 
     unsigned hash() const
@@ -79,7 +79,7 @@ private:
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_headers;
     ByteBuffer m_body;
     Core::ElapsedTimer m_load_timer;
-    JS::GCPtr<Page> m_page;
+    JS::Handle<Page> m_page;
     bool m_main_resource { false };
 };
 
