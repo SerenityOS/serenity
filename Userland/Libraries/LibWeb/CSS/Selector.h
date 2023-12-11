@@ -37,6 +37,8 @@ public:
             ProgressBar,
             Placeholder,
             Selection,
+            SliderRunnableTrack,
+            SliderThumb,
 
             // Keep this last.
             KnownPseudoElementCount,
