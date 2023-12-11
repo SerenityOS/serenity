@@ -850,4 +850,15 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     return {};
 }
 
+PaintableBox const* PaintableBox::nearest_scrollable_ancestor() const
+{
+    auto* ancestor = parent();
+    while (ancestor) {
+        if (ancestor->is_paintable_box() && static_cast<PaintableBox const*>(ancestor)->has_scrollable_overflow())
+            return static_cast<PaintableBox const*>(ancestor);
+        ancestor = ancestor->parent();
+    }
+    return nullptr;
+}
+
 }

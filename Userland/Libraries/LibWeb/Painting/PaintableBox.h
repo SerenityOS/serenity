@@ -191,6 +191,8 @@ public:
     BorderRadiiData const& border_radii_data() const { return m_border_radii_data; }
     void set_border_radii_data(BorderRadiiData const& border_radii_data) { m_border_radii_data = border_radii_data; }
 
+    PaintableBox const* nearest_scrollable_ancestor() const;
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 
