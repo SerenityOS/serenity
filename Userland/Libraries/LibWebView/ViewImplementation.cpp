@@ -231,9 +231,9 @@ void ViewImplementation::prompt_closed(Optional<String> response)
     client().async_prompt_closed(move(response));
 }
 
-void ViewImplementation::color_picker_closed(Optional<Color> picked_color)
+void ViewImplementation::color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state)
 {
-    client().async_color_picker_closed(picked_color);
+    client().async_color_picker_update(picked_color, state);
 }
 
 void ViewImplementation::select_dropdown_closed(Optional<String> value)

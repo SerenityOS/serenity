@@ -599,6 +599,8 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         auto* panel = [NSColorPanel sharedColorPanel];
         [panel setColor:Ladybird::gfx_color_to_ns_color(current_color)];
         [panel setShowsAlpha:NO];
+        [panel setTarget:self];
+        [panel setAction:@selector(colorPickerUpdate:)];
 
         NSNotificationCenter* notification_center = [NSNotificationCenter defaultCenter];
         [notification_center addObserver:self
@@ -761,9 +763,14 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         m_web_view_bridge->select_dropdown_closed({});
 }
 
+- (void)colorPickerUpdate:(NSColorPanel*)colorPanel
+{
+    m_web_view_bridge->color_picker_update(Ladybird::ns_color_to_gfx_color(colorPanel.color), Web::HTML::ColorPickerUpdateState::Update);
+}
+
 - (void)colorPickerClosed:(NSNotification*)notification
 {
-    m_web_view_bridge->color_picker_closed(Ladybird::ns_color_to_gfx_color([[NSColorPanel sharedColorPanel] color]));
+    m_web_view_bridge->color_picker_update(Ladybird::ns_color_to_gfx_color([NSColorPanel sharedColorPanel].color), Web::HTML::ColorPickerUpdateState::Closed);
 }
 
 - (NSScrollView*)scrollView

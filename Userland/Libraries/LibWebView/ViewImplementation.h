@@ -16,6 +16,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWebView/Forward.h>
 #include <LibWebView/WebContentClient.h>
@@ -84,7 +85,7 @@ public:
     void alert_closed();
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
-    void color_picker_closed(Optional<Color> picked_color);
+    void color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state);
     void select_dropdown_closed(Optional<String> value);
 
     void toggle_media_play_state();

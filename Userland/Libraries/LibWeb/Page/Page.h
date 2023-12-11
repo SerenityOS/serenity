@@ -30,6 +30,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/PixelUnits.h>
@@ -128,7 +129,7 @@ public:
     void accept_dialog();
 
     void did_request_color_picker(WeakPtr<HTML::HTMLInputElement> target, Color current_color);
-    void color_picker_closed(Optional<Color> picked_color);
+    void color_picker_update(Optional<Color> picked_color, HTML::ColorPickerUpdateState state);
 
     void did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items);
     void select_dropdown_closed(Optional<String> value);
