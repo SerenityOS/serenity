@@ -54,6 +54,12 @@ private:
         O(In, in)                                               \
         O(InstanceOf, instance_of)
 
+#    define JS_ENUMERATE_COMMON_UNARY_OPS_WITHOUT_FAST_PATH(O) \
+        O(BitwiseNot, bitwise_not)                             \
+        O(Not, not_)                                           \
+        O(UnaryPlus, unary_plus)                               \
+        O(Typeof, typeof_)
+
 #    define JS_ENUMERATE_COMPARISON_OPS(O)                                         \
         O(LessThan, less_than, SignedLessThan, Below)                              \
         O(LessThanEquals, less_than_equals, SignedLessThanOrEqualTo, BelowOrEqual) \

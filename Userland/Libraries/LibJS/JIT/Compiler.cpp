@@ -1406,8 +1406,56 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
             check_exception();                                                       \
         }
 
-JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
+JS_ENUMERATE_COMMON_UNARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_UNARY_OP)
 #    undef DO_COMPILE_COMMON_UNARY_OP
+
+static Value cxx_unary_minus(VM& vm, Value value)
+{
+    return TRY_OR_SET_EXCEPTION(unary_minus(vm, value));
+}
+
+void Compiler::compile_unary_minus(Bytecode::Op::UnaryMinus const&)
+{
+    Assembler::Label end;
+    Assembler::Label slow_case;
+
+    load_accumulator(ARG1);
+    branch_if_int32(ARG1, [&] {
+        m_assembler.mov32(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Operand::Register(ARG1),
+            Assembler::Extension::ZeroExtend);
+
+        // For ~0 to become negative zero, we need to create a floating-point JS::Value.
+        Assembler::Label zero_case;
+        m_assembler.jump_if(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(0),
+            zero_case);
+
+        // accumulator = -accumulator
+        m_assembler.neg32(Assembler::Operand::Register(ARG1));
+
+        // accumulator |= SHIFTED_INT32_TAG;
+        m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(Assembler::Operand::Register(ARG1), Assembler::Operand::Register(GPR0));
+
+        store_accumulator(ARG1);
+        m_assembler.jump(end);
+
+        zero_case.link(m_assembler);
+        m_assembler.mov(Assembler::Operand::Register(ARG1), Assembler::Operand::Imm(Value(-0.0).encoded()));
+        store_accumulator(ARG1);
+        m_assembler.jump(end);
+    });
+
+    slow_case.link(m_assembler);
+    native_call((void*)cxx_unary_minus);
+    store_accumulator(RET);
+    check_exception();
+    end.link(m_assembler);
+}
 
 void Compiler::compile_return(Bytecode::Op::Return const&)
 {
