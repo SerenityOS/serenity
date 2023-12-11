@@ -44,9 +44,9 @@ ErrorOr<void> generate_header_file(Core::InputBufferedFile&, Core::File& file)
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Trie.h>
+#include <AK/Variant.h>
 
 namespace WebView {
 
@@ -70,7 +70,7 @@ public:
     ErrorOr<Optional<String>> get_public_suffix(StringView string);
 
 private:
-    Trie<char, DeprecatedString> m_dictionary;
+    Trie<char, Empty> m_dictionary;
 };
 
 }
@@ -118,13 +118,11 @@ static constexpr auto s_public_suffixes = Array {)~~~");
 };
 
 PublicSuffixData::PublicSuffixData()
-    : m_dictionary('/', "")
+    : m_dictionary('/')
 {
     // FIXME: Reduce the depth of this trie
     for (auto str : s_public_suffixes) {
-        MUST(m_dictionary.insert(str.begin(), str.end(), str, [](auto& parent, auto& it) -> Optional<DeprecatedString> {
-            return DeprecatedString::formatted("{}{}", parent.metadata_value(), *it);
-        }));
+        MUST(m_dictionary.insert(str.begin(), str.end(), Empty {}, [](auto const&, auto const&) -> Optional<Empty> { return {}; }));
     }
 }
 
@@ -132,7 +130,7 @@ bool PublicSuffixData::is_public_suffix(StringView host)
 {
     auto it = host.begin();
     auto& node = m_dictionary.traverse_until_last_accessible_node(it, host.end());
-    return it.is_end() && node.metadata().has_value();
+    return it.is_end() && node.has_metadata();
 }
 
 ErrorOr<Optional<String>> PublicSuffixData::get_public_suffix(StringView string)
