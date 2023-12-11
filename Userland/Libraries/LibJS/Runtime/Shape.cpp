@@ -135,10 +135,10 @@ void Shape::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
     m_property_key.visit_edges(visitor);
-    if (m_property_table) {
-        for (auto& it : *m_property_table)
-            it.key.visit_edges(visitor);
-    }
+
+    // NOTE: We don't need to mark the keys in the property table, since they are guaranteed
+    //       to also be marked by the chain of shapes leading up to this one.
+
     visitor.ignore(m_prototype_transitions);
 
     // FIXME: The forward transition keys should be weak, but we have to mark them for now in case they go stale.
