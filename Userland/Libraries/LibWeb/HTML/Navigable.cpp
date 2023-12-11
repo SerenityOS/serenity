@@ -1274,7 +1274,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     // 14. Let targetSnapshotParams be the result of snapshotting target snapshot params given navigable.
     auto target_snapshot_params = snapshot_target_snapshot_params();
 
-    // 15. Invoke WebDriver BiDi navigation started with targetBrowsingContext, and a new WebDriver BiDi navigation status whose id is navigationId, url is url, and status is "pending".
+    // FIXME: 15. Invoke WebDriver BiDi navigation started with targetBrowsingContext, and a new WebDriver BiDi navigation status whose id is navigationId, url is url, and status is "pending".
 
     // 16. If navigable's ongoing navigation is "traversal", then:
     if (ongoing_navigation().has<Traversal>()) {
