@@ -2,6 +2,7 @@ set(TEST_SOURCES
     TestCSSIDSpeed.cpp
     TestCSSPixels.cpp
     TestHTMLTokenizer.cpp
+    TestMicrosyntax.cpp
     TestMimeSniff.cpp
     TestNumbers.cpp
 )
