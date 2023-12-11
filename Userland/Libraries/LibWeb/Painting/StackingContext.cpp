@@ -226,6 +226,13 @@ void StackingContext::paint_internal(PaintContext& context) const
                 : TraversalDecision::Continue;
         }
 
+        // Apply scroll offset of nearest scrollable ancestor before painting the positioned descendant.
+        PaintableBox const* nearest_scrollable_ancestor = nullptr;
+        if (paintable.is_paintable_box())
+            nearest_scrollable_ancestor = static_cast<PaintableBox const&>(paintable).nearest_scrollable_ancestor();
+        if (nearest_scrollable_ancestor)
+            nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
+
         // At this point, `paintable_box` is a positioned descendant with z-index: auto.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
         auto exit_decision = TraversalDecision::Continue;
@@ -246,6 +253,9 @@ void StackingContext::paint_internal(PaintContext& context) const
             parent_paintable->after_children_paint(context, PaintPhase::Foreground);
         if (containing_block_paintable)
             containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
+
+        if (nearest_scrollable_ancestor)
+            nearest_scrollable_ancestor->reset_scroll_offset(context, PaintPhase::Foreground);
 
         return exit_decision;
     });
