@@ -257,11 +257,9 @@ static bool is_supported_document_mime_type(StringView mime_type)
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
-JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigation_params)
+JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 {
-    VERIFY(navigation_params.has_value());
-
-    auto extracted_mime_type = navigation_params->response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+    auto extracted_mime_type = navigation_params.response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
     if (!extracted_mime_type.has_value())
         return nullptr;
 
@@ -269,14 +267,14 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
     if (!is_supported_document_mime_type(mime_type.essence()))
         return nullptr;
 
-    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, *navigation_params).release_value_but_fixme_should_propagate_errors();
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
     document->set_content_type(mime_type.essence());
 
     auto& realm = document->realm();
 
-    if (navigation_params->response->body()) {
+    if (navigation_params.response->body()) {
         Optional<String> content_encoding = mime_type.parameters().get("charset"sv);
-        auto process_body = [document, url = navigation_params->response->url().value(), encoding = move(content_encoding)](ByteBuffer bytes) {
+        auto process_body = [document, url = navigation_params.response->url().value(), encoding = move(content_encoding)](ByteBuffer bytes) {
             if (parse_document(*document, bytes, move(encoding)))
                 return;
             document->remove_all_children(true);
@@ -290,11 +288,11 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
             dbgln("FIXME: Load html page with an error if read of body failed.");
         };
 
-        navigation_params->response->body()->fully_read(
-                                               realm,
-                                               move(process_body),
-                                               move(process_body_error),
-                                               JS::NonnullGCPtr { realm.global_object() })
+        navigation_params.response->body()->fully_read(
+                                              realm,
+                                              move(process_body),
+                                              move(process_body_error),
+                                              JS::NonnullGCPtr { realm.global_object() })
             .release_value_but_fixme_should_propagate_errors();
     }
 
