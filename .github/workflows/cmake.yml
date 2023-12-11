@@ -43,7 +43,7 @@ jobs:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       # Set default Python to python 3.x, and set Python path such that pip install works properly
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
