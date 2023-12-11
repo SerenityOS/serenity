@@ -1158,26 +1158,13 @@ void Object::storage_set(PropertyKey const& property_key, ValueAndAttributes con
     auto metadata = shape().lookup(property_key_string_or_symbol);
 
     if (!metadata.has_value()) {
-        if (!m_shape->is_unique() && shape().property_count() > 100) {
-            // If you add more than 100 properties to an object, let's stop doing
-            // transitions to avoid filling up the heap with shapes.
-            ensure_shape_is_unique();
-        }
-
-        if (m_shape->is_unique())
-            m_shape->add_property_to_unique_shape(property_key_string_or_symbol, attributes);
-        else
-            set_shape(*m_shape->create_put_transition(property_key_string_or_symbol, attributes));
-
+        set_shape(*m_shape->create_put_transition(property_key_string_or_symbol, attributes));
         m_storage.append(value);
         return;
     }
 
     if (attributes != metadata->attributes) {
-        if (m_shape->is_unique())
-            m_shape->reconfigure_property_in_unique_shape(property_key_string_or_symbol, attributes);
-        else
-            set_shape(*m_shape->create_configure_transition(property_key_string_or_symbol, attributes));
+        set_shape(*m_shape->create_configure_transition(property_key_string_or_symbol, attributes));
     }
 
     m_storage[metadata->offset] = value;
@@ -1199,9 +1186,7 @@ void Object::storage_delete(PropertyKey const& property_key)
     auto metadata = shape().lookup(property_key.to_string_or_symbol());
     VERIFY(metadata.has_value());
 
-    ensure_shape_is_unique();
-
-    shape().remove_property_from_unique_shape(property_key.to_string_or_symbol(), metadata->offset);
+    m_shape = m_shape->create_delete_transition(property_key.to_string_or_symbol());
     m_storage.remove(metadata->offset);
 }
 
@@ -1209,11 +1194,7 @@ void Object::set_prototype(Object* new_prototype)
 {
     if (prototype() == new_prototype)
         return;
-    auto& shape = this->shape();
-    if (shape.is_unique())
-        shape.set_prototype_without_transition(new_prototype);
-    else
-        m_shape = shape.create_prototype_transition(new_prototype);
+    m_shape = shape().create_prototype_transition(new_prototype);
 }
 
 void Object::define_native_accessor(Realm& realm, PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&)> getter, Function<ThrowCompletionOr<Value>(VM&)> setter, PropertyAttributes attribute)
@@ -1253,14 +1234,6 @@ void Object::define_intrinsic_accessor(PropertyKey const& property_key, Property
     m_has_intrinsic_accessors = true;
     auto& intrinsics = s_intrinsics.ensure(this);
     intrinsics.set(property_key.as_string(), move(accessor));
-}
-
-void Object::ensure_shape_is_unique()
-{
-    if (shape().is_unique())
-        return;
-
-    m_shape = m_shape->create_unique_clone();
 }
 
 // Simple side-effect free property lookup, following the prototype chain. Non-standard.

@@ -1665,39 +1665,6 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
             Assembler::Operand::Register(GPR1),
             slow_case);
 
-        // (!object->shape().is_unique() || object->shape().unique_shape_serial_number() == cache.unique_shape_serial_number)) {
-        Assembler::Label fast_case;
-
-        // GPR1 = object->shape().is_unique()
-        m_assembler.mov8(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Mem64BaseAndOffset(GPR2, Shape::is_unique_offset()));
-
-        m_assembler.jump_if(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Condition::EqualTo,
-            Assembler::Operand::Imm(0),
-            fast_case);
-
-        // GPR1 = object->shape().unique_shape_serial_number()
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Mem64BaseAndOffset(GPR2, Shape::unique_shape_serial_number_offset()));
-
-        // GPR2 = cache.unique_shape_serial_number
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR2),
-            Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::PropertyLookupCache::unique_shape_serial_number_offset()));
-
-        // if (GPR1 != GPR2) goto slow_case;
-        m_assembler.jump_if(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Condition::NotEqualTo,
-            Assembler::Operand::Register(GPR2),
-            slow_case);
-
-        fast_case.link(m_assembler);
-
         // return object->get_direct(*cache.property_offset);
         // GPR0 = object
         // GPR1 = *cache.property_offset * sizeof(Value)
@@ -1952,38 +1919,6 @@ void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
         Assembler::Condition::NotEqualTo,
         Assembler::Operand::Register(GPR0),
         slow_case);
-
-    Assembler::Label fast_case {};
-
-    // GPR2 = shape->unique()
-    m_assembler.mov8(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Operand::Mem64BaseAndOffset(GPR0, Shape::is_unique_offset()));
-    // if (!GPR2) goto fast_case;
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Condition::EqualTo,
-        Assembler::Operand::Imm(0),
-        fast_case);
-
-    // GPR2 = shape->unique_shape_serial_number()
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Operand::Mem64BaseAndOffset(GPR0, Shape::unique_shape_serial_number_offset()));
-
-    // GPR0 = cache.unique_shape_serial_number
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::PropertyLookupCache::unique_shape_serial_number_offset()));
-
-    // if (GPR2 != GPR0) goto slow_case;
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Register(GPR0),
-        slow_case);
-
-    fast_case.link(m_assembler);
 
     // accumulator = GPR1->get_direct(*cache.property_offset);
     // GPR0 = GPR1
@@ -2294,39 +2229,6 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
                 Assembler::Condition::NotEqualTo,
                 Assembler::Operand::Register(GPR1),
                 slow_case);
-
-            // (!object->shape().is_unique() || object->shape().unique_shape_serial_number() == cache.unique_shape_serial_number)) {
-            Assembler::Label fast_case;
-
-            // GPR1 = object->shape().is_unique()
-            m_assembler.mov8(
-                Assembler::Operand::Register(GPR1),
-                Assembler::Operand::Mem64BaseAndOffset(GPR2, Shape::is_unique_offset()));
-
-            m_assembler.jump_if(
-                Assembler::Operand::Register(GPR1),
-                Assembler::Condition::EqualTo,
-                Assembler::Operand::Imm(0),
-                fast_case);
-
-            // GPR1 = object->shape().unique_shape_serial_number()
-            m_assembler.mov(
-                Assembler::Operand::Register(GPR1),
-                Assembler::Operand::Mem64BaseAndOffset(GPR2, Shape::unique_shape_serial_number_offset()));
-
-            // GPR2 = cache.unique_shape_serial_number
-            m_assembler.mov(
-                Assembler::Operand::Register(GPR2),
-                Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::PropertyLookupCache::unique_shape_serial_number_offset()));
-
-            // if (GPR1 != GPR2) goto slow_case;
-            m_assembler.jump_if(
-                Assembler::Operand::Register(GPR1),
-                Assembler::Condition::NotEqualTo,
-                Assembler::Operand::Register(GPR2),
-                slow_case);
-
-            fast_case.link(m_assembler);
 
             // object->put_direct(*cache.property_offset, value);
             // GPR0 = object

@@ -92,7 +92,6 @@ JS_DEFINE_ALLOCATOR(GlobalObject);
 GlobalObject::GlobalObject(Realm& realm)
     : Object(GlobalObjectTag::Tag, realm)
 {
-    ensure_shape_is_unique();
     Object::set_prototype(realm.intrinsics().object_prototype());
 }
 
