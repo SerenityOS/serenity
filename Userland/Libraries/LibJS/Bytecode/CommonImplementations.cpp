@@ -83,10 +83,8 @@ ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, 
     auto base_obj = TRY(base_object_for_get(vm, base_value));
 
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
-    // NOTE: Unique shapes don't change identity, so we compare their serial numbers instead.
     auto& shape = base_obj->shape();
-    if (&shape == cache.shape
-        && (!shape.is_unique() || shape.unique_shape_serial_number() == cache.unique_shape_serial_number)) {
+    if (&shape == cache.shape) {
         return base_obj->get_direct(cache.property_offset.value());
     }
 
@@ -96,7 +94,6 @@ ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, 
     if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
         cache.shape = shape;
         cache.property_offset = cacheable_metadata.property_offset.value();
-        cache.unique_shape_serial_number = shape.unique_shape_serial_number();
     }
 
     return value;
@@ -176,11 +173,9 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Deprecat
     auto& declarative_record = realm.global_environment().declarative_record();
 
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
-    // NOTE: Unique shapes don't change identity, so we compare their serial numbers instead.
     auto& shape = binding_object.shape();
     if (cache.environment_serial_number == declarative_record.environment_serial_number()
-        && &shape == cache.shape
-        && (!shape.is_unique() || shape.unique_shape_serial_number() == cache.unique_shape_serial_number)) {
+        && &shape == cache.shape) {
         return binding_object.get_direct(cache.property_offset.value());
     }
 
@@ -207,7 +202,6 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Deprecat
         if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
             cache.shape = shape;
             cache.property_offset = cacheable_metadata.property_offset.value();
-            cache.unique_shape_serial_number = shape.unique_shape_serial_number();
         }
         return value;
     }
@@ -243,9 +237,7 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
         break;
     }
     case Op::PropertyKind::KeyValue: {
-        if (cache
-            && cache->shape == &object->shape()
-            && (!object->shape().is_unique() || object->shape().unique_shape_serial_number() == cache->unique_shape_serial_number)) {
+        if (cache && cache->shape == &object->shape()) {
             object->put_direct(*cache->property_offset, value);
             return {};
         }
@@ -256,7 +248,6 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
         if (succeeded && cache && cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
             cache->shape = object->shape();
             cache->property_offset = cacheable_metadata.property_offset.value();
-            cache->unique_shape_serial_number = object->shape().unique_shape_serial_number();
         }
 
         if (!succeeded && vm.in_strict_mode()) {

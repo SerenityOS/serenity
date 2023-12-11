@@ -49,7 +49,6 @@ struct CacheablePropertyMetadata {
     };
     Type type { Type::NotCacheable };
     Optional<u32> property_offset;
-    u64 unique_shape_serial_number { 0 };
 };
 
 class Object : public Cell {
@@ -214,8 +213,6 @@ public:
     Shape const& shape() const { return *m_shape; }
 
     static FlatPtr shape_offset() { return OFFSET_OF(Object, m_shape); }
-
-    void ensure_shape_is_unique();
 
     template<typename T>
     bool fast_is() const = delete;

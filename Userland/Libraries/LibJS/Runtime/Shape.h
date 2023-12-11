@@ -48,19 +48,16 @@ public:
         Put,
         Configure,
         Prototype,
+        Delete,
     };
 
     Shape* create_put_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_configure_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_prototype_transition(Object* new_prototype);
+    [[nodiscard]] NonnullGCPtr<Shape> create_delete_transition(StringOrSymbol const&);
 
     void add_property_without_transition(StringOrSymbol const&, PropertyAttributes);
     void add_property_without_transition(PropertyKey const&, PropertyAttributes);
-
-    bool is_unique() const { return m_unique; }
-    static FlatPtr is_unique_offset() { return OFFSET_OF(Shape, m_unique); }
-
-    Shape* create_unique_clone() const;
 
     Realm& realm() const { return m_realm; }
 
@@ -78,22 +75,17 @@ public:
 
     void set_prototype_without_transition(Object* new_prototype) { m_prototype = new_prototype; }
 
-    void remove_property_from_unique_shape(StringOrSymbol const&, size_t offset);
-    void add_property_to_unique_shape(StringOrSymbol const&, PropertyAttributes attributes);
-    void reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes);
-
-    [[nodiscard]] u64 unique_shape_serial_number() const { return m_unique_shape_serial_number; }
-    static FlatPtr unique_shape_serial_number_offset() { return OFFSET_OF(Shape, m_unique_shape_serial_number); }
-
 private:
     explicit Shape(Realm&);
     Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType);
+    Shape(Shape& previous_shape, StringOrSymbol const& property_key, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);
 
     virtual void visit_edges(Visitor&) override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);
     Shape* get_or_prune_cached_prototype_transition(Object* prototype);
+    [[nodiscard]] GCPtr<Shape> get_or_prune_cached_delete_transition(StringOrSymbol const&);
 
     void ensure_property_table() const;
 
@@ -103,6 +95,7 @@ private:
 
     OwnPtr<HashMap<TransitionKey, WeakPtr<Shape>>> m_forward_transitions;
     OwnPtr<HashMap<GCPtr<Object>, WeakPtr<Shape>>> m_prototype_transitions;
+    OwnPtr<HashMap<StringOrSymbol, WeakPtr<Shape>>> m_delete_transitions;
     GCPtr<Shape> m_previous;
     StringOrSymbol m_property_key;
     GCPtr<Object> m_prototype;
@@ -110,11 +103,6 @@ private:
 
     PropertyAttributes m_attributes { 0 };
     TransitionType m_transition_type { TransitionType::Invalid };
-    bool m_unique { false };
-
-    // Since unique shapes never change identity, inline caches use this incrementing serial number
-    // to know whether its property table has been modified since last time we checked.
-    u64 m_unique_shape_serial_number { 0 };
 };
 
 }

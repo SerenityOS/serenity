@@ -12,18 +12,6 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(Shape);
 
-Shape* Shape::create_unique_clone() const
-{
-    auto new_shape = heap().allocate_without_realm<Shape>(m_realm);
-    new_shape->m_unique = true;
-    new_shape->m_prototype = m_prototype;
-    ensure_property_table();
-    new_shape->ensure_property_table();
-    (*new_shape->m_property_table) = *m_property_table;
-    new_shape->m_property_count = new_shape->m_property_table->size();
-    return new_shape;
-}
-
 Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
 {
     if (!m_forward_transitions)
@@ -37,6 +25,21 @@ Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
         return nullptr;
     }
     return it->value;
+}
+
+GCPtr<Shape> Shape::get_or_prune_cached_delete_transition(StringOrSymbol const& key)
+{
+    if (!m_delete_transitions)
+        return nullptr;
+    auto it = m_delete_transitions->find(key);
+    if (it == m_delete_transitions->end())
+        return nullptr;
+    if (!it->value) {
+        // The cached delete transition has gone stale (from garbage collection). Prune it.
+        m_delete_transitions->remove(it);
+        return nullptr;
+    }
+    return it->value.ptr();
 }
 
 Shape* Shape::get_or_prune_cached_prototype_transition(Object* prototype)
@@ -105,6 +108,17 @@ Shape::Shape(Shape& previous_shape, StringOrSymbol const& property_key, Property
 {
 }
 
+Shape::Shape(Shape& previous_shape, StringOrSymbol const& property_key, TransitionType transition_type)
+    : m_realm(previous_shape.m_realm)
+    , m_previous(&previous_shape)
+    , m_property_key(property_key)
+    , m_prototype(previous_shape.m_prototype)
+    , m_property_count(previous_shape.m_property_count - 1)
+    , m_transition_type(transition_type)
+{
+    VERIFY(transition_type == TransitionType::Delete);
+}
+
 Shape::Shape(Shape& previous_shape, Object* new_prototype)
     : m_realm(previous_shape.m_realm)
     , m_previous(&previous_shape)
@@ -131,6 +145,12 @@ void Shape::visit_edges(Cell::Visitor& visitor)
     if (m_forward_transitions) {
         for (auto& it : *m_forward_transitions)
             it.key.property_key.visit_edges(visitor);
+    }
+
+    // FIXME: The delete transition keys should be weak, but we have to mark them for now in case they go stale.
+    if (m_delete_transitions) {
+        for (auto& it : *m_delete_transitions)
+            it.key.visit_edges(visitor);
     }
 }
 
@@ -159,6 +179,7 @@ void Shape::ensure_property_table() const
     u32 next_offset = 0;
 
     Vector<Shape const&, 64> transition_chain;
+    transition_chain.append(*this);
     for (auto shape = m_previous; shape; shape = shape->m_previous) {
         if (shape->m_property_table) {
             *m_property_table = *shape->m_property_table;
@@ -167,7 +188,6 @@ void Shape::ensure_property_table() const
         }
         transition_chain.append(*shape);
     }
-    transition_chain.append(*this);
 
     for (auto const& shape : transition_chain.in_reverse()) {
         if (!shape.m_property_key.is_valid()) {
@@ -180,48 +200,29 @@ void Shape::ensure_property_table() const
             auto it = m_property_table->find(shape.m_property_key);
             VERIFY(it != m_property_table->end());
             it->value.attributes = shape.m_attributes;
+        } else if (shape.m_transition_type == TransitionType::Delete) {
+            auto remove_it = m_property_table->find(shape.m_property_key);
+            VERIFY(remove_it != m_property_table->end());
+            auto removed_offset = remove_it->value.offset;
+            m_property_table->remove(remove_it);
+            for (auto& it : *m_property_table) {
+                if (it.value.offset > removed_offset)
+                    --it.value.offset;
+            }
+            --next_offset;
         }
     }
 }
 
-void Shape::add_property_to_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes)
+NonnullGCPtr<Shape> Shape::create_delete_transition(StringOrSymbol const& property_key)
 {
-    VERIFY(is_unique());
-    VERIFY(m_property_table);
-    VERIFY(!m_property_table->contains(property_key));
-    m_property_table->set(property_key, { static_cast<u32>(m_property_table->size()), attributes });
-
-    VERIFY(m_property_count < NumericLimits<u32>::max());
-    ++m_property_count;
-
-    ++m_unique_shape_serial_number;
-}
-
-void Shape::reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes)
-{
-    VERIFY(is_unique());
-    VERIFY(m_property_table);
-    auto it = m_property_table->find(property_key);
-    VERIFY(it != m_property_table->end());
-    it->value.attributes = attributes;
-    m_property_table->set(property_key, it->value);
-
-    ++m_unique_shape_serial_number;
-}
-
-void Shape::remove_property_from_unique_shape(StringOrSymbol const& property_key, size_t offset)
-{
-    VERIFY(is_unique());
-    VERIFY(m_property_table);
-    if (m_property_table->remove(property_key))
-        --m_property_count;
-    for (auto& it : *m_property_table) {
-        VERIFY(it.value.offset != offset);
-        if (it.value.offset > offset)
-            --it.value.offset;
-    }
-
-    ++m_unique_shape_serial_number;
+    if (auto existing_shape = get_or_prune_cached_delete_transition(property_key))
+        return *existing_shape;
+    auto new_shape = heap().allocate_without_realm<Shape>(*this, property_key, TransitionType::Delete);
+    if (!m_delete_transitions)
+        m_delete_transitions = make<HashMap<StringOrSymbol, WeakPtr<Shape>>>();
+    m_delete_transitions->set(property_key, new_shape.ptr());
+    return new_shape;
 }
 
 void Shape::add_property_without_transition(StringOrSymbol const& property_key, PropertyAttributes attributes)
