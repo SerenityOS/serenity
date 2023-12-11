@@ -50,6 +50,8 @@ static ErrorOr<void> initialize_lagom_networking();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    AK::set_rich_debug_enabled(true);
+
 #if defined(HAVE_QT)
     QCoreApplication app(arguments.argc, arguments.argv);
 

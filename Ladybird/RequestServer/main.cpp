@@ -36,6 +36,8 @@ ErrorOr<String> find_certificates(StringView serenity_resource_root)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    AK::set_rich_debug_enabled(true);
+
     int fd_passing_socket { -1 };
     StringView serenity_resource_root;
 

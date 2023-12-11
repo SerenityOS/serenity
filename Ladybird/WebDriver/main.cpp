@@ -55,6 +55,8 @@ static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_pat
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    AK::set_rich_debug_enabled(true);
+
     auto listen_address = "0.0.0.0"sv;
     int port = 8000;
 

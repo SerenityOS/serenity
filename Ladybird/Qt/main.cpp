@@ -87,6 +87,8 @@ public:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    AK::set_rich_debug_enabled(true);
+
     LadybirdApplication app(arguments.argc, arguments.argv);
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);

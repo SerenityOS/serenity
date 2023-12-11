@@ -15,6 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    AK::set_rich_debug_enabled(true);
+
     DeprecatedString pid_file;
 
     Core::ArgsParser args_parser;
