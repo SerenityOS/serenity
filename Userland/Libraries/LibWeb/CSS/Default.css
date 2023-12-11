@@ -26,7 +26,7 @@ label {
 }
 
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
-input:not([type=submit], input[type=button], input[type=reset], input[type=color], input[type=checkbox], input[type=radio]), textarea {
+input:not([type=submit], input[type=button], input[type=reset], input[type=color], input[type=checkbox], input[type=radio], input[type=range]), textarea {
     border: 1px solid ButtonBorder;
     min-height: 16px;
     width: attr(size ch, 20ch);
@@ -68,6 +68,30 @@ select {
 
 option {
     display: none;
+}
+
+/* Custom <input type="range"> styles */
+input[type=range] {
+    display: inline-block;
+    width: 20ch;
+    height: 16px;
+}
+input[type=range]::-webkit-slider-runnable-track, input[type=range]::-webkit-slider-thumb {
+    display: block;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    height: 4px;
+    margin-top: 6px;
+    background-color:  hsl(217, 71%, 53%);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+}
+input[type=range]::-webkit-slider-thumb {
+    margin-top: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: hsl(0, 0%, 96%);
+    outline: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 /* Custom <meter> styles */

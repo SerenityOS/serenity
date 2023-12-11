@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -202,6 +203,7 @@ private:
     void create_shadow_tree_if_needed();
     void create_text_input_shadow_tree();
     void create_color_input_shadow_tree();
+    void create_range_input_shadow_tree();
     WebIDL::ExceptionOr<void> run_input_activation_behavior();
     void set_checked_within_group();
 
@@ -218,6 +220,9 @@ private:
     JS::GCPtr<DOM::Element> m_color_well_element;
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
+
+    void update_slider_thumb_element();
+    JS::GCPtr<DOM::Element> m_slider_thumb;
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-indeterminate
     bool m_indeterminate { false };

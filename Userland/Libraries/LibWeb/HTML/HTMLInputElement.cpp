@@ -3,6 +3,7 @@
  * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,6 +63,7 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_color_well_element);
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group);
     visitor.visit(m_selected_files);
+    visitor.visit(m_slider_thumb);
 }
 
 JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -547,6 +549,9 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     case TypeAttributeState::Color:
         create_color_input_shadow_tree();
         break;
+    case TypeAttributeState::Range:
+        create_range_input_shadow_tree();
+        break;
     // FIXME: This could be better factored. Everything except the above types becomes a text input.
     default:
         create_text_input_shadow_tree();
@@ -674,6 +679,38 @@ void HTMLInputElement::create_color_input_shadow_tree()
     set_shadow_root(shadow_root);
 }
 
+void HTMLInputElement::create_range_input_shadow_tree()
+{
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
+    set_shadow_root(shadow_root);
+
+    auto slider_runnable_track = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    slider_runnable_track->set_use_pseudo_element(CSS::Selector::PseudoElement::Type::SliderRunnableTrack);
+    MUST(shadow_root->append_child(slider_runnable_track));
+
+    m_slider_thumb = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    m_slider_thumb->set_use_pseudo_element(CSS::Selector::PseudoElement::Type::SliderThumb);
+    MUST(slider_runnable_track->append_child(*m_slider_thumb));
+    update_slider_thumb_element();
+}
+
+void HTMLInputElement::update_slider_thumb_element()
+{
+    double minimum = *min();
+    double maximum = *max();
+
+    double default_value = minimum + (maximum - minimum) / 2;
+    if (maximum < minimum)
+        default_value = minimum;
+
+    double value = MUST(value_as_number());
+    if (!isfinite(value))
+        value = default_value;
+
+    double position = (value - minimum) / (maximum - minimum) * 100;
+    MUST(m_slider_thumb->style_for_bindings()->set_property(CSS::PropertyID::MarginLeft, MUST(String::formatted("{}%", position))));
+}
+
 void HTMLInputElement::did_receive_focus()
 {
     auto* browsing_context = document().browsing_context();
@@ -714,6 +751,9 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String>
 
                 if (type_state() == TypeAttributeState::Color && m_color_well_element)
                     MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+
+                if (type_state() == TypeAttributeState::Range && m_slider_thumb)
+                    update_slider_thumb_element();
             }
         } else {
             if (!m_dirty_value) {
@@ -722,6 +762,9 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String>
 
                 if (type_state() == TypeAttributeState::Color && m_color_well_element)
                     MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+
+                if (type_state() == TypeAttributeState::Range && m_slider_thumb)
+                    update_slider_thumb_element();
             }
         }
     } else if (name == HTML::AttributeNames::placeholder) {
@@ -1051,6 +1094,10 @@ Optional<double> HTMLInputElement::convert_string_to_number(StringView input) co
     if (type_state() == TypeAttributeState::Number)
         return parse_floating_point_number(input);
 
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-value-string-number
+    if (type_state() == TypeAttributeState::Range)
+        return parse_floating_point_number(input);
+
     dbgln("HTMLInputElement::convert_string_to_number() not implemented for input type {}", type());
     return {};
 }
@@ -1060,6 +1107,10 @@ String HTMLInputElement::covert_number_to_string(double input) const
 {
     // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-value-number-string
     if (type_state() == TypeAttributeState::Number)
+        return MUST(String::number(input));
+
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-value-number-string
+    if (type_state() == TypeAttributeState::Range)
         return MUST(String::number(input));
 
     dbgln("HTMLInputElement::covert_number_to_string() not implemented for input type {}", type());
@@ -1109,6 +1160,10 @@ double HTMLInputElement::default_step() const
     if (type_state() == TypeAttributeState::Number)
         return 1;
 
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-step-default
+    if (type_state() == TypeAttributeState::Range)
+        return 1;
+
     dbgln("HTMLInputElement::default_step() not implemented for input type {}", type());
     return 0;
 }
@@ -1116,8 +1171,12 @@ double HTMLInputElement::default_step() const
 // https://html.spec.whatwg.org/multipage/input.html#concept-input-step-scale
 double HTMLInputElement::step_scale_factor() const
 {
-    // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-step-default
+    // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-step-scale
     if (type_state() == TypeAttributeState::Number)
+        return 1;
+
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-step-scale
+    if (type_state() == TypeAttributeState::Range)
         return 1;
 
     dbgln("HTMLInputElement::step_scale_factor() not implemented for input type {}", type());
