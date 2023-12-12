@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Utf8View.h>
+#include <LibIPC/File.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Completion.h>
@@ -1062,11 +1063,10 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
     }
 
     // 6. Let transfer be options["transfer"].
-    // FIXME: This is currently unused.
+    auto& transfer = options.transfer;
 
     // 7. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
-    // FIXME: Use StructuredSerializeWithTransfer instead of StructuredSerialize
-    auto serialize_with_transfer_result = TRY(structured_serialize(target_realm.vm(), message));
+    auto serialize_with_transfer_result = TRY(structured_serialize_with_transfer(target_realm.vm(), message, transfer));
 
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
     queue_global_task(Task::Source::PostedMessage, *this, [this, serialize_with_transfer_result = move(serialize_with_transfer_result), target_origin = move(target_origin), &incumbent_settings, &target_realm]() {
@@ -1086,11 +1086,9 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
         auto& source = verify_cast<WindowProxy>(incumbent_settings.realm().global_environment().global_this_value());
 
         // 4. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
-        // FIXME: Use StructuredDeserializeWithTransfer instead of StructuredDeserialize
-        // FIXME: Don't use a temporary execution context here.
         auto& settings_object = Bindings::host_defined_environment_settings_object(target_realm);
         auto temporary_execution_context = TemporaryExecutionContext { settings_object };
-        auto deserialize_record_or_error = structured_deserialize(vm(), serialize_with_transfer_result, target_realm, Optional<HTML::DeserializationMemory> {});
+        auto deserialize_record_or_error = structured_deserialize_with_transfer(vm(), serialize_with_transfer_result);
 
         // If this throws an exception, catch it, fire an event named messageerror at targetWindow, using MessageEvent,
         // with the origin attribute initialized to origin and the source attribute initialized to source, and then return.
@@ -1105,20 +1103,27 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
         }
 
         // 5. Let messageClone be deserializeRecord.[[Deserialized]].
-        // FIXME: Get this from deserializeRecord.[[Deserialized]] once it uses StructuredDeserializeWithTransfer instead of StructuredDeserialize.
-        auto message_clone = deserialize_record_or_error.release_value();
+        auto deserialize_record = deserialize_record_or_error.release_value();
+        auto message_clone = deserialize_record.deserialized;
 
-        // FIXME: 6. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]],
-        //           if any, maintaining their relative order.
+        // 6. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]],
+        //    if any, maintaining their relative order.
+        // FIXME: Use a FrozenArray
+        Vector<JS::Handle<JS::Object>> new_ports;
+        for (auto const& object : deserialize_record.transferred_values) {
+            if (is<HTML::MessagePort>(*object)) {
+                new_ports.append(object);
+            }
+        }
 
         // 7. Fire an event named message at targetWindow, using MessageEvent, with the origin attribute initialized to origin,
         //    the source attribute initialized to source, the data attribute initialized to messageClone, and the ports attribute
         //    initialized to newPorts.
-        // FIXME: Set the ports attribute to newPorts.
         MessageEventInit message_event_init {};
         message_event_init.origin = MUST(String::from_deprecated_string(origin));
         message_event_init.source = JS::make_handle(source);
         message_event_init.data = message_clone;
+        message_event_init.ports = move(new_ports);
 
         auto message_event = MessageEvent::create(target_realm, EventNames::message, message_event_init);
         dispatch_event(message_event);
