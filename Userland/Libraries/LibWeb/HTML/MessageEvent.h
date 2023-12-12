@@ -20,6 +20,7 @@ struct MessageEventInit : public DOM::EventInit {
     String origin {};
     String last_event_id {};
     Optional<MessageEventSource> source;
+    Vector<JS::Handle<JS::Object>> ports;
 };
 
 class MessageEvent : public DOM::Event {
@@ -36,6 +37,7 @@ public:
     JS::Value data() const { return m_data; }
     String const& origin() const { return m_origin; }
     String const& last_event_id() const { return m_last_event_id; }
+    JS::NonnullGCPtr<JS::Object> ports() const;
     Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>, Empty> source() const;
 
 private:
@@ -46,6 +48,8 @@ private:
     String m_origin;
     String m_last_event_id;
     Optional<MessageEventSource> m_source;
+    Vector<JS::Handle<JS::Object>> m_ports;
+    mutable JS::GCPtr<JS::Array> m_ports_array;
 };
 
 }

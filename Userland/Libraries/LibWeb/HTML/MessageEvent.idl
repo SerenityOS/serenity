@@ -14,6 +14,7 @@ interface MessageEvent : Event {
     readonly attribute DOMString lastEventId;
     readonly attribute MessageEventSource? source;
     // FIXME: readonly attribute FrozenArray<MessagePort> ports;
+    readonly attribute any ports;
 };
 
 dictionary MessageEventInit : EventInit {
@@ -22,4 +23,5 @@ dictionary MessageEventInit : EventInit {
     DOMString lastEventId = "";
     MessageEventSource? source = null;
     // FIXME: sequence<MessagePort> ports = [];
+    sequence<object> ports = [];
 };
