@@ -354,7 +354,7 @@ i32 HTMLObjectElement::default_tab_index_value() const
     return 0;
 }
 
-RefPtr<DecodedImageData const> HTMLObjectElement::image_data() const
+JS::GCPtr<DecodedImageData> HTMLObjectElement::image_data() const
 {
     if (!m_image_request)
         return nullptr;

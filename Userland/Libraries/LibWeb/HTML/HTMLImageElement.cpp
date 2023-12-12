@@ -715,7 +715,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
 
     // FIXME: 13. End the synchronous section, continuing the remaining steps in parallel.
 
-    auto step_15 = [this](String const& selected_source, JS::NonnullGCPtr<ImageRequest> image_request, ListOfAvailableImages::Key const& key, NonnullRefPtr<DecodedImageData> const& image_data) {
+    auto step_15 = [this](String const& selected_source, JS::NonnullGCPtr<ImageRequest> image_request, ListOfAvailableImages::Key const& key, JS::NonnullGCPtr<DecodedImageData> image_data) {
         // 15. Queue an element task on the DOM manipulation task source given the img element and the following steps:
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, selected_source, image_request, key, image_data] {
             // 1. FIXME: If the img element has experienced relevant mutations since this algorithm started, then let pending request be null and abort these steps.
@@ -789,7 +789,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
                     VERIFY(image_request->shared_image_request());
                     auto image_data = image_request->shared_image_request()->image_data();
                     image_request->set_image_data(image_data);
-                    step_15(selected_source, image_request, key, NonnullRefPtr(*image_data));
+                    step_15(selected_source, image_request, key, *image_data);
                 });
             },
             [this]() {

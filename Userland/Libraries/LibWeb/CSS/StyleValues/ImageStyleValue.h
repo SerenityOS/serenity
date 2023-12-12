@@ -48,7 +48,7 @@ public:
 
     Function<void()> on_animate;
 
-    RefPtr<HTML::DecodedImageData const> image_data() const;
+    JS::GCPtr<HTML::DecodedImageData> image_data() const;
 
 private:
     ImageStyleValue(AK::URL const&);

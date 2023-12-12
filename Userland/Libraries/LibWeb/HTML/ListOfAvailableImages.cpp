@@ -9,6 +9,9 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(ListOfAvailableImages);
+JS_DEFINE_ALLOCATOR(ListOfAvailableImages::Entry);
+
 ListOfAvailableImages::ListOfAvailableImages() = default;
 ListOfAvailableImages::~ListOfAvailableImages() = default;
 
@@ -30,23 +33,30 @@ u32 ListOfAvailableImages::Key::hash() const
     return cached_hash.value();
 }
 
-ErrorOr<NonnullRefPtr<ListOfAvailableImages::Entry>> ListOfAvailableImages::Entry::create(NonnullRefPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
+JS::NonnullGCPtr<ListOfAvailableImages::Entry> ListOfAvailableImages::Entry::create(JS::VM& vm, JS::NonnullGCPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Entry(move(image_data), ignore_higher_layer_caching));
+    return vm.heap().allocate_without_realm<Entry>(image_data, ignore_higher_layer_caching);
 }
 
-ListOfAvailableImages::Entry::Entry(NonnullRefPtr<DecodedImageData> data, bool ignore_higher_layer_caching)
+void ListOfAvailableImages::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& it : m_images)
+        visitor.visit(it.value);
+}
+
+ListOfAvailableImages::Entry::Entry(JS::NonnullGCPtr<DecodedImageData> data, bool ignore_higher_layer_caching)
     : ignore_higher_layer_caching(ignore_higher_layer_caching)
-    , image_data(move(data))
+    , image_data(data)
 {
 }
 
 ListOfAvailableImages::Entry::~Entry() = default;
 
-ErrorOr<void> ListOfAvailableImages::add(Key const& key, NonnullRefPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
+ErrorOr<void> ListOfAvailableImages::add(Key const& key, JS::NonnullGCPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
 {
-    auto entry = TRY(Entry::create(move(image_data), ignore_higher_layer_caching));
-    TRY(m_images.try_set(key, move(entry)));
+    auto entry = Entry::create(vm(), image_data, ignore_higher_layer_caching);
+    TRY(m_images.try_set(key, entry));
     return {};
 }
 
@@ -55,7 +65,7 @@ void ListOfAvailableImages::remove(Key const& key)
     m_images.remove(key);
 }
 
-RefPtr<ListOfAvailableImages::Entry> ListOfAvailableImages::get(Key const& key) const
+JS::GCPtr<ListOfAvailableImages::Entry> ListOfAvailableImages::get(Key const& key) const
 {
     auto it = m_images.find(key);
     if (it == m_images.end())

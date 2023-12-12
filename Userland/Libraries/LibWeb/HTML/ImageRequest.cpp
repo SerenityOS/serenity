@@ -41,6 +41,7 @@ void ImageRequest::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_shared_image_request);
     visitor.visit(m_page);
+    visitor.visit(m_image_data);
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#img-available
@@ -92,14 +93,14 @@ void abort_the_image_request(JS::Realm&, ImageRequest* image_request)
     // AD-HOC: We simply don't do this, since our SharedImageRequest may be used by someone else.
 }
 
-RefPtr<DecodedImageData const> ImageRequest::image_data() const
+JS::GCPtr<DecodedImageData> ImageRequest::image_data() const
 {
     return m_image_data;
 }
 
-void ImageRequest::set_image_data(RefPtr<DecodedImageData const> data)
+void ImageRequest::set_image_data(JS::GCPtr<DecodedImageData> data)
 {
-    m_image_data = move(data);
+    m_image_data = data;
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#prepare-an-image-for-presentation

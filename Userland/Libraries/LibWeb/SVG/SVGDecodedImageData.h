@@ -12,8 +12,11 @@
 namespace Web::SVG {
 
 class SVGDecodedImageData final : public HTML::DecodedImageData {
+    JS_CELL(SVGDecodedImageData, Cell);
+    JS_DECLARE_ALLOCATOR(SVGDecodedImageData);
+
 public:
-    static ErrorOr<NonnullRefPtr<SVGDecodedImageData>> create(Page&, AK::URL const&, ByteBuffer encoded_svg);
+    static ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> create(JS::Realm&, JS::NonnullGCPtr<Page>, AK::URL const&, ByteBuffer encoded_svg);
     virtual ~SVGDecodedImageData() override;
 
     virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize) const override;
@@ -30,18 +33,20 @@ public:
 
     DOM::Document const& svg_document() const { return *m_document; }
 
+    virtual void visit_edges(Cell::Visitor& visitor) override;
+
 private:
     class SVGPageClient;
-    SVGDecodedImageData(JS::NonnullGCPtr<Page>, JS::Handle<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
+    SVGDecodedImageData(JS::NonnullGCPtr<Page>, JS::NonnullGCPtr<SVGPageClient>, JS::NonnullGCPtr<DOM::Document>, JS::NonnullGCPtr<SVG::SVGSVGElement>);
 
     RefPtr<Gfx::Bitmap> render(Gfx::IntSize) const;
     mutable RefPtr<Gfx::ImmutableBitmap> m_immutable_bitmap;
 
-    JS::Handle<Page> m_page;
-    JS::Handle<SVGPageClient> m_page_client;
+    JS::NonnullGCPtr<Page> m_page;
+    JS::NonnullGCPtr<SVGPageClient> m_page_client;
 
-    JS::Handle<DOM::Document> m_document;
-    JS::Handle<SVG::SVGSVGElement> m_root_element;
+    JS::NonnullGCPtr<DOM::Document> m_document;
+    JS::NonnullGCPtr<SVG::SVGSVGElement> m_root_element;
 };
 
 }

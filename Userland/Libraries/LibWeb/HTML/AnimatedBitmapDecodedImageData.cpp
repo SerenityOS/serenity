@@ -5,13 +5,17 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Realm.h>
 #include <LibWeb/HTML/AnimatedBitmapDecodedImageData.h>
 
 namespace Web::HTML {
 
-ErrorOr<NonnullRefPtr<AnimatedBitmapDecodedImageData>> AnimatedBitmapDecodedImageData::create(Vector<Frame>&& frames, size_t loop_count, bool animated)
+JS_DEFINE_ALLOCATOR(AnimatedBitmapDecodedImageData);
+
+ErrorOr<JS::NonnullGCPtr<AnimatedBitmapDecodedImageData>> AnimatedBitmapDecodedImageData::create(JS::Realm& realm, Vector<Frame>&& frames, size_t loop_count, bool animated)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) AnimatedBitmapDecodedImageData(move(frames), loop_count, animated));
+    return realm.heap().allocate<AnimatedBitmapDecodedImageData>(realm, move(frames), loop_count, animated);
 }
 
 AnimatedBitmapDecodedImageData::AnimatedBitmapDecodedImageData(Vector<Frame>&& frames, size_t loop_count, bool animated)

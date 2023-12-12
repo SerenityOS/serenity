@@ -56,9 +56,10 @@ void SharedImageRequest::visit_edges(JS::Cell::Visitor& visitor)
         visitor.visit(callback.on_finish);
         visitor.visit(callback.on_fail);
     }
+    visitor.visit(m_image_data);
 }
 
-RefPtr<DecodedImageData const> SharedImageRequest::image_data() const
+JS::GCPtr<DecodedImageData> SharedImageRequest::image_data() const
 {
     return m_image_data;
 }
@@ -137,7 +138,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
 
     bool const is_svg_image = mime_type == "image/svg+xml"sv || url_string.basename().ends_with(".svg"sv);
 
-    RefPtr<DecodedImageData> image_data;
+    JS::GCPtr<DecodedImageData> image_data;
 
     auto handle_failed_decode = [&] {
         m_state = State::Failed;
@@ -148,7 +149,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
     };
 
     if (is_svg_image) {
-        auto result = SVG::SVGDecodedImageData::create(m_page, url_string, data);
+        auto result = SVG::SVGDecodedImageData::create(m_document->realm(), m_page, url_string, data);
         if (result.is_error())
             return handle_failed_decode();
 
@@ -165,10 +166,10 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
                 .duration = static_cast<int>(frame.duration),
             });
         }
-        image_data = AnimatedBitmapDecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
+        image_data = AnimatedBitmapDecodedImageData::create(m_document->realm(), move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
     }
 
-    m_image_data = move(image_data);
+    m_image_data = image_data;
 
     m_state = State::Finished;
 

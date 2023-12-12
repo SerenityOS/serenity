@@ -132,7 +132,7 @@ void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_r
     }
 }
 
-RefPtr<HTML::DecodedImageData const> ImageStyleValue::image_data() const
+JS::GCPtr<HTML::DecodedImageData> ImageStyleValue::image_data() const
 {
     if (!m_image_request)
         return nullptr;

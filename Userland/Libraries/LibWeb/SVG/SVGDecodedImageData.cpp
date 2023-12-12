@@ -23,6 +23,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGDecodedImageData);
+
 class SVGDecodedImageData::SVGPageClient final : public PageClient {
     JS_CELL(SVGDecodedImageData::SVGPageClient, PageClient);
 
@@ -54,7 +56,7 @@ private:
     }
 };
 
-ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& host_page, AK::URL const& url, ByteBuffer data)
+ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> SVGDecodedImageData::create(JS::Realm& realm, JS::NonnullGCPtr<Page> host_page, AK::URL const& url, ByteBuffer data)
 {
     auto page_client = SVGPageClient::create(Bindings::main_thread_vm(), host_page);
     auto page = Page::create(Bindings::main_thread_vm(), *page_client);
@@ -98,18 +100,27 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
 
     MUST(document->append_child(*svg_root));
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SVGDecodedImageData(page, move(page_client), move(document), move(svg_root)));
+    return realm.heap().allocate<SVGDecodedImageData>(realm, page, page_client, document, *svg_root);
 }
 
-SVGDecodedImageData::SVGDecodedImageData(JS::NonnullGCPtr<Page> page, JS::Handle<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
-    : m_page(move(page))
-    , m_page_client(move(page_client))
-    , m_document(move(document))
-    , m_root_element(move(root_element))
+SVGDecodedImageData::SVGDecodedImageData(JS::NonnullGCPtr<Page> page, JS::NonnullGCPtr<SVGPageClient> page_client, JS::NonnullGCPtr<DOM::Document> document, JS::NonnullGCPtr<SVG::SVGSVGElement> root_element)
+    : m_page(page)
+    , m_page_client(page_client)
+    , m_document(document)
+    , m_root_element(root_element)
 {
 }
 
 SVGDecodedImageData::~SVGDecodedImageData() = default;
+
+void SVGDecodedImageData::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_page);
+    visitor.visit(m_document);
+    visitor.visit(m_page_client);
+    visitor.visit(m_root_element);
+}
 
 RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
 {
