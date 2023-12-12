@@ -174,14 +174,6 @@ requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullOwnPtr<T>> try_make(
     return adopt_nonnull_own_or_enomem(new (nothrow) T(forward<Args>(args)...));
 }
 
-// FIXME: Remove once P0960R3 is available in Clang.
-template<typename T, class... Args>
-inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
-
-{
-    return adopt_nonnull_own_or_enomem(new (nothrow) T { forward<Args>(args)... });
-}
-
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public DefaultTraits<NonnullOwnPtr<T>> {
     using PeekType = T*;

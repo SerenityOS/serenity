@@ -240,13 +240,6 @@ requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullRefPtr<T>> try_make_
     return adopt_nonnull_ref_or_enomem(new (nothrow) T(forward<Args>(args)...));
 }
 
-// FIXME: Remove once P0960R3 is available in Clang.
-template<typename T, class... Args>
-inline ErrorOr<NonnullRefPtr<T>> try_make_ref_counted(Args&&... args)
-{
-    return adopt_nonnull_ref_or_enomem(new (nothrow) T { forward<Args>(args)... });
-}
-
 template<Formattable T>
 struct Formatter<NonnullRefPtr<T>> : Formatter<T> {
     ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& value)
@@ -275,13 +268,6 @@ template<typename T, class... Args>
 requires(IsConstructible<T, Args...>) inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
 {
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *new T(forward<Args>(args)...));
-}
-
-// FIXME: Remove once P0960R3 is available in Clang.
-template<typename T, class... Args>
-inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
-{
-    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *new T { forward<Args>(args)... });
 }
 
 template<typename T>

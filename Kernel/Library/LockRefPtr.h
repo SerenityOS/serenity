@@ -500,13 +500,6 @@ requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullLockRefPtr<T>> try_m
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) T(forward<Args>(args)...));
 }
 
-// FIXME: Remove once P0960R3 is available in Clang.
-template<typename T, class... Args>
-inline ErrorOr<NonnullLockRefPtr<T>> try_make_lock_ref_counted(Args&&... args)
-{
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) T { forward<Args>(args)... });
-}
-
 template<typename T>
 inline ErrorOr<NonnullLockRefPtr<T>> adopt_nonnull_lock_ref_or_enomem(T* object)
 {
