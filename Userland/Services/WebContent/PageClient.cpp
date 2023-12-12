@@ -509,9 +509,9 @@ void PageClient::page_did_request_color_picker(Color current_color)
     client().async_did_request_color_picker(current_color);
 }
 
-void PageClient::page_did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)
+void PageClient::page_did_request_select_dropdown(Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items)
 {
-    client().async_did_request_select_dropdown(content_position, minimum_width, items);
+    client().async_did_request_select_dropdown(page().css_to_device_point(content_position).to_type<int>(), minimum_width * device_pixels_per_css_pixel(), items);
 }
 
 void PageClient::page_did_change_theme_color(Gfx::Color color)

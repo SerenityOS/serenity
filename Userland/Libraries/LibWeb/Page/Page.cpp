@@ -331,7 +331,7 @@ void Page::color_picker_closed(Optional<Color> picked_color)
     }
 }
 
-void Page::did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)
+void Page::did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items)
 {
     if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::None) {
         m_pending_non_blocking_dialog = PendingNonBlockingDialog::Select;
