@@ -3,7 +3,7 @@
 <body>
     <script>
         window.addEventListener('message', (event) => {
-            window.parent.postMessage(event.data, '*');
+            window.parent.postMessage(event.data, '*', event.ports);
         });
     </script>
 <body>
@@ -30,6 +30,9 @@
             println(`Message ${messageCount} origin: ${messageEvent.origin}`);
             println(`Message ${messageCount} lastEventId: ${messageEvent.lastEventId}`);
             println(`Message ${messageCount} source: ${messageEvent.source}`);
+            println(`Message ${messageCount} ports: ${messageEvent.ports}`);
+            println(`Message ${messageCount} ports === ports: ${messageEvent.ports === messageEvent.ports}`);
+            println(`Message ${messageCount} Object.isFrozen(ports): ${Object.isFrozen(messageEvent.ports)}`);
             println(`Message ${messageCount} source === window: ${messageEvent.source === window}`);
             println(`Message ${messageCount} source === iframe.contentWindow: ${messageEvent.source === iframe.contentWindow}`);
             println(`Message ${messageCount} source === blobIframe.contentWindow: ${messageEvent.source === blobIframe.contentWindow}`);
@@ -55,6 +58,8 @@
         window.postMessage("This is a string", "/");
         window.postMessage("I shouldn't appear, I'm not same origin!", "https://serenityos.org");
         iframe.contentWindow.postMessage("I am from another ~planet~ iframe", "*");
+        let channel = new MessageChannel();
+        window.postMessage({foo: [channel.port1]}, "*", [channel.port1]);
         blobIframe.contentWindow.postMessage("All done :^)", iframeSrcdocBlobUrl);
 
         try {
