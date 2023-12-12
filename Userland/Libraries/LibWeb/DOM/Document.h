@@ -728,7 +728,7 @@ private:
     JS::GCPtr<HTML::HTMLBaseElement const> m_first_base_element_with_href_in_tree_order;
 
     // https://html.spec.whatwg.org/multipage/images.html#list-of-available-images
-    OwnPtr<HTML::ListOfAvailableImages> m_list_of_available_images;
+    JS::GCPtr<HTML::ListOfAvailableImages> m_list_of_available_images;
 
     JS::GCPtr<CSS::VisualViewport> m_visual_viewport;
 

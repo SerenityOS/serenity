@@ -28,7 +28,7 @@ public:
 
     AK::URL const& url() const { return m_url; }
 
-    [[nodiscard]] RefPtr<DecodedImageData const> image_data() const;
+    [[nodiscard]] JS::GCPtr<DecodedImageData> image_data() const;
 
     [[nodiscard]] JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller();
     void set_fetch_controller(JS::GCPtr<Fetch::Infrastructure::FetchController>);
@@ -66,7 +66,7 @@ private:
     Vector<Callbacks> m_callbacks;
 
     AK::URL m_url;
-    RefPtr<DecodedImageData const> m_image_data;
+    JS::GCPtr<DecodedImageData> m_image_data;
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 
     JS::GCPtr<DOM::Document> m_document;

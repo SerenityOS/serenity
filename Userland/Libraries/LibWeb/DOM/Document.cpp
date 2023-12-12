@@ -347,7 +347,7 @@ void Document::initialize(JS::Realm& realm)
 
     m_selection = heap().allocate<Selection::Selection>(realm, realm, *this);
 
-    m_list_of_available_images = make<HTML::ListOfAvailableImages>();
+    m_list_of_available_images = heap().allocate<HTML::ListOfAvailableImages>(realm);
 }
 
 void Document::visit_edges(Cell::Visitor& visitor)
@@ -413,6 +413,8 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& timeline : m_associated_animation_timelines)
         visitor.visit(timeline);
+
+    visitor.visit(m_list_of_available_images);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection

@@ -12,13 +12,16 @@
 namespace Web::HTML {
 
 class AnimatedBitmapDecodedImageData final : public DecodedImageData {
+    JS_CELL(AnimatedBitmapDecodedImageData, Cell);
+    JS_DECLARE_ALLOCATOR(AnimatedBitmapDecodedImageData);
+
 public:
     struct Frame {
         RefPtr<Gfx::ImmutableBitmap> bitmap;
         int duration { 0 };
     };
 
-    static ErrorOr<NonnullRefPtr<AnimatedBitmapDecodedImageData>> create(Vector<Frame>&&, size_t loop_count, bool animated);
+    static ErrorOr<JS::NonnullGCPtr<AnimatedBitmapDecodedImageData>> create(JS::Realm&, Vector<Frame>&&, size_t loop_count, bool animated);
     virtual ~AnimatedBitmapDecodedImageData() override;
 
     virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize = {}) const override;

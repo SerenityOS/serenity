@@ -81,7 +81,7 @@ private:
 
     Representation m_representation { Representation::Unknown };
 
-    RefPtr<DecodedImageData const> image_data() const;
+    JS::GCPtr<DecodedImageData> image_data() const;
 
     JS::GCPtr<SharedImageRequest> m_image_request;
 };

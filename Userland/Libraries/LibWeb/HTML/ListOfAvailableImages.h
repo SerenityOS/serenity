@@ -16,7 +16,10 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/images.html#list-of-available-images
-class ListOfAvailableImages {
+class ListOfAvailableImages : public JS::Cell {
+    JS_CELL(ListOfAvailableImages, Cell);
+    JS_DECLARE_ALLOCATOR(ListOfAvailableImages);
+
 public:
     struct Key {
         AK::URL url;
@@ -30,26 +33,32 @@ public:
         mutable Optional<u32> cached_hash;
     };
 
-    struct Entry final : public RefCounted<Entry> {
-        static ErrorOr<NonnullRefPtr<Entry>> create(NonnullRefPtr<DecodedImageData>, bool ignore_higher_layer_caching);
+    struct Entry final : public JS::Cell {
+        JS_CELL(Entry, Cell);
+        JS_DECLARE_ALLOCATOR(Entry);
+
+    public:
+        static JS::NonnullGCPtr<Entry> create(JS::VM&, JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
         ~Entry();
 
         bool ignore_higher_layer_caching { false };
-        NonnullRefPtr<DecodedImageData> image_data;
+        JS::NonnullGCPtr<DecodedImageData> image_data;
 
     private:
-        Entry(NonnullRefPtr<DecodedImageData>, bool ignore_higher_layer_caching);
+        Entry(JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
     };
 
     ListOfAvailableImages();
     ~ListOfAvailableImages();
 
-    ErrorOr<void> add(Key const&, NonnullRefPtr<DecodedImageData>, bool ignore_higher_layer_caching);
+    ErrorOr<void> add(Key const&, JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
     void remove(Key const&);
-    [[nodiscard]] RefPtr<Entry> get(Key const&) const;
+    [[nodiscard]] JS::GCPtr<Entry> get(Key const&) const;
+
+    void visit_edges(JS::Cell::Visitor& visitor) override;
 
 private:
-    HashMap<Key, NonnullRefPtr<Entry>> m_images;
+    HashMap<Key, JS::NonnullGCPtr<Entry>> m_images;
 };
 
 }

@@ -43,8 +43,8 @@ public:
     AK::URL const& current_url() const;
     void set_current_url(JS::Realm&, AK::URL);
 
-    [[nodiscard]] RefPtr<DecodedImageData const> image_data() const;
-    void set_image_data(RefPtr<DecodedImageData const>);
+    [[nodiscard]] JS::GCPtr<DecodedImageData> image_data() const;
+    void set_image_data(JS::GCPtr<DecodedImageData>);
 
     [[nodiscard]] float current_pixel_density() const { return m_current_pixel_density; }
     void set_current_pixel_density(float density) { m_current_pixel_density = density; }
@@ -76,7 +76,7 @@ private:
     AK::URL m_current_url;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-data
-    RefPtr<DecodedImageData const> m_image_data;
+    JS::GCPtr<DecodedImageData> m_image_data;
 
     // https://html.spec.whatwg.org/multipage/images.html#current-pixel-density
     // Each image request has a current pixel density, which must initially be 1.
