@@ -338,8 +338,8 @@ void WebContentView::wheelEvent(QWheelEvent* event)
             auto num_degrees = -event->angleDelta();
             float delta_x = -num_degrees.x() / 120;
             float delta_y = num_degrees.y() / 120;
-            auto step_x = delta_x * QApplication::wheelScrollLines() * devicePixelRatio();
-            auto step_y = delta_y * QApplication::wheelScrollLines() * devicePixelRatio();
+            auto step_x = delta_x * QApplication::wheelScrollLines() * m_device_pixel_ratio;
+            auto step_y = delta_y * QApplication::wheelScrollLines() * m_device_pixel_ratio;
             int scroll_step_size = verticalScrollBar()->singleStep();
             client().async_mouse_wheel(to_content_position(position), screen_position, button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
         }
