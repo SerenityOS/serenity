@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Array.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/MessageEvent.h>
 
@@ -27,6 +28,7 @@ MessageEvent::MessageEvent(JS::Realm& realm, FlyString const& event_name, Messag
     , m_origin(event_init.origin)
     , m_last_event_id(event_init.last_event_id)
     , m_source(event_init.source)
+    , m_ports(event_init.ports)
 {
 }
 
@@ -50,6 +52,19 @@ Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>, Empty> MessageEvent::s
         return Empty {};
 
     return m_source.value().downcast<JS::Handle<WindowProxy>, JS::Handle<MessagePort>>();
+}
+
+JS::NonnullGCPtr<JS::Object> MessageEvent::ports() const
+{
+    if (!m_ports_array) {
+        Vector<JS::Value> port_vector;
+        for (auto const& port : m_ports) {
+            port_vector.append(JS::Value(port.ptr()));
+        }
+        m_ports_array = JS::Array::create_from(realm(), port_vector);
+        MUST(m_ports_array->set_integrity_level(IntegrityLevel::Frozen));
+    }
+    return *m_ports_array;
 }
 
 }
