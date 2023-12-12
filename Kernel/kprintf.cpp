@@ -69,12 +69,12 @@ static void critical_console_out(char ch)
 
 static void console_out(char ch)
 {
-    if (s_serial_debug_enabled)
-        serial_putch(ch);
-
     if (DeviceManagement::the().is_console_device_attached()) {
         DeviceManagement::the().console_device().put_char(ch);
     } else {
+        if (s_serial_debug_enabled)
+            serial_putch(ch);
+
 #if ARCH(X86_64)
         bochs_debug_output(ch);
 #endif
