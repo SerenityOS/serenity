@@ -192,7 +192,7 @@ public:
         }
     }
 
-    void dump()
+    AK::JsonObject dump()
     {
         auto graph = AK::JsonObject();
         for (auto& it : m_graph) {
@@ -233,7 +233,7 @@ public:
             graph.set(DeprecatedString::number(it.key), node);
         }
 
-        dbgln("{}", graph.to_deprecated_string());
+        return graph;
     }
 
 private:
@@ -253,14 +253,14 @@ private:
     FlatPtr m_max_block_address;
 };
 
-void Heap::dump_graph()
+AK::JsonObject Heap::dump_graph()
 {
     HashMap<Cell*, HeapRoot> roots;
     gather_roots(roots);
     GraphConstructorVisitor visitor(*this, roots);
     vm().bytecode_interpreter().visit_edges(visitor);
     visitor.visit_all_cells();
-    visitor.dump();
+    return visitor.dump();
 }
 
 void Heap::collect_garbage(CollectionType collection_type, bool print_report)

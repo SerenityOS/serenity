@@ -443,11 +443,6 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
         return;
     }
 
-    if (request == "dump-gc-graph") {
-        Web::Bindings::main_thread_vm().heap().dump_graph();
-        return;
-    }
-
     if (request == "set-line-box-borders") {
         bool state = argument == "on";
         page().set_should_show_line_box_borders(state);
@@ -874,6 +869,12 @@ Messages::WebContentServer::TakeDomNodeScreenshotResponse ConnectionFromClient::
     page().paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
 
     return bitmap->to_shareable_bitmap();
+}
+
+Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_graph()
+{
+    auto gc_graph_json = Web::Bindings::main_thread_vm().heap().dump_graph();
+    return MUST(String::from_deprecated_string(gc_graph_json.to_deprecated_string()));
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()

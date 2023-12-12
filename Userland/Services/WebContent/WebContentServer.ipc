@@ -59,6 +59,8 @@ endpoint WebContentServer
     take_document_screenshot() => (Gfx::ShareableBitmap data)
     take_dom_node_screenshot(i32 node_id) => (Gfx::ShareableBitmap data)
 
+    dump_gc_graph() => (String json)
+
     run_javascript(DeprecatedString js_source) =|
 
     dump_layout_tree() => (DeprecatedString dump)

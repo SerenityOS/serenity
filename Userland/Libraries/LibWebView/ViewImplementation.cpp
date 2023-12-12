@@ -403,8 +403,8 @@ static ErrorOr<LexicalPath> save_screenshot(Gfx::ShareableBitmap const& bitmap)
 
     auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
 
-    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
-    TRY(screenshot_file->write_until_depleted(encoded));
+    auto dump_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
+    TRY(dump_file->write_until_depleted(encoded));
 
     return path;
 }
@@ -430,6 +430,19 @@ ErrorOr<LexicalPath> ViewImplementation::take_dom_node_screenshot(i32 node_id)
 {
     auto bitmap = client().take_dom_node_screenshot(node_id);
     return save_screenshot(bitmap);
+}
+
+ErrorOr<LexicalPath> ViewImplementation::dump_gc_graph()
+{
+    auto gc_graph_json = client().dump_gc_graph();
+
+    LexicalPath path { Core::StandardPaths::tempfile_directory() };
+    path = path.append(TRY(Core::DateTime::now().to_string("gc-graph-%Y-%m-%d-%H-%M-%S.json"sv)));
+
+    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
+    TRY(screenshot_file->write_until_depleted(gc_graph_json.bytes()));
+
+    return path;
 }
 
 void ViewImplementation::set_user_style_sheet(String source)

@@ -99,6 +99,8 @@ public:
     ErrorOr<LexicalPath> take_screenshot(ScreenshotType);
     ErrorOr<LexicalPath> take_dom_node_screenshot(i32);
 
+    ErrorOr<LexicalPath> dump_gc_graph();
+
     void set_user_style_sheet(String source);
     // Load Native.css as the User style sheet, which attempts to make WebView content look as close to
     // native GUI widgets as possible.
