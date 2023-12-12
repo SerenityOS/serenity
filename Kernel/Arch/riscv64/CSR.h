@@ -31,7 +31,7 @@ enum class Address : u16 {
     TIME = 0xc01,
 };
 
-inline FlatPtr read(Address address)
+ALWAYS_INLINE FlatPtr read(Address address)
 {
     FlatPtr ret;
     asm volatile("csrr %0, %1"
@@ -40,12 +40,12 @@ inline FlatPtr read(Address address)
     return ret;
 }
 
-inline void write(Address address, FlatPtr value)
+ALWAYS_INLINE void write(Address address, FlatPtr value)
 {
     asm volatile("csrw %0, %1" ::"i"(address), "Kr"(value));
 }
 
-inline FlatPtr read_and_set_bits(Address address, FlatPtr bit_mask)
+ALWAYS_INLINE FlatPtr read_and_set_bits(Address address, FlatPtr bit_mask)
 {
     FlatPtr ret;
     asm volatile("csrrs %0, %1, %2"
@@ -54,12 +54,12 @@ inline FlatPtr read_and_set_bits(Address address, FlatPtr bit_mask)
     return ret;
 }
 
-inline void set_bits(Address address, FlatPtr bit_mask)
+ALWAYS_INLINE void set_bits(Address address, FlatPtr bit_mask)
 {
     asm volatile("csrs %0, %1" ::"i"(address), "Kr"(bit_mask));
 }
 
-inline void clear_bits(Address address, FlatPtr bit_mask)
+ALWAYS_INLINE void clear_bits(Address address, FlatPtr bit_mask)
 {
     asm volatile("csrc %0, %1" ::"i"(address), "Kr"(bit_mask));
 }
@@ -82,12 +82,12 @@ struct [[gnu::packed]] alignas(u64) SATP {
     // Current address-translation scheme
     Mode MODE : 4;
 
-    static inline void write(SATP satp)
+    static ALWAYS_INLINE void write(SATP satp)
     {
         CSR::write(CSR::Address::SATP, bit_cast<FlatPtr>(satp));
     }
 
-    static inline SATP read()
+    static ALWAYS_INLINE SATP read()
     {
         return bit_cast<SATP>(CSR::read(CSR::Address::SATP));
     }
@@ -203,12 +203,12 @@ struct [[gnu::packed]] alignas(u64) SSTATUS {
     // presence of some dirty state that will require saving extended user context to memory.
     u64 SD : 1;
 
-    static inline void write(SSTATUS sstatus)
+    static ALWAYS_INLINE void write(SSTATUS sstatus)
     {
         CSR::write(CSR::Address::SSTATUS, bit_cast<FlatPtr>(sstatus));
     }
 
-    static inline SSTATUS read()
+    static ALWAYS_INLINE SSTATUS read()
     {
         return bit_cast<SSTATUS>(CSR::read(CSR::Address::SSTATUS));
     }
