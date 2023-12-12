@@ -43,7 +43,7 @@ class Shape final
 public:
     virtual ~Shape() override = default;
 
-    enum class TransitionType {
+    enum class TransitionType : u8 {
         Invalid,
         Put,
         Configure,
