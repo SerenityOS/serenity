@@ -45,6 +45,8 @@ public:
 private:
     Position(JS::GCPtr<Node>, unsigned offset);
 
+    virtual void visit_edges(Visitor&) override;
+
     JS::GCPtr<Node> m_node;
     unsigned m_offset { 0 };
 };

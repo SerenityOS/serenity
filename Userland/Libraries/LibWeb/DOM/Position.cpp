@@ -21,6 +21,12 @@ Position::Position(JS::GCPtr<Node> node, unsigned offset)
 {
 }
 
+void Position::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_node);
+}
+
 ErrorOr<String> Position::to_string() const
 {
     if (!node())
