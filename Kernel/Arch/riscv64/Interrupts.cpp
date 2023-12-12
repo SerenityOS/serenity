@@ -7,6 +7,8 @@
 #include <AK/Error.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 

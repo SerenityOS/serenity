@@ -172,7 +172,7 @@ public:
 
     RISCV64::CSR::SATP satp() const
     {
-        return {
+        return RISCV64::CSR::SATP {
             .PPN = m_directory_table->paddr().get() >> PADDR_PPN_OFFSET,
             .ASID = 0,
             .MODE = RISCV64::CSR::SATP::Mode::Sv39,

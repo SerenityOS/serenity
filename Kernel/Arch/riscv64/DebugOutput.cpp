@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/DebugOutput.h>
 #include <Kernel/Library/Assertions.h>
 
 namespace Kernel {
