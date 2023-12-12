@@ -50,6 +50,7 @@ public:
     void zoom_out();
     void reset_zoom();
     float zoom_level() const { return m_zoom_level; }
+    float device_pixel_ratio() const { return m_device_pixel_ratio; }
 
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 

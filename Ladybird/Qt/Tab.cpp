@@ -341,7 +341,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_page_context_menu->addAction(&m_window->view_source_action());
     m_page_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_context_menu_request = [this, search_selected_text_action](Gfx::IntPoint) {
+    view().on_context_menu_request = [this, search_selected_text_action](Gfx::IntPoint content_position) {
         auto selected_text = Settings::the()->enable_search()
             ? view().selected_text_with_whitespace_collapsed()
             : OptionalNone {};
@@ -355,8 +355,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             search_selected_text_action->setVisible(false);
         }
 
-        auto screen_position = QCursor::pos();
-        m_page_context_menu->exec(screen_position);
+        m_page_context_menu->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
     };
 
     auto* open_link_action = new QAction("&Open", this);
@@ -385,7 +384,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_link_context_menu->addSeparator();
     m_link_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_link_context_menu_request = [this](auto const& url, Gfx::IntPoint) {
+    view().on_link_context_menu_request = [this](auto const& url, Gfx::IntPoint content_position) {
         m_link_context_menu_url = url;
 
         switch (WebView::url_type(url)) {
@@ -400,8 +399,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             break;
         }
 
-        auto screen_position = QCursor::pos();
-        m_link_context_menu->exec(screen_position);
+        m_link_context_menu->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
     };
 
     auto* open_image_action = new QAction("&Open Image", this);
@@ -450,12 +448,11 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_image_context_menu->addSeparator();
     m_image_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_image_context_menu_request = [this](auto& image_url, Gfx::IntPoint, Gfx::ShareableBitmap const& shareable_bitmap) {
+    view().on_image_context_menu_request = [this](auto& image_url, Gfx::IntPoint content_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
 
-        auto screen_position = QCursor::pos();
-        m_image_context_menu->exec(screen_position);
+        m_image_context_menu->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
     };
 
     m_media_context_menu_play_icon = load_icon_from_uri("resource://icons/16x16/play.png"sv);
@@ -549,7 +546,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_video_context_menu->addSeparator();
     m_video_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_media_context_menu_request = [this](Gfx::IntPoint, Web::Page::MediaContextMenu const& menu) {
+    view().on_media_context_menu_request = [this](Gfx::IntPoint content_position, Web::Page::MediaContextMenu const& menu) {
         m_media_context_menu_url = menu.media_url;
 
         if (menu.is_playing) {
@@ -571,8 +568,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_media_context_menu_controls_action->setChecked(menu.has_user_agent_controls);
         m_media_context_menu_loop_action->setChecked(menu.is_looping);
 
-        auto screen_position = QCursor::pos();
-
+        auto screen_position = view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio());
         if (menu.is_video)
             m_video_context_menu->exec(screen_position);
         else
