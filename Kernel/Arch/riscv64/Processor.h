@@ -38,6 +38,8 @@ extern Processor* g_current_processor;
 
 constexpr size_t MAX_CPU_COUNT = 1;
 
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread);
+
 class Processor final : public ProcessorBase<Processor> {
 public:
     template<IteratorFunction<Processor&> Callback>

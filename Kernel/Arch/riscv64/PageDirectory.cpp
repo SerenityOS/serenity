@@ -8,8 +8,10 @@
 #include <AK/Singleton.h>
 
 #include <Kernel/Arch/PageDirectory.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
 
 namespace Kernel::Memory {
@@ -34,9 +36,35 @@ void PageDirectory::deregister_page_directory(PageDirectory* page_directory)
     });
 }
 
-ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Process&)
+ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Process& process)
 {
-    TODO_RISCV64();
+    auto directory = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PageDirectory));
+
+    directory->m_process = &process;
+
+    directory->m_directory_table = TRY(MM.allocate_physical_page());
+    auto kernel_pd_index = (kernel_mapping_base >> 30) & PAGE_TABLE_INDEX_MASK;
+    for (size_t i = 0; i < kernel_pd_index; i++) {
+        directory->m_directory_pages[i] = TRY(MM.allocate_physical_page());
+    }
+
+    // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)
+    directory->m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
+
+    {
+        InterruptDisabler disabler;
+        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_directory_table);
+        for (size_t i = 0; i < sizeof(m_directory_pages) / sizeof(m_directory_pages[0]); i++) {
+            if (directory->m_directory_pages[i]) {
+                table.raw[i] = (((FlatPtr)directory->m_directory_pages[i]->paddr().as_ptr()) >> PADDR_PPN_OFFSET) << PTE_PPN_OFFSET;
+                table.raw[i] |= to_underlying(PageTableEntryBits::Valid);
+            }
+        }
+        MM.unquickmap_page();
+    }
+
+    register_page_directory(directory);
+    return directory;
 }
 
 LockRefPtr<PageDirectory> PageDirectory::find_current()

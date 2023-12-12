@@ -136,3 +136,71 @@ asm_trap_handler:
     ld x2, 1*XLEN(sp)
     addi sp, sp, REGISTER_STATE_SIZE
     sret
+
+
+.global restore_context_and_sret
+restore_context_and_sret:
+    mv a0, sp
+    call exit_trap
+
+    // Remove TrapFrame from the stack
+    addi sp, sp, 16
+
+    // Restore special registers first
+    ld t0, SSTATUS_SLOT(sp)
+    csrw sstatus, t0
+    ld t0, SEPC_SLOT(sp)
+    csrw sepc, t0
+
+    ld x1, 0*XLEN(sp)
+    // sp
+    ld x3, 2*XLEN(sp)
+    ld x4, 3*XLEN(sp)
+    ld x5, 4*XLEN(sp)
+    ld x6, 5*XLEN(sp)
+    ld x7, 6*XLEN(sp)
+    ld x8, 7*XLEN(sp)
+    ld x9, 8*XLEN(sp)
+    ld x10, 9*XLEN(sp)
+    ld x11, 10*XLEN(sp)
+    ld x12, 11*XLEN(sp)
+    ld x13, 12*XLEN(sp)
+    ld x14, 13*XLEN(sp)
+    ld x15, 14*XLEN(sp)
+    ld x16, 15*XLEN(sp)
+    ld x17, 16*XLEN(sp)
+    ld x18, 17*XLEN(sp)
+    ld x19, 18*XLEN(sp)
+    ld x20, 19*XLEN(sp)
+    ld x21, 20*XLEN(sp)
+    ld x22, 21*XLEN(sp)
+    ld x23, 22*XLEN(sp)
+    ld x24, 23*XLEN(sp)
+    ld x25, 24*XLEN(sp)
+    ld x26, 25*XLEN(sp)
+    ld x27, 26*XLEN(sp)
+    ld x28, 27*XLEN(sp)
+    ld x29, 28*XLEN(sp)
+    ld x30, 29*XLEN(sp)
+    ld x31, 30*XLEN(sp)
+
+    // FIXME: don't clobber t0 and t1
+    ld t0, USERSPACE_SP_SLOT(sp)
+    addi sp, sp, REGISTER_STATE_SIZE
+
+    csrr t1, sstatus
+    srl t1, t1, 8
+    andi t1, t1, 1
+    beqz t1, 1f
+
+    // Kernel
+    csrw sscratch, zero
+    j 2f
+
+1:
+    // User
+    csrw sscratch, sp
+
+2:
+    mv sp, t0
+    sret

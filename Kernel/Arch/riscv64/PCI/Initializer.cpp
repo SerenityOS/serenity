@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Library/Assertions.h>
 
@@ -14,7 +15,8 @@ bool g_pci_access_is_disabled_from_commandline { true };
 
 void initialize()
 {
-    TODO_RISCV64();
+    dbgln("PCI: FIXME: Enable PCI for riscv64 platforms");
+    g_pci_access_io_probe_failed = true;
 }
 
 }
