@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Library/Assertions.h>
 
 namespace Kernel::PCI {
