@@ -64,7 +64,7 @@ public:
     };
 
     void collect_garbage(CollectionType = CollectionType::CollectGarbage, bool print_report = false);
-    void dump_graph();
+    AK::JsonObject dump_graph();
 
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
     void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }

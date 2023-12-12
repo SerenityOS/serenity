@@ -278,7 +278,12 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     auto* dump_gc_graph_action = new QAction("Dump GC graph", this);
     debug_menu->addAction(dump_gc_graph_action);
     QObject::connect(dump_gc_graph_action, &QAction::triggered, this, [this] {
-        debug_request("dump-gc-graph");
+        if (m_current_tab) {
+            auto gc_graph_path = m_current_tab->view().dump_gc_graph();
+            warnln("\033[33;1mDumped GC-graph into {}"
+                   "\033[0m",
+                gc_graph_path);
+        }
     });
 
     auto* clear_cache_action = new QAction("Clear &Cache", this);

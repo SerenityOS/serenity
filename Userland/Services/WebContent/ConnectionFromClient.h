@@ -124,6 +124,8 @@ private:
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
     virtual Messages::WebContentServer::TakeDomNodeScreenshotResponse take_dom_node_screenshot(i32 node_id) override;
 
+    virtual Messages::WebContentServer::DumpGcGraphResponse dump_gc_graph() override;
+
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
     virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;
 
