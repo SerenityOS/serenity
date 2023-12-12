@@ -72,8 +72,6 @@ static void console_out(char ch)
     if (s_serial_debug_enabled)
         serial_putch(ch);
 
-    // It would be bad to reach the assert in ConsoleDevice()::the() and do a stack overflow
-
     if (DeviceManagement::the().is_console_device_attached()) {
         DeviceManagement::the().console_device().put_char(ch);
     } else {
