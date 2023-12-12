@@ -120,6 +120,20 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
     return true;
 }
+#elif ARCH(RISCV64)
+UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain(PhysicalAddress ecam_addr)
+{
+    VERIFY(!Access::is_initialized());
+    auto* access = new Access();
+
+    Domain pci_domain { 0, 0, 0xff };
+    dmesgln("PCI: New PCI domain @ {}", PhysicalAddress { ecam_addr });
+    auto host_bridge = MemoryBackedHostBridge::must_create(pci_domain, PhysicalAddress { ecam_addr });
+    access->add_host_controller(move(host_bridge));
+    access->rescan_hardware();
+    dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
+    return true;
+}
 #endif
 
 ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullOwnPtr<HostController> controller)

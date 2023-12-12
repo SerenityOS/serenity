@@ -38,6 +38,9 @@ void ProcessorBase<T>::initialize(u32)
     sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
     RISCV64::CSR::SSTATUS::write(sstatus);
 
+    // FIXME: Actually set correct count when we support SMP on riscv64.
+    g_total_processors.store(1u, AK::MemoryOrder::memory_order_release);
+
     initialize_interrupts();
 }
 

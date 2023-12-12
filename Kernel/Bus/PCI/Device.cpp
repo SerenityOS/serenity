@@ -23,11 +23,19 @@ Device::Device(DeviceIdentifier const& pci_identifier)
 
 bool Device::is_msi_capable() const
 {
+#if ARCH(RISCV64)
+    return false;
+#else
     return m_pci_identifier->is_msi_capable();
+#endif
 }
 bool Device::is_msix_capable() const
 {
+#if ARCH(RISCV64)
+    return false;
+#else
     return m_pci_identifier->is_msix_capable();
+#endif
 }
 
 void Device::enable_pin_based_interrupts() const

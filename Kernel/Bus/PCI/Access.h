@@ -23,6 +23,8 @@ public:
 
 #if ARCH(X86_64)
     static bool initialize_for_one_pci_domain();
+#elif ARCH(RISCV64)
+    static bool initialize_for_one_pci_domain(PhysicalAddress ecam_addr);
 #endif
 
     ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;

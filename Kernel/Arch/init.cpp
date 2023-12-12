@@ -231,7 +231,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_modules = nullptr;
     multiboot_modules_count = 0;
 
-    kernel_cmdline = "serial_debug"sv;
+    kernel_cmdline = "serial_debug nvme_poll root=nvme:0:1:0"sv;
 #endif
 
     setup_serial_debug();

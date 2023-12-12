@@ -5,18 +5,36 @@
  */
 
 #include <AK/Format.h>
+#include <Kernel/Boot/CommandLine.h>
+#include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 #include <Kernel/Bus/PCI/Initializer.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/Library/Assertions.h>
 
 namespace Kernel::PCI {
 
-bool g_pci_access_io_probe_failed { false };
-bool g_pci_access_is_disabled_from_commandline { true };
+READONLY_AFTER_INIT bool g_pci_access_io_probe_failed { false };
+READONLY_AFTER_INIT bool g_pci_access_is_disabled_from_commandline { true };
 
-void initialize()
+UNMAP_AFTER_INIT void initialize()
 {
-    dbgln("PCI: FIXME: Enable PCI for riscv64 platforms");
-    g_pci_access_io_probe_failed = true;
+    g_pci_access_is_disabled_from_commandline = kernel_command_line().is_pci_disabled();
+
+    if (g_pci_access_is_disabled_from_commandline) {
+        return;
+    }
+
+    auto const qemu_ecam_addr = PhysicalAddress { 0x3000'0000 };
+
+    Access::initialize_for_one_pci_domain(qemu_ecam_addr);
+
+    PCIBusSysFSDirectory::initialize();
+
+    MUST(PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
+        dmesgln("{} {}", device_identifier.address(), device_identifier.hardware_id());
+    }));
 }
 
 }

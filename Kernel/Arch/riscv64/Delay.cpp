@@ -5,12 +5,20 @@
  */
 
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/riscv64/CSR.h>
 
 namespace Kernel {
 
-void microseconds_delay(u32)
+void microseconds_delay(u32 microseconds)
 {
-    TODO_RISCV64();
+    // FIXME: actually delay in micoseconds
+
+    u64 const start = RISCV64::CSR::read(RISCV64::CSR::Address::TIME);
+
+    while ((RISCV64::CSR::read(RISCV64::CSR::Address::TIME) - start) < static_cast<u64>(microseconds) * 100) {
+        // Processor::pause();
+    }
 }
 
 }
