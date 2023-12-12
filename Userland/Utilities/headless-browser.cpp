@@ -479,6 +479,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_text = false;
     bool is_layout_test_mode = false;
     StringView test_root_path;
+    Vector<size_t> user_provided_window_size;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
@@ -488,6 +489,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(test_root_path, "Run tests in path", "run-tests", 'R', "test-root-path");
     args_parser.add_option(dump_failed_ref_tests, "Dump screenshots of failing ref tests", "dump-failed-ref-tests", 'D');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
+    args_parser.add_option(user_provided_window_size, "Size of the window (defaults to 800x600)", "window-size", 'w', "WxH", 'x');
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
@@ -502,8 +504,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto theme_path = LexicalPath::join(resources_folder, "themes"sv, "Default.ini"sv);
     auto theme = TRY(Gfx::load_system_theme(theme_path.string()));
 
-    // FIXME: Allow passing the window size as an argument.
-    static constexpr Gfx::IntSize window_size { 800, 600 };
+    Gfx::IntSize window_size;
+
+    if (user_provided_window_size.is_empty())
+        window_size = { 800, 600 };
+    else if (user_provided_window_size.size() == 2)
+        window_size = { user_provided_window_size[0], user_provided_window_size[1] };
+    else
+        return Error::from_string_literal("Invalid window size");
 
     if (!test_root_path.is_empty()) {
         // --run-tests implies --layout-test-mode.
