@@ -239,7 +239,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             select_dropdown_add_item(m_select_dropdown, item);
         }
 
-        m_select_dropdown->exec(mapToGlobal(QPoint(content_position.x(), content_position.y())));
+        m_select_dropdown->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
     };
 
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
