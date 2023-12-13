@@ -1145,7 +1145,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             union_generator.append(R"~~~(
             if (is<JS::ArrayBuffer>(@js_name@@js_suffix@_object))
                 return JS::make_handle(@js_name@@js_suffix@_object);
-        }
 )~~~");
         }
 
@@ -1156,7 +1155,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             union_generator.append(R"~~~(
             if (is<JS::DataView>(@js_name@@js_suffix@_object))
                 return JS::make_handle(@js_name@@js_suffix@_object);
-        }
 )~~~");
         }
 
@@ -1171,7 +1169,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             union_generator.append(R"~~~(
             if (is<JS::TypedArrayBase>(@js_name@@js_suffix@_object))
                 return JS::make_handle(@js_name@@js_suffix@_object);
-        }
 )~~~");
         }
 
