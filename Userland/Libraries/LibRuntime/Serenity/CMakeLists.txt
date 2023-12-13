@@ -1,4 +1,7 @@
-set(LIBRUNTIME_SOURCES)
+set(LIBRUNTIME_SOURCES
+    Mutex.cpp
+    System.cpp
+)
 
 if (SERENITY_ARCH STREQUAL "x86_64")
     set(LIBRUNTIME_ARCH_SOURCES
