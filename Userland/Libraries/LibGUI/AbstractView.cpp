@@ -791,7 +791,7 @@ void AbstractView::drag_enter_event(DragEvent& event)
     //       We might be able to reduce event traffic by communicating the set of drag-accepting
     //       rects in this widget to the windowing system somehow.
     event.accept();
-    dbgln_if(DRAG_DEBUG, "accepting drag of {}", event.mime_types().first());
+    dbgln_if(DRAG_DEBUG, "accepting drag of {}", event.mime_types());
 }
 
 void AbstractView::drag_move_event(DragEvent& event)
