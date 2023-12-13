@@ -51,6 +51,7 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_previous_value);
     if (m_frame)
         m_frame->visit_edges(visitor);
+    m_execution_context->visit_edges(visitor);
 }
 
 // 27.5.3.2 GeneratorValidate ( generator, generatorBrand ), https://tc39.es/ecma262/#sec-generatorvalidate

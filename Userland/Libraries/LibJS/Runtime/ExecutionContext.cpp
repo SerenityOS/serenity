@@ -21,12 +21,10 @@ NonnullOwnPtr<ExecutionContext> ExecutionContext::create(Heap& heap)
 ExecutionContext::ExecutionContext(Heap& heap)
     : m_heap(heap)
 {
-    m_heap.did_create_execution_context({}, *this);
 }
 
 ExecutionContext::~ExecutionContext()
 {
-    m_heap.did_destroy_execution_context({}, *this);
 }
 
 NonnullOwnPtr<ExecutionContext> ExecutionContext::copy() const

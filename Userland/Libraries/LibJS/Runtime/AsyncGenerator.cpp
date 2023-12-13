@@ -48,6 +48,7 @@ void AsyncGenerator::visit_edges(Cell::Visitor& visitor)
     if (m_frame)
         m_frame->visit_edges(visitor);
     visitor.visit(m_current_promise);
+    m_async_generator_context->visit_edges(visitor);
 }
 
 // 27.6.3.4 AsyncGeneratorEnqueue ( generator, completion, promiseCapability ), https://tc39.es/ecma262/#sec-asyncgeneratorenqueue
