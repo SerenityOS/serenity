@@ -1894,6 +1894,8 @@ RefPtr<Gfx::FontCascadeList const> StyleComputer::compute_font_for_style_values(
     auto found_font = StyleProperties::font_fallback(monospace, bold);
     if (auto scaled_fallback_font = found_font->with_size(font_size_in_pt)) {
         font_list->add(*scaled_fallback_font);
+    } else {
+        font_list->add(*found_font);
     }
 
     return font_list;
