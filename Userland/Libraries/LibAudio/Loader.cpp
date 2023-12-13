@@ -45,13 +45,15 @@ static constexpr LoaderPluginInitializer s_initializers[] = {
 ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(StringView path)
 {
     auto stream = TRY(Core::MappedFile::map(path, Core::MappedFile::Mode::ReadOnly));
-    return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
+    auto plugin = TRY(Loader::create_plugin(move(stream)));
+    return adopt_ref(*new (nothrow) Loader(move(plugin)));
 }
 
 ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(ReadonlyBytes buffer)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(buffer));
-    return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
+    auto plugin = TRY(Loader::create_plugin(move(stream)));
+    return adopt_ref(*new (nothrow) Loader(move(plugin)));
 }
 
 ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(NonnullOwnPtr<SeekableStream> stream)

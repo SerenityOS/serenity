@@ -19,14 +19,18 @@ namespace GUI {
 ErrorOr<NonnullRefPtr<InputBox>> InputBox::create(Window* parent_window, String text_value, StringView prompt, StringView title, InputType input_type, RefPtr<Gfx::Bitmap const> icon)
 {
     VERIFY(input_type != InputType::Numeric);
-    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, text_value, TRY(String::from_utf8(title)), TRY(String::from_utf8(prompt)), input_type, move(icon))));
+    auto title_string = TRY(String::from_utf8(title));
+    auto prompt_string = TRY(String::from_utf8(prompt));
+    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, text_value, title_string, prompt_string, input_type, move(icon))));
     TRY(box->build());
     return box;
 }
 
 ErrorOr<NonnullRefPtr<InputBox>> InputBox::create_numeric(Window* parent_window, int value, StringView title, StringView prompt, RefPtr<Gfx::Bitmap const> icon)
 {
-    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, value, TRY(String::from_utf8(title)), TRY(String::from_utf8(prompt)), move(icon))));
+    auto title_string = TRY(String::from_utf8(title));
+    auto prompt_string = TRY(String::from_utf8(prompt));
+    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, value, title_string, prompt_string, move(icon))));
     TRY(box->build());
     return box;
 }

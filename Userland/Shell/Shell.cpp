@@ -420,8 +420,10 @@ ErrorOr<RefPtr<AST::Value const>> Shell::look_up_local_variable(StringView name)
 
 ErrorOr<RefPtr<AST::Value const>> Shell::get_argument(size_t index) const
 {
-    if (index == 0)
-        return adopt_ref(*new AST::StringValue(TRY(String::from_deprecated_string(current_script))));
+    if (index == 0) {
+        auto current_script_string = TRY(String::from_deprecated_string(current_script));
+        return adopt_ref(*new AST::StringValue(current_script_string));
+    }
 
     --index;
     if (auto argv = TRY(look_up_local_variable("ARGV"sv))) {
