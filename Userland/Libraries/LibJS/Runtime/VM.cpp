@@ -153,6 +153,20 @@ Bytecode::Interpreter& VM::bytecode_interpreter()
     return *m_bytecode_interpreter;
 }
 
+struct ExecutionContextRootsCollector : public Cell::Visitor {
+    virtual void visit_impl(Cell& cell) override
+    {
+        roots.set(&cell);
+    }
+
+    virtual void visit_possible_values(ReadonlyBytes) override
+    {
+        VERIFY_NOT_REACHED();
+    }
+
+    HashTable<Cell*> roots;
+};
+
 void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
 {
     roots.set(m_empty_string, HeapRoot { .type = HeapRoot::Type::VM });
@@ -169,6 +183,18 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
 
     for (auto finalization_registry : m_finalization_registry_cleanup_jobs)
         roots.set(finalization_registry, HeapRoot { .type = HeapRoot::Type::VM });
+
+    auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
+        for (auto const& execution_context : stack) {
+            ExecutionContextRootsCollector visitor;
+            execution_context->visit_edges(visitor);
+            for (auto* cell : visitor.roots)
+                roots.set(cell, HeapRoot { .type = HeapRoot::Type::VM });
+        }
+    };
+    gather_roots_from_execution_context_stack(m_execution_context_stack);
+    for (auto& saved_stack : m_saved_execution_context_stacks)
+        gather_roots_from_execution_context_stack(saved_stack);
 }
 
 ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)

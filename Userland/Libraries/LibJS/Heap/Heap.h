@@ -148,7 +148,6 @@ private:
     HandleImpl::List m_handles;
     MarkedVectorBase::List m_marked_vectors;
     WeakContainer::List m_weak_containers;
-    ExecutionContext::List m_execution_contexts;
 
     Vector<GCPtr<Cell>> m_uprooted_cells;
 
@@ -194,18 +193,6 @@ inline void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer
 {
     VERIFY(m_weak_containers.contains(set));
     m_weak_containers.remove(set);
-}
-
-inline void Heap::did_create_execution_context(Badge<ExecutionContext>, ExecutionContext& set)
-{
-    VERIFY(!m_execution_contexts.contains(set));
-    m_execution_contexts.append(set);
-}
-
-inline void Heap::did_destroy_execution_context(Badge<ExecutionContext>, ExecutionContext& set)
-{
-    VERIFY(m_execution_contexts.contains(set));
-    m_execution_contexts.remove(set);
 }
 
 }

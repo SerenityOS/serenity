@@ -45,6 +45,7 @@ void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(target_browsing_context);
     visitor.visit(m_module_map);
     visitor.ignore(m_outstanding_rejected_promises_weak_set);
+    m_realm_execution_context->visit_edges(visitor);
 }
 
 JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()

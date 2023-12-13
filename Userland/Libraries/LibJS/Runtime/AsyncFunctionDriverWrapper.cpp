@@ -192,6 +192,8 @@ void AsyncFunctionDriverWrapper::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_top_level_promise);
     if (m_current_promise)
         visitor.visit(m_current_promise);
+    if (m_suspended_execution_context)
+        m_suspended_execution_context->visit_edges(visitor);
 }
 
 }

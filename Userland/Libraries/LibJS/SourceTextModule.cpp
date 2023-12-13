@@ -120,6 +120,7 @@ void SourceTextModule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_import_meta);
+    m_execution_context->visit_edges(visitor);
 }
 
 // 16.2.1.6.1 ParseModule ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parsemodule
