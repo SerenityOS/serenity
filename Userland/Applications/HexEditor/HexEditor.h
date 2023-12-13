@@ -84,8 +84,6 @@ private:
     size_t m_position { 0 };
     bool m_cursor_at_low_nibble { false };
     EditMode m_edit_mode { Hex };
-    RefPtr<Core::Timer> m_blink_timer;
-    bool m_cursor_blink_active { false };
     NonnullOwnPtr<HexDocument> m_document;
     GUI::UndoStack m_undo_stack;
 
@@ -108,6 +106,4 @@ private:
     void did_change();
     ErrorOr<void> did_complete_action(size_t position, u8 old_value, u8 new_value);
     ErrorOr<void> did_complete_action(size_t position, ByteBuffer&& old_values, ByteBuffer&& new_values);
-
-    void reset_cursor_blink_state();
 };
