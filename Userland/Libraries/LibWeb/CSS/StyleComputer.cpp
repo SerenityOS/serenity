@@ -208,7 +208,8 @@ struct StyleComputer::MatchingFontCandidate {
             return font_list;
         }
 
-        font_list->add(*loader_or_typeface.get<Gfx::Typeface const*>()->get_font(point_size));
+        if (auto font = loader_or_typeface.get<Gfx::Typeface const*>()->get_font(point_size))
+            font_list->add(*font);
         return font_list;
     }
 };
