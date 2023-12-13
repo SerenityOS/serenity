@@ -4,9 +4,18 @@ shared_library("LibJIT") {
   sources = [
     "Assembler.cpp",
     "Assembler.h",
+    "GDB.cpp",
+    "GDB.h",
   ]
   deps = [
     "//AK",
     "//Userland/Libraries/LibCore",
   ]
+
+  if (current_os == "mac") {
+    sources += [ "GDBUnsupported.cpp" ]
+  } else {
+    sources += [ "GDBElf.cpp" ]
+    deps += [ "//Userland/Libraries/LibELF" ]
+  }
 }

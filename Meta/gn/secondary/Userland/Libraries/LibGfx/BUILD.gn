@@ -53,6 +53,7 @@ shared_library("LibGfx") {
     "Font/Typeface.cpp",
     "Font/WOFF/Font.cpp",
     "Font/WOFF2/Font.cpp",
+    "FontCascadeList.cpp",
     "GradientPainting.cpp",
     "ICC/BinaryWriter.cpp",
     "ICC/Enums.cpp",
