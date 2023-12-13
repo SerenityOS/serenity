@@ -42,12 +42,6 @@ HexEditor::HexEditor()
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     vertical_scrollbar().set_step(line_height());
-
-    m_blink_timer = Core::Timer::create_repeating(500, [this]() {
-        m_cursor_blink_active = !m_cursor_blink_active;
-        update();
-    }).release_value_but_fixme_should_propagate_errors();
-    m_blink_timer->start();
 }
 
 ErrorOr<void> HexEditor::open_new_file(size_t size)
@@ -120,7 +114,6 @@ void HexEditor::set_position(size_t position)
 
     m_position = position;
     m_cursor_at_low_nibble = false;
-    reset_cursor_blink_state();
     scroll_position_into_view(position);
     update_status();
 }
@@ -133,7 +126,6 @@ void HexEditor::set_selection(size_t position, size_t length)
     m_cursor_at_low_nibble = false;
     m_selection_start = position;
     m_selection_end = position + length;
-    reset_cursor_blink_state();
     scroll_position_into_view(position);
     update_status();
 }
@@ -432,7 +424,6 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
         } else
             m_selection_start = m_selection_end = m_position = new_position;
         m_cursor_at_low_nibble = false;
-        reset_cursor_blink_state();
         scroll_position_into_view(m_position);
         update();
         update_status();
@@ -538,7 +529,6 @@ ErrorOr<void> HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
             m_cursor_at_low_nibble = false;
         }
 
-        reset_cursor_blink_state();
         update();
         update_status();
         did_change();
@@ -565,7 +555,6 @@ ErrorOr<void> HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
         m_position++;
     m_cursor_at_low_nibble = false;
 
-    reset_cursor_blink_state();
     update();
     update_status();
     did_change();
@@ -686,7 +675,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Hex) {
-                if (byte_position == m_position && m_cursor_blink_active) {
+                if (byte_position == m_position) {
                     Gfx::IntRect cursor_position_rect {
                         static_cast<int>(hex_display_rect.left() + m_cursor_at_low_nibble * character_width()),
                         hex_display_rect.top(),
@@ -732,7 +721,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.draw_text(text_display_rect, character, Gfx::TextAlignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Text) {
-                if (byte_position == m_position && m_cursor_blink_active) {
+                if (byte_position == m_position) {
                     Gfx::IntRect cursor_position_rect {
                         text_display_rect.left(), text_display_rect.top(), 2, text_display_rect.height()
                     };
@@ -857,12 +846,6 @@ Vector<Match> HexEditor::find_all_strings(size_t min_length)
     return matches;
 }
 
-void HexEditor::reset_cursor_blink_state()
-{
-    m_cursor_blink_active = true;
-    m_blink_timer->restart();
-}
-
 ErrorOr<void> HexEditor::did_complete_action(size_t position, u8 old_value, u8 new_value)
 {
     if (old_value == new_value)
@@ -892,7 +875,6 @@ bool HexEditor::undo()
         return false;
 
     m_undo_stack.undo();
-    reset_cursor_blink_state();
     update();
     update_status();
     did_change();
@@ -905,7 +887,6 @@ bool HexEditor::redo()
         return false;
 
     m_undo_stack.redo();
-    reset_cursor_blink_state();
     update();
     update_status();
     did_change();
