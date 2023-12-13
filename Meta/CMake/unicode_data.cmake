@@ -96,12 +96,14 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${SENTENCE_BREAK_PROP_SOURCE}" "${SENTENCE_BREAK_PROP_PATH}")
 
         download_file("${EMOJI_TEST_URL}" "${EMOJI_TEST_PATH}")
+
+        download_file("${IDNA_MAPPING_TABLE_URL}" "${IDNA_MAPPING_TABLE_PATH}")
     else()
         message(STATUS "Skipping download of ${UCD_ZIP_URL}, expecting the archive to have been extracted to ${UCD_ZIP_PATH}")
-        message(STATUS "Skipping download of ${EMOJI_TEST_URL}, expecting the archive to have been extracted to ${EMOJI_TEST_PATH}")
+        message(STATUS "Skipping download of ${EMOJI_TEST_URL}, expecting the file to be at ${EMOJI_TEST_PATH}")
+        message(STATUS "Skipping download of ${IDNA_MAPPING_TABLE_URL}, expecting the file to be at  ${IDNA_MAPPING_TABLE_PATH}")
     endif()
 
-    download_file("${IDNA_MAPPING_TABLE_URL}" "${IDNA_MAPPING_TABLE_PATH}")
 
     set(UNICODE_DATA_HEADER UnicodeData.h)
     set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
