@@ -50,9 +50,11 @@ ErrorOr<NonnullRefPtr<Resource>> ResourceImplementation::load_from_uri(StringVie
 
     if (uri.starts_with(file_scheme)) {
         auto path = uri.substring_view(file_scheme.length());
+        auto utf8_path = TRY(String::from_utf8(path));
         if (is_directory(path))
-            return adopt_ref(*new Resource(TRY(String::from_utf8(path)), Resource::Scheme::File, Resource::DirectoryTag {}));
-        return adopt_ref(*new Resource(TRY(String::from_utf8(path)), Resource::Scheme::File, TRY(MappedFile::map(path))));
+            return adopt_ref(*new Resource(utf8_path, Resource::Scheme::File, Resource::DirectoryTag {}));
+        auto mapped_file = TRY(MappedFile::map(path));
+        return adopt_ref(*new Resource(utf8_path, Resource::Scheme::File, move(mapped_file)));
     }
 
     dbgln("ResourceImplementation: Unknown scheme for {}", uri);
