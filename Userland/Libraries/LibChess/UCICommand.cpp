@@ -94,9 +94,9 @@ ErrorOr<NonnullOwnPtr<SetOptionCommand>> SetOptionCommand::from_string(StringVie
 
     VERIFY(!name.is_empty());
 
-    return adopt_nonnull_own_or_enomem(new (nothrow) SetOptionCommand(
-        TRY(String::from_utf8(name.string_view().trim_whitespace())),
-        TRY(String::from_utf8(value.string_view().trim_whitespace()))));
+    auto name_string = TRY(String::from_utf8(name.string_view().trim_whitespace()));
+    auto value_string = TRY(String::from_utf8(value.string_view().trim_whitespace()));
+    return adopt_nonnull_own_or_enomem(new (nothrow) SetOptionCommand(name_string, value_string));
 }
 
 ErrorOr<String> SetOptionCommand::to_string() const
@@ -259,10 +259,11 @@ ErrorOr<NonnullOwnPtr<IdCommand>> IdCommand::from_string(StringView command)
         TRY(value.try_append(tokens[i]));
     }
 
+    auto value_string = TRY(value.to_string());
     if (tokens[1] == "name") {
-        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Name, TRY(value.to_string())));
+        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Name, value_string));
     } else if (tokens[1] == "author") {
-        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Author, TRY(value.to_string())));
+        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Author, value_string));
     }
     VERIFY_NOT_REACHED();
 }
