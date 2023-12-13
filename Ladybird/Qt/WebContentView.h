@@ -69,6 +69,7 @@ public:
     void set_viewport_rect(Gfx::IntRect);
     void set_window_size(Gfx::IntSize);
     void set_window_position(Gfx::IntPoint);
+    void set_device_pixel_ratio(double);
 
     enum class PaletteMode {
         Default,
@@ -90,7 +91,6 @@ private:
     void update_viewport_rect();
     void update_cursor(Gfx::StandardCursor cursor);
 
-    qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
     Gfx::IntRect m_viewport_rect;
