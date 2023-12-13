@@ -9,6 +9,7 @@
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/USB/EHCI/EHCIController.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
@@ -48,7 +49,9 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
             dmesgln("USBManagement: OHCI controller found at {} is not currently supported.", device_identifier.address());
             return;
         case EHCI:
-            dmesgln("USBManagement: EHCI controller found at {} is not currently supported.", device_identifier.address());
+            dmesgln("USBManagement: EHCI controller found at {} is currently not fully supported.", device_identifier.address());
+            if (auto ehci_controller_or_error = EHCI::EHCIController::try_to_initialize(device_identifier); !ehci_controller_or_error.is_error())
+                m_controllers.append(ehci_controller_or_error.release_value());
             return;
         case xHCI:
             dmesgln("USBManagement: xHCI controller found at {} is not currently supported.", device_identifier.address());
