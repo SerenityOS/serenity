@@ -12,6 +12,7 @@
 #include <QCloseEvent>
 #include <QMenu>
 #include <QVBoxLayout>
+#include <QWindow>
 
 namespace Ladybird {
 
@@ -123,6 +124,22 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
 
     setWindowTitle("Inspector");
     resize(875, 825);
+
+    // Listen for DPI changes
+    setAttribute(Qt::WA_NativeWindow);
+    setAttribute(Qt::WA_DontCreateNativeAncestors);
+    m_device_pixel_ratio = devicePixelRatio();
+    m_current_screen = screen();
+    QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &InspectorWidget::device_pixel_ratio_changed);
+    QObject::connect(windowHandle(), &QWindow::screenChanged, this, [this](QScreen* screen) {
+        if (m_device_pixel_ratio != screen->devicePixelRatio())
+            device_pixel_ratio_changed(screen->devicePixelRatio());
+
+        // Listen for logicalDotsPerInchChanged signals on new screen
+        QObject::disconnect(m_current_screen, &QScreen::logicalDotsPerInchChanged, nullptr, nullptr);
+        m_current_screen = screen;
+        QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &InspectorWidget::device_pixel_ratio_changed);
+    });
 }
 
 InspectorWidget::~InspectorWidget() = default;
@@ -145,6 +162,12 @@ void InspectorWidget::select_hovered_node()
 void InspectorWidget::select_default_node()
 {
     m_inspector_client->select_default_node();
+}
+
+void InspectorWidget::device_pixel_ratio_changed(qreal dpi)
+{
+    m_device_pixel_ratio = dpi;
+    m_inspector_view->set_device_pixel_ratio(m_device_pixel_ratio);
 }
 
 void InspectorWidget::closeEvent(QCloseEvent* event)

@@ -70,6 +70,7 @@ public:
     }
 
 public slots:
+    void device_pixel_ratio_changed(qreal dpi);
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon const& icon);
     Tab& new_tab(QString const&, Web::HTML::ActivateTab);
@@ -114,6 +115,9 @@ private:
             callback(tab);
         }
     }
+
+    QScreen* m_current_screen;
+    double m_device_pixel_ratio { 0 };
 
     QTabWidget* m_tabs_container { nullptr };
     Tab* m_current_tab { nullptr };

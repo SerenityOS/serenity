@@ -31,10 +31,16 @@ public:
     void select_hovered_node();
     void select_default_node();
 
+public slots:
+    void device_pixel_ratio_changed(qreal dpi);
+
 private:
     void closeEvent(QCloseEvent*) override;
 
     QPoint to_widget_position(Gfx::IntPoint) const;
+
+    QScreen* m_current_screen;
+    double m_device_pixel_ratio { 0 };
 
     WebContentView* m_inspector_view;
     OwnPtr<WebView::InspectorClient> m_inspector_client;

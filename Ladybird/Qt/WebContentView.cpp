@@ -63,7 +63,6 @@ WebContentView::WebContentView(WebContentOptions const& web_content_options, Str
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
     m_device_pixel_ratio = devicePixelRatio();
-    m_inverse_pixel_scaling_ratio = 1.0 / m_device_pixel_ratio;
 
     verticalScrollBar()->setSingleStep(24);
     horizontalScrollBar()->setSingleStep(24);
@@ -325,8 +324,8 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
 void WebContentView::wheelEvent(QWheelEvent* event)
 {
     if (!event->modifiers().testFlag(Qt::ControlModifier)) {
-        Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
-        Gfx::IntPoint screen_position(event->globalPosition().x() / m_inverse_pixel_scaling_ratio, event->globalPosition().y() / m_inverse_pixel_scaling_ratio);
+        Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
+        Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
         auto button = get_button_from_qt_event(*event);
         auto buttons = get_buttons_from_qt_event(*event);
         auto modifiers = get_modifiers_from_qt_mouse_event(*event);
@@ -351,8 +350,8 @@ void WebContentView::wheelEvent(QWheelEvent* event)
 
 void WebContentView::mouseMoveEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() / m_inverse_pixel_scaling_ratio, event->globalPosition().y() / m_inverse_pixel_scaling_ratio);
+    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
+    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     client().async_mouse_move(to_content_position(position), screen_position, 0, buttons, modifiers);
@@ -360,8 +359,8 @@ void WebContentView::mouseMoveEvent(QMouseEvent* event)
 
 void WebContentView::mousePressEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() / m_inverse_pixel_scaling_ratio, event->globalPosition().y() / m_inverse_pixel_scaling_ratio);
+    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
+    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto button = get_button_from_qt_event(*event);
     if (button == 0) {
         // We could not convert Qt buttons to something that Lagom can
@@ -376,8 +375,8 @@ void WebContentView::mousePressEvent(QMouseEvent* event)
 
 void WebContentView::mouseReleaseEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() / m_inverse_pixel_scaling_ratio, event->globalPosition().y() / m_inverse_pixel_scaling_ratio);
+    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
+    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto button = get_button_from_qt_event(*event);
 
     if (event->button() & Qt::MouseButton::BackButton) {
@@ -401,8 +400,8 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
 
 void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() / m_inverse_pixel_scaling_ratio, event->globalPosition().y() / m_inverse_pixel_scaling_ratio);
+    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
+    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto button = get_button_from_qt_event(*event);
     if (button == 0) {
         // We could not convert Qt buttons to something that Lagom can
@@ -478,7 +477,7 @@ void WebContentView::focusOutEvent(QFocusEvent*)
 void WebContentView::paintEvent(QPaintEvent*)
 {
     QPainter painter(viewport());
-    painter.scale(m_inverse_pixel_scaling_ratio, m_inverse_pixel_scaling_ratio);
+    painter.scale(1 / m_device_pixel_ratio, 1 / m_device_pixel_ratio);
 
     Gfx::Bitmap const* bitmap = nullptr;
     Gfx::IntSize bitmap_size;
@@ -532,10 +531,19 @@ void WebContentView::set_window_position(Gfx::IntPoint position)
     client().async_set_window_position(position);
 }
 
+void WebContentView::set_device_pixel_ratio(double device_pixel_ratio)
+{
+    m_device_pixel_ratio = device_pixel_ratio;
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    update_viewport_rect();
+    handle_resize();
+    request_repaint();
+}
+
 void WebContentView::update_viewport_rect()
 {
-    auto scaled_width = int(viewport()->width() / m_inverse_pixel_scaling_ratio);
-    auto scaled_height = int(viewport()->height() / m_inverse_pixel_scaling_ratio);
+    auto scaled_width = int(viewport()->width() * m_device_pixel_ratio);
+    auto scaled_height = int(viewport()->height() * m_device_pixel_ratio);
     Gfx::IntRect rect(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()), scaled_width, scaled_height);
 
     set_viewport_rect(rect);

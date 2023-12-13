@@ -27,6 +27,7 @@
 #include <QPlainTextEdit>
 #include <QShortcut>
 #include <QTabBar>
+#include <QWindow>
 
 namespace Ladybird {
 
@@ -54,6 +55,22 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     m_tabs_container->setTabsClosable(true);
     m_tabs_container->setDocumentMode(true);
     m_tabs_container->setTabBarAutoHide(true);
+
+    // Listen for DPI changes
+    setAttribute(Qt::WA_NativeWindow);
+    setAttribute(Qt::WA_DontCreateNativeAncestors);
+    m_device_pixel_ratio = devicePixelRatio();
+    m_current_screen = screen();
+    QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &BrowserWindow::device_pixel_ratio_changed);
+    QObject::connect(windowHandle(), &QWindow::screenChanged, this, [this](QScreen* screen) {
+        if (m_device_pixel_ratio != screen->devicePixelRatio())
+            device_pixel_ratio_changed(screen->devicePixelRatio());
+
+        // Listen for logicalDotsPerInchChanged signals on new screen
+        QObject::disconnect(m_current_screen, &QScreen::logicalDotsPerInchChanged, nullptr, nullptr);
+        m_current_screen = screen;
+        QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &BrowserWindow::device_pixel_ratio_changed);
+    });
 
     auto* menu = menuBar()->addMenu("&File");
 
@@ -560,6 +577,14 @@ void BrowserWindow::close_current_tab()
 int BrowserWindow::tab_index(Tab* tab)
 {
     return m_tabs_container->indexOf(tab);
+}
+
+void BrowserWindow::device_pixel_ratio_changed(qreal dpi)
+{
+    m_device_pixel_ratio = dpi;
+    for_each_tab([this](auto& tab) {
+        tab.view().set_device_pixel_ratio(m_device_pixel_ratio);
+    });
 }
 
 void BrowserWindow::tab_title_changed(int index, QString const& title)
