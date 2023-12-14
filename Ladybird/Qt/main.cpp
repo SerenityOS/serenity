@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> raw_urls;
     StringView webdriver_content_ipc_path;
     bool enable_callgrind_profiling = false;
-    bool enable_sql_database = false;
+    bool disable_sql_database = false;
     bool enable_qt_networking = false;
     bool use_gpu_painting = false;
 
@@ -115,14 +115,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(raw_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.add_option(enable_callgrind_profiling, "Enable Callgrind profiling", "enable-callgrind-profiling", 'P');
-    args_parser.add_option(enable_sql_database, "Enable SQL database", "enable-sql-database", 0);
+    args_parser.add_option(disable_sql_database, "Disable SQL database", "disable-sql-database", 0);
     args_parser.add_option(enable_qt_networking, "Enable Qt as the backend networking service", "enable-qt-networking", 0);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
     args_parser.parse(arguments);
 
     RefPtr<WebView::Database> database;
 
-    if (enable_sql_database) {
+    if (!disable_sql_database) {
         auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
         database = TRY(WebView::Database::create(move(sql_server_paths)));
     }
