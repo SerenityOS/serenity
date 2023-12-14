@@ -1,12 +1,16 @@
 set(LIBRUNTIME_SOURCES
     LibC/string.cpp
     LibC/strings.cpp
+    Exceptions.cpp
     Mutex.cpp
+    PosixThreadSupport.cpp
+    PossiblyThrowingCallback.cpp
     System.cpp
 )
 
 # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
 set_source_files_properties(LibC/string.cpp PROPERTIES COMPILE_FLAGS -fno-builtin)
+set_source_files_properties(PossiblyThrowingCallback.cpp PROPERTIES COMPILE_FLAGS -fexceptions)
 
 if (SERENITY_ARCH STREQUAL "x86_64")
     set(LIBRUNTIME_ARCH_SOURCES

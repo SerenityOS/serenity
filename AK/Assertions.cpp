@@ -87,7 +87,7 @@ ALWAYS_INLINE void dump_backtrace()
 
 extern "C" {
 
-void ak_verification_failed(char const* message)
+void ak_verification_failed(char const* message) noexcept
 {
 #    if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
     bool colorize_output = true;

@@ -131,6 +131,8 @@ endif()
 
 set_source_files_properties(ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 
+set_source_files_properties(../LibRuntime/Serenity/PossiblyThrowingCallback.cpp PROPERTIES COMPILE_FLAGS -fexceptions)
+
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
 target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
 add_dependencies(LibCStaticWithoutDeps LibSystem LibUBSanitizer)
@@ -156,6 +158,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
 add_dependencies(LibC crti crt0 crt0_shared crtn install_libc_headers)
 target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    # FIXME: Since we provide weak _Unwind_Resume in LibRuntime, linker thinks libunwind is not
+    #        needed anymore for libc. This would have been totally fine (since we are not supposed
+    #        to ever use libunwind in the first place) but, unfortunately, libc++.so depends on it
+    #        and doesn't have corresponding DT_NEEDED entry. As a workaround, mark libunwind libc's
+    #        dependency just as it was marked implicitly previously.
+    target_link_libraries(LibC PRIVATE unwind)
+endif()
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
 add_dependencies(LibC LibCStatic)
