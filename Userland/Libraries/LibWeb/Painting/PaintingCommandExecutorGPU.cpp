@@ -257,12 +257,6 @@ CommandResult PaintingCommandExecutorGPU::draw_signed_distance_field(Gfx::IntRec
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_progressbar(Gfx::IntRect const&, Gfx::IntRect const&, Palette const&, int, int, int, StringView const&)
-{
-    // FIXME
-    return CommandResult::Continue;
-}
-
 CommandResult PaintingCommandExecutorGPU::paint_frame(Gfx::IntRect const&, Palette const&, Gfx::FrameStyle)
 {
     // FIXME

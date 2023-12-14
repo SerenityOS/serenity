@@ -307,19 +307,6 @@ void RecordingPainter::pop_stacking_context()
     m_state_stack.take_last();
 }
 
-void RecordingPainter::paint_progressbar(Gfx::IntRect frame_rect, Gfx::IntRect progress_rect, Palette palette, int min, int max, int value, StringView text)
-{
-    push_command(PaintProgressbar {
-        .frame_rect = state().translation.map(frame_rect),
-        .progress_rect = state().translation.map(progress_rect),
-        .palette = palette,
-        .min = min,
-        .max = max,
-        .value = value,
-        .text = text,
-    });
-}
-
 void RecordingPainter::paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style)
 {
     push_command(PaintFrame { state().translation.map(rect), palette, style });
@@ -528,9 +515,6 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
             },
             [&](DrawSignedDistanceField const& command) {
                 return executor.draw_signed_distance_field(command.rect, command.color, command.sdf, command.smoothing);
-            },
-            [&](PaintProgressbar const& command) {
-                return executor.paint_progressbar(command.frame_rect, command.progress_rect, command.palette, command.min, command.max, command.value, command.text);
             },
             [&](PaintFrame const& command) {
                 return executor.paint_frame(command.rect, command.palette, command.style);

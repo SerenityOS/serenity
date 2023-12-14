@@ -339,14 +339,6 @@ CommandResult PaintingCommandExecutorCPU::draw_signed_distance_field(Gfx::IntRec
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_progressbar(Gfx::IntRect const& frame_rect, Gfx::IntRect const& progress_rect, Palette const& palette, int min, int max, int value, StringView const& text)
-{
-    auto& painter = this->painter();
-    Gfx::StylePainter::paint_progressbar(painter, progress_rect, palette, min, max, value, text);
-    Gfx::StylePainter::paint_frame(painter, frame_rect, palette, Gfx::FrameStyle::RaisedBox);
-    return CommandResult::Continue;
-}
-
 CommandResult PaintingCommandExecutorCPU::paint_frame(Gfx::IntRect const& rect, Palette const& palette, Gfx::FrameStyle style)
 {
     Gfx::StylePainter::paint_frame(painter(), rect, palette, style);
