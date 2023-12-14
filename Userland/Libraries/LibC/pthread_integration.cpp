@@ -8,6 +8,7 @@
 #include <AK/NeverDestroyed.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibRuntime/Serenity/PosixThreadSupport.h>
 #include <bits/pthread_integration.h>
 #include <errno.h>
 #include <pthread.h>
@@ -15,76 +16,35 @@
 #include <serenity.h>
 #include <unistd.h>
 
-namespace {
-
-// Most programs don't need this, no need to incur an extra mutex lock/unlock on them
-static Atomic<bool> g_did_touch_atfork { false };
-static pthread_mutex_t g_atfork_list_mutex __PTHREAD_MUTEX_INITIALIZER;
-static NeverDestroyed<Vector<void (*)(void), 4>> g_atfork_prepare_list;
-static NeverDestroyed<Vector<void (*)(void), 4>> g_atfork_child_list;
-static NeverDestroyed<Vector<void (*)(void), 4>> g_atfork_parent_list;
-
-}
-
 extern "C" {
 void __pthread_fork_prepare(void)
 {
-    if (!g_did_touch_atfork.load())
-        return;
-
-    pthread_mutex_lock(&g_atfork_list_mutex);
-    for (auto entry : g_atfork_prepare_list.get())
-        entry();
-    pthread_mutex_unlock(&g_atfork_list_mutex);
+    Runtime::run_pthread_callbacks(Runtime::CallbackType::ForkPrepare);
 }
 
 void __pthread_fork_child(void)
 {
-    if (!g_did_touch_atfork.load())
-        return;
-
-    pthread_mutex_lock(&g_atfork_list_mutex);
-    for (auto entry : g_atfork_child_list.get())
-        entry();
-    pthread_mutex_unlock(&g_atfork_list_mutex);
+    Runtime::run_pthread_callbacks(Runtime::CallbackType::ForkChild);
 }
 
 void __pthread_fork_parent(void)
 {
-    if (!g_did_touch_atfork.load())
-        return;
-
-    pthread_mutex_lock(&g_atfork_list_mutex);
-    for (auto entry : g_atfork_parent_list.get())
-        entry();
-    pthread_mutex_unlock(&g_atfork_list_mutex);
+    Runtime::run_pthread_callbacks(Runtime::CallbackType::ForkParent);
 }
 
 void __pthread_fork_atfork_register_prepare(void (*func)(void))
 {
-    g_did_touch_atfork.store(true);
-
-    pthread_mutex_lock(&g_atfork_list_mutex);
-    g_atfork_prepare_list->append(func);
-    pthread_mutex_unlock(&g_atfork_list_mutex);
+    Runtime::register_pthread_callback(Runtime::CallbackType::ForkPrepare, func);
 }
 
 void __pthread_fork_atfork_register_parent(void (*func)(void))
 {
-    g_did_touch_atfork.store(true);
-
-    pthread_mutex_lock(&g_atfork_list_mutex);
-    g_atfork_parent_list->append(func);
-    pthread_mutex_unlock(&g_atfork_list_mutex);
+    Runtime::register_pthread_callback(Runtime::CallbackType::ForkParent, func);
 }
 
 void __pthread_fork_atfork_register_child(void (*func)(void))
 {
-    g_did_touch_atfork.store(true);
-
-    pthread_mutex_lock(&g_atfork_list_mutex);
-    g_atfork_child_list->append(func);
-    pthread_mutex_unlock(&g_atfork_list_mutex);
+    Runtime::register_pthread_callback(Runtime::CallbackType::ForkChild, func);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_self.html
