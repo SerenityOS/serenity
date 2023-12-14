@@ -22,6 +22,8 @@ public:
     Layout::InlineNode const& layout_node() const;
     auto const& box_model() const { return layout_node().box_model(); }
 
+    CSSPixelRect bounding_rect() const;
+
 private:
     InlinePaintable(Layout::InlineNode const&);
 
