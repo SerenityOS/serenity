@@ -95,7 +95,12 @@ void OutOfProcessWebView::create_client()
 
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
-    client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
+
+    Vector<Web::DevicePixelRect> screen_rects;
+    for (auto const& screen_rect : GUI::Desktop::the().rects()) {
+        screen_rects.append(screen_rect.to_type<Web::DevicePixels>());
+    }
+    client().async_update_screen_rects(screen_rects, GUI::Desktop::the().main_screen_index());
 }
 
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
@@ -132,13 +137,13 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     Super::resize_event(event);
-    client().async_set_viewport_rect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
+    client().async_set_viewport_rect(Web::DevicePixelRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
     handle_resize();
 }
 
-Gfx::IntRect OutOfProcessWebView::viewport_rect() const
+Web::DevicePixelRect OutOfProcessWebView::viewport_rect() const
 {
-    return visible_content_rect();
+    return visible_content_rect().to_type<Web::DevicePixels>();
 }
 
 Gfx::IntPoint OutOfProcessWebView::to_content_position(Gfx::IntPoint widget_position) const
@@ -210,12 +215,16 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 
 void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
-    client().async_update_screen_rects(event.rects(), event.main_screen_index());
+    Vector<Web::DevicePixelRect> screen_rects;
+    for (auto const& screen_rect : event.rects()) {
+        screen_rects.append(screen_rect.to_type<Web::DevicePixels>());
+    }
+    client().async_update_screen_rects(screen_rects, event.main_screen_index());
 }
 
 void OutOfProcessWebView::did_scroll()
 {
-    client().async_set_viewport_rect(visible_content_rect());
+    client().async_set_viewport_rect(visible_content_rect().to_type<Web::DevicePixels>());
     request_repaint();
 }
 
@@ -261,12 +270,12 @@ void OutOfProcessWebView::connect_to_webdriver(DeprecatedString const& webdriver
 
 void OutOfProcessWebView::set_window_position(Gfx::IntPoint position)
 {
-    client().async_set_window_position(position);
+    client().async_set_window_position(position.to_type<Web::DevicePixels>());
 }
 
 void OutOfProcessWebView::set_window_size(Gfx::IntSize size)
 {
-    client().async_set_window_size(size);
+    client().async_set_window_size(size.to_type<Web::DevicePixels>());
 }
 
 void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)

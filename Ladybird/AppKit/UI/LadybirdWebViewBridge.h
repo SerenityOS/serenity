@@ -23,7 +23,7 @@ namespace Ladybird {
 
 class WebViewBridge final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<WebViewBridge>> create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, WebContentOptions const&, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
+    static ErrorOr<NonnullOwnPtr<WebViewBridge>> create(Vector<Web::DevicePixelRect> screen_rects, float device_pixel_ratio, WebContentOptions const&, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
     virtual ~WebViewBridge() override;
 
     float device_pixel_ratio() const { return m_device_pixel_ratio; }
@@ -60,16 +60,16 @@ public:
     Function<void(Gfx::IntPoint)> on_scroll;
 
 private:
-    WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, WebContentOptions const&, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
+    WebViewBridge(Vector<Web::DevicePixelRect> screen_rects, float device_pixel_ratio, WebContentOptions const&, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
 
     virtual void update_zoom() override;
-    virtual Gfx::IntRect viewport_rect() const override;
+    virtual Web::DevicePixelRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
     virtual void create_client() override;
 
-    Vector<Gfx::IntRect> m_screen_rects;
+    Vector<Web::DevicePixelRect> m_screen_rects;
     Gfx::IntRect m_viewport_rect;
 
     WebContentOptions m_web_content_options;

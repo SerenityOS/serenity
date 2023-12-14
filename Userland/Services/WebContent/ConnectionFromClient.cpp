@@ -107,7 +107,7 @@ void ConnectionFromClient::update_system_fonts(DeprecatedString const& default_f
     Gfx::FontDatabase::set_window_title_font_query(window_title_font_query);
 }
 
-void ConnectionFromClient::update_screen_rects(Vector<Gfx::IntRect> const& rects, u32 main_screen)
+void ConnectionFromClient::update_screen_rects(Vector<Web::DevicePixelRect> const& rects, u32 main_screen)
 {
     page().set_screen_rects(rects, main_screen);
 }
@@ -135,10 +135,10 @@ void ConnectionFromClient::load_html(DeprecatedString const& html)
     page().page().load_html(html);
 }
 
-void ConnectionFromClient::set_viewport_rect(Gfx::IntRect const& rect)
+void ConnectionFromClient::set_viewport_rect(Web::DevicePixelRect const& rect)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
-    page().set_viewport_rect(rect.to_type<Web::DevicePixels>());
+    page().set_viewport_rect(rect);
 }
 
 void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap const& bitmap)
@@ -152,7 +152,7 @@ void ConnectionFromClient::remove_backing_store(i32 backing_store_id)
     m_pending_paint_requests.remove_all_matching([backing_store_id](auto& pending_repaint_request) { return pending_repaint_request.bitmap_id == backing_store_id; });
 }
 
-void ConnectionFromClient::paint(Gfx::IntRect const& content_rect, i32 backing_store_id)
+void ConnectionFromClient::paint(Web::DevicePixelRect const& content_rect, i32 backing_store_id)
 {
     for (auto& pending_paint : m_pending_paint_requests) {
         if (pending_paint.bitmap_id == backing_store_id) {
@@ -175,8 +175,8 @@ void ConnectionFromClient::paint(Gfx::IntRect const& content_rect, i32 backing_s
 void ConnectionFromClient::flush_pending_paint_requests()
 {
     for (auto& pending_paint : m_pending_paint_requests) {
-        page().paint(pending_paint.content_rect.to_type<Web::DevicePixels>(), *pending_paint.bitmap);
-        async_did_paint(pending_paint.content_rect, pending_paint.bitmap_id);
+        page().paint(pending_paint.content_rect, *pending_paint.bitmap);
+        async_did_paint(pending_paint.content_rect.to_type<int>(), pending_paint.bitmap_id);
     }
     m_pending_paint_requests.clear();
 }
@@ -981,14 +981,14 @@ void ConnectionFromClient::set_device_pixels_per_css_pixel(float device_pixels_p
     page().set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
 }
 
-void ConnectionFromClient::set_window_position(Gfx::IntPoint position)
+void ConnectionFromClient::set_window_position(Web::DevicePixelPoint position)
 {
-    page().set_window_position(position.to_type<Web::DevicePixels>());
+    page().set_window_position(position);
 }
 
-void ConnectionFromClient::set_window_size(Gfx::IntSize size)
+void ConnectionFromClient::set_window_size(Web::DevicePixelSize size)
 {
-    page().set_window_size(size.to_type<Web::DevicePixels>());
+    page().set_window_size(size);
 }
 
 Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()

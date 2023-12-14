@@ -55,11 +55,11 @@ private:
     virtual void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path) override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
-    virtual void update_screen_rects(Vector<Gfx::IntRect> const&, u32) override;
+    virtual void update_screen_rects(Vector<Web::DevicePixelRect> const&, u32) override;
     virtual void load_url(URL const&) override;
     virtual void load_html(DeprecatedString const&) override;
-    virtual void paint(Gfx::IntRect const&, i32) override;
-    virtual void set_viewport_rect(Gfx::IntRect const&) override;
+    virtual void paint(Web::DevicePixelRect const&, i32) override;
+    virtual void set_viewport_rect(Web::DevicePixelRect const&) override;
     virtual void mouse_down(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
     virtual void mouse_move(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
     virtual void mouse_up(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
@@ -97,8 +97,8 @@ private:
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
     virtual void set_device_pixels_per_css_pixel(float) override;
-    virtual void set_window_position(Gfx::IntPoint) override;
-    virtual void set_window_size(Gfx::IntSize) override;
+    virtual void set_window_position(Web::DevicePixelPoint) override;
+    virtual void set_window_size(Web::DevicePixelSize) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
     virtual void set_system_visibility_state(bool visible) override;
 
@@ -138,7 +138,7 @@ private:
 
     NonnullOwnPtr<PageHost> m_page_host;
     struct PaintRequest {
-        Gfx::IntRect content_rect;
+        Web::DevicePixelRect content_rect;
         NonnullRefPtr<Gfx::Bitmap> bitmap;
         i32 bitmap_id { -1 };
     };

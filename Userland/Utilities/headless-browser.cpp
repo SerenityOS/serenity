@@ -74,8 +74,8 @@ public:
         view->client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
         view->m_viewport_rect = { { 0, 0 }, window_size };
-        view->client().async_set_viewport_rect(view->m_viewport_rect);
-        view->client().async_set_window_size(window_size);
+        view->client().async_set_viewport_rect(view->m_viewport_rect.to_type<Web::DevicePixels>());
+        view->client().async_set_window_size(window_size.to_type<Web::DevicePixels>());
 
         if (!web_driver_ipc_path.is_empty())
             view->client().async_connect_to_webdriver(web_driver_ipc_path);
@@ -114,7 +114,7 @@ private:
     void update_zoom() override { }
     void create_client() override { }
 
-    virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
+    virtual Web::DevicePixelRect viewport_rect() const override { return m_viewport_rect.to_type<Web::DevicePixels>(); }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override { return widget_position; }
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override { return content_position; }
 
