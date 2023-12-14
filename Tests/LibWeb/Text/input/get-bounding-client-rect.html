@@ -9,10 +9,16 @@
     }
 </style>
 <div id="box"></div>
+<a id="inline">inline</a>
 <script src="include.js"></script>
 <script>
     test(() => {
         const rect = document.getElementById("box").getBoundingClientRect();
+        println(JSON.stringify(rect));
+    });
+
+    test(() => {
+        const rect = document.getElementById("inline").getBoundingClientRect();
         println(JSON.stringify(rect));
     });
 </script>

@@ -173,4 +173,32 @@ void InlinePaintable::for_each_fragment(Callback callback) const
     }
 }
 
+CSSPixelRect InlinePaintable::bounding_rect() const
+{
+    auto top = CSSPixels::max();
+    auto left = CSSPixels::max();
+    auto right = CSSPixels::min();
+    auto bottom = CSSPixels::min();
+    auto has_fragments = false;
+    for_each_fragment([&](auto const& fragment, bool, bool) {
+        has_fragments = true;
+        auto fragment_absolute_rect = fragment.absolute_rect();
+        if (fragment_absolute_rect.top() < top)
+            top = fragment_absolute_rect.top();
+        if (fragment_absolute_rect.left() < left)
+            left = fragment_absolute_rect.left();
+        if (fragment_absolute_rect.right() > right)
+            right = fragment_absolute_rect.right();
+        if (fragment_absolute_rect.bottom() > bottom)
+            bottom = fragment_absolute_rect.bottom();
+    });
+
+    if (!has_fragments) {
+        // FIXME: This is adhoc, and we should return rect of empty fragment instead.
+        auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
+        return { containing_block_position_in_absolute_coordinates, { 0, 0 } };
+    }
+    return { left, top, right - left, bottom - top };
+}
+
 }

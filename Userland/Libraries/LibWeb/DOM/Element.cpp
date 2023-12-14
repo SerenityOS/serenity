@@ -61,6 +61,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
@@ -834,16 +835,24 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
     // // NOTE: Ensure that layout is up-to-date before looking at metrics.
     const_cast<Document&>(document()).update_layout();
-
-    // FIXME: Support inline layout nodes as well.
-    auto* paintable_box = this->paintable_box();
-    if (!paintable_box)
-        return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
-
     VERIFY(document().navigable());
     auto viewport_offset = document().navigable()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paintable_box->absolute_border_box_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>());
+    if (auto const* paintable_box = this->paintable_box()) {
+        auto absolute_rect = paintable_box->absolute_border_box_rect();
+        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
+        return Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>());
+    }
+
+    if (auto const* paintable = this->paintable(); is<Painting::InlinePaintable>(*paintable)) {
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
+        auto absolute_rect = inline_paintable.bounding_rect();
+        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
+        return Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>());
+    }
+
+    dbgln("FIXME: Failed to get bounding client rect for element ({})", debug_description());
+    return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
