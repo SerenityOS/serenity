@@ -128,53 +128,10 @@ int sigpending(sigset_t* set)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-// Signal 0 (the null signal) and Signal 32 (SIGCANCEL) are deliberately set to null here.
-// They are not intended to be resolved by strsignal(), getsignalname() or getsignalbyname().
-#define ENUMERATE_SIGNALS                                  \
-    __ENUMERATE_SIGNAL(nullptr, nullptr)                   \
-    __ENUMERATE_SIGNAL("HUP", "Hangup")                    \
-    __ENUMERATE_SIGNAL("INT", "Interrupt")                 \
-    __ENUMERATE_SIGNAL("QUIT", "Quit")                     \
-    __ENUMERATE_SIGNAL("ILL", "Illegal instruction")       \
-    __ENUMERATE_SIGNAL("TRAP", "Trap")                     \
-    __ENUMERATE_SIGNAL("ABRT", "Aborted")                  \
-    __ENUMERATE_SIGNAL("BUS", "Bus error")                 \
-    __ENUMERATE_SIGNAL("FPE", "Division by zero")          \
-    __ENUMERATE_SIGNAL("KILL", "Killed")                   \
-    __ENUMERATE_SIGNAL("USR1", "User signal 1")            \
-    __ENUMERATE_SIGNAL("SEGV", "Segmentation violation")   \
-    __ENUMERATE_SIGNAL("USR2", "User signal 2")            \
-    __ENUMERATE_SIGNAL("PIPE", "Broken pipe")              \
-    __ENUMERATE_SIGNAL("ALRM", "Alarm clock")              \
-    __ENUMERATE_SIGNAL("TERM", "Terminated")               \
-    __ENUMERATE_SIGNAL("STKFLT", "Stack fault")            \
-    __ENUMERATE_SIGNAL("CHLD", "Child exited")             \
-    __ENUMERATE_SIGNAL("CONT", "Continued")                \
-    __ENUMERATE_SIGNAL("STOP", "Stopped (signal)")         \
-    __ENUMERATE_SIGNAL("TSTP", "Stopped")                  \
-    __ENUMERATE_SIGNAL("TTIN", "Stopped (tty input)")      \
-    __ENUMERATE_SIGNAL("TTOU", "Stopped (tty output)")     \
-    __ENUMERATE_SIGNAL("URG", "Urgent I/O condition)")     \
-    __ENUMERATE_SIGNAL("XCPU", "CPU limit exceeded")       \
-    __ENUMERATE_SIGNAL("XFSZ", "File size limit exceeded") \
-    __ENUMERATE_SIGNAL("VTALRM", "Virtual timer expired")  \
-    __ENUMERATE_SIGNAL("PROF", "Profiling timer expired")  \
-    __ENUMERATE_SIGNAL("WINCH", "Window changed")          \
-    __ENUMERATE_SIGNAL("IO", "I/O possible")               \
-    __ENUMERATE_SIGNAL("INFO", "Power failure")            \
-    __ENUMERATE_SIGNAL("SYS", "Bad system call")           \
-    __ENUMERATE_SIGNAL(nullptr, nullptr)
-
-char const* sys_siglist[NSIG] = {
-#define __ENUMERATE_SIGNAL(name, description) description,
-    ENUMERATE_SIGNALS
-#undef __ENUMERATE_SIGNAL
-};
-
 char const* sys_signame[NSIG] = {
-#define __ENUMERATE_SIGNAL(name, description) name,
-    ENUMERATE_SIGNALS
-#undef __ENUMERATE_SIGNAL
+#define NAME(name, description) name,
+    __ENUMERATE_SIGNALS(NAME)
+#undef NAME
 };
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/siglongjmp.html

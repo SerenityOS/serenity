@@ -40,3 +40,40 @@
 #define SIGSYS 31
 #define SIGCANCEL 32
 #define NSIG 33
+
+// Signal 0 (the null signal) and Signal 32 (SIGCANCEL) are deliberately set to null here.
+// They are not intended to be resolved by strsignal(), getsignalname() or getsignalbyname().
+#define __ENUMERATE_SIGNALS(F)            \
+    F(nullptr, nullptr)                   \
+    F("HUP", "Hangup")                    \
+    F("INT", "Interrupt")                 \
+    F("QUIT", "Quit")                     \
+    F("ILL", "Illegal instruction")       \
+    F("TRAP", "Trap")                     \
+    F("ABRT", "Aborted")                  \
+    F("BUS", "Bus error")                 \
+    F("FPE", "Division by zero")          \
+    F("KILL", "Killed")                   \
+    F("USR1", "User signal 1")            \
+    F("SEGV", "Segmentation violation")   \
+    F("USR2", "User signal 2")            \
+    F("PIPE", "Broken pipe")              \
+    F("ALRM", "Alarm clock")              \
+    F("TERM", "Terminated")               \
+    F("STKFLT", "Stack fault")            \
+    F("CHLD", "Child exited")             \
+    F("CONT", "Continued")                \
+    F("STOP", "Stopped (signal)")         \
+    F("TSTP", "Stopped")                  \
+    F("TTIN", "Stopped (tty input)")      \
+    F("TTOU", "Stopped (tty output)")     \
+    F("URG", "Urgent I/O condition)")     \
+    F("XCPU", "CPU limit exceeded")       \
+    F("XFSZ", "File size limit exceeded") \
+    F("VTALRM", "Virtual timer expired")  \
+    F("PROF", "Profiling timer expired")  \
+    F("WINCH", "Window changed")          \
+    F("IO", "I/O possible")               \
+    F("INFO", "Power failure")            \
+    F("SYS", "Bad system call")           \
+    F(nullptr, nullptr)
