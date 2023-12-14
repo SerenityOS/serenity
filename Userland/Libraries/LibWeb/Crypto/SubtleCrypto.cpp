@@ -36,7 +36,7 @@ void SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
-JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
+JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(Variant<JS::Handle<JS::Object>, String> const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
 {
     auto& realm = this->realm();
 
@@ -54,8 +54,16 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::
 
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
     // FIXME: This is way more generic than it needs to be right now, so we simplify it.
+    if (!algorithm.has<String>()) {
+        auto promise = JS::Promise::create(realm);
+        auto error = WebIDL::OperationError::create(realm, "LibJS does not support non-string parameters to digest()"_fly_string);
+        promise->reject(error.ptr());
+        return promise;
+    }
+
     ::Crypto::Hash::HashKind hash_kind;
-    auto algorithm_as_string_view = algorithm.bytes_as_string_view();
+    auto algorithm_name = algorithm.get<String>();
+    auto algorithm_as_string_view = algorithm_name.bytes_as_string_view();
     if (algorithm_as_string_view.equals_ignoring_ascii_case("SHA-1"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA1;
     } else if (algorithm_as_string_view.equals_ignoring_ascii_case("SHA-256"sv)) {
@@ -67,7 +75,7 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
-        auto error = WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid hash function '{}'", algorithm)));
+        auto error = WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid hash function '{}'", algorithm_name)));
         auto promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
