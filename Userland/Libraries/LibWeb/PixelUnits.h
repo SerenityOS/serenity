@@ -15,6 +15,7 @@
 #include <AK/Traits.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
+#include <LibIPC/Forward.h>
 #include <math.h>
 
 namespace Web {
@@ -502,5 +503,29 @@ struct Formatter<Web::DevicePixels> : Formatter<Web::DevicePixels::Type> {
         return Formatter<Web::DevicePixels::Type>::format(builder, value.value());
     }
 };
+
+}
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, Web::DevicePixels const& value);
+template<>
+ErrorOr<Web::DevicePixels> decode(Decoder& decoder);
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, Web::DevicePixelPoint const& value);
+template<>
+ErrorOr<Web::DevicePixelPoint> decode(Decoder& decoder);
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, Web::DevicePixelSize const& value);
+template<>
+ErrorOr<Web::DevicePixelSize> decode(Decoder& decoder);
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, Web::DevicePixelRect const& value);
+template<>
+ErrorOr<Web::DevicePixelRect> decode(Decoder& decoder);
 
 }

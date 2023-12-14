@@ -484,11 +484,11 @@ void WebContentView::paintEvent(QPaintEvent*)
 
     if (m_client_state.has_usable_bitmap) {
         bitmap = m_client_state.front_bitmap.bitmap.ptr();
-        bitmap_size = m_client_state.front_bitmap.last_painted_size;
+        bitmap_size = m_client_state.front_bitmap.last_painted_size.to_type<int>();
 
     } else {
         bitmap = m_backup_bitmap.ptr();
-        bitmap_size = m_backup_bitmap_size;
+        bitmap_size = m_backup_bitmap_size.to_type<int>();
     }
 
     if (bitmap) {
@@ -518,17 +518,17 @@ void WebContentView::resizeEvent(QResizeEvent* event)
 void WebContentView::set_viewport_rect(Gfx::IntRect rect)
 {
     m_viewport_rect = rect;
-    client().async_set_viewport_rect(rect);
+    client().async_set_viewport_rect(rect.to_type<Web::DevicePixels>());
 }
 
 void WebContentView::set_window_size(Gfx::IntSize size)
 {
-    client().async_set_window_size(size);
+    client().async_set_window_size(size.to_type<Web::DevicePixels>());
 }
 
 void WebContentView::set_window_position(Gfx::IntPoint position)
 {
-    client().async_set_window_position(position);
+    client().async_set_window_position(position.to_type<Web::DevicePixels>());
 }
 
 void WebContentView::set_device_pixel_ratio(double device_pixel_ratio)
@@ -631,12 +631,10 @@ void WebContentView::create_client()
     auto screens = QGuiApplication::screens();
 
     if (!screens.empty()) {
-        Vector<Gfx::IntRect> screen_rects;
-
+        Vector<Web::DevicePixelRect> screen_rects;
         for (auto const& screen : screens) {
             auto geometry = screen->geometry();
-
-            screen_rects.append(Gfx::IntRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
+            screen_rects.append(Web::DevicePixelRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
         }
 
         // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
@@ -714,9 +712,9 @@ void WebContentView::update_cursor(Gfx::StandardCursor cursor)
     }
 }
 
-Gfx::IntRect WebContentView::viewport_rect() const
+Web::DevicePixelRect WebContentView::viewport_rect() const
 {
-    return m_viewport_rect;
+    return m_viewport_rect.to_type<Web::DevicePixels>();
 }
 
 Gfx::IntPoint WebContentView::to_content_position(Gfx::IntPoint widget_position) const

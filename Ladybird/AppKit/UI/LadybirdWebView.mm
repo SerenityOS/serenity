@@ -85,11 +85,11 @@ struct HideCursor {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         auto* screens = [NSScreen screens];
 
-        Vector<Gfx::IntRect> screen_rects;
+        Vector<Web::DevicePixelRect> screen_rects;
         screen_rects.ensure_capacity([screens count]);
 
         for (id screen in screens) {
-            auto screen_rect = Ladybird::ns_rect_to_gfx_rect([screen frame]);
+            auto screen_rect = Ladybird::ns_rect_to_gfx_rect([screen frame]).to_type<Web::DevicePixels>();
             screen_rects.unchecked_append(screen_rect);
         }
 

@@ -23,12 +23,12 @@ static T scale_for_device(T size, float device_pixel_ratio)
     return size.template to_type<float>().scaled(device_pixel_ratio).template to_type<int>();
 }
 
-ErrorOr<NonnullOwnPtr<WebViewBridge>> WebViewBridge::create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, WebContentOptions const& web_content_options, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
+ErrorOr<NonnullOwnPtr<WebViewBridge>> WebViewBridge::create(Vector<Web::DevicePixelRect> screen_rects, float device_pixel_ratio, WebContentOptions const& web_content_options, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) WebViewBridge(move(screen_rects), device_pixel_ratio, web_content_options, move(webdriver_content_ipc_path), preferred_color_scheme));
 }
 
-WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, WebContentOptions const& web_content_options, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
+WebViewBridge::WebViewBridge(Vector<Web::DevicePixelRect> screen_rects, float device_pixel_ratio, WebContentOptions const& web_content_options, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
     : m_screen_rects(move(screen_rects))
     , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(move(webdriver_content_ipc_path))
@@ -89,7 +89,7 @@ void WebViewBridge::set_viewport_rect(Gfx::IntRect viewport_rect, ForResize for_
     viewport_rect.set_size(scale_for_device(viewport_rect.size(), m_device_pixel_ratio));
     m_viewport_rect = viewport_rect;
 
-    client().async_set_viewport_rect(m_viewport_rect);
+    client().async_set_viewport_rect(m_viewport_rect.to_type<Web::DevicePixels>());
     request_repaint();
 
     if (for_resize == ForResize::Yes) {
@@ -151,10 +151,10 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
 
     if (m_client_state.has_usable_bitmap) {
         bitmap = m_client_state.front_bitmap.bitmap.ptr();
-        bitmap_size = m_client_state.front_bitmap.last_painted_size;
+        bitmap_size = m_client_state.front_bitmap.last_painted_size.to_type<int>();
     } else {
         bitmap = m_backup_bitmap.ptr();
-        bitmap_size = m_backup_bitmap_size;
+        bitmap_size = m_backup_bitmap_size.to_type<int>();
     }
 
     if (!bitmap)
@@ -170,9 +170,9 @@ void WebViewBridge::update_zoom()
         on_zoom_level_changed();
 }
 
-Gfx::IntRect WebViewBridge::viewport_rect() const
+Web::DevicePixelRect WebViewBridge::viewport_rect() const
 {
-    return m_viewport_rect;
+    return m_viewport_rect.to_type<Web::DevicePixels>();
 }
 
 Gfx::IntPoint WebViewBridge::to_content_position(Gfx::IntPoint widget_position) const

@@ -33,7 +33,7 @@ public:
 
     void set_palette_impl(Gfx::PaletteImpl&);
     void set_viewport_rect(Web::DevicePixelRect const&);
-    void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index].to_type<Web::DevicePixels>(); }
+    void set_screen_rects(Vector<Web::DevicePixelRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; }
     void set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) { m_device_pixels_per_css_pixel = device_pixels_per_css_pixel; }
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }

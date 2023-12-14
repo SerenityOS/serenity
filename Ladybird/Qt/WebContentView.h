@@ -84,7 +84,7 @@ private:
     // ^WebView::ViewImplementation
     virtual void create_client() override;
     virtual void update_zoom() override;
-    virtual Gfx::IntRect viewport_rect() const override;
+    virtual Web::DevicePixelRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 

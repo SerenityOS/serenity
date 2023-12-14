@@ -55,7 +55,7 @@ void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id
 
     m_client_state.has_usable_bitmap = true;
     m_client_state.back_bitmap.pending_paints--;
-    m_client_state.back_bitmap.last_painted_size = size;
+    m_client_state.back_bitmap.last_painted_size = size.to_type<Web::DevicePixels>();
     swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
 
     // We don't need the backup bitmap anymore, so drop it.
@@ -310,7 +310,7 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
     if (viewport_rect.is_empty())
         return;
 
-    Gfx::IntSize minimum_needed_size;
+    Web::DevicePixelSize minimum_needed_size;
 
     if (window_resize_in_progress == WindowResizeInProgress::Yes) {
         // Pad the minimum needed size so that we don't have to keep reallocating backing stores while the window is being resized.
@@ -323,8 +323,8 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
     }
 
     auto reallocate_backing_store_if_needed = [&](SharedBitmap& backing_store) {
-        if (!backing_store.bitmap || !backing_store.bitmap->size().contains(minimum_needed_size)) {
-            if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRA8888, minimum_needed_size); !new_bitmap_or_error.is_error()) {
+        if (!backing_store.bitmap || !backing_store.bitmap->size().contains(minimum_needed_size.to_type<int>())) {
+            if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRA8888, minimum_needed_size.to_type<int>()); !new_bitmap_or_error.is_error()) {
                 if (backing_store.bitmap)
                     client().async_remove_backing_store(backing_store.id);
 

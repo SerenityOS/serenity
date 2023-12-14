@@ -174,7 +174,7 @@ public:
     Function<void(i32, Gfx::IntPoint, String const&, Optional<String> const&, Optional<Attribute> const&)> on_inspector_requested_dom_tree_context_menu;
     Function<void(String const&)> on_inspector_executed_console_script;
 
-    virtual Gfx::IntRect viewport_rect() const = 0;
+    virtual Web::DevicePixelRect viewport_rect() const = 0;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const = 0;
 
@@ -205,7 +205,7 @@ protected:
     struct SharedBitmap {
         i32 id { -1 };
         i32 pending_paints { 0 };
-        Gfx::IntSize last_painted_size;
+        Web::DevicePixelSize last_painted_size;
         RefPtr<Gfx::Bitmap> bitmap;
     };
 
@@ -227,7 +227,7 @@ protected:
     RefPtr<Core::Timer> m_backing_store_shrink_timer;
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
-    Gfx::IntSize m_backup_bitmap_size;
+    Web::DevicePixelSize m_backup_bitmap_size;
 
     size_t m_crash_count = 0;
     RefPtr<Core::Timer> m_repeated_crash_timer;
