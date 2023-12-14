@@ -156,7 +156,7 @@ ErrorOr<void> HexEditor::save()
     return {};
 }
 
-size_t HexEditor::selection_size()
+size_t HexEditor::selection_size() const
 {
     if (!has_selection())
         return 0;
@@ -638,12 +638,20 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             bool const selection_inbetween_end_start = byte_position >= m_selection_end && byte_position < m_selection_start;
             bool const highlight_flag = selection_inbetween_start_end || selection_inbetween_end_start;
 
-            Gfx::IntRect hex_display_rect {
+            Gfx::IntRect hex_display_rect_high_nibble {
                 frame_thickness() + offset_margin_width() + j * cell_width() + 2 * m_padding,
                 frame_thickness() + m_padding + i * line_height(),
-                cell_width(),
+                cell_width() / 2,
                 line_height() - m_line_spacing
             };
+
+            Gfx::IntRect hex_display_rect_low_nibble {
+                static_cast<int>(hex_display_rect_high_nibble.x() + character_width()),
+                hex_display_rect_high_nibble.y(),
+                hex_display_rect_high_nibble.width(),
+                hex_display_rect_high_nibble.height()
+            };
+
             Gfx::IntRect background_rect {
                 frame_thickness() + offset_margin_width() + j * cell_width() + 1 * m_padding,
                 frame_thickness() + m_line_spacing / 2 + i * line_height(),
@@ -653,6 +661,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
             u8 const cell_value = m_document->get(byte_position).value;
             auto line = String::formatted("{:02X}", cell_value).release_value_but_fixme_should_propagate_errors();
+            auto high_nibble = line.substring_from_byte_offset(0, 1).release_value_but_fixme_should_propagate_errors();
+            auto low_nibble = line.substring_from_byte_offset(1).release_value_but_fixme_should_propagate_errors();
 
             Gfx::Color background_color = palette().color(background_role());
             Gfx::Color text_color = [&]() -> Gfx::Color {
@@ -665,25 +675,31 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
             if (highlight_flag) {
                 background_color = edited_flag ? palette().selection().inverted() : palette().selection();
-                text_color = edited_flag ? palette().selection_text().inverted() : palette().selection_text();
+                text_color = edited_flag ? text_color : palette().selection_text();
             } else if (byte_position == m_position && m_edit_mode == EditMode::Text) {
                 background_color = palette().inactive_selection();
                 text_color = palette().inactive_selection_text();
             }
             painter.fill_rect(background_rect, background_color);
 
-            painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
-
             if (m_edit_mode == EditMode::Hex) {
                 if (byte_position == m_position) {
                     Gfx::IntRect cursor_position_rect {
-                        static_cast<int>(hex_display_rect.left() + m_cursor_at_low_nibble * character_width()),
-                        hex_display_rect.top(),
-                        2,
-                        hex_display_rect.height()
+                        static_cast<int>(hex_display_rect_high_nibble.left() + m_cursor_at_low_nibble * character_width()),
+                        static_cast<int>(frame_thickness() + m_line_spacing / 2 + i * line_height()),
+                        static_cast<int>(character_width()),
+                        static_cast<int>(line_height())
                     };
-                    painter.fill_rect(cursor_position_rect, palette().text_cursor());
+                    painter.fill_rect(cursor_position_rect, palette().black());
                 }
+            }
+
+            if (byte_position == m_position && !edited_flag) {
+                painter.draw_text(hex_display_rect_high_nibble, high_nibble, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? text_color : palette().selection_text());
+                painter.draw_text(hex_display_rect_low_nibble, low_nibble, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? palette().selection_text() : text_color);
+            } else {
+                painter.draw_text(hex_display_rect_high_nibble, high_nibble, Gfx::TextAlignment::TopLeft, text_color);
+                painter.draw_text(hex_display_rect_low_nibble, low_nibble, Gfx::TextAlignment::TopLeft, text_color);
             }
 
             Gfx::IntRect text_display_rect {
@@ -718,16 +734,23 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
             painter.fill_rect(text_background_rect, background_color);
             auto character = String::formatted("{:c}", isprint(cell_value) ? cell_value : '.').release_value_but_fixme_should_propagate_errors();
-            painter.draw_text(text_display_rect, character, Gfx::TextAlignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Text) {
                 if (byte_position == m_position) {
                     Gfx::IntRect cursor_position_rect {
-                        text_display_rect.left(), text_display_rect.top(), 2, text_display_rect.height()
+                        text_display_rect.left(),
+                        static_cast<int>(frame_thickness() + m_line_spacing / 2 + i * line_height()),
+                        static_cast<int>(character_width()),
+                        static_cast<int>(line_height())
                     };
-                    painter.fill_rect(cursor_position_rect, palette().text_cursor());
+                    painter.fill_rect(cursor_position_rect, palette().black());
                 }
             }
+
+            if (byte_position == m_position)
+                painter.draw_text(text_display_rect, character, Gfx::TextAlignment::TopLeft, palette().selection_text());
+            else
+                painter.draw_text(text_display_rect, character, Gfx::TextAlignment::TopLeft, text_color);
         }
     }
 }
