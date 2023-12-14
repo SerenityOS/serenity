@@ -237,18 +237,6 @@ struct DrawSignedDistanceField {
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
 };
 
-struct PaintProgressbar {
-    Gfx::IntRect frame_rect;
-    Gfx::IntRect progress_rect;
-    Palette palette;
-    int min;
-    int max;
-    int value;
-    StringView text;
-
-    [[nodiscard]] Gfx::IntRect bounding_rect() const { return frame_rect; }
-};
-
 struct PaintFrame {
     Gfx::IntRect rect;
     Palette palette;
@@ -348,7 +336,6 @@ using PaintingCommand = Variant<
     FillEllipse,
     DrawLine,
     DrawSignedDistanceField,
-    PaintProgressbar,
     PaintFrame,
     ApplyBackdropFilter,
     DrawRect,
@@ -386,7 +373,6 @@ public:
     virtual CommandResult fill_ellipse(Gfx::IntRect const&, Color const&, Gfx::AntiAliasingPainter::BlendMode blend_mode) = 0;
     virtual CommandResult draw_line(Color const& color, Gfx::IntPoint const& from, Gfx::IntPoint const& to, int thickness, Gfx::Painter::LineStyle, Color const& alternate_color) = 0;
     virtual CommandResult draw_signed_distance_field(Gfx::IntRect const& rect, Color const&, Gfx::GrayscaleBitmap const&, float smoothing) = 0;
-    virtual CommandResult paint_progressbar(Gfx::IntRect const& frame_rect, Gfx::IntRect const& progress_rect, Palette const& palette, int min, int max, int value, StringView const& text) = 0;
     virtual CommandResult paint_frame(Gfx::IntRect const& rect, Palette const&, Gfx::FrameStyle) = 0;
     virtual CommandResult apply_backdrop_filter(Gfx::IntRect const& backdrop_region, Web::CSS::ResolvedBackdropFilter const& backdrop_filter) = 0;
     virtual CommandResult draw_rect(Gfx::IntRect const& rect, Color const&, bool rough) = 0;
@@ -489,7 +475,6 @@ public:
     void sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip);
     void blit_corner_clipping(u32 id, Gfx::IntRect border_rect);
 
-    void paint_progressbar(Gfx::IntRect frame_rect, Gfx::IntRect progress_rect, Palette palette, int min, int max, int value, StringView text);
     void paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style);
 
     void apply_backdrop_filter(Gfx::IntRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter);
