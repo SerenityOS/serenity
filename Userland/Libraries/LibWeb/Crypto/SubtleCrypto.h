@@ -20,7 +20,7 @@ public:
 
     virtual ~SubtleCrypto() override;
 
-    JS::NonnullGCPtr<JS::Promise> digest(String const& algorithm, JS::Handle<WebIDL::BufferSource> const& data);
+    JS::NonnullGCPtr<JS::Promise> digest(Variant<JS::Handle<JS::Object>, String> const& algorithm, JS::Handle<WebIDL::BufferSource> const& data);
 
 private:
     explicit SubtleCrypto(JS::Realm&);
