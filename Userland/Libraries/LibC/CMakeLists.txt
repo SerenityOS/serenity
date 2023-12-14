@@ -2,7 +2,6 @@ set(LIBC_SOURCES
     arpa/inet.cpp
     assert.cpp
     ctype.cpp
-    cxxabi.cpp
     dirent.cpp
     dlfcn.cpp
     fcntl.cpp

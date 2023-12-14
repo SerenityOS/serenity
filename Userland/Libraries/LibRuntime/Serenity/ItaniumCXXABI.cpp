@@ -9,19 +9,13 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/NeverDestroyed.h>
-#include <assert.h>
-#include <bits/pthread_integration.h>
+#include <LibRuntime/Mutex.h>
+#include <LibRuntime/Serenity/PossiblyThrowingCallback.h>
+#include <LibRuntime/System.h>
 #include <mallocdefs.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/internals.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
-extern "C" {
-
+namespace {
 struct AtExitEntry {
     AtExitFunction method { nullptr };
     void* parameter { nullptr };
@@ -30,48 +24,47 @@ struct AtExitEntry {
 
 // We'll re-allocate the region if it ends up being too small at runtime.
 // Invariant: atexit_entry_region_capacity * sizeof(AtExitEntry) does not overflow.
-static size_t atexit_entry_region_capacity = PAGE_SIZE / sizeof(AtExitEntry);
+size_t atexit_entry_region_capacity = PAGE_SIZE / sizeof(AtExitEntry);
 
-static size_t atexit_region_bytes(size_t capacity = atexit_entry_region_capacity)
+size_t atexit_region_bytes(size_t capacity = atexit_entry_region_capacity)
 {
     return PAGE_ROUND_UP(capacity * sizeof(AtExitEntry));
 }
 
-static size_t atexit_next_capacity()
+size_t atexit_next_capacity()
 {
     size_t original_num_bytes = atexit_region_bytes();
     VERIFY(!Checked<size_t>::addition_would_overflow(original_num_bytes, PAGE_SIZE));
     return (original_num_bytes + PAGE_SIZE) / sizeof(AtExitEntry);
 }
 
-static AtExitEntry* atexit_entries;
-static size_t atexit_entry_count = 0;
-static pthread_mutex_t atexit_mutex = __PTHREAD_MUTEX_INITIALIZER;
+AtExitEntry* atexit_entries;
+size_t atexit_entry_count = 0;
+Runtime::Mutex atexit_mutex;
 
 // The C++ compiler automagically registers the destructor of this object with __cxa_atexit.
 // However, we can't control the order in which these destructors are run, so we might still want to access this data after the registered entry.
 // Hence, we will call the destructor manually, when we know it is safe to do so.
-static NeverDestroyed<Bitmap> atexit_called_entries;
+NeverDestroyed<Bitmap> atexit_called_entries;
 
 // During startup, it is sufficiently unlikely that the attacker can exploit any write primitive.
 // We use this to avoid unnecessary syscalls to mprotect.
-static bool atexit_region_should_lock = false;
+bool atexit_region_should_lock = false;
 
-static void lock_atexit_handlers()
+void lock_atexit_handlers()
 {
-    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_region_bytes(), PROT_READ) < 0) {
-        perror("lock_atexit_handlers");
-        _exit(1);
-    }
+    if (atexit_region_should_lock)
+        MUST(Runtime::mprotect(atexit_entries, atexit_region_bytes(), Runtime::RegionAccess::Read));
 }
 
-static void unlock_atexit_handlers()
+void unlock_atexit_handlers()
 {
-    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_region_bytes(), PROT_READ | PROT_WRITE) < 0) {
-        perror("unlock_atexit_handlers");
-        _exit(1);
-    }
+    if (atexit_region_should_lock)
+        MUST(Runtime::mprotect(atexit_entries, atexit_region_bytes(), Runtime::RegionAccess::ReadWrite));
 }
+}
+
+extern "C" {
 
 void __begin_atexit_locking()
 {
@@ -81,16 +74,13 @@ void __begin_atexit_locking()
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle)
 {
-    pthread_mutex_lock(&atexit_mutex);
+    Runtime::MutexLocker atexit_lock(atexit_mutex);
 
     // allocate initial atexit region
     if (!atexit_entries) {
-        atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_region_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-        if (atexit_entries == MAP_FAILED) {
-            pthread_mutex_unlock(&atexit_mutex);
-            perror("__cxa_atexit mmap");
-            _exit(1);
-        }
+        auto* region = MUST(Runtime::mmap(nullptr, atexit_region_bytes(), Runtime::RegionAccess::ReadWrite,
+            Runtime::MMap::Private | Runtime::MMap::Anonymous, "atexit"sv, 0, 0, PAGE_SIZE));
+        atexit_entries = reinterpret_cast<AtExitEntry*>(region);
     }
 
     // reallocate atexit region, increasing size by PAGE_SIZE
@@ -99,16 +89,13 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
         size_t new_atexit_region_size = atexit_region_bytes(new_capacity);
         dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_atexit: Growing exit handler region from {} entries to {} entries", atexit_entry_region_capacity, new_capacity);
 
-        auto* new_atexit_entries = (AtExitEntry*)mmap(nullptr, new_atexit_region_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-        if (new_atexit_entries == MAP_FAILED) {
-            pthread_mutex_unlock(&atexit_mutex);
-            perror("__cxa_atexit mmap (new size)");
-            return -1;
-        }
+        auto* region = MUST(Runtime::mmap(nullptr, new_atexit_region_size, Runtime::RegionAccess::ReadWrite,
+            Runtime::MMap::Private | Runtime::MMap::Anonymous, "atexit"sv, 0, 0, PAGE_SIZE));
+        auto* new_atexit_entries = reinterpret_cast<AtExitEntry*>(region);
         // Note: We must make sure to only copy initialized entries, as even touching uninitialized bytes will trigger UBSan.
         memcpy(new_atexit_entries, atexit_entries, atexit_entry_count * sizeof(AtExitEntry));
-        if (munmap(atexit_entries, atexit_region_bytes()) < 0) {
-            perror("__cxa_atexit munmap old region");
+        if (auto unmap_result = Runtime::munmap(atexit_entries, atexit_region_bytes()); unmap_result.is_error()) {
+            dbgln("__cxa_atexit failed to munmap old region: {}", unmap_result.release_error());
             // leak the old region on failure
         }
         atexit_entries = new_atexit_entries;
@@ -118,8 +105,6 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     unlock_atexit_handlers();
     atexit_entries[atexit_entry_count++] = { exit_function, parameter, dso_handle };
     lock_atexit_handlers();
-
-    pthread_mutex_unlock(&atexit_mutex);
 
     return 0;
 }
@@ -133,7 +118,7 @@ void __cxa_finalize(void* dso_handle)
     // Multiple calls to __cxa_finalize shall not result in calling termination function entries multiple times;
     // the implementation may either remove entries or mark them finished.
 
-    pthread_mutex_lock(&atexit_mutex);
+    Runtime::MutexLocker atexit_lock(atexit_mutex);
 
     if (atexit_entry_count > atexit_called_entries->size())
         atexit_called_entries->grow(atexit_entry_count, false);
@@ -148,13 +133,11 @@ void __cxa_finalize(void* dso_handle)
         if (needs_calling) {
             dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
             atexit_called_entries->set(entry_index, true);
-            pthread_mutex_unlock(&atexit_mutex);
-            exit_entry.method(exit_entry.parameter);
-            pthread_mutex_lock(&atexit_mutex);
+            atexit_lock.unlock();
+            Runtime::run_possibly_throwing_callback(exit_entry.method, exit_entry.parameter);
+            atexit_lock.lock();
         }
     }
-
-    pthread_mutex_unlock(&atexit_mutex);
 }
 
 __attribute__((noreturn)) void __cxa_pure_virtual()

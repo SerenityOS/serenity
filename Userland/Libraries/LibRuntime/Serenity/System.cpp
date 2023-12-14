@@ -83,4 +83,39 @@ pid_t gettid()
     return s_cached_tid;
 }
 
+ErrorOr<void*> mmap(void* address, size_t size, RegionAccess access, MMap flags, StringView name, FileDescriptor fd, off_t offset, size_t alignment)
+{
+    Syscall::SC_mmap_params params {
+        .addr = address,
+        .size = size,
+        .alignment = alignment,
+        .prot = to_underlying(access),
+        .flags = to_underlying(flags),
+        .fd = fd.value(),
+        .offset = offset,
+        .name = { name.characters_without_null_termination(), name.length() }
+    };
+    return syscall_with_errno<void*>(SC_mmap, &params);
+}
+
+ErrorOr<void> mprotect(void* address, size_t size, RegionAccess access)
+{
+    return syscall_with_errno<void>(SC_mprotect, address, size, access);
+}
+
+ErrorOr<void> munmap(void* address, size_t size)
+{
+    return syscall_with_errno<void>(SC_munmap, address, size);
+}
+
+ErrorOr<void> set_mmap_name(void* address, size_t size, StringView name)
+{
+    Syscall::SC_set_mmap_name_params params {
+        .addr = address,
+        .size = size,
+        .name = { name.characters_without_null_termination(), name.length() }
+    };
+    return syscall_with_errno<void>(SC_set_mmap_name, &params);
+}
+
 }

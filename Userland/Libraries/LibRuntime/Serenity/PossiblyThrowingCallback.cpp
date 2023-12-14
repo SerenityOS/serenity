@@ -20,4 +20,13 @@ void run_possibly_throwing_callback(void (*callback)()) noexcept
     }
 }
 
+void run_possibly_throwing_callback(void (*callback)(void* argument), void* argument) noexcept
+{
+    try {
+        callback(argument);
+    } catch (...) {
+        VERIFY_NOT_REACHED();
+    }
+}
+
 }

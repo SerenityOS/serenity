@@ -2,6 +2,7 @@ set(LIBRUNTIME_SOURCES
     LibC/string.cpp
     LibC/strings.cpp
     Exceptions.cpp
+    ItaniumCXXABI.cpp
     Mutex.cpp
     PosixThreadSupport.cpp
     PossiblyThrowingCallback.cpp
