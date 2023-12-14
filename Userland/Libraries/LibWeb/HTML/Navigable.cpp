@@ -1877,6 +1877,9 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
         // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace);
     });
+
+    // FIXME: Implement synchronous session history steps.
+    traversable->process_session_history_traversal_queue();
 }
 
 void Navigable::scroll_offset_did_change()
