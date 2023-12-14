@@ -52,12 +52,6 @@ int isdigit(int c)
     return __inline_isdigit(c);
 }
 
-#undef isxdigit
-int isxdigit(int c)
-{
-    return __inline_isxdigit(c);
-}
-
 #undef isspace
 int isspace(int c)
 {

@@ -10,13 +10,6 @@
 
 extern "C" {
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_yield.html
-int sched_yield()
-{
-    int rc = syscall(SC_yield);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_get_priority_min.html
 int sched_get_priority_min([[maybe_unused]] int policy)
 {

@@ -643,11 +643,6 @@ int ilogbf(float x) NOEXCEPT
     return internal_ilogb(x);
 }
 
-long double logbl(long double x) NOEXCEPT
-{
-    return ilogbl(x);
-}
-
 double logb(double x) NOEXCEPT
 {
     return ilogb(x);
@@ -1082,11 +1077,6 @@ double scalbn(double x, int exponent) NOEXCEPT
     return internal_scalbn(x, exponent);
 }
 
-long double scalbnl(long double x, int exponent) NOEXCEPT
-{
-    return internal_scalbn(x, exponent);
-}
-
 float scalbnlf(float x, long exponent) NOEXCEPT
 {
     return internal_scalbn(x, exponent);
@@ -1100,16 +1090,6 @@ double scalbln(double x, long exponent) NOEXCEPT
 long double scalblnl(long double x, long exponent) NOEXCEPT
 {
     return internal_scalbn(x, exponent);
-}
-
-long double fmaxl(long double x, long double y) NOEXCEPT
-{
-    if (isnan(x))
-        return y;
-    if (isnan(y))
-        return x;
-
-    return x > y ? x : y;
 }
 
 double fmax(double x, double y) NOEXCEPT

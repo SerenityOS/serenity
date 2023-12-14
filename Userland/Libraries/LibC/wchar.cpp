@@ -48,15 +48,6 @@ static unsigned int mbstate_expected_bytes(mbstate_t* state)
 
 extern "C" {
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcslen.html
-size_t wcslen(wchar_t const* str)
-{
-    size_t len = 0;
-    while (*(str++))
-        ++len;
-    return len;
-}
-
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcscpy.html
 wchar_t* wcscpy(wchar_t* dest, wchar_t const* src)
 {
