@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView webdriver_content_ipc_path;
     bool enable_callgrind_profiling = false;
     bool enable_sql_database = false;
-    bool use_lagom_networking = false;
+    bool enable_qt_networking = false;
     bool use_gpu_painting = false;
 
     Core::ArgsParser args_parser;
@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.add_option(enable_callgrind_profiling, "Enable Callgrind profiling", "enable-callgrind-profiling", 'P');
     args_parser.add_option(enable_sql_database, "Enable SQL database", "enable-sql-database", 0);
-    args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "enable-lagom-networking", 0);
+    args_parser.add_option(enable_qt_networking, "Enable Qt as the backend networking service", "enable-qt-networking", 0);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
     args_parser.parse(arguments);
 
@@ -144,7 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::WebContentOptions web_content_options {
         .enable_callgrind_profiling = enable_callgrind_profiling ? Ladybird::EnableCallgrindProfiling::Yes : Ladybird::EnableCallgrindProfiling::No,
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
-        .use_lagom_networking = use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No,
+        .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,
     };
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
