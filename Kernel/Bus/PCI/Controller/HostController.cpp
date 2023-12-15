@@ -19,6 +19,42 @@ HostController::HostController(PCI::Domain const& domain)
 {
 }
 
+void HostController::write8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
+{
+    SpinlockLocker locker(m_access_lock);
+    write8_field_locked(bus, device, function, field, value);
+}
+
+void HostController::write16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
+{
+    SpinlockLocker locker(m_access_lock);
+    write16_field_locked(bus, device, function, field, value);
+}
+
+void HostController::write32_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
+{
+    SpinlockLocker locker(m_access_lock);
+    write32_field_locked(bus, device, function, field, value);
+}
+
+u8 HostController::read8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+{
+    SpinlockLocker locker(m_access_lock);
+    return read8_field_locked(bus, device, function, field);
+}
+
+u16 HostController::read16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+{
+    SpinlockLocker locker(m_access_lock);
+    return read16_field_locked(bus, device, function, field);
+}
+
+u32 HostController::read32_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+{
+    SpinlockLocker locker(m_access_lock);
+    return read32_field_locked(bus, device, function, field);
+}
+
 UNMAP_AFTER_INIT Optional<u8> HostController::get_capabilities_pointer_for_function(BusNumber bus, DeviceNumber device, FunctionNumber function)
 {
     if (read16_field(bus, device, function, PCI::RegisterOffset::STATUS) & (1 << 4)) {
