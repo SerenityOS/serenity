@@ -429,12 +429,12 @@ bool Window::dispatch_event(DOM::Event& event)
 
 Page* Window::page()
 {
-    return associated_document().page();
+    return &associated_document().page();
 }
 
 Page const* Window::page() const
 {
-    return associated_document().page();
+    return &associated_document().page();
 }
 
 Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID media_feature) const

@@ -33,16 +33,14 @@ void SVGTitleElement::children_changed()
 {
     Base::children_changed();
 
-    auto* page = document().page();
-    if (!page)
-        return;
-    if (document().browsing_context() != &page->top_level_browsing_context())
+    auto& page = document().page();
+    if (document().browsing_context() != &page.top_level_browsing_context())
         return;
 
     auto* document_element = document().document_element();
 
     if (document_element == parent() && is<SVGElement>(document_element))
-        page->client().page_did_change_title(document().title().to_deprecated_string());
+        page.client().page_did_change_title(document().title().to_deprecated_string());
 }
 
 }

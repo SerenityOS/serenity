@@ -292,7 +292,7 @@ bool EnvironmentSettingsObject::is_scripting_enabled() const
     // The user has not disabled scripting for settings at this time. (User agents may provide users with the option to disable scripting globally, or in a finer-grained manner, e.g., on a per-origin basis, down to the level of individual environment settings objects.)
     auto document = const_cast<EnvironmentSettingsObject&>(*this).responsible_document();
     VERIFY(document);
-    if (!document->page() || !document->page()->is_scripting_enabled())
+    if (!document->page().is_scripting_enabled())
         return false;
 
     // FIXME: Either settings's global object is not a Window object, or settings's global object's associated Document's active sandboxing flag set does not have its sandboxed scripts browsing context flag set.

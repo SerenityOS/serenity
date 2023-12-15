@@ -57,7 +57,7 @@ void HTMLImageElement::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"_fly_string));
 
-    m_current_request = ImageRequest::create(realm, *document().page());
+    m_current_request = ImageRequest::create(realm, document().page());
 }
 
 void HTMLImageElement::adopted_from(DOM::Document& old_document)
@@ -385,7 +385,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
             m_pending_request = nullptr;
 
             // 4. Let current request be a new image request whose image data is that of the entry and whose state is completely available.
-            m_current_request = ImageRequest::create(realm(), *document().page());
+            m_current_request = ImageRequest::create(realm(), document().page());
             m_current_request->set_image_data(entry->image_data);
             m_current_request->set_state(ImageRequest::State::CompletelyAvailable);
 
@@ -512,7 +512,7 @@ after_step_7:
         //         multiple image elements (as well as CSS background-images, etc.)
 
         // 16. Set image request to a new image request whose current URL is urlString.
-        auto image_request = ImageRequest::create(realm(), *document().page());
+        auto image_request = ImageRequest::create(realm(), document().page());
         image_request->set_current_url(realm(), url_string);
 
         // 17. If current request's state is unavailable or broken, then set the current request to image request.
@@ -707,7 +707,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
         key.origin = document().origin();
 
     // 11. ⌛ Let image request be a new image request whose current URL is urlString
-    auto image_request = ImageRequest::create(realm(), *document().page());
+    auto image_request = ImageRequest::create(realm(), document().page());
     image_request->set_current_url(realm(), url_string);
 
     // 12. ⌛ Let the element's pending request be image request.

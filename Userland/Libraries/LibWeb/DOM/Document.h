@@ -181,8 +181,8 @@ public:
 
     void set_browsing_context(HTML::BrowsingContext*);
 
-    Page* page();
-    Page const* page() const;
+    Page& page();
+    Page const& page() const;
 
     Color background_color() const;
     Vector<CSS::BackgroundLayerData> const* background_layers() const;
