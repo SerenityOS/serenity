@@ -94,8 +94,11 @@ void Editor::cursor_left_word()
 
 void Editor::cursor_left_character()
 {
-    if (m_cursor > 0)
-        --m_cursor;
+    if (m_cursor > 0) {
+        size_t closest_cursor_left_offset;
+        binary_search(m_cached_buffer_metrics.grapheme_breaks, m_cursor - 1, &closest_cursor_left_offset);
+        m_cursor = m_cached_buffer_metrics.grapheme_breaks[closest_cursor_left_offset];
+    }
     m_inline_search_cursor = m_cursor;
 }
 
@@ -120,7 +123,11 @@ void Editor::cursor_right_word()
 void Editor::cursor_right_character()
 {
     if (m_cursor < m_buffer.size()) {
-        ++m_cursor;
+        size_t closest_cursor_left_offset;
+        binary_search(m_cached_buffer_metrics.grapheme_breaks, m_cursor, &closest_cursor_left_offset);
+        m_cursor = closest_cursor_left_offset + 1 >= m_cached_buffer_metrics.grapheme_breaks.size()
+            ? m_buffer.size()
+            : m_cached_buffer_metrics.grapheme_breaks[closest_cursor_left_offset + 1];
     }
     m_inline_search_cursor = m_cursor;
     m_search_offset = 0;
@@ -136,8 +143,13 @@ void Editor::erase_character_backwards()
         fflush(stderr);
         return;
     }
-    remove_at_index(m_cursor - 1);
-    --m_cursor;
+
+    size_t closest_cursor_left_offset;
+    binary_search(m_cached_buffer_metrics.grapheme_breaks, m_cursor - 1, &closest_cursor_left_offset);
+    auto start_of_previous_grapheme = m_cached_buffer_metrics.grapheme_breaks[closest_cursor_left_offset];
+    for (; m_cursor > start_of_previous_grapheme; --m_cursor)
+        remove_at_index(m_cursor - 1);
+
     m_inline_search_cursor = m_cursor;
     // We will have to redraw :(
     m_refresh_needed = true;
@@ -150,7 +162,14 @@ void Editor::erase_character_forwards()
         fflush(stderr);
         return;
     }
-    remove_at_index(m_cursor);
+
+    size_t closest_cursor_left_offset;
+    binary_search(m_cached_buffer_metrics.grapheme_breaks, m_cursor, &closest_cursor_left_offset);
+    auto end_of_next_grapheme = closest_cursor_left_offset + 1 >= m_cached_buffer_metrics.grapheme_breaks.size()
+        ? m_buffer.size()
+        : m_cached_buffer_metrics.grapheme_breaks[closest_cursor_left_offset + 1];
+    for (; m_cursor < end_of_next_grapheme;)
+        remove_at_index(m_cursor);
     m_refresh_needed = true;
 }
 

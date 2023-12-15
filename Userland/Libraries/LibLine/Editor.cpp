@@ -21,6 +21,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
+#include <LibUnicode/Segmentation.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -1865,66 +1866,53 @@ static MaskedSelectionDecision resolve_masked_selection(Optional<Style::Mask>& m
 
 StringMetrics Editor::actual_rendered_string_metrics(StringView string, RedBlackTree<u32, Optional<Style::Mask>> const& masks, Optional<size_t> maximum_line_width)
 {
-    StringMetrics metrics;
-    StringMetrics::LineMetrics current_line;
-    VTState state { Free };
-    Utf8View view { string };
-    size_t last_return {};
-    auto it = view.begin();
-    Optional<Style::Mask> mask;
-    size_t i = 0;
-    auto mask_it = masks.begin();
+    Vector<u32> utf32_buffer;
+    utf32_buffer.ensure_capacity(string.length());
+    for (auto c : Utf8View { string })
+        utf32_buffer.append(c);
 
-    for (; it != view.end(); ++it) {
-        if (!mask_it.is_end() && mask_it.key() <= i)
-            mask = *mask_it;
-        auto c = *it;
-        auto it_copy = it;
-        ++it_copy;
-
-        if (resolve_masked_selection(mask, i, mask_it, view, state, metrics, current_line) == MaskedSelectionDecision::Skip)
-            continue;
-
-        auto next_c = it_copy == view.end() ? 0 : *it_copy;
-        state = actual_rendered_string_length_step(metrics, view.iterator_offset(it), current_line, c, next_c, state, mask, maximum_line_width, last_return);
-        if (!mask_it.is_end() && mask_it.key() <= i) {
-            auto mask_it_peek = mask_it;
-            ++mask_it_peek;
-            if (!mask_it_peek.is_end() && mask_it_peek.key() > i)
-                mask_it = mask_it_peek;
-        }
-        ++i;
-    }
-
-    metrics.line_metrics.append(current_line);
-
-    for (auto& line : metrics.line_metrics)
-        metrics.max_line_length = max(line.total_length(), metrics.max_line_length);
-
-    return metrics;
+    return actual_rendered_string_metrics(Utf32View { utf32_buffer.data(), utf32_buffer.size() }, masks, maximum_line_width);
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedBlackTree<u32, Optional<Style::Mask>> const& masks)
+StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedBlackTree<u32, Optional<Style::Mask>> const& masks, Optional<size_t> maximum_line_width)
 {
     StringMetrics metrics;
     StringMetrics::LineMetrics current_line;
     VTState state { Free };
     Optional<Style::Mask> mask;
+    size_t last_return { 0 };
 
     auto mask_it = masks.begin();
 
-    for (size_t i = 0; i < view.length(); ++i) {
+    Vector<size_t> grapheme_breaks;
+    Unicode::for_each_grapheme_segmentation_boundary(view, [&](size_t offset) -> IterationDecision {
+        if (offset >= view.length())
+            return IterationDecision::Break;
+
+        grapheme_breaks.append(offset);
+        return IterationDecision::Continue;
+    });
+
+    // In case Unicode data isn't available, default to using code points as grapheme boundaries.
+    if (grapheme_breaks.is_empty()) {
+        for (size_t i = 0; i < view.length(); ++i)
+            grapheme_breaks.append(i);
+    }
+
+    for (size_t break_index = 0; break_index < grapheme_breaks.size(); ++break_index) {
+        auto i = grapheme_breaks[break_index];
         auto c = view[i];
         if (!mask_it.is_end() && mask_it.key() <= i)
             mask = *mask_it;
 
         if (resolve_masked_selection(mask, i, mask_it, view, state, metrics, current_line) == MaskedSelectionDecision::Skip) {
             --i;
+            binary_search(grapheme_breaks, i, &break_index);
             continue;
         }
 
-        auto next_c = i + 1 < view.length() ? view.code_points()[i + 1] : 0;
-        state = actual_rendered_string_length_step(metrics, i, current_line, c, next_c, state, mask);
+        auto next_c = break_index + 1 < grapheme_breaks.size() ? view.code_points()[grapheme_breaks[break_index + 1]] : 0;
+        state = actual_rendered_string_length_step(metrics, i, current_line, c, next_c, state, mask, maximum_line_width, last_return);
         if (!mask_it.is_end() && mask_it.key() <= i) {
             auto mask_it_peek = mask_it;
             ++mask_it_peek;
@@ -1937,6 +1925,8 @@ StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedB
 
     for (auto& line : metrics.line_metrics)
         metrics.max_line_length = max(line.total_length(), metrics.max_line_length);
+
+    metrics.grapheme_breaks = move(grapheme_breaks);
 
     return metrics;
 }
