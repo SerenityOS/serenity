@@ -147,21 +147,27 @@ static ErrorOr<RefPtr<Gfx::Bitmap>> chunky_to_bitmap(ILBMLoadingContext& context
 
     dbgln_if(ILBM_DEBUG, "created Bitmap {}x{}", width, height);
 
+    // - For 24bit pictures: the chunky buffer contains 3 bytes (R,G,B) per pixel
+    // - For indexed colored pictures: chunky buffer contains a single byte per pixel
+    u8 pixel_size = AK::max(1, context.bm_header.planes / 8);
+
     for (int row = 0; row < height; ++row) {
         // Keep color: in HAM mode, current color
         // may be based on previous color instead of coming from
         // the palette.
         Color color = Color::Black;
-        for (int col = 0; col < width; ++col) {
-            u8 index = chunky[(width * row) + col];
-            if (index < context.color_table.size()) {
-                color = context.color_table[index];
+        for (int col = 0; col < width; col++) {
+            size_t index = (width * row * pixel_size) + (col * pixel_size);
+            if (context.bm_header.planes == 24) {
+                color = Color(chunky[index], chunky[index + 1], chunky[index + 2]);
+            } else if (chunky[index] < context.color_table.size()) {
+                color = context.color_table[chunky[index]];
             } else if (has_flag(context.viewport_mode, ViewportMode::HAM)) {
                 // Get the control bit which will tell use how current pixel should be calculated
-                u8 control = (index >> context.cmap_bits) & 0x3;
+                u8 control = (chunky[index] >> context.cmap_bits) & 0x3;
                 // Since we only have (cmap_bits - 2) bits to define the component,
                 // we need to pad it to 8 bits.
-                u8 component = (index % context.color_table.size()) << (8 - context.cmap_bits);
+                u8 component = (chunky[index] % context.color_table.size()) << (8 - context.cmap_bits);
 
                 if (control == 1) {
                     color.set_blue(component);
@@ -189,30 +195,41 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
     u16 width = context.bm_header.width;
     u16 height = context.bm_header.height;
     u8 planes = context.bm_header.planes;
-    auto chunky = TRY(ByteBuffer::create_zeroed(static_cast<size_t>(width) * height));
+    size_t buffer_size = static_cast<size_t>(width) * height;
+    // If planes number is 24 we'll store R,G,B components so buffer needs to be 3 times width*height
+    // otherwise we'll store a single 8bit index to the CMAP.
+    if (planes == 24)
+        buffer_size *= 3;
+
+    auto chunky = TRY(ByteBuffer::create_zeroed(buffer_size));
+
+    u8 const pixel_size = AK::max(1, planes / 8);
 
     for (u16 y = 0; y < height; y++) {
         size_t scanline = static_cast<size_t>(y) * width;
         for (u8 p = 0; p < planes; p++) {
-            u8 const plane_mask = 1 << p;
+            u8 const plane_mask = 1 << (p % 8);
             size_t offset_base = (pitch * planes * y) + (p * pitch);
             if (offset_base + pitch > bitplanes.size() || scanline + ((pitch - 1) * 8) + 7 >= chunky.size())
                 return Error::from_string_literal("Malformed bitplane data");
 
             for (u16 i = 0; i < pitch; i++) {
                 u8 bit = bitplanes[offset_base + i];
+                u8 rgb_shift = p / 8;
 
                 for (u8 b = 0; b < 8; b++) {
                     u8 mask = 1 << (7 - b);
                     // get current plane
                     if (bit & mask) {
                         u16 x = (i * 8) + b;
-                        chunky[scanline + x] |= plane_mask;
+                        chunky[(scanline * pixel_size) + (x * pixel_size) + rgb_shift] |= plane_mask;
                     }
                 }
             }
         }
     }
+
+    dbgln_if(ILBM_DEBUG, "planar_to_chunky: end");
 
     return chunky;
 }
@@ -377,8 +394,13 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
             context.color_table = TRY(decode_cmap_chunk(chunk));
             context.cmap_bits = AK::ceil_log2(context.color_table.size());
         } else if (chunk.type == FourCC("BODY")) {
-            if (context.color_table.is_empty())
-                return Error::from_string_literal("Decoding BODY chunk without a color map is not currently supported");
+            if (context.color_table.is_empty() && context.bm_header.planes != 24)
+                return Error::from_string_literal("Decoding indexed BODY chunk without a color map is not currently supported");
+
+            // Apparently 32bit ilbm files exist: but I wasn't able to find any,
+            // nor is it documented anywhere, so let's make it clear it's not supported.
+            if (context.bm_header.planes != 24 && context.bm_header.planes > 8)
+                return Error::from_string_literal("Invalid number of bitplanes");
 
             TRY(decode_body_chunk(chunk, context));
             context.state = ILBMLoadingContext::State::BitmapDecoded;
@@ -408,9 +430,6 @@ static ErrorOr<void> decode_bmhd_chunk(ILBMLoadingContext& context)
         return Error::from_string_literal("IFFImageDecoderPlugin: Not enough data for header chunk");
 
     context.bm_header = *bit_cast<BMHDHeader const*>(first_chunk.data.data());
-
-    if (context.bm_header.planes > 8)
-        return Error::from_string_literal("IFFImageDecoderPlugin: Deep ILBMs are not currently supported");
 
     if (context.bm_header.mask >= MaskType::__Count)
         return Error::from_string_literal("IFFImageDecoderPlugin: Unsupported mask type");

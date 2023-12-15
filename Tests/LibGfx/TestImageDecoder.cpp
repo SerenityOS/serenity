@@ -160,6 +160,17 @@ TEST_CASE(test_ilbm_dos)
     EXPECT_EQ(frame.image->get_pixel(315, 134), Gfx::Color::NamedColor::Red);
 }
 
+TEST_CASE(test_24bit)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/serenity-24bit.iff"sv)));
+    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 640, 640 }));
+
+    EXPECT_EQ(frame.image->get_pixel(158, 270), Gfx::Color(0xee, 0x3d, 0x3c, 255));
+}
+
 TEST_CASE(test_ilbm_malformed_header)
 {
     Array test_inputs = {
