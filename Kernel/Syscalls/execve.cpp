@@ -201,6 +201,10 @@ static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& p
             range.end = region_end;
     });
 
+    // If there's nothing to load, there's nothing to execute
+    if (range.start == range.end)
+        return EINVAL;
+
     VERIFY(range.end > range.start);
     return range;
 }
