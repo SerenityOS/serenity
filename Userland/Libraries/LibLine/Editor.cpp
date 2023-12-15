@@ -384,7 +384,7 @@ void Editor::insert(StringView string_view)
         insert(ch);
 }
 
-void Editor::insert(const u32 cp)
+void Editor::insert(u32 const cp)
 {
     StringBuilder builder;
     builder.append(Utf32View(&cp, 1));
@@ -842,7 +842,7 @@ ErrorOr<void> Editor::handle_read_event()
 
     auto prohibit_scope = prohibit_input();
 
-    char keybuf[16];
+    char keybuf[1024];
     ssize_t nread = 0;
 
     if (!m_incomplete_data.size())
@@ -1235,10 +1235,11 @@ ErrorOr<void> Editor::handle_read_event()
         insert(code_point);
     }
 
-    if (consumed_code_points == m_incomplete_data.size()) {
+    if (consumed_code_points == valid_bytes) {
         m_incomplete_data.clear();
     } else {
-        for (size_t i = 0; i < consumed_code_points; ++i)
+        auto bytes_to_drop = input_view.byte_offset_of(consumed_code_points + 1);
+        for (size_t i = 0; i < bytes_to_drop; ++i)
             m_incomplete_data.take_first();
     }
 
