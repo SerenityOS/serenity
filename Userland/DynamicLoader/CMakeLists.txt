@@ -32,8 +32,8 @@ set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LI
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpie -DNO_TLS")
 
-if ("${SERENITY_ARCH}" STREQUAL "aarch64")
-    # On aarch64 the stack protector would be accessed before the Loader can relocate itself.
+if (("${SERENITY_ARCH}" STREQUAL "aarch64") OR ("${SERENITY_ARCH}" STREQUAL "riscv64"))
+    # On aarch64 and riscv64 the stack protector would be accessed before the Loader can relocate itself.
     set_source_files_properties(main.cpp ../Libraries/LibELF/Relocation.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 endif()
 
