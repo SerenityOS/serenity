@@ -50,7 +50,9 @@ AK_ENUM_BITWISE_OPERATORS(RegionAccess)
 AK_ENUM_BITWISE_OPERATORS(MMap)
 
 void dbgputstr(StringArgument const& string);
+ErrorOr<void> get_process_name(StringBuilder& result);
 StackBounds get_stack_bounds();
+pid_t getpid();
 pid_t gettid();
 ErrorOr<void*> mmap(void* address, size_t size, RegionAccess access, MMap flags, StringView name, FileDescriptor fd = -1, off_t offset = 0, size_t alignment = 0);
 ErrorOr<void> mprotect(void* address, size_t size, RegionAccess access);

@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Atomic.h>
 #include <AK/Error.h>
 #include <AK/StringView.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/API/prctl_numbers.h>
 #include <LibRuntime/System.h>
 #include <LibSystem/syscall.h>
 
@@ -18,6 +20,7 @@ int s_cached_tid = 0;
 #else
 thread_local int s_cached_tid = 0;
 #endif
+Atomic<int> s_cached_pid = 0;
 
 constexpr StringView syscall_names[] = {
 #define __ENUMERATE_SYSCALL(sys_call, needs_lock) #sys_call##sv,
@@ -67,6 +70,16 @@ void dbgputstr(StringArgument const& string)
     VERIFY(syscall(SC_dbgputstr, characters, length) == length);
 }
 
+ErrorOr<void> get_process_name(StringBuilder& result)
+{
+    TRY(result.try_append_unknown_length(32, [&](Bytes buffer) -> ErrorOr<size_t> {
+        // FIXME: Why doesn't it return the length of the name?
+        TRY(syscall_with_errno<void>(SC_prctl, PR_GET_PROCESS_NAME, buffer.data(), buffer.size(), nullptr));
+        return strlen(reinterpret_cast<char*>(buffer.data()));
+    }));
+    return {};
+}
+
 StackBounds get_stack_bounds()
 {
     StackBounds result;
@@ -74,6 +87,13 @@ StackBounds get_stack_bounds()
     // variable turn out to be invalid, something went horribly wrong, so we better off crashing.
     VERIFY(syscall(SC_get_stack_bounds, &result.user_stack_base, &result.user_stack_size) == 0);
     return result;
+}
+
+pid_t getpid()
+{
+    if (s_cached_pid == 0)
+        s_cached_pid = cast_syscall_ret_to<pid_t>(syscall(SC_getpid));
+    return s_cached_pid;
 }
 
 pid_t gettid()

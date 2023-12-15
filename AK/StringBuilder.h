@@ -104,6 +104,36 @@ public:
         return {};
     }
 
+    template<typename T>
+    ErrorOr<void> try_append_unknown_length(size_t expected_length, T&& callback)
+    {
+        size_t old_size = m_buffer.size();
+        while (true) {
+            TRY(m_buffer.try_ensure_capacity(old_size + expected_length));
+            size_t remaining_capacity = m_buffer.capacity() - old_size;
+            ErrorOr<size_t> result = callback(m_buffer.must_get_bytes_for_writing(remaining_capacity));
+            // There are three options here:
+            if (!result.is_error()) {
+                // 1. Callback succeeded and returned the number of bytes written.
+                VERIFY(result.value() <= remaining_capacity);
+                m_buffer.resize(m_buffer.size() - remaining_capacity + result.value());
+                return {};
+            } else {
+                // FIXME: This might trigger unnecessary copies to/from inline buffer with the
+                //        current ByteBuffer implementation. Ideally, we should add
+                //        ByteBuffer::MayShrinkToInlineBuffer::No.
+                m_buffer.resize(old_size);
+                if (result.error().code() == ENAMETOOLONG) {
+                    // 2. It failed with ENAMETOOLONG, thus buffer we provided was too small.
+                    expected_length = remaining_capacity + 1;
+                } else {
+                    // 3. It failed with any other error and we should propagate this error up.
+                    return result.release_error();
+                }
+            }
+        }
+    }
+
 private:
     ErrorOr<void> will_append(size_t);
     u8* data();
