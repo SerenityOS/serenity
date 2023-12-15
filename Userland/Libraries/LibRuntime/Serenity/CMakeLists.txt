@@ -1,4 +1,5 @@
 set(LIBRUNTIME_SOURCES
+    LibC/errno.cpp
     LibC/stdio.cpp
     LibC/string.cpp
     LibC/strings.cpp

@@ -15,7 +15,6 @@ set(LIBC_SOURCES
     inttypes.cpp
     ioctl.cpp
     langinfo.cpp
-    libcinit.cpp
     libgen.cpp
     link.cpp
     locale.cpp

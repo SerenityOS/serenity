@@ -345,25 +345,6 @@ static T c_str_to_floating_point(char const* str, char** endptr)
 
 extern "C" {
 
-void (*__call_fini_functions)();
-
-void exit(int status)
-{
-    __cxa_finalize(nullptr);
-
-    if (secure_getenv("LIBC_DUMP_MALLOC_STATS"))
-        serenity_dump_malloc_stats();
-
-    __call_fini_functions();
-    fflush(nullptr);
-
-#ifndef _DYNAMIC_LOADER
-    __pthread_key_destroy_for_current_thread();
-#endif
-
-    _exit(status);
-}
-
 static void __atexit_to_cxa_atexit(void* handler)
 {
     reinterpret_cast<void (*)()>(handler)();

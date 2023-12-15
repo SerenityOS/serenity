@@ -21,5 +21,6 @@ void register_pthread_callback(CallbackType, void (*callback)());
 }
 
 extern "C" {
+void __pthread_key_destroy_for_current_thread();
 void __pthread_maybe_cancel();
 }

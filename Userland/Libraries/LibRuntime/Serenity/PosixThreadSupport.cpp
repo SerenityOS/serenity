@@ -40,6 +40,10 @@ void register_pthread_callback(CallbackType type, void (*callback)())
 
 }
 
+[[gnu::weak]] void __pthread_key_destroy_for_current_thread()
+{
+}
+
 [[gnu::weak]] void __pthread_maybe_cancel()
 {
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mițca Dumitru <dumitru0mitca@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Leon Albrecht <leon.a@serenityos.org>
@@ -13,19 +13,55 @@
 #include <AK/FloatingPoint.h>
 #include <Kernel/API/POSIX/signal.h>
 #include <LibSystem/syscall.h>
+#include <bits/stdio_file_implementation.h>
 #include <errno.h>
 #include <math.h>
 #include <sched.h>
+#include <sys/internals.h>
 #include <wchar.h>
 
-extern "C" {
+// LibC initialization routines
+char** environ = nullptr;
+bool __environ_is_malloced = false;
+bool __stdio_is_initialized = false;
+void* __auxiliary_vector = nullptr;
+
+void __libc_init()
+{
+    VERIFY(environ);
+    char** env;
+    for (env = environ; *env; ++env)
+        ;
+    __auxiliary_vector = (void*)++env;
+
+    __malloc_init();
+    __stdio_init();
+}
+
+extern "C" void (*__call_fini_functions)();
+void (*__call_fini_functions)() = nullptr;
+
+void exit(int status)
+{
+    __cxa_finalize(nullptr);
+
+    if (Runtime::secure_getenv("LIBC_DUMP_MALLOC_STATS"sv).has_value())
+        serenity_dump_malloc_stats();
+
+    __call_fini_functions();
+    FILE::flush_open_streams();
+    __pthread_key_destroy_for_current_thread();
+
+    syscall(SC_exit, status);
+    VERIFY_NOT_REACHED();
+}
+
 // Needed by strsignal
 char const* sys_siglist[NSIG] = {
 #define DESCRIPTION(name, description) description,
     __ENUMERATE_SIGNALS(DESCRIPTION)
 #undef __ENUMERATE_SIGNAL
 };
-}
 
 // compiler-rt doesn't know how to implement these for 80-bit long doubles.
 // Instead of copying functions from math.cpp here, teach compiler-rt how to work with long doubles.
