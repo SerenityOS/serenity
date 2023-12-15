@@ -79,6 +79,11 @@ Kernel::TimePage* get_kernel_time_page()
 }
 }
 
+[[noreturn]] void abort()
+{
+    TODO();
+}
+
 ErrorOr<timespec> clock_gettime(clockid_t clock_id)
 {
     timespec ts;

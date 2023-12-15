@@ -1,10 +1,10 @@
 set(SOURCES
     UBSanitizer.cpp
-    ../LibC/ssp.cpp
+    ../LibRuntime/Serenity/StackProtector.cpp
     ../LibC/ssp_nonshared.cpp
 )
 
-set_source_files_properties(../LibC/ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
+set_source_files_properties(../LibRuntime/Serenity/StackProtector.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 set_source_files_properties(../LibC/ssp_nonshared.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib")

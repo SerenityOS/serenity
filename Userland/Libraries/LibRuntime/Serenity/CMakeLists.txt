@@ -10,6 +10,7 @@ set(LIBRUNTIME_SOURCES
     Mutex.cpp
     PosixThreadSupport.cpp
     PossiblyThrowingCallback.cpp
+    StackProtector.cpp
     System.cpp
 )
 
@@ -18,6 +19,7 @@ set_source_files_properties(LibC/stdio.cpp PROPERTIES COMPILE_FLAGS -fno-builtin
 # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
 set_source_files_properties(LibC/string.cpp PROPERTIES COMPILE_FLAGS -fno-builtin)
 set_source_files_properties(PossiblyThrowingCallback.cpp PROPERTIES COMPILE_FLAGS -fexceptions)
+set_source_files_properties(StackProtector PROPERTIES COMPILE_FLAGS -fno-stack-protector)
 
 if (SERENITY_ARCH STREQUAL "x86_64")
     set(LIBRUNTIME_ARCH_SOURCES

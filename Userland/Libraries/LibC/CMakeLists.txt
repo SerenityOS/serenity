@@ -42,7 +42,6 @@ set(LIBC_SOURCES
     shadow.cpp
     signal.cpp
     spawn.cpp
-    ssp.cpp
     stat.cpp
     stdio.cpp
     stdlib.cpp
@@ -127,7 +126,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set_source_files_properties(../LibRuntime/Serenity/LibC/string.cpp wchar.cpp PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 endif()
 
-set_source_files_properties(ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
+set_source_files_properties(../LibRuntime/Serenity/StackProtector.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 
 set_source_files_properties(../LibRuntime/Serenity/PossiblyThrowingCallback.cpp PROPERTIES COMPILE_FLAGS -fexceptions)
 
