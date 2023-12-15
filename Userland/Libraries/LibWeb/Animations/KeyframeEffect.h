@@ -47,7 +47,7 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> construct_impl(
         JS::Realm&,
         JS::Handle<DOM::Element> const& target,
-        JS::Handle<JS::Object> const& keyframes,
+        Optional<JS::Handle<JS::Object>> const& keyframes,
         Variant<double, KeyframeEffectOptions> options = KeyframeEffectOptions {});
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> construct_impl(JS::Realm&, JS::NonnullGCPtr<KeyframeEffect> source);
@@ -62,7 +62,7 @@ public:
     void set_composite(Bindings::CompositeOperation value) { m_composite = value; }
 
     WebIDL::ExceptionOr<Vector<JS::Object*>> get_keyframes() const;
-    WebIDL::ExceptionOr<void> set_keyframes(JS::Object*);
+    WebIDL::ExceptionOr<void> set_keyframes(Optional<JS::Handle<JS::Object>> const&);
 
 private:
     KeyframeEffect(JS::Realm&);

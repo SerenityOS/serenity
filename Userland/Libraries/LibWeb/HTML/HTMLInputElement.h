@@ -101,7 +101,10 @@ public:
     unsigned size() const;
     WebIDL::ExceptionOr<void> set_size(unsigned value);
 
-    WebIDL::ExceptionOr<double> value_as_number() const;
+    JS::Object* value_as_date() const;
+    WebIDL::ExceptionOr<void> set_value_as_date(Optional<JS::Handle<JS::Object>> const&);
+
+    double value_as_number() const;
     WebIDL::ExceptionOr<void> set_value_as_number(double value);
 
     WebIDL::ExceptionOr<void> step_up(long n = 1);
@@ -164,6 +167,7 @@ public:
 
     bool has_input_activation_behavior() const;
     bool change_event_applies() const;
+    bool value_as_date_applies() const;
     bool value_as_number_applies() const;
     bool step_applies() const;
     bool step_up_or_down_applies() const;
@@ -189,6 +193,9 @@ private:
 
     Optional<double> convert_string_to_number(StringView input) const;
     String covert_number_to_string(double input) const;
+
+    WebIDL::ExceptionOr<JS::GCPtr<JS::Date>> convert_string_to_date(StringView input) const;
+    String covert_date_to_string(JS::NonnullGCPtr<JS::Date> input) const;
 
     Optional<double> min() const;
     Optional<double> max() const;

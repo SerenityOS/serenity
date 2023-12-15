@@ -600,7 +600,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = JS::make_handle(&static_cast<JS::Promise&>(@js_name@@js_suffix@.as_object()));
 )~~~");
     } else if (parameter.type->name() == "object") {
-        if (optional) {
+        if (parameter.type->is_nullable()) {
+            scoped_generator.append(R"~~~(
+    Optional<JS::Handle<JS::Object>> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_null() && !@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
+)~~~");
+        } else if (optional) {
             scoped_generator.append(R"~~~(
     Optional<JS::Handle<JS::Object>> @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined())

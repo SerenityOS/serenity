@@ -40,7 +40,7 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions] attribute DOMString type;
     [CEReactions, Reflect=value] attribute DOMString defaultValue;
     [CEReactions, LegacyNullToEmptyString] attribute DOMString value;
-    // FIXME: attribute object? valueAsDate;
+    attribute object? valueAsDate;
     attribute unrestricted double valueAsNumber;
     // FIXME: [CEReactions] attribute unsigned long width;
 

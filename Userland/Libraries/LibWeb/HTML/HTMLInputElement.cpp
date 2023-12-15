@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
@@ -1066,6 +1067,63 @@ String HTMLInputElement::covert_number_to_string(double input) const
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-value-string-date
+WebIDL::ExceptionOr<JS::GCPtr<JS::Date>> HTMLInputElement::convert_string_to_date(StringView input) const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date):concept-input-value-string-date
+    if (type_state() == TypeAttributeState::Date) {
+        // If parsing a date from input results in an error, then return an error;
+        auto maybe_date = parse_date_string(realm(), input);
+        if (maybe_date.is_exception())
+            return maybe_date.exception();
+
+        // otherwise, return a new Date object representing midnight UTC on the morning of the parsed date.
+        return maybe_date.value();
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#time-state-(type=time):concept-input-value-string-date
+    if (type_state() == TypeAttributeState::Time) {
+        // If parsing a time from input results in an error, then return an error;
+        auto maybe_time = parse_time_string(realm(), input);
+        if (maybe_time.is_exception())
+            return maybe_time.exception();
+
+        // otherwise, return a new Date object representing the parsed time in UTC on 1970-01-01.
+        return maybe_time.value();
+    }
+
+    dbgln("HTMLInputElement::convert_string_to_date() not implemented for input type {}", type());
+    return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-value-date-string
+String HTMLInputElement::covert_date_to_string(JS::NonnullGCPtr<JS::Date> input) const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date):concept-input-value-date-string
+    if (type_state() == TypeAttributeState::Date) {
+        // Return a valid date string that represents the date current at the time represented by input in the UTC time zone.
+        // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-date-string
+        return MUST(String::formatted("{:04d}-{:02d}-{:02d}", JS::year_from_time(input->date_value()), JS::month_from_time(input->date_value()) + 1, JS::date_from_time(input->date_value())));
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#time-state-(type=time):concept-input-value-string-date
+    if (type_state() == TypeAttributeState::Time) {
+        // Return a valid time string that represents the UTC time component that is represented by input.
+        // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-time-string
+        auto seconds = JS::sec_from_time(input->date_value());
+        auto milliseconds = JS::ms_from_time(input->date_value());
+        if (seconds > 0) {
+            if (milliseconds > 0)
+                return MUST(String::formatted("{:02d}:{:02d}:{:02d}.{:3d}", JS::hour_from_time(input->date_value()), JS::min_from_time(input->date_value()), seconds, milliseconds));
+            return MUST(String::formatted("{:02d}:{:02d}:{:02d}", JS::hour_from_time(input->date_value()), JS::min_from_time(input->date_value()), seconds));
+        }
+        return MUST(String::formatted("{:02d}:{:02d}", JS::hour_from_time(input->date_value()), JS::min_from_time(input->date_value())));
+    }
+
+    dbgln("HTMLInputElement::covert_date_to_string() not implemented for input type {}", type());
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-min
 Optional<double> HTMLInputElement::min() const
 {
@@ -1175,8 +1233,50 @@ double HTMLInputElement::step_base() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasdate
+JS::Object* HTMLInputElement::value_as_date() const
+{
+    // On getting, if the valueAsDate attribute does not apply, as defined for the input element's type attribute's current state, then return null.
+    if (!value_as_date_applies())
+        return nullptr;
+
+    // Otherwise, run the algorithm to convert a string to a Date object defined for that state to the element's value;
+    // if the algorithm returned a Date object, then return it, otherwise, return null.
+    auto maybe_date = convert_string_to_date(value());
+    if (!maybe_date.is_exception())
+        return maybe_date.value().ptr();
+    return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasdate
+WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_date(Optional<JS::Handle<JS::Object>> const& value)
+{
+    // On setting, if the valueAsDate attribute does not apply, as defined for the input element's type attribute's current state, then throw an "InvalidStateError" DOMException;
+    if (!value_as_date_applies())
+        return WebIDL::InvalidStateError::create(realm(), "valueAsDate: Invalid input type used"_fly_string);
+
+    // otherwise, if the new value is not null and not a Date object throw a TypeError exception;
+    if (value.has_value() && !is<JS::Date>(**value))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "valueAsDate: input is not a Date"sv };
+
+    // otherwise if the new value is null or a Date object representing the NaN time value, then set the value of the element to the empty string;
+    if (!value.has_value()) {
+        TRY(set_value(String {}));
+        return {};
+    }
+    auto& date = static_cast<JS::Date&>(**value);
+    if (!isfinite(date.date_value())) {
+        TRY(set_value(String {}));
+        return {};
+    }
+
+    // otherwise, run the algorithm to convert a Date object to a string, as defined for that state, on the new value, and set the value of the element to the resulting string.
+    TRY(set_value(covert_date_to_string(date)));
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasnumber
-WebIDL::ExceptionOr<double> HTMLInputElement::value_as_number() const
+double HTMLInputElement::value_as_number() const
 {
     // On getting, if the valueAsNumber attribute does not apply, as defined for the input element's type attribute's current state, then return a Not-a-Number (NaN) value.
     if (!value_as_number_applies())
@@ -1472,6 +1572,20 @@ bool HTMLInputElement::change_event_applies() const
     case TypeAttributeState::Time:
     case TypeAttributeState::URL:
     case TypeAttributeState::Week:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:dom-input-valueasdate-3
+bool HTMLInputElement::value_as_date_applies() const
+{
+    switch (type_state()) {
+    case TypeAttributeState::Date:
+    case TypeAttributeState::Month:
+    case TypeAttributeState::Week:
+    case TypeAttributeState::Time:
         return true;
     default:
         return false;
