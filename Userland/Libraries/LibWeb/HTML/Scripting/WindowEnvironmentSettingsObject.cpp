@@ -29,7 +29,7 @@ void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#set-up-a-window-environment-settings-object
-void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
+void WindowEnvironmentSettingsObject::setup(Page& page, AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
 {
     // 1. Let realm be the value of execution context's Realm component.
     auto realm = execution_context->realm;
@@ -74,7 +74,7 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
     // 7. Set realm's [[HostDefined]] field to settings object.
     // Non-Standard: We store the ESO next to the web intrinsics in a custom HostDefined object
     auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
-    auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics);
+    auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics, page);
     realm->set_host_defined(move(host_defined));
 
     // Non-Standard: We cannot fully initialize window object until *after* the we set up

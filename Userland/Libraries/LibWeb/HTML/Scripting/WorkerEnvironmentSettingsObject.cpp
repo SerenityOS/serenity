@@ -11,7 +11,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(WorkerEnvironmentSettingsObject);
 
-JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> WorkerEnvironmentSettingsObject::setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
+JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> WorkerEnvironmentSettingsObject::setup(JS::NonnullGCPtr<Page> page, NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
 {
     auto realm = execution_context->realm;
     VERIFY(realm);
@@ -22,7 +22,7 @@ JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> WorkerEnvironmentSettingsObjec
     settings_object->target_browsing_context = nullptr;
 
     auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
-    auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics);
+    auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics, page);
     realm->set_host_defined(move(host_defined));
 
     // Non-Standard: We cannot fully initialize worker object until *after* the we set up
