@@ -19,15 +19,15 @@ class HostBridge : public HostController {
 public:
     static NonnullOwnPtr<HostBridge> must_create_with_io_access();
 
-    virtual void write8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) override;
-    virtual void write16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) override;
-    virtual void write32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value) override;
-
-    virtual u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
-    virtual u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
-    virtual u32 read32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
-
 private:
+    virtual void write8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) override;
+    virtual void write16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) override;
+    virtual void write32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value) override;
+
+    virtual u8 read8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
+    virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
+    virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
+
     explicit HostBridge(PCI::Domain const&);
 };
 

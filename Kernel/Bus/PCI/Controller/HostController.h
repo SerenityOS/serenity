@@ -73,13 +73,13 @@ class HostController {
 public:
     virtual ~HostController() = default;
 
-    virtual void write8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) = 0;
-    virtual void write16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) = 0;
-    virtual void write32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value) = 0;
+    void write8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value);
+    void write16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value);
+    void write32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value);
 
-    virtual u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
-    virtual u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
-    virtual u32 read32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
+    u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field);
+    u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field);
+    u32 read32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field);
 
     u32 domain_number() const { return m_domain.domain_number(); }
 
@@ -102,9 +102,19 @@ private:
     Vector<Capability> get_capabilities_for_function(BusNumber, DeviceNumber, FunctionNumber);
 
 protected:
+    virtual void write8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) = 0;
+    virtual void write16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) = 0;
+    virtual void write32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value) = 0;
+
+    virtual u8 read8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
+    virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
+    virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
+
     explicit HostController(PCI::Domain const& domain);
 
     const PCI::Domain m_domain;
+
+    Spinlock<LockRank::None> m_access_lock;
 
 private:
     Bitmap m_enumerated_buses;
