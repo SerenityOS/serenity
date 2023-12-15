@@ -6,6 +6,7 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <LibRuntime/Mutex.h>
 #include <LibRuntime/System.h>
@@ -633,4 +634,165 @@ size_t fwrite(void const* ptr, size_t size, size_t nmemb, FILE* stream)
     if (!nwritten)
         return 0;
     return nwritten / size;
+}
+
+static void stdout_putch(char*&, char ch)
+{
+    (void)fputc(ch, stdout);
+}
+
+static void buffer_putch(char*& bufptr, char ch)
+{
+    *bufptr++ = ch;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfprintf.html
+int vfprintf(FILE* stream, char const* fmt, va_list ap)
+{
+    return printf_internal([stream](auto, char ch) { (void)fputc(ch, stream); }, nullptr, fmt, ap);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fprintf.html
+int fprintf(FILE* stream, char const* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vfprintf(stream, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vdprintf.html
+int vdprintf(int fd, char const* fmt, va_list ap)
+{
+    // FIXME: Implement buffering so that we don't issue one write syscall for every character.
+    return printf_internal([fd](auto, char ch) { (void)Runtime::write(fd, &ch, 1); }, nullptr, fmt, ap);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/dprintf.html
+int dprintf(int fd, char const* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vdprintf(fd, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vprintf.html
+int vprintf(char const* fmt, va_list ap)
+{
+    return printf_internal(stdout_putch, nullptr, fmt, ap);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/printf.html
+int printf(char const* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vprintf(fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vasprintf.html
+int vasprintf(char** strp, char const* fmt, va_list ap)
+{
+    StringBuilder builder;
+    builder.appendvf(fmt, ap);
+    VERIFY(builder.length() <= NumericLimits<int>::max());
+    int length = builder.length();
+    *strp = strdup(builder.to_byte_string().characters());
+    return length;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/asprintf.html
+int asprintf(char** strp, char const* fmt, ...)
+{
+    StringBuilder builder;
+    va_list ap;
+    va_start(ap, fmt);
+    builder.appendvf(fmt, ap);
+    va_end(ap);
+    VERIFY(builder.length() <= NumericLimits<int>::max());
+    int length = builder.length();
+    *strp = strdup(builder.to_byte_string().characters());
+    return length;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vsprintf.html
+int vsprintf(char* buffer, char const* fmt, va_list ap)
+{
+    int ret = printf_internal(buffer_putch, buffer, fmt, ap);
+    buffer[ret] = '\0';
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sprintf.html
+int sprintf(char* buffer, char const* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsprintf(buffer, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vsnprintf.html
+int vsnprintf(char* buffer, size_t size, char const* fmt, va_list ap)
+{
+    size_t space_remaining = 0;
+    if (size) {
+        space_remaining = size - 1;
+    } else {
+        space_remaining = 0;
+    }
+    auto sized_buffer_putch = [&](char*& bufptr, char ch) {
+        if (space_remaining) {
+            *bufptr++ = ch;
+            --space_remaining;
+        }
+    };
+    int ret = printf_internal(sized_buffer_putch, buffer, fmt, ap);
+    if (space_remaining) {
+        buffer[ret] = '\0';
+    } else if (size > 0) {
+        buffer[size - 1] = '\0';
+    }
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/snprintf.html
+int snprintf(char* buffer, size_t size, char const* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsnprintf(buffer, size, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputc.html
+int fputc(int ch, FILE* stream)
+{
+    VERIFY(stream);
+    u8 byte = ch;
+    ScopedFileLock lock(stream);
+    size_t nwritten = stream->write(&byte, 1);
+    if (nwritten == 0)
+        return EOF;
+    VERIFY(nwritten == 1);
+    return byte;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputs.html
+int fputs(char const* s, FILE* stream)
+{
+    VERIFY(stream);
+    size_t len = strlen(s);
+    ScopedFileLock lock(stream);
+    size_t nwritten = stream->write(reinterpret_cast<u8 const*>(s), len);
+    if (nwritten < len)
+        return EOF;
+    return 1;
 }

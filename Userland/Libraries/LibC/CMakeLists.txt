@@ -119,7 +119,7 @@ set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES} ${LIBRUN
 
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs")
-set_source_files_properties(../LibRuntime/Serenity/LibC/stdio.cpp PROPERTIES COMPILE_FLAGS -fno-builtin-fwrite)
+set_source_files_properties(../LibRuntime/Serenity/LibC/stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fwrite -fno-builtin-fputc -fno-builtin-fputs")
 
 # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
