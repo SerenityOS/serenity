@@ -114,8 +114,7 @@ PDFErrorOr<Vector<ByteBuffer>> PS1FontProgram::parse_subroutines(Reader& reader)
 
     while (reader.remaining()) {
         auto word = TRY(parse_word(reader));
-        if (word.is_empty())
-            VERIFY(0);
+        VERIFY(!word.is_empty());
 
         if (word == "dup") {
             auto index = TRY(parse_int(reader));
