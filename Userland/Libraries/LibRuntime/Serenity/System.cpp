@@ -61,6 +61,21 @@ ErrorOr<T> syscall_with_errno(Syscall::Function function, auto... args)
 }
 }
 
+void dbgputstr(StringArgument const& string)
+{
+    auto [characters, length] = string.get();
+    VERIFY(syscall(SC_dbgputstr, characters, length) == length);
+}
+
+StackBounds get_stack_bounds()
+{
+    StackBounds result;
+    // get_stack_bounds will fail only if we provide invalid pointers. And if pointers to a stack
+    // variable turn out to be invalid, something went horribly wrong, so we better off crashing.
+    VERIFY(syscall(SC_get_stack_bounds, &result.user_stack_base, &result.user_stack_size) == 0);
+    return result;
+}
+
 pid_t gettid()
 {
     if (s_cached_tid == 0)

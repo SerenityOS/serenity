@@ -8,9 +8,17 @@
 
 #include <AK/Types.h>
 #include <Kernel/API/POSIX/sys/types.h>
+#include <LibRuntime/StringArgument.h>
 
 namespace Runtime {
 
+struct StackBounds {
+    uintptr_t user_stack_base;
+    size_t user_stack_size;
+};
+
+StackBounds get_stack_bounds();
+void dbgputstr(StringArgument const& string);
 pid_t gettid();
 
 }
