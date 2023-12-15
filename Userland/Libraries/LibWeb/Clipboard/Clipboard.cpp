@@ -113,8 +113,7 @@ static void write_blobs_and_option_to_clipboard(JS::Realm& realm, ReadonlySpan<J
         auto payload = MUST(TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, item->bytes()));
 
         // 4. Insert payload and presentationStyle into the system clipboard using formatString as the native clipboard format.
-        if (auto* page = window.page())
-            page->client().page_did_insert_clipboard_entry(move(payload), move(presentation_style), move(format_string));
+        window.page().client().page_did_insert_clipboard_entry(move(payload), move(presentation_style), move(format_string));
     }
 
     // FIXME: 3. Write web custom formats given webCustomFormats.

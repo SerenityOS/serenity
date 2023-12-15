@@ -40,7 +40,7 @@ void Screen::visit_edges(Cell::Visitor& visitor)
 
 Gfx::IntRect Screen::screen_rect() const
 {
-    auto screen_rect_in_css_pixels = window().page()->web_exposed_screen_area();
+    auto screen_rect_in_css_pixels = window().page().web_exposed_screen_area();
     return {
         screen_rect_in_css_pixels.x().to_int(),
         screen_rect_in_css_pixels.y().to_int(),

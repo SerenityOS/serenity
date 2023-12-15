@@ -77,8 +77,8 @@ public:
     // ^JS::Object
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
-    Page* page();
-    Page const* page() const;
+    Page& page();
+    Page const& page() const;
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     DOM::Document const& associated_document() const { return *m_associated_document; }

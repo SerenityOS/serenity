@@ -32,8 +32,7 @@ Vector<String> MimeTypeArray::supported_property_names() const
 {
     // The MimeTypeArray interface supports named properties. If the user agent's PDF viewer supported is true, then they are the PDF viewer mime types. Otherwise, they are the empty list.
     auto const& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
-    VERIFY(window.page());
-    if (!window.page()->pdf_viewer_supported())
+    if (!window.page().pdf_viewer_supported())
         return {};
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-types

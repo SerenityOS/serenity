@@ -427,14 +427,14 @@ bool Window::dispatch_event(DOM::Event& event)
     return DOM::EventDispatcher::dispatch(*this, event, true);
 }
 
-Page* Window::page()
+Page& Window::page()
 {
-    return &associated_document().page();
+    return associated_document().page();
 }
 
-Page const* Window::page() const
+Page const& Window::page() const
 {
-    return &associated_document().page();
+    return associated_document().page();
 }
 
 Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID media_feature) const
@@ -457,15 +457,9 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
         return CSS::MediaFeatureValue(0);
     // FIXME: device-aspect-ratio
     case CSS::MediaFeatureID::DeviceHeight:
-        if (auto* page = this->page()) {
-            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().height()));
-        }
-        return CSS::MediaFeatureValue(0);
+        return CSS::MediaFeatureValue(CSS::Length::make_px(page().web_exposed_screen_area().height()));
     case CSS::MediaFeatureID::DeviceWidth:
-        if (auto* page = this->page()) {
-            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().width()));
-        }
-        return CSS::MediaFeatureValue(0);
+        return CSS::MediaFeatureValue(CSS::Length::make_px(page().web_exposed_screen_area().width()));
     case CSS::MediaFeatureID::DisplayMode:
         // FIXME: Detect if window is fullscreen
         return CSS::MediaFeatureValue(CSS::ValueID::Browser);
@@ -498,18 +492,15 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     case CSS::MediaFeatureID::Pointer:
         return CSS::MediaFeatureValue(CSS::ValueID::Fine);
     case CSS::MediaFeatureID::PrefersColorScheme: {
-        if (auto* page = this->page()) {
-            switch (page->preferred_color_scheme()) {
-            case CSS::PreferredColorScheme::Light:
-                return CSS::MediaFeatureValue(CSS::ValueID::Light);
-            case CSS::PreferredColorScheme::Dark:
-                return CSS::MediaFeatureValue(CSS::ValueID::Dark);
-            case CSS::PreferredColorScheme::Auto:
-            default:
-                return CSS::MediaFeatureValue(page->palette().is_dark() ? CSS::ValueID::Dark : CSS::ValueID::Light);
-            }
+        switch (page().preferred_color_scheme()) {
+        case CSS::PreferredColorScheme::Light:
+            return CSS::MediaFeatureValue(CSS::ValueID::Light);
+        case CSS::PreferredColorScheme::Dark:
+            return CSS::MediaFeatureValue(CSS::ValueID::Dark);
+        case CSS::PreferredColorScheme::Auto:
+        default:
+            return CSS::MediaFeatureValue(page().palette().is_dark() ? CSS::ValueID::Dark : CSS::ValueID::Light);
         }
-        return CSS::MediaFeatureValue(CSS::ValueID::Light);
     }
     case CSS::MediaFeatureID::PrefersContrast:
         // FIXME: Make this a preference
@@ -701,8 +692,7 @@ Vector<JS::NonnullGCPtr<Plugin>> Window::pdf_viewer_plugin_objects()
     // 3.   "Microsoft Edge PDF Viewer"
     // 4.   "WebKit built-in PDF"
     // The values of the above list form the PDF viewer plugin names list. https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-names
-    VERIFY(page());
-    if (!page()->pdf_viewer_supported())
+    if (!page().pdf_viewer_supported())
         return {};
 
     if (m_pdf_viewer_plugin_objects.is_empty()) {
@@ -725,8 +715,7 @@ Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
     // 0.   "application/pdf"
     // 1.   "text/pdf"
     // The values of the above list form the PDF viewer mime types list. https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-types
-    VERIFY(page());
-    if (!page()->pdf_viewer_supported())
+    if (!page().pdf_viewer_supported())
         return {};
 
     if (m_pdf_viewer_mime_type_objects.is_empty()) {
@@ -1010,8 +999,7 @@ void Window::alert(String const& message)
     //       for historical reasons. The practical impact of this is that alert(undefined) is
     //       treated as alert("undefined"), but alert() is treated as alert("").
     // FIXME: Make this fully spec compliant.
-    if (auto* page = this->page())
-        page->did_request_alert(message);
+    page().did_request_alert(message);
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-confirm
@@ -1019,18 +1007,14 @@ bool Window::confirm(Optional<String> const& message)
 {
     // FIXME: Make this fully spec compliant.
     // NOTE: `message` has an IDL-provided default value and is never empty.
-    if (auto* page = this->page())
-        return page->did_request_confirm(*message);
-    return false;
+    return page().did_request_confirm(*message);
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-prompt
 Optional<String> Window::prompt(Optional<String> const& message, Optional<String> const& default_)
 {
     // FIXME: Make this fully spec compliant.
-    if (auto* page = this->page())
-        return page->did_request_prompt(*message, *default_);
-    return {};
+    return page().did_request_prompt(*message, *default_);
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
@@ -1222,9 +1206,7 @@ double Window::scroll_x() const
 {
     // The scrollX attribute must return the x-coordinate, relative to the initial containing block origin,
     // of the left of the viewport, or zero if there is no viewport.
-    if (auto* page = this->page())
-        return page->top_level_traversable()->viewport_scroll_offset().x().to_double();
-    return 0;
+    return page().top_level_traversable()->viewport_scroll_offset().x().to_double();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrolly
@@ -1232,9 +1214,7 @@ double Window::scroll_y() const
 {
     // The scrollY attribute must return the y-coordinate, relative to the initial containing block origin,
     // of the top of the viewport, or zero if there is no viewport.
-    if (auto* page = this->page())
-        return page->top_level_traversable()->viewport_scroll_offset().y().to_double();
-    return 0;
+    return page().top_level_traversable()->viewport_scroll_offset().y().to_double();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#perform-a-scroll
@@ -1256,10 +1236,7 @@ static void perform_a_scroll(Page& page, double x, double y, JS::GCPtr<DOM::Node
 void Window::scroll(ScrollToOptions const& options)
 {
     // 4. If there is no viewport, abort these steps.
-    auto* page = this->page();
-    if (!page)
-        return;
-    auto top_level_traversable = page->top_level_traversable();
+    auto top_level_traversable = page().top_level_traversable();
 
     // 1. If invoked with one argument, follow these substeps:
 
@@ -1312,7 +1289,7 @@ void Window::scroll(ScrollToOptions const& options)
     // 12. Perform a scroll of the viewport to position, document’s root element as the associated element, if there is
     //     one, or null otherwise, and the scroll behavior being the value of the behavior dictionary member of options.
     auto element = JS::GCPtr<DOM::Node const> { document ? &document->root() : nullptr };
-    perform_a_scroll(*page, x, y, element, options.behavior);
+    perform_a_scroll(page(), x, y, element, options.behavior);
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scroll
@@ -1374,9 +1351,7 @@ i32 Window::screen_x() const
 {
     // The screenX and screenLeft attributes must return the x-coordinate, relative to the origin of the Web-exposed
     // screen area, of the left of the client window as number of CSS pixels, or zero if there is no such thing.
-    if (auto* page = this->page())
-        return page->window_position().x().value();
-    return 0;
+    return page().window_position().x().value();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-screeny
@@ -1384,9 +1359,7 @@ i32 Window::screen_y() const
 {
     // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the
     // Web-exposed screen area, of the top of the client window as number of CSS pixels, or zero if there is no such thing.
-    if (auto* page = this->page())
-        return page->window_position().y().value();
-    return 0;
+    return page().window_position().y().value();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-outerwidth
@@ -1394,9 +1367,7 @@ i32 Window::outer_width() const
 {
     // The outerWidth attribute must return the width of the client window. If there is no client window this
     // attribute must return zero.
-    if (auto* page = this->page())
-        return page->window_size().width().value();
-    return 0;
+    return page().window_size().width().value();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-outerheight
@@ -1404,9 +1375,7 @@ i32 Window::outer_height() const
 {
     // The outerHeight attribute must return the height of the client window. If there is no client window this
     // attribute must return zero.
-    if (auto* page = this->page())
-        return page->window_size().height().value();
-    return 0;
+    return page().window_size().height().value();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-devicepixelratio
@@ -1416,9 +1385,7 @@ double Window::device_pixel_ratio() const
     // 2. Let CSS pixel size be the size of a CSS pixel at the current page zoom and using a scale factor of 1.0.
     // 3. Let device pixel size be the vertical size of a device pixel of the output device.
     // 4. Return the result of dividing CSS pixel size by device pixel size.
-    if (auto* page = this->page())
-        return page->client().device_pixels_per_css_pixel();
-    return 1;
+    return page().client().device_pixels_per_css_pixel();
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-animationframeprovider-requestanimationframe
