@@ -38,9 +38,15 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
 
         auto& connection = *connection_it;
         if (connection->request_queue.is_empty()) {
+            // Immediately mark the connection as finished, as new jobs will never be run if they are queued
+            // before the deferred_invoke() below runs otherwise.
+            connection->has_started = false;
+            connection->socket->set_notifications_enabled(false);
+
             Core::deferred_invoke([&connection, &cache_entry = *it->value, key = it->key, &cache] {
-                connection->socket->set_notifications_enabled(false);
-                connection->has_started = false;
+                if (connection->has_started)
+                    return;
+
                 connection->current_url = {};
                 connection->job_data = {};
                 connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry, key = move(key), &cache]() mutable {
