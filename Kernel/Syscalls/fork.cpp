@@ -168,8 +168,11 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
                 TRY(child_space->region_tree().place_specifically(*region_clone, region.range()));
                 auto* child_region = region_clone.leak_ptr();
 
-                if (&region == m_master_tls_region.unsafe_ptr())
+                if (&region == m_master_tls_region.unsafe_ptr()) {
                     child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
+                    child->m_master_tls_size = m_master_tls_size;
+                    child->m_master_tls_alignment = m_master_tls_alignment;
+                }
             }
             return {};
         });
