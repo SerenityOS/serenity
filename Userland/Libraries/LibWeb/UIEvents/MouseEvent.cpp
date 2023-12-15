@@ -29,7 +29,7 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_ctrl_key(modifiers & Mod_Ctrl)
     , m_shift_key(modifiers & Mod_Shift)
     , m_alt_key(modifiers & Mod_Alt)
-    , m_meta_key(false) // FIXME: Implement meta key
+    , m_meta_key(modifiers & Mod_Super)
     , m_movement_x(event_init.movement_x)
     , m_movement_y(event_init.movement_y)
     , m_button(event_init.button)
