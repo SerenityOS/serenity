@@ -163,7 +163,7 @@ bool is_valid_time_string(StringView value)
     // 1. A U+002E FULL STOP character (.)
     // 2. One, two, or three ASCII digits, representing the fractional part of second
     auto parts = value.split_view(':');
-    if (parts.size() != 2 || parts.size() != 3)
+    if (parts.size() != 2 && parts.size() != 3)
         return false;
     if (parts[0].length() != 2)
         return false;
