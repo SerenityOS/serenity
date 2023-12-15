@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, stelar7 <dudedbz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,7 +37,7 @@ void SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-normalize-an-algorithm
-JS::ThrowCompletionOr<SubtleCrypto::Algorithm> SubtleCrypto::normalize_an_algorithm(Variant<JS::Handle<JS::Object>, String> const& algorithm, String operation)
+JS::ThrowCompletionOr<Bindings::Algorithm> SubtleCrypto::normalize_an_algorithm(Variant<JS::Handle<JS::Object>, String> const& algorithm, String operation)
 {
     auto& realm = this->realm();
 
@@ -93,7 +94,7 @@ JS::ThrowCompletionOr<SubtleCrypto::Algorithm> SubtleCrypto::normalize_an_algori
     // 8. Let normalizedAlgorithm be the result of converting the ECMAScript object represented by alg
     // to the IDL dictionary type desiredType, as defined by [WebIDL].
     // FIXME: Should IDL generate a struct for each of these?
-    SubtleCrypto::Algorithm normalized_algorithm;
+    Bindings::Algorithm normalized_algorithm;
 
     // 9. Set the name attribute of normalizedAlgorithm to algName.
     normalized_algorithm.name = algorithm_name;
