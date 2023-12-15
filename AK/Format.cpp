@@ -13,6 +13,7 @@
 #include <AK/kstdio.h>
 
 #if defined(AK_OS_SERENITY) && !defined(KERNEL)
+#    include <LibRuntime/System.h>
 #    include <serenity.h>
 #endif
 
@@ -1134,11 +1135,10 @@ void vout(LogLevel log_level, StringView fmtstr, TypeErasedFormatParams& params,
 [[gnu::used]] static ByteString process_name_helper()
 {
 #    if defined(AK_OS_SERENITY)
-    char buffer[BUFSIZ] = {};
-    int rc = get_process_name(buffer, BUFSIZ);
-    if (rc != 0)
+    StringBuilder process_name;
+    if (Runtime::get_process_name(process_name).is_error())
         return ByteString {};
-    return StringView { buffer, strlen(buffer) };
+    return process_name.to_byte_string();
 #    elif defined(AK_LIBC_GLIBC) || (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID))
     return StringView { program_invocation_name, strlen(program_invocation_name) };
 #    elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_HAIKU)
@@ -1212,12 +1212,20 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 #else
         auto process_name = process_name_for_logging();
         if (!process_name.is_empty()) {
+#    if defined(AK_OS_SERENITY)
+            auto ts = MUST(Runtime::clock_gettime(CLOCK_MONOTONIC_COARSE));
+            auto pid = Runtime::getpid();
+            auto tid = Runtime::gettid();
+#    else
             struct timespec ts = {};
             clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
             auto pid = getpid();
+#        ifndef AK_OS_MACOS
+            auto tid = gettid();
+#        endif
+#    endif
 #    ifndef AK_OS_MACOS
             // Darwin doesn't handle thread IDs the same way other Unixes do
-            auto tid = gettid();
             if (pid == tid)
 #    endif
             {
@@ -1246,9 +1254,10 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
         kernelearlyputstr(string.characters_without_null_termination(), string.length());
         return;
     }
+#    else
+    Runtime::dbgputstr(string);
 #    endif
-#endif
-#ifdef AK_OS_ANDROID
+#elif defined(AK_OS_ANDROID)
     __android_log_write(ANDROID_LOG_DEBUG, s_log_tag_name, string.characters_without_null_termination());
 #else
     dbgputstr(string.characters_without_null_termination(), string.length());

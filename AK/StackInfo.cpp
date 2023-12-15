@@ -5,13 +5,14 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Error.h>
 #include <AK/Platform.h>
 #include <AK/StackInfo.h>
 #include <stdio.h>
 #include <string.h>
 
 #ifdef AK_OS_SERENITY
-#    include <serenity.h>
+#    include <LibRuntime/System.h>
 #elif defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_MACOS) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS) or defined(AK_OS_HAIKU)
 #    include <pthread.h>
 #elif defined(AK_OS_FREEBSD) or defined(AK_OS_OPENBSD)
@@ -28,10 +29,9 @@ namespace AK {
 StackInfo::StackInfo()
 {
 #ifdef AK_OS_SERENITY
-    if (get_stack_bounds(&m_base, &m_size) < 0) {
-        perror("get_stack_bounds");
-        VERIFY_NOT_REACHED();
-    }
+    auto stack_bounds = Runtime::get_stack_bounds();
+    m_base = stack_bounds.user_stack_base;
+    m_size = stack_bounds.user_stack_size;
 #elif defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_FREEBSD) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS) or defined(AK_OS_HAIKU)
     int rc;
     pthread_attr_t attr;

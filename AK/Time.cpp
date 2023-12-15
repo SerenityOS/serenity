@@ -9,8 +9,10 @@
 
 // Make a reasonable guess as to which timespec/timeval definition to use.
 // It doesn't really matter, since both are identical.
-#ifdef KERNEL
+#if defined(KERNEL)
 #    include <Kernel/UnixTypes.h>
+#elif defined(AK_OS_SERENITY)
+#    include <LibRuntime/System.h>
 #else
 #    include <sys/time.h>
 #    include <time.h>
@@ -211,8 +213,12 @@ Duration Duration::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanos
 namespace {
 static Duration now_time_from_clock(clockid_t clock_id)
 {
+#    ifdef AK_OS_SERENITY
+    auto now_spec = MUST(Runtime::clock_gettime(clock_id));
+#    else
     timespec now_spec {};
     ::clock_gettime(clock_id, &now_spec);
+#    endif
     return Duration::from_timespec(now_spec);
 }
 }
