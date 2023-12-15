@@ -60,6 +60,8 @@ ErrorOr<void> close(FileDescriptor fd);
 void dbgputstr(StringArgument const& string);
 ErrorOr<void> get_process_name(StringBuilder& result);
 StackBounds get_stack_bounds();
+Optional<long> getauxval(long type);
+Optional<StringView> getenv(StringView name);
 pid_t getpid();
 pid_t gettid();
 ErrorOr<bool> isatty(FileDescriptor fd);
@@ -70,6 +72,7 @@ ErrorOr<void> mprotect(void* address, size_t size, RegionAccess access);
 ErrorOr<void> munmap(void* address, size_t size);
 ErrorOr<void> perf_event(int type, uintptr_t arg1, FlatPtr arg2);
 ErrorOr<size_t> read(FileDescriptor fd, void* buffer, size_t count);
+Optional<StringView> secure_getenv(StringView name);
 ErrorOr<void> set_mmap_name(void* address, size_t size, StringView name);
 ErrorOr<size_t> write(FileDescriptor fd, void const* buffer, size_t count);
 

@@ -616,13 +616,13 @@ void __malloc_init()
         s_scrub_free = false;
     }
 
-    if (secure_getenv("LIBC_NOSCRUB_MALLOC"))
+    if (Runtime::secure_getenv("LIBC_NOSCRUB_MALLOC"sv).has_value())
         s_scrub_malloc = false;
-    if (secure_getenv("LIBC_NOSCRUB_FREE"))
+    if (Runtime::secure_getenv("LIBC_NOSCRUB_FREE"sv).has_value())
         s_scrub_free = false;
-    if (secure_getenv("LIBC_LOG_MALLOC"))
+    if (Runtime::secure_getenv("LIBC_LOG_MALLOC"sv).has_value())
         s_log_malloc = true;
-    if (secure_getenv("LIBC_PROFILE_MALLOC"))
+    if (Runtime::secure_getenv("LIBC_PROFILE_MALLOC"sv).has_value())
         s_profiling = true;
 
     for (size_t i = 0; i < num_size_classes; ++i) {

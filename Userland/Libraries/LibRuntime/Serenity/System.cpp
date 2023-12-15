@@ -7,11 +7,14 @@
 #include <AK/Atomic.h>
 #include <AK/Error.h>
 #include <AK/StringView.h>
+#include <Kernel/API/POSIX/sys/auxv.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/API/prctl_numbers.h>
 #include <LibRuntime/Serenity/PosixThreadSupport.h>
 #include <LibRuntime/System.h>
 #include <LibSystem/syscall.h>
+#include <sys/internals.h>
+#include <unistd.h>
 
 namespace Runtime {
 
@@ -96,6 +99,29 @@ StackBounds get_stack_bounds()
     return result;
 }
 
+Optional<long> getauxval(long type)
+{
+    auxv_t* auxvp = (auxv_t*)__auxiliary_vector;
+    for (; auxvp->a_type != AT_NULL; ++auxvp) {
+        if (auxvp->a_type == type)
+            return auxvp->a_un.a_val;
+    }
+    return {};
+}
+
+Optional<StringView> getenv(StringView name)
+{
+    for (size_t i = 0; environ[i]; ++i) {
+        char const* decl = environ[i];
+        char* eq = strchr(decl, '=');
+        if (!eq)
+            continue;
+        if (name == StringView { decl, static_cast<size_t>(eq - decl) })
+            return { { eq + 1, strlen(eq + 1) } };
+    }
+    return {};
+}
+
 pid_t getpid()
 {
     if (s_cached_pid == 0)
@@ -161,6 +187,13 @@ ErrorOr<size_t> read(FileDescriptor fd, void* buffer, size_t count)
 {
     __pthread_maybe_cancel();
     return syscall_with_errno<size_t>(SC_read, fd.value(), buffer, count);
+}
+
+Optional<StringView> secure_getenv(StringView name)
+{
+    if (getauxval(AT_SECURE).value_or(0))
+        return {};
+    return getenv(name);
 }
 
 ErrorOr<void> set_mmap_name(void* address, size_t size, StringView name)
