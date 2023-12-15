@@ -56,6 +56,7 @@ enum class SeekWhence {
 AK_ENUM_BITWISE_OPERATORS(RegionAccess)
 AK_ENUM_BITWISE_OPERATORS(MMap)
 
+ErrorOr<timespec> clock_gettime(clockid_t clock_id);
 ErrorOr<void> close(FileDescriptor fd);
 void dbgputstr(StringArgument const& string);
 ErrorOr<void> get_process_name(StringBuilder& result);

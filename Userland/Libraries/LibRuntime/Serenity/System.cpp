@@ -9,6 +9,7 @@
 #include <AK/StringView.h>
 #include <Kernel/API/POSIX/sys/auxv.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/API/TimePage.h>
 #include <Kernel/API/prctl_numbers.h>
 #include <LibRuntime/Serenity/PosixThreadSupport.h>
 #include <LibRuntime/System.h>
@@ -66,6 +67,36 @@ ErrorOr<T> syscall_with_errno(Syscall::Function function, auto... args)
         return cast_syscall_ret_to<T>(rc);
     }
 }
+
+Kernel::TimePage* get_kernel_time_page()
+{
+    static AK::Atomic<Kernel::TimePage*> s_kernel_time_page = nullptr;
+    if (s_kernel_time_page == nullptr) {
+        if (auto result = syscall_with_errno<Kernel::TimePage*>(SC_map_time_page); !result.is_error())
+            s_kernel_time_page = result.value();
+    };
+    return s_kernel_time_page;
+}
+}
+
+ErrorOr<timespec> clock_gettime(clockid_t clock_id)
+{
+    timespec ts;
+
+    if (Kernel::time_page_supports(clock_id)) {
+        if (auto* kernel_time_page = get_kernel_time_page()) {
+            u32 update_iteration;
+            do {
+                update_iteration = AK::atomic_load(&kernel_time_page->update1, AK::memory_order_acquire);
+                ts = kernel_time_page->clocks[clock_id];
+                // FIXME: Call _mm_pause or an Arch-specific analog to notify processor that this is a spinlock.
+            } while (update_iteration != AK::atomic_load(&kernel_time_page->update2, AK::memory_order_acquire));
+            return ts;
+        }
+    }
+
+    TRY(syscall_with_errno<void>(SC_clock_gettime, clock_id, &ts));
+    return ts;
 }
 
 ErrorOr<void> close(FileDescriptor fd)
