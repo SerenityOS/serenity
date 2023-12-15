@@ -1626,7 +1626,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
     generate_to_cpp(sequence_generator, parameter, "next_item", ByteString::number(recursion_depth), ByteString::formatted("sequence_item{}", recursion_depth), interface, false, false, {}, false, recursion_depth);
 
     sequence_generator.append(R"~~~(
-        @cpp_name@.append(sequence_item@recursion_depth@);
+    @cpp_name@.append(sequence_item@recursion_depth@);
     }
 )~~~");
 }
