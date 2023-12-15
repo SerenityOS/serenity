@@ -1722,19 +1722,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
 
     auto request = fetch_params.request();
 
-    Page* page = nullptr;
-    auto& global_object = realm.global_object();
-    if (is<HTML::Window>(global_object))
-        page = static_cast<HTML::Window&>(global_object).page();
-    else if (is<HTML::WorkerGlobalScope>(global_object))
-        page = static_cast<HTML::WorkerGlobalScope&>(global_object).page();
+    auto& page = Bindings::host_defined_page(realm);
 
     // NOTE: Using LoadRequest::create_for_url_on_page here will unconditionally add cookies as long as there's a page available.
     //       However, it is up to http_network_or_cache_fetch to determine if cookies should be added to the request.
     LoadRequest load_request;
     load_request.set_url(request->current_url());
-    if (page)
-        load_request.set_page(*page);
+    load_request.set_page(page);
     load_request.set_method(DeprecatedString::copy(request->method()));
     for (auto const& header : *request->header_list())
         load_request.set_header(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value));
