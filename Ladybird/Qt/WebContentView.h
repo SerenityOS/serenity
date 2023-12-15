@@ -49,10 +49,10 @@ public:
 
     virtual void paintEvent(QPaintEvent*) override;
     virtual void resizeEvent(QResizeEvent*) override;
-    virtual void wheelEvent(QWheelEvent*) override;
     virtual void mouseMoveEvent(QMouseEvent*) override;
     virtual void mousePressEvent(QMouseEvent*) override;
     virtual void mouseReleaseEvent(QMouseEvent*) override;
+    virtual void wheelEvent(QWheelEvent*) override;
     virtual void mouseDoubleClickEvent(QMouseEvent*) override;
     virtual void dragEnterEvent(QDragEnterEvent*) override;
     virtual void dropEvent(QDropEvent*) override;
