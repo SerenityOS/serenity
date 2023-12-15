@@ -175,6 +175,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
 
     // 12. Set up a window environment settings object with about:blank, realm execution context, null, topLevelCreationURL, and topLevelOrigin.
     WindowEnvironmentSettingsObject::setup(
+        page,
         AK::URL("about:blank"),
         move(realm_execution_context),
         {},

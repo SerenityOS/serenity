@@ -236,6 +236,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
         // FIXME: Why do we assume `creation_url` is non-empty here? Is this a spec bug?
         // FIXME: Why do we assume `top_level_creation_url` is non-empty here? Is this a spec bug?
         HTML::WindowEnvironmentSettingsObject::setup(
+            browsing_context->page(),
             creation_url.value(),
             move(realm_execution_context),
             navigation_params.reserved_environment.visit(
@@ -321,6 +322,7 @@ JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url
 
 Document::Document(JS::Realm& realm, const AK::URL& url)
     : ParentNode(realm, *this, NodeType::DOCUMENT_NODE)
+    , m_page(Bindings::host_defined_page(realm))
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
 {
@@ -353,6 +355,7 @@ void Document::initialize(JS::Realm& realm)
 void Document::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_page);
     visitor.visit(m_window);
     visitor.visit(m_layout_root);
     visitor.visit(m_style_sheets);
@@ -1908,12 +1911,12 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 
 Page* Document::page()
 {
-    return m_browsing_context ? &m_browsing_context->page() : nullptr;
+    return m_page;
 }
 
 Page const* Document::page() const
 {
-    return m_browsing_context ? &m_browsing_context->page() : nullptr;
+    return m_page;
 }
 
 EventTarget* Document::get_parent(Event const& event)

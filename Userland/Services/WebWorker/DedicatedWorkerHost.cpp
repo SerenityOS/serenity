@@ -55,7 +55,7 @@ void DedicatedWorkerHost::run()
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(move(realm_execution_context));
+    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(m_page, move(realm_execution_context));
 
     auto& console_object = *inner_settings->realm().intrinsics().console_object();
     m_console = adopt_ref(*new Web::HTML::WorkerDebugConsoleClient(console_object.console()));

@@ -572,6 +572,7 @@ private:
 
     Element* find_a_potential_indicated_element(FlyString const& fragment) const;
 
+    JS::NonnullGCPtr<Page> m_page;
     OwnPtr<CSS::StyleComputer> m_style_computer;
     JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
     JS::GCPtr<Node> m_hovered_node;
