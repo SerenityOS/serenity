@@ -10,15 +10,7 @@
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-// FIXME: Generate these from IDL
-namespace Web::Bindings {
-
-// https://w3c.github.io/webcrypto/#dfn-Algorithm
-struct Algorithm {
-    String name;
-};
-
-};
+#include <LibWeb/Crypto/CryptoBindings.h>
 
 namespace Web::Crypto {
 
