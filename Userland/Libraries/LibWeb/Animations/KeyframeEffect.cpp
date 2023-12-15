@@ -20,7 +20,7 @@ JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_impl(
     JS::Realm& realm,
     JS::Handle<DOM::Element> const& target,
-    JS::Handle<JS::Object> const& keyframes,
+    Optional<JS::Handle<JS::Object>> const& keyframes,
     Variant<double, KeyframeEffectOptions> options)
 {
     auto& vm = realm.vm();
@@ -163,10 +163,9 @@ WebIDL::ExceptionOr<Vector<JS::Object*>> KeyframeEffect::get_keyframes() const
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-setkeyframes
-WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(JS::Object* keyframe_object)
+WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::Object>> const&)
 {
     // FIXME: Implement this
-    (void)keyframe_object;
     return {};
 }
 
