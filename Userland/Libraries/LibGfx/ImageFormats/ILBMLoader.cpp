@@ -233,7 +233,8 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
 
     u32 index = 0;
     u32 read_bytes = 0;
-    while (read_bytes < length) {
+    // Uncompressing is done once we've read all buffer or plane buffer has been fully filled
+    while (read_bytes < length && index < plane_data_size) {
         auto const byte = static_cast<i8>(data[read_bytes++]);
         if (byte >= -127 && byte <= -1) {
             // read next byte
