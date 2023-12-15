@@ -1,4 +1,5 @@
 set(LIBRUNTIME_SOURCES
+    LibC/stdio.cpp
     LibC/string.cpp
     LibC/strings.cpp
     Exceptions.cpp
