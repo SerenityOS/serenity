@@ -717,6 +717,7 @@ def setup_machine_devices(config: Configuration):
             config.display_device = None
             config.add_devices(
                 [
+                    "isa-debugcon,chardev=stdout",
                     "vmware-svga",
                     "ich9-usb-ehci1,bus=pcie.0,multifunction=on,addr=0x05.3,multifunction=on,id=ehci1",
                     "ich9-usb-uhci1,bus=pcie.0,multifunction=on,addr=0x05.0,masterbus=ehci1.0,firstport=0",
@@ -741,6 +742,7 @@ def setup_machine_devices(config: Configuration):
                     "sdhci-pci,bus=bridge1,addr=0x1.0x0",
                 ]
             )
+            config.character_devices.append("stdio,id=stdout,mux=on")
             config.enable_usb = True
         case MachineType.MicroVM | MachineType.ISAPC:
             config.character_devices.append("stdio,id=stdout,mux=on")
