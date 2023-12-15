@@ -31,6 +31,7 @@
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86_64/ISRStubs.h>
+#include <Kernel/Arch/x86_64/MSR.h>
 
 extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;
@@ -133,8 +134,9 @@ void dump_registers(RegisterState const& regs)
 
     dbgln("Exception code: {:04x} (isr: {:04x})", regs.exception_code, regs.isr_number);
     dbgln("    pc={:#04x}:{:p} rflags={:p}", (u16)regs.cs, regs.rip, regs.rflags);
-    dbgln(" stack={:p}", rsp);
-    // FIXME: Add fs_base and gs_base here
+    MSR fs_base_msr(MSR_FS_BASE);
+    MSR gs_base_msr(MSR_GS_BASE);
+    dbgln(" stack={:p}  fs={:p}  gs={:p}", rsp, fs_base_msr.get(), gs_base_msr.get());
     dbgln("   rax={:p} rbx={:p} rcx={:p} rdx={:p}", regs.rax, regs.rbx, regs.rcx, regs.rdx);
     dbgln("   rbp={:p} rsp={:p} rsi={:p} rdi={:p}", regs.rbp, regs.rsp, regs.rsi, regs.rdi);
     dbgln("    r8={:p}  r9={:p} r10={:p} r11={:p}", regs.r8, regs.r9, regs.r10, regs.r11);
