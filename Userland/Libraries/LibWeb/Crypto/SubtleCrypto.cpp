@@ -37,7 +37,7 @@ void SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-normalize-an-algorithm
-JS::ThrowCompletionOr<Bindings::Algorithm> SubtleCrypto::normalize_an_algorithm(Variant<JS::Handle<JS::Object>, String> const& algorithm, String operation)
+JS::ThrowCompletionOr<Bindings::Algorithm> SubtleCrypto::normalize_an_algorithm(AlgorithmIdentifier const& algorithm, String operation)
 {
     auto& realm = this->realm();
 
@@ -110,7 +110,7 @@ JS::ThrowCompletionOr<Bindings::Algorithm> SubtleCrypto::normalize_an_algorithm(
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
-JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(Variant<JS::Handle<JS::Object>, String> const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
+JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
 {
     auto& realm = this->realm();
 

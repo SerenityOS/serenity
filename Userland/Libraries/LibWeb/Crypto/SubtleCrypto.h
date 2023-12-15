@@ -27,19 +27,20 @@ class SubtleCrypto final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(SubtleCrypto);
 
     using SupportedAlgorithmsMap = HashMap<String, HashMap<String, String, AK::ASCIICaseInsensitiveStringTraits>>;
+    using AlgorithmIdentifier = Variant<JS::Handle<JS::Object>, String>;
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SubtleCrypto> create(JS::Realm&);
 
     virtual ~SubtleCrypto() override;
 
-    JS::NonnullGCPtr<JS::Promise> digest(Variant<JS::Handle<JS::Object>, String> const& algorithm, JS::Handle<WebIDL::BufferSource> const& data);
+    JS::NonnullGCPtr<JS::Promise> digest(AlgorithmIdentifier const& algorithm, JS::Handle<WebIDL::BufferSource> const& data);
 
 private:
     explicit SubtleCrypto(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
 
-    JS::ThrowCompletionOr<Bindings::Algorithm> normalize_an_algorithm(Variant<JS::Handle<JS::Object>, String> const& algorithm, String operation);
+    JS::ThrowCompletionOr<Bindings::Algorithm> normalize_an_algorithm(AlgorithmIdentifier const& algorithm, String operation);
 
     static SubtleCrypto::SupportedAlgorithmsMap& supported_algorithms_internal();
     static SubtleCrypto::SupportedAlgorithmsMap supported_algorithms();
