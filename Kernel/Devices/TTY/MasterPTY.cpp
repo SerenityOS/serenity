@@ -36,10 +36,14 @@ MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
     , m_buffer(move(buffer))
 {
     m_buffer->set_unblock_callback([this]() {
-        m_slave.with([this](auto& slave) {
-            if (slave)
-                evaluate_block_conditions();
-        });
+        // Note that has_slave() takes and then releases the m_slave spinlock.
+        // Not holding the spinlock while calling evaluate_block_conditions is legal,
+        // as the call will trigger a check to see if waiters may be unblocked,
+        // and if it was called spuriously (i.e. because the slave disappeared between
+        // calling the unblock callback and the actual block condition evaluation),
+        // the waiters will simply not unblock.
+        if (has_slave())
+            evaluate_block_conditions();
     });
 }
 
