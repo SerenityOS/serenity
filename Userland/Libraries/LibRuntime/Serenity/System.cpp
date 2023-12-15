@@ -9,6 +9,7 @@
 #include <AK/StringView.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/API/prctl_numbers.h>
+#include <LibRuntime/Serenity/PosixThreadSupport.h>
 #include <LibRuntime/System.h>
 #include <LibSystem/syscall.h>
 
@@ -64,6 +65,12 @@ ErrorOr<T> syscall_with_errno(Syscall::Function function, auto... args)
 }
 }
 
+ErrorOr<void> close(FileDescriptor fd)
+{
+    __pthread_maybe_cancel();
+    return syscall_with_errno<void>(SC_close, fd.value());
+}
+
 void dbgputstr(StringArgument const& string)
 {
     auto [characters, length] = string.get();
@@ -103,6 +110,18 @@ pid_t gettid()
     return s_cached_tid;
 }
 
+ErrorOr<bool> isatty(FileDescriptor fd)
+{
+    __pthread_maybe_cancel();
+    return syscall_with_errno<bool>(SC_fcntl, fd.value(), F_ISTTY);
+}
+
+ErrorOr<off_t> lseek(FileDescriptor fd, off_t offset, SeekWhence whence)
+{
+    VERIFY(TRY(syscall_with_errno<FlatPtr>(SC_lseek, fd.value(), &offset, whence)) == 0);
+    return offset;
+}
+
 ErrorOr<void*> mmap(void* address, size_t size, RegionAccess access, MMap flags, StringView name, FileDescriptor fd, off_t offset, size_t alignment)
 {
     Syscall::SC_mmap_params params {
@@ -128,6 +147,12 @@ ErrorOr<void> munmap(void* address, size_t size)
     return syscall_with_errno<void>(SC_munmap, address, size);
 }
 
+ErrorOr<size_t> read(FileDescriptor fd, void* buffer, size_t count)
+{
+    __pthread_maybe_cancel();
+    return syscall_with_errno<size_t>(SC_read, fd.value(), buffer, count);
+}
+
 ErrorOr<void> set_mmap_name(void* address, size_t size, StringView name)
 {
     Syscall::SC_set_mmap_name_params params {
@@ -136,6 +161,12 @@ ErrorOr<void> set_mmap_name(void* address, size_t size, StringView name)
         .name = { name.characters_without_null_termination(), name.length() }
     };
     return syscall_with_errno<void>(SC_set_mmap_name, &params);
+}
+
+ErrorOr<size_t> write(FileDescriptor fd, void const* buffer, size_t count)
+{
+    __pthread_maybe_cancel();
+    return syscall_with_errno<size_t>(SC_write, fd.value(), buffer, count);
 }
 
 }

@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
+#include <LibRuntime/Mutex.h>
 #include <bits/FILE.h>
 #include <bits/pthread_integration.h>
 #include <bits/wchar.h>
@@ -21,8 +22,6 @@ public:
         : m_fd(fd)
         , m_mode(mode)
     {
-        pthread_mutexattr_t attr = { __PTHREAD_MUTEX_RECURSIVE };
-        pthread_mutex_init(&m_mutex, &attr);
     }
     ~FILE();
 
@@ -135,7 +134,7 @@ private:
     bool m_eof { false };
     pid_t m_popen_child { -1 };
     Buffer m_buffer;
-    __pthread_mutex_t m_mutex;
+    Runtime::Mutex m_mutex { { Runtime::MutexType::Recursive } };
     IntrusiveListNode<FILE> m_list_node;
 
 public:

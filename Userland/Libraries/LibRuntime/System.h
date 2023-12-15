@@ -46,17 +46,28 @@ enum class MMap {
     Purgeable = MAP_PURGEABLE,
 };
 
+enum class SeekWhence {
+    Set = SEEK_SET,
+    Current = SEEK_CUR,
+    End = SEEK_END,
+};
+
 AK_ENUM_BITWISE_OPERATORS(RegionAccess)
 AK_ENUM_BITWISE_OPERATORS(MMap)
 
+ErrorOr<void> close(FileDescriptor fd);
 void dbgputstr(StringArgument const& string);
 ErrorOr<void> get_process_name(StringBuilder& result);
 StackBounds get_stack_bounds();
 pid_t getpid();
 pid_t gettid();
+ErrorOr<bool> isatty(FileDescriptor fd);
+ErrorOr<off_t> lseek(FileDescriptor fd, off_t offset, SeekWhence whence);
 ErrorOr<void*> mmap(void* address, size_t size, RegionAccess access, MMap flags, StringView name, FileDescriptor fd = -1, off_t offset = 0, size_t alignment = 0);
 ErrorOr<void> mprotect(void* address, size_t size, RegionAccess access);
 ErrorOr<void> munmap(void* address, size_t size);
+ErrorOr<size_t> read(FileDescriptor fd, void* buffer, size_t count);
 ErrorOr<void> set_mmap_name(void* address, size_t size, StringView name);
+ErrorOr<size_t> write(FileDescriptor fd, void const* buffer, size_t count);
 
 }

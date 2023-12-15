@@ -7,13 +7,12 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/ScopedValueRollback.h>
+#include <LibRuntime/Mutex.h>
 #include <LibRuntime/System.h>
-#include <bits/mutex_locker.h>
 #include <bits/stdio_file_implementation.h>
 #include <sys/internals.h>
-#include <unistd.h>
 
-static constinit pthread_mutex_t s_open_streams_lock = __PTHREAD_MUTEX_INITIALIZER;
+static constinit Runtime::Mutex s_open_streams_lock;
 
 // The list of open files is initialized in __stdio_init.
 // We cannot rely on global constructors to initialize it, because it must
@@ -28,13 +27,36 @@ FILE::~FILE()
     VERIFY(already_closed);
 }
 
+namespace {
+template<typename T>
+T unwrap_and_set_errno(ErrorOr<T>&& result)
+{
+    if (result.is_error()) {
+        errno = result.error().code();
+        return -1;
+    } else {
+        return result.value();
+    }
+}
+
+int unwrap_and_set_errno(ErrorOr<void>&& result)
+{
+    if (result.is_error()) {
+        errno = result.error().code();
+        return -1;
+    } else {
+        return 0;
+    }
+}
+}
+
 FILE* FILE::create(int fd, int mode)
 {
     void* file_location = calloc(1, sizeof(FILE));
     if (file_location == nullptr)
         return nullptr;
     auto* file = new (file_location) FILE(fd, mode);
-    LibC::MutexLocker locker(s_open_streams_lock);
+    Runtime::MutexLocker locker(s_open_streams_lock);
     s_open_streams->append(*file);
     return file;
 }
@@ -56,7 +78,7 @@ int FILE::close(FILE* stream)
     ScopedValueRollback errno_restorer(errno);
 
     {
-        LibC::MutexLocker locker(s_open_streams_lock);
+        Runtime::MutexLocker locker(s_open_streams_lock);
         s_open_streams->remove(*stream);
     }
     stream->~FILE();
@@ -69,7 +91,7 @@ int FILE::close(FILE* stream)
 int FILE::flush_open_streams()
 {
     int rc = 0;
-    LibC::MutexLocker locker(s_open_streams_lock);
+    Runtime::MutexLocker locker(s_open_streams_lock);
     for (auto& file : *s_open_streams) {
         ScopedFileLock lock(&file);
         rc = file.flush() ? rc : EOF;
@@ -80,7 +102,7 @@ int FILE::flush_open_streams()
 bool FILE::close()
 {
     bool flush_ok = flush();
-    int rc = ::close(m_fd);
+    int rc = unwrap_and_set_errno(Runtime::close(m_fd));
     m_fd = -1;
     if (!flush_ok) {
         // Restore the original error from flush().
@@ -107,7 +129,7 @@ bool FILE::flush()
         m_buffer.drop();
         // Attempt to reset the underlying file position to what the user
         // expects.
-        if (lseek(m_fd, -had_buffered, SEEK_CUR) < 0) {
+        if (unwrap_and_set_errno(Runtime::lseek(m_fd, -had_buffered, Runtime::SeekWhence::Current)) < 0) {
             if (errno == ESPIPE) {
                 // We can't set offset on this file; oh well, the user will just
                 // have to cope.
@@ -138,7 +160,7 @@ size_t FILE::pending()
 
 ssize_t FILE::do_read(u8* data, size_t size)
 {
-    int nread = ::read(m_fd, data, size);
+    ssize_t nread = static_cast<ssize_t>(unwrap_and_set_errno(Runtime::read(m_fd, data, size)));
 
     if (nread < 0) {
         m_error = errno;
@@ -150,7 +172,7 @@ ssize_t FILE::do_read(u8* data, size_t size)
 
 ssize_t FILE::do_write(u8 const* data, size_t size)
 {
-    int nwritten = ::write(m_fd, data, size);
+    ssize_t nwritten = static_cast<ssize_t>(unwrap_and_set_errno(Runtime::write(m_fd, data, size)));
 
     if (nwritten < 0)
         m_error = errno;
@@ -360,7 +382,7 @@ int FILE::seek(off_t offset, int whence)
     if (!ok)
         return -1;
 
-    off_t off = lseek(m_fd, offset, whence);
+    off_t off = unwrap_and_set_errno(Runtime::lseek(m_fd, offset, static_cast<Runtime::SeekWhence>(whence)));
     if (off < 0) {
         // Note: do not set m_error.
         return off;
@@ -376,7 +398,7 @@ off_t FILE::tell()
     if (!ok)
         return -1;
 
-    return lseek(m_fd, 0, SEEK_CUR);
+    return unwrap_and_set_errno(Runtime::lseek(m_fd, 0, Runtime::SeekWhence::Current));
 }
 
 void FILE::reopen(int fd, int mode)
@@ -419,8 +441,10 @@ bool FILE::Buffer::may_use() const
 
 void FILE::Buffer::realize(int fd)
 {
-    if (m_mode == -1)
-        m_mode = isatty(fd) ? _IOLBF : _IOFBF;
+    if (m_mode == -1) {
+        auto isatty_result = Runtime::isatty(fd);
+        m_mode = !isatty_result.is_error() && isatty_result.value() ? _IOLBF : _IOFBF;
+    }
 
     if (m_mode != _IONBF && m_data == nullptr) {
         m_data = reinterpret_cast<u8*>(malloc(m_capacity));
@@ -561,12 +585,12 @@ bool FILE::Buffer::enqueue_front(u8 byte)
 
 void FILE::lock()
 {
-    pthread_mutex_lock(&m_mutex);
+    m_mutex.lock();
 }
 
 void FILE::unlock()
 {
-    pthread_mutex_unlock(&m_mutex);
+    m_mutex.unlock();
 }
 
 extern "C" {
