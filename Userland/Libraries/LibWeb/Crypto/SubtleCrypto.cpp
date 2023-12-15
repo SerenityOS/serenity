@@ -190,7 +190,7 @@ SubtleCrypto::SupportedAlgorithmsMap& SubtleCrypto::supported_algorithms_interna
     return s_supported_algorithms;
 }
 
-// https://w3c.github.io/webcrypto/#algorithm-normalization-internal
+// https://w3c.github.io/webcrypto/#algorithm-normalization-internalS
 SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
 {
     auto& internal_object = supported_algorithms_internal();
