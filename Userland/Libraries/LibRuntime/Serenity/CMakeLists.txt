@@ -1,5 +1,6 @@
 set(LIBRUNTIME_SOURCES
     LibC/errno.cpp
+    LibC/malloc.cpp
     LibC/stdio.cpp
     LibC/string.cpp
     LibC/strings.cpp
@@ -62,3 +63,7 @@ add_dependencies(DynamicLoaderRuntime install_libc_headers)
 target_compile_options(DynamicLoaderRuntime PUBLIC -fno-rtti)
 target_compile_definitions(DynamicLoaderRuntime PRIVATE _DYNAMIC_LOADER NO_TLS)
 target_link_libraries(DynamicLoaderRuntime PRIVATE NoCoverage)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(DynamicLoaderRuntime PRIVATE gcc)
+endif ()

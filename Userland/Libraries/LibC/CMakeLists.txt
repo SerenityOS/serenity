@@ -18,7 +18,6 @@ set(LIBC_SOURCES
     libgen.cpp
     link.cpp
     locale.cpp
-    malloc.cpp
     math.cpp
     mntent.cpp
     net.cpp

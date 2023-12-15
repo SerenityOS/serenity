@@ -7,43 +7,18 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Debug.h>
+#include <AK/Format.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
-#include <assert.h>
-#include <errno.h>
+#include <LibRuntime/Mutex.h>
+#include <LibRuntime/System.h>
 #include <mallocdefs.h>
-#include <pthread.h>
-#include <serenity.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/internals.h>
-#include <sys/mman.h>
 #include <syscall.h>
-
-class PthreadMutexLocker {
-public:
-    ALWAYS_INLINE explicit PthreadMutexLocker(pthread_mutex_t& mutex)
-        : m_mutex(mutex)
-    {
-        lock();
-        __heap_is_stable = false;
-    }
-    ALWAYS_INLINE ~PthreadMutexLocker()
-    {
-        __heap_is_stable = true;
-        unlock();
-    }
-    ALWAYS_INLINE void lock() { pthread_mutex_lock(&m_mutex); }
-    ALWAYS_INLINE void unlock() { pthread_mutex_unlock(&m_mutex); }
-
-private:
-    pthread_mutex_t& m_mutex;
-};
 
 #define RECYCLE_BIG_ALLOCATIONS
 
-static pthread_mutex_t s_malloc_mutex = PTHREAD_MUTEX_INITIALIZER;
+static constinit Runtime::Mutex s_malloc_mutex;
 bool __heap_is_stable = true;
 
 constexpr size_t number_of_hot_chunked_blocks_to_keep_around = 16;
@@ -239,24 +214,22 @@ static BigAllocator* big_allocator_for_size(size_t size)
 
 extern "C" {
 
-static ErrorOr<void*> os_alloc(size_t size, char const* name)
+static ErrorOr<void*> os_alloc(size_t size, StringView name)
 {
-    int flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE;
-#if ARCH(X86_64)
-    flags |= MAP_RANDOMIZED;
-#endif
-    auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, flags, 0, 0, ChunkedBlock::block_size, name);
-    VERIFY(ptr != nullptr);
-    if (ptr == MAP_FAILED) {
+    using namespace Runtime;
+
+    auto flags = MMap::Anonymous | MMap::Private | MMap::Purgeable | MMap::Randomized;
+    auto ptr_or_error = mmap(nullptr, size, RegionAccess::ReadWrite, flags, name, -1, 0, ChunkedBlock::block_size);
+    if (ptr_or_error.is_error())
         return ENOMEM;
-    }
+    auto* ptr = ptr_or_error.value();
+    VERIFY(ptr != nullptr);
     return ptr;
 }
 
 static void os_free(void* ptr, size_t size)
 {
-    int rc = munmap(ptr, size);
-    assert(rc == 0);
+    MUST(Runtime::munmap(ptr, size));
 }
 
 static void* try_allocate_chunk_aligned(size_t align, ChunkedBlock& block)
@@ -321,7 +294,7 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
     size_t good_size;
     auto* allocator = allocator_for_size(size, good_size, align);
 
-    PthreadMutexLocker locker(s_malloc_mutex);
+    Runtime::MutexLocker locker(s_malloc_mutex);
 
     if (!allocator) {
         size_t real_size = round_up_to_power_of_two(sizeof(BigAllocationBlock) + size + ((align > 16) ? align : 0), ChunkedBlock::block_size);
@@ -334,16 +307,8 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
             if (!allocator->blocks.is_empty()) {
                 g_malloc_stats.number_of_big_allocator_hits++;
                 auto* block = allocator->blocks.take_last();
-                int rc = madvise(block, real_size, MADV_SET_NONVOLATILE);
-                bool this_block_was_purged = rc == 1;
-                if (rc < 0) {
-                    perror("madvise");
-                    VERIFY_NOT_REACHED();
-                }
-                if (mprotect(block, real_size, PROT_READ | PROT_WRITE) < 0) {
-                    perror("mprotect");
-                    VERIFY_NOT_REACHED();
-                }
+                bool this_block_was_purged = MUST(Runtime::madvise_set_volatile(block, real_size, false));
+                MUST(Runtime::mprotect(block, real_size, Runtime::RegionAccess::ReadWrite));
                 if (this_block_was_purged) {
                     g_malloc_stats.number_of_big_allocator_purge_hits++;
                     new (block) BigAllocationBlock(real_size);
@@ -356,7 +321,7 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
             }
         }
 #endif
-        auto* block = (BigAllocationBlock*)TRY(os_alloc(real_size, "malloc: BigAllocationBlock"));
+        auto* block = (BigAllocationBlock*)TRY(os_alloc(real_size, "malloc: BigAllocationBlock"sv));
         g_malloc_stats.number_of_big_allocs++;
         new (block) BigAllocationBlock(real_size);
 
@@ -383,9 +348,10 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
         if (block->m_size != good_size) {
             new (block) ChunkedBlock(good_size);
             ue_notify_chunk_size_changed(block, good_size);
-            char buffer[64];
-            snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
-            set_mmap_name(block, ChunkedBlock::block_size, buffer);
+
+            StringBuilder builder { StringBuilder::UseInlineCapacityOnly::Yes };
+            builder.appendff("malloc: ChunkedBlock({})", good_size);
+            (void)Runtime::set_mmap_name(block, ChunkedBlock::block_size, builder.string_view());
         }
         allocator->usable_blocks.append(*block);
     }
@@ -393,17 +359,8 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
     if (!block && s_cold_empty_block_count) {
         g_malloc_stats.number_of_cold_empty_block_hits++;
         block = s_cold_empty_blocks[--s_cold_empty_block_count];
-        int rc = madvise(block, ChunkedBlock::block_size, MADV_SET_NONVOLATILE);
-        bool this_block_was_purged = rc == 1;
-        if (rc < 0) {
-            perror("madvise");
-            VERIFY_NOT_REACHED();
-        }
-        rc = mprotect(block, ChunkedBlock::block_size, PROT_READ | PROT_WRITE);
-        if (rc < 0) {
-            perror("mprotect");
-            VERIFY_NOT_REACHED();
-        }
+        bool this_block_was_purged = MUST(Runtime::madvise_set_volatile(block, ChunkedBlock::block_size, false));
+        MUST(Runtime::mprotect(block, ChunkedBlock::block_size, Runtime::RegionAccess::ReadWrite));
         if (this_block_was_purged || block->m_size != good_size) {
             if (this_block_was_purged)
                 g_malloc_stats.number_of_cold_empty_block_purge_hits++;
@@ -415,9 +372,9 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
 
     if (!block) {
         g_malloc_stats.number_of_block_allocs++;
-        char buffer[64];
-        snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
-        block = (ChunkedBlock*)TRY(os_alloc(ChunkedBlock::block_size, buffer));
+        StringBuilder builder { StringBuilder::UseInlineCapacityOnly::Yes };
+        builder.appendff("malloc: ChunkedBlock({})", good_size);
+        block = (ChunkedBlock*)TRY(os_alloc(ChunkedBlock::block_size, builder.string_view()));
         new (block) ChunkedBlock(good_size);
         allocator->usable_blocks.append(*block);
         ++allocator->block_count;
@@ -459,7 +416,7 @@ static void free_impl(void* ptr)
     void* block_base = (void*)((FlatPtr)ptr & ChunkedBlock::ChunkedBlock::block_mask);
     size_t magic = *(size_t*)block_base;
 
-    PthreadMutexLocker locker(s_malloc_mutex);
+    Runtime::MutexLocker locker(s_malloc_mutex);
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
         auto* block = (BigAllocationBlock*)block_base;
@@ -469,14 +426,8 @@ static void free_impl(void* ptr)
                 g_malloc_stats.number_of_big_allocator_keeps++;
                 allocator->blocks.append(block);
                 size_t this_block_size = block->m_size;
-                if (mprotect(block, this_block_size, PROT_NONE) < 0) {
-                    perror("mprotect");
-                    VERIFY_NOT_REACHED();
-                }
-                if (madvise(block, this_block_size, MADV_SET_VOLATILE) != 0) {
-                    perror("madvise");
-                    VERIFY_NOT_REACHED();
-                }
+                MUST(Runtime::mprotect(block, this_block_size, Runtime::RegionAccess::None));
+                VERIFY(MUST(Runtime::madvise_set_volatile(block, this_block_size, true)) == 0);
                 return;
             }
         }
@@ -486,7 +437,7 @@ static void free_impl(void* ptr)
         return;
     }
 
-    assert(magic == MAGIC_PAGE_HEADER);
+    VERIFY(magic == MAGIC_PAGE_HEADER);
     auto* block = (ChunkedBlock*)block_base;
 
     dbgln_if(MALLOC_DEBUG, "LibC: freeing {:p} in allocator {:p} (size={}, used={})", ptr, block, block->bytes_per_chunk(), block->used_chunks());
@@ -524,8 +475,8 @@ static void free_impl(void* ptr)
             g_malloc_stats.number_of_cold_keeps++;
             allocator->usable_blocks.remove(*block);
             s_cold_empty_blocks[s_cold_empty_block_count++] = block;
-            mprotect(block, ChunkedBlock::block_size, PROT_NONE);
-            madvise(block, ChunkedBlock::block_size, MADV_SET_VOLATILE);
+            MUST(Runtime::mprotect(block, ChunkedBlock::block_size, Runtime::RegionAccess::None));
+            VERIFY(MUST(Runtime::madvise_set_volatile(block, ChunkedBlock::block_size, true)) == 0);
             return;
         }
         dbgln_if(MALLOC_DEBUG, "Releasing block {:p} for size class {}", block, good_size);
@@ -548,7 +499,7 @@ void* malloc(size_t size)
     }
 
     if (s_profiling)
-        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr_or_error.value()));
+        (void)Runtime::perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr_or_error.value()));
 
     return ptr_or_error.value();
 }
@@ -558,7 +509,7 @@ void free(void* ptr)
 {
     MemoryAuditingSuppressor suppressor;
     if (s_profiling)
-        perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
+        (void)Runtime::perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
     ue_notify_free(ptr);
     free_impl(ptr);
 }

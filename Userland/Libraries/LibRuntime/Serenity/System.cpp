@@ -122,6 +122,11 @@ ErrorOr<off_t> lseek(FileDescriptor fd, off_t offset, SeekWhence whence)
     return offset;
 }
 
+ErrorOr<bool> madvise_set_volatile(void* address, size_t size, bool is_volatile)
+{
+    return syscall_with_errno<bool>(SC_madvise, address, size, is_volatile ? MADV_SET_VOLATILE : MADV_SET_NONVOLATILE);
+}
+
 ErrorOr<void*> mmap(void* address, size_t size, RegionAccess access, MMap flags, StringView name, FileDescriptor fd, off_t offset, size_t alignment)
 {
     Syscall::SC_mmap_params params {
@@ -145,6 +150,11 @@ ErrorOr<void> mprotect(void* address, size_t size, RegionAccess access)
 ErrorOr<void> munmap(void* address, size_t size)
 {
     return syscall_with_errno<void>(SC_munmap, address, size);
+}
+
+ErrorOr<void> perf_event(int type, uintptr_t arg1, FlatPtr arg2)
+{
+    return syscall_with_errno<void>(SC_perf_event, type, arg1, arg2);
 }
 
 ErrorOr<size_t> read(FileDescriptor fd, void* buffer, size_t count)
