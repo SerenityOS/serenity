@@ -157,9 +157,9 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     regs.x[1] = argv;
     regs.x[2] = envp;
 #elif ARCH(RISCV64)
-    (void)argv;
-    (void)envp;
-    TODO_RISCV64();
+    regs.x[9] = argv_entries.size();
+    regs.x[10] = argv;
+    regs.x[11] = envp;
 #else
 #    error Unknown architecture
 #endif
