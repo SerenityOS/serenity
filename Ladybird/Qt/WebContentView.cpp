@@ -321,46 +321,19 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
     return Key_Invalid;
 }
 
-void WebContentView::wheelEvent(QWheelEvent* event)
-{
-    if (!event->modifiers().testFlag(Qt::ControlModifier)) {
-        Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-        Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
-        auto button = get_button_from_qt_event(*event);
-        auto buttons = get_buttons_from_qt_event(*event);
-        auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-
-        auto num_pixels = -event->pixelDelta();
-        if (!num_pixels.isNull()) {
-            client().async_mouse_wheel(to_content_position(position), screen_position, button, buttons, modifiers, num_pixels.x(), num_pixels.y());
-        } else {
-            auto num_degrees = -event->angleDelta();
-            float delta_x = -num_degrees.x() / 120;
-            float delta_y = num_degrees.y() / 120;
-            auto step_x = delta_x * QApplication::wheelScrollLines() * m_device_pixel_ratio;
-            auto step_y = delta_y * QApplication::wheelScrollLines() * m_device_pixel_ratio;
-            int scroll_step_size = verticalScrollBar()->singleStep();
-            client().async_mouse_wheel(to_content_position(position), screen_position, button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
-        }
-        event->accept();
-        return;
-    }
-    event->ignore();
-}
-
 void WebContentView::mouseMoveEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
+    Web::DevicePixelPoint position(to_content_position(Gfx::IntPoint { event->position().x(), event->position().y() }) * m_device_pixel_ratio);
+    Web::DevicePixelPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    client().async_mouse_move(to_content_position(position), screen_position, 0, buttons, modifiers);
+    client().async_mouse_move(position, screen_position, 0, buttons, modifiers);
 }
 
 void WebContentView::mousePressEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
+    Web::DevicePixelPoint position(to_content_position(Gfx::IntPoint { event->position().x(), event->position().y() }) * m_device_pixel_ratio);
+    Web::DevicePixelPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto button = get_button_from_qt_event(*event);
     if (button == 0) {
         // We could not convert Qt buttons to something that Lagom can
@@ -370,13 +343,13 @@ void WebContentView::mousePressEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_down(to_content_position(position), screen_position, button, buttons, modifiers);
+    client().async_mouse_down(position, screen_position, button, buttons, modifiers);
 }
 
 void WebContentView::mouseReleaseEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
+    Web::DevicePixelPoint position(to_content_position(Gfx::IntPoint { event->position().x(), event->position().y() }) * m_device_pixel_ratio);
+    Web::DevicePixelPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto button = get_button_from_qt_event(*event);
 
     if (event->button() & Qt::MouseButton::BackButton) {
@@ -395,13 +368,40 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_up(to_content_position(position), screen_position, button, buttons, modifiers);
+    client().async_mouse_up(position, screen_position, button, buttons, modifiers);
+}
+
+void WebContentView::wheelEvent(QWheelEvent* event)
+{
+    if (!event->modifiers().testFlag(Qt::ControlModifier)) {
+        Web::DevicePixelPoint position(to_content_position(Gfx::IntPoint { event->position().x(), event->position().y() }) * m_device_pixel_ratio);
+        Web::DevicePixelPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
+        auto button = get_button_from_qt_event(*event);
+        auto buttons = get_buttons_from_qt_event(*event);
+        auto modifiers = get_modifiers_from_qt_mouse_event(*event);
+
+        auto num_pixels = -event->pixelDelta();
+        if (!num_pixels.isNull()) {
+            client().async_mouse_wheel(position, screen_position, button, buttons, modifiers, num_pixels.x(), num_pixels.y());
+        } else {
+            auto num_degrees = -event->angleDelta();
+            float delta_x = -num_degrees.x() / 120;
+            float delta_y = num_degrees.y() / 120;
+            auto step_x = delta_x * QApplication::wheelScrollLines() * m_device_pixel_ratio;
+            auto step_y = delta_y * QApplication::wheelScrollLines() * m_device_pixel_ratio;
+            int scroll_step_size = verticalScrollBar()->singleStep();
+            client().async_mouse_wheel(position, screen_position, button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
+        }
+        event->accept();
+        return;
+    }
+    event->ignore();
 }
 
 void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
+    Web::DevicePixelPoint position(to_content_position(Gfx::IntPoint { event->position().x(), event->position().y() }) * m_device_pixel_ratio);
+    Web::DevicePixelPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto button = get_button_from_qt_event(*event);
     if (button == 0) {
         // We could not convert Qt buttons to something that Lagom can
@@ -411,7 +411,7 @@ void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_doubleclick(to_content_position(position), screen_position, button, buttons, modifiers);
+    client().async_doubleclick(position, screen_position, button, buttons, modifiers);
 }
 
 void WebContentView::dragEnterEvent(QDragEnterEvent* event)

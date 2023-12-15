@@ -60,11 +60,11 @@ private:
     virtual void load_html(DeprecatedString const&) override;
     virtual void paint(Web::DevicePixelRect const&, i32) override;
     virtual void set_viewport_rect(Web::DevicePixelRect const&) override;
-    virtual void mouse_down(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
-    virtual void mouse_move(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
-    virtual void mouse_up(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
-    virtual void mouse_wheel(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned, i32, i32) override;
-    virtual void doubleclick(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_down(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_move(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_up(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_wheel(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned, Web::DevicePixels, Web::DevicePixels) override;
+    virtual void doubleclick(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
     virtual void key_down(i32, unsigned, u32) override;
     virtual void key_up(i32, unsigned, u32) override;
     virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
@@ -164,13 +164,13 @@ private:
             DoubleClick,
         };
         Type type {};
-        Gfx::IntPoint position {};
-        Gfx::IntPoint screen_position {};
+        Web::DevicePixelPoint position {};
+        Web::DevicePixelPoint screen_position {};
         unsigned button {};
         unsigned buttons {};
         unsigned modifiers {};
-        int wheel_delta_x {};
-        int wheel_delta_y {};
+        Web::DevicePixels wheel_delta_x {};
+        Web::DevicePixels wheel_delta_y {};
         size_t coalesced_event_count { 0 };
     };
 

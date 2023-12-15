@@ -192,14 +192,12 @@ void ConnectionFromClient::process_next_input_event()
             switch (event.type) {
             case QueuedMouseEvent::Type::MouseDown:
                 report_finished_handling_input_event(page().page().handle_mousedown(
-                    event.position.to_type<Web::DevicePixels>(),
-                    event.screen_position.to_type<Web::DevicePixels>(),
+                    event.position, event.screen_position,
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseUp:
                 report_finished_handling_input_event(page().page().handle_mouseup(
-                    event.position.to_type<Web::DevicePixels>(),
-                    event.screen_position.to_type<Web::DevicePixels>(),
+                    event.position, event.screen_position,
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseMove:
@@ -209,14 +207,12 @@ void ConnectionFromClient::process_next_input_event()
                     report_finished_handling_input_event(false);
                 }
                 report_finished_handling_input_event(page().page().handle_mousemove(
-                    event.position.to_type<Web::DevicePixels>(),
-                    event.screen_position.to_type<Web::DevicePixels>(),
+                    event.position, event.screen_position,
                     event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::DoubleClick:
                 report_finished_handling_input_event(page().page().handle_doubleclick(
-                    event.position.to_type<Web::DevicePixels>(),
-                    event.screen_position.to_type<Web::DevicePixels>(),
+                    event.position, event.screen_position,
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseWheel:
@@ -224,9 +220,9 @@ void ConnectionFromClient::process_next_input_event()
                     report_finished_handling_input_event(false);
                 }
                 report_finished_handling_input_event(page().page().handle_mousewheel(
-                    event.position.to_type<Web::DevicePixels>(),
-                    event.screen_position.to_type<Web::DevicePixels>(),
-                    event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y));
+                    event.position, event.screen_position,
+                    event.button, event.buttons, event.modifiers,
+                    event.wheel_delta_x, event.wheel_delta_y));
                 break;
             }
         },
@@ -245,7 +241,7 @@ void ConnectionFromClient::process_next_input_event()
         m_input_event_queue_timer->start();
 }
 
-void ConnectionFromClient::mouse_down(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -258,7 +254,7 @@ void ConnectionFromClient::mouse_down(Gfx::IntPoint position, Gfx::IntPoint scre
         });
 }
 
-void ConnectionFromClient::mouse_move(Gfx::IntPoint position, Gfx::IntPoint screen_position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseMove,
@@ -281,7 +277,7 @@ void ConnectionFromClient::mouse_move(Gfx::IntPoint position, Gfx::IntPoint scre
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::mouse_up(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -294,7 +290,7 @@ void ConnectionFromClient::mouse_up(Gfx::IntPoint position, Gfx::IntPoint screen
         });
 }
 
-void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
+void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseWheel,
@@ -322,7 +318,7 @@ void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, Gfx::IntPoint scr
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::doubleclick(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
