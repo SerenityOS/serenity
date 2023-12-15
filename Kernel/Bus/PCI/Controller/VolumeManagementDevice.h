@@ -20,12 +20,12 @@ public:
 private:
     VolumeManagementDevice(PCI::Domain const&, PhysicalAddress);
 
-    virtual void write8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) override;
-    virtual void write16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) override;
-    virtual void write32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value) override;
-    virtual u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
-    virtual u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
-    virtual u32 read32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
+    virtual void write8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) override;
+    virtual void write16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) override;
+    virtual void write32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u32 value) override;
+    virtual u8 read8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
+    virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
+    virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
 
     // Note: All read and writes must be done with a spinlock because
     // Linux says that CPU might deadlock otherwise if access is not serialized.

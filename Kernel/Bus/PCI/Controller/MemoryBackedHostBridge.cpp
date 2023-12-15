@@ -22,50 +22,50 @@ MemoryBackedHostBridge::MemoryBackedHostBridge(PCI::Domain const& domain, Physic
 {
 }
 
-u8 MemoryBackedHostBridge::read8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u8 MemoryBackedHostBridge::read8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     VERIFY(field <= 0xfff);
     return *((u8 volatile*)(get_device_configuration_memory_mapped_space(bus, device, function).get() + (field & 0xfff)));
 }
-u16 MemoryBackedHostBridge::read16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u16 MemoryBackedHostBridge::read16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     VERIFY(field < 0xfff);
     u16 data = 0;
     ByteReader::load<u16>(get_device_configuration_memory_mapped_space(bus, device, function).offset(field & 0xfff).as_ptr(), data);
     return data;
 }
-u32 MemoryBackedHostBridge::read32_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u32 MemoryBackedHostBridge::read32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     VERIFY(field <= 0xffc);
     u32 data = 0;
     ByteReader::load<u32>(get_device_configuration_memory_mapped_space(bus, device, function).offset(field & 0xfff).as_ptr(), data);
     return data;
 }
-void MemoryBackedHostBridge::write8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
+void MemoryBackedHostBridge::write8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     VERIFY(field <= 0xfff);
     *((u8 volatile*)(get_device_configuration_memory_mapped_space(bus, device, function).get() + (field & 0xfff))) = value;
 }
-void MemoryBackedHostBridge::write16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
+void MemoryBackedHostBridge::write16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     VERIFY(field < 0xfff);
     ByteReader::store<u16>(get_device_configuration_memory_mapped_space(bus, device, function).offset(field & 0xfff).as_ptr(), value);
 }
-void MemoryBackedHostBridge::write32_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
+void MemoryBackedHostBridge::write32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     VERIFY(field <= 0xffc);
     ByteReader::store<u32>(get_device_configuration_memory_mapped_space(bus, device, function).offset(field & 0xfff).as_ptr(), value);
 }
 
 void MemoryBackedHostBridge::map_bus_region(BusNumber bus)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     if (m_mapped_bus == bus && m_mapped_bus_region)
         return;
     auto bus_base_address = determine_memory_mapped_bus_base_address(bus);
@@ -80,7 +80,7 @@ void MemoryBackedHostBridge::map_bus_region(BusNumber bus)
 
 VirtualAddress MemoryBackedHostBridge::get_device_configuration_memory_mapped_space(BusNumber bus, DeviceNumber device, FunctionNumber function)
 {
-    VERIFY(Access::the().access_lock().is_locked());
+    VERIFY(m_access_lock.is_locked());
     map_bus_region(bus);
     return m_mapped_bus_region->vaddr().offset(mmio_device_space_size * function.value() + (mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice)) * device.value());
 }

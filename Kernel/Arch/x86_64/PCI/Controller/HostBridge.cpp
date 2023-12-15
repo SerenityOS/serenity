@@ -27,34 +27,44 @@ static u32 io_address_for_pci_field(BusNumber bus, DeviceNumber device, Function
     return 0x80000000u | (bus.value() << 16u) | (device.value() << 11u) | (function.value() << 8u) | (field & 0xfc);
 }
 
-void HostBridge::write8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
+void HostBridge::write8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
 {
+    VERIFY(m_access_lock.is_locked());
     IO::out32(PCI::address_port, io_address_for_pci_field(bus, device, function, field));
     IO::out8(PCI::value_port + (field & 3), value);
 }
-void HostBridge::write16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
+
+void HostBridge::write16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
 {
+    VERIFY(m_access_lock.is_locked());
     IO::out32(PCI::address_port, io_address_for_pci_field(bus, device, function, field));
     IO::out16(PCI::value_port + (field & 2), value);
 }
-void HostBridge::write32_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
+
+void HostBridge::write32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
 {
+    VERIFY(m_access_lock.is_locked());
     IO::out32(PCI::address_port, io_address_for_pci_field(bus, device, function, field));
     IO::out32(PCI::value_port, value);
 }
 
-u8 HostBridge::read8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u8 HostBridge::read8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
+    VERIFY(m_access_lock.is_locked());
     IO::out32(PCI::address_port, io_address_for_pci_field(bus, device, function, field));
     return IO::in8(PCI::value_port + (field & 3));
 }
-u16 HostBridge::read16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+
+u16 HostBridge::read16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
+    VERIFY(m_access_lock.is_locked());
     IO::out32(PCI::address_port, io_address_for_pci_field(bus, device, function, field));
     return IO::in16(PCI::value_port + (field & 2));
 }
-u32 HostBridge::read32_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+
+u32 HostBridge::read32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
+    VERIFY(m_access_lock.is_locked());
     IO::out32(PCI::address_port, io_address_for_pci_field(bus, device, function, field));
     return IO::in32(PCI::value_port);
 }
