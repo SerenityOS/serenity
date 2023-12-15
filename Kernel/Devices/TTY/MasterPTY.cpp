@@ -55,11 +55,16 @@ MasterPTY::~MasterPTY()
 
 ErrorOr<size_t> MasterPTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    return m_slave.with([this, &buffer, size](auto& slave) -> ErrorOr<size_t> {
-        if (!slave && m_buffer->is_empty())
-            return 0;
-        return m_buffer->read(buffer, size);
-    });
+    // Note that has_slave() takes and then releases the m_slave spinlock.
+    // Not holding the spinlock while calling m_buffer->read is legal, because slave starts non-null,
+    // and can only change its state to null once  (and never back to non-null) in notify_slave_closed.
+    // So if the check happens, and it returns non-null, and then it turns null concurrently,
+    // and we call m_buffer->read, the behaviour from the perspective of the read caller is
+    // the same as if the slave turned null after we called m_buffer->read. On the other hand,
+    // if the check happens and returns null, then it can't possibly change to non-null after.
+    if (!has_slave() && m_buffer->is_empty())
+        return 0;
+    return m_buffer->read(buffer, size);
 }
 
 ErrorOr<size_t> MasterPTY::write(OpenFileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
