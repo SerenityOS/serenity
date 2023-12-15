@@ -119,7 +119,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp_nonshared.a DESTINATION ${CMAKE
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES} ${LIBRUNTIME_SOURCES})
 
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
-set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
+set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs")
+set_source_files_properties(../LibRuntime/Serenity/LibC/stdio.cpp PROPERTIES COMPILE_FLAGS -fno-builtin-fwrite)
 
 # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

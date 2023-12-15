@@ -613,3 +613,24 @@ void __stdio_init()
     __stdio_is_initialized = true;
 }
 }
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ferror.html
+int ferror(FILE* stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    return stream->error();
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwrite.html
+size_t fwrite(void const* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    VERIFY(stream);
+    VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
+
+    ScopedFileLock lock(stream);
+    size_t nwritten = stream->write(reinterpret_cast<u8 const*>(ptr), size * nmemb);
+    if (!nwritten)
+        return 0;
+    return nwritten / size;
+}

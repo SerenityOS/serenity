@@ -12,11 +12,15 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/FloatingPoint.h>
 #include <Kernel/API/POSIX/signal.h>
+#include <LibRuntime/Mutex.h>
+#include <LibRuntime/Serenity/PosixThreadSupport.h>
+#include <LibRuntime/System.h>
 #include <LibSystem/syscall.h>
 #include <bits/stdio_file_implementation.h>
 #include <errno.h>
 #include <math.h>
 #include <sched.h>
+#include <stdlib.h>
 #include <sys/internals.h>
 #include <wchar.h>
 
@@ -133,4 +137,43 @@ int sched_yield()
 {
     int rc = syscall(SC_yield);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+// FIXME: We should instead provide a wrapper for SC_getrandom in System.h.
+void arc4random_buf(void* buffer, size_t buffer_size)
+{
+    static constinit Runtime::Mutex s_randomness_mutex;
+    static u8* s_randomness_buffer = nullptr;
+    static size_t s_randomness_index = 0;
+
+    Runtime::MutexLocker lock(s_randomness_mutex);
+
+    size_t bytes_needed = buffer_size;
+    auto* ptr = static_cast<u8*>(buffer);
+
+    while (bytes_needed > 0) {
+        if (!s_randomness_buffer || s_randomness_index >= PAGE_SIZE) {
+            if (!s_randomness_buffer) {
+                auto flags = Runtime::MMap::Anonymous | Runtime::MMap::Private | Runtime::MMap::Randomized;
+                s_randomness_buffer = static_cast<u8*>(MUST(Runtime::mmap(nullptr, PAGE_SIZE, Runtime::RegionAccess::ReadWrite, flags, ""sv, -1, 0, 0)));
+                Runtime::register_pthread_callback(Runtime::CallbackType::ForkChild,
+                    [] {
+                        MUST(Runtime::munmap(s_randomness_buffer, PAGE_SIZE));
+                        s_randomness_buffer = nullptr;
+                        s_randomness_index = 0;
+                    });
+            }
+            syscall(SC_getrandom, s_randomness_buffer, PAGE_SIZE);
+            s_randomness_index = 0;
+        }
+
+        size_t available_bytes = PAGE_SIZE - s_randomness_index;
+        size_t bytes_to_copy = min(bytes_needed, available_bytes);
+
+        memcpy(ptr, s_randomness_buffer + s_randomness_index, bytes_to_copy);
+
+        s_randomness_index += bytes_to_copy;
+        bytes_needed -= bytes_to_copy;
+        ptr += bytes_to_copy;
+    }
 }

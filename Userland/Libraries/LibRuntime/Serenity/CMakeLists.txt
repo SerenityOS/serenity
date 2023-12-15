@@ -13,6 +13,8 @@ set(LIBRUNTIME_SOURCES
     System.cpp
 )
 
+# Prevent GCC from removing null checks by marking the `FILE*` argument non-null
+set_source_files_properties(LibC/stdio.cpp PROPERTIES COMPILE_FLAGS -fno-builtin-fwrite)
 # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
 set_source_files_properties(LibC/string.cpp PROPERTIES COMPILE_FLAGS -fno-builtin)
 set_source_files_properties(PossiblyThrowingCallback.cpp PROPERTIES COMPILE_FLAGS -fexceptions)
