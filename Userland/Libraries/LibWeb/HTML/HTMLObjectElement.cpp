@@ -138,7 +138,7 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
             }
 
             // 4. Let request be a new request whose URL is the resulting URL record, client is the element's node document's relevant settings object, destination is "object", credentials mode is "include", mode is "navigate", and whose use-URL-credentials flag is set.
-            auto request = LoadRequest::create_for_url_on_page(url, document().page());
+            auto request = LoadRequest::create_for_url_on_page(url, &document().page());
 
             // 5. Fetch request, with processResponseEndOfBody given response res set to finalize and report timing with res, the element's node document's relevant global object, and "object".
             //    Fetching the resource must delay the load event of the element's node document until the task that is queued by the networking task source once the resource has been fetched (defined next) has been run.
@@ -316,7 +316,7 @@ void HTMLObjectElement::load_image()
     // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
     auto data = deprecated_attribute(HTML::AttributeNames::data);
     auto url = document().parse_url(data);
-    m_image_request = HTML::SharedImageRequest::get_or_create(realm(), *document().page(), url);
+    m_image_request = HTML::SharedImageRequest::get_or_create(realm(), document().page(), url);
     m_image_request->add_callbacks(
         [this] {
             run_object_representation_completed_steps(Representation::Image);

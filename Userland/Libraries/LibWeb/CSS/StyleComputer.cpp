@@ -2334,11 +2334,8 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
 
 void StyleComputer::build_rule_cache()
 {
-    // FIXME: How are we sometimes calculating style before the Document has a Page?
-    if (document().page()) {
-        if (auto user_style_source = document().page()->user_style(); user_style_source.has_value()) {
-            m_user_style_sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document()), user_style_source.value()));
-        }
+    if (auto user_style_source = document().page().user_style(); user_style_source.has_value()) {
+        m_user_style_sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document()), user_style_source.value()));
     }
 
     m_author_rule_cache = make_rule_cache_for_cascade_origin(CascadeOrigin::Author);

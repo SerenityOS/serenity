@@ -70,7 +70,7 @@ void HTMLLinkElement::inserted()
         ResourceLoader::the().preconnect(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Icon) {
         auto favicon_url = document().parse_url(href());
-        auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, document().page());
+        auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, &document().page());
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, favicon_request));
     }
 }

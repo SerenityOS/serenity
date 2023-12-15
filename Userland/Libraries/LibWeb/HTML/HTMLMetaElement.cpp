@@ -57,9 +57,6 @@ void HTMLMetaElement::inserted()
     auto name = attribute(AttributeNames::name);
     auto content = attribute(AttributeNames::content);
     if (name.has_value() && name->bytes_as_string_view().equals_ignoring_ascii_case("theme-color"sv) && content.has_value()) {
-        auto* page = document().page();
-        if (!page)
-            return;
         auto context = CSS::Parser::ParsingContext { document() };
 
         // 2. For each element in candidate elements:
@@ -82,7 +79,7 @@ void HTMLMetaElement::inserted()
         auto color = css_value->as_color().color();
 
         // 4. If color is not failure, then return color.
-        page->client().page_did_change_theme_color(color);
+        document().page().client().page_did_change_theme_color(color);
         return;
     }
 

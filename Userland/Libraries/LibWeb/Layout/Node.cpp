@@ -752,7 +752,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 VERIFY_NOT_REACHED();
             };
 
-            border.width = snap_a_length_as_a_border_width(document().page()->client().device_pixels_per_css_pixel(), resolve_border_width());
+            border.width = snap_a_length_as_a_border_width(document().page().client().device_pixels_per_css_pixel(), resolve_border_width());
         }
     };
 

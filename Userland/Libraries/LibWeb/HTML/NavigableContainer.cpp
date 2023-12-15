@@ -69,9 +69,8 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     VERIFY(group);
 
     // 3. Let browsingContext and document be the result of creating a new browsing context and document given element's node document, element, and group.
-    auto* page = document().page();
-    VERIFY(page);
-    auto [browsing_context, document] = TRY(BrowsingContext::create_a_new_browsing_context_and_document(*page, this->document(), *this, *group));
+    auto& page = document().page();
+    auto [browsing_context, document] = TRY(BrowsingContext::create_a_new_browsing_context_and_document(page, this->document(), *this, *group));
 
     // 4. Let targetName be null.
     Optional<String> target_name;

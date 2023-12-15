@@ -1425,10 +1425,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
                     if (!document)
                         return DeprecatedString::empty();
-                    auto* page = document->page();
-                    if (!page)
-                        return DeprecatedString::empty();
-                    return page->client().page_did_request_cookie(http_request->current_url(), Cookie::Source::Http);
+                    return document->page().client().page_did_request_cookie(http_request->current_url(), Cookie::Source::Http);
                 })();
 
                 // 2. If cookies is not the empty string, then append (`Cookie`, cookies) to httpRequest’s header list.

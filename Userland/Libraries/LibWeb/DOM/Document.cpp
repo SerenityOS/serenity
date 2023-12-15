@@ -803,10 +803,8 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
         return {};
     }
 
-    if (auto* page = this->page()) {
-        if (browsing_context() == &page->top_level_browsing_context())
-            page->client().page_did_change_title(title.to_deprecated_string());
-    }
+    if (browsing_context() == &page().top_level_browsing_context())
+        page().client().page_did_change_title(title.to_deprecated_string());
 
     return {};
 }
@@ -1040,8 +1038,7 @@ void Document::update_layout()
         navigable()->set_needs_display();
 
     if (navigable()->is_traversable()) {
-        if (auto* page = this->page())
-            page->client().page_did_layout();
+        page().client().page_did_layout();
     }
 
     m_layout_root->recompute_selection_states();
@@ -1909,12 +1906,12 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     }
 }
 
-Page* Document::page()
+Page& Document::page()
 {
     return m_page;
 }
 
-Page const* Document::page() const
+Page const& Document::page() const
 {
     return m_page;
 }
@@ -1977,9 +1974,7 @@ void Document::completely_finish_loading()
 
 String Document::cookie(Cookie::Source source)
 {
-    if (auto* page = this->page())
-        return MUST(String::from_deprecated_string(page->client().page_did_request_cookie(m_url, source)));
-    return String {};
+    return MUST(String::from_deprecated_string(page().client().page_did_request_cookie(m_url, source)));
 }
 
 void Document::set_cookie(StringView cookie_string, Cookie::Source source)
@@ -1988,8 +1983,7 @@ void Document::set_cookie(StringView cookie_string, Cookie::Source source)
     if (!cookie.has_value())
         return;
 
-    if (auto* page = this->page())
-        page->client().page_did_set_cookie(m_url, cookie.value(), source);
+    page().client().page_did_set_cookie(m_url, cookie.value(), source);
 }
 
 String Document::dump_dom_tree_as_json() const
@@ -2372,8 +2366,7 @@ void Document::increment_number_of_things_delaying_the_load_event(Badge<Document
 {
     ++m_number_of_things_delaying_the_load_event;
 
-    if (auto* page = this->page())
-        page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
+    page().client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
 }
 
 void Document::decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
@@ -2381,8 +2374,7 @@ void Document::decrement_number_of_things_delaying_the_load_event(Badge<Document
     VERIFY(m_number_of_things_delaying_the_load_event);
     --m_number_of_things_delaying_the_load_event;
 
-    if (auto* page = this->page())
-        page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
+    page().client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
 }
 
 bool Document::anything_is_delaying_the_load_event() const
@@ -2726,7 +2718,7 @@ void Document::run_unloading_cleanup_steps()
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
-    page()->client().page_did_destroy_document(*this);
+    page().client().page_did_destroy_document(*this);
 
     // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
     // 4. Abort document.
