@@ -228,6 +228,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
         }
     }
 
+    if (interface.enumerations.contains(type.name()))
+        return { .name = type.name(), .sequence_storage_type = SequenceStorageType::Vector };
+
     dbgln("Unimplemented type for idl_type_name_to_cpp_type: {}{}", type.name(), type.is_nullable() ? "?" : "");
     TODO();
 }
