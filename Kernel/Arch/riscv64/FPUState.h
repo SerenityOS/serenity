@@ -13,7 +13,9 @@ VALIDATE_IS_RISCV64()
 
 namespace Kernel {
 
-struct FPUState {
+// This struct will get pushed on the stack by the signal handling code.
+// Therefore, it has to be aligned to a 16-byte boundary.
+struct [[gnu::aligned(16)]] FPUState {
     u64 f[32];
     u64 fcsr;
 };
