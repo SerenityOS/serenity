@@ -121,6 +121,9 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
     }
+
+    if (sum_of_grid_track_sizes == 0)
+        return 0;
     return max(1, (get_free_space(available_space, GridDimension::Column).to_px_or_zero() / sum_of_grid_track_sizes).to_int());
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
