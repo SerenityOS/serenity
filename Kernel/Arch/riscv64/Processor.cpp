@@ -258,15 +258,29 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-extern "C" FlatPtr do_init_context(Thread*, u32)
+extern "C" FlatPtr do_init_context(Thread* thread, u32 new_interrupts_state)
 {
-    TODO_RISCV64();
+    VERIFY_INTERRUPTS_DISABLED();
+
+    thread->regs().sstatus.SPIE = (new_interrupts_state == to_underlying(InterruptsState::Enabled));
+
+    return Processor::current().init_context(*thread, true);
 }
 
 template<typename T>
-void ProcessorBase<T>::assume_context(Thread&, InterruptsState)
+void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
-    TODO_RISCV64();
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
+
+    VERIFY_INTERRUPTS_DISABLED();
+    Scheduler::prepare_after_exec();
+    // in_critical() should be 2 here. The critical section in Process::exec
+    // and then the scheduler lock
+    VERIFY(Processor::in_critical() == 2);
+
+    do_assume_context(&thread, to_underlying(new_interrupts_state));
+
+    VERIFY_NOT_REACHED();
 }
 
 template<typename T>
@@ -430,7 +444,22 @@ NAKED void thread_context_first_enter()
 
 NAKED void do_assume_context(Thread*, u32)
 {
-    asm("unimp");
+    // clang-format off
+    asm(
+        "mv s0, a0 \n" // save thread ptr
+        // We're going to call Processor::init_context, so just make sure
+        // we have enough stack space so we don't stomp over it
+        "addi sp, sp, -" __STRINGIFY(8 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) " \n"
+        "jal do_init_context \n"
+        "mv sp, a0 \n"  // move stack pointer to what Processor::init_context set up for us
+        "mv a0, s0 \n" // to_thread
+        "mv a1, s0 \n" // from_thread
+        "addi sp, sp, -32 \n"
+        "sd s0, 0(sp) \n"
+        "sd s0, 8(sp) \n"
+        "la ra, thread_context_first_enter \n" // should be same as regs.sepc
+        "j enter_thread_context \n");
+    // clang-format on
 }
 
 template<typename T>
