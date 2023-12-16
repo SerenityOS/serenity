@@ -844,7 +844,8 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
         return Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>());
     }
 
-    if (auto const* paintable = this->paintable(); is<Painting::InlinePaintable>(*paintable)) {
+    auto const* paintable = this->paintable();
+    if (paintable && is<Painting::InlinePaintable>(*paintable)) {
         auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
         auto absolute_rect = inline_paintable.bounding_rect();
         absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
