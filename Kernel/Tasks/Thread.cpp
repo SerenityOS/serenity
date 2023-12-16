@@ -1360,37 +1360,31 @@ ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
     return KString::try_create(builder.string_view());
 }
 
-size_t Thread::thread_specific_region_alignment() const
-{
-    return max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
-}
-
-size_t Thread::thread_specific_region_size() const
-{
-    return align_up_to(process().m_master_tls_size, thread_specific_region_alignment()) + sizeof(ThreadSpecificData);
-}
-
 ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
 {
-    // The process may not require a TLS region, or allocate TLS later with sys$allocate_tls (which is what dynamically loaded programs do)
-    if (!process().m_master_tls_region)
-        return {};
+    return process().m_master_tls.with([&](auto& master_tls) -> ErrorOr<void> {
+        // The process may not require a TLS region, or allocate TLS later with sys$allocate_tls (which is what dynamically loaded programs do)
+        if (!master_tls.region)
+            return {};
 
-    return process().address_space().with([&](auto& space) -> ErrorOr<void> {
-        auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
+        return process().address_space().with([&](auto& space) -> ErrorOr<void> {
+            auto region_alignment = max(master_tls.alignment, alignof(ThreadSpecificData));
+            auto region_size = align_up_to(master_tls.size, region_alignment) + sizeof(ThreadSpecificData);
+            auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, region_size, PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
 
-        m_thread_specific_range = region->range();
+            m_thread_specific_range = region->range();
 
-        SmapDisabler disabler;
-        auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
-        auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
-        m_thread_specific_data = VirtualAddress(thread_specific_data);
-        thread_specific_data->self = thread_specific_data;
+            SmapDisabler disabler;
+            auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(master_tls.size, region_alignment)).as_ptr();
+            auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(master_tls.size, master_tls.size);
+            m_thread_specific_data = VirtualAddress(thread_specific_data);
+            thread_specific_data->self = thread_specific_data;
 
-        if (process().m_master_tls_size != 0)
-            memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
+            if (master_tls.size != 0)
+                memcpy(thread_local_storage, master_tls.region.unsafe_ptr()->vaddr().as_ptr(), master_tls.size);
 
-        return {};
+            return {};
+        });
     });
 }
 

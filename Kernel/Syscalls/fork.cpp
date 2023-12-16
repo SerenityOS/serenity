@@ -158,21 +158,27 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #endif
 
     TRY(address_space().with([&](auto& parent_space) {
-        return child->address_space().with([&](auto& child_space) -> ErrorOr<void> {
-            child_space->set_enforces_syscall_regions(parent_space->enforces_syscall_regions());
-            for (auto& region : parent_space->region_tree().regions()) {
-                dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
-                auto region_clone = TRY(region.try_clone());
-                TRY(region_clone->map(child_space->page_directory(), Memory::ShouldFlushTLB::No));
-                TRY(child_space->region_tree().place_specifically(*region_clone, region.range()));
-                auto* child_region = region_clone.leak_ptr();
+        return m_master_tls.with([&](auto& parent_master_tls) -> ErrorOr<void> {
+            return child->address_space().with([&](auto& child_space) -> ErrorOr<void> {
+                child_space->set_enforces_syscall_regions(parent_space->enforces_syscall_regions());
+                for (auto& region : parent_space->region_tree().regions()) {
+                    dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
+                    auto region_clone = TRY(region.try_clone());
+                    TRY(region_clone->map(child_space->page_directory(), Memory::ShouldFlushTLB::No));
+                    TRY(child_space->region_tree().place_specifically(*region_clone, region.range()));
+                    auto* child_region = region_clone.leak_ptr();
 
-                if (&region == m_master_tls_region.unsafe_ptr()) {
-                    child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
-                    child->m_master_tls_size = m_master_tls_size;
-                    child->m_master_tls_alignment = m_master_tls_alignment;
+                    if (&region == parent_master_tls.region.unsafe_ptr()) {
+                        TRY(child->m_master_tls.with([&](auto& child_master_tls) -> ErrorOr<void> {
+                            child_master_tls.region = TRY(child_region->try_make_weak_ptr());
+                            child_master_tls.size = parent_master_tls.size;
+                            child_master_tls.alignment = parent_master_tls.alignment;
+                            return {};
+                        }));
+                    }
                 }
-            }
+                return {};
+            });
             return {};
         });
     }));

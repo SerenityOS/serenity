@@ -524,50 +524,52 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
 
 ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, size_t size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     if (!size || size % PAGE_SIZE != 0)
         return EINVAL;
 
-    if (!m_master_tls_region.is_null())
-        return EEXIST;
+    return m_master_tls.with([&](auto& master_tls) -> ErrorOr<FlatPtr> {
+        if (!master_tls.region.is_null())
+            return EEXIST;
 
-    if (thread_count() != 1)
-        return EFAULT;
+        if (thread_count() != 1)
+            return EFAULT;
 
-    Thread* main_thread = nullptr;
-    bool multiple_threads = false;
-    for_each_thread([&main_thread, &multiple_threads](auto& thread) {
-        if (main_thread)
-            multiple_threads = true;
-        main_thread = &thread;
-        return IterationDecision::Break;
-    });
-    VERIFY(main_thread);
+        Thread* main_thread = nullptr;
+        bool multiple_threads = false;
+        for_each_thread([&main_thread, &multiple_threads](auto& thread) {
+            if (main_thread)
+                multiple_threads = true;
+            main_thread = &thread;
+            return IterationDecision::Break;
+        });
+        VERIFY(main_thread);
 
-    if (multiple_threads)
-        return EINVAL;
+        if (multiple_threads)
+            return EINVAL;
 
-    return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
-        auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, size, PAGE_SIZE, "Master TLS"sv, PROT_READ | PROT_WRITE));
+        return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
+            auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, size, PAGE_SIZE, "Master TLS"sv, PROT_READ | PROT_WRITE));
 
-        m_master_tls_region = TRY(region->try_make_weak_ptr());
-        m_master_tls_size = size;
-        m_master_tls_alignment = PAGE_SIZE;
+            master_tls.region = TRY(region->try_make_weak_ptr());
+            master_tls.size = size;
+            master_tls.alignment = PAGE_SIZE;
 
-        {
-            Kernel::SmapDisabler disabler;
-            void* fault_at;
-            if (!Kernel::safe_memcpy((char*)m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), (char*)initial_data.ptr(), size, fault_at))
-                return EFAULT;
-        }
+            {
+                Kernel::SmapDisabler disabler;
+                void* fault_at;
+                if (!Kernel::safe_memcpy((char*)master_tls.region.unsafe_ptr()->vaddr().as_ptr(), (char*)initial_data.ptr(), size, fault_at))
+                    return EFAULT;
+            }
 
-        TRY(main_thread->make_thread_specific_region({}));
+            TRY(main_thread->make_thread_specific_region({}));
 
-        Processor::set_thread_specific_data(main_thread->thread_specific_data());
+            Processor::set_thread_specific_data(main_thread->thread_specific_data());
 
-        return m_master_tls_region.unsafe_ptr()->vaddr().get();
+            return master_tls.region.unsafe_ptr()->vaddr().get();
+        });
     });
 }
 
