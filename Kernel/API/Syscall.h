@@ -113,7 +113,7 @@ enum class NeedsBigProcessLock {
     S(getuid, NeedsBigProcessLock::No)                     \
     S(inode_watcher_add_watch, NeedsBigProcessLock::No)    \
     S(inode_watcher_remove_watch, NeedsBigProcessLock::No) \
-    S(ioctl, NeedsBigProcessLock::Yes)                     \
+    S(ioctl, NeedsBigProcessLock::No)                      \
     S(join_thread, NeedsBigProcessLock::No)                \
     S(jail_create, NeedsBigProcessLock::No)                \
     S(jail_attach, NeedsBigProcessLock::No)                \
