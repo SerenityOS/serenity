@@ -97,7 +97,7 @@ enum class NeedsBigProcessLock {
     S(getgroups, NeedsBigProcessLock::No)                  \
     S(gethostname, NeedsBigProcessLock::No)                \
     S(getkeymap, NeedsBigProcessLock::No)                  \
-    S(getpeername, NeedsBigProcessLock::Yes)               \
+    S(getpeername, NeedsBigProcessLock::No)                \
     S(getpgid, NeedsBigProcessLock::No)                    \
     S(getpgrp, NeedsBigProcessLock::No)                    \
     S(getpid, NeedsBigProcessLock::No)                     \

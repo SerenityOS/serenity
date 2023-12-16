@@ -367,7 +367,7 @@ ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<Syscall::SC_getsockname_para
 
 ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<Syscall::SC_getpeername_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
     TRY(get_sock_or_peer_name<SockOrPeerName::PeerName>(params));
     return 0;
