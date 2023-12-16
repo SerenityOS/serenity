@@ -5,6 +5,9 @@ set(LIBRUNTIME_SOURCES
     System.cpp
 )
 
+# Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
+set_source_files_properties(LibC/string.cpp PROPERTIES COMPILE_FLAGS -fno-builtin)
+
 if (SERENITY_ARCH STREQUAL "x86_64")
     set(LIBRUNTIME_ARCH_SOURCES
         LibC/Arch/x86_64/memset.cpp
@@ -45,3 +48,9 @@ add_custom_command(
     TARGET crtn
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
 )
+
+add_library(DynamicLoaderRuntime ${AK_SOURCES} ${LIBRUNTIME_SOURCES})
+add_dependencies(DynamicLoaderRuntime install_libc_headers)
+target_compile_options(DynamicLoaderRuntime PUBLIC -fno-rtti)
+target_compile_definitions(DynamicLoaderRuntime PRIVATE _DYNAMIC_LOADER NO_TLS)
+target_link_libraries(DynamicLoaderRuntime PRIVATE NoCoverage)

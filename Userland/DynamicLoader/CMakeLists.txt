@@ -26,7 +26,7 @@ list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
 
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBRUNTIME_SOURCES} ${LIBSYSTEM_SOURCES})
+set(SOURCES ${LOADER_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpie -DNO_TLS")
 
@@ -56,6 +56,6 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 endif ()
 
 # Note: Don't confuse the coverage results by instrumenting Loader
-target_link_libraries(Loader.so PRIVATE LibTimeZone NoCoverage)
+target_link_libraries(Loader.so PRIVATE LibTimeZone DynamicLoaderRuntime NoCoverage)
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)
