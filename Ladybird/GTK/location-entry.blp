@@ -1,0 +1,7 @@
+using Gtk 4.0;
+
+template $LadybirdLocationEntry : Entry {
+  input-purpose: url;
+  secondary-icon-name: "non-starred-symbolic";
+  notify::text => $on_notify_text(template) swapped;
+}

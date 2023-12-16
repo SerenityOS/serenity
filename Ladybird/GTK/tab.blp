@@ -1,0 +1,36 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LadybirdTab : Widget {
+  Overlay overlay {
+    ScrolledWindow {
+      $LadybirdWebView web_view {
+        notify::hovered-link => $on_hovered_link_change(template) swapped;
+        notify::prompt-text => $on_prompt_text_changed(template) swapped;
+
+        request-alert => $on_request_alert(template) swapped;
+        request-confirm => $on_request_confirm(template) swapped;
+        request-prompt => $on_request_prompt(template) swapped;
+        request-dismiss-dialog => $on_request_dismiss_dialog(template) swapped;
+        request-accept-dialog => $on_request_accept_dialog(template) swapped;
+
+        styles ["view"]
+      }
+    }
+
+    [overlay]
+    Label hovered_link_label {
+      halign: start;
+      valign: end;
+      // Label binding is done in code, in order to get a nicer animation.
+      // label: bind web_view.hovered-link;
+      styles ["hovered-link", "hidden"]
+    }
+  }
+
+  EventControllerMotion {
+    enter => $on_motion(template) swapped;
+    motion => $on_motion(template) swapped;
+    leave => $on_leave(template) swapped;
+  }
+}

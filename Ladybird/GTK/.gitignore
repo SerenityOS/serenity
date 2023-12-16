@@ -1,0 +1,5 @@
+.flatpak-builder
+.clangd
+build/
+Build/
+

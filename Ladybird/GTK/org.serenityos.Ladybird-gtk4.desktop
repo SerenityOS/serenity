@@ -1,0 +1,32 @@
+[Desktop Entry]
+Name=Ladybird
+GenericName=Web Browser
+GenericName[eo]=Retumilo
+GenericName[fr]=Navigateur Web
+GenericName[ru]=Веб-браузер
+GenericName[sv]=Webbläsare
+Exec=ladybird %U
+Icon=org.serenityos.Ladybird-gtk4
+DBusActivatable=true
+Type=Application
+Categories=Network;WebBrowser;GTK;GNOME;
+StartupNotify=true
+MimeType=text/html;application/xhtml+xml;text/markdown;text/gemini;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/gemini;
+Actions=new-window;new-incognito-window;
+X-Purism-FormFactor=Workstation;Mobile;
+
+[Desktop Action new-window]
+Name=New Window
+Name[eo]=Nova fenestro
+Name[fr]=Nouvelle Fenêtre
+Name[ru]=Новое окно
+Name[sv]=Nytt fönster
+Exec=ladybird --no-such-option
+
+[Desktop Action new-incognito-window]
+Name=New Incognito Window
+Name[eo]=Nova inkognita fenestro
+Name[fr]=Nouvelle Fenêtre de Navigation Privée
+Name[ru]=Новое окно инкогнито
+Name[sv]=Nytt privat fönster
+Exec=ladybird --no-such-option

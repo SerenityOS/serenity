@@ -1,0 +1,319 @@
+using Gtk 4.0;
+using Adw 1;
+
+menu main_menu {
+  section {
+    item {
+      custom: "zoom";
+    }
+  }
+  item (_("_New Window"), "app.new-window")
+  item (_("New _Incognito Window"), "app.new-incognito-window")
+  item (_("_Open File"), "win.open-file")
+  item (_("_Keyboard Shortcuts"), "app.shortcuts")
+  submenu {
+    label: _("_Tools");
+    item (_("JavaScript Console"), "page.open-js-console")
+  }
+  item (_("_About Ladybird"), "app.about")
+}
+
+menu tab_menu {
+  item (_("_Reload"), "page.reload-page")
+  item (_("_Duplicate"), "tab.duplicate")
+  item {
+    // Translators: this is a menu item for pinning a tab.
+    label: _("P_in");
+    action: "tab.pin";
+    hidden-when: "action-disabled";
+  }
+  item {
+    // Translators: this is a menu item for unpinning a tab.
+    label: _("Unp_in");
+    action: "tab.unpin";
+    hidden-when: "action-disabled";
+  }
+  item (_("_Move to New Window"), "tab.move-to-new-window")
+  item (_("Close _Other Tabs"), "tab.close-others")
+  item (_("_Close"), "tab.close")
+}
+
+menu tab_overview_menu {
+  item (_("_New Window"), "app.new-window")
+  item (_("New _Incognito Window"), "app.new-incognito-window")
+  item (_("_Open File"), "win.open-file")
+  item (_("_Keyboard Shortcuts"), "app.shortcuts")
+  item (_("_About Ladybird"), "app.about")
+}
+
+Popover bookmarks_popover {
+  Adw.StatusPage {
+    title: _("Bookmarks & History");
+    /* Translators: this is a placeholder content for the Bookmarks & History
+       popover; it will go away once we implement it, so you can skip translating
+       it. But it also doesn't hurt to translate it either, if you want to. */
+    description: _("…will appear here, once we implement them :^)");
+    icon-name: "applications-engineering-symbolic";
+    width-request: 300;
+    height-request: 350;
+    styles ["compact"]
+  }
+}
+
+Popover navigation_history_popover {
+  styles ["menu"]
+  closed => $on_navigation_history_popover_closed(template) swapped;
+
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    propagate-natural-height: true;
+
+    ListView navigation_history_list_view {
+      single-click-activate: true;
+      activate => $on_navigation_history_activate(template) swapped;
+
+      factory: BuilderListItemFactory {
+        template ListItem {
+          child: Box {
+            orientation: horizontal;
+            spacing: 6;
+
+            Image {
+              paintable: bind template.item as <$LadybirdHistoryEntry>.favicon;
+            }
+            Box {
+              hexpand: true;
+              orientation: vertical;
+              Label {
+                label: bind template.item as <$LadybirdHistoryEntry>.title;
+                xalign: 0;
+                width-chars: 30;
+                single-line-mode: true;
+                ellipsize: end;
+              }
+              Label {
+                label: bind template.item as <$LadybirdHistoryEntry>.url;
+                xalign: 0;
+                width-chars: 30;
+                ellipsize: end;
+                styles ["dim-label"]
+              }
+            }
+          };
+        }
+      };
+    }
+  }
+}
+
+template $LadybirdWindow : Adw.ApplicationWindow {
+  title: "Ladybird";
+  default-height: 560;
+  width-request: 300;
+  height-request: 300;
+
+  Adw.Breakpoint {
+    condition("max-width: 600px")
+    setters {
+      header_bar_start_box.visible: false;
+      header_bar_end_box.visible: false;
+      tab_bar.visible: false;
+      action_bar.revealed: true;
+    }
+  }
+
+  Adw.TabOverview tab_overview {
+    view: tab_view;
+    secondary-menu: tab_overview_menu;
+    enable-new-tab: true;
+    create-tab => $on_create_tab(template) swapped;
+
+    child: Adw.ToolbarView {
+      top-bar-style: raised_border;
+      bottom-bar-style: raised_border;
+
+      [top]
+      Adw.HeaderBar {
+        [start]
+        Box header_bar_start_box {
+          orientation: horizontal;
+          spacing: 6;
+          margin-end: 6;
+
+          Button {
+            icon-name: "go-previous-symbolic";
+            action-name: "page.navigate-back";
+            tooltip-text: _("Navigate Back");
+            focus-on-click: false;
+
+            GestureClick {
+              button: 3;
+              pressed => $claim_event();
+              released => $on_navigate_back_right_clicked(template) swapped;
+            }
+          }
+          Button {
+            icon-name: "go-next-symbolic";
+            action-name: "page.navigate-forward";
+            tooltip-text: _("Navigate Forward");
+            focus-on-click: false;
+
+            GestureClick {
+              button: 3;
+              pressed => $claim_event();
+              released => $on_navigate_forward_right_clicked(template) swapped;
+            }
+          }
+          Button {
+            icon-name: "view-refresh-symbolic";
+            action-name: "page.reload-page";
+            tooltip-text: _("Reload Page");
+            focus-on-click: false;
+          }
+          Button {
+            icon-name: "tab-new-symbolic";
+            action-name: "win.new-tab";
+            tooltip-text: _("New Tab");
+            focus-on-click: false;
+          }
+        }
+
+        [title]
+        Adw.Clamp {
+          hexpand: true;
+          maximum-size: 860;
+          tightening-threshold: 560;
+
+          $LadybirdLocationEntry location_entry {
+            // Translators: this is the placeholder text for the main location entry.
+            placeholder-text: _("Search or enter a URL to open…");
+            activate => $on_url_entered(template) swapped;
+          }
+        }
+
+        [end]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+          margin-start: 6;
+
+          Box header_bar_end_box {
+            orientation: horizontal;
+            spacing: 6;
+
+            MenuButton {
+              icon-name: "user-bookmarks-symbolic";
+              tooltip-text: _("Bookmarks");
+              focus-on-click: false;
+              popover: bookmarks_popover;
+            }
+            Button {
+              icon-name: "view-grid-symbolic";
+              action-name: "overview.open";
+              tooltip-text: _("Tab Overview");
+              focus-on-click: false;
+            }
+          }
+          MenuButton {
+            icon-name: "open-menu-symbolic";
+            tooltip-text: _("Main Menu");
+            primary: true;
+            focus-on-click: false;
+            popover: PopoverMenu popover_menu {
+              menu-model: main_menu;
+
+              [zoom]
+              Box {
+                orientation: horizontal;
+                homogeneous: true;
+                styles ["linked"]
+
+                Button {
+                  tooltip-text: _("Zoom Out");
+                  icon-name: "zoom-out-symbolic";
+                  action-name: "page.zoom-out";
+                }
+                Button {
+                  tooltip-text: _("Restore Zoom");
+                  action-name: "page.zoom-reset";
+                  Label {
+                    width-chars: 5;
+                    label: bind $format_zoom_percent_label(
+                      ((tab_view.selected-page.child as <$LadybirdTab>).web_view as <$LadybirdWebView>).zoom-percent
+                    ) as <string>;
+                  }
+                }
+                Button {
+                  tooltip-text: _("Zoom In");
+                  icon-name: "zoom-in-symbolic";
+                  action-name: "page.zoom-in";
+                }
+              }
+            };
+          }
+        }
+      }
+
+      [top]
+      Adw.TabBar tab_bar {
+        view: tab_view;
+      }
+
+      content: Adw.ToastOverlay toast_overlay {
+        child: Adw.TabView tab_view {
+          menu-model: tab_menu;
+          create-window => $on_create_window(template) swapped;
+          setup-menu => $on_setup_tab_menu(template) swapped;
+          notify::selected-page => $on_selected_page_changed(template) swapped;
+        };
+      };
+
+      [bottom]
+      ActionBar action_bar {
+        revealed: false;
+
+        [start]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+
+          Button {
+            icon-name: "go-previous-symbolic";
+            action-name: "page.navigate-back";
+            tooltip-text: _("Navigate Back");
+            focus-on-click: false;
+          }
+          Button {
+            icon-name: "go-next-symbolic";
+            action-name: "page.navigate-forward";
+            tooltip-text: _("Navigate Forward");
+            focus-on-click: false;
+          }
+          Button {
+            icon-name: "view-refresh-symbolic";
+            action-name: "page.reload-page";
+            tooltip-text: _("Reload Page");
+            focus-on-click: false;
+          }
+        }
+
+        [end]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+
+          MenuButton {
+            icon-name: "user-bookmarks-symbolic";
+            tooltip-text: _("Bookmarks");
+            focus-on-click: false;
+          }
+          Adw.TabButton {
+            view: tab_view;
+            action-name: "overview.open";
+            focus-on-click: false;
+          }
+        }
+      }
+    };
+  }
+}

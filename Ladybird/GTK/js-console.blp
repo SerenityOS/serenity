@@ -1,0 +1,15 @@
+using Gtk 4.0;
+
+template $LadybirdJSConsole : Widget {
+  ScrolledWindow scrolled_window {
+    vexpand: true;
+
+    $LadybirdWebView console_web_view {
+    }
+  }
+
+  Entry entry {
+    placeholder-text: _("Enter a JavaScript expression to evaluate");
+    activate => $on_entered(template) swapped;
+  }
+}

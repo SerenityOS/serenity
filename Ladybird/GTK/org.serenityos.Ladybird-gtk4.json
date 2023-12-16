@@ -1,0 +1,99 @@
+{
+    "app-id": "org.serenityos.Ladybird-gtk4",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "master",
+    "sdk": "org.gnome.Sdk",
+    "command": "ladybird",
+    "finish-args": [
+        "--device=dri",
+        "--share=ipc",
+        "--share=network",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--socket=session-bus"
+    ],
+    "cleanup": [
+        "blueprint*",
+        "/lib/python3*"
+    ],
+    "modules": [
+        {
+            "name": "blueprint-compiler",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/jwestman/blueprint-compiler.git",
+                    "tag": "v0.10.0"
+                }
+            ]
+        },
+        {
+            "name": "Ladybird",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://www.unicode.org/Public/15.1.0/ucd/UCD.zip",
+                    "dest": "Caches/UCD/",
+                    "sha256": "cb1c663d053926500cd501229736045752713a066bd75802098598b7a7056177",
+                    "strip-components": 0,
+                    "dest-filename": "UCD.zip"
+                },
+                {
+                    "type": "file",
+                    "url": "https://www.unicode.org/Public/emoji/15.1/emoji-test.txt",
+                    "dest": "Caches/UCD/",
+                    "sha256": "8445f23ac8388e096be19d0262e14fceff856ff52093f2356dc89485f1a853db"
+                },
+                {
+                    "type": "archive",
+                    "url": "https://github.com/unicode-org/cldr-json/releases/download/43.1.0/cldr-43.1.0-json-modern.zip",
+                    "dest": "Caches/CLDR/",
+                    "sha256": "5b770d59f052f19573d5e0783b6581269f6c86a193cc6e84ebd0796e143153cd",
+                    "strip-components": 0,
+                    "dest-filename": "cldr.zip"
+                },
+                {
+                    "type": "archive",
+                    "url": "https://data.iana.org/time-zones/releases/tzdata2023c.tar.gz",
+                    "dest": "Caches/TZDB/",
+                    "sha256": "3f510b5d1b4ae9bb38e485aa302a776b317fb3637bdb6404c4adf7b6cadd965c",
+                    "strip-components": 0,
+                    "dest-filename": "tzdb.tar.gz"
+                },
+                {
+                    "type": "file",
+                    "url": "https://curl.se/ca/cacert-2023-05-30.pem",
+                    "dest": "Caches/CACERT/",
+                    "sha256": "5fadcae90aa4ae041150f8e2d26c37d980522cdb49f923fc1e1b5eb8d74e71ad"
+                },
+                {
+                    "type": "shell",
+                    "commands": [
+                        "echo -n 15.1.0 > Caches/UCD/version.txt",
+                        "echo -n 43.1.0 > Caches/CLDR/version.txt",
+                        "echo -n 2023c > Caches/TZDB/version.txt",
+                        "echo -n 2023-05-30 > Caches/CACERT/version.txt",
+                        "# FIXME Is there an easier way to set an absolute path in config-opts?",
+                        "echo set\\(SERENITY_CACHE_DIR \"$PWD/Caches\" CACHE STRING \\\"\\\"\\) > Cache.cmake"
+                    ]
+                },
+                {
+                    "type": "git",
+                    "url": "https://github.com/SerenityOS/serenity.git",
+                    "dest": "serenity"
+                },
+                {
+                    "type": "dir",
+                    "path": "."
+                }
+            ],
+            "config-opts": [ "-DSERENITY_SOURCE_DIR=serenity", "-CCache.cmake" ],
+            "build-options": {
+                "build-args": ["--share=network"]
+            }
+        }
+    ]
+}
