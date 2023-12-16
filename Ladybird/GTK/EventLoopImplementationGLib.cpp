@@ -108,7 +108,6 @@ size_t EventLoopImplementationGLib::pump(PumpMode pump_mode)
 
 GMainContext* EventLoopManagerGLib::current_thread_context()
 {
-    // Sigh.
     GMainContext* context = g_main_context_get_thread_default();
     if (context == nullptr)
         context = g_main_context_default();
@@ -200,7 +199,6 @@ bool EventLoopManagerGLib::unregister_timer(int timer_id)
     VERIFY(source);
     g_source_destroy(source);
     g_source_unref(source);
-    // What the hell? Why does this return a boolean?
     return true;
 }
 

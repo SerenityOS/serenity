@@ -7,6 +7,7 @@
 #pragma once
 
 #include "WebView.h"
+#include <Ladybird/Types.h>
 #include <LibWebView/ViewImplementation.h>
 
 class LadybirdViewImpl final
@@ -31,17 +32,17 @@ private:
     LadybirdViewImpl(LadybirdWebView* widget);
 
     virtual void update_zoom() override;
-    virtual Gfx::IntRect viewport_rect() const override;
+    virtual Web::DevicePixelRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
-    virtual void create_client(WebView::EnableCallgrindProfiling) override;
+    virtual void create_client() override;
 
     void update_cursor(Gfx::StandardCursor);
     void update_theme();
     WebView::CookieJar& cookie_jar();
 
-    Gfx::IntRect m_viewport_rect;
+    Web::DevicePixelRect m_viewport_rect;
     LadybirdWebView* m_widget { nullptr };
     gulong m_update_style_id { 0 };
 };

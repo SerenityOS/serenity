@@ -28,7 +28,7 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_bitmap_paintable_push_bitmap(
             LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_bitmap_paintable(m_widget)),
             m_client_state.front_bitmap.bitmap.ptr(),
-            size.width(), size.height(),
+            size.width().value(), size.height().value(),
             gtk_widget_get_scale_factor(GTK_WIDGET(m_widget)),
             true);
     };
@@ -182,7 +182,7 @@ LadybirdViewImpl::~LadybirdViewImpl()
 ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebView* widget)
 {
     auto impl = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LadybirdViewImpl(widget)));
-    impl->create_client(WebView::EnableCallgrindProfiling::No);
+    impl->create_client();
     return impl;
 }
 
@@ -193,15 +193,16 @@ WebView::CookieJar& LadybirdViewImpl::cookie_jar()
     return *jar;
 }
 
-void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+void LadybirdViewImpl::create_client()
 {
     auto candidate_web_content_paths = MUST(get_paths_for_helper_process("WebContent"sv));
     auto new_client = launch_web_content_process(*this,
         candidate_web_content_paths,
-        enable_callgrind_profiling,
-        WebView::IsLayoutTestMode::No,
-        Ladybird::UseLagomNetworking::No,
-        WebView::EnableGPUPainting::No)
+        Ladybird::WebContentOptions {
+            Ladybird::EnableCallgrindProfiling::No,
+            Ladybird::EnableGPUPainting::No,
+            Ladybird::IsLayoutTestMode::No,
+            Ladybird::UseLagomNetworking::Yes })
                           .release_value_but_fixme_should_propagate_errors();
 
     m_client_state.client = new_client;
@@ -213,13 +214,6 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
     client().async_set_window_handle(m_client_state.client_handle);
     update_theme();
-
-    /*
-        client().async_update_system_fonts(
-            Gfx::FontDatabase::default_font_query(),
-            Gfx::FontDatabase::fixed_width_font_query(),
-            Gfx::FontDatabase::window_title_font_query());
-    */
 }
 
 void LadybirdViewImpl::update_theme()
@@ -258,7 +252,7 @@ void LadybirdViewImpl::update_theme()
 
 void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
 {
-    m_viewport_rect = Gfx::IntRect(x, y, width, height);
+    m_viewport_rect = Web::DevicePixelRect { Web::DevicePixelPoint { x, y }, Web::DevicePixelSize { width, height } };
     client().async_set_viewport_rect(m_viewport_rect);
     handle_resize();
     request_repaint();
@@ -271,19 +265,19 @@ void LadybirdViewImpl::scale_factor_changed()
 
 void LadybirdViewImpl::mouse_down(int x, int y, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    Gfx::IntPoint point(x, y);
+    Web::DevicePixelPoint point({ x, y });
     client().async_mouse_down(point, point, button, buttons, modifiers);
 }
 
 void LadybirdViewImpl::mouse_move(int x, int y, unsigned buttons, unsigned modifiers)
 {
-    Gfx::IntPoint point(x, y);
+    Web::DevicePixelPoint point({ x, y });
     client().async_mouse_move(point, point, 0, buttons, modifiers);
 }
 
 void LadybirdViewImpl::mouse_up(int x, int y, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    Gfx::IntPoint point(x, y);
+    Web::DevicePixelPoint point({ x, y });
     client().async_mouse_up(point, point, button, buttons, modifiers);
 }
 
@@ -373,7 +367,7 @@ void LadybirdViewImpl::update_zoom()
     gtk_widget_queue_allocate(GTK_WIDGET(m_widget));
 }
 
-Gfx::IntRect LadybirdViewImpl::viewport_rect() const
+Web::DevicePixelRect LadybirdViewImpl::viewport_rect() const
 {
     return m_viewport_rect;
 }

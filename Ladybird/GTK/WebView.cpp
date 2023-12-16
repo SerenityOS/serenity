@@ -10,6 +10,7 @@
 #include "NavigationHistory.h"
 #include "ViewImpl.h"
 #include "WebViewPrivate.h"
+#include <Ladybird/Types.h>
 
 struct _LadybirdWebView {
     GtkWidget parent_instance;
@@ -652,11 +653,10 @@ void ladybird_web_view_redraw_favicon(LadybirdWebView* self)
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
 
-    // Is this horrible? Yes, yes it is.
+    // FIXME: Is there a cleaner way to render the favicon?
     GskRenderer* renderer = gsk_cairo_renderer_new();
     gsk_renderer_realize(renderer, nullptr, nullptr);
     GtkSnapshot* snapshot = gtk_snapshot_new();
-    // FIXME what
     gdk_paintable_snapshot(GDK_PAINTABLE(self->favicon), snapshot, 64, 64);
     GskRenderNode* node = gtk_snapshot_free_to_node(snapshot);
     GdkTexture* texture = gsk_renderer_render_texture(renderer, node, nullptr);
@@ -911,7 +911,7 @@ static unsigned translate_buttons(GdkModifierType modifiers)
         buttons |= 2;
     if (modifiers & GDK_BUTTON3_MASK)
         buttons |= 4;
-    // TODO: ditto
+    // TODO: Forward/back buttons
 
     return buttons;
 }
@@ -959,7 +959,7 @@ static void on_click_pressed(GtkGestureClick* gesture_click, gint n_press, gdoub
         gtk_gesture_set_state(GTK_GESTURE(gesture_click), GTK_EVENT_SEQUENCE_DENIED);
         return;
     }
-    // gtk_gesture_set_state(GTK_GESTURE(gesture_click), GTK_EVENT_SEQUENCE_CLAIMED);
+    // FIXME: Should we claim the gesture with GTK?
 
     if (n_press > 1) {
         // TODO doubleclick

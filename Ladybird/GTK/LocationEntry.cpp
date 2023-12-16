@@ -8,10 +8,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-
-#ifdef ENABLE_PUBLIC_SUFFIX_DOWNLOAD
-#    include <LibPublicSuffix/PublicSuffixData.h>
-#endif
+#include <LibWebView/PublicSuffixData.h>
 
 struct _LadybirdLocationEntry {
     GtkEntry parent_instance;
@@ -39,10 +36,8 @@ static Optional<StringView> find_base_domain(char const* text)
     if (!host)
         return {};
 
-#if defined(ENABLE_PUBLIC_SUFFIX_DOWNLOAD)
-
     StringView host_sv { host, strlen(host) };
-    if (auto r = PublicSuffix::PublicSuffixData::the()->get_public_suffix(host_sv); !r.is_error()) {
+    if (auto r = WebView::PublicSuffixData::the()->get_public_suffix(host_sv); !r.is_error()) {
         if (auto v = r.release_value(); v.has_value()) {
             auto public_suffix = v.release_value();
             g_return_val_if_fail(host_sv.ends_with(public_suffix), Optional<StringView> {});
@@ -61,8 +56,6 @@ static Optional<StringView> find_base_domain(char const* text)
         }
     }
     return {};
-
-#endif
 }
 
 static void update_text_attrs(LadybirdLocationEntry* self)

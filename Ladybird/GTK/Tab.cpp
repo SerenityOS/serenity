@@ -156,7 +156,7 @@ static void on_prompt_text_changed(LadybirdTab* self)
 
 static bool open_dialog(LadybirdTab* self)
 {
-    // TODO: Maybe we want to dismiss the previous dialog in that case?
+    // FIXME: Maybe we want to dismiss the previous dialog in that case?
     // Need to think of whether we communicate its result to WebView.
     if (self->dialog)
         return false;
