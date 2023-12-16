@@ -29,9 +29,9 @@ class Painter {
     AK_MAKE_NONMOVABLE(Painter);
 
 public:
-    static NonnullOwnPtr<Painter> create(Context&);
+    static NonnullOwnPtr<Painter> create(Context&, NonnullRefPtr<Canvas>);
 
-    Painter(Context&);
+    Painter(Context&, NonnullRefPtr<Canvas>);
     ~Painter();
 
     void clear(Gfx::Color);
@@ -67,7 +67,6 @@ public:
     void set_clip_rect(Gfx::IntRect);
     void clear_clip_rect();
 
-    void set_target_canvas(NonnullRefPtr<Canvas>);
     void flush(Gfx::Bitmap&);
 
     void fill_rect_with_linear_gradient(Gfx::IntRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
@@ -110,7 +109,7 @@ private:
 
     Vector<State, 1> m_state_stack;
 
-    RefPtr<Canvas> m_target_canvas;
+    NonnullRefPtr<Canvas> m_target_canvas;
 
     Program m_rectangle_program;
     Program m_rounded_rectangle_program;
