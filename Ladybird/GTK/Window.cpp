@@ -525,17 +525,6 @@ static void page_reload_action(GtkWidget* widget, [[maybe_unused]] char const* a
     ladybird_web_view_load_url(web_view, url);
 }
 
-static void page_open_js_console_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
-{
-    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
-
-    AdwTabPage* tab_page = adw_tab_view_get_selected_page(self->tab_view);
-    if (!tab_page)
-        return;
-    LadybirdTab* tab = LADYBIRD_TAB(adw_tab_page_get_child(tab_page));
-    ladybird_tab_open_js_console(tab);
-}
-
 void ladybird_window_open_file(LadybirdWindow* self, GFile* file)
 {
     g_return_if_fail(LADYBIRD_IS_WINDOW(self));
@@ -632,9 +621,6 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_Right, GDK_ALT_MASK, "page.navigate-forward", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_F5, GdkModifierType(0), "page.reload-page", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_r, GDK_CONTROL_MASK, "page.reload-page", nullptr);
-
-    gtk_widget_class_install_action(widget_class, "page.open-js-console", nullptr, page_open_js_console_action);
-    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_F12, GdkModifierType(0), "page.open-js-console", nullptr);
 }
 
 LadybirdWindow* ladybird_window_new(LadybirdApplication* app, bool add_initial_tab, bool incognito)

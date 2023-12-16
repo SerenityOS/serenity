@@ -18,6 +18,4 @@ LadybirdTab* ladybird_tab_new(void);
 typedef struct _LadybirdWebView LadybirdWebView;
 LadybirdWebView* ladybird_tab_get_web_view(LadybirdTab* self);
 
-void ladybird_tab_open_js_console(LadybirdTab* self);
-
 G_END_DECLS
