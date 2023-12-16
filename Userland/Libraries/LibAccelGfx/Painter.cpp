@@ -170,13 +170,14 @@ void main() {
 
 HashMap<u32, GL::Texture> s_immutable_bitmap_texture_cache;
 
-NonnullOwnPtr<Painter> Painter::create(Context& context)
+NonnullOwnPtr<Painter> Painter::create(Context& context, NonnullRefPtr<Canvas> canvas)
 {
-    return make<Painter>(context);
+    return make<Painter>(context, canvas);
 }
 
-Painter::Painter(Context& context)
+Painter::Painter(Context& context, NonnullRefPtr<Canvas> canvas)
     : m_context(context)
+    , m_target_canvas(canvas)
     , m_rectangle_program(Program::create(Program::Name::RectangleProgram, vertex_shader_source, solid_color_fragment_shader_source))
     , m_rounded_rectangle_program(Program::create(Program::Name::RoundedRectangleProgram, vertex_shader_source, rect_with_rounded_corners_fragment_shader_source))
     , m_blit_program(Program::create(Program::Name::BlitProgram, blit_vertex_shader_source, blit_fragment_shader_source))
@@ -184,6 +185,8 @@ Painter::Painter(Context& context)
     , m_blur_program(Program::create(Program::Name::BlurProgram, blit_vertex_shader_source, blur_fragment_shader_source))
 {
     m_state_stack.empend(State());
+    state().clip_rect = { { 0, 0 }, m_target_canvas->size() };
+    bind_target_canvas();
 }
 
 Painter::~Painter()
@@ -605,14 +608,6 @@ void Painter::bind_target_canvas()
     m_target_canvas->bind();
     GL::set_viewport({ 0, 0, m_target_canvas->size().width(), m_target_canvas->size().height() });
     GL::enable_scissor_test(state().clip_rect);
-}
-
-void Painter::set_target_canvas(NonnullRefPtr<Canvas> canvas)
-{
-    m_target_canvas = canvas;
-    canvas->bind();
-    GL::set_viewport({ 0, 0, canvas->size().width(), canvas->size().height() });
-    state().clip_rect = { { 0, 0 }, m_target_canvas->size() };
 }
 
 void Painter::flush(Gfx::Bitmap& bitmap)
