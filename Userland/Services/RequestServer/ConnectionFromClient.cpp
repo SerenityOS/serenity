@@ -12,6 +12,8 @@
 #include <RequestServer/Request.h>
 #include <RequestServer/RequestClientEndpoint.h>
 #include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 namespace RequestServer {
 
@@ -149,7 +151,21 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
     if (cache_level == CacheLevel::ResolveOnly) {
         return Core::deferred_invoke([host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string()] {
             dbgln("EnsureConnection: DNS-preload for {}", host);
-            (void)gethostbyname(host.characters());
+            struct addrinfo hints, *result;
+            memset(&hints, 0, sizeof(struct addrinfo));
+            hints.ai_family = AF_UNSPEC; // Allow IPv4 or IPv6
+            hints.ai_socktype = SOCK_STREAM; // Stream socket
+            hints.ai_flags = AI_PASSIVE; // For wildcard IP address
+            hints.ai_protocol = 0; // Any protocol
+
+            int s = getaddrinfo(host.characters(), nullptr, &hints, &result);
+            if (s != 0) {
+                dbgln("getaddrinfo: {}", gai_strerror(s));
+                return;
+            }
+
+            freeaddrinfo(result); // Free the linked list
+
         });
     }
 
