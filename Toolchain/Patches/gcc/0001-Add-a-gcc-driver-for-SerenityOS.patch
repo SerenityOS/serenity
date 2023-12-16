@@ -99,7 +99,7 @@ index 0000000000000000000000000000000000000000..10c6f16fbe13eab36bab8f6896f8e2a6
 +/* Default arguments you want when running your
 +   x86_64-serenity-gcc toolchain */
 +#undef LIB_SPEC
-+#define LIB_SPEC "-lc" /* link against C standard library */
++#define LIB_SPEC "-lruntime -lc" /* link against C standard library and LibRuntime */
 +
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */

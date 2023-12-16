@@ -55,7 +55,6 @@ static size_t s_current_tls_offset = 0;
 static size_t s_total_tls_size = 0;
 static size_t s_allocated_tls_block_size = 0;
 static char** s_envp = nullptr;
-static LibCExitFunction s_libc_exit = nullptr;
 static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
 static ByteString s_cwd;
 
@@ -258,39 +257,40 @@ static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
     return 0;
 }
 
-static void initialize_libc(DynamicObject& libc)
+static void initialize_libruntime(DynamicObject& libruntime)
 {
-    // Traditionally, `_start` of the main program initializes libc.
-    // However, since some libs use malloc() and getenv() in global constructors,
-    // we have to initialize libc just after it is loaded.
-    // Also, we can't just mark `__libc_init` with "__attribute__((constructor))"
-    // because it uses getenv() internally, so `environ` has to be initialized before we call `__libc_init`.
-    auto res = libc.lookup_symbol("environ"sv);
+    // Some libraries use malloc() and getenv() in global constructors, so we have to initialize
+    // LibRuntime just after it is loaded. This is done by `__libc_init`, which marked as a
+    // constructor with a high priority. However, we still need to "manually" provide `environ` and
+    // `__stack_chk_guard` for it.
+    // FIXME: Instead of this, we can make the following symbols undefined and use more conventional
+    //        methods of linking them.
+    auto res = libruntime.lookup_symbol("environ"sv);
     VERIFY(res.has_value());
     *((char***)res.value().address.as_ptr()) = s_envp;
 
-    // __stack_chk_guard should be initialized before anything significant (read: global constructors) is running.
-    // This is not done in __libc_init, as we definitely have to return from that, and it might affect Loader as well.
-    res = libc.lookup_symbol("__stack_chk_guard"sv);
+    // __stack_chk_guard should be initialized before anything significant (read: global
+    // constructors) is running. This is not done in __libc_init, as we definitely have to return
+    // from that, and it might affect Loader as well.
+    res = libruntime.lookup_symbol("__stack_chk_guard"sv);
     VERIFY(res.has_value());
     void* stack_guard = res.value().address.as_ptr();
     arc4random_buf(stack_guard, sizeof(uintptr_t));
+
+    res = libruntime.lookup_symbol("__call_fini_functions"sv);
+    VERIFY(res.has_value());
+    *((CallFiniFunctionsFunction*)res.value().address.as_ptr()) = __call_fini_functions;
 
 #ifdef AK_ARCH_64_BIT
     // For 64-bit platforms we include an additional hardening: zero the first byte of the stack guard to avoid
     // leaking or overwriting the stack guard with C-style string functions.
     ((char*)stack_guard)[0] = 0;
 #endif
+}
 
-    res = libc.lookup_symbol("__environ_is_malloced"sv);
-    VERIFY(res.has_value());
-    *((bool*)res.value().address.as_ptr()) = false;
-
-    res = libc.lookup_symbol("exit"sv);
-    VERIFY(res.has_value());
-    s_libc_exit = (LibCExitFunction)res.value().address.as_ptr();
-
-    res = libc.lookup_symbol("__dl_iterate_phdr"sv);
+static void initialize_libc(DynamicObject& libc)
+{
+    auto res = libc.lookup_symbol("__dl_iterate_phdr"sv);
     VERIFY(res.has_value());
     *((DlIteratePhdrFunction*)res.value().address.as_ptr()) = __dl_iterate_phdr;
 
@@ -309,15 +309,6 @@ static void initialize_libc(DynamicObject& libc)
     res = libc.lookup_symbol("__dladdr"sv);
     VERIFY(res.has_value());
     *((DlAddrFunction*)res.value().address.as_ptr()) = __dladdr;
-
-    res = libc.lookup_symbol("__call_fini_functions"sv);
-    VERIFY(res.has_value());
-    *((CallFiniFunctionsFunction*)res.value().address.as_ptr()) = __call_fini_functions;
-
-    res = libc.lookup_symbol("__libc_init"sv);
-    VERIFY(res.has_value());
-    typedef void libc_init_func();
-    ((libc_init_func*)res.value().address.as_ptr())();
 }
 
 template<typename Callback>
@@ -409,9 +400,10 @@ static Result<void, DlErrorMessage> link_main_library(ByteString const& path, in
         VERIFY(!result.is_error());
         auto& object = result.value();
 
-        if (loader->filepath().ends_with("/libc.so"sv)) {
+        if (loader->filepath().ends_with("/libruntime.so"sv))
+            initialize_libruntime(*object);
+        if (loader->filepath().ends_with("/libc.so"sv))
             initialize_libc(*object);
-        }
 
         if (loader->filepath().ends_with("/libsystem.so"sv)) {
             VERIFY(!loader->text_segments().is_empty());

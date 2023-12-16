@@ -145,7 +145,7 @@ new file mode 100644
 index 000000000..4fdf45a19
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,336 @@
+@@ -0,0 +1,337 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -307,6 +307,7 @@ index 000000000..4fdf45a19
 +
 +  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
 +    if (!Args.hasArg(options::OPT_nolibc))
++      CmdArgs.push_back("-lruntime");
 +      CmdArgs.push_back("-lc");
 +  }
 +

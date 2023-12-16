@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/UBSanitizer.h>
+#include <LibRuntime/System.h>
 
 using namespace AK::UBSanitizer;
 
@@ -18,7 +19,7 @@ Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly;
 #define ABORT_ALWAYS()                                            \
     do {                                                          \
         WARNLN_AND_DBGLN("UBSAN: This error is not recoverable"); \
-        abort();                                                  \
+        Runtime::abort();                                         \
     } while (0)
 
 // FIXME: Dump backtrace of this process (with symbols? without symbols?) in case the user wants non-deadly UBSAN
@@ -28,7 +29,7 @@ Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly;
     do {                                                                     \
         if (g_ubsan_is_deadly.load(AK::MemoryOrder::memory_order_acquire)) { \
             WARNLN_AND_DBGLN("UBSAN: UB is configured to be deadly");        \
-            abort();                                                         \
+            Runtime::abort();                                                \
         }                                                                    \
     } while (0)
 
@@ -36,8 +37,7 @@ extern "C" {
 
 [[gnu::constructor]] static void init_ubsan_options()
 {
-    auto const* options_ptr = getenv("UBSAN_OPTIONS");
-    auto options = options_ptr != NULL ? StringView { options_ptr, strlen(options_ptr) } : StringView {};
+    auto options = Runtime::getenv("UBSAN_OPTIONS"sv).value_or(""sv);
     // FIXME: Parse more options and complain about invalid options
     if (!options.is_null()) {
         if (options.contains("halt_on_error=1"sv))

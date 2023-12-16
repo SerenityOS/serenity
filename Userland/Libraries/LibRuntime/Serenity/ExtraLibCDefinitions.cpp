@@ -30,7 +30,7 @@ bool __environ_is_malloced = false;
 bool __stdio_is_initialized = false;
 void* __auxiliary_vector = nullptr;
 
-void __libc_init()
+[[gnu::constructor]] void __libc_init()
 {
     VERIFY(environ);
     char** env;

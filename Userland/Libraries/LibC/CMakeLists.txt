@@ -115,7 +115,7 @@ add_dependencies(ssp_nonshared install_libc_headers)
 target_link_libraries(ssp_nonshared PRIVATE NoCoverage)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp_nonshared.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
 
-set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES} ${LIBRUNTIME_SOURCES})
+set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs")
@@ -130,7 +130,7 @@ set_source_files_properties(../LibRuntime/Serenity/StackProtector.cpp PROPERTIES
 
 set_source_files_properties(../LibRuntime/Serenity/PossiblyThrowingCallback.cpp PROPERTIES COMPILE_FLAGS -fexceptions)
 
-add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
+add_library(LibCStaticWithoutDeps STATIC ${SOURCES} ${LIBRUNTIME_SOURCES})
 target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
 add_dependencies(LibCStaticWithoutDeps LibSystem LibUBSanitizer)
 
@@ -153,8 +153,9 @@ set_property(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
-add_dependencies(LibC crti crt0 crt0_shared crtn install_libc_headers)
-target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
+# NOTE: LibRuntime must be linked before any other library which potentially creates a dependency
+#       cycle.
+target_link_libraries(LibC PRIVATE LibRuntime LibSystem LibTimeZone)
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # FIXME: Since we provide weak _Unwind_Resume in LibRuntime, linker thinks libunwind is not
     #        needed anymore for libc. This would have been totally fine (since we are not supposed

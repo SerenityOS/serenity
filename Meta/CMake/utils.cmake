@@ -8,7 +8,7 @@ function(serenity_set_implicit_links target_name)
     # The latter is a problem with Clang especially, since we might have the
     # slightly outdated stub in the sysroot, but have not yet installed the freshly
     # built LibC.
-    target_link_libraries(${target_name} PRIVATE LibC)
+    target_link_libraries(${target_name} PRIVATE LibRuntime LibC)
 
     # Same goes for -lssp_nonshared, which is required during build time but is not
     # yet installed in the sysroot. However, we just want to add the link directory
