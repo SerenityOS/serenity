@@ -3,7 +3,7 @@
     "runtime": "org.gnome.Platform",
     "runtime-version": "master",
     "sdk": "org.gnome.Sdk",
-    "command": "ladybird",
+    "command": "Ladybird",
     "finish-args": [
         "--device=dri",
         "--share=ipc",
@@ -15,7 +15,8 @@
     ],
     "cleanup": [
         "blueprint*",
-        "/lib/python3*"
+        "/lib/python3*",
+        "/share/Caches*"
     ],
     "modules": [
         {
@@ -30,9 +31,24 @@
             ]
         },
         {
-            "name": "Ladybird",
-            "buildsystem": "cmake-ninja",
+            "name": "ladybird-data",
+            "buildsystem": "simple",
+            "build-commands": [
+                "cp -r Caches /app/share/Caches"
+            ],
             "sources": [
+                 {
+                    "type": "file",
+                    "url": "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat",
+                    "dest": "Caches/PublicSuffix/",
+                    "sha256": "d68c0cb4d0d90683201d47b6ed4b95a1cd9a91f6906e240b6b5387d056da1ab6"
+                },
+                {
+                    "type": "file",
+                    "url": "https://www.unicode.org/Public/idna/15.1.0/IdnaMappingTable.txt",
+                    "dest": "Caches/UCD/",
+                    "sha256": "402cbd285f1f952fcd0834b63541d54f69d3d8f1b8f8599bf71a1a14935f82c4"
+                },
                 {
                     "type": "archive",
                     "url": "https://www.unicode.org/Public/15.1.0/ucd/UCD.zip",
@@ -45,13 +61,13 @@
                     "type": "file",
                     "url": "https://www.unicode.org/Public/emoji/15.1/emoji-test.txt",
                     "dest": "Caches/UCD/",
-                    "sha256": "8445f23ac8388e096be19d0262e14fceff856ff52093f2356dc89485f1a853db"
+                    "sha256": "d876ee249aa28eaa76cfa6dfaa702847a8d13b062aa488d465d0395ee8137ed9"
                 },
                 {
                     "type": "archive",
-                    "url": "https://github.com/unicode-org/cldr-json/releases/download/43.1.0/cldr-43.1.0-json-modern.zip",
+                    "url": "https://github.com/unicode-org/cldr-json/releases/download/44.0.1/cldr-44.0.1-json-modern.zip",
                     "dest": "Caches/CLDR/",
-                    "sha256": "5b770d59f052f19573d5e0783b6581269f6c86a193cc6e84ebd0796e143153cd",
+                    "sha256": "6daf783158fb3b09aa026a048e1f5ed5773148387b1edadfad33f303371f332a",
                     "strip-components": 0,
                     "dest-filename": "cldr.zip"
                 },
@@ -65,35 +81,34 @@
                 },
                 {
                     "type": "file",
-                    "url": "https://curl.se/ca/cacert-2023-05-30.pem",
+                    "url": "https://curl.se/ca/cacert-2023-12-12.pem",
                     "dest": "Caches/CACERT/",
-                    "sha256": "5fadcae90aa4ae041150f8e2d26c37d980522cdb49f923fc1e1b5eb8d74e71ad"
+                    "sha256": "ccbdfc2fe1a0d7bbbb9cc15710271acf1bb1afe4c8f1725fe95c4c7733fcbe5a"
                 },
                 {
                     "type": "shell",
                     "commands": [
                         "echo -n 15.1.0 > Caches/UCD/version.txt",
-                        "echo -n 43.1.0 > Caches/CLDR/version.txt",
+                        "echo -n 44.0.1 > Caches/CLDR/version.txt",
                         "echo -n 2023c > Caches/TZDB/version.txt",
-                        "echo -n 2023-05-30 > Caches/CACERT/version.txt",
-                        "# FIXME Is there an easier way to set an absolute path in config-opts?",
-                        "echo set\\(SERENITY_CACHE_DIR \"$PWD/Caches\" CACHE STRING \\\"\\\"\\) > Cache.cmake"
+                        "echo -n 2023-12-12 > Caches/CACERT/version.txt"
                     ]
-                },
-                {
-                    "type": "git",
-                    "url": "https://github.com/SerenityOS/serenity.git",
-                    "dest": "serenity"
-                },
+                }
+            ]
+        },
+        {
+            "name": "Ladybird",
+            "buildsystem": "cmake-ninja",
+            "subdir": "Ladybird",
+            "builddir": true,
+            "sources": [
                 {
                     "type": "dir",
-                    "path": "."
+                    "path": "../..",
+                    "skip": [ "Toolchain", "Build", "Tests/LibWeb/WPT", "out", "build" ]
                 }
             ],
-            "config-opts": [ "-DSERENITY_SOURCE_DIR=serenity", "-CCache.cmake" ],
-            "build-options": {
-                "build-args": ["--share=network"]
-            }
+            "config-opts": [ "-DENABLE_GTK=ON", "-DENABLE_NETWORK_DOWNLOADS=OFF", "-DENABLE_COMMONMARK_SPEC_DOWNLOAD=OFF", "-DSERENITY_CACHE_DIR=/app/share/Caches" ]
         }
     ]
 }

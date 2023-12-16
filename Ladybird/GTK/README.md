@@ -54,11 +54,17 @@ flatpak install --user org.gnome.Platform//master org.gnome.Sdk//master
 
 ```sh
 # Build and install the application to your local Flatpak installation
-flatpak-builder --user --install --force-clean --ccache build org.serenityos.Ladybird-gtk4.json 
+flatpak-builder --user --install --force-clean --ccache Build/ladybird-gtk4 org.serenityos.Ladybird-gtk4.json
 
 # Run the app
 flatpak run --user org.serenityos.Ladybird-gtk4
 ```
 
-If you are only modifying the ladybird-gtk4 files, then adding the `--keep-build-dirs` flag will help
-reduce churn for the serenity components. The `--ccache` flag is essentially mandatory to reduce incremental build times.
+The `--ccache` flag is essentially mandatory to reduce incremental build times.
+
+## Using GNOME Builder
+
+For the GNOME Builder IDE, the project detection defaults almost work. When opening the project, set the file type
+filter in the bottom right to "CMake", and  manually select the CMakeLists.txt for the Ladybird/ subdirectory
+After the project is opened, Builder should automatically detect the Flatpak manifest and allow building and running the
+Ladybird application.
