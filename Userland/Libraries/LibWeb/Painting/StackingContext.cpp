@@ -333,11 +333,14 @@ void StackingContext::paint(PaintContext& context) const
         if (masking_area->is_empty())
             return;
         auto mask_bitmap = paintable_box().calculate_mask(context, *masking_area);
-        push_stacking_context_params.source_paintable_rect = context.enclosing_device_rect(*masking_area).to_type<int>();
-        push_stacking_context_params.mask = StackingContextMask {
-            .mask_bitmap = mask_bitmap.release_nonnull(),
-            .mask_kind = *paintable_box().get_mask_type()
-        };
+        if (mask_bitmap) {
+            auto source_paintable_rect = context.enclosing_device_rect(*masking_area).to_type<int>();
+            push_stacking_context_params.source_paintable_rect = source_paintable_rect;
+            push_stacking_context_params.mask = StackingContextMask {
+                .mask_bitmap = mask_bitmap.release_nonnull(),
+                .mask_kind = *paintable_box().get_mask_type()
+            };
+        }
     }
 
     context.recording_painter().push_stacking_context(push_stacking_context_params);
