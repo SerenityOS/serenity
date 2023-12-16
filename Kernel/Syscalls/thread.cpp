@@ -125,7 +125,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
 
 ErrorOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::thread));
     auto thread = TRY(get_thread_from_thread_list(tid));
     if (!thread->is_joinable())

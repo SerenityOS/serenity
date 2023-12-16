@@ -65,7 +65,7 @@ enum class NeedsBigProcessLock {
     S(create_inode_watcher, NeedsBigProcessLock::No)       \
     S(create_thread, NeedsBigProcessLock::No)              \
     S(dbgputstr, NeedsBigProcessLock::No)                  \
-    S(detach_thread, NeedsBigProcessLock::Yes)             \
+    S(detach_thread, NeedsBigProcessLock::No)              \
     S(disown, NeedsBigProcessLock::No)                     \
     S(dump_backtrace, NeedsBigProcessLock::No)             \
     S(dup2, NeedsBigProcessLock::No)                       \
