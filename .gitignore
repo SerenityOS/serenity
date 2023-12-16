@@ -11,6 +11,7 @@
 *.autosave
 Meta/Lagom/build
 Build
+build
 Toolchain/Tarballs
 Toolchain/Build
 Toolchain/Local
@@ -28,6 +29,7 @@ sync-local.sh
 .vim/
 .exrc
 .helix/
+.flatpak-builder
 
 # Gradle/AndroidStudio
 .gradle/

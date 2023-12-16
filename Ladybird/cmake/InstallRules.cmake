@@ -114,6 +114,21 @@ install(FILES
   COMPONENT ladybird_Runtime
 )
 
+if (ENABLE_GTK)
+    install(FILES
+        GTK/org.serenityos.Ladybird-gtk4.svg
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps"
+    )
+    install(FILES
+        GTK/org.serenityos.Ladybird-gtk4.desktop
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
+    )
+    install(FILES
+        GTK/org.serenityos.Ladybird-gtk4.service
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/dbus-1/services"
+    )
+endif()
+
 if (APPLE)
   # Fixup the app bundle and copy:
   #   - Libraries from lib/ to Ladybird.app/Contents/lib

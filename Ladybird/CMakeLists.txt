@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(ladybird
     VERSION 0.0.1
-    LANGUAGES CXX
+    LANGUAGES C CXX
     DESCRIPTION "Ladybird Web Browser"
 )
 
@@ -84,6 +84,11 @@ if (ANDROID OR APPLE)
     serenity_option(ENABLE_QT OFF CACHE BOOL "Build ladybird application using Qt GUI")
 else()
     serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
+    serenity_option(ENABLE_GTK OFF CACHE BOOL "Build ladybird application using GTK GUI")
+    if (ENABLE_GTK AND ENABLE_QT)
+        message(STATUS "Cannot enable both Qt and GTK GUIs, disabling Qt")
+        set(ENABLE_QT OFF CACHE BOOL "" FORCE)
+    endif()
 endif()
 
 if (ANDROID AND ENABLE_QT)
@@ -96,6 +101,12 @@ if (ENABLE_QT)
     set(CMAKE_AUTORCC ON)
     set(CMAKE_AUTOUIC ON)
     find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+elseif (ENABLE_GTK)
+    find_package(PkgConfig)
+    pkg_check_modules(gtk4 REQUIRED IMPORTED_TARGET gtk4>=4.11.3)
+    pkg_check_modules(libadwaita REQUIRED IMPORTED_TARGET libadwaita-1>=1.4)
+    find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
+    find_program(BLUEPRINT_COMPILER NAMES blueprint-compiler REQUIRED)
 elseif (APPLE)
     find_library(COCOA_LIBRARY Cocoa)
 endif()
@@ -130,6 +141,24 @@ if (ENABLE_QT)
         Qt/main.cpp
     )
     target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
+elseif (ENABLE_GTK)
+    add_executable(ladybird ${SOURCES})
+    target_sources(ladybird PRIVATE
+        GTK/main.cpp
+        GTK/Application.cpp
+        GTK/Window.cpp
+        GTK/WebView.cpp
+        GTK/Tab.cpp
+        GTK/BitmapPaintable.cpp
+        GTK/LocationEntry.cpp
+        GTK/ViewImpl.cpp
+        GTK/EventLoopImplementationGLib.cpp
+        GTK/HistoryEntry.cpp
+        GTK/NavigationHistory.cpp
+        GTK/NavigationHistorySlice.cpp
+    )
+    target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita)
+    include (cmake/GTKExtras.cmake)
 elseif (APPLE)
     add_executable(ladybird MACOSX_BUNDLE
         ${SOURCES}
