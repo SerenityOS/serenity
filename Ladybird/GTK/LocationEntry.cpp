@@ -9,10 +9,6 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 
-#ifdef HAVE_LIBSOUP
-#    include <libsoup/soup.h>
-#endif
-
 #ifdef ENABLE_PUBLIC_SUFFIX_DOWNLOAD
 #    include <LibPublicSuffix/PublicSuffixData.h>
 #endif
@@ -43,19 +39,7 @@ static Optional<StringView> find_base_domain(char const* text)
     if (!host)
         return {};
 
-#ifdef HAVE_LIBSOUP
-
-    char const* base_domain = soup_tld_get_base_domain(host, nullptr);
-    if (!base_domain)
-        return {};
-
-    // This is quite horrible. Look for the base domain in the text.
-    char const* base_domain_ptr = strstr(text, base_domain);
-    if (!base_domain_ptr)
-        return {};
-    return StringView { base_domain_ptr, strlen(base_domain) };
-
-#elif defined(ENABLE_PUBLIC_SUFFIX_DOWNLOAD)
+#if defined(ENABLE_PUBLIC_SUFFIX_DOWNLOAD)
 
     StringView host_sv { host, strlen(host) };
     if (auto r = PublicSuffix::PublicSuffixData::the()->get_public_suffix(host_sv); !r.is_error()) {
