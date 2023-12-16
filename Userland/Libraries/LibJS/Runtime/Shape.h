@@ -49,15 +49,27 @@ public:
         Configure,
         Prototype,
         Delete,
+        CacheableDictionary,
+        UncacheableDictionary,
     };
 
     Shape* create_put_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_configure_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_prototype_transition(Object* new_prototype);
     [[nodiscard]] NonnullGCPtr<Shape> create_delete_transition(StringOrSymbol const&);
+    [[nodiscard]] NonnullGCPtr<Shape> create_cacheable_dictionary_transition();
+    [[nodiscard]] NonnullGCPtr<Shape> create_uncacheable_dictionary_transition();
 
     void add_property_without_transition(StringOrSymbol const&, PropertyAttributes);
     void add_property_without_transition(PropertyKey const&, PropertyAttributes);
+
+    void remove_property_without_transition(StringOrSymbol const&, u32 offset);
+    void set_property_attributes_without_transition(StringOrSymbol const&, PropertyAttributes);
+
+    [[nodiscard]] bool is_cacheable() const { return m_cacheable; }
+    [[nodiscard]] bool is_dictionary() const { return m_dictionary; }
+    [[nodiscard]] bool is_cacheable_dictionary() const { return m_dictionary && m_cacheable; }
+    [[nodiscard]] bool is_uncacheable_dictionary() const { return m_dictionary && !m_cacheable; }
 
     Realm& realm() const { return m_realm; }
 
@@ -103,6 +115,9 @@ private:
 
     PropertyAttributes m_attributes { 0 };
     TransitionType m_transition_type { TransitionType::Invalid };
+
+    bool m_dictionary { false };
+    bool m_cacheable { true };
 };
 
 }

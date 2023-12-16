@@ -875,7 +875,7 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
     // 3. If IsDataDescriptor(desc) is true, return desc.[[Value]].
     if (descriptor->is_data_descriptor()) {
         // Non-standard: If the caller has requested cacheable metadata and the property is an own property, fill it in.
-        if (cacheable_metadata && descriptor->property_offset.has_value()) {
+        if (cacheable_metadata && descriptor->property_offset.has_value() && shape().is_cacheable()) {
             *cacheable_metadata = CacheablePropertyMetadata {
                 .type = CacheablePropertyMetadata::Type::OwnProperty,
                 .property_offset = descriptor->property_offset.value(),
@@ -969,7 +969,7 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
             // iii. Let valueDesc be the PropertyDescriptor { [[Value]]: V }.
             auto value_descriptor = PropertyDescriptor { .value = value };
 
-            if (cacheable_metadata && own_descriptor.has_value() && own_descriptor->property_offset.has_value()) {
+            if (cacheable_metadata && own_descriptor.has_value() && own_descriptor->property_offset.has_value() && shape().is_cacheable()) {
                 *cacheable_metadata = CacheablePropertyMetadata {
                     .type = CacheablePropertyMetadata::Type::OwnProperty,
                     .property_offset = own_descriptor->property_offset.value(),
@@ -1158,13 +1158,23 @@ void Object::storage_set(PropertyKey const& property_key, ValueAndAttributes con
     auto metadata = shape().lookup(property_key_string_or_symbol);
 
     if (!metadata.has_value()) {
-        set_shape(*m_shape->create_put_transition(property_key_string_or_symbol, attributes));
+        static constexpr size_t max_transitions_before_converting_to_dictionary = 64;
+        if (!m_shape->is_dictionary() && m_shape->property_count() >= max_transitions_before_converting_to_dictionary)
+            set_shape(m_shape->create_cacheable_dictionary_transition());
+
+        if (m_shape->is_dictionary())
+            m_shape->add_property_without_transition(property_key_string_or_symbol, attributes);
+        else
+            set_shape(*m_shape->create_put_transition(property_key_string_or_symbol, attributes));
         m_storage.append(value);
         return;
     }
 
     if (attributes != metadata->attributes) {
-        set_shape(*m_shape->create_configure_transition(property_key_string_or_symbol, attributes));
+        if (m_shape->is_dictionary())
+            m_shape->set_property_attributes_without_transition(property_key_string_or_symbol, attributes);
+        else
+            set_shape(*m_shape->create_configure_transition(property_key_string_or_symbol, attributes));
     }
 
     m_storage[metadata->offset] = value;
@@ -1186,6 +1196,14 @@ void Object::storage_delete(PropertyKey const& property_key)
     auto metadata = shape().lookup(property_key.to_string_or_symbol());
     VERIFY(metadata.has_value());
 
+    if (m_shape->is_cacheable_dictionary()) {
+        m_shape = m_shape->create_uncacheable_dictionary_transition();
+    }
+    if (m_shape->is_uncacheable_dictionary()) {
+        m_shape->remove_property_without_transition(property_key.to_string_or_symbol(), metadata->offset);
+        m_storage.remove(metadata->offset);
+        return;
+    }
     m_shape = m_shape->create_delete_transition(property_key.to_string_or_symbol());
     m_storage.remove(metadata->offset);
 }

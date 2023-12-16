@@ -12,6 +12,32 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(Shape);
 
+NonnullGCPtr<Shape> Shape::create_cacheable_dictionary_transition()
+{
+    auto new_shape = heap().allocate_without_realm<Shape>(m_realm);
+    new_shape->m_dictionary = true;
+    new_shape->m_cacheable = true;
+    new_shape->m_prototype = m_prototype;
+    ensure_property_table();
+    new_shape->ensure_property_table();
+    (*new_shape->m_property_table) = *m_property_table;
+    new_shape->m_property_count = new_shape->m_property_table->size();
+    return new_shape;
+}
+
+NonnullGCPtr<Shape> Shape::create_uncacheable_dictionary_transition()
+{
+    auto new_shape = heap().allocate_without_realm<Shape>(m_realm);
+    new_shape->m_dictionary = true;
+    new_shape->m_cacheable = true;
+    new_shape->m_prototype = m_prototype;
+    ensure_property_table();
+    new_shape->ensure_property_table();
+    (*new_shape->m_property_table) = *m_property_table;
+    new_shape->m_property_count = new_shape->m_property_table->size();
+    return new_shape;
+}
+
 Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
 {
     if (!m_forward_transitions)
@@ -239,6 +265,29 @@ FLATTEN void Shape::add_property_without_transition(PropertyKey const& property_
 {
     VERIFY(property_key.is_valid());
     add_property_without_transition(property_key.to_string_or_symbol(), attributes);
+}
+
+void Shape::set_property_attributes_without_transition(StringOrSymbol const& property_key, PropertyAttributes attributes)
+{
+    VERIFY(is_dictionary());
+    VERIFY(m_property_table);
+    auto it = m_property_table->find(property_key);
+    VERIFY(it != m_property_table->end());
+    it->value.attributes = attributes;
+    m_property_table->set(property_key, it->value);
+}
+
+void Shape::remove_property_without_transition(StringOrSymbol const& property_key, u32 offset)
+{
+    VERIFY(is_uncacheable_dictionary());
+    VERIFY(m_property_table);
+    if (m_property_table->remove(property_key))
+        --m_property_count;
+    for (auto& it : *m_property_table) {
+        VERIFY(it.value.offset != offset);
+        if (it.value.offset > offset)
+            --it.value.offset;
+    }
 }
 
 }
