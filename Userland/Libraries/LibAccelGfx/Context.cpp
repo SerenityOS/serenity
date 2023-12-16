@@ -16,14 +16,6 @@
 
 namespace AccelGfx {
 
-Context& Context::the()
-{
-    static OwnPtr<Context> s_the;
-    if (!s_the)
-        s_the = Context::create();
-    return *s_the;
-}
-
 #ifdef AK_OS_MACOS
 static void make_context_cgl()
 {

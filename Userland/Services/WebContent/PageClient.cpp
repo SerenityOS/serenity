@@ -55,6 +55,12 @@ PageClient::PageClient(PageHost& owner, u64 id)
         client().async_did_invalidate_content_rect({ m_invalidation_rect.x().value(), m_invalidation_rect.y().value(), m_invalidation_rect.width().value(), m_invalidation_rect.height().value() });
         m_invalidation_rect = {};
     });
+
+#ifdef HAS_ACCELERATED_GRAPHICS
+    if (s_use_gpu_painter) {
+        m_accelerated_graphics_context = AccelGfx::Context::create();
+    }
+#endif
 }
 
 void PageClient::visit_edges(JS::Cell::Visitor& visitor)
@@ -169,7 +175,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS
-        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(target);
+        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(*m_accelerated_graphics_context, target);
         recording_painter.execute(painting_command_executor);
 #else
         static bool has_warned_about_configuration = false;

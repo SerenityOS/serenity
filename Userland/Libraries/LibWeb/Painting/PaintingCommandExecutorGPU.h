@@ -55,11 +55,12 @@ public:
     bool needs_update_immutable_bitmap_texture_cache() const override { return true; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override;
 
-    PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap);
+    PaintingCommandExecutorGPU(AccelGfx::Context&, Gfx::Bitmap& bitmap);
     ~PaintingCommandExecutorGPU() override;
 
 private:
     Gfx::Bitmap& m_target_bitmap;
+    AccelGfx::Context& m_context;
 
     struct StackingContext {
         RefPtr<AccelGfx::Canvas> canvas;

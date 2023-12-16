@@ -20,8 +20,6 @@ namespace AccelGfx {
 
 class Context {
 public:
-    static Context& the();
-
     static OwnPtr<Context> create();
 
     Context()
