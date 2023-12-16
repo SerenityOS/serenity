@@ -17,7 +17,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(Module);
 
-Module::Module(Realm& realm, DeprecatedString filename, Script::HostDefined* host_defined)
+Module::Module(Realm& realm, ByteString filename, Script::HostDefined* host_defined)
     : m_realm(realm)
     , m_host_defined(host_defined)
     , m_filename(move(filename))

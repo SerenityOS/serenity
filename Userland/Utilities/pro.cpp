@@ -154,9 +154,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool verbose_output = false;
     StringView data;
     StringView proxy_spec;
-    DeprecatedString method = "GET";
+    ByteString method = "GET";
     StringView method_override;
-    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> request_headers;
+    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> request_headers;
     String credentials;
 
     Core::ArgsParser args_parser;
@@ -253,7 +253,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // that scheme as (...) or a single sequence of characters capable of holding base64-encoded information.
         auto const encoded_credentials = TRY(encode_base64(credentials.bytes()));
         auto const authorization = TRY(String::formatted("Basic {}", encoded_credentials));
-        request_headers.set("Authorization", authorization.to_deprecated_string());
+        request_headers.set("Authorization", authorization.to_byte_string());
     } else {
         if (is_http_url && has_credentials && has_manual_authorization_header)
             warnln("* Skipping encoding provided authorization, manual header present.");
@@ -326,7 +326,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             if (!following_url && save_at_provided_name) {
-                DeprecatedString output_name;
+                ByteString output_name;
                 if (auto content_disposition = response_headers.get("Content-Disposition"); content_disposition.has_value()) {
                     auto& value = content_disposition.value();
                     ContentDispositionParser parser(value);
@@ -343,9 +343,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (output_name.is_empty() || output_name == "/") {
                     int i = -1;
                     do {
-                        output_name = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+                        output_name = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string();
                         if (i > -1)
-                            output_name = DeprecatedString::formatted("{}.{}", output_name, i);
+                            output_name = ByteString::formatted("{}.{}", output_name, i);
                         ++i;
                     } while (FileSystem::exists(output_name));
                 }

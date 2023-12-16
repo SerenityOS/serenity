@@ -233,8 +233,8 @@ public:
         UnicodeEscapeOverflow,
         LegacyOctalEscapeSequence,
     };
-    DeprecatedString string_value(StringValueStatus& status) const;
-    DeprecatedString raw_template_value() const;
+    ByteString string_value(StringValueStatus& status) const;
+    ByteString raw_template_value() const;
 
     void set_identifier_value(DeprecatedFlyString value)
     {

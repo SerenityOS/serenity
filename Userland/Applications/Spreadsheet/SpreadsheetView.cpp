@@ -80,7 +80,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         if (!is_dragging()) {
             auto tooltip = model->data(index, static_cast<GUI::ModelRole>(SheetModel::Role::Tooltip));
             if (tooltip.is_string()) {
-                set_tooltip(MUST(String::from_deprecated_string(tooltip.as_string())));
+                set_tooltip(MUST(String::from_byte_string(tooltip.as_string())));
                 show_or_hide_tooltip();
             } else {
                 set_tooltip({});
@@ -495,7 +495,7 @@ void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, Gfx::IntRec
     auto text_color = index.data(GUI::ModelRole::ForegroundColor).to_color(palette.color(m_table_view.foreground_role()));
     auto data = index.data();
     auto text_alignment = index.data(GUI::ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterRight);
-    painter.draw_text(rect, data.to_deprecated_string(), m_table_view.font_for_index(index), text_alignment, text_color, Gfx::TextElision::Right);
+    painter.draw_text(rect, data.to_byte_string(), m_table_view.font_for_index(index), text_alignment, text_color, Gfx::TextElision::Right);
 }
 
 }

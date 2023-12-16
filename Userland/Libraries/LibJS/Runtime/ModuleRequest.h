@@ -14,14 +14,14 @@
 namespace JS {
 
 struct ModuleWithSpecifier {
-    DeprecatedString specifier;  // [[Specifier]]
+    ByteString specifier;        // [[Specifier]]
     NonnullGCPtr<Module> module; // [[Module]]
 };
 
 // https://tc39.es/proposal-import-attributes/#importattribute-record
 struct ImportAttribute {
-    DeprecatedString key;
-    DeprecatedString value;
+    ByteString key;
+    ByteString value;
 };
 
 // https://tc39.es/proposal-import-attributes/#modulerequest-record
@@ -35,7 +35,7 @@ struct ModuleRequest {
 
     ModuleRequest(DeprecatedFlyString specifier, Vector<ImportAttribute> attributes);
 
-    void add_attribute(DeprecatedString key, DeprecatedString value)
+    void add_attribute(ByteString key, ByteString value)
     {
         attributes.empend(move(key), move(value));
     }

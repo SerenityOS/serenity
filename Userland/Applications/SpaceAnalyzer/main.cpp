@@ -28,7 +28,7 @@
 
 static auto const APP_NAME = "Space Analyzer"_string;
 
-static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& tree_map_widget, bool include_last_node = true)
+static ByteString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& tree_map_widget, bool include_last_node = true)
 {
     StringBuilder path_builder;
     for (size_t k = 0; k < tree_map_widget.path_size() - (include_last_node ? 0 : 1); k++) {
@@ -38,7 +38,7 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
         TreeNode const* node = tree_map_widget.path_node(k);
         path_builder.append(node->name());
     }
-    return path_builder.to_deprecated_string();
+    return path_builder.to_byte_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     file_menu->add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
-            GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
+            GUI::MessageBox::show_error(window, ByteString::formatted("{}", result.error()));
         }
     }));
     file_menu->add_separator();
@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(tree_map_widget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
-        DeprecatedString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
+        ByteString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
         bool try_again = true;
         while (try_again) {
             try_again = false;
@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto deletion_result = FileSystem::remove(selected_node_path, FileSystem::RecursionMode::Allowed);
             if (deletion_result.is_error()) {
                 auto retry_message_result = GUI::MessageBox::show(window,
-                    DeprecatedString::formatted("Failed to delete \"{}\": {}. Retry?",
+                    ByteString::formatted("Failed to delete \"{}\": {}. Retry?",
                         selected_node_path,
                         deletion_result.error()),
                     "Deletion failed"sv,
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             } else {
                 GUI::MessageBox::show(window,
-                    DeprecatedString::formatted("Successfully deleted \"{}\".", selected_node_path),
+                    ByteString::formatted("Successfully deleted \"{}\".", selected_node_path),
                     "Deletion completed"sv,
                     GUI::MessageBox::Type::Information,
                     GUI::MessageBox::InputType::OK);
@@ -131,7 +131,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
-            GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
+            GUI::MessageBox::show_error(window, ByteString::formatted("{}", result.error()));
         }
     });
 
@@ -165,14 +165,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             // Sneakily set the window title here, while the StringBuilder holds the right amount of the path.
             if (k == tree_map_widget.viewpoint())
-                window->set_title(DeprecatedString::formatted("{} - SpaceAnalyzer", builder.string_view()));
+                window->set_title(ByteString::formatted("{} - SpaceAnalyzer", builder.string_view()));
 
             breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), MUST(builder.to_string()));
         }
         breadcrumbbar.set_selected_segment(tree_map_widget.viewpoint());
     };
     tree_map_widget.on_context_menu_request = [&](const GUI::ContextMenuEvent& event) {
-        DeprecatedString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
+        ByteString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
         if (selected_node_path.is_empty())
             return;
         delete_action->set_enabled(FileSystem::can_delete_or_move(selected_node_path));

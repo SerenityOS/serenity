@@ -9,7 +9,7 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <AK/Math.h>
 #include <AK/StdLibExtras.h>
@@ -262,14 +262,14 @@ public:
         return VectorN<3, T>(x(), y(), z());
     }
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const
+    [[nodiscard]] ByteString to_byte_string() const
     {
         if constexpr (N == 2)
-            return DeprecatedString::formatted("[{},{}]", x(), y());
+            return ByteString::formatted("[{},{}]", x(), y());
         else if constexpr (N == 3)
-            return DeprecatedString::formatted("[{},{},{}]", x(), y(), z());
+            return ByteString::formatted("[{},{},{}]", x(), y(), z());
         else
-            return DeprecatedString::formatted("[{},{},{},{}]", x(), y(), z(), w());
+            return ByteString::formatted("[{},{},{},{}]", x(), y(), z(), w());
     }
 
     template<typename U>

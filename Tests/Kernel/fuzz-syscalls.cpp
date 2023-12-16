@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
@@ -101,7 +101,7 @@ static void do_weird_call(size_t attempt, int syscall_fn, size_t arg1, size_t ar
         builder.appendff("{:p}", fake_params[i]);
     }
     builder.append(']');
-    dbgln("{}", builder.to_deprecated_string());
+    dbgln("{}", builder.to_byte_string());
 
     // Actually do the syscall ('fake_params' is passed indirectly, if any of arg1, arg2, or arg3 point to it.
     int rc = syscall(Syscall::Function(syscall_fn), arg1, arg2, arg3);

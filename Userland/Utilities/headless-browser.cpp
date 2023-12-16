@@ -8,7 +8,7 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -90,17 +90,17 @@ public:
 
     ErrorOr<String> dump_layout_tree()
     {
-        return String::from_deprecated_string(client().dump_layout_tree());
+        return String::from_byte_string(client().dump_layout_tree());
     }
 
     ErrorOr<String> dump_paint_tree()
     {
-        return String::from_deprecated_string(client().dump_paint_tree());
+        return String::from_byte_string(client().dump_paint_tree());
     }
 
     ErrorOr<String> dump_text()
     {
-        return String::from_deprecated_string(client().dump_text());
+        return String::from_byte_string(client().dump_text());
     }
 
     void clear_content_filters()
@@ -190,7 +190,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
         loop.quit(0);
     }));
 
-    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_deprecated_string()));
+    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string()));
 
     String result;
 
@@ -266,7 +266,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
         loop.quit(0);
     }));
 
-    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_deprecated_string()));
+    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string()));
 
     RefPtr<Gfx::Bitmap> actual_screenshot, expectation_screenshot;
     view.on_load_finish = [&](auto const&) {
@@ -332,7 +332,7 @@ struct Test {
     Optional<TestResult> result;
 };
 
-static Vector<DeprecatedString> s_skipped_tests;
+static Vector<ByteString> s_skipped_tests;
 
 static ErrorOr<void> load_test_config(StringView test_root_path)
 {
@@ -361,7 +361,7 @@ static ErrorOr<void> load_test_config(StringView test_root_path)
 
 static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, StringView trail, TestMode mode)
 {
-    Core::DirIterator it(TRY(String::formatted("{}/input/{}", path, trail)).to_deprecated_string(), Core::DirIterator::Flags::SkipDots);
+    Core::DirIterator it(TRY(String::formatted("{}/input/{}", path, trail)).to_byte_string(), Core::DirIterator::Flags::SkipDots);
     while (it.has_next()) {
         auto name = it.next_path();
         auto input_path = TRY(FileSystem::real_path(TRY(String::formatted("{}/input/{}/{}", path, trail, name))));

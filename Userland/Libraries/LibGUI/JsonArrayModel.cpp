@@ -61,7 +61,7 @@ void JsonArrayModel::update()
 ErrorOr<void> JsonArrayModel::store()
 {
     auto file = TRY(Core::File::open(m_json_path, Core::File::OpenMode::Write));
-    ByteBuffer json_bytes = m_array.to_deprecated_string().to_byte_buffer();
+    ByteBuffer json_bytes = m_array.to_byte_string().to_byte_buffer();
 
     TRY(file->write_until_depleted(json_bytes));
     file->close();
@@ -138,7 +138,7 @@ Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
             return "";
         if (data->is_number())
             return data.value();
-        return data->to_deprecated_string();
+        return data->to_byte_string();
     }
 
     if (role == ModelRole::Sort) {
@@ -156,7 +156,7 @@ Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
     return {};
 }
 
-void JsonArrayModel::set_json_path(DeprecatedString const& json_path)
+void JsonArrayModel::set_json_path(ByteString const& json_path)
 {
     if (m_json_path == json_path)
         return;

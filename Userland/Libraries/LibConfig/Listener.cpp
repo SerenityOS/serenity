@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <LibConfig/Listener.h>

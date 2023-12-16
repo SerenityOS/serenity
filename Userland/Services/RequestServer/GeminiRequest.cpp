@@ -23,7 +23,7 @@ GeminiRequest::GeminiRequest(ConnectionFromClient& client, NonnullRefPtr<Gemini:
         if (auto* response = m_job->response()) {
             set_downloaded_size(MUST(m_job->response_length()));
             if (!response->meta().is_empty()) {
-                HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> headers;
+                HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> headers;
                 headers.set("meta", response->meta());
                 // Note: We're setting content-type to meta only on status==SUCCESS
                 //       we should perhaps have a better mechanism for this, since we
@@ -46,7 +46,7 @@ GeminiRequest::GeminiRequest(ConnectionFromClient& client, NonnullRefPtr<Gemini:
     };
 }
 
-void GeminiRequest::set_certificate(DeprecatedString, DeprecatedString)
+void GeminiRequest::set_certificate(ByteString, ByteString)
 {
 }
 

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 #include <LibSyntax/Document.h>
 #include <LibSyntax/TextPosition.h>
@@ -25,7 +25,7 @@ public:
     virtual Vector<TextDocumentFoldingRegion>& folding_regions() = 0;
     virtual Vector<TextDocumentFoldingRegion> const& folding_regions() const = 0;
 
-    virtual DeprecatedString highlighter_did_request_text() const = 0;
+    virtual ByteString highlighter_did_request_text() const = 0;
     virtual void highlighter_did_request_update() = 0;
     virtual Document& highlighter_did_request_document() = 0;
     virtual TextPosition highlighter_did_request_cursor() const = 0;
@@ -36,7 +36,7 @@ public:
     void do_set_folding_regions(Vector<TextDocumentFoldingRegion> folding_regions) { highlighter_did_set_folding_regions(move(folding_regions)); }
     void do_update() { highlighter_did_request_update(); }
 
-    DeprecatedString get_text() const { return highlighter_did_request_text(); }
+    ByteString get_text() const { return highlighter_did_request_text(); }
     Document& get_document() { return highlighter_did_request_document(); }
     TextPosition get_cursor() const { return highlighter_did_request_cursor(); }
 

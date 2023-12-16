@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
@@ -34,7 +34,7 @@ struct BlockName {
     StringView display_name;
 };
 
-Optional<DeprecatedString> code_point_display_name(u32 code_point);
+Optional<ByteString> code_point_display_name(u32 code_point);
 Optional<StringView> code_point_block_display_name(u32 code_point);
 Optional<StringView> code_point_abbreviation(u32 code_point);
 

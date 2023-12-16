@@ -9,8 +9,8 @@
 #include "Job.h"
 #include "Parser.h"
 #include <AK/Array.h>
+#include <AK/ByteString.h>
 #include <AK/CircularQueue.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/StackInfo.h>
@@ -119,8 +119,8 @@ public:
     void setup_keybinds();
 
     struct SourcePosition {
-        Optional<DeprecatedString> source_file;
-        DeprecatedString literal_source_text;
+        Optional<ByteString> source_file;
+        ByteString literal_source_text;
         Optional<AST::Position> position;
     };
 
@@ -133,7 +133,7 @@ public:
         };
 
         Kind kind;
-        DeprecatedString path;
+        ByteString path;
 
         bool operator<(RunnablePath const& other) const
         {
@@ -169,38 +169,38 @@ public:
 
     int run_command(StringView, Optional<SourcePosition> = {});
     Optional<RunnablePath> runnable_path_for(StringView);
-    Optional<DeprecatedString> help_path_for(Vector<RunnablePath> visited, RunnablePath const& runnable_path);
+    Optional<ByteString> help_path_for(Vector<RunnablePath> visited, RunnablePath const& runnable_path);
     ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
     Vector<NonnullRefPtr<Job>> run_commands(Vector<AST::Command>&);
-    bool run_file(DeprecatedString const&, bool explicitly_invoked = true);
+    bool run_file(ByteString const&, bool explicitly_invoked = true);
     ErrorOr<bool> run_builtin(const AST::Command&, Vector<NonnullRefPtr<AST::Rewiring>> const&, int& retval);
     bool has_builtin(StringView) const;
     ErrorOr<RefPtr<AST::Node>> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const&);
     static bool has_immediate_function(StringView);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
-    DeprecatedString prompt() const;
+    ByteString prompt() const;
 
-    static DeprecatedString expand_tilde(StringView expression);
-    static ErrorOr<Vector<DeprecatedString>> expand_globs(StringView path, StringView base);
-    static Vector<DeprecatedString> expand_globs(Vector<StringView> path_segments, StringView base);
+    static ByteString expand_tilde(StringView expression);
+    static ErrorOr<Vector<ByteString>> expand_globs(StringView path, StringView base);
+    static Vector<ByteString> expand_globs(Vector<StringView> path_segments, StringView base);
     ErrorOr<Vector<AST::Command>> expand_aliases(Vector<AST::Command>);
-    DeprecatedString resolve_path(DeprecatedString) const;
-    Optional<DeprecatedString> resolve_alias(StringView) const;
+    ByteString resolve_path(ByteString) const;
+    Optional<ByteString> resolve_alias(StringView) const;
 
     static bool has_history_event(StringView);
 
     ErrorOr<RefPtr<AST::Value const>> get_argument(size_t) const;
     ErrorOr<RefPtr<AST::Value const>> look_up_local_variable(StringView) const;
-    ErrorOr<DeprecatedString> local_variable_or(StringView, DeprecatedString const&) const;
-    void set_local_variable(DeprecatedString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
+    ErrorOr<ByteString> local_variable_or(StringView, ByteString const&) const;
+    void set_local_variable(ByteString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);
 
-    void define_function(DeprecatedString name, Vector<DeprecatedString> argnames, RefPtr<AST::Node> body);
+    void define_function(ByteString name, Vector<ByteString> argnames, RefPtr<AST::Node> body);
     bool has_function(StringView);
     bool invoke_function(const AST::Command&, int& retval);
 
-    DeprecatedString format(StringView, ssize_t& cursor) const;
+    ByteString format(StringView, ssize_t& cursor) const;
 
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
@@ -209,15 +209,15 @@ public:
         Block,
     };
     struct LocalFrame {
-        LocalFrame(DeprecatedString name, HashMap<DeprecatedString, RefPtr<AST::Value>> variables, LocalFrameKind kind = LocalFrameKind::Block)
+        LocalFrame(ByteString name, HashMap<ByteString, RefPtr<AST::Value>> variables, LocalFrameKind kind = LocalFrameKind::Block)
             : name(move(name))
             , local_variables(move(variables))
             , is_function_frame(kind == LocalFrameKind::FunctionOrGlobal)
         {
         }
 
-        DeprecatedString name;
-        HashMap<DeprecatedString, RefPtr<AST::Value>> local_variables;
+        ByteString name;
+        HashMap<ByteString, RefPtr<AST::Value>> local_variables;
         bool is_function_frame;
     };
 
@@ -237,16 +237,16 @@ public:
         bool should_destroy_frame { true };
     };
 
-    [[nodiscard]] Frame push_frame(DeprecatedString name, LocalFrameKind = LocalFrameKind::Block);
+    [[nodiscard]] Frame push_frame(ByteString name, LocalFrameKind = LocalFrameKind::Block);
     void pop_frame();
 
     struct Promise {
         struct Data {
             struct Unveil {
-                DeprecatedString path;
-                DeprecatedString access;
+                ByteString path;
+                ByteString access;
             };
-            DeprecatedString exec_promises;
+            ByteString exec_promises;
             Vector<Unveil> unveils;
         } data;
 
@@ -280,11 +280,11 @@ public:
         SingleQuotedString,
         DoubleQuotedString,
     };
-    static DeprecatedString escape_token_for_double_quotes(StringView token);
-    static DeprecatedString escape_token_for_single_quotes(StringView token);
-    static DeprecatedString escape_token(StringView token, EscapeMode = EscapeMode::Bareword);
-    static DeprecatedString escape_token(Utf32View token, EscapeMode = EscapeMode::Bareword);
-    static DeprecatedString unescape_token(StringView token);
+    static ByteString escape_token_for_double_quotes(StringView token);
+    static ByteString escape_token_for_single_quotes(StringView token);
+    static ByteString escape_token(StringView token, EscapeMode = EscapeMode::Bareword);
+    static ByteString escape_token(Utf32View token, EscapeMode = EscapeMode::Bareword);
+    static ByteString unescape_token(StringView token);
     enum class SpecialCharacterEscapeMode {
         Untouched,
         Escaped,
@@ -319,7 +319,7 @@ public:
     Job* current_job() const { return m_current_job; }
     void kill_job(Job const*, int sig);
 
-    DeprecatedString get_history_path();
+    ByteString get_history_path();
     void print_path(StringView path);
     void cache_path();
 
@@ -334,9 +334,9 @@ public:
     bool was_interrupted { false };
     bool was_resized { false };
 
-    DeprecatedString cwd;
-    DeprecatedString username;
-    DeprecatedString home;
+    ByteString cwd;
+    ByteString username;
+    ByteString home;
 
     constexpr static auto TTYNameSize = 32;
     constexpr static auto HostNameSize = 64;
@@ -346,12 +346,12 @@ public:
 
     uid_t uid;
     Optional<int> last_return_code;
-    Vector<DeprecatedString> directory_stack;
-    CircularQueue<DeprecatedString, 8> cd_history; // FIXME: have a configurable cd history length
+    Vector<ByteString> directory_stack;
+    CircularQueue<ByteString, 8> cd_history; // FIXME: have a configurable cd history length
     HashMap<u64, NonnullRefPtr<Job>> jobs;
     Vector<RunnablePath, 256> cached_path;
 
-    DeprecatedString current_script;
+    ByteString current_script;
 
     enum ShellEventType {
         ReadLine,
@@ -375,7 +375,7 @@ public:
         WriteFailure,
     };
 
-    void raise_error(ShellError kind, DeprecatedString description, Optional<AST::Position> position = {})
+    void raise_error(ShellError kind, ByteString description, Optional<AST::Position> position = {})
     {
         m_error = kind;
         m_error_description = move(description);
@@ -384,7 +384,7 @@ public:
     }
     bool has_error(ShellError err) const { return m_error == err; }
     bool has_any_error() const { return !has_error(ShellError::None); }
-    DeprecatedString const& error_description() const { return m_error_description; }
+    ByteString const& error_description() const { return m_error_description; }
     ShellError take_error()
     {
         auto err = m_error;
@@ -484,8 +484,8 @@ private:
     };
 
     struct ShellFunction {
-        DeprecatedString name;
-        Vector<DeprecatedString> arguments;
+        ByteString name;
+        Vector<ByteString> arguments;
         RefPtr<AST::Node> body;
     };
 
@@ -494,19 +494,19 @@ private:
     bool m_should_ignore_jobs_on_next_exit { false };
     pid_t m_pid { 0 };
 
-    HashMap<DeprecatedString, ShellFunction> m_functions;
+    HashMap<ByteString, ShellFunction> m_functions;
     Vector<NonnullOwnPtr<LocalFrame>> m_local_frames;
     Promise::List m_active_promises;
     Vector<NonnullRefPtr<AST::Redirection>> m_global_redirections;
 
-    HashMap<DeprecatedString, DeprecatedString> m_aliases;
+    HashMap<ByteString, ByteString> m_aliases;
     bool m_is_interactive { true };
     bool m_is_subshell { false };
     bool m_should_reinstall_signal_handlers { true };
     bool m_in_posix_mode { false };
 
     ShellError m_error { ShellError::None };
-    DeprecatedString m_error_description;
+    ByteString m_error_description;
     Optional<SourcePosition> m_source_position;
 
     bool m_should_format_live { false };
@@ -522,7 +522,7 @@ private:
     StackInfo m_completion_stack_info;
 
     RefPtr<AST::Node> m_prompt_command_node;
-    mutable Optional<DeprecatedString> m_next_scheduled_prompt_text;
+    mutable Optional<ByteString> m_next_scheduled_prompt_text;
 };
 
 [[maybe_unused]] static constexpr bool is_word_character(char c)
@@ -606,7 +606,7 @@ struct Traits<Shell::Shell::RunnablePath> : public DefaultTraits<Shell::Shell::R
         return self.path == other;
     }
 
-    static bool equals(Shell::Shell::RunnablePath const& self, DeprecatedString const& other)
+    static bool equals(Shell::Shell::RunnablePath const& self, ByteString const& other)
     {
         return self.path == other;
     }

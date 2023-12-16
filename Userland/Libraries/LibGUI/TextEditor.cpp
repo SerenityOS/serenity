@@ -248,7 +248,7 @@ TextPosition TextEditor::text_position_at(Gfx::IntPoint widget_position) const
     return text_position_at_content_position(content_position);
 }
 
-void TextEditor::highlight_all_occurances_of(DeprecatedString const selected_text)
+void TextEditor::highlight_all_occurances_of(ByteString const selected_text)
 {
     auto search_result = document().find_all(selected_text, false, true);
     if (search_result.size() > 1) {
@@ -677,7 +677,7 @@ void TextEditor::paint_event(PaintEvent& event)
             size_t const line_number = is_relative_line_number() && !is_current_line ? max(i, m_cursor.line()) - min(i, m_cursor.line()) : i + 1;
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0),
-                DeprecatedString::number(line_number),
+                ByteString::number(line_number),
                 is_current_line ? font().bold_variant() : font(),
                 Gfx::TextAlignment::CenterRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
@@ -1081,7 +1081,7 @@ void TextEditor::keydown_event(KeyEvent& event)
             return;
 
         size_t indent_length = current_line().leading_spaces();
-        DeprecatedString indent = current_line().to_utf8().substring(0, indent_length);
+        ByteString indent = current_line().to_utf8().substring(0, indent_length);
         auto insert_pos = event.shift() ? InsertLineCommand::InsertPosition::Above : InsertLineCommand::InsertPosition::Below;
         execute<InsertLineCommand>(m_cursor, move(indent), insert_pos);
         return;
@@ -1394,7 +1394,7 @@ void TextEditor::add_code_point(u32 code_point)
         else
             m_autocomplete_timer->start();
     }
-    insert_at_cursor_or_replace_selection(sb.to_deprecated_string());
+    insert_at_cursor_or_replace_selection(sb.to_byte_string());
 }
 
 void TextEditor::reset_cursor_blink()
@@ -1712,7 +1712,7 @@ ErrorOr<void> TextEditor::write_to_file(Core::File& file)
     return {};
 }
 
-DeprecatedString TextEditor::text() const
+ByteString TextEditor::text() const
 {
     return document().text();
 }
@@ -1727,7 +1727,7 @@ void TextEditor::clear()
     update();
 }
 
-DeprecatedString TextEditor::selected_text() const
+ByteString TextEditor::selected_text() const
 {
     if (!has_selection())
         return {};
@@ -1863,7 +1863,7 @@ void TextEditor::paste()
     if (data.is_empty())
         return;
 
-    dbgln_if(TEXTEDITOR_DEBUG, "Paste: \"{}\"", DeprecatedString::copy(data));
+    dbgln_if(TEXTEDITOR_DEBUG, "Paste: \"{}\"", ByteString::copy(data));
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
     insert_at_cursor_or_replace_selection(data);
@@ -2292,7 +2292,7 @@ void TextEditor::document_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
 
     m_undo_action->set_enabled(can_undo() && !text_is_secret());
@@ -2333,7 +2333,7 @@ void TextEditor::cursor_did_change()
     hide_autocomplete_if_needed();
 }
 
-void TextEditor::clipboard_content_did_change(DeprecatedString const& mime_type)
+void TextEditor::clipboard_content_did_change(ByteString const& mime_type)
 {
     m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/"sv));
 }

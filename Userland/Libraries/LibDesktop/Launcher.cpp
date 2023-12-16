@@ -13,14 +13,14 @@
 
 namespace Desktop {
 
-auto Launcher::Details::from_details_str(DeprecatedString const& details_str) -> NonnullRefPtr<Details>
+auto Launcher::Details::from_details_str(ByteString const& details_str) -> NonnullRefPtr<Details>
 {
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
     auto const& obj = json.as_object();
-    details->executable = obj.get_deprecated_string("executable"sv).value_or({});
-    details->name = obj.get_deprecated_string("name"sv).value_or({});
-    if (auto type_value = obj.get_deprecated_string("type"sv); type_value.has_value()) {
+    details->executable = obj.get_byte_string("executable"sv).value_or({});
+    details->name = obj.get_byte_string("name"sv).value_or({});
+    if (auto type_value = obj.get_byte_string("type"sv); type_value.has_value()) {
         auto const& type_str = type_value.value();
         if (type_str == "app")
             details->launcher_type = LauncherType::Application;
@@ -62,7 +62,7 @@ ErrorOr<void> Launcher::add_allowed_url(URL const& url)
     return {};
 }
 
-ErrorOr<void> Launcher::add_allowed_handler_with_any_url(DeprecatedString const& handler)
+ErrorOr<void> Launcher::add_allowed_handler_with_any_url(ByteString const& handler)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_any_url(handler);
     if (response_or_error.is_error())
@@ -70,7 +70,7 @@ ErrorOr<void> Launcher::add_allowed_handler_with_any_url(DeprecatedString const&
     return {};
 }
 
-ErrorOr<void> Launcher::add_allowed_handler_with_only_specific_urls(DeprecatedString const& handler, Vector<URL> const& urls)
+ErrorOr<void> Launcher::add_allowed_handler_with_only_specific_urls(ByteString const& handler, Vector<URL> const& urls)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_only_specific_urls(handler, urls);
     if (response_or_error.is_error())
@@ -86,7 +86,7 @@ ErrorOr<void> Launcher::seal_allowlist()
     return {};
 }
 
-bool Launcher::open(const URL& url, DeprecatedString const& handler_name)
+bool Launcher::open(const URL& url, ByteString const& handler_name)
 {
     return connection().open_url(url, handler_name);
 }
@@ -97,14 +97,14 @@ bool Launcher::open(const URL& url, Details const& details)
     return open(url, details.executable);
 }
 
-Vector<DeprecatedString> Launcher::get_handlers_for_url(const URL& url)
+Vector<ByteString> Launcher::get_handlers_for_url(const URL& url)
 {
-    return connection().get_handlers_for_url(url.to_deprecated_string());
+    return connection().get_handlers_for_url(url.to_byte_string());
 }
 
 auto Launcher::get_handlers_with_details_for_url(const URL& url) -> Vector<NonnullRefPtr<Details>>
 {
-    auto details = connection().get_handlers_with_details_for_url(url.to_deprecated_string());
+    auto details = connection().get_handlers_with_details_for_url(url.to_byte_string());
     Vector<NonnullRefPtr<Details>> handlers_with_details;
     for (auto& value : details) {
         handlers_with_details.append(Details::from_details_str(value));

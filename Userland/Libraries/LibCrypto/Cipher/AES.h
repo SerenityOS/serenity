@@ -14,7 +14,7 @@
 #include <LibCrypto/Cipher/Mode/GCM.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace Crypto::Cipher {
@@ -48,7 +48,7 @@ public:
     }
 
 #ifndef KERNEL
-    DeprecatedString to_deprecated_string() const;
+    ByteString to_byte_string() const;
 #endif
 
 private:
@@ -64,7 +64,7 @@ struct AESCipherKey : public CipherKey {
     static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; }
 
 #ifndef KERNEL
-    DeprecatedString to_deprecated_string() const;
+    ByteString to_byte_string() const;
 #endif
 
     u32 const* round_keys() const
@@ -120,7 +120,7 @@ public:
     virtual void decrypt_block(BlockType const& in, BlockType& out) override;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const override
+    virtual ByteString class_name() const override
     {
         return "AES";
     }

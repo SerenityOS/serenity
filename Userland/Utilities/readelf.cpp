@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -206,7 +206,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath map_fixed"));
 
-    DeprecatedString path {};
+    ByteString path {};
     static bool display_all = false;
     static bool display_elf_header = false;
     static bool display_program_headers = false;
@@ -432,17 +432,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 found_dynamic_section = true;
 
                 if (section.entry_count()) {
-                    outln("Dynamic section '{}' at offset {:#08x} contains {} entries.", section.name().to_deprecated_string(), section.offset(), section.entry_count());
+                    outln("Dynamic section '{}' at offset {:#08x} contains {} entries.", section.name().to_byte_string(), section.offset(), section.entry_count());
                 } else {
-                    outln("Dynamic section '{}' at offset {:#08x} contains zero entries.", section.name().to_deprecated_string(), section.offset());
+                    outln("Dynamic section '{}' at offset {:#08x} contains zero entries.", section.name().to_byte_string(), section.offset());
                 }
 
                 return IterationDecision::Break;
             });
 
-            Vector<DeprecatedString> libraries;
+            Vector<ByteString> libraries;
             object->for_each_needed_library([&libraries](StringView entry) {
-                libraries.append(DeprecatedString::formatted("{}", entry));
+                libraries.append(ByteString::formatted("{}", entry));
             });
 
             auto library_index = 0;

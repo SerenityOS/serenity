@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
@@ -27,10 +27,10 @@ static int max_depth = INT_MAX;
 static int g_directories_seen = 0;
 static int g_files_seen = 0;
 
-static void print_directory_tree(DeprecatedString const& root_path, int depth, DeprecatedString const& indent_string)
+static void print_directory_tree(ByteString const& root_path, int depth, ByteString const& indent_string)
 {
     if (depth > 0) {
-        DeprecatedString root_indent_string;
+        ByteString root_indent_string;
         if (depth > 1) {
             root_indent_string = indent_string.substring(0, (depth - 1) * 4);
         } else {
@@ -39,7 +39,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
         out("{}|-- ", root_indent_string);
     }
 
-    DeprecatedString root_dir_name = LexicalPath::basename(root_path);
+    ByteString root_dir_name = LexicalPath::basename(root_path);
     out("\033[34;1m{}\033[0m\n", root_dir_name);
 
     if (depth >= max_depth) {
@@ -52,9 +52,9 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
         return;
     }
 
-    Vector<DeprecatedString> names;
+    Vector<ByteString> names;
     while (di.has_next()) {
-        DeprecatedString name = di.next_path();
+        ByteString name = di.next_path();
         if (di.has_error()) {
             warnln("{}: {}", root_path, di.error());
             continue;
@@ -65,7 +65,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
     quick_sort(names);
 
     for (size_t i = 0; i < names.size(); i++) {
-        DeprecatedString name = names[i];
+        ByteString name = names[i];
 
         StringBuilder builder;
         builder.append(root_path);
@@ -73,7 +73,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
             builder.append('/');
         }
         builder.append(name);
-        auto full_path = builder.to_deprecated_string();
+        auto full_path = builder.to_byte_string();
 
         struct stat st;
         int rc = lstat(full_path.characters(), &st);
@@ -86,11 +86,11 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
             g_directories_seen++;
 
             bool at_last_entry = i == names.size() - 1;
-            DeprecatedString new_indent_string;
+            ByteString new_indent_string;
             if (at_last_entry) {
-                new_indent_string = DeprecatedString::formatted("{}    ", indent_string);
+                new_indent_string = ByteString::formatted("{}    ", indent_string);
             } else {
-                new_indent_string = DeprecatedString::formatted("{}|   ", indent_string);
+                new_indent_string = ByteString::formatted("{}|   ", indent_string);
             }
 
             print_directory_tree(full_path.characters(), depth + 1, new_indent_string);
@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
-    Vector<DeprecatedString> directories;
+    Vector<ByteString> directories;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_show_hidden_files, "Show hidden files", "all", 'a');

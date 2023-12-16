@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
@@ -31,7 +31,7 @@ inline void run_with_randomness_source(Randomized::RandomnessSource source, Test
 
 class TestCase : public RefCounted<TestCase> {
 public:
-    TestCase(DeprecatedString const& name, TestFunction&& fn, bool is_benchmark)
+    TestCase(ByteString const& name, TestFunction&& fn, bool is_benchmark)
         : m_name(name)
         , m_function(move(fn))
         , m_is_benchmark(is_benchmark)
@@ -39,10 +39,10 @@ public:
     }
 
     bool is_benchmark() const { return m_is_benchmark; }
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
     TestFunction const& func() const { return m_function; }
 
-    static NonnullRefPtr<TestCase> randomized(DeprecatedString const& name, TestFunction&& test_function)
+    static NonnullRefPtr<TestCase> randomized(ByteString const& name, TestFunction&& test_function)
     {
         using namespace Randomized;
 
@@ -101,7 +101,7 @@ public:
     }
 
 private:
-    DeprecatedString m_name;
+    ByteString m_name;
     TestFunction m_function;
     bool m_is_benchmark;
 };

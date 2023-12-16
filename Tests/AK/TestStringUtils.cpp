@@ -22,11 +22,11 @@ TEST_CASE(hash_compatible)
     static_assert(AK::Concepts::HashCompatible<FlyString, String>);
     static_assert(AK::Concepts::HashCompatible<FlyString, StringView>);
 
-    static_assert(AK::Concepts::HashCompatible<DeprecatedString, StringView>);
-    static_assert(AK::Concepts::HashCompatible<DeprecatedString, DeprecatedFlyString>);
-    static_assert(AK::Concepts::HashCompatible<StringView, DeprecatedString>);
+    static_assert(AK::Concepts::HashCompatible<ByteString, StringView>);
+    static_assert(AK::Concepts::HashCompatible<ByteString, DeprecatedFlyString>);
+    static_assert(AK::Concepts::HashCompatible<StringView, ByteString>);
     static_assert(AK::Concepts::HashCompatible<StringView, DeprecatedFlyString>);
-    static_assert(AK::Concepts::HashCompatible<DeprecatedFlyString, DeprecatedString>);
+    static_assert(AK::Concepts::HashCompatible<DeprecatedFlyString, ByteString>);
     static_assert(AK::Concepts::HashCompatible<DeprecatedFlyString, StringView>);
 
     static_assert(AK::Concepts::HashCompatible<StringView, ByteBuffer>);
@@ -328,7 +328,7 @@ TEST_CASE(convert_to_floating_point)
 
 TEST_CASE(ends_with)
 {
-    DeprecatedString test_string = "ABCDEF";
+    ByteString test_string = "ABCDEF";
     EXPECT(AK::StringUtils::ends_with(test_string, "DEF"sv, CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::ends_with(test_string, "ABCDEF"sv, CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::ends_with(test_string, "ABCDE"sv, CaseSensitivity::CaseSensitive));
@@ -339,7 +339,7 @@ TEST_CASE(ends_with)
 
 TEST_CASE(starts_with)
 {
-    DeprecatedString test_string = "ABCDEF";
+    ByteString test_string = "ABCDEF";
     EXPECT(AK::StringUtils::starts_with(test_string, "ABC"sv, CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::starts_with(test_string, "ABCDEF"sv, CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::starts_with(test_string, "BCDEF"sv, CaseSensitivity::CaseSensitive));
@@ -350,7 +350,7 @@ TEST_CASE(starts_with)
 
 TEST_CASE(contains)
 {
-    DeprecatedString test_string = "ABCDEFABCXYZ";
+    ByteString test_string = "ABCDEFABCXYZ";
     EXPECT(AK::StringUtils::contains(test_string, "ABC"sv, CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::contains(test_string, "ABC"sv, CaseSensitivity::CaseInsensitive));
     EXPECT(AK::StringUtils::contains(test_string, "AbC"sv, CaseSensitivity::CaseInsensitive));
@@ -368,7 +368,7 @@ TEST_CASE(contains)
     EXPECT(!AK::StringUtils::contains(test_string, "L"sv, CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::contains(test_string, "L"sv, CaseSensitivity::CaseInsensitive));
 
-    DeprecatedString command_palette_bug_string = "Go Go Back";
+    ByteString command_palette_bug_string = "Go Go Back";
     EXPECT(AK::StringUtils::contains(command_palette_bug_string, "Go Back"sv, AK::CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::contains(command_palette_bug_string, "gO bAcK"sv, AK::CaseSensitivity::CaseInsensitive));
 }
@@ -397,7 +397,7 @@ TEST_CASE(trim)
 
 TEST_CASE(find)
 {
-    DeprecatedString test_string = "1234567";
+    ByteString test_string = "1234567";
     EXPECT_EQ(AK::StringUtils::find(test_string, "1"sv).value_or(1), 0u);
     EXPECT_EQ(AK::StringUtils::find(test_string, "2"sv).value_or(2), 1u);
     EXPECT_EQ(AK::StringUtils::find(test_string, "3"sv).value_or(3), 2u);

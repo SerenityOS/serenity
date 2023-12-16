@@ -42,7 +42,7 @@ ErrorOr<void> SpiceAgent::start()
     TRY(this->send_message(capabilities_message));
 
     GUI::Clipboard::the().on_change = [this](auto const& mime_type) {
-        auto result = this->on_clipboard_update(String::from_deprecated_string(mime_type).release_value_but_fixme_should_propagate_errors());
+        auto result = this->on_clipboard_update(String::from_byte_string(mime_type).release_value_but_fixme_should_propagate_errors());
         if (result.is_error()) {
             dbgln("Failed to inform the spice server of a clipboard update: {}", result.release_error());
         }
@@ -85,7 +85,7 @@ ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
 
     // We have an exception for `image/x-serenityos`, where we treat it as a PNG when talking to the spice server.
     auto is_serenity_image = data_and_type.mime_type == "image/x-serenityos" && data_type == ClipboardDataType::PNG;
-    if (!is_serenity_image && requested_mime_type.to_deprecated_string() != data_and_type.mime_type) {
+    if (!is_serenity_image && requested_mime_type.to_byte_string() != data_and_type.mime_type) {
         // If the requested mime type doesn't match what's on the clipboard, we won't send anything back.
         return Error::from_string_literal("Requested mime type doesn't match the clipboard's contents!");
     }
@@ -255,8 +255,8 @@ ErrorOr<void> SpiceAgent::did_receive_clipboard_message(ClipboardMessage& messag
     case ClipboardDataType::TIFF: {
         auto mime_type = TRY(clipboard_data_type_to_mime_type(message.data_type()));
 
-        // FIXME: It should be trivial to make `try_create_for_raw_bytes` take a `StringView` instead of a direct `DeprecatedString`.
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_deprecated_string());
+        // FIXME: It should be trivial to make `try_create_for_raw_bytes` take a `StringView` instead of a direct `ByteString`.
+        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_byte_string());
         if (!decoder || (decoder->frame_count() == 0)) {
             return Error::from_string_literal("Failed to find a suitable decoder for a pasted image!");
         }

@@ -88,7 +88,7 @@ ErrorOr<void> CardSettingsWidget::initialize()
         TRY(m_card_front_sets.try_append(entry.name));
         return IterationDecision::Continue;
     }));
-    auto piece_set_model = GUI::ItemListModel<DeprecatedString>::create(m_card_front_sets);
+    auto piece_set_model = GUI::ItemListModel<ByteString>::create(m_card_front_sets);
     m_card_front_images_combo_box->set_model(piece_set_model);
     auto card_front_set = Config::read_string("Games"sv, "Cards"sv, "CardFrontImages"sv, default_card_front_image_set);
     if (card_front_set.is_empty())
@@ -103,7 +103,7 @@ ErrorOr<void> CardSettingsWidget::initialize()
     m_card_back_image_view = find_descendant_of_type_named<GUI::IconView>("cards_back_image");
     m_card_back_image_view->set_model(GUI::FileSystemModel::create("/res/graphics/cards/backs"));
     m_card_back_image_view->set_model_column(GUI::FileSystemModel::Column::Name);
-    if (!set_card_back_image_path(TRY(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv)))))
+    if (!set_card_back_image_path(TRY(String::from_byte_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv)))))
         set_card_back_image_path(default_card_back_image_path);
     m_card_back_image_view->on_selection_change = [&]() {
         auto& card_back_selection = m_card_back_image_view->selection();
@@ -140,7 +140,7 @@ void CardSettingsWidget::reset_default_values()
 
 bool CardSettingsWidget::set_card_back_image_path(StringView path)
 {
-    auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path.to_deprecated_string(), m_card_back_image_view->model_column());
+    auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path.to_byte_string(), m_card_back_image_view->model_column());
     if (index.is_valid()) {
         m_card_back_image_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
         Cards::CardPainter::the().set_back_image_path(path);
@@ -156,7 +156,7 @@ String CardSettingsWidget::card_back_image_path() const
     GUI::ModelIndex card_back_image_index = m_last_selected_card_back;
     if (!card_back_selection.is_empty())
         card_back_image_index = card_back_selection.first();
-    return String::from_deprecated_string(static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index)).release_value_but_fixme_should_propagate_errors();
+    return String::from_byte_string(static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index)).release_value_but_fixme_should_propagate_errors();
 }
 
 String CardSettingsWidget::card_front_images_set_name() const
@@ -164,7 +164,7 @@ String CardSettingsWidget::card_front_images_set_name() const
     auto selected_set_name = m_card_front_images_combo_box->text();
     if (selected_set_name == "None")
         return {};
-    return MUST(String::from_deprecated_string(selected_set_name));
+    return MUST(String::from_byte_string(selected_set_name));
 }
 
 }

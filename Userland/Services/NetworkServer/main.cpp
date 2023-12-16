@@ -42,15 +42,15 @@ ErrorOr<int> serenity_main(Main::Arguments)
     struct InterfaceConfig {
         bool enabled = false;
         bool dhcp_enabled = false;
-        DeprecatedString ipv4_address = "0.0.0.0"sv;
-        DeprecatedString ipv4_netmask = "0.0.0.0"sv;
-        DeprecatedString ipv4_gateway = "0.0.0.0"sv;
+        ByteString ipv4_address = "0.0.0.0"sv;
+        ByteString ipv4_netmask = "0.0.0.0"sv;
+        ByteString ipv4_gateway = "0.0.0.0"sv;
     };
 
-    Vector<DeprecatedString> interfaces_with_dhcp_enabled;
+    Vector<ByteString> interfaces_with_dhcp_enabled;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto ifname = if_object.get_deprecated_string("name"sv).value_or({});
+        auto ifname = if_object.get_byte_string("name"sv).value_or({});
 
         if (ifname == "loop"sv)
             return;

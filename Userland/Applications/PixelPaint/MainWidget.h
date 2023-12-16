@@ -62,7 +62,7 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     void update_window_modified();
-    void update_status_bar(DeprecatedString appended_text = DeprecatedString::empty());
+    void update_status_bar(ByteString appended_text = ByteString::empty());
 
     ProjectLoader m_loader;
 

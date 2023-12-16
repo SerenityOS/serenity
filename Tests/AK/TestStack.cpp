@@ -26,7 +26,7 @@ TEST_CASE(basic)
 
 TEST_CASE(complex_type)
 {
-    AK::Stack<DeprecatedString, 4> stack;
+    AK::Stack<ByteString, 4> stack;
 
     EXPECT_EQ(stack.is_empty(), true);
     EXPECT(stack.push("Well"));

@@ -28,8 +28,8 @@ public:
 
     // Convenience helpers for "text/plain"
     bool has_text() const { return has_format("text/plain"sv); }
-    DeprecatedString text() const;
-    void set_text(DeprecatedString const&);
+    ByteString text() const;
+    void set_text(ByteString const&);
 
     // Convenience helpers for "text/uri-list"
     bool has_urls() const { return has_format("text/uri-list"sv); }

@@ -59,7 +59,7 @@ void SVGScriptElement::process_the_script_element()
     auto& settings_object = document().relevant_settings_object();
     auto base_url = document().base_url();
 
-    m_script = HTML::ClassicScript::create(m_document->url().to_deprecated_string(), inline_script, settings_object, base_url, m_source_line_number);
+    m_script = HTML::ClassicScript::create(m_document->url().to_byte_string(), inline_script, settings_object, base_url, m_source_line_number);
     (void)m_script->run();
 }
 

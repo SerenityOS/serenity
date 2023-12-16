@@ -24,7 +24,7 @@ ErrorOr<NonnullRefPtr<Resource>> ResourceImplementationFile::load_from_resource_
     VERIFY(uri.starts_with(resource_scheme));
 
     auto path = TRY(String::from_utf8(uri.substring_view(resource_scheme.length())));
-    auto full_path = TRY(String::from_deprecated_string(LexicalPath::join(m_base_directory, path).string()));
+    auto full_path = TRY(String::from_byte_string(LexicalPath::join(m_base_directory, path).string()));
     if (is_directory(full_path))
         return make_directory_resource(move(path));
 
@@ -34,16 +34,16 @@ ErrorOr<NonnullRefPtr<Resource>> ResourceImplementationFile::load_from_resource_
 Vector<String> ResourceImplementationFile::child_names_for_resource_scheme(Resource const& resource)
 {
     Vector<String> children;
-    Core::DirIterator it(resource.filesystem_path().to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator it(resource.filesystem_path().to_byte_string(), Core::DirIterator::SkipParentAndBaseDir);
     while (it.has_next())
-        children.append(MUST(String::from_deprecated_string(it.next_path())));
+        children.append(MUST(String::from_byte_string(it.next_path())));
 
     return children;
 }
 
 String ResourceImplementationFile::filesystem_path_for_resource_scheme(String const& relative_path)
 {
-    return MUST(String::from_deprecated_string(LexicalPath::join(m_base_directory, relative_path).string()));
+    return MUST(String::from_byte_string(LexicalPath::join(m_base_directory, relative_path).string()));
 }
 
 }

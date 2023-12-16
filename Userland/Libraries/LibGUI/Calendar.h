@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/AbstractScrollableWidget.h>
@@ -104,7 +104,7 @@ protected:
     Calendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
 
 private:
-    static size_t day_of_week_index(DeprecatedString const&);
+    static size_t day_of_week_index(ByteString const&);
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
@@ -127,14 +127,14 @@ private:
     bool is_day_in_weekend(DayOfWeek);
 
     struct Day {
-        DeprecatedString name;
+        ByteString name;
         int width { 0 };
         int height { 16 };
     };
     Vector<Day> m_days;
 
     struct MonthTile {
-        DeprecatedString name;
+        ByteString name;
         Gfx::IntRect rect;
         int width { 0 };
         int height { 0 };

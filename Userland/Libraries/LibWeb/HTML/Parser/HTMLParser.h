@@ -51,7 +51,7 @@ public:
 
     static JS::NonnullGCPtr<HTMLParser> create_for_scripting(DOM::Document&);
     static JS::NonnullGCPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
-    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, DeprecatedString const& encoding);
+    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, ByteString const& encoding);
 
     void run();
     void run(const AK::URL&);
@@ -82,7 +82,7 @@ public:
     size_t script_nesting_level() const { return m_script_nesting_level; }
 
 private:
-    HTMLParser(DOM::Document&, StringView input, DeprecatedString const& encoding);
+    HTMLParser(DOM::Document&, StringView input, ByteString const& encoding);
     HTMLParser(DOM::Document&);
 
     virtual void visit_edges(Cell::Visitor&) override;
@@ -202,6 +202,6 @@ private:
 
 RefPtr<CSS::StyleValue> parse_dimension_value(StringView);
 RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView);
-Optional<Color> parse_legacy_color_value(DeprecatedString input);
+Optional<Color> parse_legacy_color_value(ByteString input);
 
 }

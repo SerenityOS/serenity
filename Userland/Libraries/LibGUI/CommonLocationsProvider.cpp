@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
@@ -24,7 +24,7 @@ static void initialize_if_needed()
     if (s_initialized)
         return;
 
-    auto user_config = DeprecatedString::formatted("{}/CommonLocations.json", Core::StandardPaths::config_directory());
+    auto user_config = ByteString::formatted("{}/CommonLocations.json", Core::StandardPaths::config_directory());
     if (FileSystem::exists(user_config)) {
         auto maybe_error = CommonLocationsProvider::load_from_json(user_config);
         if (!maybe_error.is_error())
@@ -56,8 +56,8 @@ ErrorOr<void> CommonLocationsProvider::load_from_json(StringView json_path)
         if (!entry_value.is_object())
             continue;
         auto entry = entry_value.as_object();
-        auto name = entry.get_deprecated_string("name"sv).value_or({});
-        auto path = entry.get_deprecated_string("path"sv).value_or({});
+        auto name = entry.get_byte_string("name"sv).value_or({});
+        auto path = entry.get_byte_string("path"sv).value_or({});
         TRY(s_common_locations.try_append({ name, path }));
     }
 

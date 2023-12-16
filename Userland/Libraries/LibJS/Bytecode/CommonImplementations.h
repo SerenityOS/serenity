@@ -30,7 +30,7 @@ struct CalleeAndThis {
     Value this_value;
 };
 ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter&, DeprecatedFlyString const& name, EnvironmentVariableCache&);
-Value new_regexp(VM&, ParsedRegex const&, DeprecatedString const& pattern, DeprecatedString const& flags);
+Value new_regexp(VM&, ParsedRegex const&, ByteString const& pattern, ByteString const& flags);
 MarkedVector<Value> argument_list_evaluation(VM&, Value arguments);
 ThrowCompletionOr<void> create_variable(VM&, DeprecatedFlyString const& name, Op::EnvironmentMode, bool is_global, bool is_immutable, bool is_strict);
 ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM&, Value super_class, ClassExpression const&, Optional<IdentifierTableIndex> const& lhs_name);

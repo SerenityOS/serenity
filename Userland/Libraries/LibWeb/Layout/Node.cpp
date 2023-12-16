@@ -880,7 +880,7 @@ bool Node::is_root_element() const
     return is<HTML::HTMLHtmlElement>(*dom_node());
 }
 
-DeprecatedString Node::debug_description() const
+ByteString Node::debug_description() const
 {
     StringBuilder builder;
     builder.append(class_name());
@@ -896,7 +896,7 @@ DeprecatedString Node::debug_description() const
     } else {
         builder.append("(anonymous)"sv);
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 CSS::Display Node::display() const

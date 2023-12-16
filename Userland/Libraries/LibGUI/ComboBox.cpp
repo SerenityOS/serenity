@@ -150,7 +150,7 @@ void ComboBox::set_editor_placeholder(StringView placeholder)
     m_editor->set_placeholder(placeholder);
 }
 
-DeprecatedString const& ComboBox::editor_placeholder() const
+ByteString const& ComboBox::editor_placeholder() const
 {
     return m_editor->placeholder();
 }
@@ -179,7 +179,7 @@ void ComboBox::selection_updated(ModelIndex const& index)
 {
     if (index.is_valid()) {
         m_selected_index = index;
-        auto new_value = index.data().to_deprecated_string();
+        auto new_value = index.data().to_byte_string();
         m_editor->set_text(new_value);
     } else {
         m_selected_index.clear();
@@ -285,12 +285,12 @@ void ComboBox::close()
     m_list_window->hide();
 }
 
-DeprecatedString ComboBox::text() const
+ByteString ComboBox::text() const
 {
     return m_editor->text();
 }
 
-void ComboBox::set_text(DeprecatedString const& text, AllowCallback allow_callback)
+void ComboBox::set_text(ByteString const& text, AllowCallback allow_callback)
 {
     m_editor->set_text(text, allow_callback);
 }

@@ -289,7 +289,7 @@ static void dump(XML::Document& document)
                                     color(ColorRole::Tag);
                                     out("{} ", declaration.name);
                                     declaration.definition.visit(
-                                        [](DeprecatedString const& value) {
+                                        [](ByteString const& value) {
                                             color(ColorRole::AttributeValue);
                                             out("\"{}\"", value);
                                         },
@@ -320,7 +320,7 @@ static void dump(XML::Document& document)
                                     color(ColorRole::Tag);
                                     out("{} ", declaration.name);
                                     declaration.definition.visit(
-                                        [](DeprecatedString const& value) {
+                                        [](ByteString const& value) {
                                             color(ColorRole::AttributeValue);
                                             out("\"{}\"", value);
                                         },
@@ -362,8 +362,8 @@ static auto parse(StringView contents)
         contents,
         {
             .preserve_comments = true,
-            .resolve_external_resource = [&](XML::SystemID const& system_id, Optional<XML::PublicID> const&) -> ErrorOr<DeprecatedString> {
-                auto base = URL::create_with_file_scheme(s_path.to_deprecated_string());
+            .resolve_external_resource = [&](XML::SystemID const& system_id, Optional<XML::PublicID> const&) -> ErrorOr<ByteString> {
+                auto base = URL::create_with_file_scheme(s_path.to_byte_string());
                 auto url = URLParser::basic_parse(system_id.system_literal, base);
                 if (!url.is_valid())
                     return Error::from_string_literal("Invalid URL");
@@ -372,7 +372,7 @@ static auto parse(StringView contents)
                     return Error::from_string_literal("NYI: Nonlocal entity");
 
                 auto file = TRY(Core::File::open(url.serialize_path(), Core::File::OpenMode::Read));
-                return DeprecatedString::copy(TRY(file->read_until_eof()));
+                return ByteString::copy(TRY(file->read_until_eof()));
             },
         },
     };
@@ -383,7 +383,7 @@ enum class TestResult {
     Failed,
     RunnerFailed,
 };
-static HashMap<DeprecatedString, TestResult> s_test_results {};
+static HashMap<ByteString, TestResult> s_test_results {};
 static void do_run_tests(XML::Document& document)
 {
     auto& root = document.root().content.get<XML::Node::Element>();
@@ -402,7 +402,7 @@ static void do_run_tests(XML::Document& document)
 
     dump_cases(root);
 
-    auto base_path = LexicalPath::dirname(s_path.to_deprecated_string());
+    auto base_path = LexicalPath::dirname(s_path.to_byte_string());
 
     while (!suites.is_empty()) {
         auto& node = *suites.dequeue();
@@ -430,7 +430,7 @@ static void do_run_tests(XML::Document& document)
                 path_builder.append(entry);
                 path_builder.append('/');
             }
-            auto test_base_path = path_builder.to_deprecated_string();
+            auto test_base_path = path_builder.to_byte_string();
 
             path_builder.append(suite.attributes.find("URI")->value);
             auto url = URL::create_with_file_scheme(path_builder.string_view());

@@ -621,14 +621,14 @@ void String::did_create_fly_string(Badge<FlyString>) const
     m_data->set_fly_string(true);
 }
 
-DeprecatedString String::to_deprecated_string() const
+ByteString String::to_byte_string() const
 {
-    return DeprecatedString(bytes_as_string_view());
+    return ByteString(bytes_as_string_view());
 }
 
-ErrorOr<String> String::from_deprecated_string(DeprecatedString const& deprecated_string)
+ErrorOr<String> String::from_byte_string(ByteString const& byte_string)
 {
-    return String::from_utf8(deprecated_string.view());
+    return String::from_utf8(byte_string.view());
 }
 
 bool String::equals_ignoring_ascii_case(StringView other) const

@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto content = TRY(file->read_until_eof());
-    DeprecatedString name = LexicalPath::basename(path);
+    ByteString name = LexicalPath::basename(path);
     Cpp::Preprocessor cpp(name, StringView { content });
     auto tokens = cpp.process_and_lex();
 
@@ -31,13 +31,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (definition.value.parameters.is_empty())
                 outln("{}: {}", definition.key, definition.value.value);
             else
-                outln("{}({}): {}", definition.key, DeprecatedString::join(',', definition.value.parameters), definition.value.value);
+                outln("{}({}): {}", definition.key, ByteString::join(',', definition.value.parameters), definition.value.value);
         }
         outln("");
     }
 
     for (auto& token : tokens) {
-        outln("{}", token.to_deprecated_string());
+        outln("{}", token.to_byte_string());
     }
 
     return 0;

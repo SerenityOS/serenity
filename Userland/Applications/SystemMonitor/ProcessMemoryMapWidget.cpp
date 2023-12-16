@@ -25,7 +25,7 @@ public:
     virtual void paint(GUI::Painter& painter, Gfx::IntRect const& a_rect, Gfx::Palette const&, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto pagemap = index.data(GUI::ModelRole::Custom).to_deprecated_string();
+        auto pagemap = index.data(GUI::ModelRole::Custom).to_byte_string();
 
         float scale_factor = (float)pagemap.length() / (float)rect.width();
 
@@ -58,7 +58,7 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     TRY(pid_vm_fields.try_empend(
         "Address"_string, Gfx::TextAlignment::CenterLeft,
-        [](auto& object) { return DeprecatedString::formatted("{:p}", object.get_u64("address"sv).value_or(0)); },
+        [](auto& object) { return ByteString::formatted("{:p}", object.get_u64("address"sv).value_or(0)); },
         [](auto& object) { return object.get_u64("address"sv).value_or(0); }));
     TRY(pid_vm_fields.try_empend("size", "Size"_string, Gfx::TextAlignment::CenterRight));
     TRY(pid_vm_fields.try_empend("amount_resident", "Resident"_string, Gfx::TextAlignment::CenterRight));
@@ -77,10 +77,10 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
             builder.append('C');
         if (object.get_bool("stack"sv).value_or(false))
             builder.append('T');
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }));
     TRY(pid_vm_fields.try_empend("VMObject type"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        auto type = object.get_deprecated_string("vmobject"sv).value_or({});
+        auto type = object.get_byte_string("vmobject"sv).value_or({});
         if (type.ends_with("VMObject"sv))
             type = type.substring(0, type.length() - 8);
         return type;
@@ -99,7 +99,7 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
             return GUI::Variant(0);
         },
         [](JsonObject const& object) {
-            auto pagemap = object.get_deprecated_string("pagemap"sv).value_or({});
+            auto pagemap = object.get_byte_string("pagemap"sv).value_or({});
             return pagemap;
         }));
     TRY(pid_vm_fields.try_empend("cow_pages", "# CoW"_string, Gfx::TextAlignment::CenterRight));
@@ -121,7 +121,7 @@ void ProcessMemoryMapWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    m_json_model->set_json_path(DeprecatedString::formatted("/proc/{}/vm", pid));
+    m_json_model->set_json_path(ByteString::formatted("/proc/{}/vm", pid));
 }
 
 void ProcessMemoryMapWidget::refresh()

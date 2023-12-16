@@ -18,7 +18,7 @@ class StringBuilder {
 public:
     static constexpr size_t inline_capacity = 256;
 
-    using OutputType = DeprecatedString;
+    using OutputType = ByteString;
 
     static ErrorOr<StringBuilder> create(size_t initial_capacity = inline_capacity);
 
@@ -70,7 +70,7 @@ public:
     }
 
 #ifndef KERNEL
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
 #endif
 
     ErrorOr<String> to_string() const;

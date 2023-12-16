@@ -55,7 +55,7 @@ WindowManager::WindowManager(Gfx::PaletteImpl& palette)
 
     reload_config();
 
-    m_keymap_switcher->on_keymap_change = [&](DeprecatedString const& keymap) {
+    m_keymap_switcher->on_keymap_change = [&](ByteString const& keymap) {
         for_each_window_manager([&keymap](WMConnectionFromClient& conn) {
             if (!(conn.event_mask() & WMEventMask::KeymapChanged))
                 return IterationDecision::Continue;
@@ -89,7 +89,7 @@ void WindowManager::reload_config()
     m_cursor_highlight_color = Color::from_string(g_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
     apply_cursor_theme(g_config->read_entry("Mouse", "CursorTheme", "Default"));
 
-    auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, DeprecatedString const& name) {
+    auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, ByteString const& name) {
         if (bitmap) {
             if (!bitmap->load(name))
                 bitmap = nullptr;
@@ -116,7 +116,7 @@ Gfx::Font const& WindowManager::window_title_font() const
     return Gfx::FontDatabase::window_title_font();
 }
 
-bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, DeprecatedString& error_msg)
+bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, ByteString& error_msg)
 {
     if (!Screen::apply_layout(move(screen_layout), error_msg))
         return false;
@@ -146,7 +146,7 @@ ScreenLayout WindowManager::get_screen_layout() const
     return Screen::layout();
 }
 
-bool WindowManager::save_screen_layout(DeprecatedString& error_msg)
+bool WindowManager::save_screen_layout(ByteString& error_msg)
 {
     if (!Screen::layout().save_config(*g_config)) {
         error_msg = "Could not save";
@@ -266,7 +266,7 @@ void WindowManager::set_acceleration_factor(double factor)
 {
     ScreenInput::the().set_acceleration_factor(factor);
     dbgln("Saving acceleration factor {} to config file at {}", factor, g_config->filename());
-    g_config->write_entry("Mouse", "AccelerationFactor", DeprecatedString::formatted("{}", factor));
+    g_config->write_entry("Mouse", "AccelerationFactor", ByteString::formatted("{}", factor));
     sync_config_to_disk();
 }
 
@@ -274,7 +274,7 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
 {
     ScreenInput::the().set_scroll_step_size(step_size);
     dbgln("Saving scroll step size {} to config file at {}", step_size, g_config->filename());
-    g_config->write_entry("Mouse", "ScrollStepSize", DeprecatedString::number(step_size));
+    g_config->write_entry("Mouse", "ScrollStepSize", ByteString::number(step_size));
     sync_config_to_disk();
 }
 
@@ -283,7 +283,7 @@ void WindowManager::set_double_click_speed(int speed)
     VERIFY(speed >= double_click_speed_min && speed <= double_click_speed_max);
     m_double_click_speed = speed;
     dbgln("Saving double-click speed {} to config file at {}", speed, g_config->filename());
-    g_config->write_entry("Input", "DoubleClickSpeed", DeprecatedString::number(speed));
+    g_config->write_entry("Input", "DoubleClickSpeed", ByteString::number(speed));
     sync_config_to_disk();
 }
 
@@ -2117,7 +2117,7 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, Optional<Scr
     return rect;
 }
 
-void WindowManager::start_dnd_drag(ConnectionFromClient& client, DeprecatedString const& text, Gfx::Bitmap const* bitmap, Core::MimeData const& mime_data)
+void WindowManager::start_dnd_drag(ConnectionFromClient& client, ByteString const& text, Gfx::Bitmap const* bitmap, Core::MimeData const& mime_data)
 {
     VERIFY(!m_dnd_client);
     m_dnd_client = client;
@@ -2148,7 +2148,7 @@ void WindowManager::set_accepts_drag(bool accepts)
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
-    Compositor::the().set_background_color(g_config->read_entry("Background", "Color", palette().desktop_background().to_deprecated_string()));
+    Compositor::the().set_background_color(g_config->read_entry("Background", "Color", palette().desktop_background().to_byte_string()));
     WindowFrame::reload_config();
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& window) {
@@ -2166,7 +2166,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
     Compositor::the().invalidate_after_theme_or_font_change();
 }
 
-bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path)
+bool WindowManager::update_theme(ByteString theme_path, ByteString theme_name, bool keep_desktop_background, Optional<ByteString> const& color_scheme_path)
 {
     auto error_or_new_theme = Gfx::load_system_theme(theme_path, color_scheme_path);
     if (error_or_new_theme.is_error()) {
@@ -2217,7 +2217,7 @@ void WindowManager::clear_theme_override()
 {
     m_theme_overridden = false;
     auto previous_theme_name = g_config->read_entry("Theme", "Name");
-    auto previous_theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name), m_preferred_color_scheme));
+    auto previous_theme = MUST(Gfx::load_system_theme(ByteString::formatted("/res/themes/{}.ini", previous_theme_name), m_preferred_color_scheme));
     Gfx::set_system_theme(previous_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
     invalidate_after_theme_or_font_change();
@@ -2329,9 +2329,9 @@ WindowStack& WindowManager::get_rendering_window_stacks(WindowStack*& transition
     return Compositor::the().get_rendering_window_stacks(transitioning_window_stack);
 }
 
-void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
+void WindowManager::apply_cursor_theme(ByteString const& theme_name)
 {
-    auto theme_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini");
+    auto theme_path = ByteString::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini");
     auto cursor_theme_config_or_error = Core::ConfigFile::open(theme_path);
     if (cursor_theme_config_or_error.is_error()) {
         dbgln("Unable to open cursor theme '{}': {}", theme_path, cursor_theme_config_or_error.error());
@@ -2340,11 +2340,11 @@ void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
     auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor const>& cursor, DeprecatedString const& name) {
+    auto reload_cursor = [&](RefPtr<Cursor const>& cursor, ByteString const& name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
         static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
-        cursor = Cursor::create(DeprecatedString::formatted("/res/cursor-themes/{}/{}", theme_name, cursor_theme_config->read_entry("Cursor", name)), s_default_cursor_path);
+        cursor = Cursor::create(ByteString::formatted("/res/cursor-themes/{}/{}", theme_name, cursor_theme_config->read_entry("Cursor", name)), s_default_cursor_path);
 
         if (is_current_cursor) {
             Compositor::the().current_cursor_was_reloaded(cursor.ptr());
@@ -2397,7 +2397,7 @@ void WindowManager::set_cursor_highlight_color(Gfx::Color color)
 {
     m_cursor_highlight_color = color;
     Compositor::the().invalidate_cursor();
-    g_config->write_entry("Mouse", "CursorHighlightColor", color.to_deprecated_string());
+    g_config->write_entry("Mouse", "CursorHighlightColor", color.to_byte_string());
     sync_config_to_disk();
 }
 

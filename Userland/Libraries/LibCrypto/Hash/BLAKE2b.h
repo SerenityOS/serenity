@@ -10,7 +10,7 @@
 #include <LibCrypto/Hash/SHA2.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace Crypto::Hash {
@@ -44,7 +44,7 @@ public:
     static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const override
+    virtual ByteString class_name() const override
     {
         return "BLAKE2b";
     }

@@ -33,7 +33,7 @@ static WeakPtr<HackStudioWidget> s_hack_studio_widget;
 static bool make_is_available();
 static ErrorOr<void> notify_make_not_available();
 static void update_path_environment_variable();
-static Optional<DeprecatedString> last_opened_project_path();
+static Optional<ByteString> last_opened_project_path();
 static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, StringView path, pid_t pid_to_debug);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_main_widget(hack_studio_widget);
     s_hack_studio_widget = hack_studio_widget;
 
-    window->set_title(DeprecatedString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
+    window->set_title(ByteString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
 
     TRY(hack_studio_widget->initialize_menubar(*window));
 
@@ -131,10 +131,10 @@ static void update_path_environment_variable()
     if (path.length())
         path.append(':');
     path.append(DEFAULT_PATH_SV);
-    setenv("PATH", path.to_deprecated_string().characters(), true);
+    setenv("PATH", path.to_byte_string().characters(), true);
 }
 
-static Optional<DeprecatedString> last_opened_project_path()
+static Optional<ByteString> last_opened_project_path()
 {
     auto projects = HackStudioWidget::read_recent_projects();
     if (projects.size() == 0)
@@ -153,12 +153,12 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(DeprecatedString const& filename)
+void open_file(ByteString const& filename)
 {
     s_hack_studio_widget->open_file(filename);
 }
 
-void open_file(DeprecatedString const& filename, size_t line, size_t column)
+void open_file(ByteString const& filename, size_t line, size_t column)
 {
     s_hack_studio_widget->open_file(filename, line, column);
 }
@@ -175,7 +175,7 @@ Project& project()
     return s_hack_studio_widget->project();
 }
 
-DeprecatedString currently_open_file()
+ByteString currently_open_file()
 {
     if (!s_hack_studio_widget)
         return {};
@@ -212,16 +212,16 @@ bool semantic_syntax_highlighting_is_enabled()
 
 static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, StringView raw_path_argument, pid_t pid_to_debug)
 {
-    DeprecatedString project_path;
+    ByteString project_path;
     if (pid_to_debug != -1 || mode_coredump)
         project_path = "/usr/src/serenity";
     else if (!raw_path_argument.is_null())
         // FIXME: Validation is unintentional, and should be removed when migrating to String.
-        project_path = TRY(DeprecatedString::from_utf8(raw_path_argument));
+        project_path = TRY(ByteString::from_utf8(raw_path_argument));
     else if (auto last_path = last_opened_project_path(); last_path.has_value())
         project_path = last_path.release_value();
     else
-        project_path = TRY(FileSystem::real_path("."sv)).to_deprecated_string();
+        project_path = TRY(FileSystem::real_path("."sv)).to_byte_string();
 
     return HackStudioWidget::create(project_path);
 }

@@ -57,7 +57,7 @@ public:
         AllOptions options;
 
         struct {
-            Optional<DeprecatedString> pure_substring_search;
+            Optional<ByteString> pure_substring_search;
         } optimization_data {};
     };
 
@@ -86,7 +86,7 @@ protected:
     ALWAYS_INLINE bool match_ordinary_characters();
     ALWAYS_INLINE Token consume();
     ALWAYS_INLINE Token consume(TokenType type, Error error);
-    ALWAYS_INLINE bool consume(DeprecatedString const&);
+    ALWAYS_INLINE bool consume(ByteString const&);
     ALWAYS_INLINE Optional<u32> consume_escaped_code_point(bool unicode);
     ALWAYS_INLINE bool try_skip(StringView);
     ALWAYS_INLINE bool lookahead_any(StringView);

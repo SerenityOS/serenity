@@ -20,7 +20,7 @@ ErrorOr<ByteBuffer> decode_rfc2047_encoded_words(StringView input)
 
     while (!lexer.is_eof()) {
         auto ascii_view = lexer.consume_until("=?"sv);
-        DeprecatedString ascii = ascii_view.replace("\r"sv, " "sv, ReplaceMode::All);
+        ByteString ascii = ascii_view.replace("\r"sv, " "sv, ReplaceMode::All);
         ascii = ascii.replace("\n"sv, " "sv, ReplaceMode::All);
         TRY(output.try_append(ascii));
         if (lexer.is_eof())

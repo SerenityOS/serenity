@@ -113,8 +113,8 @@ private:
         int connected_adapters = 0;
         json.as_array().for_each([&adapter_info, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
-            auto ip_address = if_object.get_deprecated_string("ipv4_address"sv).value_or("no IP");
-            auto ifname = if_object.get_deprecated_string("name"sv).value();
+            auto ip_address = if_object.get_byte_string("ipv4_address"sv).value_or("no IP");
+            auto ifname = if_object.get_byte_string("name"sv).value();
             auto link_up = if_object.get_bool("link_up"sv).value();
             auto link_speed = if_object.get_i32("link_speed"sv).value();
 

@@ -99,7 +99,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm
     if (value.is_number())
         return JsonValue { value.as_double() };
     if (value.is_string())
-        return JsonValue { value.as_string().deprecated_string() };
+        return JsonValue { value.as_string().byte_string() };
 
     // NOTE: BigInt and Symbol not mentioned anywhere in the WebDriver spec, as it references ES5.
     //       It assumes that all primitives are handled above, and the value is an object for the remaining steps.
@@ -130,7 +130,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm
         auto to_json_result = TRY_OR_JS_ERROR(to_json.as_function().internal_call(value, JS::MarkedVector<JS::Value> { vm.heap() }));
         if (!to_json_result.is_string())
             return ExecuteScriptResultType::JavaScriptError;
-        return to_json_result.as_string().deprecated_string();
+        return to_json_result.as_string().byte_string();
     }
 
     // -> Otherwise
@@ -220,7 +220,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> clone_an_object(JS::Realm& re
 }
 
 // https://w3c.github.io/webdriver/#dfn-execute-a-function-body
-static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page, DeprecatedString const& body, JS::MarkedVector<JS::Value> parameters)
+static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page, ByteString const& body, JS::MarkedVector<JS::Value> parameters)
 {
     // FIXME: If at any point during the algorithm a user prompt appears, immediately return Completion { [[Type]]: normal, [[Value]]: null, [[Target]]: empty }, but continue to run the other steps of this algorithm in parallel.
 
@@ -237,7 +237,7 @@ static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page,
     auto& realm = window.realm();
 
     bool contains_direct_call_to_eval = false;
-    auto source_text = DeprecatedString::formatted("function() {{ {} }}", body);
+    auto source_text = ByteString::formatted("function() {{ {} }}", body);
     auto parser = JS::Parser { JS::Lexer { source_text } };
     auto function_expression = parser.parse_function_node<JS::FunctionExpression>();
 
@@ -282,7 +282,7 @@ static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page,
     return completion;
 }
 
-ExecuteScriptResultSerialized execute_script(Web::Page& page, DeprecatedString const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
+ExecuteScriptResultSerialized execute_script(Web::Page& page, ByteString const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
 {
     // FIXME: Use timeout.
     (void)timeout;
@@ -323,7 +323,7 @@ ExecuteScriptResultSerialized execute_script(Web::Page& page, DeprecatedString c
     return { result.type, json_value_or_error.release_value() };
 }
 
-ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedString const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
+ExecuteScriptResultSerialized execute_async_script(Web::Page& page, ByteString const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
 {
     auto* document = page.top_level_browsing_context().active_document();
     auto* window = page.top_level_browsing_context().active_window();

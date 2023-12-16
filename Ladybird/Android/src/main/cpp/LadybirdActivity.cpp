@@ -6,7 +6,7 @@
 
 #include "ALooperEventLoopImplementation.h"
 #include "JNIHelpers.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
@@ -21,7 +21,7 @@
 #include <LibFileSystem/FileSystem.h>
 #include <jni.h>
 
-static ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_directory);
+static ErrorOr<void> extract_tar_archive(String archive_file, ByteString output_directory);
 
 JavaVM* global_vm;
 static OwnPtr<Core::EventLoop> s_main_event_loop;
@@ -89,29 +89,29 @@ Java_org_serenityos_ladybird_LadybirdActivity_disposeNativeCode(JNIEnv* env, job
     delete &Core::EventLoopManager::the();
 }
 
-ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_directory)
+ErrorOr<void> extract_tar_archive(String archive_file, ByteString output_directory)
 {
     constexpr size_t buffer_size = 4096;
 
     auto file = TRY(Core::InputBufferedFile::create(TRY(Core::File::open(archive_file, Core::File::OpenMode::Read))));
 
-    DeprecatedString old_pwd = TRY(Core::System::getcwd());
+    ByteString old_pwd = TRY(Core::System::getcwd());
 
     TRY(Core::System::chdir(output_directory));
     ScopeGuard go_back = [&old_pwd] { MUST(Core::System::chdir(old_pwd)); };
 
     auto tar_stream = TRY(Archive::TarInputStream::construct(move(file)));
 
-    HashMap<DeprecatedString, DeprecatedString> global_overrides;
-    HashMap<DeprecatedString, DeprecatedString> local_overrides;
+    HashMap<ByteString, ByteString> global_overrides;
+    HashMap<ByteString, ByteString> local_overrides;
 
-    auto get_override = [&](StringView key) -> Optional<DeprecatedString> {
-        Optional<DeprecatedString> maybe_local = local_overrides.get(key);
+    auto get_override = [&](StringView key) -> Optional<ByteString> {
+        Optional<ByteString> maybe_local = local_overrides.get(key);
 
         if (maybe_local.has_value())
             return maybe_local;
 
-        Optional<DeprecatedString> maybe_global = global_overrides.get(key);
+        Optional<ByteString> maybe_global = global_overrides.get(key);
 
         if (maybe_global.has_value())
             return maybe_global;
@@ -163,7 +163,7 @@ ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_d
                 long_name.append(reinterpret_cast<char*>(slice.data()), slice.size());
             }
 
-            local_overrides.set("path", long_name.to_deprecated_string());
+            local_overrides.set("path", long_name.to_byte_string());
             TRY(tar_stream->advance());
             continue;
         }
@@ -175,9 +175,9 @@ ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_d
         LexicalPath path = LexicalPath(header.filename());
         if (!header.prefix().is_empty())
             path = path.prepend(header.prefix());
-        DeprecatedString filename = get_override("path"sv).value_or(path.string());
+        ByteString filename = get_override("path"sv).value_or(path.string());
 
-        DeprecatedString absolute_path = TRY(FileSystem::absolute_path(filename)).to_deprecated_string();
+        ByteString absolute_path = TRY(FileSystem::absolute_path(filename)).to_byte_string();
         auto parent_path = LexicalPath(absolute_path).parent();
         auto header_mode = TRY(header.mode());
 

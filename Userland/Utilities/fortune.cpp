@@ -30,30 +30,30 @@ public:
         if (!entry.has_string("quote"sv) || !entry.has_string("author"sv) || !entry.has_u64("utc_time"sv) || !entry.has_string("url"sv))
             return {};
         // From here on, trust that it's probably fine.
-        q.m_quote = entry.get_deprecated_string("quote"sv).value();
-        q.m_author = entry.get_deprecated_string("author"sv).value();
+        q.m_quote = entry.get_byte_string("quote"sv).value();
+        q.m_author = entry.get_byte_string("author"sv).value();
         q.m_utc_time = entry.get_u64("utc_time"sv).value();
-        q.m_url = entry.get_deprecated_string("url"sv).value();
+        q.m_url = entry.get_byte_string("url"sv).value();
         if (entry.has("context"sv))
-            q.m_context = entry.get_deprecated_string("context"sv).value();
+            q.m_context = entry.get_byte_string("context"sv).value();
 
         return q;
     }
 
-    DeprecatedString const& quote() const { return m_quote; }
-    DeprecatedString const& author() const { return m_author; }
+    ByteString const& quote() const { return m_quote; }
+    ByteString const& author() const { return m_author; }
     u64 const& utc_time() const { return m_utc_time; }
-    DeprecatedString const& url() const { return m_url; }
-    Optional<DeprecatedString> const& context() const { return m_context; }
+    ByteString const& url() const { return m_url; }
+    Optional<ByteString> const& context() const { return m_context; }
 
 private:
     Quote() = default;
 
-    DeprecatedString m_quote;
-    DeprecatedString m_author;
+    ByteString m_quote;
+    ByteString m_author;
     u64 m_utc_time;
-    DeprecatedString m_url;
-    Optional<DeprecatedString> m_context;
+    ByteString m_url;
+    Optional<ByteString> m_context;
 };
 
 static Vector<Quote> parse_all(JsonArray const& array)
@@ -131,11 +131,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (show_color) {
-        out("\033[34m({})\033[m", datetime.to_deprecated_string());
+        out("\033[34m({})\033[m", datetime.to_byte_string());
         out(" \033[34;1m<{}>\033[m", chosen_quote.author());
         out(" \033[32m{}\033[m", chosen_quote.quote());
     } else {
-        out("({})", datetime.to_deprecated_string());
+        out("({})", datetime.to_byte_string());
         out(" <{}>", chosen_quote.author());
         out(" {}", chosen_quote.quote());
     }

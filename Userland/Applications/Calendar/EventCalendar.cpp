@@ -36,12 +36,12 @@ void EventCalendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile,
             if (!event.has("start_date"sv) || !event.has("start_date"sv) || !event.has("summary"sv))
                 return;
 
-            auto start_date = event.get("start_date"sv).value().to_deprecated_string();
-            auto start_time = event.get("start_time"sv).value().to_deprecated_string();
-            auto summary = event.get("summary"sv).value().to_deprecated_string();
-            auto combined_text = DeprecatedString::formatted("{} {}", start_time, summary);
+            auto start_date = event.get("start_date"sv).value().to_byte_string();
+            auto start_time = event.get("start_time"sv).value().to_byte_string();
+            auto summary = event.get("summary"sv).value().to_byte_string();
+            auto combined_text = ByteString::formatted("{} {}", start_time, summary);
 
-            if (start_date == DeprecatedString::formatted("{}-{:0>2d}-{:0>2d}", tile.year, tile.month, tile.day)) {
+            if (start_date == ByteString::formatted("{}-{:0>2d}-{:0>2d}", tile.year, tile.month, tile.day)) {
 
                 auto text_rect = tile.rect.translated(4, 4 + (font_height + 4) * ++index);
                 painter.draw_text(text_rect, combined_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::TopLeft, palette().base_text(), Gfx::TextElision::Right);

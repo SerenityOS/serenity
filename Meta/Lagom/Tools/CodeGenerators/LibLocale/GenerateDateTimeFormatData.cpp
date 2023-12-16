@@ -6,8 +6,8 @@
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/AllOf.h>
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/Format.h>
@@ -487,7 +487,7 @@ struct AK::Formatter<Locale::HourCycle> : Formatter<FormatString> {
 };
 
 struct LocaleData {
-    HashMap<DeprecatedString, size_t> calendars;
+    HashMap<ByteString, size_t> calendars;
 
     size_t time_zones { 0 };
     size_t time_zone_formats { 0 };
@@ -513,27 +513,27 @@ struct CLDR {
     UniqueStorage<DayPeriodList> unique_day_period_lists;
     UniqueStorage<HourCycleList> unique_hour_cycle_lists;
 
-    HashMap<DeprecatedString, LocaleData> locales;
+    HashMap<ByteString, LocaleData> locales;
 
-    HashMap<DeprecatedString, size_t> hour_cycles;
-    Vector<DeprecatedString> hour_cycle_regions;
+    HashMap<ByteString, size_t> hour_cycles;
+    Vector<ByteString> hour_cycle_regions;
 
-    HashMap<DeprecatedString, u8> minimum_days;
-    Vector<DeprecatedString> minimum_days_regions;
+    HashMap<ByteString, u8> minimum_days;
+    Vector<ByteString> minimum_days_regions;
 
-    HashMap<DeprecatedString, Locale::Weekday> first_day;
-    Vector<DeprecatedString> first_day_regions;
+    HashMap<ByteString, Locale::Weekday> first_day;
+    Vector<ByteString> first_day_regions;
 
-    HashMap<DeprecatedString, Locale::Weekday> weekend_start;
-    Vector<DeprecatedString> weekend_start_regions;
+    HashMap<ByteString, Locale::Weekday> weekend_start;
+    Vector<ByteString> weekend_start_regions;
 
-    HashMap<DeprecatedString, Locale::Weekday> weekend_end;
-    Vector<DeprecatedString> weekend_end_regions;
+    HashMap<ByteString, Locale::Weekday> weekend_end;
+    Vector<ByteString> weekend_end_regions;
 
-    HashMap<DeprecatedString, Vector<TimeZone::TimeZone>> meta_zones;
-    Vector<DeprecatedString> time_zones { "UTC"sv };
+    HashMap<ByteString, Vector<TimeZone::TimeZone>> meta_zones;
+    Vector<ByteString> time_zones { "UTC"sv };
 
-    Vector<DeprecatedString> calendars;
+    Vector<ByteString> calendars;
 };
 
 static Optional<Locale::DayPeriod> day_period_from_string(StringView day_period)
@@ -563,7 +563,7 @@ static Optional<Locale::DayPeriod> day_period_from_string(StringView day_period)
     return {};
 }
 
-static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
+static ErrorOr<void> parse_hour_cycles(ByteString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Time_Data
     LexicalPath time_data_path(move(core_path));
@@ -587,7 +587,7 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
     };
 
     time_data_object.for_each_member([&](auto const& key, JsonValue const& value) {
-        auto allowed_hour_cycles_string = value.as_object().get_deprecated_string("_allowed"sv).value();
+        auto allowed_hour_cycles_string = value.as_object().get_byte_string("_allowed"sv).value();
         auto allowed_hour_cycles = allowed_hour_cycles_string.split_view(' ');
 
         Vector<Locale::HourCycle> hour_cycles;
@@ -607,7 +607,7 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
+static ErrorOr<void> parse_week_data(ByteString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Week_Data
     LexicalPath week_data_path(move(core_path));
@@ -672,7 +672,7 @@ static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_meta_zones(DeprecatedString core_path, CLDR& cldr)
+static ErrorOr<void> parse_meta_zones(ByteString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Metazones
     LexicalPath meta_zone_path(move(core_path));
@@ -686,8 +686,8 @@ static ErrorOr<void> parse_meta_zones(DeprecatedString core_path, CLDR& cldr)
 
     meta_zone_array.for_each([&](JsonValue const& value) {
         auto const& mapping = value.as_object().get_object("mapZone"sv).value();
-        auto const& meta_zone = mapping.get_deprecated_string("_other"sv).value();
-        auto const& golden_zone = mapping.get_deprecated_string("_type"sv).value();
+        auto const& meta_zone = mapping.get_byte_string("_other"sv).value();
+        auto const& golden_zone = mapping.get_byte_string("_type"sv).value();
 
         if (auto time_zone = TimeZone::time_zone_from_string(golden_zone); time_zone.has_value()) {
             auto& golden_zones = cldr.meta_zones.ensure(meta_zone);
@@ -770,7 +770,7 @@ static ErrorOr<String> remove_period_from_pattern(String pattern)
     return pattern;
 }
 
-static ErrorOr<Optional<CalendarPattern>> parse_date_time_pattern_raw(DeprecatedString pattern, DeprecatedString skeleton, CLDR& cldr)
+static ErrorOr<Optional<CalendarPattern>> parse_date_time_pattern_raw(ByteString pattern, ByteString skeleton, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
     using Locale::CalendarPatternStyle;
@@ -989,16 +989,16 @@ static ErrorOr<Optional<CalendarPattern>> parse_date_time_pattern_raw(Deprecated
     return format;
 }
 
-static ErrorOr<Optional<size_t>> parse_date_time_pattern(DeprecatedString pattern, DeprecatedString skeleton, CLDR& cldr)
+static ErrorOr<Optional<size_t>> parse_date_time_pattern(ByteString pattern, ByteString skeleton, CLDR& cldr)
 {
     auto format = TRY(parse_date_time_pattern_raw(move(pattern), move(skeleton), cldr));
     if (!format.has_value())
         return OptionalNone {};
 
-    format->pattern_index = cldr.unique_strings.ensure(format->pattern.to_deprecated_string());
+    format->pattern_index = cldr.unique_strings.ensure(format->pattern.to_byte_string());
 
     if (format->pattern12.has_value())
-        format->pattern12_index = cldr.unique_strings.ensure(format->pattern12->to_deprecated_string());
+        format->pattern12_index = cldr.unique_strings.ensure(format->pattern12->to_byte_string());
 
     return Optional<size_t> { cldr.unique_patterns.ensure(format.release_value()) };
 }
@@ -1388,7 +1388,7 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
     calendar.symbols = cldr.unique_calendar_symbols_lists.ensure(move(symbols_list));
 }
 
-static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_calendars(ByteString locale_calendars_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath calendars_path(move(locale_calendars_path));
     if (!calendars_path.basename().starts_with("ca-"sv))
@@ -1402,10 +1402,10 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
 
     auto parse_patterns = [&](auto const& patterns_object, auto const& skeletons_object, Vector<CalendarPattern>* patterns) -> ErrorOr<size_t> {
         auto parse_pattern = [&](auto name) -> ErrorOr<size_t> {
-            auto format = patterns_object.get_deprecated_string(name);
-            auto skeleton = skeletons_object.get_deprecated_string(name);
+            auto format = patterns_object.get_byte_string(name);
+            auto skeleton = skeletons_object.get_byte_string(name);
 
-            auto format_index = TRY(parse_date_time_pattern(format.value(), skeleton.value_or(DeprecatedString::empty()), cldr)).value();
+            auto format_index = TRY(parse_date_time_pattern(format.value(), skeleton.value_or(ByteString::empty()), cldr)).value();
 
             if (patterns)
                 patterns->append(cldr.unique_patterns.get(format_index));
@@ -1483,7 +1483,7 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
     return {};
 }
 
-static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_names_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_time_zone_names(ByteString locale_time_zone_names_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath time_zone_names_path(move(locale_time_zone_names_path));
     time_zone_names_path = time_zone_names_path.append("timeZoneNames.json"sv);
@@ -1494,9 +1494,9 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
     auto const& dates_object = locale_object.get_object("dates"sv).value();
     auto const& time_zone_names_object = dates_object.get_object("timeZoneNames"sv).value();
     auto const& meta_zone_object = time_zone_names_object.get_object("metazone"sv);
-    auto const& hour_format_string = time_zone_names_object.get_deprecated_string("hourFormat"sv).value();
-    auto const& gmt_format_string = time_zone_names_object.get_deprecated_string("gmtFormat"sv).value();
-    auto const& gmt_zero_format_string = time_zone_names_object.get_deprecated_string("gmtZeroFormat"sv).value();
+    auto const& hour_format_string = time_zone_names_object.get_byte_string("hourFormat"sv).value();
+    auto const& gmt_format_string = time_zone_names_object.get_byte_string("gmtFormat"sv).value();
+    auto const& gmt_zero_format_string = time_zone_names_object.get_byte_string("gmtZeroFormat"sv).value();
 
     if (!meta_zone_object.has_value())
         return {};
@@ -1506,7 +1506,7 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
         if (!names.has_value())
             return {};
 
-        auto const& name = names->get_deprecated_string(key);
+        auto const& name = names->get_byte_string(key);
         if (name.has_value())
             return cldr.unique_strings.ensure(name.value());
 
@@ -1592,7 +1592,7 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
     return {};
 }
 
-static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
+static ErrorOr<void> parse_day_periods(ByteString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Day_Period_Rule_Sets
     LexicalPath day_periods_path(move(core_path));
@@ -1622,8 +1622,8 @@ static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
         if (!day_period.has_value())
             return {};
 
-        auto begin = parse_hour(ranges.get_deprecated_string("_from"sv).value());
-        auto end = parse_hour(ranges.get_deprecated_string("_before"sv).value());
+        auto begin = parse_hour(ranges.get_byte_string("_from"sv).value());
+        auto end = parse_hour(ranges.get_byte_string("_before"sv).value());
 
         return DayPeriod { *day_period, begin, end };
     };
@@ -1648,13 +1648,13 @@ static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedString dates_path, CLDR& cldr)
+static ErrorOr<void> parse_all_locales(ByteString core_path, ByteString dates_path, CLDR& cldr)
 {
     TRY(parse_hour_cycles(core_path, cldr));
     TRY(parse_week_data(core_path, cldr));
     TRY(parse_meta_zones(core_path, cldr));
 
-    auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
+    auto remove_variants_from_path = [&](ByteString path) -> ErrorOr<ByteString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
@@ -1664,7 +1664,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
 
     TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", dates_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
@@ -1687,15 +1687,15 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
     return {};
 }
 
-static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
+static ByteString format_identifier(StringView owner, ByteString identifier)
 {
     identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
     identifier = identifier.replace("/"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
-        return DeprecatedString::formatted("{}_{}", owner[0], identifier);
+        return ByteString::formatted("{}_{}", owner[0], identifier);
     if (is_ascii_lower_alpha(identifier[0]))
-        return DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+        return ByteString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
     return identifier;
 }
 
@@ -1953,9 +1953,9 @@ struct DayPeriodData {
     cldr.unique_day_period_lists.generate(generator, cldr.unique_day_periods.type_that_fits(), "s_day_period_lists"sv);
     cldr.unique_hour_cycle_lists.generate(generator, cldr.unique_hour_cycle_lists.type_that_fits(), "s_hour_cycle_lists"sv);
 
-    auto append_calendars = [&](DeprecatedString name, auto const& calendars) {
+    auto append_calendars = [&](ByteString name, auto const& calendars) {
         generator.set("name", name);
-        generator.set("size", DeprecatedString::number(calendars.size()));
+        generator.set("size", ByteString::number(calendars.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
@@ -1965,7 +1965,7 @@ static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
             auto calendar = calendars.find(calendar_key)->value;
 
             generator.append(first ? " "sv : ", "sv);
-            generator.append(DeprecatedString::number(calendar));
+            generator.append(ByteString::number(calendar));
             first = false;
         }
 
@@ -1975,7 +1975,7 @@ static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
     auto append_mapping = [&](auto const& keys, auto const& map, auto type, auto name, auto mapping_getter) {
         generator.set("type", type);
         generator.set("name", name);
-        generator.set("size", DeprecatedString::number(keys.size()));
+        generator.set("size", ByteString::number(keys.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {)~~~");
@@ -1986,7 +1986,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             auto mapping = mapping_getter(value);
 
             generator.append(first ? " "sv : ", "sv);
-            generator.append(DeprecatedString::number(mapping));
+            generator.append(ByteString::number(mapping));
             first = false;
         }
 
@@ -2008,7 +2008,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     generator.append("\n");
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) -> ErrorOr<void> {
-        HashValueMap<DeprecatedString> hashes;
+        HashValueMap<ByteString> hashes;
         TRY(hashes.try_ensure_capacity(values.size()));
 
         for (auto const& value : values)

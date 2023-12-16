@@ -331,7 +331,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     auto* disable_spoofing = add_user_agent("Disabled"sv, Web::default_user_agent);
     disable_spoofing->setChecked(true);
     for (auto const& user_agent : WebView::user_agents)
-        add_user_agent(user_agent.key, user_agent.value.to_deprecated_string());
+        add_user_agent(user_agent.key, user_agent.value.to_byte_string());
 
     auto* custom_user_agent_action = new QAction("Custom...", this);
     custom_user_agent_action->setCheckable(true);
@@ -340,7 +340,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     QObject::connect(custom_user_agent_action, &QAction::triggered, this, [this, disable_spoofing] {
         auto user_agent = QInputDialog::getText(this, "Custom User Agent", "Enter User Agent:");
         if (!user_agent.isEmpty()) {
-            debug_request("spoof-user-agent", ak_deprecated_string_from_qstring(user_agent));
+            debug_request("spoof-user-agent", ak_byte_string_from_qstring(user_agent));
             debug_request("clear-cache"); // clear the cache to ensure requests are re-done with the new user agent
         } else {
             disable_spoofing->activate(QAction::Trigger);
@@ -455,7 +455,7 @@ void BrowserWindow::set_current_tab(Tab* tab)
         update_displayed_zoom_level();
 }
 
-void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
+void BrowserWindow::debug_request(ByteString const& request, ByteString const& argument)
 {
     if (!m_current_tab)
         return;
@@ -505,7 +505,7 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
     };
 
     tab->view().on_tab_open_request = [this](auto url, auto activate_tab) {
-        auto& tab = new_tab(qstring_from_ak_string(url.to_deprecated_string()), activate_tab);
+        auto& tab = new_tab(qstring_from_ak_string(url.to_byte_string()), activate_tab);
         return tab.view().handle();
     };
 
@@ -533,7 +533,7 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    tab->view().on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
+    tab->view().on_get_cookie = [this](auto& url, auto source) -> ByteString {
         return m_cookie_jar.get_cookie(url, source);
     };
 

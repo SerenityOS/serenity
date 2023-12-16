@@ -79,7 +79,7 @@ ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
         return {};
 
     auto request = TRY(m_remaining_request.to_byte_buffer());
-    dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", DeprecatedString::copy(request));
+    dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", ByteString::copy(request));
 
     auto maybe_parsed_request = HTTP::HttpRequest::from_raw_request(TRY(m_remaining_request.to_byte_buffer()));
     if (maybe_parsed_request.is_error()) {
@@ -125,7 +125,7 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
         }
     }
 
-    auto requested_path = TRY(String::from_deprecated_string(LexicalPath::join("/"sv, resource_decoded).string()));
+    auto requested_path = TRY(String::from_byte_string(LexicalPath::join("/"sv, resource_decoded).string()));
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     auto real_path = TRY(String::formatted("{}{}", Configuration::the().document_root_path(), requested_path));
@@ -240,24 +240,24 @@ ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest 
     return {};
 }
 
-static DeprecatedString folder_image_data()
+static ByteString folder_image_data()
 {
-    static DeprecatedString cache;
+    static ByteString cache;
     if (cache.is_empty()) {
         auto file = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors();
         // FIXME: change to TRY() and make method fallible
-        cache = MUST(encode_base64(file->bytes())).to_deprecated_string();
+        cache = MUST(encode_base64(file->bytes())).to_byte_string();
     }
     return cache;
 }
 
-static DeprecatedString file_image_data()
+static ByteString file_image_data()
 {
-    static DeprecatedString cache;
+    static ByteString cache;
     if (cache.is_empty()) {
         auto file = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors();
         // FIXME: change to TRY() and make method fallible
-        cache = MUST(encode_base64(file->bytes())).to_deprecated_string();
+        cache = MUST(encode_base64(file->bytes())).to_byte_string();
     }
     return cache;
 }
@@ -286,7 +286,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     TRY(builder.try_append("<code><table>\n"sv));
 
     Core::DirIterator dt(real_path.bytes_as_string_view());
-    Vector<DeprecatedString> names;
+    Vector<ByteString> names;
     while (dt.has_next())
         TRY(names.try_append(dt.next_path()));
     quick_sort(names);
@@ -337,7 +337,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     TRY(builder.try_append("</body>\n"sv));
     TRY(builder.try_append("</html>\n"sv));
 
-    auto response = builder.to_deprecated_string();
+    auto response = builder.to_byte_string();
     FixedMemoryStream stream { response.bytes() };
     return send_response(stream, request, { .type = "text/html"_string, .length = response.length() });
 }
@@ -373,7 +373,7 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
 
 void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
-    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_deprecated_string(), code, request.method_name(), request.url().serialize().substring(1));
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_byte_string(), code, request.method_name(), request.url().serialize().substring(1));
 }
 
 bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers)

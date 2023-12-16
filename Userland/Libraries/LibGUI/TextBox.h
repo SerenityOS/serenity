@@ -32,12 +32,12 @@ private:
     bool has_no_history() const { return !m_history_enabled || m_history.is_empty(); }
     bool can_go_backwards_in_history() const { return m_history_index > 0; }
     bool can_go_forwards_in_history() const { return m_history_index < static_cast<int>(m_history.size()) - 1; }
-    void add_input_to_history(DeprecatedString);
+    void add_input_to_history(ByteString);
 
     bool m_history_enabled { false };
-    Vector<DeprecatedString> m_history;
+    Vector<ByteString> m_history;
     int m_history_index { -1 };
-    DeprecatedString m_saved_input;
+    ByteString m_saved_input;
 };
 
 class PasswordBox : public TextBox {

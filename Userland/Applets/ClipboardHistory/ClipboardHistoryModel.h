@@ -44,7 +44,7 @@ public:
     void clear();
     bool is_empty() { return m_history_items.is_empty(); }
 
-    ErrorOr<void> read_from_file(DeprecatedString const& path);
+    ErrorOr<void> read_from_file(ByteString const& path);
     ErrorOr<void> write_to_file(bool rewrite_all);
 
     ErrorOr<void> invalidate_model_and_file(bool rewrite_all);
@@ -64,10 +64,10 @@ private:
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(DeprecatedString const&) override;
+    virtual void clipboard_content_did_change(ByteString const&) override;
 
     Vector<ClipboardItem> m_history_items;
     size_t m_history_limit;
 
-    DeprecatedString m_path;
+    ByteString m_path;
 };

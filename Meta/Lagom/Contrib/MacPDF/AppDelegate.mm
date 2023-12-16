@@ -22,7 +22,7 @@
     NSString* source_root = [[NSBundle mainBundle] executablePath];
     for (int i = 0; i < 7; ++i)
         source_root = [source_root stringByDeletingLastPathComponent];
-    auto source_root_string = DeprecatedString([source_root UTF8String]);
+    auto source_root_string = ByteString([source_root UTF8String]);
     Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Base/res", source_root_string))));
 }
 

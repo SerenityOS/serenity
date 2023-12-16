@@ -6,7 +6,7 @@ set(AK_SOURCES
     CountingStream.cpp
     DOSPackedTime.cpp
     DeprecatedFlyString.cpp
-    DeprecatedString.cpp
+    ByteString.cpp
     Error.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp

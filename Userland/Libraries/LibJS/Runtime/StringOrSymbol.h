@@ -22,7 +22,7 @@ public:
     {
     }
 
-    StringOrSymbol(DeprecatedString const& string)
+    StringOrSymbol(ByteString const& string)
         : StringOrSymbol(DeprecatedFlyString(string))
     {
     }
@@ -74,12 +74,12 @@ public:
         return reinterpret_cast<Symbol const*>(bits() & ~1ul);
     }
 
-    DeprecatedString to_display_string() const
+    ByteString to_display_string() const
     {
         if (is_string())
             return as_string();
         if (is_symbol())
-            return as_symbol()->descriptive_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+            return as_symbol()->descriptive_string().release_value_but_fixme_should_propagate_errors().to_byte_string();
         VERIFY_NOT_REACHED();
     }
 

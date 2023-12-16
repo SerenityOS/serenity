@@ -33,7 +33,7 @@ public:
     explicit TextDocumentLine(Document&);
     explicit TextDocumentLine(Document&, StringView);
 
-    DeprecatedString to_utf8() const;
+    ByteString to_utf8() const;
 
     Utf32View view() const { return { code_points(), length() }; }
     u32 const* code_points() const { return m_text.data(); }

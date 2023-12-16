@@ -79,11 +79,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         FileArgument parsed_argument(filename);
 
         FileSystemAccessClient::Client::the().set_silence_errors(FileSystemAccessClient::ErrorFlag::NoEntries);
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, parsed_argument.filename().to_deprecated_string());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, parsed_argument.filename().to_byte_string());
 
         if (response.is_error()) {
             if (response.error().code() == ENOENT)
-                text_widget->open_nonexistent_file(parsed_argument.filename().to_deprecated_string());
+                text_widget->open_nonexistent_file(parsed_argument.filename().to_byte_string());
         } else {
             TRY(text_widget->read_file(response.value().filename(), response.value().stream()));
             text_widget->editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));

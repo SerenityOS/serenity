@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/ByteString.h>
 #include <AK/CircularQueue.h>
-#include <AK/DeprecatedString.h>
 
 TEST_CASE(basic)
 {
@@ -28,7 +28,7 @@ TEST_CASE(basic)
 
 TEST_CASE(complex_type)
 {
-    CircularQueue<DeprecatedString, 2> strings;
+    CircularQueue<ByteString, 2> strings;
 
     strings.enqueue("ABC");
     strings.enqueue("DEF");
@@ -44,7 +44,7 @@ TEST_CASE(complex_type)
 
 TEST_CASE(complex_type_clear)
 {
-    CircularQueue<DeprecatedString, 5> strings;
+    CircularQueue<ByteString, 5> strings;
     strings.enqueue("xxx");
     strings.enqueue("xxx");
     strings.enqueue("xxx");

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
@@ -75,7 +75,7 @@ public:
 
 private:
     TreeNode(BTree&, TreeNode*, DownPointer&, u32 = 0);
-    void dump_if(int, DeprecatedString&& = "");
+    void dump_if(int, ByteString&& = "");
     bool insert_in_leaf(Key const&);
     void just_insert(Key const&, TreeNode* = nullptr);
     void split();

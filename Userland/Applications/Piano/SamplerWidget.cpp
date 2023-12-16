@@ -52,11 +52,11 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     m_open_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_open_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
     m_open_button->on_click = [this](auto) {
-        Optional<DeprecatedString> open_path = GUI::FilePicker::get_open_filepath(window());
+        Optional<ByteString> open_path = GUI::FilePicker::get_open_filepath(window());
         if (!open_path.has_value())
             return;
         // TODO: We don't actually load the sample.
-        m_recorded_sample_name->set_text(String::from_deprecated_string(open_path.value()).release_value_but_fixme_should_propagate_errors());
+        m_recorded_sample_name->set_text(String::from_byte_string(open_path.value()).release_value_but_fixme_should_propagate_errors());
         m_wave_editor->update();
     };
 

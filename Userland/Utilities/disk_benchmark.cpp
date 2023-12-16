@@ -6,7 +6,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -39,13 +39,13 @@ static Result average_result(Vector<Result> const& results)
     return average;
 }
 
-static ErrorOr<Result> benchmark(DeprecatedString const& filename, int file_size, ByteBuffer& buffer, bool allow_cache);
+static ErrorOr<Result> benchmark(ByteString const& filename, int file_size, ByteBuffer& buffer, bool allow_cache);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     using namespace AK::TimeLiterals;
 
-    DeprecatedString directory = ".";
+    ByteString directory = ".";
     i64 time_per_benchmark_sec = 10;
     Vector<size_t> file_sizes;
     Vector<size_t> block_sizes;
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         block_sizes = { 8192, 32768, 65536 };
     }
 
-    auto filename = DeprecatedString::formatted("{}/disk_benchmark.tmp", directory);
+    auto filename = ByteString::formatted("{}/disk_benchmark.tmp", directory);
 
     for (auto file_size : file_sizes) {
         for (auto block_size : block_sizes) {
@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-ErrorOr<Result> benchmark(DeprecatedString const& filename, int file_size, ByteBuffer& buffer, bool allow_cache)
+ErrorOr<Result> benchmark(ByteString const& filename, int file_size, ByteBuffer& buffer, bool allow_cache)
 {
     int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)

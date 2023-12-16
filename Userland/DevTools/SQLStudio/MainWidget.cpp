@@ -41,16 +41,16 @@ REGISTER_WIDGET(SQLStudio, MainWidget);
 
 namespace SQLStudio {
 
-static Vector<DeprecatedString> lookup_database_names()
+static Vector<ByteString> lookup_database_names()
 {
     static constexpr auto database_extension = ".db"sv;
 
-    auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
+    auto database_path = ByteString::formatted("{}/sql", Core::StandardPaths::data_directory());
     if (!FileSystem::exists(database_path))
         return {};
 
     Core::DirIterator iterator(move(database_path), Core::DirIterator::SkipParentAndBaseDir);
-    Vector<DeprecatedString> database_names;
+    Vector<ByteString> database_names;
 
     while (iterator.has_next()) {
         if (auto database = iterator.next_path(); database.ends_with(database_extension))
@@ -86,7 +86,7 @@ ErrorOr<void> MainWidget::setup()
         VERIFY(editor);
 
         if (auto result = editor->save(); result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -94,7 +94,7 @@ ErrorOr<void> MainWidget::setup()
         VERIFY(editor);
 
         if (auto result = editor->save_as(); result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
     });
 
     m_save_all_action = GUI::Action::create("Save All", { Mod_Ctrl | Mod_Alt, Key_S }, [this](auto&) {
@@ -106,7 +106,7 @@ ErrorOr<void> MainWidget::setup()
             m_tab_widget->set_active_widget(&editor);
 
             if (auto result = editor.save(); result.is_error()) {
-                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor.path(), result.error()));
+                GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save {}\n{}", editor.path(), result.error()));
                 return IterationDecision::Break;
             } else if (!result.value()) {
                 return IterationDecision::Break;
@@ -176,7 +176,7 @@ ErrorOr<void> MainWidget::setup()
             m_connection_id = *connection_id;
             m_run_script_action->set_enabled(true);
         } else {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not connect to {}", database_name));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Could not connect to {}", database_name));
         }
     });
 
@@ -191,7 +191,7 @@ ErrorOr<void> MainWidget::setup()
     m_databases_combo_box = GUI::ComboBox::construct();
     m_databases_combo_box->set_editor_placeholder("Enter new database or select existing database"sv);
     m_databases_combo_box->set_max_width(font().width(m_databases_combo_box->editor_placeholder()) + font().max_glyph_width() + 16);
-    m_databases_combo_box->set_model(*GUI::ItemListModel<DeprecatedString>::create(database_names));
+    m_databases_combo_box->set_model(*GUI::ItemListModel<ByteString>::create(database_names));
     m_databases_combo_box->on_return_pressed = [this]() {
         m_connect_to_database_action->activate(m_databases_combo_box);
     };
@@ -220,7 +220,7 @@ ErrorOr<void> MainWidget::setup()
         auto& editor = verify_cast<ScriptEditor>(widget);
 
         if (auto result = editor.attempt_to_close(); result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor.path(), result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save {}\n{}", editor.path(), result.error()));
         } else if (result.value()) {
             m_tab_widget->remove_tab(editor);
             update_title();
@@ -266,14 +266,14 @@ ErrorOr<void> MainWidget::setup()
         auto* editor = active_editor();
         VERIFY(editor);
 
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Error executing {}\n{}", editor->path(), result.error_message));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Error executing {}\n{}", editor->path(), result.error_message));
     };
     m_sql_client->on_next_result = [this](auto result) {
         m_results.append({});
         m_results.last().ensure_capacity(result.values.size());
 
         for (auto const& value : result.values)
-            m_results.last().unchecked_append(value.to_deprecated_string());
+            m_results.last().unchecked_append(value.to_byte_string());
     };
     m_sql_client->on_results_exhausted = [this](auto) {
         if (m_results.size() == 0)
@@ -283,7 +283,7 @@ ErrorOr<void> MainWidget::setup()
 
         Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
         for (auto& column_name : m_result_column_names)
-            query_result_fields.empend(column_name, String::from_deprecated_string(column_name).release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft);
+            query_result_fields.empend(column_name, String::from_byte_string(column_name).release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft);
 
         auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
         m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));
@@ -333,10 +333,10 @@ ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
 
 void MainWidget::open_new_script()
 {
-    auto new_script_name = DeprecatedString::formatted("New Script - {}", m_new_script_counter);
+    auto new_script_name = ByteString::formatted("New Script - {}", m_new_script_counter);
     ++m_new_script_counter;
 
-    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_deprecated_string(new_script_name).release_value_but_fixme_should_propagate_errors());
+    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_byte_string(new_script_name).release_value_but_fixme_should_propagate_errors());
     editor.new_script_with_temp_name(new_script_name);
 
     editor.on_cursor_change = [this] { on_editor_change(); };
@@ -351,7 +351,7 @@ void MainWidget::open_script_from_file(LexicalPath const& file_path)
     auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_utf8(file_path.title()).release_value_but_fixme_should_propagate_errors());
 
     if (auto result = editor.open_script_from_file(file_path); result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, result.error()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to open {}\n{}", file_path, result.error()));
         return;
     }
 
@@ -407,7 +407,7 @@ ScriptEditor* MainWidget::active_editor()
 void MainWidget::update_title()
 {
     if (auto* editor = active_editor())
-        window()->set_title(DeprecatedString::formatted("{} - SQL Studio", editor->name()));
+        window()->set_title(ByteString::formatted("{} - SQL Studio", editor->name()));
     else
         window()->set_title("SQL Studio");
 }
@@ -548,7 +548,7 @@ void MainWidget::read_next_sql_statement_of_editor()
             m_editor_line_level = last_token_ended_statement ? 0 : (m_editor_line_level > 0 ? m_editor_line_level : 1);
     } while ((m_editor_line_level > 0) || piece.is_empty());
 
-    auto sql_statement = piece.to_deprecated_string();
+    auto sql_statement = piece.to_byte_string();
 
     if (auto statement_id = m_sql_client->prepare_statement(*m_connection_id, sql_statement); statement_id.has_value()) {
         m_sql_client->async_execute_statement(*statement_id, {});
@@ -556,11 +556,11 @@ void MainWidget::read_next_sql_statement_of_editor()
         auto* editor = active_editor();
         VERIFY(editor);
 
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not parse {}\n{}", editor->path(), sql_statement));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Could not parse {}\n{}", editor->path(), sql_statement));
     }
 }
 
-Optional<DeprecatedString> MainWidget::read_next_line_of_editor()
+Optional<ByteString> MainWidget::read_next_line_of_editor()
 {
     auto* editor = active_editor();
     if (!editor)

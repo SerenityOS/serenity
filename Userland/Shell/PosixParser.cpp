@@ -144,20 +144,20 @@ ErrorOr<void> Parser::fill_token_buffer(Optional<Reduction> starting_reduction)
         if (!token.has_value())
             break;
 #if SHELL_POSIX_PARSER_DEBUG
-        DeprecatedString position = "(~)";
+        ByteString position = "(~)";
         if (token->position.has_value())
-            position = DeprecatedString::formatted("{}:{}", token->position->start_offset, token->position->end_offset);
-        DeprecatedString expansions = "";
+            position = ByteString::formatted("{}:{}", token->position->start_offset, token->position->end_offset);
+        ByteString expansions = "";
         for (auto& exp : token->resolved_expansions)
             exp.visit(
-                [&](ResolvedParameterExpansion& x) { expansions = DeprecatedString::formatted("{}param({}),", expansions, x.to_deprecated_string()); },
-                [&](ResolvedCommandExpansion& x) { expansions = DeprecatedString::formatted("{}command({:p})", expansions, x.command.ptr()); },
-                [&](ResolvedArithmeticExpansion& x) { expansions = DeprecatedString::formatted("{}arith({})", expansions, x.source_expression); });
-        DeprecatedString rexpansions = "";
+                [&](ResolvedParameterExpansion& x) { expansions = ByteString::formatted("{}param({}),", expansions, x.to_byte_string()); },
+                [&](ResolvedCommandExpansion& x) { expansions = ByteString::formatted("{}command({:p})", expansions, x.command.ptr()); },
+                [&](ResolvedArithmeticExpansion& x) { expansions = ByteString::formatted("{}arith({})", expansions, x.source_expression); });
+        ByteString rexpansions = "";
         for (auto& exp : token->expansions)
             exp.visit(
-                [&](ParameterExpansion& x) { rexpansions = DeprecatedString::formatted("{}param({}) from {} to {},", rexpansions, x.parameter.string_view(), x.range.start, x.range.length); },
-                [&](auto&) { rexpansions = DeprecatedString::formatted("{}...,", rexpansions); });
+                [&](ParameterExpansion& x) { rexpansions = ByteString::formatted("{}param({}) from {} to {},", rexpansions, x.parameter.string_view(), x.range.start, x.range.length); },
+                [&](auto&) { rexpansions = ByteString::formatted("{}...,", rexpansions); });
         dbgln("Token @ {}: '{}' (type {}) - parsed expansions: {} - raw expansions: {}", position, token->value.replace("\n"sv, "\\n"sv, ReplaceMode::All), token->type_name(), expansions, rexpansions);
 #endif
     }
@@ -1845,7 +1845,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
     for (auto& expansion : token.resolved_expansions) {
         TRY(expansion.visit(
             [&](ResolvedParameterExpansion const& x) -> ErrorOr<void> {
-                dbgln_if(SHELL_POSIX_PARSER_DEBUG, "    Expanding '{}' ({}+{})", x.to_deprecated_string(), x.range.start, x.range.length);
+                dbgln_if(SHELL_POSIX_PARSER_DEBUG, "    Expanding '{}' ({}+{})", x.to_byte_string(), x.range.start, x.range.length);
                 if (x.range.start >= value_bytes.length()) {
                     dbgln("Parameter expansion range {}-{} is out of bounds for '{}'", x.range.start, x.range.length, value_bytes);
                     return {};

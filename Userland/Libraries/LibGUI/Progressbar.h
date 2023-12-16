@@ -28,8 +28,8 @@ public:
     void set_orientation(Orientation value);
     Orientation orientation() const { return m_orientation; }
 
-    DeprecatedString text() const { return m_text; }
-    void set_text(DeprecatedString text) { m_text = move(text); }
+    ByteString text() const { return m_text; }
+    void set_text(ByteString text) { m_text = move(text); }
 
     enum Format {
         NoText,
@@ -51,7 +51,7 @@ private:
     int m_min { 0 };
     int m_max { 100 };
     int m_value { 0 };
-    DeprecatedString m_text;
+    ByteString m_text;
     Orientation m_orientation { Orientation::Horizontal };
 };
 

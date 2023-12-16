@@ -183,8 +183,8 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
             return {};
         if (auto path = page_path(index); path.has_value())
             if (auto page = page_view(path.release_value()); !page.is_error())
-                // FIXME: We already provide String, but GUI::Variant still needs DeprecatedString.
-                return DeprecatedString(page.release_value());
+                // FIXME: We already provide String, but GUI::Variant still needs ByteString.
+                return ByteString(page.release_value());
         return {};
     case GUI::ModelRole::Display:
         if (auto name = node->name(); !name.is_error())

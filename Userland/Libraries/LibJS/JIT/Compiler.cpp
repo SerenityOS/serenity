@@ -1470,7 +1470,7 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
     }
 }
 
-static Value cxx_new_string(VM& vm, DeprecatedString const& string)
+static Value cxx_new_string(VM& vm, ByteString const& string)
 {
     return PrimitiveString::create(vm, string);
 }
@@ -3428,7 +3428,7 @@ void Compiler::compile_has_private_id(Bytecode::Op::HasPrivateId const& op)
 }
 
 #    define COMPILE_NEW_BUILTIN_ERROR_OP(NewErrorName, new_error_name, ErrorName)                              \
-        static Value cxx_##new_error_name(VM& vm, DeprecatedString const& error_string)                        \
+        static Value cxx_##new_error_name(VM& vm, ByteString const& error_string)                              \
         {                                                                                                      \
             return ErrorName::create(*vm.current_realm(), error_string);                                       \
         }                                                                                                      \
@@ -3663,7 +3663,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
             default:
                 if constexpr (LOG_JIT_FAILURE) {
                     dbgln("\033[31;1mJIT compilation failed\033[0m: {}", bytecode_executable.name);
-                    dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
+                    dbgln("Unsupported bytecode op: {}", op.to_byte_string(bytecode_executable));
                 }
                 return nullptr;
             }

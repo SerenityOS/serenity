@@ -146,7 +146,7 @@ public:
         bool has_user_agent_controls { false };
         bool is_looping { false };
     };
-    void did_request_media_context_menu(i32 media_id, CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, MediaContextMenu);
+    void did_request_media_context_menu(i32 media_id, CSSPixelPoint, ByteString const& target, unsigned modifiers, MediaContextMenu);
     WebIDL::ExceptionOr<void> toggle_media_play_state();
     void toggle_media_mute_state();
     WebIDL::ExceptionOr<void> toggle_media_loop_state();
@@ -224,7 +224,7 @@ public:
     virtual double device_pixels_per_css_pixel() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, PaintOptions = {}) = 0;
-    virtual void page_did_change_title(DeprecatedString const&) { }
+    virtual void page_did_change_title(ByteString const&) { }
     virtual void page_did_request_navigate_back() { }
     virtual void page_did_request_navigate_forward() { }
     virtual void page_did_request_refresh() { }
@@ -241,12 +241,12 @@ public:
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(CSSPixelPoint) { }
-    virtual void page_did_request_link_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_request_image_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
-    virtual void page_did_request_media_context_menu(CSSPixelPoint, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Page::MediaContextMenu) { }
-    virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_enter_tooltip_area(CSSPixelPoint, DeprecatedString const&) { }
+    virtual void page_did_request_link_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
+    virtual void page_did_request_media_context_menu(CSSPixelPoint, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers, Page::MediaContextMenu) { }
+    virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_enter_tooltip_area(CSSPixelPoint, ByteString const&) { }
     virtual void page_did_leave_tooltip_area() { }
     virtual void page_did_hover_link(const AK::URL&) { }
     virtual void page_did_unhover_link() { }
@@ -263,8 +263,8 @@ public:
     virtual void page_did_request_accept_dialog() { }
     virtual void page_did_request_dismiss_dialog() { }
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(AK::URL const&) { return {}; }
-    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, DeprecatedString const&) { return {}; }
-    virtual DeprecatedString page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, ByteString const&) { return {}; }
+    virtual ByteString page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }

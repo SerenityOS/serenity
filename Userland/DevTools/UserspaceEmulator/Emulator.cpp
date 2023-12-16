@@ -42,7 +42,7 @@ Emulator& Emulator::the()
     return *s_the;
 }
 
-Emulator::Emulator(DeprecatedString const& executable_path, Vector<StringView> const& arguments, Vector<DeprecatedString> const& environment)
+Emulator::Emulator(ByteString const& executable_path, Vector<StringView> const& arguments, Vector<ByteString> const& environment)
     : m_executable_path(executable_path)
     , m_arguments(arguments)
     , m_environment(environment)
@@ -70,7 +70,7 @@ Emulator::Emulator(DeprecatedString const& executable_path, Vector<StringView> c
     setup_signal_trampoline();
 }
 
-Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, DeprecatedString const& executable_path, int executable_fd) const
+Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, ByteString const& executable_path, int executable_fd) const
 {
     // FIXME: This is not fully compatible with the auxiliary vector the kernel generates, this is just the bare
     //        minimum to get the loader going.
@@ -227,7 +227,7 @@ int Emulator::exec()
 
     size_t instructions_until_next_profile_dump = profile_instruction_interval();
     if (is_profiling() && m_loader_text_size.has_value())
-        emit_profile_event(profile_stream(), "mmap"sv, DeprecatedString::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
+        emit_profile_event(profile_stream(), "mmap"sv, ByteString::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
 
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
@@ -235,7 +235,7 @@ int Emulator::exec()
             auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
             // Exec cycle
             if constexpr (trace) {
-                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_deprecated_string(m_cpu->base_eip(), symbol_provider));
+                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_byte_string(m_cpu->base_eip(), symbol_provider));
             }
 
             (m_cpu->*insn.handler())(insn);
@@ -419,13 +419,13 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
     if (!region)
         return {};
 
-    DeprecatedString lib_name = region->lib_name();
+    ByteString lib_name = region->lib_name();
     if (lib_name.is_null())
         return {};
 
-    DeprecatedString lib_path = lib_name;
+    ByteString lib_path = lib_name;
     if (FileSystem::looks_like_shared_library(lib_name))
-        lib_path = DeprecatedString::formatted("/usr/lib/{}", lib_path);
+        lib_path = ByteString::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
         auto file_or_error = Core::MappedFile::map(lib_path);
@@ -463,7 +463,7 @@ Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
     VERIFY(first_region);
     auto lib_path = lib_name;
     if (FileSystem::looks_like_shared_library(lib_name)) {
-        lib_path = DeprecatedString::formatted("/usr/lib/{}", lib_name);
+        lib_path = ByteString::formatted("/usr/lib/{}", lib_name);
     }
 
     auto it = m_dynamic_library_cache.find(lib_path);
@@ -474,18 +474,18 @@ Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
     return { { lib_name, symbol, source_position } };
 }
 
-DeprecatedString Emulator::create_backtrace_line(FlatPtr address)
+ByteString Emulator::create_backtrace_line(FlatPtr address)
 {
     auto maybe_symbol = symbol_at(address);
     if (!maybe_symbol.has_value()) {
-        return DeprecatedString::formatted("=={}==    {:p}", getpid(), address);
+        return ByteString::formatted("=={}==    {:p}", getpid(), address);
     }
     if (!maybe_symbol->source_position.has_value()) {
-        return DeprecatedString::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
+        return ByteString::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
     }
 
     auto const& source_position = maybe_symbol->source_position.value();
-    return DeprecatedString::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
+    return ByteString::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
 }
 
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
@@ -513,7 +513,7 @@ void Emulator::emit_profile_sample(Stream& output)
     output.write_until_depleted(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
-void Emulator::emit_profile_event(Stream& output, StringView event_name, DeprecatedString const& contents)
+void Emulator::emit_profile_event(Stream& output, StringView event_name, ByteString const& contents)
 {
     StringBuilder builder;
     timeval tv {};
@@ -523,13 +523,13 @@ void Emulator::emit_profile_event(Stream& output, StringView event_name, Depreca
     output.write_until_depleted(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
-DeprecatedString Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
+ByteString Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
 {
     auto symbol = symbol_at(address);
     if (!symbol.has_value() || !symbol->source_position.has_value())
-        return DeprecatedString::formatted("{:p}: {}", address, insn.to_deprecated_string(address));
+        return ByteString::formatted("{:p}: {}", address, insn.to_byte_string(address));
 
-    return DeprecatedString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_deprecated_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
+    return ByteString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_byte_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum, siginfo_t* signal_info, void* context)

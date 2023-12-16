@@ -8,7 +8,7 @@
 
 #include "CodeDocument.h"
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 
@@ -16,12 +16,12 @@ namespace HackStudio {
 
 class ProjectFile : public RefCounted<ProjectFile> {
 public:
-    static NonnullRefPtr<ProjectFile> construct_with_name(DeprecatedString const& name)
+    static NonnullRefPtr<ProjectFile> construct_with_name(ByteString const& name)
     {
         return adopt_ref(*new ProjectFile(name));
     }
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
     bool could_render_text() const { return m_could_render_text; }
 
     GUI::TextDocument& document() const;
@@ -33,10 +33,10 @@ public:
     void horizontal_scroll_value(int);
 
 private:
-    explicit ProjectFile(DeprecatedString const& name);
+    explicit ProjectFile(ByteString const& name);
     void create_document_if_needed() const;
 
-    DeprecatedString m_name;
+    ByteString m_name;
     mutable RefPtr<CodeDocument> m_document;
     mutable bool m_could_render_text { false };
     int m_vertical_scroll_value { 0 };

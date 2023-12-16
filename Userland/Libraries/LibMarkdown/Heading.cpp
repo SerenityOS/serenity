@@ -12,14 +12,14 @@
 
 namespace Markdown {
 
-DeprecatedString Heading::render_to_html(bool) const
+ByteString Heading::render_to_html(bool) const
 {
     auto input = Unicode::normalize(m_text.render_for_raw_print().view(), Unicode::NormalizationForm::NFD);
     auto slugified = MUST(AK::slugify(input));
-    return DeprecatedString::formatted("<h{} id='{}'><a href='#{}'>#</a> {}</h{}>\n", m_level, slugified, slugified, m_text.render_to_html(), m_level);
+    return ByteString::formatted("<h{} id='{}'><a href='#{}'>#</a> {}</h{}>\n", m_level, slugified, slugified, m_text.render_to_html(), m_level);
 }
 
-Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
+Vector<ByteString> Heading::render_lines_for_terminal(size_t) const
 {
     StringBuilder builder;
 
@@ -36,7 +36,7 @@ Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
         break;
     }
 
-    return Vector<DeprecatedString> { builder.to_deprecated_string() };
+    return Vector<ByteString> { builder.to_byte_string() };
 }
 
 RecursionDecision Heading::walk(Visitor& visitor) const

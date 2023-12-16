@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/EventReceiver.h>
@@ -23,18 +23,18 @@ public:
 
     void next_keymap();
 
-    Function<void(DeprecatedString const& keymap)> on_keymap_change;
+    Function<void(ByteString const& keymap)> on_keymap_change;
 
-    DeprecatedString get_current_keymap() const;
+    ByteString get_current_keymap() const;
 
-    void set_keymap(AK::DeprecatedString const&);
+    void set_keymap(AK::ByteString const&);
 
 private:
     void refresh();
 
     KeymapSwitcher();
 
-    Vector<AK::DeprecatedString> m_keymaps;
+    Vector<AK::ByteString> m_keymaps;
 
     RefPtr<Core::FileWatcher> m_file_watcher;
 

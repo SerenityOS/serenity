@@ -138,7 +138,7 @@ private:
 
     RefPtr<Gfx::Font const> current_font();
 
-    PreparedText prepare_text(DeprecatedString const& text, float max_width = INFINITY);
+    PreparedText prepare_text(ByteString const& text, float max_width = INFINITY);
 
     Gfx::Painter* painter();
     Optional<Gfx::AntiAliasingPainter> antialiased_painter();

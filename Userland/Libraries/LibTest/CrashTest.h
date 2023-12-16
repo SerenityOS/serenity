@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/Variant.h>
 
@@ -28,7 +28,7 @@ public:
 
     static constexpr int ANY_SIGNAL = -1;
 
-    Crash(DeprecatedString test_type, Function<Crash::Failure()> crash_function, int crash_signal = ANY_SIGNAL);
+    Crash(ByteString test_type, Function<Crash::Failure()> crash_function, int crash_signal = ANY_SIGNAL);
 
     bool run(RunType run_type = RunType::UsingChildProcess);
 
@@ -36,7 +36,7 @@ private:
     using Report = Variant<Failure, int>;
     bool do_report(Report report);
 
-    DeprecatedString m_type;
+    ByteString m_type;
     Function<Crash::Failure()> m_crash_function;
     int m_crash_signal;
 };

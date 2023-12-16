@@ -240,7 +240,7 @@ ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::File
     return palette;
 }
 
-ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(DeprecatedString const& file_path)
+ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(ByteString const& file_path)
 {
     auto file = TRY(Core::File::open(file_path, Core::File::OpenMode::Read));
     return load_palette_file(move(file));
@@ -249,7 +249,7 @@ ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(DeprecatedString const& 
 ErrorOr<void> PaletteWidget::save_palette_file(Vector<Color> palette, NonnullOwnPtr<Core::File> file)
 {
     for (auto& color : palette) {
-        TRY(file->write_until_depleted(color.to_deprecated_string_without_alpha().bytes()));
+        TRY(file->write_until_depleted(color.to_byte_string_without_alpha().bytes()));
         TRY(file->write_until_depleted({ "\n", 1 }));
     }
     return {};

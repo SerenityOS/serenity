@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
 
@@ -224,7 +224,7 @@ struct SourcePosition {
 
 class Token {
 public:
-    Token(TokenType type, DeprecatedString value, SourcePosition start_position, SourcePosition end_position)
+    Token(TokenType type, ByteString value, SourcePosition start_position, SourcePosition end_position)
         : m_type(type)
         , m_value(move(value))
         , m_start_position(start_position)
@@ -239,7 +239,7 @@ public:
     TokenType type() const { return m_type; }
     TokenCategory category() const { return category(m_type); }
 
-    DeprecatedString const& value() const { return m_value; }
+    ByteString const& value() const { return m_value; }
     double double_value() const;
 
     SourcePosition const& start_position() const { return m_start_position; }
@@ -247,7 +247,7 @@ public:
 
 private:
     TokenType m_type;
-    DeprecatedString m_value;
+    ByteString m_value;
     SourcePosition m_start_position;
     SourcePosition m_end_position;
 };

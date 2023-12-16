@@ -8,7 +8,7 @@
 
 #include "Token.h"
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -21,7 +21,7 @@ public:
 
     Token next();
 
-    DeprecatedString const& source() const { return m_source; }
+    ByteString const& source() const { return m_source; }
     String const& filename() const { return m_filename; }
 
     void disallow_html_comments() { m_allow_html_comments = false; }
@@ -58,7 +58,7 @@ private:
 
     TokenType consume_regex_literal();
 
-    DeprecatedString m_source;
+    ByteString m_source;
     size_t m_position { 0 };
     Token m_current_token;
     char m_current_char { 0 };
@@ -81,8 +81,8 @@ private:
     Optional<size_t> m_hit_invalid_unicode;
 
     static HashMap<DeprecatedFlyString, TokenType> s_keywords;
-    static HashMap<DeprecatedString, TokenType> s_three_char_tokens;
-    static HashMap<DeprecatedString, TokenType> s_two_char_tokens;
+    static HashMap<ByteString, TokenType> s_three_char_tokens;
+    static HashMap<ByteString, TokenType> s_two_char_tokens;
     static HashMap<char, TokenType> s_single_char_tokens;
 
     struct ParsedIdentifiers : public RefCounted<ParsedIdentifiers> {

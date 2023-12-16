@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/String.h>
 #include <AK/Utf32View.h>
@@ -24,7 +24,7 @@ public:
     static constexpr ForSearchTag ForSearch {};
 
     // Intentionally not explicit. (To allow suggesting bare strings)
-    CompletionSuggestion(DeprecatedString const& completion)
+    CompletionSuggestion(ByteString const& completion)
         : CompletionSuggestion(completion, ""sv, {})
     {
     }
@@ -118,7 +118,7 @@ public:
 
     void reset()
     {
-        m_last_shown_suggestion = DeprecatedString::empty();
+        m_last_shown_suggestion = ByteString::empty();
         m_last_shown_suggestion_display_length = 0;
         m_suggestions.clear();
         m_last_displayed_suggestion_index = 0;
@@ -131,7 +131,7 @@ private:
     }
 
     Vector<CompletionSuggestion> m_suggestions;
-    CompletionSuggestion m_last_shown_suggestion { DeprecatedString::empty() };
+    CompletionSuggestion m_last_shown_suggestion { ByteString::empty() };
     size_t m_last_shown_suggestion_display_length { 0 };
     bool m_last_shown_suggestion_was_complete { false };
     mutable size_t m_next_suggestion_index { 0 };

@@ -70,7 +70,7 @@ WebIDL::ExceptionOr<String> WindowOrWorkerGlobalScopeMixin::origin() const
     auto& vm = this_impl().vm();
 
     // The origin getter steps are to return this's relevant settings object's origin, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(relevant_settings_object(this_impl()).origin().serialize()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(relevant_settings_object(this_impl()).origin().serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-issecurecontext

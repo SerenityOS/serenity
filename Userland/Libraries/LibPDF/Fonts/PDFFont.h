@@ -23,7 +23,7 @@ public:
     virtual ~PDFFont() = default;
 
     virtual void set_font_size(float font_size) = 0;
-    virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Renderer const&) = 0;
+    virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) = 0;
 
 protected:
     virtual PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size);

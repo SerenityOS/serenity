@@ -21,12 +21,12 @@ struct BytecodeInterpreter : public Interpreter {
     virtual void interpret(Configuration&) override;
     virtual ~BytecodeInterpreter() override = default;
     virtual bool did_trap() const override { return !m_trap.has<Empty>(); }
-    virtual DeprecatedString trap_reason() const override
+    virtual ByteString trap_reason() const override
     {
         return m_trap.visit(
-            [](Empty) -> DeprecatedString { VERIFY_NOT_REACHED(); },
+            [](Empty) -> ByteString { VERIFY_NOT_REACHED(); },
             [](Trap const& trap) { return trap.reason; },
-            [](JS::Completion const& completion) { return completion.value()->to_string_without_side_effects().to_deprecated_string(); });
+            [](JS::Completion const& completion) { return completion.value()->to_string_without_side_effects().to_byte_string(); });
     }
     virtual void clear_trap() override { m_trap = Empty {}; }
 

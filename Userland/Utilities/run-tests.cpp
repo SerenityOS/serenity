@@ -33,11 +33,11 @@ struct FileResult {
     pid_t child_pid { 0 };
 };
 
-DeprecatedString g_currently_running_test;
+ByteString g_currently_running_test;
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(DeprecatedString test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, bool print_json, bool print_all_output, bool unlink_coredumps, bool print_times = true)
+    TestRunner(ByteString test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, bool print_json, bool print_all_output, bool unlink_coredumps, bool print_times = true)
         : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
         , m_exclude_regex(move(exclude_regex))
         , m_config(move(config))
@@ -55,29 +55,29 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(DeprecatedString const& test_path, size_t current_text_index, size_t num_tests) override;
-    virtual Vector<DeprecatedString> get_test_paths() const override;
-    virtual Vector<DeprecatedString> const* get_failed_test_names() const override { return &m_failed_test_names; }
+    virtual void do_run_single_test(ByteString const& test_path, size_t current_text_index, size_t num_tests) override;
+    virtual Vector<ByteString> get_test_paths() const override;
+    virtual Vector<ByteString> const* get_failed_test_names() const override { return &m_failed_test_names; }
 
-    virtual FileResult run_test_file(DeprecatedString const& test_path);
+    virtual FileResult run_test_file(ByteString const& test_path);
 
     bool should_skip_test(LexicalPath const& test_path);
 
     Regex<PosixExtended> m_exclude_regex;
     NonnullRefPtr<Core::ConfigFile> m_config;
-    Vector<DeprecatedString> m_skip_directories;
-    Vector<DeprecatedString> m_skip_files;
-    Vector<DeprecatedString> m_failed_test_names;
+    Vector<ByteString> m_skip_directories;
+    Vector<ByteString> m_skip_files;
+    Vector<ByteString> m_failed_test_names;
     Regex<PosixExtended> m_skip_regex;
     bool m_run_skipped_tests { false };
     bool m_print_all_output { false };
     bool m_unlink_coredumps { false };
 };
 
-Vector<DeprecatedString> TestRunner::get_test_paths() const
+Vector<ByteString> TestRunner::get_test_paths() const
 {
-    Vector<DeprecatedString> paths;
-    Test::iterate_directory_recursively(m_test_root, [&](DeprecatedString const& file_path) {
+    Vector<ByteString> paths;
+    Test::iterate_directory_recursively(m_test_root, [&](ByteString const& file_path) {
         if (access(file_path.characters(), R_OK | X_OK) != 0)
             return;
         auto result = m_exclude_regex.match(file_path, PosixFlags::Global);
@@ -93,11 +93,11 @@ bool TestRunner::should_skip_test(LexicalPath const& test_path)
     if (m_run_skipped_tests)
         return false;
 
-    for (DeprecatedString const& dir : m_skip_directories) {
+    for (ByteString const& dir : m_skip_directories) {
         if (test_path.dirname().contains(dir))
             return true;
     }
-    for (DeprecatedString const& file : m_skip_files) {
+    for (ByteString const& file : m_skip_files) {
         if (test_path.basename().contains(file))
             return true;
     }
@@ -108,7 +108,7 @@ bool TestRunner::should_skip_test(LexicalPath const& test_path)
     return false;
 }
 
-void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t current_test_index, size_t num_tests)
+void TestRunner::do_run_single_test(ByteString const& test_path, size_t current_test_index, size_t num_tests)
 {
     g_currently_running_test = test_path;
     auto test_relative_path = LexicalPath::relative_path(test_path, m_test_root);
@@ -146,8 +146,8 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
         out("{}", test_result.result == Test::Result::Fail ? " FAIL  " : "CRASHED");
         print_modifiers({ Test::CLEAR });
         if (test_result.result == Test::Result::Crashed) {
-            auto pid_search_string = DeprecatedString::formatted("_{}_", test_result.child_pid);
-            Optional<DeprecatedString> coredump_path;
+            auto pid_search_string = ByteString::formatted("_{}_", test_result.child_pid);
+            Optional<ByteString> coredump_path;
             Core::DirIterator iterator("/tmp/coredump"sv);
             if (!iterator.has_error()) {
                 while (iterator.has_next()) {
@@ -166,7 +166,7 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
                         auto tid = thread_info.tid; // Note: Yoinking this out of the struct because we can't pass a reference to it (as it's a misaligned field in a packed struct)
                         dbgln("Thread {}", tid);
                         for (auto const& entry : thread_backtrace.entries())
-                            dbgln("- {}", entry.to_deprecated_string(true));
+                            dbgln("- {}", entry.to_byte_string(true));
                         return IterationDecision::Continue;
                     });
                     break;
@@ -235,7 +235,7 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
     close(test_result.stdout_err_fd);
 }
 
-FileResult TestRunner::run_test_file(DeprecatedString const& test_path)
+FileResult TestRunner::run_test_file(ByteString const& test_path)
 {
     double start_time = get_time_in_ms();
 
@@ -251,8 +251,8 @@ FileResult TestRunner::run_test_file(DeprecatedString const& test_path)
     int child_out_err_file = mkstemp(child_out_err_path);
     VERIFY(child_out_err_file >= 0);
 
-    DeprecatedString dirname = path_for_test.dirname();
-    DeprecatedString basename = path_for_test.basename();
+    ByteString dirname = path_for_test.dirname();
+    ByteString basename = path_for_test.basename();
 
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDOUT_FILENO);
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO);
@@ -327,9 +327,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool run_skipped_tests = false;
     bool unlink_coredumps = false;
     StringView specified_test_root;
-    DeprecatedString test_glob;
-    DeprecatedString exclude_pattern;
-    DeprecatedString config_file;
+    ByteString test_glob;
+    ByteString exclude_pattern;
+    ByteString config_file;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(Core::ArgsParser::Option {
@@ -358,7 +358,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    test_glob = DeprecatedString::formatted("*{}*", test_glob);
+    test_glob = ByteString::formatted("*{}*", test_glob);
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
         AK::set_debug_enabled(false);
@@ -370,10 +370,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!run_benchmarks)
         TRY(Core::System::setenv("TESTS_ONLY"sv, "1"sv, true));
 
-    DeprecatedString test_root;
+    ByteString test_root;
 
     if (!specified_test_root.is_empty()) {
-        test_root = DeprecatedString { specified_test_root };
+        test_root = ByteString { specified_test_root };
     } else {
         test_root = "/usr/Tests";
     }
@@ -382,7 +382,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    test_root = TRY(FileSystem::real_path(test_root)).to_deprecated_string();
+    test_root = TRY(FileSystem::real_path(test_root)).to_byte_string();
 
     auto void_or_error = Core::System::chdir(test_root);
     if (void_or_error.is_error()) {

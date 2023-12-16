@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
@@ -13,7 +13,7 @@
 
 namespace Gemini {
 
-DeprecatedString Document::render_to_html() const
+ByteString Document::render_to_html() const
 {
     StringBuilder html_builder;
     html_builder.append("<!DOCTYPE html>\n<html>\n"sv);
@@ -26,7 +26,7 @@ DeprecatedString Document::render_to_html() const
     }
     html_builder.append("</body>"sv);
     html_builder.append("</html>"sv);
-    return html_builder.to_deprecated_string();
+    return html_builder.to_byte_string();
 }
 
 NonnullRefPtr<Document> Document::parse(StringView lines, const URL& url)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/Resource.h>
 #include <LibGfx/Palette.h>
@@ -33,7 +33,7 @@ Core::AnonymousBuffer create_system_palette()
 
     auto theme_file = is_dark ? "Dark"sv : "Default"sv;
     auto theme_ini = MUST(Core::Resource::load_from_uri(MUST(String::formatted("resource://themes/{}.ini", theme_file))));
-    auto theme = Gfx::load_system_theme(theme_ini->filesystem_path().to_deprecated_string()).release_value_but_fixme_should_propagate_errors();
+    auto theme = Gfx::load_system_theme(theme_ini->filesystem_path().to_byte_string()).release_value_but_fixme_should_propagate_errors();
 
     auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
     auto palette = Gfx::Palette(move(palette_impl));

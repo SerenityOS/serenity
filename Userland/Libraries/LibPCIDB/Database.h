@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
@@ -53,7 +53,7 @@ struct Class {
 
 class Database : public RefCounted<Database> {
 public:
-    static RefPtr<Database> open(DeprecatedString const& filename);
+    static RefPtr<Database> open(ByteString const& filename);
     static RefPtr<Database> open() { return open("/res/pci.ids"); }
 
     const StringView get_vendor(u16 vendor_id) const;

@@ -127,7 +127,7 @@ MainWidget::MainWidget()
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
             GUI::MessageBox::show(window(),
-                DeprecatedString::formatted("Not found: \"{}\"", needle),
+                ByteString::formatted("Not found: \"{}\"", needle),
                 "Not found"sv,
                 GUI::MessageBox::Type::Information);
         }
@@ -152,7 +152,7 @@ MainWidget::MainWidget()
             }
         } else {
             GUI::MessageBox::show(window(),
-                DeprecatedString::formatted("Not found: \"{}\"", needle),
+                ByteString::formatted("Not found: \"{}\"", needle),
                 "Not found"sv,
                 GUI::MessageBox::Type::Information);
         }
@@ -346,7 +346,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
         m_page_view = web_view_container.add<WebView::OutOfProcessWebView>();
         m_page_view->on_link_hover = [this](auto& url) {
             if (url.is_valid())
-                m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
+                m_statusbar->set_text(String::from_byte_string(url.to_byte_string()).release_value_but_fixme_should_propagate_errors());
             else
                 update_statusbar();
         };
@@ -354,7 +354,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
             if (!Desktop::Launcher::open(url)) {
                 GUI::MessageBox::show(
                     window(),
-                    DeprecatedString::formatted("The link to '{}' could not be opened.", url),
+                    ByteString::formatted("The link to '{}' could not be opened.", url),
                     "Failed to open link"sv,
                     GUI::MessageBox::Type::Error);
             }
@@ -791,7 +791,7 @@ void MainWidget::update_title()
     else
         builder.append(m_path);
     builder.append("[*] - Text Editor"sv);
-    window()->set_title(builder.to_deprecated_string());
+    window()->set_title(builder.to_byte_string());
 }
 
 ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)
@@ -803,7 +803,7 @@ ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)
     return {};
 }
 
-void MainWidget::open_nonexistent_file(DeprecatedString const& path)
+void MainWidget::open_nonexistent_file(ByteString const& path)
 {
     m_editor->set_text({});
     set_path(path);
@@ -928,11 +928,11 @@ void MainWidget::update_statusbar()
 
     StringBuilder builder;
     if (m_editor->has_selection()) {
-        DeprecatedString selected_text = m_editor->selected_text();
+        ByteString selected_text = m_editor->selected_text();
         auto word_count = m_editor->number_of_selected_words();
         builder.appendff("{:'d} {} ({:'d} {}) selected", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     } else {
-        DeprecatedString text = m_editor->text();
+        ByteString text = m_editor->text();
         auto word_count = m_editor->number_of_words();
         builder.appendff("{:'d} {} ({:'d} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
@@ -959,7 +959,7 @@ void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessa
 
     if (!result.is_valid() && show_message == ShowMessageIfNoResults::Yes) {
         GUI::MessageBox::show(window(),
-            DeprecatedString::formatted("Not found: \"{}\"", needle),
+            ByteString::formatted("Not found: \"{}\"", needle),
             "Not found"sv,
             GUI::MessageBox::Type::Information);
     }

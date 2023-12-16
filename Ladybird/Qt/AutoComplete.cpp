@@ -45,7 +45,7 @@ ErrorOr<void> AutoComplete::parse_google_autocomplete(Vector<JsonValue> const& j
 
     if (!json[0].is_string())
         return Error::from_string_view("Invalid JSON, expected first element to be a string"sv);
-    auto query = TRY(String::from_deprecated_string(json[0].as_string()));
+    auto query = TRY(String::from_byte_string(json[0].as_string()));
 
     if (!json[1].is_array())
         return Error::from_string_view("Invalid JSON, expected second element to be an array"sv);
@@ -55,7 +55,7 @@ ErrorOr<void> AutoComplete::parse_google_autocomplete(Vector<JsonValue> const& j
         return Error::from_string_view("Invalid JSON, query does not match"sv);
 
     for (auto& suggestion : suggestions_array) {
-        m_auto_complete_model->add(TRY(String::from_deprecated_string(suggestion.as_string())));
+        m_auto_complete_model->add(TRY(String::from_byte_string(suggestion.as_string())));
     }
 
     return {};
@@ -67,7 +67,7 @@ ErrorOr<void> AutoComplete::parse_duckduckgo_autocomplete(Vector<JsonValue> cons
         auto maybe_value = suggestion.as_object().get("phrase"sv);
         if (!maybe_value.has_value())
             continue;
-        m_auto_complete_model->add(TRY(String::from_deprecated_string(maybe_value->as_string())));
+        m_auto_complete_model->add(TRY(String::from_byte_string(maybe_value->as_string())));
     }
 
     return {};
@@ -77,7 +77,7 @@ ErrorOr<void> AutoComplete::parse_yahoo_autocomplete(JsonObject const& json)
 {
     if (!json.get("q"sv).has_value() || !json.get("q"sv)->is_string())
         return Error::from_string_view("Invalid JSON, expected \"q\" to be a string"sv);
-    auto query = TRY(String::from_deprecated_string(json.get("q"sv)->as_string()));
+    auto query = TRY(String::from_byte_string(json.get("q"sv)->as_string()));
 
     if (!json.get("r"sv).has_value() || !json.get("r"sv)->is_array())
         return Error::from_string_view("Invalid JSON, expected \"r\" to be an object"sv);
@@ -94,7 +94,7 @@ ErrorOr<void> AutoComplete::parse_yahoo_autocomplete(JsonObject const& json)
         if (!suggestion.get("k"sv).has_value() || !suggestion.get("k"sv)->is_string())
             return Error::from_string_view("Invalid JSON, expected \"k\" to be a string"sv);
 
-        m_auto_complete_model->add(TRY(String::from_deprecated_string(suggestion.get("k"sv)->as_string())));
+        m_auto_complete_model->add(TRY(String::from_byte_string(suggestion.get("k"sv)->as_string())));
     };
 
     return {};
@@ -105,7 +105,7 @@ ErrorOr<void> AutoComplete::got_network_response(QNetworkReply* reply)
     if (reply->error() == QNetworkReply::NetworkError::OperationCanceledError)
         return {};
 
-    AK::JsonParser parser(ak_deprecated_string_from_qstring(reply->readAll()));
+    AK::JsonParser parser(ak_byte_string_from_qstring(reply->readAll()));
     auto json = TRY(parser.parse());
 
     auto engine_name = Settings::the()->autocomplete_engine().name;

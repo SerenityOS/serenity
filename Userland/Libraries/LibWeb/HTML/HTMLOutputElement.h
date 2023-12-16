@@ -23,9 +23,9 @@ class HTMLOutputElement final
 public:
     virtual ~HTMLOutputElement() override;
 
-    DeprecatedString const& type() const
+    ByteString const& type() const
     {
-        static DeprecatedString output = "output";
+        static ByteString output = "output";
         return output;
     }
 

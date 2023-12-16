@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -45,7 +45,7 @@ public:
 
     URL() = default;
     URL(StringView);
-    URL(DeprecatedString const& string)
+    URL(ByteString const& string)
         : URL(string.view())
     {
     }
@@ -77,11 +77,11 @@ public:
     ErrorOr<String> password() const;
     Host const& host() const { return m_host; }
     ErrorOr<String> serialized_host() const;
-    DeprecatedString basename() const;
+    ByteString basename() const;
     Optional<String> const& query() const { return m_query; }
     Optional<String> const& fragment() const { return m_fragment; }
     Optional<u16> port() const { return m_port; }
-    DeprecatedString path_segment_at_index(size_t index) const;
+    ByteString path_segment_at_index(size_t index) const;
     size_t path_segment_count() const { return m_paths.size(); }
 
     u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme).value_or(0)); }
@@ -96,7 +96,7 @@ public:
     ErrorOr<void> set_password(StringView);
     void set_host(Host);
     void set_port(Optional<u16>);
-    void set_paths(Vector<DeprecatedString> const&);
+    void set_paths(Vector<ByteString> const&);
     void set_query(Optional<String> query) { m_query = move(query); }
     void set_fragment(Optional<String> fragment) { m_fragment = move(fragment); }
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
@@ -111,14 +111,14 @@ public:
         Yes,
         No
     };
-    DeprecatedString serialize_path(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
-    DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
-    DeprecatedString serialize_for_display() const;
-    DeprecatedString to_deprecated_string() const { return serialize(); }
+    ByteString serialize_path(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    ByteString serialize(ExcludeFragment = ExcludeFragment::No) const;
+    ByteString serialize_for_display() const;
+    ByteString to_byte_string() const { return serialize(); }
     ErrorOr<String> to_string() const;
 
     // HTML origin
-    DeprecatedString serialize_origin() const;
+    ByteString serialize_origin() const;
 
     bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
@@ -130,9 +130,9 @@ public:
     };
     ErrorOr<DataURL> process_data_url() const;
 
-    static URL create_with_url_or_path(DeprecatedString const&);
-    static URL create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
-    static URL create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
+    static URL create_with_url_or_path(ByteString const&);
+    static URL create_with_file_scheme(ByteString const& path, ByteString const& fragment = {}, ByteString const& hostname = {});
+    static URL create_with_help_scheme(ByteString const& path, ByteString const& fragment = {}, ByteString const& hostname = {});
     static URL create_with_data(StringView mime_type, StringView payload, bool is_base64 = false);
 
     static Optional<u16> default_port_for_scheme(StringView);
@@ -142,8 +142,8 @@ public:
         No,
         Yes,
     };
-    static DeprecatedString percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
-    static DeprecatedString percent_decode(StringView input);
+    static ByteString percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
+    static ByteString percent_decode(StringView input);
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
 
@@ -198,7 +198,7 @@ struct Formatter<URL> : Formatter<StringView> {
 
 template<>
 struct Traits<URL> : public DefaultTraits<URL> {
-    static unsigned hash(URL const& url) { return url.to_deprecated_string().hash(); }
+    static unsigned hash(URL const& url) { return url.to_byte_string().hash(); }
 };
 
 }

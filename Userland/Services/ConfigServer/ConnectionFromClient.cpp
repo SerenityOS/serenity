@@ -15,15 +15,15 @@ namespace ConfigServer {
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 
 struct CachedDomain {
-    DeprecatedString domain;
+    ByteString domain;
     NonnullRefPtr<Core::ConfigFile> config;
     RefPtr<Core::FileWatcher> watcher;
 };
 
-static HashMap<DeprecatedString, NonnullOwnPtr<CachedDomain>> s_cache;
+static HashMap<ByteString, NonnullOwnPtr<CachedDomain>> s_cache;
 static constexpr int s_disk_sync_delay_ms = 5'000;
 
-static void for_each_monitoring_connection(DeprecatedString const& domain, ConnectionFromClient* excluded_connection, Function<void(ConnectionFromClient&)> callback)
+static void for_each_monitoring_connection(ByteString const& domain, ConnectionFromClient* excluded_connection, Function<void(ConnectionFromClient&)> callback)
 {
     for (auto& it : s_connections) {
         if (it.value->is_monitoring_domain(domain) && (!excluded_connection || it.value != excluded_connection))
@@ -31,7 +31,7 @@ static void for_each_monitoring_connection(DeprecatedString const& domain, Conne
     }
 }
 
-static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
+static Core::ConfigFile& ensure_domain_config(ByteString const& domain)
 {
     auto it = s_cache.find(domain);
     if (it != s_cache.end())
@@ -88,7 +88,7 @@ void ConnectionFromClient::die()
     sync_dirty_domains_to_disk();
 }
 
-void ConnectionFromClient::pledge_domains(Vector<DeprecatedString> const& domains)
+void ConnectionFromClient::pledge_domains(Vector<ByteString> const& domains)
 {
     if (m_has_pledged) {
         did_misbehave("Tried to pledge domains twice.");
@@ -99,7 +99,7 @@ void ConnectionFromClient::pledge_domains(Vector<DeprecatedString> const& domain
         m_pledged_domains.set(domain);
 }
 
-void ConnectionFromClient::monitor_domain(DeprecatedString const& domain)
+void ConnectionFromClient::monitor_domain(ByteString const& domain)
 {
     if (m_has_pledged && !m_pledged_domains.contains(domain)) {
         did_misbehave("Attempt to monitor non-pledged domain");
@@ -109,13 +109,13 @@ void ConnectionFromClient::monitor_domain(DeprecatedString const& domain)
     m_monitored_domains.set(domain);
 }
 
-bool ConnectionFromClient::validate_access(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+bool ConnectionFromClient::validate_access(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
     if (!m_has_pledged)
         return true;
     if (m_pledged_domains.contains(domain))
         return true;
-    did_misbehave(DeprecatedString::formatted("Blocked attempt to access domain '{}', group={}, key={}", domain, group, key).characters());
+    did_misbehave(ByteString::formatted("Blocked attempt to access domain '{}', group={}, key={}", domain, group, key).characters());
     return false;
 }
 
@@ -135,34 +135,34 @@ void ConnectionFromClient::sync_dirty_domains_to_disk()
     }
 }
 
-Messages::ConfigServer::ListConfigKeysResponse ConnectionFromClient::list_config_keys(DeprecatedString const& domain, DeprecatedString const& group)
+Messages::ConfigServer::ListConfigKeysResponse ConnectionFromClient::list_config_keys(ByteString const& domain, ByteString const& group)
 {
     if (!validate_access(domain, group, ""))
-        return Vector<DeprecatedString> {};
+        return Vector<ByteString> {};
     auto& config = ensure_domain_config(domain);
     return { config.keys(group) };
 }
 
-Messages::ConfigServer::ListConfigGroupsResponse ConnectionFromClient::list_config_groups(DeprecatedString const& domain)
+Messages::ConfigServer::ListConfigGroupsResponse ConnectionFromClient::list_config_groups(ByteString const& domain)
 {
     if (!validate_access(domain, "", ""))
-        return Vector<DeprecatedString> {};
+        return Vector<ByteString> {};
     auto& config = ensure_domain_config(domain);
     return { config.groups() };
 }
 
-Messages::ConfigServer::ReadStringValueResponse ConnectionFromClient::read_string_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+Messages::ConfigServer::ReadStringValueResponse ConnectionFromClient::read_string_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
     if (!validate_access(domain, group, key))
         return nullptr;
 
     auto& config = ensure_domain_config(domain);
     if (!config.has_key(group, key))
-        return Optional<DeprecatedString> {};
-    return Optional<DeprecatedString> { config.read_entry(group, key) };
+        return Optional<ByteString> {};
+    return Optional<ByteString> { config.read_entry(group, key) };
 }
 
-Messages::ConfigServer::ReadI32ValueResponse ConnectionFromClient::read_i32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+Messages::ConfigServer::ReadI32ValueResponse ConnectionFromClient::read_i32_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
     if (!validate_access(domain, group, key))
         return nullptr;
@@ -173,7 +173,7 @@ Messages::ConfigServer::ReadI32ValueResponse ConnectionFromClient::read_i32_valu
     return Optional<i32> { config.read_num_entry(group, key) };
 }
 
-Messages::ConfigServer::ReadU32ValueResponse ConnectionFromClient::read_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+Messages::ConfigServer::ReadU32ValueResponse ConnectionFromClient::read_u32_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
     if (!validate_access(domain, group, key))
         return nullptr;
@@ -184,7 +184,7 @@ Messages::ConfigServer::ReadU32ValueResponse ConnectionFromClient::read_u32_valu
     return Optional<u32> { config.read_num_entry<u32>(group, key) };
 }
 
-Messages::ConfigServer::ReadBoolValueResponse ConnectionFromClient::read_bool_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+Messages::ConfigServer::ReadBoolValueResponse ConnectionFromClient::read_bool_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
     if (!validate_access(domain, group, key))
         return nullptr;
@@ -203,7 +203,7 @@ void ConnectionFromClient::start_or_restart_sync_timer()
         m_sync_timer->start();
 }
 
-void ConnectionFromClient::write_string_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void ConnectionFromClient::write_string_value(ByteString const& domain, ByteString const& group, ByteString const& key, ByteString const& value)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -222,7 +222,7 @@ void ConnectionFromClient::write_string_value(DeprecatedString const& domain, De
     });
 }
 
-void ConnectionFromClient::write_i32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value)
+void ConnectionFromClient::write_i32_value(ByteString const& domain, ByteString const& group, ByteString const& key, i32 value)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -241,7 +241,7 @@ void ConnectionFromClient::write_i32_value(DeprecatedString const& domain, Depre
     });
 }
 
-void ConnectionFromClient::write_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value)
+void ConnectionFromClient::write_u32_value(ByteString const& domain, ByteString const& group, ByteString const& key, u32 value)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -260,7 +260,7 @@ void ConnectionFromClient::write_u32_value(DeprecatedString const& domain, Depre
     });
 }
 
-void ConnectionFromClient::write_bool_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value)
+void ConnectionFromClient::write_bool_value(ByteString const& domain, ByteString const& group, ByteString const& key, bool value)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -279,7 +279,7 @@ void ConnectionFromClient::write_bool_value(DeprecatedString const& domain, Depr
     });
 }
 
-void ConnectionFromClient::remove_key_entry(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+void ConnectionFromClient::remove_key_entry(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -297,7 +297,7 @@ void ConnectionFromClient::remove_key_entry(DeprecatedString const& domain, Depr
     });
 }
 
-void ConnectionFromClient::remove_group_entry(DeprecatedString const& domain, DeprecatedString const& group)
+void ConnectionFromClient::remove_group_entry(ByteString const& domain, ByteString const& group)
 {
     if (!validate_access(domain, group, {}))
         return;
@@ -315,7 +315,7 @@ void ConnectionFromClient::remove_group_entry(DeprecatedString const& domain, De
     });
 }
 
-void ConnectionFromClient::add_group_entry(DeprecatedString const& domain, DeprecatedString const& group)
+void ConnectionFromClient::add_group_entry(ByteString const& domain, ByteString const& group)
 {
     if (!validate_access(domain, group, {}))
         return;

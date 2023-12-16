@@ -29,7 +29,7 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
     virtual void invalidate() override;
 
-    void change_theme(DeprecatedString const& name)
+    void change_theme(ByteString const& name)
     {
         m_theme_name = name;
         invalidate();
@@ -40,13 +40,13 @@ private:
 
     struct Cursor {
         RefPtr<Gfx::Bitmap> bitmap;
-        DeprecatedString path;
-        DeprecatedString name;
+        ByteString path;
+        ByteString name;
         Gfx::CursorParams params;
     };
 
     Vector<Cursor> m_cursors;
-    DeprecatedString m_theme_name;
+    ByteString m_theme_name;
 };
 
 class ThemeModel final : public GUI::Model {
@@ -59,7 +59,7 @@ public:
     virtual void invalidate() override;
 
 private:
-    Vector<DeprecatedString> m_themes;
+    Vector<ByteString> m_themes;
 };
 
 class ThemeWidget final : public GUI::SettingsWindow::Tab {

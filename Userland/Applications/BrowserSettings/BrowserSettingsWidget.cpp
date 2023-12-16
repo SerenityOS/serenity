@@ -15,8 +15,8 @@
 #include <LibWebView/SearchEngine.h>
 
 struct ColorScheme {
-    DeprecatedString title;
-    DeprecatedString setting_value;
+    ByteString title;
+    ByteString setting_value;
 };
 
 class ColorSchemeModel final : public GUI::Model {
@@ -140,8 +140,8 @@ ErrorOr<void> BrowserSettingsWidget::setup()
 
     m_search_engine_combobox->set_model(adopt_ref(*new SearchEngineModel()));
     m_search_engine_combobox->set_only_allow_values_from_model(true);
-    m_search_engine_combobox->on_change = [this](AK::DeprecatedString const&, GUI::ModelIndex const& cursor_index) {
-        auto url_format = m_search_engine_combobox->model()->index(cursor_index.row(), 1).data().to_deprecated_string();
+    m_search_engine_combobox->on_change = [this](AK::ByteString const&, GUI::ModelIndex const& cursor_index) {
+        auto url_format = m_search_engine_combobox->model()->index(cursor_index.row(), 1).data().to_byte_string();
         m_is_custom_search_engine = url_format.is_empty();
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);
         set_modified(true);
@@ -159,7 +159,7 @@ void BrowserSettingsWidget::set_color_scheme(StringView color_scheme)
 {
     bool found_color_scheme = false;
     for (int item_index = 0; item_index < m_color_scheme_combobox->model()->row_count(); ++item_index) {
-        auto scheme = m_color_scheme_combobox->model()->index(item_index, 1).data().to_deprecated_string();
+        auto scheme = m_color_scheme_combobox->model()->index(item_index, 1).data().to_byte_string();
         if (scheme == color_scheme) {
             m_color_scheme_combobox->set_selected_index(item_index, GUI::AllowCallback::No);
             found_color_scheme = true;
@@ -183,7 +183,7 @@ void BrowserSettingsWidget::set_search_engine_url(StringView url)
 
         bool found_url = false;
         for (int item_index = 0; item_index < m_search_engine_combobox->model()->row_count(); ++item_index) {
-            auto url_format = m_search_engine_combobox->model()->index(item_index, 1).data().to_deprecated_string();
+            auto url_format = m_search_engine_combobox->model()->index(item_index, 1).data().to_byte_string();
             if (url_format == url) {
                 m_search_engine_combobox->set_selected_index(item_index, GUI::AllowCallback::No);
                 found_url = true;
@@ -226,7 +226,7 @@ void BrowserSettingsWidget::apply_settings()
     Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, m_show_bookmarks_bar_checkbox->is_checked());
 
     auto color_scheme_index = m_color_scheme_combobox->selected_index();
-    auto color_scheme = m_color_scheme_combobox->model()->index(color_scheme_index, 1).data().to_deprecated_string();
+    auto color_scheme = m_color_scheme_combobox->model()->index(color_scheme_index, 1).data().to_byte_string();
     Config::write_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, color_scheme);
 
     if (!m_enable_search_engine_checkbox->is_checked()) {
@@ -235,7 +235,7 @@ void BrowserSettingsWidget::apply_settings()
         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, m_custom_search_engine_textbox->text());
     } else {
         auto selected_index = m_search_engine_combobox->selected_index();
-        auto url = m_search_engine_combobox->model()->index(selected_index, 1).data().to_deprecated_string();
+        auto url = m_search_engine_combobox->model()->index(selected_index, 1).data().to_byte_string();
         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, url);
     }
 

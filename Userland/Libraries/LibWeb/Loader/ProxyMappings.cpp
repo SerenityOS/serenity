@@ -14,7 +14,7 @@ Web::ProxyMappings& Web::ProxyMappings::the()
 
 Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
 {
-    auto url_string = url.to_deprecated_string();
+    auto url_string = url.to_byte_string();
     for (auto& it : m_mappings) {
         if (url_string.matches(it.key)) {
             auto result = Core::ProxyData::parse_url(m_proxies[it.value]);
@@ -29,7 +29,7 @@ Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
     return {};
 }
 
-void Web::ProxyMappings::set_mappings(Vector<DeprecatedString> proxies, OrderedHashMap<DeprecatedString, size_t> mappings)
+void Web::ProxyMappings::set_mappings(Vector<ByteString> proxies, OrderedHashMap<ByteString, size_t> mappings)
 {
     m_proxies = move(proxies);
     m_mappings = move(mappings);

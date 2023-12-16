@@ -283,9 +283,9 @@ ErrorOr<String> DateTime::to_string(StringView format) const
     return builder.to_string();
 }
 
-DeprecatedString DateTime::to_deprecated_string(StringView format) const
+ByteString DateTime::to_byte_string(StringView format) const
 {
-    return MUST(to_string(format)).to_deprecated_string();
+    return MUST(to_string(format)).to_byte_string();
 }
 
 Optional<DateTime> DateTime::parse(StringView format, StringView string)

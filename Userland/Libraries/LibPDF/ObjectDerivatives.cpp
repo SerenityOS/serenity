@@ -53,18 +53,18 @@ static void append_indent(StringBuilder& builder, int indent)
         builder.append("  "sv);
 }
 
-DeprecatedString StringObject::to_deprecated_string(int) const
+ByteString StringObject::to_byte_string(int) const
 {
     if (is_binary())
-        return DeprecatedString::formatted("<{}>", encode_hex(string().bytes()).to_uppercase());
-    return DeprecatedString::formatted("({})", string());
+        return ByteString::formatted("<{}>", encode_hex(string().bytes()).to_uppercase());
+    return ByteString::formatted("({})", string());
 }
 
-DeprecatedString NameObject::to_deprecated_string(int) const
+ByteString NameObject::to_byte_string(int) const
 {
     StringBuilder builder;
     builder.appendff("/{}", this->name());
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 Vector<float> ArrayObject::float_elements() const
@@ -77,7 +77,7 @@ Vector<float> ArrayObject::float_elements() const
     return values;
 }
 
-DeprecatedString ArrayObject::to_deprecated_string(int indent) const
+ByteString ArrayObject::to_byte_string(int indent) const
 {
     StringBuilder builder;
     builder.append("[\n"sv);
@@ -88,16 +88,16 @@ DeprecatedString ArrayObject::to_deprecated_string(int indent) const
             builder.append("\n"sv);
         first = false;
         append_indent(builder, indent + 1);
-        builder.appendff("{}", element.to_deprecated_string(indent));
+        builder.appendff("{}", element.to_byte_string(indent));
     }
 
     builder.append('\n');
     append_indent(builder, indent);
     builder.append(']');
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString DictObject::to_deprecated_string(int indent) const
+ByteString DictObject::to_byte_string(int indent) const
 {
     StringBuilder builder;
     append_indent(builder, indent);
@@ -110,19 +110,19 @@ DeprecatedString DictObject::to_deprecated_string(int indent) const
         first = false;
         append_indent(builder, indent + 1);
         builder.appendff("/{} ", key);
-        builder.appendff("{}", value.to_deprecated_string(indent + 1));
+        builder.appendff("{}", value.to_byte_string(indent + 1));
     }
 
     builder.append('\n');
     append_indent(builder, indent);
     builder.append(">>"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString StreamObject::to_deprecated_string(int indent) const
+ByteString StreamObject::to_byte_string(int indent) const
 {
     StringBuilder builder;
-    builder.appendff("{}\n", dict()->to_deprecated_string(indent));
+    builder.appendff("{}\n", dict()->to_byte_string(indent));
     builder.append("stream\n"sv);
 
     size_t ascii_count = 0;
@@ -156,19 +156,19 @@ DeprecatedString StreamObject::to_deprecated_string(int indent) const
     }
 
     builder.append("endstream"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString IndirectValue::to_deprecated_string(int indent) const
+ByteString IndirectValue::to_byte_string(int indent) const
 {
     StringBuilder builder;
     builder.appendff("{} {} obj\n", index(), generation_index());
     append_indent(builder, indent + 1);
-    builder.append(value().to_deprecated_string(indent + 1));
+    builder.append(value().to_byte_string(indent + 1));
     builder.append('\n');
     append_indent(builder, indent);
     builder.append("endobj"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

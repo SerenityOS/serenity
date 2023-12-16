@@ -34,7 +34,7 @@ static void handle_sigint(int)
     g_debug_session = nullptr;
 }
 
-static void print_function_call(DeprecatedString function_name, size_t depth)
+static void print_function_call(ByteString function_name, size_t depth)
 {
     for (size_t i = 0; i < depth; ++i) {
         out("  ");

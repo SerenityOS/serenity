@@ -57,11 +57,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // Note: This is deferred to ensure that the window has already popped and any error dialog boxes would show up correctly.
         app->event_loop().deferred_invoke(
             [&window, &path, &main_widget]() {
-                auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.value().to_deprecated_string());
+                auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.value().to_byte_string());
                 if (!response.is_error()) {
                     auto load_from_file_result = main_widget->load_from_file(response.value().filename(), response.value().release_stream());
                     if (load_from_file_result.is_error())
-                        GUI::MessageBox::show_error(window, DeprecatedString::formatted("Loading theme from file has failed: {}", load_from_file_result.error()));
+                        GUI::MessageBox::show_error(window, ByteString::formatted("Loading theme from file has failed: {}", load_from_file_result.error()));
                 }
             });
     }

@@ -35,7 +35,7 @@ bool prescan_skip_whitespace_and_slashes(ByteBuffer const& input, size_t& positi
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#algorithm-for-extracting-a-character-encoding-from-a-meta-element
-Optional<StringView> extract_character_encoding_from_meta_element(DeprecatedString const& string)
+Optional<StringView> extract_character_encoding_from_meta_element(ByteString const& string)
 {
     // Checking for "charset" is case insensitive, as is getting an encoding.
     // Therefore, stick to lowercase from the start for simplicity.
@@ -158,7 +158,7 @@ value:
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
-Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& document, ByteBuffer const& input)
+Optional<ByteString> run_prescan_byte_stream_algorithm(DOM::Document& document, ByteBuffer const& input)
 {
     // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
 
@@ -191,7 +191,7 @@ Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& docu
             Vector<FlyString> attribute_list {};
             bool got_pragma = false;
             Optional<bool> need_pragma {};
-            Optional<DeprecatedString> charset {};
+            Optional<ByteString> charset {};
 
             while (true) {
                 auto attribute = prescan_get_attribute(document, input, position);
@@ -205,7 +205,7 @@ Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& docu
                 if (attribute_name == "http-equiv") {
                     got_pragma = attribute->value() == "content-type";
                 } else if (attribute_name == "content") {
-                    auto encoding = extract_character_encoding_from_meta_element(attribute->value().to_deprecated_string());
+                    auto encoding = extract_character_encoding_from_meta_element(attribute->value().to_byte_string());
                     if (encoding.has_value() && !charset.has_value()) {
                         charset = encoding.value();
                         need_pragma = true;
@@ -213,7 +213,7 @@ Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& docu
                 } else if (attribute_name == "charset") {
                     auto maybe_charset = TextCodec::get_standardized_encoding(attribute->value());
                     if (maybe_charset.has_value()) {
-                        charset = Optional<DeprecatedString> { maybe_charset };
+                        charset = Optional<ByteString> { maybe_charset };
                         need_pragma = { false };
                     }
                 }
@@ -247,7 +247,7 @@ Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& docu
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
-DeprecatedString run_encoding_sniffing_algorithm(DOM::Document& document, ByteBuffer const& input)
+ByteString run_encoding_sniffing_algorithm(DOM::Document& document, ByteBuffer const& input)
 {
     if (input.size() >= 2) {
         if (input[0] == 0xFE && input[1] == 0xFF) {

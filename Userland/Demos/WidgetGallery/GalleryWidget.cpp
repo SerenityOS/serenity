@@ -53,7 +53,7 @@ GalleryWidget::GalleryWidget()
     m_frame_shapes.append("Sunken Panel");
 
     m_frame_shape_combobox = basics_tab.find_descendant_of_type_named<GUI::ComboBox>("frame_style_combobox");
-    m_frame_shape_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_frame_shapes));
+    m_frame_shape_combobox->set_model(*GUI::ItemListModel<ByteString>::create(m_frame_shapes));
 
     m_frame_shape_combobox->on_change = [&](auto&, auto const& index) {
         m_label_frame->set_frame_style(static_cast<Gfx::FrameStyle>(index.row()));
@@ -61,7 +61,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_frame_shape_combobox->on_return_pressed = [&]() {
-        m_enabled_label->set_text(String::from_deprecated_string(m_frame_shape_combobox->text()).release_value_but_fixme_should_propagate_errors());
+        m_enabled_label->set_text(String::from_byte_string(m_frame_shape_combobox->text()).release_value_but_fixme_should_propagate_errors());
     };
 
     m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
@@ -141,7 +141,7 @@ GalleryWidget::GalleryWidget()
     m_msgbox_buttons.append("Yes No Cancel");
 
     m_msgbox_icon_combobox = basics_tab.find_descendant_of_type_named<GUI::ComboBox>("msgbox_icon_combobox");
-    m_msgbox_icon_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_msgbox_icons));
+    m_msgbox_icon_combobox->set_model(*GUI::ItemListModel<ByteString>::create(m_msgbox_icons));
     m_msgbox_icon_combobox->set_selected_index(0);
 
     m_msgbox_icon_combobox->on_change = [&](auto&, auto const& index) {
@@ -149,7 +149,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_msgbox_buttons_combobox = basics_tab.find_descendant_of_type_named<GUI::ComboBox>("msgbox_buttons_combobox");
-    m_msgbox_buttons_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_msgbox_buttons));
+    m_msgbox_buttons_combobox->set_model(*GUI::ItemListModel<ByteString>::create(m_msgbox_buttons));
     m_msgbox_buttons_combobox->set_selected_index(0);
 
     m_msgbox_buttons_combobox->on_change = [&](auto&, auto const& index) {
@@ -260,20 +260,20 @@ GalleryWidget::GalleryWidget()
         " _||_-\n"
     };
 
-    m_wizard_output->set_text(DeprecatedString::formatted("{}{}", serenityos_ascii, wizard_ascii));
+    m_wizard_output->set_text(ByteString::formatted("{}{}", serenityos_ascii, wizard_ascii));
 
     m_wizard_button->on_click = [&](auto) {
         StringBuilder sb;
         sb.append(m_wizard_output->get_text());
         sb.append("\nWizard started."sv);
-        m_wizard_output->set_text(sb.to_deprecated_string());
+        m_wizard_output->set_text(sb.to_byte_string());
 
         auto wizard = DemoWizardDialog::try_create(window()).release_value_but_fixme_should_propagate_errors();
         auto result = wizard->exec();
 
-        sb.append(DeprecatedString::formatted("\nWizard execution complete.\nDialog ExecResult code: {}", to_underlying(result)));
+        sb.append(ByteString::formatted("\nWizard execution complete.\nDialog ExecResult code: {}", to_underlying(result)));
         if (result == GUI::Dialog::ExecResult::OK)
-            sb.append(DeprecatedString::formatted(" (ExecResult::OK)\n'Installation' location: \"{}\"", wizard->page_1_location()));
+            sb.append(ByteString::formatted(" (ExecResult::OK)\n'Installation' location: \"{}\"", wizard->page_1_location()));
         m_wizard_output->set_text(sb.string_view());
     };
 

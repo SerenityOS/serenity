@@ -11,7 +11,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(EventHandler);
 
-EventHandler::EventHandler(DeprecatedString s)
+EventHandler::EventHandler(ByteString s)
     : value(move(s))
 {
 }

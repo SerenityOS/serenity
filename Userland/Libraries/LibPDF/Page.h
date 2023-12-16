@@ -55,8 +55,8 @@ struct Formatter<PDF::Page> : Formatter<FormatString> {
     {
         return Formatter<FormatString>::format(builder,
             "Page {{\n  resources={}\n  contents={}\n  media_box={}\n  crop_box={}\n  user_unit={}\n  rotate={}\n}}"sv,
-            page.resources->to_deprecated_string(1),
-            page.contents->to_deprecated_string(1),
+            page.resources->to_byte_string(1),
+            page.contents->to_byte_string(1),
             page.media_box,
             page.crop_box,
             page.user_unit,

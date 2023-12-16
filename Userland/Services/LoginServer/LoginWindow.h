@@ -20,10 +20,10 @@ public:
 
     Function<void()> on_submit;
 
-    DeprecatedString username() const { return m_username->text(); }
+    ByteString username() const { return m_username->text(); }
     void set_username(StringView username) { m_username->set_text(username); }
 
-    DeprecatedString password() const { return m_password->text(); }
+    ByteString password() const { return m_password->text(); }
     void set_password(StringView password) { m_password->set_text(password); }
 
     void set_fail_message(StringView message) { m_fail_message->set_text(String::from_utf8(message).release_value_but_fixme_should_propagate_errors()); }

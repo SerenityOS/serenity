@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <LibELF/DynamicObject.h>
@@ -49,10 +49,10 @@ extern "C" FlatPtr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset
 
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, DeprecatedString filepath);
+    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, ByteString filepath);
     ~DynamicLoader();
 
-    DeprecatedString const& filepath() const { return m_filepath; }
+    ByteString const& filepath() const { return m_filepath; }
 
     bool is_valid() const { return m_valid; }
 
@@ -94,7 +94,7 @@ public:
     bool is_fully_initialized() const { return m_fully_initialized; }
 
 private:
-    DynamicLoader(int fd, DeprecatedString filepath, void* file_data, size_t file_size);
+    DynamicLoader(int fd, ByteString filepath, void* file_data, size_t file_size);
 
     class ProgramHeaderRegion {
     public:
@@ -153,7 +153,7 @@ private:
     void do_relr_relocations();
     void find_tls_size_and_alignment();
 
-    DeprecatedString m_filepath;
+    ByteString m_filepath;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
     void* m_file_data { nullptr };

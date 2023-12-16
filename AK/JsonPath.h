@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -34,7 +34,7 @@ public:
     }
 
     Kind kind() const { return m_kind; }
-    DeprecatedString const& key() const
+    ByteString const& key() const
     {
         VERIFY(m_kind == Kind::Key);
         return m_key;
@@ -46,13 +46,13 @@ public:
         return m_index;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         switch (m_kind) {
         case Kind::Key:
             return key();
         case Kind::Index:
-            return DeprecatedString::number(index());
+            return ByteString::number(index());
         default:
             return "*";
         }
@@ -78,7 +78,7 @@ public:
 
 private:
     Kind m_kind;
-    DeprecatedString m_key;
+    ByteString m_key;
     size_t m_index { 0 };
 
     JsonPathElement(Kind kind)
@@ -90,7 +90,7 @@ private:
 class JsonPath : public Vector<JsonPathElement> {
 public:
     JsonValue resolve(JsonValue const&) const;
-    DeprecatedString to_deprecated_string() const;
+    ByteString to_byte_string() const;
 };
 
 }

@@ -75,7 +75,7 @@ GUI::Variant CertificateStoreModel::data(GUI::ModelIndex const& index, GUI::Mode
         return issued_by;
     }
     case Column::Expire:
-        return cert.validity.not_after.to_deprecated_string("%Y-%m-%d"sv);
+        return cert.validity.not_after.to_byte_string("%Y-%m-%d"sv);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -141,7 +141,7 @@ ErrorOr<void> CertificateStoreWidget::export_pem()
 
     filename = TRY(filename.replace(" "sv, "_"sv, ReplaceMode::All));
 
-    auto file = FileSystemAccessClient::Client::the().save_file(window(), filename.to_deprecated_string(), "pem"sv);
+    auto file = FileSystemAccessClient::Client::the().save_file(window(), filename.to_byte_string(), "pem"sv);
     if (file.is_error())
         return {};
 
@@ -183,7 +183,7 @@ ErrorOr<void> CertificateStoreWidget::initialize()
     m_import_ca_button->on_click = [&](auto) {
         auto import_result = import_pem();
         if (import_result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", import_result.release_error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("{}", import_result.release_error()));
         }
     };
 
@@ -191,7 +191,7 @@ ErrorOr<void> CertificateStoreWidget::initialize()
     m_export_ca_button->on_click = [&](auto) {
         auto export_result = export_pem();
         if (export_result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", export_result.release_error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("{}", export_result.release_error()));
         }
     };
 

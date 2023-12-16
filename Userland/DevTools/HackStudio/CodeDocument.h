@@ -18,7 +18,7 @@ class Editor;
 class CodeDocument final : public GUI::TextDocument {
 public:
     virtual ~CodeDocument() override = default;
-    static NonnullRefPtr<CodeDocument> create(DeprecatedString const& file_path, Client* client = nullptr);
+    static NonnullRefPtr<CodeDocument> create(ByteString const& file_path, Client* client = nullptr);
     static NonnullRefPtr<CodeDocument> create(Client* client = nullptr);
 
     Vector<size_t> const& breakpoint_lines() const { return m_breakpoint_lines; }
@@ -26,7 +26,7 @@ public:
     Optional<size_t> execution_position() const { return m_execution_position; }
     void set_execution_position(size_t line) { m_execution_position = line; }
     void clear_execution_position() { m_execution_position.clear(); }
-    DeprecatedString const& file_path() const { return m_file_path; }
+    ByteString const& file_path() const { return m_file_path; }
     Optional<Syntax::Language> const& language() const { return m_language; }
 
     enum class DiffType {
@@ -39,10 +39,10 @@ public:
     void set_line_differences(Badge<Editor>, Vector<DiffType>);
 
 private:
-    explicit CodeDocument(DeprecatedString const& file_path, Client* client = nullptr);
+    explicit CodeDocument(ByteString const& file_path, Client* client = nullptr);
     explicit CodeDocument(Client* client = nullptr);
 
-    DeprecatedString m_file_path;
+    ByteString m_file_path;
     Optional<Syntax::Language> m_language;
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;

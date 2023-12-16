@@ -14,7 +14,7 @@
 
 namespace GUI {
 
-PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString title, DeprecatedString server, DeprecatedString username)
+PasswordInputDialog::PasswordInputDialog(Window* parent_window, ByteString title, ByteString server, ByteString username)
     : Dialog(parent_window)
 {
     if (parent_window)
@@ -31,10 +31,10 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
     key_icon.set_bitmap(Gfx::Bitmap::load_from_file("/res/icons/32x32/key.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& server_label = *widget->find_descendant_of_type_named<GUI::Label>("server_label");
-    server_label.set_text(String::from_deprecated_string(server).release_value_but_fixme_should_propagate_errors());
+    server_label.set_text(String::from_byte_string(server).release_value_but_fixme_should_propagate_errors());
 
     auto& username_label = *widget->find_descendant_of_type_named<GUI::Label>("username_label");
-    username_label.set_text(String::from_deprecated_string(username).release_value_but_fixme_should_propagate_errors());
+    username_label.set_text(String::from_byte_string(username).release_value_but_fixme_should_propagate_errors());
 
     auto& password_box = *widget->find_descendant_of_type_named<GUI::PasswordBox>("password_box");
 
@@ -58,7 +58,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
     password_box.set_focus(true);
 }
 
-Dialog::ExecResult PasswordInputDialog::show(Window* parent_window, DeprecatedString& text_value, DeprecatedString title, DeprecatedString server, DeprecatedString username)
+Dialog::ExecResult PasswordInputDialog::show(Window* parent_window, ByteString& text_value, ByteString title, ByteString server, ByteString username)
 {
     auto box = PasswordInputDialog::construct(parent_window, move(title), move(server), move(username));
     auto result = box->exec();

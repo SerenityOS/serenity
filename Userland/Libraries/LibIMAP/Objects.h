@@ -115,8 +115,8 @@ public:
         m_status_items |= static_cast<unsigned>(type);
     }
 
-    void set_mailbox(DeprecatedString&& mailbox) { m_mailbox = move(mailbox); }
-    DeprecatedString& mailbox() { return m_mailbox; }
+    void set_mailbox(ByteString&& mailbox) { m_mailbox = move(mailbox); }
+    ByteString& mailbox() { return m_mailbox; }
 
     unsigned get(StatusItemType type) const
     {
@@ -165,60 +165,60 @@ private:
     unsigned m_uid_next { 0 };
     unsigned m_uid_validity { 0 };
     unsigned m_unseen { 0 };
-    DeprecatedString m_mailbox;
+    ByteString m_mailbox;
 };
 
 struct Address {
-    DeprecatedString name;
-    DeprecatedString source_route;
-    DeprecatedString mailbox;
-    DeprecatedString host;
+    ByteString name;
+    ByteString source_route;
+    ByteString mailbox;
+    ByteString host;
 };
 
 struct Envelope {
-    DeprecatedString date; // Format of date not specified.
-    DeprecatedString subject;
+    ByteString date; // Format of date not specified.
+    ByteString subject;
     Vector<Address> from;
     Vector<Address> sender;
     Vector<Address> reply_to;
     Vector<Address> to;
     Vector<Address> cc;
     Vector<Address> bcc;
-    DeprecatedString in_reply_to;
-    DeprecatedString message_id;
+    ByteString in_reply_to;
+    ByteString message_id;
 };
 
 class BodyStructure;
 
 struct BodyExtension {
-    AK::Variant<Optional<DeprecatedString>, unsigned, Vector<OwnPtr<BodyExtension>>> data;
+    AK::Variant<Optional<ByteString>, unsigned, Vector<OwnPtr<BodyExtension>>> data;
 };
 
 struct MultiPartBodyStructureData {
-    Optional<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> disposition;
+    Optional<Tuple<ByteString, HashMap<ByteString, ByteString>>> disposition;
     Vector<OwnPtr<BodyStructure>> bodies;
-    Vector<DeprecatedString> langs;
-    DeprecatedString multipart_subtype;
-    HashMap<DeprecatedString, DeprecatedString> params;
-    DeprecatedString location;
+    Vector<ByteString> langs;
+    ByteString multipart_subtype;
+    HashMap<ByteString, ByteString> params;
+    ByteString location;
     Vector<BodyExtension> extensions;
 };
 
 struct BodyStructureData {
-    DeprecatedString type;
-    DeprecatedString subtype;
-    DeprecatedString id {};
-    DeprecatedString desc {};
-    DeprecatedString encoding;
-    HashMap<DeprecatedString, DeprecatedString> fields;
+    ByteString type;
+    ByteString subtype;
+    ByteString id {};
+    ByteString desc {};
+    ByteString encoding;
+    HashMap<ByteString, ByteString> fields;
     unsigned bytes { 0 };
     unsigned lines { 0 };
     Optional<Tuple<Envelope, NonnullOwnPtr<BodyStructure>>> contanied_message;
 
-    DeprecatedString md5 {};
-    Optional<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> disposition {};
-    Optional<Vector<DeprecatedString>> langs {};
-    DeprecatedString location {};
+    ByteString md5 {};
+    Optional<Tuple<ByteString, HashMap<ByteString, ByteString>>> disposition {};
+    Optional<Vector<ByteString>> langs {};
+    ByteString location {};
 
     Vector<BodyExtension> extensions {};
 };
@@ -248,7 +248,7 @@ struct Sequence {
     int start;
     int end;
 
-    [[nodiscard]] DeprecatedString serialize() const;
+    [[nodiscard]] ByteString serialize() const;
 };
 
 struct FetchCommand {
@@ -276,9 +276,9 @@ struct FetchCommand {
             Optional<Vector<unsigned>> parts {};
             bool ends_with_mime {};
 
-            Optional<Vector<DeprecatedString>> headers {};
+            Optional<Vector<ByteString>> headers {};
 
-            [[nodiscard]] DeprecatedString serialize() const;
+            [[nodiscard]] ByteString serialize() const;
         };
 
         DataItemType type;
@@ -288,19 +288,19 @@ struct FetchCommand {
         int start { 0 };
         int octets { 0 };
 
-        [[nodiscard]] DeprecatedString serialize() const;
+        [[nodiscard]] ByteString serialize() const;
     };
 
     Vector<Sequence> sequence_set;
     Vector<DataItem> data_items;
 
-    DeprecatedString serialize();
+    ByteString serialize();
 };
 struct Command {
 public:
     CommandType type;
     int tag;
-    Vector<DeprecatedString> args;
+    Vector<ByteString> args;
 };
 
 enum class ResponseStatus {
@@ -311,8 +311,8 @@ enum class ResponseStatus {
 
 struct ListItem {
     unsigned flags;
-    DeprecatedString reference;
-    DeprecatedString name;
+    ByteString reference;
+    ByteString name;
 };
 
 class FetchResponseData {
@@ -332,13 +332,13 @@ public:
         m_response_type |= static_cast<unsigned>(type);
     }
 
-    void add_body_data(FetchCommand::DataItem&& data_item, DeprecatedString&& body)
+    void add_body_data(FetchCommand::DataItem&& data_item, ByteString&& body)
     {
         add_response_type(FetchResponseType::Body);
         m_bodies.append({ move(data_item), move(body) });
     }
 
-    Vector<Tuple<FetchCommand::DataItem, DeprecatedString>>& body_data()
+    Vector<Tuple<FetchCommand::DataItem, ByteString>>& body_data()
     {
         VERIFY(contains_response_type(FetchResponseType::Body));
         return m_bodies;
@@ -380,13 +380,13 @@ public:
         return m_envelope;
     }
 
-    void set_flags(Vector<DeprecatedString>&& flags)
+    void set_flags(Vector<ByteString>&& flags)
     {
         add_response_type(FetchResponseType::Flags);
         m_flags = move(flags);
     }
 
-    Vector<DeprecatedString>& flags()
+    Vector<ByteString>& flags()
     {
         VERIFY(contains_response_type(FetchResponseType::Flags));
         return m_flags;
@@ -410,8 +410,8 @@ public:
     }
 
 private:
-    Vector<DeprecatedString> m_flags;
-    Vector<Tuple<FetchCommand::DataItem, DeprecatedString>> m_bodies;
+    Vector<ByteString> m_flags;
+    Vector<Tuple<FetchCommand::DataItem, ByteString>> m_bodies;
     Core::DateTime m_internal_date;
     Envelope m_envelope;
     unsigned m_uid { 0 };
@@ -419,20 +419,20 @@ private:
     BodyStructure m_body_structure;
 };
 
-DeprecatedString serialize_astring(StringView string);
+ByteString serialize_astring(StringView string);
 
 struct SearchKey {
 public:
     // clang-format off
     struct All { };
     struct Answered { };
-    struct Bcc { DeprecatedString bcc; };
-    struct Cc { DeprecatedString cc; };
+    struct Bcc { ByteString bcc; };
+    struct Cc { ByteString cc; };
     struct Deleted { };
     struct Draft { };
-    struct From { DeprecatedString from; };
-    struct Header { DeprecatedString header; DeprecatedString value; };
-    struct Keyword { DeprecatedString keyword; };
+    struct From { ByteString from; };
+    struct Header { ByteString header; ByteString value; };
+    struct Keyword { ByteString keyword; };
     struct Larger { unsigned number; };
     struct New { };
     struct Not { OwnPtr<SearchKey> operand; };
@@ -448,14 +448,14 @@ public:
     struct SequenceSet { Sequence sequence; };
     struct Since { Core::DateTime date; };
     struct Smaller { unsigned number; };
-    struct Subject { DeprecatedString subject; };
-    struct Text { DeprecatedString text; };
-    struct To { DeprecatedString to; };
+    struct Subject { ByteString subject; };
+    struct Text { ByteString text; };
+    struct To { ByteString to; };
     struct UID { unsigned  uid; };
     struct Unanswered { };
     struct Undeleted { };
     struct Undraft { };
-    struct Unkeyword { DeprecatedString flag_keyword; };
+    struct Unkeyword { ByteString flag_keyword; };
     struct Unseen { };
     // clang-format on
 
@@ -487,7 +487,7 @@ public:
         return *this;
     }
 
-    [[nodiscard]] DeprecatedString serialize() const;
+    [[nodiscard]] ByteString serialize() const;
 };
 
 class ResponseData {
@@ -517,13 +517,13 @@ public:
         m_response_type = m_response_type | static_cast<unsigned>(response_type);
     }
 
-    void add_capabilities(Vector<DeprecatedString>&& capabilities)
+    void add_capabilities(Vector<ByteString>&& capabilities)
     {
         m_capabilities = move(capabilities);
         add_response_type(ResponseType::Capability);
     }
 
-    Vector<DeprecatedString>& capabilities()
+    Vector<ByteString>& capabilities()
     {
         VERIFY(contains_response_type(ResponseType::Capability));
         return m_capabilities;
@@ -613,25 +613,25 @@ public:
         return m_unseen;
     }
 
-    void set_flags(Vector<DeprecatedString>&& flags)
+    void set_flags(Vector<ByteString>&& flags)
     {
         m_response_type |= static_cast<unsigned>(ResponseType::Flags);
         m_flags = move(flags);
     }
 
-    Vector<DeprecatedString>& flags()
+    Vector<ByteString>& flags()
     {
         VERIFY(contains_response_type(ResponseType::Flags));
         return m_flags;
     }
 
-    void set_permanent_flags(Vector<DeprecatedString>&& flags)
+    void set_permanent_flags(Vector<ByteString>&& flags)
     {
         add_response_type(ResponseType::PermanentFlags);
         m_permanent_flags = move(flags);
     }
 
-    Vector<DeprecatedString>& permanent_flags()
+    Vector<ByteString>& permanent_flags()
     {
         VERIFY(contains_response_type(ResponseType::PermanentFlags));
         return m_permanent_flags;
@@ -673,13 +673,13 @@ public:
         return m_expunged;
     }
 
-    void set_bye(Optional<DeprecatedString> message)
+    void set_bye(Optional<ByteString> message)
     {
         add_response_type(ResponseType::Bye);
         m_bye_message = move(message);
     }
 
-    Optional<DeprecatedString>& bye_message()
+    Optional<ByteString>& bye_message()
     {
         VERIFY(contains_response_type(ResponseType::Bye));
         return m_bye_message;
@@ -699,7 +699,7 @@ public:
 private:
     unsigned m_response_type;
 
-    Vector<DeprecatedString> m_capabilities;
+    Vector<ByteString> m_capabilities;
     Vector<ListItem> m_list_items;
     Vector<ListItem> m_lsub_items;
     Vector<unsigned> m_expunged;
@@ -710,11 +710,11 @@ private:
     unsigned m_uid_next {};
     unsigned m_uid_validity {};
     unsigned m_unseen {};
-    Vector<DeprecatedString> m_permanent_flags;
-    Vector<DeprecatedString> m_flags;
+    Vector<ByteString> m_permanent_flags;
+    Vector<ByteString> m_flags;
     Vector<Tuple<unsigned, FetchResponseData>> m_fetch_responses;
     Vector<unsigned> m_search_results;
-    Optional<DeprecatedString> m_bye_message;
+    Optional<ByteString> m_bye_message;
     StatusItem m_status_item;
 };
 
@@ -735,7 +735,7 @@ public:
 
     ResponseData& data() { return m_data; }
 
-    DeprecatedString response_text() { return m_response_text; }
+    ByteString response_text() { return m_response_text; }
 
     SolidResponse()
         : SolidResponse(ResponseStatus::Bad, -1)
@@ -751,14 +751,14 @@ public:
 
 private:
     ResponseStatus m_status;
-    DeprecatedString m_response_text;
+    ByteString m_response_text;
     unsigned m_tag;
 
     ResponseData m_data;
 };
 
 struct ContinueRequest {
-    DeprecatedString data;
+    ByteString data;
 };
 
 using Response = Variant<SolidResponse, ContinueRequest>;
@@ -767,5 +767,5 @@ using Response = Variant<SolidResponse, ContinueRequest>;
 // An RFC 2822 message
 // https://datatracker.ietf.org/doc/html/rfc2822
 struct Message {
-    DeprecatedString data;
+    ByteString data;
 };

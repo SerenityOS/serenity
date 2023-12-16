@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/RefPtr.h>
 #include <AK/Variant.h>
@@ -36,7 +36,7 @@ public:
         set<NonnullRefPtr<Object>>(*refptr);
     }
 
-    [[nodiscard]] DeprecatedString to_deprecated_string(int indent = 0) const;
+    [[nodiscard]] ByteString to_byte_string(int indent = 0) const;
 
     [[nodiscard]] ALWAYS_INLINE bool has_number() const { return has<int>() || has<float>(); }
 
@@ -95,7 +95,7 @@ template<>
 struct Formatter<PDF::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, PDF::Value const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, value.to_byte_string());
     }
 };
 

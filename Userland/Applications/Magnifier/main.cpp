@@ -63,13 +63,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        AK::DeprecatedString filename = "file for saving";
+        AK::ByteString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
             auto response = FileSystemAccessClient::Client::the().save_file(window, "Capture", "png");
             if (response.is_error())
                 return {};
             auto file = response.value().release_stream();
-            auto path = AK::LexicalPath(response.value().filename().to_deprecated_string());
+            auto path = AK::LexicalPath(response.value().filename().to_byte_string());
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
 
@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             };
             dialog->set_color_has_alpha_channel(true);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                Config::write_string("Magnifier"sv, "Grid"sv, "Color"sv, dialog->color().to_deprecated_string());
+                Config::write_string("Magnifier"sv, "Grid"sv, "Color"sv, dialog->color().to_byte_string());
             }
         });
     {

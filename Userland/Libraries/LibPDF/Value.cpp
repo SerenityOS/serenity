@@ -9,30 +9,30 @@
 
 namespace PDF {
 
-DeprecatedString Value::to_deprecated_string(int indent) const
+ByteString Value::to_byte_string(int indent) const
 {
     return visit(
-        [&](Empty const&) -> DeprecatedString {
+        [&](Empty const&) -> ByteString {
             // Return type deduction means that we can't use implicit conversions.
             return "<empty>";
         },
-        [&](nullptr_t const&) -> DeprecatedString {
+        [&](nullptr_t const&) -> ByteString {
             return "null";
         },
-        [&](bool const& b) -> DeprecatedString {
+        [&](bool const& b) -> ByteString {
             return b ? "true" : "false";
         },
         [&](int const& i) {
-            return DeprecatedString::number(i);
+            return ByteString::number(i);
         },
         [&](float const& f) {
-            return DeprecatedString::number(f);
+            return ByteString::number(f);
         },
         [&](Reference const& ref) {
-            return DeprecatedString::formatted("{} {} R", ref.as_ref_index(), ref.as_ref_generation_index());
+            return ByteString::formatted("{} {} R", ref.as_ref_index(), ref.as_ref_generation_index());
         },
         [&](NonnullRefPtr<Object> const& object) {
-            return object->to_deprecated_string(indent);
+            return object->to_byte_string(indent);
         });
 }
 

@@ -115,7 +115,7 @@ void OpacitySlider::paint_event(PaintEvent& event)
 
     // Text label
     // FIXME: better support text in vertical orientation, either by having a vertical option for draw_text, or only showing when there is enough space
-    auto percent_text = DeprecatedString::formatted("{}%", (int)((float)value() / (float)max() * 100.0f));
+    auto percent_text = ByteString::formatted("{}%", (int)((float)value() / (float)max() * 100.0f));
     painter.draw_text(inner_rect.translated(1, 1), percent_text, Gfx::TextAlignment::Center, Color::Black);
     painter.draw_text(inner_rect, percent_text, Gfx::TextAlignment::Center, Color::White);
 

@@ -28,7 +28,7 @@ struct Testcase {
     size_t dest_expected_n; // == dest_n
 };
 
-static DeprecatedString show(ByteBuffer const& buf)
+static ByteString show(ByteBuffer const& buf)
 {
     StringBuilder builder;
     for (size_t i = 0; i < buf.size(); ++i) {
@@ -43,7 +43,7 @@ static DeprecatedString show(ByteBuffer const& buf)
             builder.append('_');
     }
     builder.append(')');
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 template<typename TArg>

@@ -55,7 +55,7 @@ public:
     virtual void reset() = 0;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const = 0;
+    virtual ByteString class_name() const = 0;
 #endif
 
 protected:

@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringView.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
 #include <LibWeb/Forward.h>

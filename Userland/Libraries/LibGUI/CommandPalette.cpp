@@ -129,7 +129,7 @@ public:
         case Column::Shortcut:
             if (!action.shortcut().is_valid())
                 return "";
-            return action.shortcut().to_deprecated_string();
+            return action.shortcut().to_byte_string();
         }
 
         VERIFY_NOT_REACHED();
@@ -141,21 +141,21 @@ public:
         if (needle.is_empty())
             return { TriState::True };
 
-        auto haystack = DeprecatedString::formatted("{} {}", menu_name(index), action_text(index));
+        auto haystack = ByteString::formatted("{} {}", menu_name(index), action_text(index));
         auto match_result = fuzzy_match(needle, haystack);
         if (match_result.score > 0)
             return { TriState::True, match_result.score };
         return { TriState::False };
     }
 
-    static DeprecatedString action_text(ModelIndex const& index)
+    static ByteString action_text(ModelIndex const& index)
     {
         auto& action = *static_cast<GUI::Action*>(index.internal_data());
 
         return Gfx::parse_ampersand_string(action.text());
     }
 
-    static DeprecatedString menu_name(ModelIndex const& index)
+    static ByteString menu_name(ModelIndex const& index)
     {
         auto& action = *static_cast<GUI::Action*>(index.internal_data());
         if (action.menu_items().is_empty())

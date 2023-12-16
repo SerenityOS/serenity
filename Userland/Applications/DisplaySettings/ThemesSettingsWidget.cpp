@@ -20,7 +20,7 @@ namespace DisplaySettings {
 
 static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_scheme_path)
 {
-    return TRY(String::from_deprecated_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
+    return TRY(String::from_byte_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
 }
 
 ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed)
@@ -40,7 +40,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
     TRY(m_theme_names.try_ensure_capacity(m_themes.size()));
     for (auto& theme_meta : m_themes) {
-        TRY(m_theme_names.try_append(TRY(String::from_deprecated_string(theme_meta.name))));
+        TRY(m_theme_names.try_append(TRY(String::from_byte_string(theme_meta.name))));
         if (current_theme_name == theme_meta.name) {
             m_selected_theme = &theme_meta;
             current_theme_index = m_theme_names.size() - 1;
@@ -53,7 +53,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     m_themes_combo->set_model(*GUI::ItemListModel<String>::create(m_theme_names));
     m_themes_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_theme = &m_themes.at(index.row());
-        auto selected_theme_path = String::from_deprecated_string(m_selected_theme->path);
+        auto selected_theme_path = String::from_byte_string(m_selected_theme->path);
         ErrorOr<void> set_theme_result;
         if (!selected_theme_path.is_error())
             set_theme_result = m_theme_preview->set_theme(selected_theme_path.release_value());
@@ -98,7 +98,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
         }
     }
     color_scheme_combo.on_change = [this](auto&, const GUI::ModelIndex& index) {
-        auto result = String::from_deprecated_string(index.data().as_string());
+        auto result = String::from_byte_string(index.data().as_string());
         if (result.is_error())
             return;
         m_selected_color_scheme_name = result.release_value();
@@ -139,7 +139,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
             if (current_theme_name == theme_meta.name) {
                 m_themes_combo->set_selected_index(index, GUI::AllowCallback::No);
                 m_selected_theme = &m_themes.at(index);
-                auto selected_theme_path = String::from_deprecated_string(m_selected_theme->path);
+                auto selected_theme_path = String::from_byte_string(m_selected_theme->path);
                 ErrorOr<void> set_theme_result;
                 if (!selected_theme_path.is_error())
                     set_theme_result = m_theme_preview->set_theme(selected_theme_path.release_value());
@@ -178,7 +178,7 @@ void ThemesSettingsWidget::apply_settings()
         if (!set_theme_result)
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
     } else if (find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
-        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path.to_deprecated_string());
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path.to_byte_string());
         if (!set_theme_result)
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
     } else {

@@ -54,7 +54,7 @@ public:
 
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
-    DeprecatedString selected_text();
+    ByteString selected_text();
     Optional<String> selected_text_with_whitespace_collapsed();
     void select_all();
 
@@ -76,10 +76,10 @@ public:
     void remove_dom_node(i32 node_id);
     Optional<String> get_dom_node_html(i32 node_id);
 
-    void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
+    void debug_request(ByteString const& request, ByteString const& argument = {});
 
     void run_javascript(StringView);
-    void js_console_input(DeprecatedString const& js_source);
+    void js_console_input(ByteString const& js_source);
     void js_console_request_messages(i32 start_index);
 
     void alert_closed();
@@ -120,12 +120,12 @@ public:
     Function<void(Gfx::IntPoint screen_position, Web::Page::MediaContextMenu const&)> on_media_context_menu_request;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void()> on_link_unhover;
-    Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
-    Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_middle_click;
-    Function<void(DeprecatedString const&)> on_title_change;
+    Function<void(const AK::URL&, ByteString const& target, unsigned modifiers)> on_link_click;
+    Function<void(const AK::URL&, ByteString const& target, unsigned modifiers)> on_link_middle_click;
+    Function<void(ByteString const&)> on_title_change;
     Function<void(const AK::URL&, bool)> on_load_start;
     Function<void(const AK::URL&)> on_load_finish;
-    Function<void(DeprecatedString const& path, i32)> on_request_file;
+    Function<void(ByteString const& path, i32)> on_request_file;
     Function<void()> on_navigate_back;
     Function<void()> on_navigate_forward;
     Function<void()> on_refresh;
@@ -134,7 +134,7 @@ public:
     Function<void(Gfx::IntPoint)> on_scroll_to_point;
     Function<void(Gfx::IntRect)> on_scroll_into_view;
     Function<void(Gfx::StandardCursor)> on_cursor_change;
-    Function<void(Gfx::IntPoint, DeprecatedString const&)> on_enter_tooltip_area;
+    Function<void(Gfx::IntPoint, ByteString const&)> on_enter_tooltip_area;
     Function<void()> on_leave_tooltip_area;
     Function<void(String const& message)> on_request_alert;
     Function<void(String const& message)> on_request_confirm;
@@ -142,14 +142,14 @@ public:
     Function<void(String const& message)> on_request_set_prompt_text;
     Function<void()> on_request_accept_dialog;
     Function<void()> on_request_dismiss_dialog;
-    Function<void(const AK::URL&, DeprecatedString const&)> on_received_source;
-    Function<void(DeprecatedString const&)> on_received_dom_tree;
-    Function<void(DeprecatedString const&)> on_received_accessibility_tree;
+    Function<void(const AK::URL&, ByteString const&)> on_received_source;
+    Function<void(ByteString const&)> on_received_dom_tree;
+    Function<void(ByteString const&)> on_received_accessibility_tree;
     Function<void(i32 message_id)> on_received_console_message;
-    Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_received_console_messages;
+    Function<void(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)> on_received_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
-    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, DeprecatedString const& name)> on_get_named_cookie;
-    Function<DeprecatedString(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
+    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, ByteString const& name)> on_get_named_cookie;
+    Function<ByteString(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void(Web::Cookie::Cookie const& cookie)> on_update_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;

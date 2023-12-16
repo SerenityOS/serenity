@@ -23,7 +23,7 @@ Client& Client::the()
     return *s_the;
 }
 
-Result Client::request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path)
+Result Client::request_file_read_only_approved(GUI::Window* parent_window, ByteString const& path)
 {
     auto const id = get_new_id();
     m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, Core::File::OpenMode::Read });
@@ -38,7 +38,7 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
     return handle_promise(id);
 }
 
-Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::File::OpenMode mode)
+Result Client::request_file(GUI::Window* parent_window, ByteString const& path, Core::File::OpenMode mode)
 {
     auto const id = get_new_id();
     m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, mode });
@@ -83,7 +83,7 @@ Result Client::open_file(GUI::Window* parent_window, OpenFileOptions const& opti
     return handle_promise(id);
 }
 
-Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::File::OpenMode requested_access)
+Result Client::save_file(GUI::Window* parent_window, ByteString const& name, ByteString const ext, Core::File::OpenMode requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, requested_access });
@@ -103,7 +103,7 @@ Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& nam
     return handle_promise(id);
 }
 
-void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& ipc_file, Optional<DeprecatedString> const& chosen_file)
+void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& ipc_file, Optional<ByteString> const& chosen_file)
 {
     auto potential_data = m_promises.get(request_id);
     VERIFY(potential_data.has_value());
@@ -145,7 +145,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
 
     auto file_or_error = [&]() -> ErrorOr<File> {
         auto stream = TRY(Core::File::adopt_fd(ipc_file->take_fd(), Core::File::OpenMode::ReadWrite));
-        auto filename = TRY(String::from_deprecated_string(*chosen_file));
+        auto filename = TRY(String::from_byte_string(*chosen_file));
         return File({}, move(stream), filename);
     }();
     if (file_or_error.is_error()) {

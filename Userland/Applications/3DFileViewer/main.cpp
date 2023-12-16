@@ -292,13 +292,13 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     if (!filename.bytes_as_string_view().ends_with(".obj"sv)) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), ByteString::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     auto new_mesh = m_mesh_loader->load(filename, move(file));
     if (new_mesh.is_error()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), ByteString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
@@ -330,7 +330,7 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
     m_mesh = new_mesh.release_value();
     dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
 
-    window()->set_title(DeprecatedString::formatted("{} - 3D File Viewer", filename));
+    window()->set_title(ByteString::formatted("{} - 3D File Viewer", filename));
 
     return true;
 }
@@ -580,7 +580,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename);
     if (file.is_error()) {
         if (file.error().code() != ENOENT)
-            GUI::MessageBox::show(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, ByteString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return 1;
     }
     widget->load_file(file.value().filename(), file.value().release_stream());

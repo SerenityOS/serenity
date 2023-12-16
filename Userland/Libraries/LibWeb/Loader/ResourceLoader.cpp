@@ -122,14 +122,14 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
     return resource;
 }
 
-static DeprecatedString sanitized_url_for_logging(AK::URL const& url)
+static ByteString sanitized_url_for_logging(AK::URL const& url)
 {
     if (url.scheme() == "data"sv)
         return "[data URL]"sv;
-    return url.to_deprecated_string();
+    return url.to_byte_string();
 }
 
-static void emit_signpost(DeprecatedString const& message, int id)
+static void emit_signpost(ByteString const& message, int id)
 {
 #ifdef AK_OS_SERENITY
     auto string_id = perf_register_string(message.characters(), message.length());
@@ -140,7 +140,7 @@ static void emit_signpost(DeprecatedString const& message, int id)
 #endif
 }
 
-static void store_response_cookies(Page& page, AK::URL const& url, DeprecatedString const& cookies)
+static void store_response_cookies(Page& page, AK::URL const& url, ByteString const& cookies)
 {
     auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
     VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
@@ -165,23 +165,23 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
 
     auto id = resource_id++;
     auto url_for_logging = sanitized_url_for_logging(url);
-    emit_signpost(DeprecatedString::formatted("Starting load: {}", url_for_logging), id);
+    emit_signpost(ByteString::formatted("Starting load: {}", url_for_logging), id);
     dbgln_if(SPAM_DEBUG, "ResourceLoader: Starting load of: \"{}\"", url_for_logging);
 
     auto const log_success = [url_for_logging, id](auto const& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        emit_signpost(DeprecatedString::formatted("Finished load: {}", url_for_logging), id);
+        emit_signpost(ByteString::formatted("Finished load: {}", url_for_logging), id);
         dbgln_if(SPAM_DEBUG, "ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
     auto const log_failure = [url_for_logging, id](auto const& request, auto const& error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        emit_signpost(DeprecatedString::formatted("Failed load: {}", url_for_logging), id);
+        emit_signpost(ByteString::formatted("Failed load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
     };
 
     if (is_port_blocked(url.port_or_default())) {
-        log_failure(request, DeprecatedString::formatted("The port #{} is blocked", url.port_or_default()));
+        log_failure(request, ByteString::formatted("The port #{} is blocked", url.port_or_default()));
         return;
     }
 
@@ -196,11 +196,11 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
         log_success(request);
 
-        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+        HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
         response_headers.set("Content-Type", "text/html; charset=UTF-8");
 
         Platform::EventLoopPlugin::the().deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
-            success_callback(DeprecatedString::empty().to_byte_buffer(), response_headers, {});
+            success_callback(ByteString::empty().to_byte_buffer(), response_headers, {});
         });
         return;
     }
@@ -219,8 +219,8 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             data_url.mime_type,
             StringView(data_url.body.bytes()));
 
-        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
-        response_headers.set("Content-Type", data_url.mime_type.to_deprecated_string());
+        HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
+        response_headers.set("Content-Type", data_url.mime_type.to_byte_string());
 
         log_success(request);
 
@@ -248,7 +248,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
                 log_failure(request, file_or_error.error());
                 if (error_callback) {
                     auto status = file_or_error.error().code() == ENOENT ? 404u : 500u;
-                    error_callback(DeprecatedString::formatted("{}", file_or_error.error()), status, {}, {});
+                    error_callback(ByteString::formatted("{}", file_or_error.error()), status, {}, {});
                 }
                 return;
             }
@@ -262,12 +262,12 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
                 if (maybe_response.is_error()) {
                     log_failure(request, maybe_response.error());
                     if (error_callback)
-                        error_callback(DeprecatedString::formatted("{}", maybe_response.error()), 500u, {}, {});
+                        error_callback(ByteString::formatted("{}", maybe_response.error()), 500u, {}, {});
                     return;
                 }
 
                 log_success(request);
-                HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+                HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
                 response_headers.set("Content-Type"sv, "text/html"sv);
                 success_callback(maybe_response.release_value().bytes(), response_headers, {});
                 return;
@@ -278,7 +278,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", maybe_file.error()), 500u, {}, {});
+                    error_callback(ByteString::formatted("{}", maybe_file.error()), 500u, {}, {});
                 return;
             }
 
@@ -287,7 +287,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             if (maybe_data.is_error()) {
                 log_failure(request, maybe_data.error());
                 if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", maybe_data.error()), 500u, {}, {});
+                    error_callback(ByteString::formatted("{}", maybe_data.error()), 500u, {}, {});
                 return;
             }
             auto data = maybe_data.release_value();
@@ -295,7 +295,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
 
             // NOTE: For file:// URLs, we have to guess the MIME type, since there's no HTTP header to tell us what this is.
             //       We insert a fake Content-Type header here, so that clients can use it to learn the MIME type.
-            HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+            HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
             auto mime_type = Core::guess_mime_type_based_on_filename(request.url().serialize_path());
             response_headers.set("Content-Type"sv, mime_type);
 
@@ -314,8 +314,8 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
     if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
         auto proxy = ProxyMappings::the().proxy_for_url(url);
 
-        HashMap<DeprecatedString, DeprecatedString> headers;
-        headers.set("User-Agent", m_user_agent.to_deprecated_string());
+        HashMap<ByteString, ByteString> headers;
+        headers.set("User-Agent", m_user_agent.to_byte_string());
         headers.set("Accept-Encoding", "gzip, deflate, br");
 
         for (auto& it : request.headers()) {
@@ -366,7 +366,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
                     error_builder.append("Load failed"sv);
                 log_failure(request, error_builder.string_view());
                 if (error_callback)
-                    error_callback(error_builder.to_deprecated_string(), status_code, payload, response_headers);
+                    error_callback(error_builder.to_byte_string(), status_code, payload, response_headers);
                 return;
             }
             log_success(request);
@@ -385,7 +385,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         return;
     }
 
-    auto not_implemented_error = DeprecatedString::formatted("Protocol not implemented: {}", url.scheme());
+    auto not_implemented_error = ByteString::formatted("Protocol not implemented: {}", url.scheme());
     log_failure(request, not_implemented_error);
     if (error_callback)
         error_callback(not_implemented_error, {}, {}, {});

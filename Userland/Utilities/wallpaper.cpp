@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (wallpapers_directory_iterator.has_error())
             return Error::from_string_literal("Unable to iterate /res/wallpapers directory");
 
-        Vector<DeprecatedString> wallpaper_paths;
+        Vector<ByteString> wallpaper_paths;
 
         auto current_wallpaper_path = GUI::Desktop::the().wallpaper_path();
         while (wallpapers_directory_iterator.has_next()) {

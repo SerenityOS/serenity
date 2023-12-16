@@ -5,7 +5,7 @@
  */
 
 #include "FontPluginSerenity.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibGfx/Font/FontDatabase.h>
 
 namespace Web::Platform {

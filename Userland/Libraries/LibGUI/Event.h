@@ -183,7 +183,7 @@ public:
     {
     }
 
-    DeprecatedString const& title() const { return m_title; }
+    ByteString const& title() const { return m_title; }
     Gfx::IntRect const& rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     bool is_blocked() const { return m_blocked; }
@@ -195,7 +195,7 @@ public:
     unsigned workspace_column() const { return m_workspace_column; }
 
 private:
-    DeprecatedString m_title;
+    ByteString m_title;
     Gfx::IntRect m_rect;
     WindowType m_window_type;
     unsigned m_workspace_row;
@@ -254,16 +254,16 @@ private:
 
 class WMKeymapChangedEvent : public WMEvent {
 public:
-    explicit WMKeymapChangedEvent(int client_id, DeprecatedString const& keymap)
+    explicit WMKeymapChangedEvent(int client_id, ByteString const& keymap)
         : WMEvent(Event::Type::WM_KeymapChanged, client_id, 0)
         , m_keymap(keymap)
     {
     }
 
-    DeprecatedString const& keymap() const { return m_keymap; }
+    ByteString const& keymap() const { return m_keymap; }
 
 private:
-    const DeprecatedString m_keymap;
+    const ByteString m_keymap;
 };
 
 class WMAddToQuickLaunchEvent : public WMEvent {
@@ -403,15 +403,15 @@ public:
     bool super() const { return m_modifiers & Mod_Super; }
     u8 modifiers() const { return m_modifiers; }
     u32 code_point() const { return m_code_point; }
-    DeprecatedString text() const
+    ByteString text() const
     {
         StringBuilder sb;
         sb.append_code_point(m_code_point);
-        return sb.to_deprecated_string();
+        return sb.to_byte_string();
     }
     u32 scancode() const { return m_scancode; }
 
-    DeprecatedString to_deprecated_string() const;
+    ByteString to_byte_string() const;
 
     bool is_arrow_key() const
     {
@@ -494,17 +494,17 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(Gfx::IntPoint, DeprecatedString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
+    DropEvent(Gfx::IntPoint, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
 
     ~DropEvent() = default;
 
     Gfx::IntPoint position() const { return m_position; }
-    DeprecatedString const& text() const { return m_text; }
+    ByteString const& text() const { return m_text; }
     Core::MimeData const& mime_data() const { return m_mime_data; }
 
 private:
     Gfx::IntPoint m_position;
-    DeprecatedString m_text;
+    ByteString m_text;
     NonnullRefPtr<Core::MimeData const> m_mime_data;
 };
 

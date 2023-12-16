@@ -5,7 +5,7 @@
  */
 
 #include "BigFraction.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Math.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
@@ -184,7 +184,7 @@ void BigFraction::reduce()
     m_denominator = denominator_divide.quotient;
 }
 
-DeprecatedString BigFraction::to_deprecated_string(unsigned rounding_threshold) const
+ByteString BigFraction::to_byte_string(unsigned rounding_threshold) const
 {
     StringBuilder builder;
     if (m_numerator.is_negative() && m_numerator != "0"_bigint)
@@ -239,7 +239,7 @@ DeprecatedString BigFraction::to_deprecated_string(unsigned rounding_threshold) 
             builder.append(fractional_value);
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 BigFraction BigFraction::sqrt() const

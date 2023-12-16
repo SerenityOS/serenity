@@ -23,19 +23,19 @@ class RequestClient final
 public:
     explicit RequestClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    template<typename RequestHashMapTraits = Traits<DeprecatedString>>
-    RefPtr<Request> start_request(DeprecatedString const& method, URL const&, HashMap<DeprecatedString, DeprecatedString, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {});
+    template<typename RequestHashMapTraits = Traits<ByteString>>
+    RefPtr<Request> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {});
 
     void ensure_connection(URL const&, ::RequestServer::CacheLevel);
 
     bool stop_request(Badge<Request>, Request&);
-    bool set_certificate(Badge<Request>, Request&, DeprecatedString, DeprecatedString);
+    bool set_certificate(Badge<Request>, Request&, ByteString, ByteString);
 
 private:
     virtual void request_progress(i32, Optional<u64> const&, u64) override;
     virtual void request_finished(i32, bool, u64) override;
     virtual void certificate_requested(i32) override;
-    virtual void headers_became_available(i32, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const&, Optional<u32> const&) override;
+    virtual void headers_became_available(i32, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const&, Optional<u32> const&) override;
 
     HashMap<i32, RefPtr<Request>> m_requests;
 };

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
@@ -126,7 +126,7 @@ struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, PDF::XRefEntry const& entry)
     {
         return Formatter<StringView>::format(builder,
-            DeprecatedString::formatted("XRefEntry {{ offset={} generation={} used={} }}",
+            ByteString::formatted("XRefEntry {{ offset={} generation={} used={} }}",
                 entry.byte_offset,
                 entry.generation_number,
                 entry.in_use));
@@ -142,7 +142,7 @@ struct Formatter<PDF::XRefTable> : Formatter<StringView> {
         for (auto& entry : table.m_entries)
             builder.appendff("\n  {}", entry);
         builder.append("\n}"sv);
-        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
+        return Formatter<StringView>::format(format_builder, builder.to_byte_string());
     }
 };
 

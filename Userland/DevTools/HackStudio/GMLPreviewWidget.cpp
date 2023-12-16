@@ -10,13 +10,13 @@
 
 namespace HackStudio {
 
-GMLPreviewWidget::GMLPreviewWidget(DeprecatedString const& gml_content)
+GMLPreviewWidget::GMLPreviewWidget(ByteString const& gml_content)
 {
     set_layout<GUI::VerticalBoxLayout>();
     load_gml(gml_content);
 }
 
-void GMLPreviewWidget::load_gml(DeprecatedString const& gml)
+void GMLPreviewWidget::load_gml(ByteString const& gml)
 {
     remove_all_children();
 

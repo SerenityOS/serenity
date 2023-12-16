@@ -103,9 +103,9 @@ public:
 
     void screen_resolution_changed();
 
-    bool set_background_color(DeprecatedString const& background_color);
+    bool set_background_color(ByteString const& background_color);
 
-    bool set_wallpaper_mode(DeprecatedString const& mode);
+    bool set_wallpaper_mode(ByteString const& mode);
 
     bool set_wallpaper(RefPtr<Gfx::Bitmap const>);
     RefPtr<Gfx::Bitmap const> wallpaper_bitmap() const { return m_wallpaper; }

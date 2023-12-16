@@ -23,14 +23,14 @@ RefPtr<ConnectionFromClient> ConnectionFromClient::client_connection_for(int cli
     return nullptr;
 }
 
-void ConnectionFromClient::set_database_path(DeprecatedString database_path)
+void ConnectionFromClient::set_database_path(ByteString database_path)
 {
     m_database_path = move(database_path);
 }
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket, int client_id)
     : IPC::ConnectionFromClient<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket), client_id)
-    , m_database_path(DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory()))
+    , m_database_path(ByteString::formatted("{}/sql", Core::StandardPaths::data_directory()))
 {
     s_connections.set(client_id, *this);
 }
@@ -43,7 +43,7 @@ void ConnectionFromClient::die()
         on_disconnect();
 }
 
-Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedString const& database_name)
+Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(ByteString const& database_name)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::connect(database_name: {})", database_name);
 
@@ -62,7 +62,7 @@ void ConnectionFromClient::disconnect(SQL::ConnectionID connection_id)
         dbgln("Database connection has disappeared");
 }
 
-Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(SQL::ConnectionID connection_id, DeprecatedString const& sql)
+Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(SQL::ConnectionID connection_id, ByteString const& sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement(connection_id: {}, sql: '{}')", connection_id, sql);
 
@@ -93,7 +93,7 @@ Messages::SQLServer::ExecuteStatementResponse ConnectionFromClient::execute_stat
     }
 
     dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
-    async_execution_error(statement_id, -1, SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
+    async_execution_error(statement_id, -1, SQL::SQLErrorCode::StatementUnavailable, ByteString::formatted("{}", statement_id));
     return Optional<SQL::ExecutionID> {};
 }
 

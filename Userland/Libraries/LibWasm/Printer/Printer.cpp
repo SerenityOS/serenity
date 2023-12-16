@@ -12,11 +12,11 @@
 namespace Wasm {
 
 struct Names {
-    static HashMap<OpCode, DeprecatedString> instruction_names;
-    static HashMap<DeprecatedString, OpCode> instructions_by_name;
+    static HashMap<OpCode, ByteString> instruction_names;
+    static HashMap<ByteString, OpCode> instructions_by_name;
 };
 
-DeprecatedString instruction_name(OpCode const& opcode)
+ByteString instruction_name(OpCode const& opcode)
 {
     return Names::instruction_names.get(opcode).value_or("<unknown>");
 }
@@ -131,13 +131,13 @@ void Printer::print(Wasm::DataSection::Data const& data)
             [this](DataSection::Data::Passive const& value) {
                 print_indent();
                 print("(passive init {}xu8 (", value.init.size());
-                print(DeprecatedString::join(' ', value.init, "{:x}"sv));
+                print(ByteString::join(' ', value.init, "{:x}"sv));
                 print(")\n");
             },
             [this](DataSection::Data::Active const& value) {
                 print_indent();
                 print("(active init {}xu8 (", value.init.size());
-                print(DeprecatedString::join(' ', value.init, "{:x}"sv));
+                print(ByteString::join(' ', value.init, "{:x}"sv));
                 print("\n");
                 {
                     TemporaryChange change { m_indent, m_indent + 1 };
@@ -450,7 +450,7 @@ void Printer::print(Wasm::Instruction const& instruction)
                 TemporaryChange change { m_indent, m_indent + 1 };
                 print(args.block_type);
                 print_indent();
-                print("(else {}) (end {}))", args.else_ip.has_value() ? DeprecatedString::number(args.else_ip->value()) : "(none)", args.end_ip.value());
+                print("(else {}) (end {}))", args.else_ip.has_value() ? ByteString::number(args.else_ip->value()) : "(none)", args.end_ip.value());
             },
             [&](Instruction::TableBranchArgs const& args) {
                 print("(table_branch");
@@ -650,15 +650,15 @@ void Printer::print(Wasm::Value const& value)
     print_indent();
     print("{} ", value.value().visit([&]<typename T>(T const& value) {
         if constexpr (IsSame<Wasm::Reference, T>) {
-            return DeprecatedString::formatted(
+            return ByteString::formatted(
                 "addr({})",
                 value.ref().visit(
-                    [](Wasm::Reference::Null const&) { return DeprecatedString("null"); },
-                    [](auto const& ref) { return DeprecatedString::number(ref.address.value()); }));
+                    [](Wasm::Reference::Null const&) { return ByteString("null"); },
+                    [](auto const& ref) { return ByteString::number(ref.address.value()); }));
         } else if constexpr (IsSame<u128, T>) {
-            return DeprecatedString::formatted("v128({:x})", value);
+            return ByteString::formatted("v128({:x})", value);
         } else {
-            return DeprecatedString::formatted("{}", value);
+            return ByteString::formatted("{}", value);
         }
     }));
     TemporaryChange<size_t> change { m_indent, 0 };
@@ -671,12 +671,12 @@ void Printer::print(Wasm::Reference const& value)
     print(
         "addr({})\n",
         value.ref().visit(
-            [](Wasm::Reference::Null const&) { return DeprecatedString("null"); },
-            [](auto const& ref) { return DeprecatedString::number(ref.address.value()); }));
+            [](Wasm::Reference::Null const&) { return ByteString("null"); },
+            [](auto const& ref) { return ByteString::number(ref.address.value()); }));
 }
 }
 
-HashMap<Wasm::OpCode, DeprecatedString> Wasm::Names::instruction_names {
+HashMap<Wasm::OpCode, ByteString> Wasm::Names::instruction_names {
     { Instructions::unreachable, "unreachable" },
     { Instructions::nop, "nop" },
     { Instructions::block, "block" },
@@ -1115,4 +1115,4 @@ HashMap<Wasm::OpCode, DeprecatedString> Wasm::Names::instruction_names {
     { Instructions::structured_else, "synthetic:else" },
     { Instructions::structured_end, "synthetic:end" },
 };
-HashMap<DeprecatedString, Wasm::OpCode> Wasm::Names::instructions_by_name;
+HashMap<ByteString, Wasm::OpCode> Wasm::Names::instructions_by_name;

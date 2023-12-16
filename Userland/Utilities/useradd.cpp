@@ -8,8 +8,8 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -58,10 +58,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     uid_t uid = 0;
     gid_t gid = USERS_GID;
     bool create_home_dir = false;
-    DeprecatedString password = "";
-    DeprecatedString shell = DEFAULT_SHELL;
-    DeprecatedString gecos = "";
-    DeprecatedString username;
+    ByteString password = "";
+    ByteString shell = DEFAULT_SHELL;
+    ByteString gecos = "";
+    ByteString username;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     // Let's run a quick sanity check on username
-    if (username.find_any_of("\\/!@#$%^&*()~+=`:\n"sv, DeprecatedString::SearchDirection::Forward).has_value()) {
+    if (username.find_any_of("\\/!@#$%^&*()~+=`:\n"sv, ByteString::SearchDirection::Forward).has_value()) {
         warnln("invalid character in username, {}", username);
         return 1;
     }
@@ -136,9 +136,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    DeprecatedString home;
+    ByteString home;
     if (home_path.is_empty())
-        home = DeprecatedString::formatted("/home/{}", username);
+        home = ByteString::formatted("/home/{}", username);
     else
         home = home_path;
 
@@ -163,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto get_salt = []() -> ErrorOr<DeprecatedString> {
+    auto get_salt = []() -> ErrorOr<ByteString> {
         char random_data[12];
         fill_with_random({ random_data, sizeof(random_data) });
 
@@ -171,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         builder.append("$5$"sv);
         builder.append(TRY(encode_base64({ random_data, sizeof(random_data) })));
 
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
 
     char* hash = crypt(password.characters(), TRY(get_salt()).characters());

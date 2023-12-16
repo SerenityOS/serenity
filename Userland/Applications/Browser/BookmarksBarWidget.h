@@ -32,8 +32,8 @@ public:
         InNewWindow
     };
 
-    Function<void(DeprecatedString const& url, Open)> on_bookmark_click;
-    Function<void(DeprecatedString const&, DeprecatedString const&)> on_bookmark_hover;
+    Function<void(ByteString const& url, Open)> on_bookmark_click;
+    Function<void(ByteString const&, ByteString const&)> on_bookmark_hover;
     Function<void()> on_bookmark_change;
 
     bool contains_bookmark(StringView url);
@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    BookmarksBarWidget(DeprecatedString const&, bool enabled);
+    BookmarksBarWidget(ByteString const&, bool enabled);
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
@@ -67,7 +67,7 @@ private:
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
-    DeprecatedString m_context_menu_url;
+    ByteString m_context_menu_url;
 
     Vector<NonnullRefPtr<GUI::Button>> m_bookmarks;
 

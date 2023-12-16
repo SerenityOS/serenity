@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/NumberFormat.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
@@ -56,7 +56,7 @@ static void closing_statistics()
     warnln("{}+{} blocks out", statistics.total_blocks_out, statistics.partial_blocks_out);
     if (statistics.status != Noxfer) {
         auto elapsed_time = statistics.timer.elapsed_time();
-        DeprecatedString copy_speed = "INF B/s";
+        ByteString copy_speed = "INF B/s";
         if (!elapsed_time.is_zero()) {
             auto speed = statistics.total_bytes_copied * 1000 / elapsed_time.to_milliseconds();
             copy_speed = human_readable_quantity(speed, AK::HumanReadableBasedOn::Base2, "B/s"sv);
@@ -83,7 +83,7 @@ static int handle_io_file_arguments(int& fd, int flags, StringView argument)
         return -1;
     }
 
-    fd = open(value.to_deprecated_string().characters(), flags, 0666);
+    fd = open(value.to_byte_string().characters(), flags, 0666);
     if (fd == -1) {
         warnln("Unable to open: {}", value);
         return -1;

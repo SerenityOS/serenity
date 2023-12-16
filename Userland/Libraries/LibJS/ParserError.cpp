@@ -15,31 +15,31 @@ namespace JS {
 ErrorOr<String> ParserError::to_string() const
 {
     if (!position.has_value())
-        return String::from_deprecated_string(message);
+        return String::from_byte_string(message);
     return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
 }
 
-DeprecatedString ParserError::to_deprecated_string() const
+ByteString ParserError::to_byte_string() const
 {
     if (!position.has_value())
         return message;
-    return DeprecatedString::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
+    return ByteString::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
 }
 
-DeprecatedString ParserError::source_location_hint(StringView source, char const spacer, char const indicator) const
+ByteString ParserError::source_location_hint(StringView source, char const spacer, char const indicator) const
 {
     if (!position.has_value())
         return {};
     // We need to modify the source to match what the lexer considers one line - normalizing
     // line terminators to \n is easier than splitting using all different LT characters.
-    DeprecatedString source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
+    ByteString source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
     StringBuilder builder;
     builder.append(source_string.split_view('\n', SplitBehavior::KeepEmpty)[position.value().line - 1]);
     builder.append('\n');
     for (size_t i = 0; i < position.value().column - 1; ++i)
         builder.append(spacer);
     builder.append(indicator);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

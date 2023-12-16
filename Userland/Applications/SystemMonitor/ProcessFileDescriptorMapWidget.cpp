@@ -53,7 +53,7 @@ void ProcessFileDescriptorMapWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    m_model->set_json_path(DeprecatedString::formatted("/proc/{}/fds", m_pid));
+    m_model->set_json_path(ByteString::formatted("/proc/{}/fds", m_pid));
 }
 
 }

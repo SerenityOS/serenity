@@ -13,7 +13,7 @@ namespace Gemini {
 ErrorOr<ByteBuffer> GeminiRequest::to_raw_request() const
 {
     StringBuilder builder;
-    TRY(builder.try_append(m_url.to_deprecated_string()));
+    TRY(builder.try_append(m_url.to_byte_string()));
     TRY(builder.try_append("\r\n"sv));
     return builder.to_byte_buffer();
 }

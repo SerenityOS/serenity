@@ -29,14 +29,14 @@ private:
     KeyboardSettingsWidget() = default;
     ErrorOr<void> setup();
 
-    void set_keymaps(Vector<DeprecatedString> const& keymaps, DeprecatedString const& active_keymap);
+    void set_keymaps(Vector<ByteString> const& keymaps, ByteString const& active_keymap);
 
     void write_caps_lock_to_ctrl_sys_variable(bool);
     ErrorOr<bool> read_caps_lock_to_ctrl_sys_variable();
 
-    Vector<DeprecatedString> m_initial_keymap_list;
+    Vector<ByteString> m_initial_keymap_list;
 
-    DeprecatedString m_initial_active_keymap;
+    ByteString m_initial_active_keymap;
 
     RefPtr<GUI::ListView> m_selected_keymaps_listview;
     RefPtr<GUI::Label> m_active_keymap_label;

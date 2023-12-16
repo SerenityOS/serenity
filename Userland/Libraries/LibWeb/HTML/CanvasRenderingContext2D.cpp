@@ -440,7 +440,7 @@ RefPtr<Gfx::Font const> CanvasRenderingContext2D::current_font()
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#text-preparation-algorithm
-CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(DeprecatedString const& text, float max_width)
+CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(ByteString const& text, float max_width)
 {
     // 1. If maxWidth was provided but is less than or equal to zero or equal to NaN, then return an empty array.
     if (max_width <= 0 || max_width != max_width) {
@@ -452,7 +452,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     for (auto c : text) {
         builder.append(Infra::is_ascii_whitespace(c) ? ' ' : c);
     }
-    auto replaced_text = builder.to_deprecated_string();
+    auto replaced_text = builder.to_byte_string();
 
     // 3. Let font be the current font of target, as given by that object's font attribute.
     auto font = current_font();

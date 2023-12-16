@@ -11,7 +11,7 @@
 
 namespace Markdown {
 
-DeprecatedString CommentBlock::render_to_html(bool) const
+ByteString CommentBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -20,12 +20,12 @@ DeprecatedString CommentBlock::render_to_html(bool) const
     // TODO: This is probably incorrect, because we technically need to escape "--" in some form. However, Browser does not care about this.
     builder.append("-->\n"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<DeprecatedString> CommentBlock::render_lines_for_terminal(size_t) const
+Vector<ByteString> CommentBlock::render_lines_for_terminal(size_t) const
 {
-    return Vector<DeprecatedString> {};
+    return Vector<ByteString> {};
 }
 
 RecursionDecision CommentBlock::walk(Visitor& visitor) const
@@ -69,7 +69,7 @@ OwnPtr<CommentBlock> CommentBlock::parse(LineIterator& lines)
         line = *lines;
     }
 
-    return make<CommentBlock>(builder.to_deprecated_string());
+    return make<CommentBlock>(builder.to_byte_string());
 }
 
 }

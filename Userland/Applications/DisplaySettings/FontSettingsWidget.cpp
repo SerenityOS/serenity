@@ -79,9 +79,9 @@ static void update_label_with_font(GUI::Label& label, Gfx::Font const& font)
 void FontSettingsWidget::apply_settings()
 {
     GUI::ConnectionToWindowServer::the().set_system_fonts(
-        m_default_font_label->font().qualified_name().to_deprecated_string(),
-        m_fixed_width_font_label->font().qualified_name().to_deprecated_string(),
-        m_window_title_font_label->font().qualified_name().to_deprecated_string());
+        m_default_font_label->font().qualified_name().to_byte_string(),
+        m_fixed_width_font_label->font().qualified_name().to_byte_string(),
+        m_window_title_font_label->font().qualified_name().to_byte_string());
 }
 
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <LibKeyboard/CharacterMapData.h>
 
@@ -15,18 +15,18 @@ namespace Keyboard {
 class CharacterMap {
 
 public:
-    CharacterMap(DeprecatedString const& map_name, CharacterMapData const& map_data);
-    static ErrorOr<CharacterMap> load_from_file(DeprecatedString const& filename);
+    CharacterMap(ByteString const& map_name, CharacterMapData const& map_data);
+    static ErrorOr<CharacterMap> load_from_file(ByteString const& filename);
 
     int set_system_map();
     static ErrorOr<CharacterMap> fetch_system_map();
 
     CharacterMapData const& character_map_data() const { return m_character_map_data; }
-    DeprecatedString const& character_map_name() const;
+    ByteString const& character_map_name() const;
 
 private:
     CharacterMapData m_character_map_data;
-    DeprecatedString m_character_map_name;
+    ByteString m_character_map_name;
 };
 
 }

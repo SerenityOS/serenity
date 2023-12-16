@@ -46,7 +46,7 @@ void Inspector::parse_loaded_libraries(Function<void(float)> on_progress)
             return;
 
         auto image = make<ELF::Image>(file_or_error.value()->bytes());
-        auto debug_info = make<Debug::DebugInfo>(*image, DeprecatedString {}, library.base_address);
+        auto debug_info = make<Debug::DebugInfo>(*image, ByteString {}, library.base_address);
         m_loaded_libraries.append(make<Debug::LoadedLibrary>(library.name, file_or_error.release_value(), move(image), move(debug_info), library.base_address));
     });
 }

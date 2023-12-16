@@ -184,7 +184,7 @@ void TextDocument::set_all_cursors(TextPosition const& position)
     }
 }
 
-DeprecatedString TextDocument::text() const
+ByteString TextDocument::text() const
 {
     StringBuilder builder;
     for (size_t i = 0; i < line_count(); ++i) {
@@ -193,14 +193,14 @@ DeprecatedString TextDocument::text() const
         if (i != line_count() - 1)
             builder.append('\n');
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
+ByteString TextDocument::text_in_range(TextRange const& a_range) const
 {
     auto range = a_range.normalized();
     if (is_empty() || line_count() < range.end().line() - range.start().line())
-        return DeprecatedString("");
+        return ByteString("");
 
     StringBuilder builder;
     for (size_t i = range.start().line(); i <= range.end().line(); ++i) {
@@ -219,7 +219,7 @@ DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
             builder.append('\n');
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 // This function will return the position of the previous grapheme cluster
@@ -301,7 +301,7 @@ void TextDocument::update_regex_matches(StringView needle)
         }
         re.search(views, m_regex_result);
         m_regex_needs_update = false;
-        m_regex_needle = DeprecatedString { needle };
+        m_regex_needle = ByteString { needle };
         m_regex_result_match_index = -1;
         m_regex_result_match_capture_group_index = -1;
     }
@@ -694,14 +694,14 @@ TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)
 {
 }
 
-InsertTextCommand::InsertTextCommand(TextDocument& document, DeprecatedString const& text, TextPosition const& position)
+InsertTextCommand::InsertTextCommand(TextDocument& document, ByteString const& text, TextPosition const& position)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range({ position, position })
 {
 }
 
-DeprecatedString InsertTextCommand::action_text() const
+ByteString InsertTextCommand::action_text() const
 {
     return "Insert Text";
 }
@@ -723,7 +723,7 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(m_text);
     builder.append(typed_other.m_text);
-    m_text = builder.to_deprecated_string();
+    m_text = builder.to_byte_string();
     m_range.set_end(typed_other.m_range.end());
 
     m_timestamp = MonotonicTime::now();
@@ -777,7 +777,7 @@ void InsertTextCommand::perform_formatting(TextDocument::Client const& client)
             ++column;
         }
     }
-    m_text = builder.to_deprecated_string();
+    m_text = builder.to_byte_string();
 }
 
 void InsertTextCommand::redo()
@@ -795,7 +795,7 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
-RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString const& text, TextRange const& range, TextPosition const& original_cursor_position)
+RemoveTextCommand::RemoveTextCommand(TextDocument& document, ByteString const& text, TextRange const& range, TextPosition const& original_cursor_position)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
@@ -803,7 +803,7 @@ RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString co
 {
 }
 
-DeprecatedString RemoveTextCommand::action_text() const
+ByteString RemoveTextCommand::action_text() const
 {
     return "Remove Text";
 }
@@ -824,7 +824,7 @@ bool RemoveTextCommand::merge_with(GUI::Command const& other)
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(typed_other.m_text);
     builder.append(m_text);
-    m_text = builder.to_deprecated_string();
+    m_text = builder.to_byte_string();
     m_range.set_start(typed_other.m_range.start());
 
     m_timestamp = MonotonicTime::now();
@@ -843,7 +843,7 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(m_original_cursor_position);
 }
 
-InsertLineCommand::InsertLineCommand(TextDocument& document, TextPosition cursor, DeprecatedString&& text, InsertPosition pos)
+InsertLineCommand::InsertLineCommand(TextDocument& document, TextPosition cursor, ByteString&& text, InsertPosition pos)
     : TextDocumentUndoCommand(document)
     , m_cursor(cursor)
     , m_text(move(text))
@@ -876,7 +876,7 @@ size_t InsertLineCommand::compute_line_number() const
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString InsertLineCommand::action_text() const
+ByteString InsertLineCommand::action_text() const
 {
     StringBuilder action_text_builder;
     action_text_builder.append("Insert Line"sv);
@@ -889,10 +889,10 @@ DeprecatedString InsertLineCommand::action_text() const
         VERIFY_NOT_REACHED();
     }
 
-    return action_text_builder.to_deprecated_string();
+    return action_text_builder.to_byte_string();
 }
 
-ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, DeprecatedString const& action_text)
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, ByteString const& text, ByteString const& action_text)
     : TextDocumentUndoCommand(document)
     , m_original_text(document.text())
     , m_new_text(text)
@@ -917,7 +917,7 @@ bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
     return false;
 }
 
-DeprecatedString ReplaceAllTextCommand::action_text() const
+ByteString ReplaceAllTextCommand::action_text() const
 {
     return m_action_text;
 }
@@ -931,7 +931,7 @@ IndentSelection::IndentSelection(TextDocument& document, size_t tab_width, TextR
 
 void IndentSelection::redo()
 {
-    auto const tab = DeprecatedString::repeated(' ', m_tab_width);
+    auto const tab = ByteString::repeated(' ', m_tab_width);
 
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         m_document.insert_at({ i, 0 }, tab, m_client);
@@ -970,7 +970,7 @@ void UnindentSelection::redo()
 
 void UnindentSelection::undo()
 {
-    auto const tab = DeprecatedString::repeated(' ', m_tab_width);
+    auto const tab = ByteString::repeated(' ', m_tab_width);
 
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++)
         m_document.insert_at({ i, 0 }, tab, m_client);

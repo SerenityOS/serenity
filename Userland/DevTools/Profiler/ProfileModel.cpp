@@ -126,7 +126,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             return node->object_name();
         if (index.column() == Column::StackFrame) {
             if (node->is_root()) {
-                return DeprecatedString::formatted("{} ({})", node->process().basename, node->process().pid);
+                return ByteString::formatted("{} ({})", node->process().basename, node->process().pid);
             }
             return node->symbol();
         }
@@ -136,7 +136,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             auto const* library = node->process().library_metadata.library_containing(node->address());
             if (!library)
                 return "";
-            return DeprecatedString::formatted("{:p} (offset {:p})", node->address(), node->address() - library->base);
+            return ByteString::formatted("{:p} (offset {:p})", node->address(), node->address() - library->base);
         }
         return {};
     }

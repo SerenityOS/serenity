@@ -164,7 +164,7 @@ PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document*
     // "The names parameter is an array of name objects specifying the individual color components.
     //  The length of the array determines the number of components in the DeviceN color space"
     auto names_array = TRY(document->resolve_to<ArrayObject>(parameters[0]));
-    Vector<DeprecatedString> names;
+    Vector<ByteString> names;
     for (size_t i = 0; i < names_array->size(); ++i)
         names.append(names_array->get_name_at(i)->name());
 

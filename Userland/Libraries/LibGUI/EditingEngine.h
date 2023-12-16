@@ -92,7 +92,7 @@ public:
     virtual void undo() override;
     virtual void redo() override;
     bool merge_with(GUI::Command const&) override;
-    DeprecatedString action_text() const override;
+    ByteString action_text() const override;
 
     static bool valid_operation(EditingEngine& engine, VerticalDirection direction);
 

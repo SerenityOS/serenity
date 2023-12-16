@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -26,31 +26,31 @@ public:
         No,
     };
 
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_lib(DeprecatedString const& lib_name, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_app(DeprecatedString const& app_name, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(DeprecatedString const& app_name, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, int fd);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, NonnullOwnPtr<Core::File>);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_lib(ByteString const& lib_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_app(ByteString const& app_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(ByteString const& app_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(ByteString const& filename, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(ByteString const& filename, int fd);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(ByteString const& filename, NonnullOwnPtr<Core::File>);
     ~ConfigFile();
 
-    bool has_group(DeprecatedString const&) const;
-    bool has_key(DeprecatedString const& group, DeprecatedString const& key) const;
+    bool has_group(ByteString const&) const;
+    bool has_key(ByteString const& group, ByteString const& key) const;
 
-    Vector<DeprecatedString> groups() const;
-    Vector<DeprecatedString> keys(DeprecatedString const& group) const;
+    Vector<ByteString> groups() const;
+    Vector<ByteString> keys(ByteString const& group) const;
 
     size_t num_groups() const { return m_groups.size(); }
 
-    DeprecatedString read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value = {}) const
+    ByteString read_entry(ByteString const& group, ByteString const& key, ByteString const& default_value = {}) const
     {
         return read_entry_optional(group, key).value_or(default_value);
     }
-    Optional<DeprecatedString> read_entry_optional(DeprecatedString const& group, DeprecatedString const& key) const;
-    bool read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value = false) const;
+    Optional<ByteString> read_entry_optional(ByteString const& group, ByteString const& key) const;
+    bool read_bool_entry(ByteString const& group, ByteString const& key, bool default_value = false) const;
 
     template<Integral T = int>
-    T read_num_entry(DeprecatedString const& group, DeprecatedString const& key, T default_value = 0) const
+    T read_num_entry(ByteString const& group, ByteString const& key, T default_value = 0) const
     {
         if (!has_key(group, key))
             return default_value;
@@ -61,13 +61,13 @@ public:
             return read_entry(group, key, "").to_uint<T>().value_or(default_value);
     }
 
-    void write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value);
-    void write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value);
+    void write_entry(ByteString const& group, ByteString const& key, ByteString const& value);
+    void write_bool_entry(ByteString const& group, ByteString const& key, bool value);
 
     template<Integral T = int>
-    void write_num_entry(DeprecatedString const& group, DeprecatedString const& key, T value)
+    void write_num_entry(ByteString const& group, ByteString const& key, T value)
     {
-        write_entry(group, key, DeprecatedString::number(value));
+        write_entry(group, key, ByteString::number(value));
     }
 
     void dump() const;
@@ -76,20 +76,20 @@ public:
 
     ErrorOr<void> sync();
 
-    void add_group(DeprecatedString const& group);
-    void remove_group(DeprecatedString const& group);
-    void remove_entry(DeprecatedString const& group, DeprecatedString const& key);
+    void add_group(ByteString const& group);
+    void remove_group(ByteString const& group);
+    void remove_entry(ByteString const& group, ByteString const& key);
 
-    DeprecatedString const& filename() const { return m_filename; }
+    ByteString const& filename() const { return m_filename; }
 
 private:
-    ConfigFile(DeprecatedString const& filename, OwnPtr<InputBufferedFile> open_file);
+    ConfigFile(ByteString const& filename, OwnPtr<InputBufferedFile> open_file);
 
     ErrorOr<void> reparse();
 
-    DeprecatedString m_filename;
+    ByteString m_filename;
     OwnPtr<InputBufferedFile> m_file;
-    HashMap<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> m_groups;
+    HashMap<ByteString, HashMap<ByteString, ByteString>> m_groups;
     bool m_dirty { false };
 };
 

@@ -85,8 +85,8 @@ public:
     virtual ~WebSocketClientSocket();
 
     struct CertificateAndKey {
-        DeprecatedString certificate;
-        DeprecatedString key;
+        ByteString certificate;
+        ByteString key;
     };
 
     struct Message {
@@ -101,16 +101,16 @@ public:
     };
 
     virtual Web::WebSockets::WebSocket::ReadyState ready_state() = 0;
-    virtual DeprecatedString subprotocol_in_use() = 0;
+    virtual ByteString subprotocol_in_use() = 0;
 
     virtual void send(ByteBuffer binary_or_text_message, bool is_text) = 0;
     virtual void send(StringView text_message) = 0;
-    virtual void close(u16 code = 1005, DeprecatedString reason = {}) = 0;
+    virtual void close(u16 code = 1005, ByteString reason = {}) = 0;
 
     Function<void()> on_open;
     Function<void(Message)> on_message;
     Function<void(Error)> on_error;
-    Function<void(u16 code, DeprecatedString reason, bool was_clean)> on_close;
+    Function<void(u16 code, ByteString reason, bool was_clean)> on_close;
     Function<CertificateAndKey()> on_certificate_requested;
 
 protected:
@@ -123,7 +123,7 @@ public:
     static void initialize(RefPtr<WebSocketClientManager>);
     static WebSocketClientManager& the();
 
-    virtual RefPtr<WebSocketClientSocket> connect(AK::URL const&, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols) = 0;
+    virtual RefPtr<WebSocketClientSocket> connect(AK::URL const&, ByteString const& origin, Vector<ByteString> const& protocols) = 0;
 
 protected:
     explicit WebSocketClientManager();

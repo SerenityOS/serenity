@@ -24,7 +24,7 @@ class ClockWidget final : public GUI::Frame {
 public:
     virtual ~ClockWidget() override = default;
 
-    void update_format(DeprecatedString const&);
+    void update_format(ByteString const&);
 
 private:
     ClockWidget();
@@ -47,7 +47,7 @@ private:
 
     void update_selected_calendar_button();
 
-    DeprecatedString m_time_format;
+    ByteString m_time_format;
     RefPtr<GUI::Window> m_calendar_window;
     RefPtr<GUI::Calendar> m_calendar;
     RefPtr<GUI::Button> m_next_date;

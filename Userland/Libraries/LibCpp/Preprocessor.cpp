@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 namespace Cpp {
-Preprocessor::Preprocessor(DeprecatedString const& filename, StringView program)
+Preprocessor::Preprocessor(ByteString const& filename, StringView program)
     : m_filename(filename)
     , m_program(program)
 {
@@ -369,7 +369,7 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
     return definition;
 }
 
-DeprecatedString Preprocessor::remove_escaped_newlines(StringView value)
+ByteString Preprocessor::remove_escaped_newlines(StringView value)
 {
     static constexpr auto escaped_newline = "\\\n"sv;
     AK::StringBuilder processed_value;
@@ -378,10 +378,10 @@ DeprecatedString Preprocessor::remove_escaped_newlines(StringView value)
         processed_value.append(lexer.consume_until(escaped_newline));
         lexer.ignore(escaped_newline.length());
     }
-    return processed_value.to_deprecated_string();
+    return processed_value.to_byte_string();
 }
 
-DeprecatedString Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
+ByteString Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
 {
     if (macro_call.arguments.size() != definition.parameters.size()) {
         dbgln("mismatch in # of arguments for macro call: {}", macro_call.name.text());
@@ -408,7 +408,7 @@ DeprecatedString Preprocessor::evaluate_macro_call(MacroCall const& macro_call, 
         }
     });
 
-    return processed_value.to_deprecated_string();
+    return processed_value.to_byte_string();
 }
 
 };

@@ -87,7 +87,7 @@ PathBreadcrumbbar::PathBreadcrumbbar(NonnullRefPtr<GUI::TextBox> location_text_b
 
 PathBreadcrumbbar::~PathBreadcrumbbar() = default;
 
-void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
+void PathBreadcrumbbar::set_current_path(ByteString const& new_path)
 {
     if (new_path == m_current_path)
         return;

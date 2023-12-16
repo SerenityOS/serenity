@@ -81,7 +81,7 @@ public:
     }
     ~Screen();
 
-    static bool apply_layout(ScreenLayout&&, DeprecatedString&);
+    static bool apply_layout(ScreenLayout&&, ByteString&);
     static ScreenLayout const& layout() { return s_layout; }
 
     static Screen& main()

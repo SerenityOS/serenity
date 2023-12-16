@@ -381,7 +381,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput c
     auto view = input.view.substring_view(start_position, length);
 
     if (input.regex_options & AllFlags::StringCopyMatches) {
-        match = { view.to_deprecated_string(), input.line, start_position, input.global_offset + start_position }; // create a copy of the original string
+        match = { view.to_byte_string(), input.line, start_position, input.global_offset + start_position }; // create a copy of the original string
     } else {
         match = { view, input.line, start_position, input.global_offset + start_position }; // take view to original string
     }
@@ -406,7 +406,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchIn
     auto view = input.view.substring_view(start_position, length);
 
     if (input.regex_options & AllFlags::StringCopyMatches) {
-        match = { view.to_deprecated_string(), name(), input.line, start_position, input.global_offset + start_position }; // create a copy of the original string
+        match = { view.to_byte_string(), name(), input.line, start_position, input.global_offset + start_position }; // create a copy of the original string
     } else {
         match = { view, name(), input.line, start_position, input.global_offset + start_position }; // take view to original string
     }
@@ -509,7 +509,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             if (input.view.length() < state.string_position + length)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            Optional<DeprecatedString> str;
+            Optional<ByteString> str;
             Utf16Data utf16;
             Vector<u32> data;
             data.ensure_capacity(length);
@@ -893,9 +893,9 @@ ALWAYS_INLINE void OpCode_Compare::compare_script_extension(MatchInput const& in
     }
 }
 
-DeprecatedString OpCode_Compare::arguments_string() const
+ByteString OpCode_Compare::arguments_string() const
 {
-    return DeprecatedString::formatted("argc={}, args={} ", arguments_count(), arguments_size());
+    return ByteString::formatted("argc={}, args={} ", arguments_count(), arguments_size());
 }
 
 Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
@@ -941,16 +941,16 @@ Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
     return result;
 }
 
-Vector<DeprecatedString> OpCode_Compare::variable_arguments_to_deprecated_string(Optional<MatchInput const&> input) const
+Vector<ByteString> OpCode_Compare::variable_arguments_to_byte_string(Optional<MatchInput const&> input) const
 {
-    Vector<DeprecatedString> result;
+    Vector<ByteString> result;
 
     size_t offset { state().instruction_position + 3 };
     RegexStringView const& view = ((input.has_value()) ? input.value().view : StringView {});
 
     for (size_t i = 0; i < arguments_count(); ++i) {
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
-        result.empend(DeprecatedString::formatted("type={} [{}]", (size_t)compare_type, character_compare_type_name(compare_type)));
+        result.empend(ByteString::formatted("type={} [{}]", (size_t)compare_type, character_compare_type_name(compare_type)));
 
         auto string_start_offset = state().string_position_before_match;
 
@@ -958,39 +958,39 @@ Vector<DeprecatedString> OpCode_Compare::variable_arguments_to_deprecated_string
             auto ch = m_bytecode->at(offset++);
             auto is_ascii = is_ascii_printable(ch);
             if (is_ascii)
-                result.empend(DeprecatedString::formatted(" value='{:c}'", static_cast<char>(ch)));
+                result.empend(ByteString::formatted(" value='{:c}'", static_cast<char>(ch)));
             else
-                result.empend(DeprecatedString::formatted(" value={:x}", ch));
+                result.empend(ByteString::formatted(" value={:x}", ch));
 
             if (!view.is_null() && view.length() > string_start_offset) {
                 if (is_ascii) {
-                    result.empend(DeprecatedString::formatted(
+                    result.empend(ByteString::formatted(
                         " compare against: '{}'",
-                        view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_deprecated_string()));
+                        view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_byte_string()));
                 } else {
-                    auto str = view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_deprecated_string();
+                    auto str = view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_byte_string();
                     u8 buf[8] { 0 };
                     __builtin_memcpy(buf, str.characters(), min(str.length(), sizeof(buf)));
-                    result.empend(DeprecatedString::formatted(" compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
+                    result.empend(ByteString::formatted(" compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
                         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]));
                 }
             }
         } else if (compare_type == CharacterCompareType::Reference) {
             auto ref = m_bytecode->at(offset++);
-            result.empend(DeprecatedString::formatted(" number={}", ref));
+            result.empend(ByteString::formatted(" number={}", ref));
             if (input.has_value()) {
                 if (state().capture_group_matches.size() > input->match_index) {
                     auto& match = state().capture_group_matches[input->match_index];
                     if (match.size() > ref) {
                         auto& group = match[ref];
-                        result.empend(DeprecatedString::formatted(" left={}", group.left_column));
-                        result.empend(DeprecatedString::formatted(" right={}", group.left_column + group.view.length_in_code_units()));
-                        result.empend(DeprecatedString::formatted(" contents='{}'", group.view));
+                        result.empend(ByteString::formatted(" left={}", group.left_column));
+                        result.empend(ByteString::formatted(" right={}", group.left_column + group.view.length_in_code_units()));
+                        result.empend(ByteString::formatted(" contents='{}'", group.view));
                     } else {
-                        result.empend(DeprecatedString::formatted(" (invalid ref, max={})", match.size() - 1));
+                        result.empend(ByteString::formatted(" (invalid ref, max={})", match.size() - 1));
                     }
                 } else {
-                    result.empend(DeprecatedString::formatted(" (invalid index {}, max={})", input->match_index, state().capture_group_matches.size() - 1));
+                    result.empend(ByteString::formatted(" (invalid index {}, max={})", input->match_index, state().capture_group_matches.size() - 1));
                 }
             }
         } else if (compare_type == CharacterCompareType::String) {
@@ -998,42 +998,42 @@ Vector<DeprecatedString> OpCode_Compare::variable_arguments_to_deprecated_string
             StringBuilder str_builder;
             for (size_t i = 0; i < length; ++i)
                 str_builder.append(m_bytecode->at(offset++));
-            result.empend(DeprecatedString::formatted(" value=\"{}\"", str_builder.string_view().substring_view(0, length)));
+            result.empend(ByteString::formatted(" value=\"{}\"", str_builder.string_view().substring_view(0, length)));
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(DeprecatedString::formatted(
+                result.empend(ByteString::formatted(
                     " compare against: \"{}\"",
-                    input.value().view.substring_view(string_start_offset, string_start_offset + length > view.length() ? 0 : length).to_deprecated_string()));
+                    input.value().view.substring_view(string_start_offset, string_start_offset + length > view.length() ? 0 : length).to_byte_string()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
-            result.empend(DeprecatedString::formatted(" ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
+            result.empend(ByteString::formatted(" ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(DeprecatedString::formatted(
+                result.empend(ByteString::formatted(
                     " compare against: '{}'",
-                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_deprecated_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_byte_string()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
-            result.empend(DeprecatedString::formatted(" ch_range={:x}-{:x}", value.from, value.to));
+            result.empend(ByteString::formatted(" ch_range={:x}-{:x}", value.from, value.to));
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(DeprecatedString::formatted(
+                result.empend(ByteString::formatted(
                     " compare against: '{}'",
-                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_deprecated_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_byte_string()));
         } else if (compare_type == CharacterCompareType::LookupTable) {
             auto count = m_bytecode->at(offset++);
             for (size_t j = 0; j < count; ++j) {
                 auto range = (CharRange)m_bytecode->at(offset++);
-                result.append(DeprecatedString::formatted(" {:x}-{:x}", range.from, range.to));
+                result.append(ByteString::formatted(" {:x}-{:x}", range.from, range.to));
             }
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(DeprecatedString::formatted(
+                result.empend(ByteString::formatted(
                     " compare against: '{}'",
-                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_deprecated_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_byte_string()));
         } else if (compare_type == CharacterCompareType::GeneralCategory
             || compare_type == CharacterCompareType::Property
             || compare_type == CharacterCompareType::Script
             || compare_type == CharacterCompareType::ScriptExtension) {
 
             auto value = m_bytecode->at(offset++);
-            result.empend(DeprecatedString::formatted(" value={}", value));
+            result.empend(ByteString::formatted(" value={}", value));
         }
     }
     return result;

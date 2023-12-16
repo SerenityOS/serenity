@@ -20,9 +20,9 @@ void RequestClient::ensure_connection(URL const& url, ::RequestServer::CacheLeve
 }
 
 template<typename RequestHashMapTraits>
-RefPtr<Request> RequestClient::start_request(DeprecatedString const& method, URL const& url, HashMap<DeprecatedString, DeprecatedString, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy_data)
+RefPtr<Request> RequestClient::start_request(ByteString const& method, URL const& url, HashMap<ByteString, ByteString, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy_data)
 {
-    auto headers_or_error = request_headers.template clone<Traits<DeprecatedString>>();
+    auto headers_or_error = request_headers.template clone<Traits<ByteString>>();
     if (headers_or_error.is_error())
         return nullptr;
     auto body_result = ByteBuffer::copy(request_body);
@@ -47,7 +47,7 @@ bool RequestClient::stop_request(Badge<Request>, Request& request)
     return IPCProxy::stop_request(request.id());
 }
 
-bool RequestClient::set_certificate(Badge<Request>, Request& request, DeprecatedString certificate, DeprecatedString key)
+bool RequestClient::set_certificate(Badge<Request>, Request& request, ByteString certificate, ByteString key)
 {
     if (!m_requests.contains(request.id()))
         return false;
@@ -70,7 +70,7 @@ void RequestClient::request_progress(i32 request_id, Optional<u64> const& total_
     }
 }
 
-void RequestClient::headers_became_available(i32 request_id, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> const& status_code)
+void RequestClient::headers_became_available(i32 request_id, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> const& status_code)
 {
     auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
     if (!request) {
@@ -95,5 +95,5 @@ void RequestClient::certificate_requested(i32 request_id)
 
 }
 
-template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(DeprecatedString const& method, URL const&, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
-template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(DeprecatedString const& method, URL const&, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
+template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
+template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);

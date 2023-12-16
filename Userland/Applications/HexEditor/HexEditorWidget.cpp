@@ -112,7 +112,7 @@ ErrorOr<void> HexEditorWidget::setup()
             }
 
             if (auto error = m_editor->open_new_file(file_size.value()); error.is_error()) {
-                GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to open new file: {}"sv, error.error()), "Error"sv, GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), ByteString::formatted("Unable to open new file: {}"sv, error.error()), "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
 
@@ -137,7 +137,7 @@ ErrorOr<void> HexEditorWidget::setup()
             return m_save_as_action->activate();
 
         if (auto result = m_editor->save(); result.is_error()) {
-            GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), ByteString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
         } else {
             window()->set_modified(false);
             m_editor->update();
@@ -151,7 +151,7 @@ ErrorOr<void> HexEditorWidget::setup()
             return;
         auto file = response.release_value();
         if (auto result = m_editor->save_as(file.release_stream()); result.is_error()) {
-            GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), ByteString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
@@ -180,11 +180,11 @@ ErrorOr<void> HexEditorWidget::setup()
                 m_search_results->update();
 
                 if (matches.is_empty()) {
-                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), ByteString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
-                GUI::MessageBox::show(window(), DeprecatedString::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), DeprecatedString::formatted("{} Matches", matches.size()), GUI::MessageBox::Type::Warning);
+                GUI::MessageBox::show(window(), ByteString::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), ByteString::formatted("{} Matches", matches.size()), GUI::MessageBox::Type::Warning);
                 set_search_results_visible(true);
             } else {
                 bool same_buffers = false;
@@ -196,7 +196,7 @@ ErrorOr<void> HexEditorWidget::setup()
                 auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
 
                 if (!result.has_value()) {
-                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), ByteString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
@@ -252,7 +252,7 @@ ErrorOr<void> HexEditorWidget::setup()
             auto fill_byte = strtol(value.bytes_as_string_view().characters_without_null_termination(), nullptr, 16);
             auto result = m_editor->fill_selection(fill_byte);
             if (result.is_error())
-                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", result.error()));
+                GUI::MessageBox::show_error(window(), ByteString::formatted("{}", result.error()));
         }
     });
     m_fill_selection_action->set_enabled(false);
@@ -464,7 +464,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
 
         auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
         if (!result.has_value()) {
-            GUI::MessageBox::show(&window, DeprecatedString::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, ByteString::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
         m_editor->update();
@@ -512,7 +512,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_bytes_per_row_actions.set_exclusive(true);
     auto bytes_per_row_menu = view_menu->add_submenu("Bytes per &Row"_string);
     for (int i = 8; i <= 32; i += 8) {
-        auto action = GUI::Action::create_checkable(DeprecatedString::number(i), [this, i](auto&) {
+        auto action = GUI::Action::create_checkable(ByteString::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
             m_editor->update();
             Config::write_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, i);
@@ -582,14 +582,14 @@ void HexEditorWidget::update_title()
     else
         builder.append(m_path);
     builder.append("[*] - Hex Editor"sv);
-    window()->set_title(builder.to_deprecated_string());
+    window()->set_title(builder.to_byte_string());
 }
 
 void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     window()->set_modified(false);
     m_editor->open_file(move(file));
-    set_path(filename.to_deprecated_string());
+    set_path(filename.to_byte_string());
     GUI::Application::the()->set_most_recently_open_file(filename);
 }
 

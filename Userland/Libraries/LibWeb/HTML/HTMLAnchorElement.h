@@ -20,9 +20,9 @@ class HTMLAnchorElement final
 public:
     virtual ~HTMLAnchorElement() override;
 
-    DeprecatedString rel() const { return deprecated_attribute(HTML::AttributeNames::rel); }
-    DeprecatedString target() const { return deprecated_attribute(HTML::AttributeNames::target); }
-    DeprecatedString download() const { return deprecated_attribute(HTML::AttributeNames::download); }
+    ByteString rel() const { return deprecated_attribute(HTML::AttributeNames::rel); }
+    ByteString target() const { return deprecated_attribute(HTML::AttributeNames::target); }
+    ByteString download() const { return deprecated_attribute(HTML::AttributeNames::download); }
 
     String text() const;
     void set_text(String const&);

@@ -13,7 +13,7 @@
 
 namespace DNS {
 
-Name::Name(DeprecatedString const& name)
+Name::Name(ByteString const& name)
 {
     if (name.ends_with('.'))
         m_name = name.substring(0, name.length() - 1);
@@ -38,7 +38,7 @@ ErrorOr<Name> Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_l
             if (builder.length() > MAX_NAME_SIZE)
                 return Error::from_string_literal("Domain name exceeds maximum allowed length");
             // This terminates the name.
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         } else if ((b & 0xc0) == 0xc0) {
             // The two bytes tell us the offset when to continue from.
             if (offset >= data.size())
@@ -48,7 +48,7 @@ ErrorOr<Name> Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_l
             builder.append(rest_of_name.as_string());
             if (builder.length() > MAX_NAME_SIZE)
                 return Error::from_string_literal("Domain name exceeds maximum allowed length");
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         } else {
             // This is the length of a part.
             if (offset + b >= data.size())
@@ -84,7 +84,7 @@ void Name::randomize_case()
         }
         builder.append(c);
     }
-    m_name = builder.to_deprecated_string();
+    m_name = builder.to_byte_string();
 }
 
 ErrorOr<void> Name::write_to_stream(Stream& stream) const

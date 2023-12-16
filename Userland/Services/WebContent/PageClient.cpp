@@ -224,7 +224,7 @@ void PageClient::page_did_layout()
     client().async_did_layout(m_content_size.to_type<int>());
 }
 
-void PageClient::page_did_change_title(DeprecatedString const& title)
+void PageClient::page_did_change_title(ByteString const& title)
 {
     client().async_did_change_title(title);
 }
@@ -294,7 +294,7 @@ void PageClient::page_did_request_scroll_into_view(Web::CSSPixelRect const& rect
         device_pixel_rect.height().value() });
 }
 
-void PageClient::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, DeprecatedString const& title)
+void PageClient::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, ByteString const& title)
 {
     client().async_did_enter_tooltip_area({ content_position.x().to_int(), content_position.y().to_int() }, title);
 }
@@ -314,12 +314,12 @@ void PageClient::page_did_unhover_link()
     client().async_did_unhover_link();
 }
 
-void PageClient::page_did_click_link(const URL& url, DeprecatedString const& target, unsigned modifiers)
+void PageClient::page_did_click_link(const URL& url, ByteString const& target, unsigned modifiers)
 {
     client().async_did_click_link(url, target, modifiers);
 }
 
-void PageClient::page_did_middle_click_link(const URL& url, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers)
+void PageClient::page_did_middle_click_link(const URL& url, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers)
 {
     client().async_did_middle_click_link(url, target, modifiers);
 }
@@ -354,18 +354,18 @@ void PageClient::page_did_request_context_menu(Web::CSSPixelPoint content_positi
     client().async_did_request_context_menu(page().css_to_device_point(content_position).to_type<int>());
 }
 
-void PageClient::page_did_request_link_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers)
+void PageClient::page_did_request_link_context_menu(Web::CSSPixelPoint content_position, URL const& url, ByteString const& target, unsigned modifiers)
 {
     client().async_did_request_link_context_menu(page().css_to_device_point(content_position).to_type<int>(), url, target, modifiers);
 }
 
-void PageClient::page_did_request_image_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
+void PageClient::page_did_request_image_context_menu(Web::CSSPixelPoint content_position, URL const& url, ByteString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
 {
     auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
     client().async_did_request_image_context_menu(page().css_to_device_point(content_position).to_type<int>(), url, target, modifiers, bitmap);
 }
 
-void PageClient::page_did_request_media_context_menu(Web::CSSPixelPoint content_position, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu menu)
+void PageClient::page_did_request_media_context_menu(Web::CSSPixelPoint content_position, ByteString const& target, unsigned modifiers, Web::Page::MediaContextMenu menu)
 {
     client().async_did_request_media_context_menu(page().css_to_device_point(content_position).to_type<int>(), target, modifiers, move(menu));
 }
@@ -460,12 +460,12 @@ Vector<Web::Cookie::Cookie> PageClient::page_did_request_all_cookies(URL const& 
     return client().did_request_all_cookies(url);
 }
 
-Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL const& url, DeprecatedString const& name)
+Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL const& url, ByteString const& name)
 {
     return client().did_request_named_cookie(url, name);
 }
 
-DeprecatedString PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
+ByteString PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
     auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(move(url), static_cast<u8>(source));
     if (!response) {
@@ -589,7 +589,7 @@ void PageClient::inspector_did_execute_console_script(String const& script)
     client().async_inspector_did_execute_console_script(script);
 }
 
-ErrorOr<void> PageClient::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
+ErrorOr<void> PageClient::connect_to_webdriver(ByteString const& webdriver_ipc_path)
 {
     VERIFY(!m_webdriver);
     m_webdriver = TRY(WebDriverConnection::connect(*this, webdriver_ipc_path));

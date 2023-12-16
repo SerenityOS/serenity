@@ -259,7 +259,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
         if (load_from_file_result.is_error()) {
-            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
+            GUI::MessageBox::show_error(&window, ByteString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
             return;
         }
     }));
@@ -295,7 +295,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
         if (load_from_file_result.is_error()) {
-            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
+            GUI::MessageBox::show_error(&window, ByteString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
             return;
         }
     });
@@ -316,7 +316,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
 void MainWidget::update_title()
 {
-    window()->set_title(DeprecatedString::formatted("{}[*] - Theme Editor", m_path.value_or("Untitled")));
+    window()->set_title(ByteString::formatted("{}[*] - Theme Editor", m_path.value_or("Untitled")));
 }
 
 GUI::Window::CloseRequestDecision MainWidget::request_close()
@@ -338,7 +338,7 @@ GUI::Window::CloseRequestDecision MainWidget::request_close()
     return GUI::Window::CloseRequestDecision::StayOpen;
 }
 
-void MainWidget::set_path(DeprecatedString path)
+void MainWidget::set_path(ByteString path)
 {
     m_path = path;
     update_title();
@@ -346,13 +346,13 @@ void MainWidget::set_path(DeprecatedString path)
 
 void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto theme = Core::ConfigFile::open(filename.to_deprecated_string(), move(file)).release_value_but_fixme_should_propagate_errors();
+    auto theme = Core::ConfigFile::open(filename.to_byte_string(), move(file)).release_value_but_fixme_should_propagate_errors();
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry("Alignments", to_string(Gfx::AlignmentRole::role), to_string(m_current_palette.alignment(Gfx::AlignmentRole::role)));
     ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
 #undef __ENUMERATE_ALIGNMENT_ROLE
 
-#define __ENUMERATE_COLOR_ROLE(role) theme->write_entry("Colors", to_string(Gfx::ColorRole::role), m_current_palette.color(Gfx::ColorRole::role).to_deprecated_string());
+#define __ENUMERATE_COLOR_ROLE(role) theme->write_entry("Colors", to_string(Gfx::ColorRole::role), m_current_palette.color(Gfx::ColorRole::role).to_byte_string());
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
@@ -370,10 +370,10 @@ void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> 
 
     auto sync_result = theme->sync();
     if (sync_result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", sync_result.error()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save theme file: {}", sync_result.error()));
     } else {
         m_last_modified_time = MonotonicTime::now();
-        set_path(filename.to_deprecated_string());
+        set_path(filename.to_byte_string());
         window()->set_modified(false);
         GUI::Application::the()->set_most_recently_open_file(filename);
     }
@@ -597,7 +597,7 @@ void MainWidget::set_metric(Gfx::MetricRole role, int value)
     set_palette(preview_palette);
 }
 
-void MainWidget::set_path(Gfx::PathRole role, DeprecatedString value)
+void MainWidget::set_path(Gfx::PathRole role, ByteString value)
 {
     auto preview_palette = m_current_palette;
     preview_palette.set_path(role, value);
@@ -615,7 +615,7 @@ void MainWidget::set_palette(Gfx::Palette palette)
 void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::TextBox& path_input, PathPickerTarget path_picker_target)
 {
     bool open_folder = path_picker_target == PathPickerTarget::Folder;
-    auto window_title = DeprecatedString::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
+    auto window_title = ByteString::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
     auto target_path = path_input.text();
     if (FileSystem::exists(target_path)) {
         if (!FileSystem::is_directory(target_path))
@@ -631,13 +631,13 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
 
 ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto config_file = TRY(Core::ConfigFile::open(filename.to_deprecated_string(), move(file)));
+    auto config_file = TRY(Core::ConfigFile::open(filename.to_byte_string(), move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
     VERIFY(theme.is_valid());
 
     auto new_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
     set_palette(move(new_palette));
-    set_path(filename.to_deprecated_string());
+    set_path(filename.to_byte_string());
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role)                                                    \
     if (auto alignment_input = m_alignment_inputs[to_underlying(Gfx::AlignmentRole::role)]) \
@@ -704,7 +704,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
 
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
         if (load_from_file_result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
     }
 }
 

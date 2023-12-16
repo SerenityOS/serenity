@@ -26,7 +26,7 @@ class MainWidget final : public GUI::Widget {
 public:
     virtual ~MainWidget() override = default;
     ErrorOr<void> read_file(String const& filename, Core::File&);
-    void open_nonexistent_file(DeprecatedString const& path);
+    void open_nonexistent_file(ByteString const& path);
     bool request_close();
 
     GUI::TextEditor& editor() { return *m_editor; }
@@ -64,9 +64,9 @@ private:
     void find_text(GUI::TextEditor::SearchDirection, ShowMessageIfNoResults);
 
     RefPtr<GUI::TextEditor> m_editor;
-    DeprecatedString m_path;
-    DeprecatedString m_name;
-    DeprecatedString m_extension;
+    ByteString m_path;
+    ByteString m_name;
+    ByteString m_extension;
     RefPtr<GUI::Action> m_new_action;
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;

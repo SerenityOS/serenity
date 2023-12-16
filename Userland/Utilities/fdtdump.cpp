@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    DeprecatedString filename;
+    ByteString filename;
 
     Core::ArgsParser args;
     args.add_positional_argument(filename, "File to process", "file", Core::ArgsParser::Required::Yes);

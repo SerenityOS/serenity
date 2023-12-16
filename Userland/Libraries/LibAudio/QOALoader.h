@@ -37,7 +37,7 @@ public:
     virtual int total_samples() override { return static_cast<int>(m_total_samples); }
     virtual u32 sample_rate() override { return m_sample_rate; }
     virtual u16 num_channels() override { return m_num_channels; }
-    virtual DeprecatedString format_name() override { return "Quite Okay Audio (.qoa)"; }
+    virtual ByteString format_name() override { return "Quite Okay Audio (.qoa)"; }
     virtual PcmSampleFormat pcm_format() override { return PcmSampleFormat::Int16; }
 
 private:

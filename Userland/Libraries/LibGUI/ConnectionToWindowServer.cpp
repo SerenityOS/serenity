@@ -57,7 +57,7 @@ ConnectionToWindowServer::ConnectionToWindowServer(NonnullOwnPtr<Core::LocalSock
     m_client_id = message->client_id();
 }
 
-void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Vector<bool> const&, i32)
+void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, ByteString const&, ByteString const&, ByteString const&, Vector<bool> const&, i32)
 {
     // NOTE: This message is handled in the constructor.
 }
@@ -73,7 +73,7 @@ void ConnectionToWindowServer::update_system_theme(Core::AnonymousBuffer const& 
     Application::the()->dispatch_event(*make<ThemeChangeEvent>());
 }
 
-void ConnectionToWindowServer::update_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
+void ConnectionToWindowServer::update_system_fonts(ByteString const& default_font_query, ByteString const& fixed_width_font_query, ByteString const& window_title_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
@@ -155,24 +155,24 @@ static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
     if (!shortcut.is_valid())
         return nullptr;
 
-    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_deprecated_string());
+    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_byte_string());
 
     for (auto* widget = window.focused_widget(); widget; widget = widget->parent_widget()) {
         if (auto* action = widget->action_for_shortcut(shortcut)) {
-            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", *widget, action, action->text(), action->is_enabled(), action->shortcut().to_deprecated_string(), action->alternate_shortcut().to_deprecated_string());
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", *widget, action, action->text(), action->is_enabled(), action->shortcut().to_byte_string(), action->alternate_shortcut().to_byte_string());
             return action;
         }
     }
 
     if (auto* action = window.action_for_shortcut(shortcut)) {
-        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", window, action, action->text(), action->is_enabled(), action->shortcut().to_deprecated_string(), action->alternate_shortcut().to_deprecated_string());
+        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", window, action, action->text(), action->is_enabled(), action->shortcut().to_byte_string(), action->alternate_shortcut().to_byte_string());
         return action;
     }
 
     // NOTE: Application-global shortcuts are ignored while a blocking modal window is up.
     if (!window.is_blocking() && !window.is_popup()) {
         if (auto* action = Application::the()->action_for_shortcut(shortcut)) {
-            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_deprecated_string(), action->alternate_shortcut().to_deprecated_string());
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_byte_string(), action->alternate_shortcut().to_byte_string());
             return action;
         }
     }
@@ -349,7 +349,7 @@ void ConnectionToWindowServer::applet_area_rect_changed(Gfx::IntRect const& rect
     });
 }
 
-void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, DeprecatedString const& text, HashMap<String, ByteBuffer> const& mime_data)
+void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, ByteString const& text, HashMap<String, ByteBuffer> const& mime_data)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         auto mime_data_obj = Core::MimeData::construct(mime_data);

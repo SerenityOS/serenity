@@ -15,7 +15,7 @@
 
 namespace HackStudio {
 
-using OnCommitCallback = Function<void(DeprecatedString const& message)>;
+using OnCommitCallback = Function<void(ByteString const& message)>;
 
 class GitCommitDialog final : public GUI::Dialog {
     C_OBJECT(GitCommitDialog);

@@ -70,20 +70,20 @@ private:
     RefPtr<Gfx::Bitmap> m_close_bitmap;
     RefPtr<Gfx::Bitmap> m_maximize_bitmap;
     RefPtr<Gfx::Bitmap> m_minimize_bitmap;
-    DeprecatedString m_last_close_path;
-    DeprecatedString m_last_maximize_path;
-    DeprecatedString m_last_minimize_path;
+    ByteString m_last_close_path;
+    ByteString m_last_maximize_path;
+    ByteString m_last_minimize_path;
 
     RefPtr<Gfx::Bitmap> m_active_window_shadow;
     RefPtr<Gfx::Bitmap> m_inactive_window_shadow;
     RefPtr<Gfx::Bitmap> m_menu_shadow;
     RefPtr<Gfx::Bitmap> m_taskbar_shadow;
     RefPtr<Gfx::Bitmap> m_tooltip_shadow;
-    DeprecatedString m_last_active_window_shadow_path;
-    DeprecatedString m_last_inactive_window_shadow_path;
-    DeprecatedString m_last_menu_shadow_path;
-    DeprecatedString m_last_taskbar_shadow_path;
-    DeprecatedString m_last_tooltip_shadow_path;
+    ByteString m_last_active_window_shadow_path;
+    ByteString m_last_inactive_window_shadow_path;
+    ByteString m_last_menu_shadow_path;
+    ByteString m_last_taskbar_shadow_path;
+    ByteString m_last_tooltip_shadow_path;
 };
 
 }

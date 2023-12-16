@@ -8,12 +8,12 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<GitFilesModel> GitFilesModel::create(Vector<DeprecatedString>&& files)
+NonnullRefPtr<GitFilesModel> GitFilesModel::create(Vector<ByteString>&& files)
 {
     return adopt_ref(*new GitFilesModel(move(files)));
 }
 
-GitFilesModel::GitFilesModel(Vector<DeprecatedString>&& files)
+GitFilesModel::GitFilesModel(Vector<ByteString>&& files)
     : m_files(move(files))
 {
 }

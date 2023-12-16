@@ -373,7 +373,7 @@ void Application::update_recent_file_actions()
 
 void Application::set_most_recently_open_file(String new_path)
 {
-    Vector<DeprecatedString> new_recent_files_list;
+    Vector<ByteString> new_recent_files_list;
 
     for (size_t i = 0; i < max_recently_open_files(); ++i) {
         static_assert(max_recently_open_files() < 10);
@@ -386,7 +386,7 @@ void Application::set_most_recently_open_file(String new_path)
         return existing_path.view() == new_path;
     });
 
-    new_recent_files_list.prepend(new_path.to_deprecated_string());
+    new_recent_files_list.prepend(new_path.to_byte_string());
 
     for (size_t i = 0; i < max_recently_open_files(); ++i) {
         auto& path = new_recent_files_list[i];

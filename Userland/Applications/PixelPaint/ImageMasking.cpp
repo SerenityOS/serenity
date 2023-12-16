@@ -378,7 +378,7 @@ void ColorWheelWidget::paint_event(GUI::PaintEvent&)
     aa_painter.fill_circle({ 0, 0 }, (height() - 4) / 4, Color::from_hsv(hue(), 1, 1));
 
     painter.restore();
-    auto hue_text = DeprecatedString::formatted("hue: {:.0}", hue());
+    auto hue_text = ByteString::formatted("hue: {:.0}", hue());
     painter.draw_text(rect().translated(1, 1), hue_text, Gfx::TextAlignment::Center, Color::Black);
     painter.draw_text(rect(), hue_text, Gfx::TextAlignment::Center, Color::White);
 }

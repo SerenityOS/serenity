@@ -107,7 +107,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     };
 
     view().on_link_hover = [this](auto const& url) {
-        m_hover_label->setText(qstring_from_ak_string(url.to_deprecated_string()));
+        m_hover_label->setText(qstring_from_ak_string(url.to_byte_string()));
         update_hover_label();
         m_hover_label->show();
     };
@@ -123,7 +123,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             m_history.replace_current(url, m_title.toUtf8().data());
         }
 
-        m_location_edit->setText(url.to_deprecated_string().characters());
+        m_location_edit->setText(url.to_byte_string().characters());
         m_location_edit->setCursorPosition(0);
 
         // Don't add to history if back or forward is pressed
@@ -648,7 +648,7 @@ void Tab::back()
 
     m_is_history_navigation = true;
     m_history.go_back();
-    view().load(m_history.current().url.to_deprecated_string());
+    view().load(m_history.current().url.to_byte_string());
 }
 
 void Tab::forward()
@@ -658,7 +658,7 @@ void Tab::forward()
 
     m_is_history_navigation = true;
     m_history.go_forward();
-    view().load(m_history.current().url.to_deprecated_string());
+    view().load(m_history.current().url.to_byte_string());
 }
 
 void Tab::reload()
@@ -667,7 +667,7 @@ void Tab::reload()
         return;
 
     m_is_history_navigation = true;
-    view().load(m_history.current().url.to_deprecated_string());
+    view().load(m_history.current().url.to_byte_string());
 }
 
 void Tab::open_link(URL const& url)
@@ -703,7 +703,7 @@ int Tab::tab_index()
     return m_window->tab_index(this);
 }
 
-void Tab::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
+void Tab::debug_request(ByteString const& request, ByteString const& argument)
 {
     if (request == "dump-history")
         m_history.dump();

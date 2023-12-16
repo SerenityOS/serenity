@@ -178,11 +178,11 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 // Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 MaybeLoaderError WavLoaderPlugin::parse_header()
 {
-#define CHECK(check, category, msg)                                                                                                          \
-    do {                                                                                                                                     \
-        if (!(check)) {                                                                                                                      \
-            return LoaderError { category, static_cast<size_t>(TRY(m_stream->tell())), DeprecatedString::formatted("WAV header: {}", msg) }; \
-        }                                                                                                                                    \
+#define CHECK(check, category, msg)                                                                                                    \
+    do {                                                                                                                               \
+        if (!(check)) {                                                                                                                \
+            return LoaderError { category, static_cast<size_t>(TRY(m_stream->tell())), ByteString::formatted("WAV header: {}", msg) }; \
+        }                                                                                                                              \
     } while (0)
 
     auto riff = TRY(m_stream->read_value<RIFF::ChunkID>());

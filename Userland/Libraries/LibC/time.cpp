@@ -414,7 +414,7 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
             return 0;
     }
 
-    auto str = builder.to_deprecated_string();
+    auto str = builder.to_byte_string();
     bool fits = str.copy_characters_to_buffer(destination, max_size);
     return fits ? str.length() : 0;
 }

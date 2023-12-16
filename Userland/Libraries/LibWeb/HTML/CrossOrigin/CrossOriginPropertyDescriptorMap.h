@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Traits.h>
@@ -16,7 +16,7 @@
 namespace Web::HTML {
 
 struct CrossOriginProperty {
-    DeprecatedString property;
+    ByteString property;
     Optional<bool> needs_get {};
     Optional<bool> needs_set {};
 };

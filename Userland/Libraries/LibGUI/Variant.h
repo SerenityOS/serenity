@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -21,7 +21,7 @@ namespace Detail {
 struct Boolean {
     bool value;
 };
-using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, double, i32, i64, u32, u64, DeprecatedString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
+using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, double, i32, i64, u32, u64, ByteString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
 }
 
 class Variant : public Detail::VariantUnderlyingType {
@@ -43,15 +43,15 @@ public:
 
     template<typename T>
     Variant(T&& value)
-    requires(IsConstructible<DeprecatedString, T>)
-        : Variant(DeprecatedString(forward<T>(value)))
+    requires(IsConstructible<ByteString, T>)
+        : Variant(ByteString(forward<T>(value)))
     {
     }
     template<typename T>
     Variant& operator=(T&& v)
-    requires(IsConstructible<DeprecatedString, T>)
+    requires(IsConstructible<ByteString, T>)
     {
-        set(DeprecatedString(v));
+        set(ByteString(v));
         return *this;
     }
 
@@ -77,7 +77,7 @@ public:
     bool is_u64() const { return has<u64>(); }
     bool is_float() const { return has<float>(); }
     bool is_double() const { return has<double>(); }
-    bool is_string() const { return has<DeprecatedString>(); }
+    bool is_string() const { return has<ByteString>(); }
     bool is_bitmap() const { return has<NonnullRefPtr<Gfx::Bitmap const>>(); }
     bool is_color() const { return has<Color>(); }
     bool is_icon() const { return has<GUI::Icon>(); }
@@ -103,7 +103,7 @@ public:
             [](Gfx::IntPoint const& v) { return !v.is_zero(); },
             [](OneOf<Gfx::IntRect, Gfx::IntSize> auto const& v) { return !v.is_empty(); },
             [](Enum auto const&) { return true; },
-            [](OneOf<float, double, DeprecatedString, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) { return true; });
+            [](OneOf<float, double, ByteString, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) { return true; });
     }
 
     i32 as_i32() const { return get<i32>(); }
@@ -119,7 +119,7 @@ public:
             [](Integral auto v) { return static_cast<T>(v); },
             [](FloatingPoint auto v) { return (T)v; },
             [](Detail::Boolean v) -> T { return v.value ? 1 : 0; },
-            [](DeprecatedString const& v) {
+            [](ByteString const& v) {
                 if constexpr (IsUnsigned<T>)
                     return v.to_uint<T>().value_or(0u);
                 else
@@ -144,7 +144,7 @@ public:
     Gfx::IntPoint as_point() const { return get<Gfx::IntPoint>(); }
     Gfx::IntSize as_size() const { return get<Gfx::IntSize>(); }
     Gfx::IntRect as_rect() const { return get<Gfx::IntRect>(); }
-    DeprecatedString as_string() const { return get<DeprecatedString>(); }
+    ByteString as_string() const { return get<ByteString>(); }
     Gfx::Bitmap const& as_bitmap() const { return *get<NonnullRefPtr<Gfx::Bitmap const>>(); }
     GUI::Icon as_icon() const { return get<GUI::Icon>(); }
     Color as_color() const { return get<Color>(); }
@@ -196,27 +196,27 @@ public:
     {
         if (auto const* p = get_pointer<Color>())
             return *p;
-        if (auto const* p = get_pointer<DeprecatedString>())
+        if (auto const* p = get_pointer<ByteString>())
             return Color::from_string(*p).value_or(default_value);
         return default_value;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         return visit(
-            [](Empty) -> DeprecatedString { return "[null]"; },
-            [](DeprecatedString v) { return v; },
-            [](Gfx::TextAlignment v) { return DeprecatedString::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
-            [](Gfx::ColorRole v) { return DeprecatedString::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
-            [](Gfx::AlignmentRole v) { return DeprecatedString::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(v)); },
-            [](Gfx::FlagRole v) { return DeprecatedString::formatted("Gfx::FlagRole::{}", Gfx::to_string(v)); },
-            [](Gfx::MetricRole v) { return DeprecatedString::formatted("Gfx::MetricRole::{}", Gfx::to_string(v)); },
-            [](Gfx::PathRole v) { return DeprecatedString::formatted("Gfx::PathRole::{}", Gfx::to_string(v)); },
-            [](NonnullRefPtr<Gfx::Font const> const& font) { return DeprecatedString::formatted("[Font: {}]", font->name()); },
-            [](NonnullRefPtr<Gfx::Bitmap const> const&) -> DeprecatedString { return "[Gfx::Bitmap]"; },
-            [](GUI::Icon const&) -> DeprecatedString { return "[GUI::Icon]"; },
-            [](Detail::Boolean v) { return DeprecatedString::formatted("{}", v.value); },
-            [](auto const& v) { return DeprecatedString::formatted("{}", v); });
+            [](Empty) -> ByteString { return "[null]"; },
+            [](ByteString v) { return v; },
+            [](Gfx::TextAlignment v) { return ByteString::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
+            [](Gfx::ColorRole v) { return ByteString::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
+            [](Gfx::AlignmentRole v) { return ByteString::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(v)); },
+            [](Gfx::FlagRole v) { return ByteString::formatted("Gfx::FlagRole::{}", Gfx::to_string(v)); },
+            [](Gfx::MetricRole v) { return ByteString::formatted("Gfx::MetricRole::{}", Gfx::to_string(v)); },
+            [](Gfx::PathRole v) { return ByteString::formatted("Gfx::PathRole::{}", Gfx::to_string(v)); },
+            [](NonnullRefPtr<Gfx::Font const> const& font) { return ByteString::formatted("[Font: {}]", font->name()); },
+            [](NonnullRefPtr<Gfx::Bitmap const> const&) -> ByteString { return "[Gfx::Bitmap]"; },
+            [](GUI::Icon const&) -> ByteString { return "[GUI::Icon]"; },
+            [](Detail::Boolean v) { return ByteString::formatted("{}", v.value); },
+            [](auto const& v) { return ByteString::formatted("{}", v); });
     }
 
     bool operator==(Variant const&) const;

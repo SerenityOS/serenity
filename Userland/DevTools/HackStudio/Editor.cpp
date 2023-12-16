@@ -163,9 +163,9 @@ void Editor::paint_event(GUI::PaintEvent& event)
     }
 }
 
-static HashMap<DeprecatedString, DeprecatedString>& man_paths()
+static HashMap<ByteString, ByteString>& man_paths()
 {
-    static HashMap<DeprecatedString, DeprecatedString> paths;
+    static HashMap<ByteString, ByteString> paths;
     if (paths.is_empty()) {
         auto json = Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv);
         AK::JsonParser parser(json);
@@ -194,7 +194,7 @@ static HashMap<DeprecatedString, DeprecatedString>& man_paths()
     return paths;
 }
 
-void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hovered_token, Gfx::IntPoint screen_location)
+void Editor::show_documentation_tooltip_if_available(ByteString const& hovered_token, Gfx::IntPoint screen_location)
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
@@ -384,11 +384,11 @@ void Editor::leave_event(Core::Event& event)
     GUI::TextEditor::leave_event(event);
 }
 
-static HashMap<DeprecatedString, DeprecatedString>& include_paths()
+static HashMap<ByteString, ByteString>& include_paths()
 {
-    static HashMap<DeprecatedString, DeprecatedString> paths;
+    static HashMap<ByteString, ByteString> paths;
 
-    auto add_directory = [](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
+    auto add_directory = [](ByteString base, Optional<ByteString> recursive, auto handle_directory) -> void {
         Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = it.next_full_path();
@@ -412,7 +412,7 @@ static HashMap<DeprecatedString, DeprecatedString>& include_paths()
     return paths;
 }
 
-void Editor::navigate_to_include_if_available(DeprecatedString path)
+void Editor::navigate_to_include_if_available(ByteString path)
 {
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
@@ -587,7 +587,7 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     if (!m_language_client)
         return;
 
-    m_language_client->on_declaration_found = [](DeprecatedString const& file, size_t line, size_t column) {
+    m_language_client->on_declaration_found = [](ByteString const& file, size_t line, size_t column) {
         HackStudio::open_file(file, line, column);
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
@@ -704,7 +704,7 @@ void Editor::handle_function_parameters_hint_request()
     if (!m_language_client)
         return;
 
-    m_language_client->on_function_parameters_hint_result = [this](Vector<DeprecatedString> const& params, size_t argument_index) {
+    m_language_client->on_function_parameters_hint_result = [this](Vector<ByteString> const& params, size_t argument_index) {
         dbgln("on_function_parameters_hint_result");
 
         StringBuilder html;
@@ -722,7 +722,7 @@ void Editor::handle_function_parameters_hint_request()
         }
         html.append("<style>body { background-color: #dac7b5; }</style>"sv);
 
-        s_tooltip_page_view->load_html(html.to_deprecated_string());
+        s_tooltip_page_view->load_html(html.to_byte_string());
 
         auto cursor_rect = current_editor().cursor_content_rect().location().translated(screen_relative_rect().location());
 

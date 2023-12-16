@@ -29,7 +29,7 @@ public:
 
     Function<void()> on_invalidate;
 
-    void add_item(DeprecatedString const& item);
+    void add_item(ByteString const& item);
     void remove_item(GUI::ModelIndex const&);
 
 private:
@@ -37,5 +37,5 @@ private:
     {
     }
 
-    Vector<DeprecatedString> m_items;
+    Vector<ByteString> m_items;
 };

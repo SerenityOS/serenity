@@ -19,13 +19,13 @@ namespace FileManager {
 
 HashTable<NonnullRefPtr<GUI::Window>> file_operation_windows;
 
-void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GUI::Window* parent_window)
+void delete_paths(Vector<ByteString> const& paths, bool should_confirm, GUI::Window* parent_window)
 {
-    DeprecatedString message;
+    ByteString message;
     if (paths.size() == 1) {
-        message = DeprecatedString::formatted("Are you sure you want to delete \"{}\"?", LexicalPath::basename(paths[0]));
+        message = ByteString::formatted("Are you sure you want to delete \"{}\"?", LexicalPath::basename(paths[0]));
     } else {
-        message = DeprecatedString::formatted("Are you sure you want to delete {} files?", paths.size());
+        message = ByteString::formatted("Are you sure you want to delete {} files?", paths.size());
     }
 
     if (should_confirm) {
@@ -42,7 +42,7 @@ void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GU
         _exit(1);
 }
 
-ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedString> const& sources, DeprecatedString const& destination, GUI::Window* parent_window)
+ErrorOr<void> run_file_operation(FileOperation operation, Vector<ByteString> const& sources, ByteString const& destination, GUI::Window* parent_window)
 {
     auto pipe_fds = TRY(Core::System::pipe2(0));
 
@@ -110,7 +110,7 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
     return {};
 }
 
-ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window)
+ErrorOr<bool> handle_drop(GUI::DropEvent const& event, ByteString const& destination, GUI::Window* window)
 {
     bool has_accepted_drop = false;
 
@@ -127,12 +127,12 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
     if (!FileSystem::is_directory(target))
         return has_accepted_drop;
 
-    Vector<DeprecatedString> paths_to_copy;
+    Vector<ByteString> paths_to_copy;
     for (auto& url_to_copy : urls) {
         auto file_path = url_to_copy.serialize_path();
         if (!url_to_copy.is_valid() || file_path == target)
             continue;
-        auto new_path = DeprecatedString::formatted("{}/{}", target, LexicalPath::basename(file_path));
+        auto new_path = ByteString::formatted("{}/{}", target, LexicalPath::basename(file_path));
         if (file_path == new_path)
             continue;
 

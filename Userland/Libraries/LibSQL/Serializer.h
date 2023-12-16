@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
@@ -64,7 +64,7 @@ public:
             t.deserialize(*this);
     }
 
-    void deserialize_to(DeprecatedString& text);
+    void deserialize_to(ByteString& text);
 
     template<typename T, typename... Args>
     NonnullOwnPtr<T> make_and_deserialize(Args&&... args)
@@ -99,7 +99,7 @@ public:
             t.serialize(*this);
     }
 
-    void serialize(DeprecatedString const&);
+    void serialize(ByteString const&);
 
     template<typename T>
     bool serialize_and_write(T const& t)
@@ -145,17 +145,17 @@ private:
         return buffer_ptr;
     }
 
-    static void dump(u8 const* ptr, size_t sz, DeprecatedString const& prefix)
+    static void dump(u8 const* ptr, size_t sz, ByteString const& prefix)
     {
         StringBuilder builder;
         builder.appendff("{0} {1:04x} | ", prefix, sz);
-        Vector<DeprecatedString> bytes;
+        Vector<ByteString> bytes;
         for (auto ix = 0u; ix < sz; ++ix)
-            bytes.append(DeprecatedString::formatted("{0:02x}", *(ptr + ix)));
+            bytes.append(ByteString::formatted("{0:02x}", *(ptr + ix)));
         StringBuilder bytes_builder;
         bytes_builder.join(' ', bytes);
-        builder.append(bytes_builder.to_deprecated_string());
-        dbgln(builder.to_deprecated_string());
+        builder.append(bytes_builder.to_byte_string());
+        dbgln(builder.to_byte_string());
     }
 
     ByteBuffer m_buffer {};

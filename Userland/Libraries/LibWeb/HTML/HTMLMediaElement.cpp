@@ -578,7 +578,7 @@ public:
         //    empty string, then end the synchronous section, and jump down to the failed with elements step below.
         String candiate_src;
         if (m_candidate->has_attribute(HTML::AttributeNames::src))
-            candiate_src = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_candidate->deprecated_attribute(HTML::AttributeNames::src)));
+            candiate_src = TRY_OR_THROW_OOM(vm, String::from_byte_string(m_candidate->deprecated_attribute(HTML::AttributeNames::src)));
 
         if (candiate_src.is_empty()) {
             TRY(failed_with_elements());
@@ -589,7 +589,7 @@ public:
         //    would have resulted from parsing the URL specified by candidate's src attribute's value relative to the
         //    candidate's node document when the src attribute was last changed.
         auto url_record = m_candidate->document().parse_url(candiate_src);
-        auto url_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url_record.to_deprecated_string()));
+        auto url_string = TRY_OR_THROW_OOM(vm, String::from_byte_string(url_record.to_byte_string()));
 
         // 4. ⌛ If urlString was not obtained successfully, then end the synchronous section, and jump down to the failed
         //    with elements step below.
@@ -837,7 +837,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 
         // 3. ⌛ If urlString was obtained successfully, set the currentSrc attribute to urlString.
         if (url_record.is_valid())
-            m_current_src = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url_record.to_deprecated_string()));
+            m_current_src = TRY_OR_THROW_OOM(vm, String::from_byte_string(url_record.to_byte_string()));
 
         // 4. End the synchronous section, continuing the remaining steps in parallel.
 

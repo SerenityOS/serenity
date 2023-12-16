@@ -121,7 +121,7 @@ public:
         if (role == GUI::ModelRole::Display) {
             switch (index.column()) {
             case Column::Type:
-                return inspector_value_type_to_string(static_cast<ValueType>(index.row())).to_deprecated_string();
+                return inspector_value_type_to_string(static_cast<ValueType>(index.row())).to_byte_string();
             case Column::Value:
                 return m_values.at(index.row());
             }

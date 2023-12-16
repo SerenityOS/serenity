@@ -64,7 +64,7 @@ bool Client::verify_response_is_complete()
     auto slice_data = MUST(m_buffer.slice(m_buffer.size() - slice_size, slice_size));
     StringView slice = StringView(slice_data);
     for (auto status : statuses) {
-        DeprecatedString pattern = DeprecatedString::formatted("A{} {}", m_current_command, status);
+        ByteString pattern = ByteString::formatted("A{} {}", m_current_command, status);
         if (slice.contains(pattern)) {
             dbgln("IMAP server replied {}, sending to parser", pattern);
             return true;
@@ -207,16 +207,16 @@ NonnullRefPtr<Promise<SolidResponse>> Client::login(StringView username, StringV
 NonnullRefPtr<Promise<SolidResponse>> Client::list(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::List, m_current_command,
-        { DeprecatedString::formatted("\"{}\"", reference_name),
-            DeprecatedString::formatted("\"{}\"", mailbox) } };
+        { ByteString::formatted("\"{}\"", reference_name),
+            ByteString::formatted("\"{}\"", mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 NonnullRefPtr<Promise<SolidResponse>> Client::lsub(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::ListSub, m_current_command,
-        { DeprecatedString::formatted("\"{}\"", reference_name),
-            DeprecatedString::formatted("\"{}\"", mailbox) } };
+        { ByteString::formatted("\"{}\"", reference_name),
+            ByteString::formatted("\"{}\"", mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -270,7 +270,7 @@ ErrorOr<void> Client::send_next_command()
 {
     auto command = m_command_queue.take_first();
     ByteBuffer buffer;
-    auto tag = AK::DeprecatedString::formatted("A{} ", m_current_command);
+    auto tag = AK::ByteString::formatted("A{} ", m_current_command);
     buffer += tag.to_byte_buffer();
     auto command_type = command_byte_buffer(command.type);
     buffer.append(command_type.data(), command_type.size());
@@ -303,7 +303,7 @@ NonnullRefPtr<Promise<SolidResponse>> Client::delete_mailbox(StringView name)
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-NonnullRefPtr<Promise<SolidResponse>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<DeprecatedString> const& flags, bool uid)
+NonnullRefPtr<Promise<SolidResponse>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<ByteString> const& flags, bool uid)
 {
     StringBuilder data_item_name;
     switch (method) {
@@ -326,12 +326,12 @@ NonnullRefPtr<Promise<SolidResponse>> Client::store(StoreMethod method, Sequence
     flags_builder.join(' ', flags);
     flags_builder.append(')');
 
-    auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.to_deprecated_string(), flags_builder.to_deprecated_string() } };
+    auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.to_byte_string(), flags_builder.to_byte_string() } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
-NonnullRefPtr<Promise<SolidResponse>> Client::search(Optional<DeprecatedString> charset, Vector<SearchKey>&& keys, bool uid)
+NonnullRefPtr<Promise<SolidResponse>> Client::search(Optional<ByteString> charset, Vector<SearchKey>&& keys, bool uid)
 {
-    Vector<DeprecatedString> args;
+    Vector<ByteString> args;
     if (charset.has_value()) {
         args.append("CHARSET "sv);
         args.append(charset.value());
@@ -359,7 +359,7 @@ NonnullRefPtr<Promise<SolidResponse>> Client::finish_idle()
 
 NonnullRefPtr<Promise<SolidResponse>> Client::status(StringView mailbox, Vector<StatusItemType> const& types)
 {
-    Vector<DeprecatedString> args;
+    Vector<ByteString> args;
     for (auto type : types) {
         switch (type) {
         case StatusItemType::Recent:
@@ -383,24 +383,24 @@ NonnullRefPtr<Promise<SolidResponse>> Client::status(StringView mailbox, Vector<
     types_list.append('(');
     types_list.join(' ', args);
     types_list.append(')');
-    auto command = Command { CommandType::Status, m_current_command, { mailbox, types_list.to_deprecated_string() } };
+    auto command = Command { CommandType::Status, m_current_command, { mailbox, types_list.to_byte_string() } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-NonnullRefPtr<Promise<SolidResponse>> Client::append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags, Optional<Core::DateTime> date_time)
+NonnullRefPtr<Promise<SolidResponse>> Client::append(StringView mailbox, Message&& message, Optional<Vector<ByteString>> flags, Optional<Core::DateTime> date_time)
 {
-    Vector<DeprecatedString> args = { mailbox };
+    Vector<ByteString> args = { mailbox };
     if (flags.has_value()) {
         StringBuilder flags_sb;
         flags_sb.append('(');
         flags_sb.join(' ', flags.value());
         flags_sb.append(')');
-        args.append(flags_sb.to_deprecated_string());
+        args.append(flags_sb.to_byte_string());
     }
     if (date_time.has_value())
-        args.append(date_time.value().to_deprecated_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));
+        args.append(date_time.value().to_byte_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));
 
-    args.append(DeprecatedString::formatted("{{{}}}", message.data.length()));
+    args.append(ByteString::formatted("{{{}}}", message.data.length()));
 
     auto continue_req = send_command(Command { CommandType::Append, m_current_command, args });
 

@@ -85,13 +85,13 @@ ErrorOr<ByteBuffer> WebSocketImplQt::read(int max_size)
     return buffer.slice(0, bytes_read);
 }
 
-ErrorOr<DeprecatedString> WebSocketImplQt::read_line(size_t size)
+ErrorOr<ByteString> WebSocketImplQt::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     auto bytes_read = m_socket->readLine(reinterpret_cast<char*>(buffer.data()), buffer.size());
     if (bytes_read == -1)
         return Error::from_string_literal("WebSocketImplQt::read_line(): Error reading from socket");
-    return DeprecatedString::copy(buffer.span().slice(0, bytes_read));
+    return ByteString::copy(buffer.span().slice(0, bytes_read));
 }
 
 }

@@ -63,7 +63,7 @@ public:
     void window_position_changed(Gfx::IntPoint);
     void window_size_changed(Gfx::IntSize);
 
-    Function<void(DeprecatedString const&)> on_title_change;
+    Function<void(ByteString const&)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_activate_tab_request;
     Function<void(Tab&)> on_tab_close_request;
@@ -71,8 +71,8 @@ public:
     Function<void(const URL&)> on_window_open_request;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
-    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, DeprecatedString const& name)> on_get_named_cookie;
-    Function<DeprecatedString(const URL&, Web::Cookie::Source source)> on_get_cookie;
+    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, ByteString const& name)> on_get_named_cookie;
+    Function<ByteString(const URL&, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const URL&, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
     Function<void(Web::Cookie::Cookie)> on_update_cookie;
@@ -93,7 +93,7 @@ public:
 
     void update_reset_zoom_button();
 
-    DeprecatedString const& title() const { return m_title; }
+    ByteString const& title() const { return m_title; }
     Gfx::Bitmap const* icon() const { return m_icon; }
 
     WebView::OutOfProcessWebView& view() { return *m_web_content_view; }
@@ -111,7 +111,7 @@ private:
     ErrorOr<void> bookmark_current_url();
     void update_bookmark_button(StringView url);
     void start_download(const URL& url);
-    void view_source(const URL& url, DeprecatedString const& source);
+    void view_source(const URL& url, ByteString const& source);
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
@@ -160,7 +160,7 @@ private:
     RefPtr<GUI::Menu> m_select_dropdown;
     bool m_select_dropdown_closed_by_action { false };
 
-    DeprecatedString m_title;
+    ByteString m_title;
     RefPtr<Gfx::Bitmap const> m_icon;
 
     Optional<URL> m_navigating_url;

@@ -34,7 +34,7 @@ TEST_CASE(decode_utf8)
     EXPECT(valid_bytes == (size_t)utf8.byte_length());
 
     u32 expected[] = { 1055, 1088, 1080, 1074, 1077, 1090, 44, 32, 1084, 1080, 1088, 33, 32, 128512, 32, 947, 949, 953, 940, 32, 963, 959, 965, 32, 954, 972, 963, 956, 959, 962, 32, 12371, 12435, 12395, 12385, 12399, 19990, 30028 };
-    DeprecatedString expected_underlying_bytes[] = { "П", "р", "и", "в", "е", "т", ",", " ", "м", "и", "р", "!", " ", "😀", " ", "γ", "ε", "ι", "ά", " ", "σ", "ο", "υ", " ", "κ", "ό", "σ", "μ", "ο", "ς", " ", "こ", "ん", "に", "ち", "は", "世", "界" };
+    ByteString expected_underlying_bytes[] = { "П", "р", "и", "в", "е", "т", ",", " ", "м", "и", "р", "!", " ", "😀", " ", "γ", "ε", "ι", "ά", " ", "σ", "ο", "υ", " ", "κ", "ό", "σ", "μ", "ο", "ς", " ", "こ", "ん", "に", "ち", "は", "世", "界" };
     size_t expected_size = sizeof(expected) / sizeof(expected[0]);
 
     size_t i = 0;
@@ -166,7 +166,7 @@ TEST_CASE(decode_invalid_ut8)
         char raw_data[] = { 'a', 'b', (char)0xA0, 'd' };
         Utf8View view { StringView { raw_data, 4 } };
         u32 expected_characters[] = { 'a', 'b', 0xFFFD, 'd' };
-        DeprecatedString expected_underlying_bytes[] = { "a", "b", "\xA0", "d" };
+        ByteString expected_underlying_bytes[] = { "a", "b", "\xA0", "d" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
         size_t i = 0;
         for (auto it = view.begin(); it != view.end(); ++it) {
@@ -184,7 +184,7 @@ TEST_CASE(decode_invalid_ut8)
         char raw_data[] = { 'a', 'b', (char)0xC0, 'd', 'e' };
         Utf8View view { StringView { raw_data, 5 } };
         u32 expected_characters[] = { 'a', 'b', 0xFFFD, 'd', 'e' };
-        DeprecatedString expected_underlying_bytes[] = { "a", "b", "\xC0", "d", "e" };
+        ByteString expected_underlying_bytes[] = { "a", "b", "\xC0", "d", "e" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
         size_t i = 0;
         for (auto it = view.begin(); it != view.end(); ++it) {
@@ -202,7 +202,7 @@ TEST_CASE(decode_invalid_ut8)
         char raw_data[] = { 'a', 'b', (char)0x90, 'd' };
         Utf8View view { StringView { raw_data, 4 } };
         u32 expected_characters[] = { 'a', 'b', 0xFFFD, 'd' };
-        DeprecatedString expected_underlying_bytes[] = { "a", "b", "\x90", "d" };
+        ByteString expected_underlying_bytes[] = { "a", "b", "\x90", "d" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
         size_t i = 0;
         for (auto it = view.begin(); it != view.end(); ++it) {
@@ -220,7 +220,7 @@ TEST_CASE(decode_invalid_ut8)
         char raw_data[] = { 'a', 'b', 'c', (char)0x90 };
         Utf8View view { StringView { raw_data, 4 } };
         u32 expected_characters[] = { 'a', 'b', 'c', 0xFFFD };
-        DeprecatedString expected_underlying_bytes[] = { "a", "b", "c", "\x90" };
+        ByteString expected_underlying_bytes[] = { "a", "b", "c", "\x90" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
         size_t i = 0;
         for (auto it = view.begin(); it != view.end(); ++it) {
@@ -247,7 +247,7 @@ TEST_CASE(decode_invalid_ut8)
         // https://www.unicode.org/versions/Unicode14.0.0/ch03.pdf , section "U+FFFD Substitution of Maximal Subparts"
         // However, that would go against how we deal with several other kinds of errors, so we stick to emitting only one U+FFFD.
         u32 expected_characters[] = { 'a', 0xFFFD, 'b' };
-        DeprecatedString expected_underlying_bytes[] = { "a", "\xF4\xA3\x91\x96", "b" };
+        ByteString expected_underlying_bytes[] = { "a", "\xF4\xA3\x91\x96", "b" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
         size_t i = 0;
         for (auto it = view.begin(); it != view.end(); ++it) {

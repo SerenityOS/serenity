@@ -90,8 +90,8 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
     m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
     m_preview_textbox->on_change = [this] {
-        auto maybe_preview = [](DeprecatedString const& deprecated_text) -> ErrorOr<String> {
-            auto text = TRY(String::from_deprecated_string(deprecated_text));
+        auto maybe_preview = [](ByteString const& deprecated_text) -> ErrorOr<String> {
+            auto text = TRY(String::from_byte_string(deprecated_text));
             return TRY(String::formatted("{}\n{}", text, TRY(text.to_uppercase())));
         }(m_preview_textbox->text());
         if (maybe_preview.is_error())
@@ -150,7 +150,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_save_action = GUI::CommonActions::make_save_action([this](auto&) {
         if (m_path.is_empty())
             return m_save_as_action->activate();
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path.to_deprecated_string(), Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path.to_byte_string(), Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
         if (response.is_error())
             return;
         auto file = response.release_value();
@@ -185,7 +185,7 @@ ErrorOr<void> MainWidget::create_actions()
     });
     m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
 
-    GUI::Clipboard::the().on_change = [this](DeprecatedString const& data_type) {
+    GUI::Clipboard::the().on_change = [this](ByteString const& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
     };
 
@@ -369,7 +369,7 @@ ErrorOr<void> MainWidget::create_actions()
                 continue;
             builder.append_code_point(code_point);
         }
-        GUI::Clipboard::the().set_plain_text(builder.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(builder.to_byte_string());
     });
     m_copy_text_action->set_status_tip("Copy to clipboard as text"_string);
 
@@ -478,9 +478,9 @@ void MainWidget::update_action_text()
     };
 
     if (auto maybe_text = text_or_error("&Undo"sv, m_undo_stack->undo_action_text()); !maybe_text.is_error())
-        m_undo_action->set_text(maybe_text.release_value().to_deprecated_string());
+        m_undo_action->set_text(maybe_text.release_value().to_byte_string());
     if (auto maybe_text = text_or_error("&Redo"sv, m_undo_stack->redo_action_text()); !maybe_text.is_error())
-        m_redo_action->set_text(maybe_text.release_value().to_deprecated_string());
+        m_redo_action->set_text(maybe_text.release_value().to_byte_string());
 }
 
 ErrorOr<void> MainWidget::create_widgets()
@@ -533,13 +533,13 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_name_textbox = find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_name_textbox->on_change = [this] {
-        m_font->set_name(MUST(String::from_deprecated_string(m_name_textbox->text())));
+        m_font->set_name(MUST(String::from_byte_string(m_name_textbox->text())));
         did_modify_font();
     };
 
     m_family_textbox = find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_family_textbox->on_change = [this] {
-        m_font->set_family(MUST(String::from_deprecated_string(m_family_textbox->text())));
+        m_font->set_family(MUST(String::from_byte_string(m_family_textbox->text())));
         did_modify_font();
     };
 
@@ -918,7 +918,7 @@ void MainWidget::update_title()
     else
         title.append(m_path);
     title.append("[*] - Font Editor"sv);
-    window()->set_title(title.to_deprecated_string());
+    window()->set_title(title.to_byte_string());
 }
 
 void MainWidget::did_modify_font()
@@ -1034,11 +1034,11 @@ ErrorOr<void> MainWidget::copy_selected_glyphs()
     TRY(buffer.try_append(rows));
     TRY(buffer.try_append(widths));
 
-    HashMap<DeprecatedString, DeprecatedString> metadata;
-    metadata.set("start", DeprecatedString::number(selection.start()));
-    metadata.set("count", DeprecatedString::number(selection.size()));
-    metadata.set("width", DeprecatedString::number(m_font->max_glyph_width()));
-    metadata.set("height", DeprecatedString::number(m_font->glyph_height()));
+    HashMap<ByteString, ByteString> metadata;
+    metadata.set("start", ByteString::number(selection.start()));
+    metadata.set("count", ByteString::number(selection.size()));
+    metadata.set("width", ByteString::number(m_font->max_glyph_width()));
+    metadata.set("height", ByteString::number(m_font->glyph_height()));
     GUI::Clipboard::the().set_data(buffer.bytes(), "glyph/x-fonteditor", metadata);
 
     return {};

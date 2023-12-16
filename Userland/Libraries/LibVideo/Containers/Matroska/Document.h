@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
@@ -18,7 +18,7 @@
 namespace Video::Matroska {
 
 struct EBMLHeader {
-    DeprecatedString doc_type;
+    ByteString doc_type;
     u32 doc_type_version;
 };
 
@@ -27,9 +27,9 @@ public:
     u64 timestamp_scale() const { return m_timestamp_scale; }
     void set_timestamp_scale(u64 timestamp_scale) { m_timestamp_scale = timestamp_scale; }
     Utf8View muxing_app() const { return Utf8View(m_muxing_app); }
-    void set_muxing_app(DeprecatedString muxing_app) { m_muxing_app = move(muxing_app); }
+    void set_muxing_app(ByteString muxing_app) { m_muxing_app = move(muxing_app); }
     Utf8View writing_app() const { return Utf8View(m_writing_app); }
-    void set_writing_app(DeprecatedString writing_app) { m_writing_app = move(writing_app); }
+    void set_writing_app(ByteString writing_app) { m_writing_app = move(writing_app); }
     Optional<double> duration_unscaled() const { return m_duration_unscaled; }
     void set_duration_unscaled(double duration) { m_duration_unscaled.emplace(duration); }
     Optional<Duration> duration() const
@@ -41,8 +41,8 @@ public:
 
 private:
     u64 m_timestamp_scale { 1'000'000 };
-    DeprecatedString m_muxing_app;
-    DeprecatedString m_writing_app;
+    ByteString m_muxing_app;
+    ByteString m_writing_app;
     Optional<double> m_duration_unscaled;
 };
 

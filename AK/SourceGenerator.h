@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
@@ -116,12 +116,12 @@ public:
     }
 
     // FIXME: These are deprecated.
-    void set(StringView key, DeprecatedString value)
+    void set(StringView key, ByteString value)
     {
-        set(key, MUST(String::from_deprecated_string(value)));
+        set(key, MUST(String::from_byte_string(value)));
     }
     template<size_t N>
-    void set(char const (&key)[N], DeprecatedString value)
+    void set(char const (&key)[N], ByteString value)
     {
         set(StringView { key, N - 1 }, value);
     }

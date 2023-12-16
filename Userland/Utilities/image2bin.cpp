@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -17,7 +17,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath unix"));
-    DeprecatedString path;
+    ByteString path;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to image", "path");

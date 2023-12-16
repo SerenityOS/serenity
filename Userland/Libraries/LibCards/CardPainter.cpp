@@ -24,8 +24,8 @@ CardPainter& CardPainter::the()
 
 CardPainter::CardPainter()
 {
-    m_back_image_path = MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/Red.png"sv)));
-    set_front_images_set_name(MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardFrontImages"sv, "Classic"sv))));
+    m_back_image_path = MUST(String::from_byte_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/Red.png"sv)));
+    set_front_images_set_name(MUST(String::from_byte_string(Config::read_string("Games"sv, "Cards"sv, "CardFrontImages"sv, "Classic"sv))));
 }
 
 static constexpr Gfx::CharacterBitmap s_diamond {

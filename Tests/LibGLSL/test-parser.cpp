@@ -28,7 +28,7 @@ TEST_CASE(test_regression)
             return IterationDecision::Continue;
 
         outln("Checking {}...", path.basename());
-        String file_path = MUST(String::from_deprecated_string(path.string()));
+        String file_path = MUST(String::from_byte_string(path.string()));
 
         auto ast_file_path = MUST(String::formatted("{}.ast", MUST(file_path.substring_from_byte_offset(0, file_path.bytes_as_string_view().length() - sizeof(".glsl") + 1))));
 

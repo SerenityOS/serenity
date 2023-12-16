@@ -24,7 +24,7 @@ public:
 private:
     ConnectionToWindowServer(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Vector<bool> const&, i32) override;
+    virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, ByteString const&, ByteString const&, ByteString const&, Vector<bool> const&, i32) override;
     virtual void paint(i32, Gfx::IntSize, Vector<Gfx::IntRect> const&) override;
     virtual void mouse_move(i32, Gfx::IntPoint, u32, u32, u32, i32, i32, i32, i32, bool, Vector<String> const&) override;
     virtual void mouse_down(i32, Gfx::IntPoint, u32, u32, u32, i32, i32, i32, i32) override;
@@ -48,11 +48,11 @@ private:
     virtual void menu_visibility_did_change(i32, bool) override;
     virtual void screen_rects_changed(Vector<Gfx::IntRect> const&, u32, u32, u32) override;
     virtual void applet_area_rect_changed(Gfx::IntRect const&) override;
-    virtual void drag_dropped(i32, Gfx::IntPoint, DeprecatedString const&, HashMap<String, ByteBuffer> const&) override;
+    virtual void drag_dropped(i32, Gfx::IntPoint, ByteString const&, HashMap<String, ByteBuffer> const&) override;
     virtual void drag_accepted() override;
     virtual void drag_cancelled() override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
-    virtual void update_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
+    virtual void update_system_fonts(ByteString const&, ByteString const&, ByteString const&) override;
     virtual void update_system_effects(Vector<bool> const&) override;
     virtual void window_state_changed(i32, bool, bool, bool) override;
     virtual void display_link_notification() override;

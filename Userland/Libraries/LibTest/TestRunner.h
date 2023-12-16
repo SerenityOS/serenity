@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -29,7 +29,7 @@ public:
         return s_the;
     }
 
-    TestRunner(DeprecatedString test_root, bool print_times, bool print_progress, bool print_json, bool detailed_json = false)
+    TestRunner(ByteString test_root, bool print_times, bool print_progress, bool print_json, bool detailed_json = false)
         : m_test_root(move(test_root))
         , m_print_times(print_times)
         , m_print_progress(print_progress)
@@ -42,7 +42,7 @@ public:
 
     virtual ~TestRunner() { s_the = nullptr; }
 
-    virtual void run(DeprecatedString test_glob);
+    virtual void run(ByteString test_glob);
 
     Test::Counts const& counts() const { return m_counts; }
 
@@ -64,11 +64,11 @@ protected:
     void print_test_results() const;
     void print_test_results_as_json() const;
 
-    virtual Vector<DeprecatedString> get_test_paths() const = 0;
-    virtual void do_run_single_test(DeprecatedString const&, size_t current_test_index, size_t num_tests) = 0;
-    virtual Vector<DeprecatedString> const* get_failed_test_names() const { return nullptr; }
+    virtual Vector<ByteString> get_test_paths() const = 0;
+    virtual void do_run_single_test(ByteString const&, size_t current_test_index, size_t num_tests) = 0;
+    virtual Vector<ByteString> const* get_failed_test_names() const { return nullptr; }
 
-    DeprecatedString m_test_root;
+    ByteString m_test_root;
     bool m_print_times;
     bool m_print_progress;
     bool m_print_json;
@@ -92,7 +92,7 @@ inline void cleanup()
     exit(1);
 }
 
-inline void TestRunner::run(DeprecatedString test_glob)
+inline void TestRunner::run(ByteString test_glob)
 {
     size_t progress_counter = 0;
     auto test_paths = get_test_paths();
@@ -243,11 +243,11 @@ inline void TestRunner::print_test_results_as_json() const
 
                 auto name = suite.name;
                 if (name == "__$$TOP_LEVEL$$__"sv)
-                    name = DeprecatedString::empty();
+                    name = ByteString::empty();
 
                 auto path = LexicalPath::relative_path(suite.path, m_test_root);
 
-                tests.set(DeprecatedString::formatted("{}/{}::{}", path, name, case_.name), result_name);
+                tests.set(ByteString::formatted("{}/{}::{}", path, name, case_.name), result_name);
             }
         }
 
@@ -274,7 +274,7 @@ inline void TestRunner::print_test_results_as_json() const
         root.set("files_total", m_counts.files_total);
         root.set("duration", m_total_elapsed_time_in_ms / 1000.0);
     }
-    outln("{}", root.to_deprecated_string());
+    outln("{}", root.to_byte_string());
 }
 
 }

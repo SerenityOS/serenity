@@ -364,7 +364,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
     auto& event_handler = event_handler_iterator->value;
 
     // 3. If eventHandler's value is an internal raw uncompiled handler, then:
-    if (event_handler->value.has<DeprecatedString>()) {
+    if (event_handler->value.has<ByteString>()) {
         // 1. If eventTarget is an element, then let element be eventTarget, and document be element's node document.
         //    Otherwise, eventTarget is a Window object, let element be null, and document be eventTarget's associated Document.
         JS::GCPtr<Element> element;
@@ -387,7 +387,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
             return nullptr;
 
         // 3. Let body be the uncompiled script body in eventHandler's value.
-        auto& body = event_handler->value.get<DeprecatedString>();
+        auto& body = event_handler->value.get<ByteString>();
 
         // FIXME: 4. Let location be the location where the script body originated, as given by eventHandler's value.
 
@@ -418,7 +418,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
             builder.appendff("function {}(event) {{\n{}\n}}", name, body);
         }
 
-        auto source_text = builder.to_deprecated_string();
+        auto source_text = builder.to_byte_string();
 
         auto parser = JS::Parser(JS::Lexer(source_text));
 
@@ -486,7 +486,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
 
         //  6. Return scope. (NOTE: Not necessary)
 
-        auto function = JS::ECMAScriptFunctionObject::create(realm, name.to_deprecated_fly_string(), builder.to_deprecated_string(), program->body(), program->parameters(), program->function_length(), program->local_variables_names(), scope, nullptr, JS::FunctionKind::Normal, program->is_strict_mode(), program->might_need_arguments_object(), is_arrow_function);
+        auto function = JS::ECMAScriptFunctionObject::create(realm, name.to_deprecated_fly_string(), builder.to_byte_string(), program->body(), program->parameters(), program->function_length(), program->local_variables_names(), scope, nullptr, JS::FunctionKind::Normal, program->is_strict_mode(), program->might_need_arguments_object(), is_arrow_function);
 
         // 10. Remove settings object's realm execution context from the JavaScript execution context stack.
         VERIFY(vm.execution_context_stack().last() == &settings_object.realm_execution_context());
@@ -747,7 +747,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
     // NOTE: See the optimization comments in set_event_handler_attribute.
 
     if (event_handler_iterator == handler_map.end()) {
-        auto new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(value->to_deprecated_string());
+        auto new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(value->to_byte_string());
 
         //  6. Activate an event handler given eventTarget and name.
         event_target->activate_event_handler(local_name, *new_event_handler);
@@ -759,7 +759,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
     auto& event_handler = event_handler_iterator->value;
 
     //  6. Activate an event handler given eventTarget and name.
-    event_handler->value = value->to_deprecated_string();
+    event_handler->value = value->to_byte_string();
     event_target->activate_event_handler(local_name, *event_handler);
 }
 

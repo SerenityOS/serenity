@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <QString>
 
-AK::DeprecatedString ak_deprecated_string_from_qstring(QString const&);
+AK::ByteString ak_byte_string_from_qstring(QString const&);
 String ak_string_from_qstring(QString const&);
 QString qstring_from_ak_string(StringView);

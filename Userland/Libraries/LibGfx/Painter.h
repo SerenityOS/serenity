@@ -232,6 +232,6 @@ private:
     Painter& m_painter;
 };
 
-DeprecatedString parse_ampersand_string(StringView, Optional<size_t>* underline_offset = nullptr);
+ByteString parse_ampersand_string(StringView, Optional<size_t>* underline_offset = nullptr);
 
 }

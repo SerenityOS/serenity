@@ -33,8 +33,8 @@ public:
     Table() = default;
     virtual ~Table() override = default;
 
-    virtual DeprecatedString render_to_html(bool tight = false) const override;
-    virtual Vector<DeprecatedString> render_lines_for_terminal(size_t view_width = 0) const override;
+    virtual ByteString render_to_html(bool tight = false) const override;
+    virtual Vector<ByteString> render_lines_for_terminal(size_t view_width = 0) const override;
     virtual RecursionDecision walk(Visitor&) const override;
     static OwnPtr<Table> parse(LineIterator& lines);
 

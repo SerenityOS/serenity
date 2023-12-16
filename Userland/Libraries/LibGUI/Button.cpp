@@ -186,7 +186,7 @@ void Button::set_icon(RefPtr<Gfx::Bitmap const> icon)
     update();
 }
 
-void Button::set_icon_from_path(DeprecatedString const& path)
+void Button::set_icon_from_path(ByteString const& path)
 {
     auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
     if (maybe_bitmap.is_error()) {

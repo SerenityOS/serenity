@@ -82,7 +82,7 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
             builder.append(current_character);
         }
 
-        list.append({ MUST(builder.to_string()), MUST(String::from_deprecated_string(value)) });
+        list.append({ MUST(builder.to_string()), MUST(String::from_byte_string(value)) });
     });
 
     // 4. Return list.
@@ -190,7 +190,7 @@ WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMa
     }
 
     // Remove an attribute by name given name and the DOMStringMap's associated element.
-    auto data_name = builder.to_deprecated_string();
+    auto data_name = builder.to_byte_string();
     m_associated_element->remove_attribute(data_name);
 
     // The spec doesn't have the step. This indicates that the deletion was successful.

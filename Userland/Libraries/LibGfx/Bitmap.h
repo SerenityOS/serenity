@@ -95,7 +95,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(StringView path, int scale_factor = 1, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path, Optional<IntSize> ideal_size = {});
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_bytes(ReadonlyBytes, Optional<IntSize> ideal_size = {}, Optional<DeprecatedString> mine_type = {});
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_bytes(ReadonlyBytes, Optional<IntSize> ideal_size = {}, Optional<ByteString> mine_type = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_bytes(ReadonlyBytes);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_byte_buffer(ByteBuffer&&);
@@ -197,7 +197,7 @@ public:
     // Call only for BGRx8888 and BGRA8888 bitmaps.
     void strip_alpha_channel();
 
-    void set_mmap_name(DeprecatedString const&);
+    void set_mmap_name(ByteString const&);
 
     [[nodiscard]] static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     [[nodiscard]] size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }

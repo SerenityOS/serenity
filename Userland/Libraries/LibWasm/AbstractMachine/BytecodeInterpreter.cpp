@@ -1250,7 +1250,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     default:
     unimplemented:;
         dbgln_if(WASM_TRACE_DEBUG, "Instruction '{}' not implemented", instruction_name(instruction.opcode()));
-        m_trap = Trap { DeprecatedString::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
+        m_trap = Trap { ByteString::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
         return;
     }
 }

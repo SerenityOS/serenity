@@ -150,7 +150,7 @@ ErrorOr<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
         if (record.data_length() > bytes.size() - offset)
             return Error::from_string_literal("Unexpected EOF when parsing DNS packet");
 
-        DeprecatedString data;
+        ByteString data;
 
         switch ((RecordType)record.type()) {
         case RecordType::PTR: {

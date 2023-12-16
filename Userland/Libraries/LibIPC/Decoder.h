@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
@@ -85,7 +85,7 @@ template<>
 ErrorOr<String> decode(Decoder&);
 
 template<>
-ErrorOr<DeprecatedString> decode(Decoder&);
+ErrorOr<ByteString> decode(Decoder&);
 
 template<>
 ErrorOr<ByteBuffer> decode(Decoder&);

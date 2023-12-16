@@ -15,7 +15,7 @@
 #ifdef KERNEL
 #    include <Kernel/Library/KString.h>
 #else
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 class [[gnu::packed]] MACAddress {
@@ -64,9 +64,9 @@ public:
         return Kernel::KString::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 #else
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
-        return DeprecatedString::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
+        return ByteString::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 #endif
 

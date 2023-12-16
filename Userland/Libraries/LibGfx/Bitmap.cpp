@@ -6,8 +6,8 @@
  */
 
 #include <AK/Bitmap.h>
+#include <AK/ByteString.h>
 #include <AK/Checked.h>
-#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
@@ -145,7 +145,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> 
     return load_from_bytes(mapped_file->bytes(), ideal_size, mime_type);
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_bytes(ReadonlyBytes bytes, Optional<IntSize> ideal_size, Optional<DeprecatedString> mine_type)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_bytes(ReadonlyBytes bytes, Optional<IntSize> ideal_size, Optional<ByteString> mine_type)
 {
     if (auto decoder = ImageDecoder::try_create_for_raw_bytes(bytes, mine_type)) {
         auto frame = TRY(decoder->frame(0, ideal_size));
@@ -552,7 +552,7 @@ void Bitmap::strip_alpha_channel()
     m_format = BitmapFormat::BGRx8888;
 }
 
-void Bitmap::set_mmap_name([[maybe_unused]] DeprecatedString const& name)
+void Bitmap::set_mmap_name([[maybe_unused]] ByteString const& name)
 {
     VERIFY(m_needs_munmap);
 #ifdef AK_OS_SERENITY
@@ -624,7 +624,7 @@ ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSiz
     int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
 #ifdef AK_OS_SERENITY
     map_flags |= MAP_PURGEABLE;
-    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, DeprecatedString::formatted("GraphicsBitmap [{}]", size).characters());
+    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, ByteString::formatted("GraphicsBitmap [{}]", size).characters());
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, -1, 0);
 #endif

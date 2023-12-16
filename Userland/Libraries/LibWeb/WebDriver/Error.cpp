@@ -13,7 +13,7 @@ namespace Web::WebDriver {
 struct ErrorCodeData {
     ErrorCode error_code;
     unsigned http_status;
-    DeprecatedString json_error_code;
+    ByteString json_error_code;
 };
 
 // https://w3c.github.io/webdriver/#dfn-error-code
@@ -49,7 +49,7 @@ static Vector<ErrorCodeData> const s_error_code_data = {
     { ErrorCode::OutOfMemory, 500, "out of memory" },
 };
 
-Error Error::from_code(ErrorCode code, DeprecatedString message, Optional<JsonValue> data)
+Error Error::from_code(ErrorCode code, ByteString message, Optional<JsonValue> data)
 {
     auto const& error_code_data = s_error_code_data[to_underlying(code)];
 
@@ -67,7 +67,7 @@ Error::Error(AK::Error const& error)
     *this = from_code(ErrorCode::OutOfMemory, {}, {});
 }
 
-Error::Error(unsigned http_status_, DeprecatedString error_, DeprecatedString message_, Optional<JsonValue> data_)
+Error::Error(unsigned http_status_, ByteString error_, ByteString message_, Optional<JsonValue> data_)
     : http_status(http_status_)
     , error(move(error_))
     , message(move(message_))

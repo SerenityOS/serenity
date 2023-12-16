@@ -6,22 +6,22 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
 struct MountInfo {
-    DeprecatedString mount_point;
-    DeprecatedString source;
+    ByteString mount_point;
+    ByteString source;
 };
 
 class TreeNode final {
 public:
-    TreeNode(DeprecatedString name)
+    TreeNode(ByteString name)
         : m_name(move(name)) {};
 
-    DeprecatedString name() const { return m_name; }
+    ByteString name() const { return m_name; }
     i64 area() const { return m_area; }
     size_t num_children() const
     {
@@ -31,21 +31,21 @@ public:
         return 0;
     }
     TreeNode const& child_at(size_t i) const { return m_children->at(i); }
-    Optional<TreeNode const&> child_with_name(DeprecatedString name) const;
+    Optional<TreeNode const&> child_with_name(ByteString name) const;
     void sort_children_by_area() const;
     HashMap<int, int> populate_filesize_tree(Vector<MountInfo>& mounts, Function<void(size_t)> on_progress);
 
 private:
     long long int update_totals();
 
-    DeprecatedString m_name;
+    ByteString m_name;
     i64 m_area { 0 };
     OwnPtr<Vector<TreeNode>> m_children;
 };
 
 class Tree {
 public:
-    static ErrorOr<NonnullOwnPtr<Tree>> create(DeprecatedString root_name)
+    static ErrorOr<NonnullOwnPtr<Tree>> create(ByteString root_name)
     {
         return adopt_nonnull_own_or_enomem(new (nothrow) Tree(move(root_name)));
     }
@@ -57,7 +57,7 @@ public:
     }
 
 private:
-    Tree(DeprecatedString root_name)
+    Tree(ByteString root_name)
         : m_root(move(root_name)) {};
     TreeNode m_root;
 };

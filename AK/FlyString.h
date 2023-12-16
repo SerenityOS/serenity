@@ -22,7 +22,7 @@ public:
 
     static ErrorOr<FlyString> from_utf8(StringView);
     template<typename T>
-    requires(IsOneOf<RemoveCVReference<T>, DeprecatedString, DeprecatedFlyString, FlyString, String>)
+    requires(IsOneOf<RemoveCVReference<T>, ByteString, DeprecatedFlyString, FlyString, String>)
     static ErrorOr<String> from_utf8(T&&) = delete;
 
     FlyString(String const&);

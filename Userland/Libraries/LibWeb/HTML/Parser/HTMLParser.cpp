@@ -132,7 +132,7 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-HTMLParser::HTMLParser(DOM::Document& document, StringView input, DeprecatedString const& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, StringView input, ByteString const& encoding)
     : m_tokenizer(input, encoding)
     , m_scripting_enabled(document.is_scripting_enabled())
     , m_document(JS::make_handle(document))
@@ -219,7 +219,7 @@ void HTMLParser::run()
 void HTMLParser::run(const AK::URL& url)
 {
     m_document->set_url(url);
-    m_document->set_source(MUST(String::from_deprecated_string(m_tokenizer.source())));
+    m_document->set_source(MUST(String::from_byte_string(m_tokenizer.source())));
     run();
     the_end();
     m_document->detach_parser({});
@@ -4223,13 +4223,13 @@ JS::NonnullGCPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& doc
 JS::NonnullGCPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
-        return document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value().to_deprecated_string());
+        return document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value().to_byte_string());
     auto encoding = run_encoding_sniffing_algorithm(document, input);
     dbgln_if(HTML_PARSER_DEBUG, "The encoding sniffing algorithm returned encoding '{}'", encoding);
     return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
-JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, DeprecatedString const& encoding)
+JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, ByteString const& encoding)
 {
     return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
@@ -4545,7 +4545,7 @@ RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-a-legacy-colour-value
-Optional<Color> parse_legacy_color_value(DeprecatedString input)
+Optional<Color> parse_legacy_color_value(ByteString input)
 {
     // 1. Let input be the string being parsed
     // 2. If input is the empty string, then return an error.
@@ -4591,7 +4591,7 @@ Optional<Color> parse_legacy_color_value(DeprecatedString input)
     }
 
     // 7. Replace any code points greater than U+FFFF in input (i.e., any characters that are not in the basic multilingual plane) with the two-character string "00".
-    auto replace_non_basic_multilingual_code_points = [](StringView string) -> DeprecatedString {
+    auto replace_non_basic_multilingual_code_points = [](StringView string) -> ByteString {
         StringBuilder builder;
         for (auto code_point : Utf8View { string }) {
             if (code_point > 0xFFFF)
@@ -4599,7 +4599,7 @@ Optional<Color> parse_legacy_color_value(DeprecatedString input)
             else
                 builder.append_code_point(code_point);
         }
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
     input = replace_non_basic_multilingual_code_points(input);
 
@@ -4612,7 +4612,7 @@ Optional<Color> parse_legacy_color_value(DeprecatedString input)
         input = input.substring(1);
 
     // 10. Replace any character in input that is not an ASCII hex digit with the character U+0030 DIGIT ZERO (0).
-    auto replace_non_ascii_hex = [](StringView string) -> DeprecatedString {
+    auto replace_non_ascii_hex = [](StringView string) -> ByteString {
         StringBuilder builder;
         for (auto code_point : Utf8View { string }) {
             if (is_ascii_hex_digit(code_point))
@@ -4620,7 +4620,7 @@ Optional<Color> parse_legacy_color_value(DeprecatedString input)
             else
                 builder.append_code_point('0');
         }
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
     input = replace_non_ascii_hex(input);
 
@@ -4629,7 +4629,7 @@ Optional<Color> parse_legacy_color_value(DeprecatedString input)
     builder.append(input);
     while (builder.length() == 0 || (builder.length() % 3 != 0))
         builder.append_code_point('0');
-    input = builder.to_deprecated_string();
+    input = builder.to_byte_string();
 
     // 12. Split input into three strings of equal code point length, to obtain three components. Let length be the code point length that all of those components have (one third the code point length of input).
     auto length = input.length() / 3;

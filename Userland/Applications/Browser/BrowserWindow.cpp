@@ -41,12 +41,12 @@
 
 namespace Browser {
 
-static DeprecatedString bookmarks_file_path()
+static ByteString bookmarks_file_path()
 {
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
     builder.append("/bookmarks.json"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& initial_urls)
@@ -275,11 +275,11 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url())).release_value_but_fixme_should_propagate_errors();
+            String homepage_url = String::from_byte_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url())).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
-                    Browser::g_home_url = homepage_url.to_deprecated_string();
+                    Browser::g_home_url = homepage_url.to_byte_string();
                 } else {
                     GUI::MessageBox::show_error(this, "The URL you have entered is not valid"sv);
                 }
@@ -412,7 +412,7 @@ void BrowserWindow::build_menus()
             m_disable_user_agent_spoofing->activate();
             return;
         }
-        active_tab().view().debug_request("spoof-user-agent", user_agent.to_deprecated_string());
+        active_tab().view().debug_request("spoof-user-agent", user_agent.to_byte_string());
         action.set_status_tip(user_agent);
     });
     spoof_user_agent_menu->add_action(custom_user_agent);
@@ -497,7 +497,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
             return;
         }
 
-        g_search_engine = search_engine.to_deprecated_string();
+        g_search_engine = search_engine.to_byte_string();
         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         action.set_status_tip(search_engine);
     });
@@ -506,7 +506,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 
     if (!search_engine_set && !g_search_engine.is_empty()) {
         custom_search_engine_action->set_checked(true);
-        custom_search_engine_action->set_status_tip(TRY(String::from_deprecated_string(g_search_engine)));
+        custom_search_engine_action->set_status_tip(TRY(String::from_byte_string(g_search_engine)));
     }
 
     return {};
@@ -526,7 +526,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 {
     auto& title = tab.title();
     auto url = tab.url();
-    set_title(DeprecatedString::formatted("{} - Ladybird", title.is_empty() ? url.to_deprecated_string() : title));
+    set_title(ByteString::formatted("{} - Ladybird", title.is_empty() ? url.to_byte_string() : title));
 }
 
 Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activate)
@@ -536,7 +536,7 @@ Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activa
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 
     new_tab.on_title_change = [this, &new_tab](auto& title) {
-        m_tab_widget->set_tab_title(new_tab, String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
+        m_tab_widget->set_tab_title(new_tab, String::from_byte_string(title).release_value_but_fixme_should_propagate_errors());
         if (m_tab_widget->active_widget() == &new_tab)
             set_window_title_for_tab(new_tab);
     };
@@ -582,7 +582,7 @@ Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activa
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    new_tab.on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
+    new_tab.on_get_cookie = [this](auto& url, auto source) -> ByteString {
         return m_cookie_jar.get_cookie(url, source);
     };
 
@@ -622,7 +622,7 @@ Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activa
 
 void BrowserWindow::create_new_window(URL const& url)
 {
-    GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv, Array { url.to_deprecated_string() });
+    GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv, Array { url.to_byte_string() });
 }
 
 void BrowserWindow::content_filters_changed()

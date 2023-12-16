@@ -44,7 +44,7 @@ void HTMLTableElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_t_bodies);
 }
 
-static unsigned parse_border(DeprecatedString const& value)
+static unsigned parse_border(ByteString const& value)
 {
     return value.to_uint().value_or(0);
 }

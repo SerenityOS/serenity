@@ -51,14 +51,14 @@ GUI::Dialog::ExecResult GoToOffsetDialog::show(GUI::Window* parent_window, int& 
 
 int GoToOffsetDialog::process_input()
 {
-    auto input_offset = String::from_deprecated_string(m_text_editor->text().trim_whitespace()).release_value_but_fixme_should_propagate_errors();
+    auto input_offset = String::from_byte_string(m_text_editor->text().trim_whitespace()).release_value_but_fixme_should_propagate_errors();
     int offset;
     auto type = m_offset_type_box->text().trim_whitespace();
     if (type == "Decimal") {
         offset = input_offset.to_number<int>().value_or(0);
     } else if (type == "Hexadecimal") {
         // FIXME: Find a better way of parsing hex to a number that doesn't require a zero terminated string
-        offset = strtol(input_offset.to_deprecated_string().characters(), nullptr, 16);
+        offset = strtol(input_offset.to_byte_string().characters(), nullptr, 16);
     } else {
         VERIFY_NOT_REACHED();
     }

@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    auto default_path = TRY(String::from_deprecated_string(Config::read_string("FontEditor"sv, "Defaults"sv, "Font"sv, {})));
+    auto default_path = TRY(String::from_byte_string(Config::read_string("FontEditor"sv, "Defaults"sv, "Font"sv, {})));
     auto path_to_load = path.is_empty() ? default_path : path;
     if (!path_to_load.is_empty()) {
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path_to_load);

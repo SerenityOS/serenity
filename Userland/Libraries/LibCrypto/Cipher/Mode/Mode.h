@@ -34,7 +34,7 @@ public:
     }
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const = 0;
+    virtual ByteString class_name() const = 0;
 #endif
 
     T& cipher()

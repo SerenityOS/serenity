@@ -16,7 +16,7 @@
 #include <LibVT/Position.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #    include <LibVT/Attribute.h>
 #    include <LibVT/Line.h>
 #else
@@ -435,8 +435,8 @@ protected:
     Attribute m_saved_attribute;
 
 #ifndef KERNEL
-    DeprecatedString m_current_window_title;
-    Vector<DeprecatedString> m_title_stack;
+    ByteString m_current_window_title;
+    Vector<ByteString> m_title_stack;
 #endif
 
 #ifndef KERNEL

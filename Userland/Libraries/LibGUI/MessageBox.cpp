@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<MessageBox>> MessageBox::create(Window* parent_window, Str
 {
     auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MessageBox(parent_window, type, input_type)));
     TRY(box->build());
-    box->set_title(TRY(String::from_utf8(title)).to_deprecated_string());
+    box->set_title(TRY(String::from_utf8(title)).to_byte_string());
     box->set_text(TRY(String::from_utf8(text)));
     auto size = box->main_widget()->effective_min_size();
     box->resize(TRY(size.width().shrink_value()), TRY(size.height().shrink_value()));

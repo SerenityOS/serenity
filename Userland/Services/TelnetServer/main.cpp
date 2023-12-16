@@ -5,7 +5,7 @@
  */
 
 #include "Client.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -20,7 +20,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-static void run_command(int ptm_fd, DeprecatedString command)
+static void run_command(int ptm_fd, ByteString command)
 {
     pid_t pid = fork();
     if (pid == 0) {

@@ -26,7 +26,7 @@ void ConnectionFromClient::die()
     exit(0);
 }
 
-void ConnectionFromClient::greet(DeprecatedString const& project_root)
+void ConnectionFromClient::greet(ByteString const& project_root)
 {
     m_filedb.set_project_root(project_root);
     if (unveil(project_root.characters(), "r") < 0) {
@@ -39,7 +39,7 @@ void ConnectionFromClient::greet(DeprecatedString const& project_root)
     }
 }
 
-void ConnectionFromClient::file_opened(DeprecatedString const& filename, IPC::File const& file)
+void ConnectionFromClient::file_opened(ByteString const& filename, IPC::File const& file)
 {
     if (m_filedb.is_open(filename)) {
         return;
@@ -48,7 +48,7 @@ void ConnectionFromClient::file_opened(DeprecatedString const& filename, IPC::Fi
     m_autocomplete_engine->file_opened(filename);
 }
 
-void ConnectionFromClient::file_edit_insert_text(DeprecatedString const& filename, DeprecatedString const& text, i32 start_line, i32 start_column)
+void ConnectionFromClient::file_edit_insert_text(ByteString const& filename, ByteString const& text, i32 start_line, i32 start_column)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "InsertText for file: {}", filename);
     dbgln_if(LANGUAGE_SERVER_DEBUG, "Text: {}", text);
@@ -57,7 +57,7 @@ void ConnectionFromClient::file_edit_insert_text(DeprecatedString const& filenam
     m_autocomplete_engine->on_edit(filename);
 }
 
-void ConnectionFromClient::file_edit_remove_text(DeprecatedString const& filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column)
+void ConnectionFromClient::file_edit_remove_text(ByteString const& filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "RemoveText for file: {}", filename);
     dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{} - {}:{}]", start_line, start_column, end_line, end_column);
@@ -80,7 +80,7 @@ void ConnectionFromClient::auto_complete_suggestions(CodeComprehension::ProjectL
     async_auto_complete_suggestions(move(suggestions));
 }
 
-void ConnectionFromClient::set_file_content(DeprecatedString const& filename, DeprecatedString const& content)
+void ConnectionFromClient::set_file_content(ByteString const& filename, ByteString const& content)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", filename);
     auto document = m_filedb.get_document(filename);
@@ -139,7 +139,7 @@ void ConnectionFromClient::get_parameters_hint(CodeComprehension::ProjectLocatio
     async_parameters_hint_result(params->params, params->current_index);
 }
 
-void ConnectionFromClient::get_tokens_info(DeprecatedString const& filename)
+void ConnectionFromClient::get_tokens_info(ByteString const& filename)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "GetTokenInfo: {}", filename);
     auto document = m_filedb.get_document(filename);

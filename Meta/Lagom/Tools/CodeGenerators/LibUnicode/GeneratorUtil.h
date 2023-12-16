@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
@@ -101,7 +101,7 @@ public:
     {
         generator.set("type"sv, type);
         generator.set("name"sv, name);
-        generator.set("size"sv, DeprecatedString::number(m_storage.size()));
+        generator.set("size"sv, ByteString::number(m_storage.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@ + 1> @name@ { {
@@ -113,10 +113,10 @@ static constexpr Array<@type@, @size@ + 1> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            if constexpr (IsSame<StorageType, DeprecatedString>)
-                generator.append(DeprecatedString::formatted("\"{}\"sv", value));
+            if constexpr (IsSame<StorageType, ByteString>)
+                generator.append(ByteString::formatted("\"{}\"sv", value));
             else
-                generator.append(DeprecatedString::formatted("{}", value));
+                generator.append(ByteString::formatted("{}", value));
 
             if (values_in_current_row == max_values_per_row) {
                 values_in_current_row = 0;
@@ -138,8 +138,8 @@ static constexpr Array<@type@, @size@ + 1> @name@ { {
         for (size_t i = 0; i < m_storage.size(); ++i) {
             auto const& list = m_storage[i];
 
-            generator.set("index"sv, DeprecatedString::number(i));
-            generator.set("size"sv, DeprecatedString::number(list.size()));
+            generator.set("index"sv, ByteString::number(i));
+            generator.set("size"sv, ByteString::number(list.size()));
 
             generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
@@ -147,14 +147,14 @@ static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
             bool first = true;
             for (auto const& value : list) {
                 generator.append(first ? " "sv : ", "sv);
-                generator.append(DeprecatedString::formatted("{}", value));
+                generator.append(ByteString::formatted("{}", value));
                 first = false;
             }
 
             generator.append(" } };");
         }
 
-        generator.set("size"sv, DeprecatedString::number(m_storage.size()));
+        generator.set("size"sv, ByteString::number(m_storage.size()));
 
         generator.append(R"~~~(
 
@@ -168,7 +168,7 @@ static constexpr Array<ReadonlySpan<@type@>, @size@ + 1> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.set("index"sv, DeprecatedString::number(i));
+            generator.set("index"sv, ByteString::number(i));
             generator.append("@name@@index@.span()");
 
             if (values_in_current_row == max_values_per_row) {
@@ -187,8 +187,8 @@ protected:
     HashMap<StorageType, size_t> m_storage_indices;
 };
 
-class UniqueStringStorage : public UniqueStorage<DeprecatedString> {
-    using Base = UniqueStorage<DeprecatedString>;
+class UniqueStringStorage : public UniqueStorage<ByteString> {
+    using Base = UniqueStorage<ByteString>;
 
 public:
     // The goal of the string table generator is to ensure the table is located within the read-only
@@ -204,7 +204,7 @@ public:
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.append(DeprecatedString::formatted("{:#x}", value));
+            generator.append(ByteString::formatted("{:#x}", value));
 
             if (values_in_current_row == max_values_per_row) {
                 values_in_current_row = 0;
@@ -224,7 +224,7 @@ public:
             next_index += string.length() + 2;
         }
 
-        generator.set("size", DeprecatedString::number(next_index));
+        generator.set("size", ByteString::number(next_index));
         generator.append(R"~~~(
 static constexpr Array<u8, @size@> s_encoded_strings { {
     )~~~");
@@ -242,7 +242,7 @@ static constexpr Array<u8, @size@> s_encoded_strings { {
 } };
 )~~~");
 
-        generator.set("size", DeprecatedString::number(string_indices.size()));
+        generator.set("size", ByteString::number(string_indices.size()));
         generator.append(R"~~~(
 static constexpr Array<u32, @size@> s_encoded_string_indices { {
     )~~~");
@@ -276,8 +276,8 @@ static constexpr StringView decode_string(size_t index)
 };
 
 struct Alias {
-    DeprecatedString name;
-    DeprecatedString alias;
+    ByteString name;
+    ByteString alias;
 };
 
 struct CanonicalLanguageID {
@@ -385,11 +385,11 @@ void generate_value_from_string(SourceGenerator& generator, StringView method_na
 {
     ensure_from_string_types_are_generated(generator);
 
-    generator.set("method_name", DeprecatedString::formatted(method_name_format, value_name));
+    generator.set("method_name", ByteString::formatted(method_name_format, value_name));
     generator.set("value_type", value_type);
     generator.set("value_name", value_name);
     generator.set("return_type", options.return_type.has_value() ? *options.return_type : value_type);
-    generator.set("size", DeprecatedString::number(hashes.size()));
+    generator.set("size", ByteString::number(hashes.size()));
 
     generator.append(R"~~~(
 Optional<@return_type@> @method_name@(StringView key)
@@ -408,11 +408,11 @@ Optional<@return_type@> @method_name@(StringView key)
             generator.append(" ");
 
         if constexpr (IsIntegral<ValueType>)
-            generator.set("value"sv, DeprecatedString::number(hashes.get(hash_key).value()));
+            generator.set("value"sv, ByteString::number(hashes.get(hash_key).value()));
         else
-            generator.set("value"sv, DeprecatedString::formatted("{}::{}", value_type, hashes.get(hash_key).value()));
+            generator.set("value"sv, ByteString::formatted("{}::{}", value_type, hashes.get(hash_key).value()));
 
-        generator.set("hash"sv, DeprecatedString::number(hash_key));
+        generator.set("hash"sv, ByteString::number(hash_key));
         generator.append("{ @hash@U, @value@ },"sv);
 
         if (values_in_current_row == max_values_per_row) {
@@ -421,7 +421,7 @@ Optional<@return_type@> @method_name@(StringView key)
         }
     }
 
-    generator.set("return_statement", DeprecatedString::formatted(options.return_format, "value->value"sv));
+    generator.set("return_statement", ByteString::formatted(options.return_format, "value->value"sv));
     generator.append(R"~~~(
     } };
 )~~~");
@@ -445,9 +445,9 @@ Optional<@return_type@> @method_name@(StringView key)
 }
 
 template<typename IdentifierFormatter>
-void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, ReadonlySpan<DeprecatedString> values)
+void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, ReadonlySpan<ByteString> values)
 {
-    generator.set("method_name", DeprecatedString::formatted(method_name_format, value_name));
+    generator.set("method_name", ByteString::formatted(method_name_format, value_name));
     generator.set("value_type", value_type);
     generator.set("value_name", value_name);
 
@@ -475,7 +475,7 @@ StringView @method_name@(@value_type@ @value_name@)
 }
 
 template<typename IdentifierFormatter>
-void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<DeprecatedString>& values, Vector<Alias> aliases = {})
+void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<ByteString>& values, Vector<Alias> aliases = {})
 {
     quick_sort(values, [](auto const& value1, auto const& value2) { return value1.to_lowercase() < value2.to_lowercase(); });
     quick_sort(aliases, [](auto const& alias1, auto const& alias2) { return alias1.alias.to_lowercase() < alias2.alias.to_lowercase(); });
@@ -514,20 +514,20 @@ template<typename LocalesType, typename IdentifierFormatter, typename ListFormat
 void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, IdentifierFormatter&& format_identifier, ListFormatter&& format_list)
 {
     auto format_mapping_name = [&](StringView format, StringView name) {
-        DeprecatedString mapping_name;
+        ByteString mapping_name;
 
         if constexpr (IsNullPointer<IdentifierFormatter>)
             mapping_name = name.replace("-"sv, "_"sv, ReplaceMode::All);
         else
             mapping_name = format_identifier(type, name);
 
-        return DeprecatedString::formatted(format, mapping_name.to_lowercase());
+        return ByteString::formatted(format, mapping_name.to_lowercase());
     };
 
-    Vector<DeprecatedString> mapping_names;
+    Vector<ByteString> mapping_names;
 
     for (auto const& locale : locales) {
-        DeprecatedString mapping_name;
+        ByteString mapping_name;
 
         if constexpr (requires { locale.key; }) {
             mapping_name = format_mapping_name(format, locale.key);
@@ -544,7 +544,7 @@ void generate_mapping(SourceGenerator& generator, LocalesType const& locales, St
 
     generator.set("type", type);
     generator.set("name", name);
-    generator.set("size", DeprecatedString::number(locales.size()));
+    generator.set("size", ByteString::number(locales.size()));
     generator.append(R"~~~(
 static constexpr Array<ReadonlySpan<@type@>, @size@> @name@ { {
     )~~~");
@@ -589,9 +589,9 @@ ReadonlySpan<StringView> @name@()
         first = false;
 
         if (auto it = aliases.find_if([&](auto const& alias) { return alias.alias == value; }); it != aliases.end())
-            generator.append(DeprecatedString::formatted("\"{}\"sv", it->name));
+            generator.append(ByteString::formatted("\"{}\"sv", it->name));
         else
-            generator.append(DeprecatedString::formatted("\"{}\"sv", value));
+            generator.append(ByteString::formatted("\"{}\"sv", value));
     }
 
     generator.append(R"~~~( };

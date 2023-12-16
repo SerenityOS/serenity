@@ -63,11 +63,11 @@ public:
 
     bool is_empty() const { return m_data.has<Empty>(); }
 
-    DeprecatedString debug_string() const
+    ByteString debug_string() const
     {
         if (is_error())
-            return DeprecatedString::formatted("{} at {}ms", error().string_literal(), timestamp().to_milliseconds());
-        return DeprecatedString::formatted("frame at {}ms", timestamp().to_milliseconds());
+            return ByteString::formatted("{} at {}ms", error().string_literal(), timestamp().to_milliseconds());
+        return ByteString::formatted("frame at {}ms", timestamp().to_milliseconds());
     }
 
 private:

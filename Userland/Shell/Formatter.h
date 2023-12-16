@@ -8,7 +8,7 @@
 
 #include "AST.h"
 #include "NodeVisitor.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -43,7 +43,7 @@ public:
     {
     }
 
-    DeprecatedString format();
+    ByteString format();
     size_t cursor() const { return m_output_cursor; }
 
 private:
@@ -99,7 +99,7 @@ private:
 
     ALWAYS_INLINE void with_added_indent(int indent, Function<void()>);
     ALWAYS_INLINE void in_new_block(Function<void()>);
-    ALWAYS_INLINE DeprecatedString in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
+    ALWAYS_INLINE ByteString in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
 
     StringBuilder& current_builder() { return m_builders.last(); }
 
@@ -125,7 +125,7 @@ private:
     const AST::Node* m_last_visited_node { nullptr };
 
     StringView m_trivia;
-    Vector<DeprecatedString> m_heredocs_to_append_after_sequence;
+    Vector<ByteString> m_heredocs_to_append_after_sequence;
 
     bool m_parse_as_posix { false };
 };

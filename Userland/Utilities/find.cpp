@@ -62,7 +62,7 @@ struct FileData {
     // File type as returned from readdir(), or DT_UNKNOWN.
     unsigned char d_type { DT_UNKNOWN };
 
-    DeprecatedString full_path() const
+    ByteString full_path() const
     {
         if (root_path.is_empty())
             return relative_path.string();
@@ -73,9 +73,9 @@ struct FileData {
         // POSIX says that a single slash should be added between the root path and the relative portion if the root path doesn't end in one
         // any additional trailing slashes should be left unaltered.
         if (root_path.ends_with('/'))
-            return DeprecatedString::formatted("{}{}", root_path, relative_path.string());
+            return ByteString::formatted("{}{}", root_path, relative_path.string());
 
-        return DeprecatedString::formatted("{}/{}", root_path, relative_path.string());
+        return ByteString::formatted("{}/{}", root_path, relative_path.string());
     }
 
     const struct stat* ensure_stat()
@@ -579,7 +579,7 @@ private:
             auto full_path_or_error = FileSystem::real_path(file_data.full_path());
             if (!full_path_or_error.is_error()) {
                 auto fullpath = full_path_or_error.release_value();
-                auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string());
+                auto url = URL::create_with_file_scheme(fullpath.to_byte_string());
                 out("\033]8;;{}\033\\{}{}\033]8;;\033\\", url.serialize(), file_data.full_path(), m_terminator);
                 printed = true;
             }
@@ -611,7 +611,7 @@ private:
     virtual bool evaluate(FileData& file_data) const override
     {
         // Replace any occurrences of "{}" with the path.
-        Vector<DeprecatedString> full_paths;
+        Vector<ByteString> full_paths;
         Vector<char*> argv = m_argv;
         for (auto& arg : argv) {
             if (StringView { arg, strlen(arg) } == "{}") {
@@ -1030,8 +1030,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto& path : paths) {
         LexicalPath lexical_path { path };
-        DeprecatedString dirname = lexical_path.dirname();
-        DeprecatedString basename = lexical_path.basename();
+        ByteString dirname = lexical_path.dirname();
+        ByteString basename = lexical_path.basename();
 
         int dirfd = TRY(Core::System::open(dirname, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
 

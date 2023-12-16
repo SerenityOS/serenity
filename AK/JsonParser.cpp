@@ -31,7 +31,7 @@ constexpr bool is_space(int ch)
 //                             │                       │
 //                             ╰─── u[0-9A-Za-z]{4}  ──╯
 //
-ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
+ErrorOr<ByteString> JsonParser::consume_and_unescape_string()
 {
     if (!consume_specific('"'))
         return Error::from_string_literal("JsonParser: Expected '\"'");
@@ -128,7 +128,7 @@ ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
         }
     }
 
-    return final_sb.to_deprecated_string();
+    return final_sb.to_byte_string();
 }
 
 ErrorOr<JsonValue> JsonParser::parse_object()

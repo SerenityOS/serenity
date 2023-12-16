@@ -15,7 +15,7 @@
 
 namespace Core {
 
-ErrorOr<DeprecatedString> Group::generate_group_file() const
+ErrorOr<ByteString> Group::generate_group_file() const
 {
     StringBuilder builder;
     char buffer[1024] = { 0 };
@@ -29,19 +29,19 @@ ErrorOr<DeprecatedString> Group::generate_group_file() const
             break;
 
         if (group->gr_name == m_name)
-            builder.appendff("{}:x:{}:{}\n", m_name, m_id, DeprecatedString::join(',', m_members));
+            builder.appendff("{}:x:{}:{}\n", m_name, m_id, ByteString::join(',', m_members));
         else {
-            Vector<DeprecatedString> members;
+            Vector<ByteString> members;
             if (group->gr_mem) {
                 for (size_t i = 0; group->gr_mem[i]; ++i)
                     members.append(group->gr_mem[i]);
             }
 
-            builder.appendff("{}:x:{}:{}\n", group->gr_name, group->gr_gid, DeprecatedString::join(',', members));
+            builder.appendff("{}:x:{}:{}\n", group->gr_name, group->gr_gid, ByteString::join(',', members));
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 ErrorOr<void> Group::sync()
@@ -74,7 +74,7 @@ ErrorOr<void> Group::add_group(Group& group)
         return Error::from_string_literal("Group name can not be empty.");
 
     // A quick sanity check on group name
-    if (group.name().find_any_of("\\/!@#$%^&*()~+=`:\n"sv, DeprecatedString::SearchDirection::Forward).has_value())
+    if (group.name().find_any_of("\\/!@#$%^&*()~+=`:\n"sv, ByteString::SearchDirection::Forward).has_value())
         return Error::from_string_literal("Group name has invalid characters.");
 
     // Disallow names starting with '_', '-' or other non-alpha characters.
@@ -129,7 +129,7 @@ ErrorOr<Vector<Group>> Group::all()
         if (!group.has_value())
             break;
 
-        Vector<DeprecatedString> members;
+        Vector<ByteString> members;
         if (group->gr_mem) {
             for (size_t i = 0; group->gr_mem[i]; ++i)
                 members.append(group->gr_mem[i]);
@@ -141,7 +141,7 @@ ErrorOr<Vector<Group>> Group::all()
     return groups;
 }
 
-Group::Group(DeprecatedString name, gid_t id, Vector<DeprecatedString> members)
+Group::Group(ByteString name, gid_t id, Vector<ByteString> members)
     : m_name(move(name))
     , m_id(id)
     , m_members(move(members))

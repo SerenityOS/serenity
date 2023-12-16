@@ -66,7 +66,7 @@ Heap::Heap(VM& vm)
 Heap::~Heap()
 {
     vm().string_cache().clear();
-    vm().deprecated_string_cache().clear();
+    vm().byte_string_cache().clear();
     collect_garbage(CollectionType::CollectEverything);
 }
 
@@ -198,7 +198,7 @@ public:
         for (auto& it : m_graph) {
             AK::JsonArray edges;
             for (auto const& value : it.value.edges) {
-                edges.must_append(DeprecatedString::formatted("{}", value));
+                edges.must_append(ByteString::formatted("{}", value));
             }
 
             auto node = AK::JsonObject();
@@ -207,7 +207,7 @@ public:
                 auto location = it.value.root_origin->location;
                 switch (type) {
                 case HeapRoot::Type::Handle:
-                    node.set("root"sv, DeprecatedString::formatted("Handle {} {}:{}", location->function_name(), location->filename(), location->line_number()));
+                    node.set("root"sv, ByteString::formatted("Handle {} {}:{}", location->function_name(), location->filename(), location->line_number()));
                     break;
                 case HeapRoot::Type::MarkedVector:
                     node.set("root"sv, "MarkedVector");
@@ -222,7 +222,7 @@ public:
                     node.set("root"sv, "VM");
                     break;
                 case HeapRoot::Type::SafeFunction:
-                    node.set("root"sv, DeprecatedString::formatted("SafeFunction {} {}:{}", location->function_name(), location->filename(), location->line_number()));
+                    node.set("root"sv, ByteString::formatted("SafeFunction {} {}:{}", location->function_name(), location->filename(), location->line_number()));
                     break;
                 default:
                     VERIFY_NOT_REACHED();
@@ -230,7 +230,7 @@ public:
             }
             node.set("class_name"sv, it.value.class_name);
             node.set("edges"sv, edges);
-            graph.set(DeprecatedString::number(it.key), node);
+            graph.set(ByteString::number(it.key), node);
         }
 
         return graph;

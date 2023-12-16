@@ -117,7 +117,7 @@ public:
     virtual PromiseCapability& load_requested_modules(GCPtr<GraphLoadingState::HostDefined>) = 0;
 
 protected:
-    Module(Realm&, DeprecatedString filename, Script::HostDefined* host_defined = nullptr);
+    Module(Realm&, ByteString filename, Script::HostDefined* host_defined = nullptr);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -140,7 +140,7 @@ private:
     Script::HostDefined* m_host_defined { nullptr }; // [[HostDefined]]
 
     // Needed for potential lookups of modules.
-    DeprecatedString m_filename;
+    ByteString m_filename;
 };
 
 class CyclicModule;

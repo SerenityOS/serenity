@@ -8,7 +8,7 @@
 #include "HackStudio.h"
 #include "ProjectDeclarations.h"
 #include "ToDoEntries.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 #include <LibGUI/Notification.h>
 
@@ -32,7 +32,7 @@ void ConnectionToServer::declaration_location(CodeComprehension::ProjectLocation
     m_current_language_client->declaration_found(location.file, location.line, location.column);
 }
 
-void ConnectionToServer::parameters_hint_result(Vector<DeprecatedString> const& params, int argument_index)
+void ConnectionToServer::parameters_hint_result(Vector<ByteString> const& params, int argument_index)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -60,35 +60,35 @@ void ConnectionToServer::die()
     m_wrapper->on_crash();
 }
 
-void LanguageClient::open_file(DeprecatedString const& path, int fd)
+void LanguageClient::open_file(ByteString const& path, int fd)
 {
     if (!m_connection_wrapper.connection())
         return;
     m_connection_wrapper.connection()->async_file_opened(path, fd);
 }
 
-void LanguageClient::set_file_content(DeprecatedString const& path, DeprecatedString const& content)
+void LanguageClient::set_file_content(ByteString const& path, ByteString const& content)
 {
     if (!m_connection_wrapper.connection())
         return;
     m_connection_wrapper.connection()->async_set_file_content(path, content);
 }
 
-void LanguageClient::insert_text(DeprecatedString const& path, DeprecatedString const& text, size_t line, size_t column)
+void LanguageClient::insert_text(ByteString const& path, ByteString const& text, size_t line, size_t column)
 {
     if (!m_connection_wrapper.connection())
         return;
     m_connection_wrapper.connection()->async_file_edit_insert_text(path, text, line, column);
 }
 
-void LanguageClient::remove_text(DeprecatedString const& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column)
+void LanguageClient::remove_text(ByteString const& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column)
 {
     if (!m_connection_wrapper.connection())
         return;
     m_connection_wrapper.connection()->async_file_edit_remove_text(path, from_line, from_column, to_line, to_column);
 }
 
-void LanguageClient::request_autocomplete(DeprecatedString const& path, size_t cursor_line, size_t cursor_column)
+void LanguageClient::request_autocomplete(ByteString const& path, size_t cursor_line, size_t cursor_column)
 {
     if (!m_connection_wrapper.connection())
         return;
@@ -118,19 +118,19 @@ bool LanguageClient::is_active_client() const
     return m_connection_wrapper.connection()->active_client() == this;
 }
 
-HashMap<DeprecatedString, NonnullOwnPtr<ConnectionToServerWrapper>> ConnectionToServerInstances::s_instance_for_language;
+HashMap<ByteString, NonnullOwnPtr<ConnectionToServerWrapper>> ConnectionToServerInstances::s_instance_for_language;
 
-void ConnectionToServer::declarations_in_document(DeprecatedString const& filename, Vector<CodeComprehension::Declaration> const& declarations)
+void ConnectionToServer::declarations_in_document(ByteString const& filename, Vector<CodeComprehension::Declaration> const& declarations)
 {
     ProjectDeclarations::the().set_declared_symbols(filename, declarations);
 }
 
-void ConnectionToServer::todo_entries_in_document(DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry> const& todo_entries)
+void ConnectionToServer::todo_entries_in_document(ByteString const& filename, Vector<CodeComprehension::TodoEntry> const& todo_entries)
 {
     ToDoEntries::the().set_entries(filename, move(todo_entries));
 }
 
-void LanguageClient::search_declaration(DeprecatedString const& path, size_t line, size_t column)
+void LanguageClient::search_declaration(ByteString const& path, size_t line, size_t column)
 {
     if (!m_connection_wrapper.connection())
         return;
@@ -138,7 +138,7 @@ void LanguageClient::search_declaration(DeprecatedString const& path, size_t lin
     m_connection_wrapper.connection()->async_find_declaration(CodeComprehension::ProjectLocation { path, line, column });
 }
 
-void LanguageClient::get_parameters_hint(DeprecatedString const& path, size_t line, size_t column)
+void LanguageClient::get_parameters_hint(ByteString const& path, size_t line, size_t column)
 {
     if (!m_connection_wrapper.connection())
         return;
@@ -146,7 +146,7 @@ void LanguageClient::get_parameters_hint(DeprecatedString const& path, size_t li
     m_connection_wrapper.connection()->async_get_parameters_hint(CodeComprehension::ProjectLocation { path, line, column });
 }
 
-void LanguageClient::get_tokens_info(DeprecatedString const& filename)
+void LanguageClient::get_tokens_info(ByteString const& filename)
 {
     if (!m_connection_wrapper.connection())
         return;
@@ -154,7 +154,7 @@ void LanguageClient::get_tokens_info(DeprecatedString const& filename)
     m_connection_wrapper.connection()->async_get_tokens_info(filename);
 }
 
-void LanguageClient::declaration_found(DeprecatedString const& file, size_t line, size_t column) const
+void LanguageClient::declaration_found(ByteString const& file, size_t line, size_t column) const
 {
     if (!on_declaration_found) {
         dbgln("on_declaration_found callback is not set");
@@ -163,7 +163,7 @@ void LanguageClient::declaration_found(DeprecatedString const& file, size_t line
     on_declaration_found(file, line, column);
 }
 
-void LanguageClient::parameters_hint_result(Vector<DeprecatedString> const& params, size_t argument_index) const
+void LanguageClient::parameters_hint_result(Vector<ByteString> const& params, size_t argument_index) const
 {
     if (!on_function_parameters_hint_result) {
         dbgln("on_function_parameters_hint_result callback is not set");
@@ -172,17 +172,17 @@ void LanguageClient::parameters_hint_result(Vector<DeprecatedString> const& para
     on_function_parameters_hint_result(params, argument_index);
 }
 
-void ConnectionToServerInstances::set_instance_for_language(DeprecatedString const& language_name, NonnullOwnPtr<ConnectionToServerWrapper>&& connection_wrapper)
+void ConnectionToServerInstances::set_instance_for_language(ByteString const& language_name, NonnullOwnPtr<ConnectionToServerWrapper>&& connection_wrapper)
 {
     s_instance_for_language.set(language_name, move(connection_wrapper));
 }
 
-void ConnectionToServerInstances::remove_instance_for_language(DeprecatedString const& language_name)
+void ConnectionToServerInstances::remove_instance_for_language(ByteString const& language_name)
 {
     s_instance_for_language.remove(language_name);
 }
 
-ConnectionToServerWrapper* ConnectionToServerInstances::get_instance_wrapper(DeprecatedString const& language_name)
+ConnectionToServerWrapper* ConnectionToServerInstances::get_instance_wrapper(ByteString const& language_name)
 {
     if (auto instance = s_instance_for_language.get(language_name); instance.has_value()) {
         return const_cast<ConnectionToServerWrapper*>(instance.value());
@@ -225,7 +225,7 @@ void ConnectionToServerWrapper::show_crash_notification() const
     notification->show();
 }
 
-ConnectionToServerWrapper::ConnectionToServerWrapper(DeprecatedString const& language_name, Function<NonnullRefPtr<ConnectionToServer>()> connection_creator)
+ConnectionToServerWrapper::ConnectionToServerWrapper(ByteString const& language_name, Function<NonnullRefPtr<ConnectionToServer>()> connection_creator)
     : m_language(Syntax::language_from_name(language_name).value())
     , m_connection_creator(move(connection_creator))
 {

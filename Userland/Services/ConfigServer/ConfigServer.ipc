@@ -1,22 +1,22 @@
 endpoint ConfigServer
 {
-    pledge_domains(Vector<DeprecatedString> domains) =|
+    pledge_domains(Vector<ByteString> domains) =|
 
-    monitor_domain(DeprecatedString domain) =|
+    monitor_domain(ByteString domain) =|
 
-    list_config_groups(DeprecatedString domain) => (Vector<DeprecatedString> groups)
-    list_config_keys(DeprecatedString domain, DeprecatedString group) => (Vector<DeprecatedString> keys)
+    list_config_groups(ByteString domain) => (Vector<ByteString> groups)
+    list_config_keys(ByteString domain, ByteString group) => (Vector<ByteString> keys)
 
-    read_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<DeprecatedString> value)
-    read_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<i32> value)
-    read_u32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<u32> value)
-    read_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<bool> value)
+    read_string_value(ByteString domain, ByteString group, ByteString key) => (Optional<ByteString> value)
+    read_i32_value(ByteString domain, ByteString group, ByteString key) => (Optional<i32> value)
+    read_u32_value(ByteString domain, ByteString group, ByteString key) => (Optional<u32> value)
+    read_bool_value(ByteString domain, ByteString group, ByteString key) => (Optional<bool> value)
 
-    write_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, DeprecatedString value) => ()
-    write_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, i32 value) => ()
-    write_u32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, u32 value) => ()
-    write_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, bool value)  => ()
-    remove_key_entry(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => ()
-    remove_group_entry(DeprecatedString domain, DeprecatedString group) => ()
-    add_group_entry(DeprecatedString domain, DeprecatedString group)  => ()
+    write_string_value(ByteString domain, ByteString group, ByteString key, ByteString value) => ()
+    write_i32_value(ByteString domain, ByteString group, ByteString key, i32 value) => ()
+    write_u32_value(ByteString domain, ByteString group, ByteString key, u32 value) => ()
+    write_bool_value(ByteString domain, ByteString group, ByteString key, bool value)  => ()
+    remove_key_entry(ByteString domain, ByteString group, ByteString key) => ()
+    remove_group_entry(ByteString domain, ByteString group) => ()
+    add_group_entry(ByteString domain, ByteString group)  => ()
 }

@@ -103,7 +103,7 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
         else if (name.is_one_of("browserName"sv, "browserVersion"sv, "platformName"sv)) {
             // If value is not a string return an error with error code invalid argument. Otherwise, let deserialized be set to value.
             if (!value.is_string())
-                return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Capability {} must be a string", name));
+                return Error::from_code(ErrorCode::InvalidArgument, ByteString::formatted("Capability {} must be a string", name));
             deserialized = value;
         }
 
@@ -149,7 +149,7 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
         // -> The remote end is an endpoint node
         else {
             // Return an error with error code invalid argument.
-            return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Unrecognized capability: {}", name));
+            return Error::from_code(ErrorCode::InvalidArgument, ByteString::formatted("Unrecognized capability: {}", name));
         }
 
         // d. If deserialized is not null, set a property on result with name name and value deserialized.
@@ -192,7 +192,7 @@ static ErrorOr<JsonObject, Error> merge_capabilities(JsonObject const& primary, 
 
         // d. If primary value is not undefined, return an error with error code invalid argument.
         if (primary_value.has_value())
-            return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Unable to merge capability {}", name));
+            return Error::from_code(ErrorCode::InvalidArgument, ByteString::formatted("Unable to merge capability {}", name));
 
         // e. Set a property on result with name name and value value.
         result.set(name, value);
@@ -267,20 +267,20 @@ static JsonValue match_capabilities(JsonObject const& capabilities)
         // -> "browserName"
         if (name == "browserName"sv) {
             // If value is not a string equal to the "browserName" entry in matched capabilities, return success with data null.
-            if (value.as_string() != matched_capabilities.get_deprecated_string(name).value())
+            if (value.as_string() != matched_capabilities.get_byte_string(name).value())
                 return AK::Error::from_string_view("browserName"sv);
         }
         // -> "browserVersion"
         else if (name == "browserVersion"sv) {
             // Compare value to the "browserVersion" entry in matched capabilities using an implementation-defined comparison algorithm. The comparison is to accept a value that places constraints on the version using the "<", "<=", ">", and ">=" operators.
             // If the two values do not match, return success with data null.
-            if (!matches_browser_version(value.as_string(), matched_capabilities.get_deprecated_string(name).value()))
+            if (!matches_browser_version(value.as_string(), matched_capabilities.get_byte_string(name).value()))
                 return AK::Error::from_string_view("browserVersion"sv);
         }
         // -> "platformName"
         else if (name == "platformName"sv) {
             // If value is not a string equal to the "platformName" entry in matched capabilities, return success with data null.
-            if (!matches_platform_name(value.as_string(), matched_capabilities.get_deprecated_string(name).value()))
+            if (!matches_platform_name(value.as_string(), matched_capabilities.get_byte_string(name).value()))
                 return AK::Error::from_string_view("platformName"sv);
         }
         // -> "acceptInsecureCerts"

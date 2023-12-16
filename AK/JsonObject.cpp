@@ -109,7 +109,7 @@ Optional<bool> JsonObject::get_bool(StringView key) const
 }
 
 #if !defined(KERNEL)
-Optional<DeprecatedString> JsonObject::get_deprecated_string(StringView key) const
+Optional<ByteString> JsonObject::get_byte_string(StringView key) const
 {
     auto maybe_value = get(key);
     if (maybe_value.has_value() && maybe_value->is_string())
@@ -249,7 +249,7 @@ bool JsonObject::has_double(StringView key) const
 }
 #endif
 
-void JsonObject::set(DeprecatedString const& key, JsonValue value)
+void JsonObject::set(ByteString const& key, JsonValue value)
 {
     m_members.set(key, move(value));
 }
@@ -259,7 +259,7 @@ bool JsonObject::remove(StringView key)
     return m_members.remove(key);
 }
 
-DeprecatedString JsonObject::to_deprecated_string() const
+ByteString JsonObject::to_byte_string() const
 {
     return serialized<StringBuilder>();
 }

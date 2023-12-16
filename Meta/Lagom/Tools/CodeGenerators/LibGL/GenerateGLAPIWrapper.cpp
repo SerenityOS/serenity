@@ -5,7 +5,7 @@
  */
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/JsonObject.h>
 #include <AK/NumericLimits.h>
 #include <AK/Optional.h>
@@ -18,40 +18,40 @@
 #include <LibMain/Main.h>
 
 struct ArgumentDefinition {
-    Optional<DeprecatedString> name;
-    Optional<DeprecatedString> cpp_type;
-    DeprecatedString expression;
-    Optional<DeprecatedString> cast_to;
+    Optional<ByteString> name;
+    Optional<ByteString> cpp_type;
+    ByteString expression;
+    Optional<ByteString> cast_to;
 };
 
 struct FunctionDefinition {
-    DeprecatedString name;
-    DeprecatedString return_type;
+    ByteString name;
+    ByteString return_type;
     Vector<ArgumentDefinition> arguments;
-    DeprecatedString implementation;
+    ByteString implementation;
     bool unimplemented;
-    DeprecatedString variant_gl_type;
+    ByteString variant_gl_type;
 };
 
 struct VariantType {
-    DeprecatedString encoded_type;
-    Optional<DeprecatedString> implementation;
+    ByteString encoded_type;
+    Optional<ByteString> implementation;
     bool unimplemented;
 };
 
 struct Variants {
-    Vector<DeprecatedString> api_suffixes { "" };
+    Vector<ByteString> api_suffixes { "" };
     Vector<u32> argument_counts { NumericLimits<u32>::max() };
-    Vector<DeprecatedString> argument_defaults { "" };
+    Vector<ByteString> argument_defaults { "" };
     bool convert_range { false };
     Vector<VariantType> types {
         {
             .encoded_type = "",
-            .implementation = Optional<DeprecatedString> {},
+            .implementation = Optional<ByteString> {},
             .unimplemented = false,
         }
     };
-    DeprecatedString pointer_argument { "" };
+    ByteString pointer_argument { "" };
 };
 
 struct EncodedTypeEntry {
@@ -76,18 +76,18 @@ constexpr static Array<EncodedTypeEntry, 9> type_definitions = {
 
 struct EncodedType {
     EncodedTypeEntry type_entry;
-    DeprecatedString cpp_type;
-    DeprecatedString function_name_suffix;
+    ByteString cpp_type;
+    ByteString function_name_suffix;
     bool is_pointer;
     bool is_const_pointer;
 };
 
-Vector<DeprecatedString> get_name_list(Optional<JsonValue const&> name_definition)
+Vector<ByteString> get_name_list(Optional<JsonValue const&> name_definition)
 {
     if (!name_definition.has_value() || name_definition->is_null())
         return {};
 
-    Vector<DeprecatedString, 1> names;
+    Vector<ByteString, 1> names;
     if (name_definition->is_string()) {
         names.append(name_definition->as_string());
     } else if (name_definition->is_array()) {
@@ -101,12 +101,12 @@ Vector<DeprecatedString> get_name_list(Optional<JsonValue const&> name_definitio
     return names;
 }
 
-Optional<EncodedType> get_encoded_type(DeprecatedString encoded_type)
+Optional<EncodedType> get_encoded_type(ByteString encoded_type)
 {
     bool is_const_pointer = !encoded_type.ends_with('!');
     if (!is_const_pointer)
         encoded_type = encoded_type.substring_view(0, encoded_type.length() - 1);
-    DeprecatedString function_name_suffix = encoded_type;
+    ByteString function_name_suffix = encoded_type;
 
     bool is_pointer = encoded_type.ends_with('v');
     if (is_pointer)
@@ -127,7 +127,7 @@ Optional<EncodedType> get_encoded_type(DeprecatedString encoded_type)
 
     return EncodedType {
         .type_entry = type_definition.value(),
-        .cpp_type = DeprecatedString::formatted(
+        .cpp_type = ByteString::formatted(
             "{}{}{}",
             type_definition->cpp_type,
             is_pointer && is_const_pointer ? " const" : "",
@@ -138,7 +138,7 @@ Optional<EncodedType> get_encoded_type(DeprecatedString encoded_type)
     };
 }
 
-DeprecatedString wrap_expression_in_range_conversion(DeprecatedString source_type, DeprecatedString target_type, DeprecatedString expression)
+ByteString wrap_expression_in_range_conversion(ByteString source_type, ByteString target_type, ByteString expression)
 {
     VERIFY(target_type == "GLfloat" || target_type == "GLdouble");
 
@@ -147,19 +147,19 @@ DeprecatedString wrap_expression_in_range_conversion(DeprecatedString source_typ
         return expression;
 
     if (source_type == "GLbyte")
-        return DeprecatedString::formatted("({} + 128.) / 127.5 - 1.", expression);
+        return ByteString::formatted("({} + 128.) / 127.5 - 1.", expression);
     else if (source_type == "GLfloat")
-        return DeprecatedString::formatted("static_cast<GLdouble>({})", expression);
+        return ByteString::formatted("static_cast<GLdouble>({})", expression);
     else if (source_type == "GLint")
-        return DeprecatedString::formatted("({} + 2147483648.) / 2147483647.5 - 1.", expression);
+        return ByteString::formatted("({} + 2147483648.) / 2147483647.5 - 1.", expression);
     else if (source_type == "GLshort")
-        return DeprecatedString::formatted("({} + 32768.) / 32767.5 - 1.", expression);
+        return ByteString::formatted("({} + 32768.) / 32767.5 - 1.", expression);
     else if (source_type == "GLubyte")
-        return DeprecatedString::formatted("{} / 255.", expression);
+        return ByteString::formatted("{} / 255.", expression);
     else if (source_type == "GLuint")
-        return DeprecatedString::formatted("{} / 4294967296.", expression);
+        return ByteString::formatted("{} / 4294967296.", expression);
     else if (source_type == "GLushort")
-        return DeprecatedString::formatted("{} / 65536.", expression);
+        return ByteString::formatted("{} / 65536.", expression);
     VERIFY_NOT_REACHED();
 }
 
@@ -189,7 +189,7 @@ Variants read_variants_settings(JsonObject const& variants_obj)
         });
     }
     if (variants_obj.has_string("pointer_argument"sv)) {
-        variants.pointer_argument = variants_obj.get_deprecated_string("pointer_argument"sv).value();
+        variants.pointer_argument = variants_obj.get_byte_string("pointer_argument"sv).value();
     }
     if (variants_obj.has_object("types"sv)) {
         variants.types.clear_with_capacity();
@@ -197,7 +197,7 @@ Variants read_variants_settings(JsonObject const& variants_obj)
             auto const& type = type_value.as_object();
             variants.types.append(VariantType {
                 .encoded_type = key,
-                .implementation = type.get_deprecated_string("implementation"sv),
+                .implementation = type.get_byte_string("implementation"sv),
                 .unimplemented = type.get_bool("unimplemented"sv).value_or(false),
             });
         });
@@ -223,20 +223,20 @@ Vector<ArgumentDefinition> copy_arguments_for_variant(Vector<ArgumentDefinition>
 
         // Pointer argument
         if (encoded_type.is_pointer) {
-            variant_arguments[i].name = (variadic_index == 0) ? variants.pointer_argument : Optional<DeprecatedString> {};
+            variant_arguments[i].name = (variadic_index == 0) ? variants.pointer_argument : Optional<ByteString> {};
 
             if (variadic_index >= argument_count) {
                 // If this variable argument is past the argument count, fall back to the defaults
                 variant_arguments[i].expression = variants.argument_defaults[variadic_index];
-                variant_arguments[i].cast_to = Optional<DeprecatedString> {};
+                variant_arguments[i].cast_to = Optional<ByteString> {};
 
             } else if (argument_count == 1 && variants.argument_counts.size() == 1) {
                 // Otherwise, if the pointer is the only variadic argument, pass it through unchanged
-                variant_arguments[i].cast_to = Optional<DeprecatedString> {};
+                variant_arguments[i].cast_to = Optional<ByteString> {};
 
             } else {
                 // Otherwise, index into the pointer argument
-                auto indexed_expression = DeprecatedString::formatted("{}[{}]", variants.pointer_argument, variadic_index);
+                auto indexed_expression = ByteString::formatted("{}[{}]", variants.pointer_argument, variadic_index);
                 if (variants.convert_range && cast_to.has_value())
                     indexed_expression = wrap_expression_in_range_conversion(base_cpp_type, cast_to.value(), indexed_expression);
                 variant_arguments[i].expression = indexed_expression;
@@ -246,9 +246,9 @@ Vector<ArgumentDefinition> copy_arguments_for_variant(Vector<ArgumentDefinition>
             // Regular argument
             if (variadic_index >= argument_count) {
                 // If the variable argument is past the argument count, fall back to the defaults
-                variant_arguments[i].name = Optional<DeprecatedString> {};
+                variant_arguments[i].name = Optional<ByteString> {};
                 variant_arguments[i].expression = variants.argument_defaults[variadic_index];
-                variant_arguments[i].cast_to = Optional<DeprecatedString> {};
+                variant_arguments[i].cast_to = Optional<ByteString> {};
 
             } else if (variants.convert_range && cast_to.has_value()) {
                 // Otherwise, if we need to convert the input values, wrap the expression in a range conversion
@@ -261,7 +261,7 @@ Vector<ArgumentDefinition> copy_arguments_for_variant(Vector<ArgumentDefinition>
 
         // Determine if we can skip casting to the target type
         if (cast_to == base_cpp_type || (variants.convert_range && cast_to == "GLdouble"))
-            variant_arguments[i].cast_to = Optional<DeprecatedString> {};
+            variant_arguments[i].cast_to = Optional<ByteString> {};
 
         variadic_index++;
     }
@@ -269,7 +269,7 @@ Vector<ArgumentDefinition> copy_arguments_for_variant(Vector<ArgumentDefinition>
     return variant_arguments;
 }
 
-Vector<FunctionDefinition> create_function_definitions(DeprecatedString function_name, JsonObject const& function_definition)
+Vector<FunctionDefinition> create_function_definitions(ByteString function_name, JsonObject const& function_definition)
 {
     // A single function definition can expand to multiple generated functions by way of:
     //   - differing API suffices (ARB, EXT, etc.);
@@ -284,17 +284,17 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
         VERIFY(argument_value.is_object());
         auto const& argument = argument_value.as_object();
 
-        auto type = argument.get_deprecated_string("type"sv);
+        auto type = argument.get_byte_string("type"sv);
         auto argument_names = get_name_list(argument.get("name"sv));
-        auto expression = argument.get_deprecated_string("expression"sv).value_or("@argument_name@");
-        auto cast_to = argument.get_deprecated_string("cast_to"sv);
+        auto expression = argument.get_byte_string("expression"sv).value_or("@argument_name@");
+        auto cast_to = argument.get_byte_string("cast_to"sv);
 
         // Add an empty dummy name when all we have is an expression
         if (argument_names.is_empty() && !expression.is_empty())
             argument_names.append("");
 
         for (auto const& argument_name : argument_names) {
-            argument_definitions.append({ .name = argument_name.is_empty() ? Optional<DeprecatedString> {} : argument_name,
+            argument_definitions.append({ .name = argument_name.is_empty() ? Optional<ByteString> {} : argument_name,
                 .cpp_type = type,
                 .expression = expression,
                 .cast_to = cast_to });
@@ -304,8 +304,8 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
     // Create functions for each name and/or variant
     Vector<FunctionDefinition> functions;
 
-    auto return_type = function_definition.get_deprecated_string("return_type"sv).value_or("void");
-    auto function_implementation = function_definition.get_deprecated_string("implementation"sv).value_or(function_name.to_snakecase());
+    auto return_type = function_definition.get_byte_string("return_type"sv).value_or("void");
+    auto function_implementation = function_definition.get_byte_string("implementation"sv).value_or(function_name.to_snakecase());
     auto function_unimplemented = function_definition.get_bool("unimplemented"sv).value_or(false);
 
     if (!function_definition.has("variants"sv)) {
@@ -336,10 +336,10 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
 
             for (auto const& api_suffix : variants.api_suffixes) {
                 functions.append({
-                    .name = DeprecatedString::formatted(
+                    .name = ByteString::formatted(
                         "{}{}{}{}",
                         function_name,
-                        variants.argument_counts.size() > 1 ? DeprecatedString::formatted("{}", argument_count) : "",
+                        variants.argument_counts.size() > 1 ? ByteString::formatted("{}", argument_count) : "",
                         encoded_type.has_value() && variants.types.size() > 1 ? encoded_type->function_name_suffix : "",
                         api_suffix),
                     .return_type = return_type,

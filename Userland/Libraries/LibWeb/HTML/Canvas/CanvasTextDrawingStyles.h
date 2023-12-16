@@ -20,7 +20,7 @@ class CanvasTextDrawingStyles {
 public:
     ~CanvasTextDrawingStyles() = default;
 
-    DeprecatedString font() const
+    ByteString font() const
     {
         // When font style value is empty return default string
         if (!my_drawing_state().font_style_value) {
@@ -33,7 +33,7 @@ public:
         auto font_weight = font_style_value.longhand(CSS::PropertyID::FontWeight);
         auto font_size = font_style_value.longhand(CSS::PropertyID::FontSize);
         auto font_family = font_style_value.longhand(CSS::PropertyID::FontFamily);
-        return DeprecatedString::formatted("{} {} {} {}", font_style->to_string(), font_weight->to_string(), font_size->to_string(), font_family->to_string());
+        return ByteString::formatted("{} {} {} {}", font_style->to_string(), font_weight->to_string(), font_size->to_string(), font_family->to_string());
     }
 
     void set_font(StringView font)

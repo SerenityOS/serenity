@@ -142,7 +142,7 @@ FindDialog::FindDialog(NonnullRefPtr<HexEditor::FindWidget> find_widget)
     };
 
     m_find_button->on_click = [this](auto) {
-        auto text = String::from_deprecated_string(m_text_editor->text()).release_value_but_fixme_should_propagate_errors();
+        auto text = String::from_byte_string(m_text_editor->text()).release_value_but_fixme_should_propagate_errors();
         if (!text.is_empty()) {
             m_text_value = text;
             done(ExecResult::OK);

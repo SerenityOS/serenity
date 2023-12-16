@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     static bool flag_most_posix = false;
     static bool flag_portability = false;
     static bool flag_empty_name_and_leading_dash = false;
-    Vector<DeprecatedString> paths;
+    Vector<ByteString> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_most_posix, "Check for most POSIX systems", nullptr, 'p');

@@ -649,7 +649,7 @@ int ptsname_r(int fd, char* buffer, size_t size)
         return -1;
     }
     memset(buffer, 0, devpts_path_builder.length() + 1);
-    auto full_devpts_path_string = devpts_path_builder.to_deprecated_string();
+    auto full_devpts_path_string = devpts_path_builder.to_byte_string();
     if (!full_devpts_path_string.copy_characters_to_buffer(buffer, size)) {
         errno = ERANGE;
         return -1;

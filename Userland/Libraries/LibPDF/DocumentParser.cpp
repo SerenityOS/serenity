@@ -482,12 +482,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
         auto object_count = object_count_value.get<int>();
 
         for (int i = 0; i < object_count; i++) {
-            auto offset_string = DeprecatedString(m_reader.bytes().slice(m_reader.offset(), 10));
+            auto offset_string = ByteString(m_reader.bytes().slice(m_reader.offset(), 10));
             m_reader.move_by(10);
             if (!m_reader.consume(' '))
                 return error("Malformed xref entry");
 
-            auto generation_string = DeprecatedString(m_reader.bytes().slice(m_reader.offset(), 5));
+            auto generation_string = ByteString(m_reader.bytes().slice(m_reader.offset(), 5));
             m_reader.move_by(5);
             if (!m_reader.consume(' '))
                 return error("Malformed xref entry");
@@ -747,7 +747,7 @@ PDFErrorOr<RefPtr<DictObject>> DocumentParser::conditionally_parse_page_tree_nod
     auto dict_value = TRY(parse_object_with_index(object_index));
     auto dict_object = dict_value.get<NonnullRefPtr<Object>>();
     if (!dict_object->is<DictObject>())
-        return error(DeprecatedString::formatted("Invalid page tree with xref index {}", object_index));
+        return error(ByteString::formatted("Invalid page tree with xref index {}", object_index));
 
     auto dict = dict_object->cast<DictObject>();
     if (!dict->contains_any_of(CommonNames::Type, CommonNames::Parent, CommonNames::Kids, CommonNames::Count))
@@ -787,7 +787,7 @@ struct Formatter<PDF::DocumentParser::LinearizationDictionary> : Formatter<Strin
         builder.appendff("  offset_of_main_xref_table={}\n", dict.offset_of_main_xref_table);
         builder.appendff("  first_page={}\n", dict.first_page);
         builder.append('}');
-        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
+        return Formatter<StringView>::format(format_builder, builder.to_byte_string());
     }
 };
 
@@ -811,7 +811,7 @@ struct Formatter<PDF::DocumentParser::PageOffsetHintTable> : Formatter<StringVie
         builder.appendff("  bits_required_for_fraction_numerator={}\n", table.bits_required_for_fraction_numerator);
         builder.appendff("  shared_object_reference_fraction_denominator={}\n", table.shared_object_reference_fraction_denominator);
         builder.append('}');
-        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
+        return Formatter<StringView>::format(format_builder, builder.to_byte_string());
     }
 };
 
@@ -835,7 +835,7 @@ struct Formatter<PDF::DocumentParser::PageOffsetHintTableEntry> : Formatter<Stri
         builder.appendff("  page_content_stream_offset_number={}\n", entry.page_content_stream_offset_number);
         builder.appendff("  page_content_stream_length_number={}\n", entry.page_content_stream_length_number);
         builder.append('}');
-        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
+        return Formatter<StringView>::format(format_builder, builder.to_byte_string());
     }
 };
 

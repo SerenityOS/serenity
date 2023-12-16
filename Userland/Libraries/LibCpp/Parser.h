@@ -19,7 +19,7 @@ class Parser final {
     AK_MAKE_NONCOPYABLE(Parser);
 
 public:
-    explicit Parser(Vector<Token> tokens, DeprecatedString const& filename);
+    explicit Parser(Vector<Token> tokens, ByteString const& filename);
     ~Parser() = default;
 
     NonnullRefPtr<TranslationUnit> parse();
@@ -30,11 +30,11 @@ public:
     Optional<Token> token_at(Position) const;
     Optional<size_t> index_of_token_at(Position) const;
     RefPtr<TranslationUnit const> root_node() const { return m_root_node; }
-    DeprecatedString text_of_node(ASTNode const&) const;
+    ByteString text_of_node(ASTNode const&) const;
     StringView text_of_token(Cpp::Token const& token) const;
     void print_tokens() const;
     Vector<Token> const& tokens() const { return m_tokens; }
-    Vector<DeprecatedString> const& errors() const { return m_errors; }
+    Vector<ByteString> const& errors() const { return m_errors; }
 
     Vector<CodeComprehension::TodoEntry> get_todo_entries() const;
 
@@ -69,7 +69,7 @@ private:
     bool match_literal();
     bool match_unary_expression();
     bool match_boolean_literal();
-    bool match_keyword(DeprecatedString const&);
+    bool match_keyword(ByteString const&);
     bool match_block_statement();
     bool match_namespace_declaration();
     bool match_template_arguments();
@@ -132,12 +132,12 @@ private:
     bool match(Token::Type);
     Token consume(Token::Type);
     Token consume();
-    Token consume_keyword(DeprecatedString const&);
+    Token consume_keyword(ByteString const&);
     Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
     Position previous_token_end() const;
-    DeprecatedString text_in_range(Position start, Position end) const;
+    ByteString text_in_range(Position start, Position end) const;
 
     void save_state();
     void load_state();
@@ -192,12 +192,12 @@ private:
     };
     void parse_constructor_or_destructor_impl(FunctionDeclaration&, CtorOrDtor);
 
-    DeprecatedString m_filename;
+    ByteString m_filename;
     Vector<Token> m_tokens;
     State m_state;
     Vector<State> m_saved_states;
     RefPtr<TranslationUnit> m_root_node;
-    Vector<DeprecatedString> m_errors;
+    Vector<ByteString> m_errors;
     Vector<NonnullRefPtr<ASTNode>> m_nodes;
 };
 

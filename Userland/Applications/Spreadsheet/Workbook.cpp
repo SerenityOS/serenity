@@ -41,7 +41,7 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
     m_vm->set_dynamic_imports_allowed(true);
 }
 
-bool Workbook::set_filename(DeprecatedString const& filename)
+bool Workbook::set_filename(ByteString const& filename)
 {
     if (m_current_filename == filename)
         return false;
@@ -50,14 +50,14 @@ bool Workbook::set_filename(DeprecatedString const& filename)
     return true;
 }
 
-ErrorOr<void, DeprecatedString> Workbook::open_file(String const& filename, Core::File& file)
+ErrorOr<void, ByteString> Workbook::open_file(String const& filename, Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
     // Make an import dialog, we might need to import it.
     m_sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, filename, file, *this));
 
-    set_filename(filename.to_deprecated_string());
+    set_filename(filename.to_byte_string());
 
     return {};
 }
@@ -67,14 +67,14 @@ ErrorOr<void> Workbook::write_to_file(String const& filename, Core::File& stream
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
     // Make an export dialog, we might need to import it.
-    TRY(ExportDialog::make_and_run_for(mime, stream, filename.to_deprecated_string(), *this));
+    TRY(ExportDialog::make_and_run_for(mime, stream, filename.to_byte_string(), *this));
 
-    set_filename(filename.to_deprecated_string());
+    set_filename(filename.to_byte_string());
     set_dirty(false);
     return {};
 }
 
-ErrorOr<bool, DeprecatedString> Workbook::import_file(String const& filename, Core::File& file)
+ErrorOr<bool, ByteString> Workbook::import_file(String const& filename, Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 

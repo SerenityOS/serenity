@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
@@ -36,7 +36,7 @@ public:
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile>);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_stream(FixedMemoryStream&);
 
-    ErrorOr<void> write_to_file(DeprecatedString const& path);
+    ErrorOr<void> write_to_file(ByteString const& path);
     ErrorOr<void> write_to_file(NonnullOwnPtr<Core::File> file);
 
     ~BitmapFont();

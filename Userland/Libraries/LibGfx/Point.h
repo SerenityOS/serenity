@@ -261,7 +261,7 @@ public:
         return Point<U>(AK::floor(x()), AK::floor(y()));
     }
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
 
 private:
     T m_x { 0 };

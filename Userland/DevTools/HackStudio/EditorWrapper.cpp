@@ -34,7 +34,7 @@ EditorWrapper::EditorWrapper()
         set_current_editor_wrapper(this);
     };
 
-    m_editor->on_open = [](DeprecatedString const& path) {
+    m_editor->on_open = [](ByteString const& path) {
         open_file(path);
     };
 
@@ -64,7 +64,7 @@ void EditorWrapper::set_mode_non_displayable()
     editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?"sv);
 }
 
-void EditorWrapper::set_filename(DeprecatedString const& filename)
+void EditorWrapper::set_filename(ByteString const& filename)
 {
     m_filename = filename;
     update_title();
@@ -75,7 +75,7 @@ bool EditorWrapper::save()
 {
     if (filename().is_empty()) {
         auto file_picker_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-            Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), "file"sv, "txt"sv, project_root().value());
+            Optional<ByteString> save_path = GUI::FilePicker::get_save_filepath(window(), "file"sv, "txt"sv, project_root().value());
             if (save_path.has_value())
                 set_filename(save_path.value());
         });
@@ -99,7 +99,7 @@ void EditorWrapper::update_diff()
     }
 }
 
-void EditorWrapper::set_project_root(DeprecatedString const& project_root)
+void EditorWrapper::set_project_root(ByteString const& project_root)
 {
     m_project_root = project_root;
     auto result = GitRepo::try_to_create(*m_project_root);
@@ -126,7 +126,7 @@ void EditorWrapper::update_title()
 
     if (editor().document().is_modified())
         title.append(" (*)"sv);
-    m_filename_title = title.to_deprecated_string();
+    m_filename_title = title.to_byte_string();
 }
 
 void EditorWrapper::set_debug_mode(bool enabled)

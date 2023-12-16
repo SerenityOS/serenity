@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/Vector.h>
@@ -32,7 +32,7 @@ struct DuOption {
     bool one_file_system = false;
     i64 threshold = 0;
     TimeType time_type = TimeType::NotUsed;
-    Vector<DeprecatedString> excluded_patterns;
+    Vector<ByteString> excluded_patterns;
     u64 block_size = 1024;
     size_t max_depth = SIZE_MAX;
 };
@@ -57,12 +57,12 @@ struct AK::Traits<VisitedFile> : public DefaultTraits<VisitedFile> {
 
 static HashTable<VisitedFile> s_visited_files;
 
-static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option);
-static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, Optional<dev_t> root_device = {});
+static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, DuOption& du_option);
+static u64 print_space_usage(ByteString const& path, DuOption const& du_option, size_t current_depth, Optional<dev_t> root_device = {});
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> files;
+    Vector<ByteString> files;
     DuOption du_option;
 
     TRY(parse_args(arguments, files, du_option));
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option)
+ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, DuOption& du_option)
 {
     bool summarize = false;
     StringView pattern;
@@ -140,7 +140,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
         auto file = TRY(Core::File::open(exclude_from, Core::File::OpenMode::Read));
         auto const buff = TRY(file->read_until_eof());
         if (!buff.is_empty()) {
-            DeprecatedString patterns = DeprecatedString::copy(buff, Chomp);
+            ByteString patterns = ByteString::copy(buff, Chomp);
             du_option.excluded_patterns.extend(patterns.split('\n'));
         }
     }
@@ -156,7 +156,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
     return {};
 }
 
-u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, Optional<dev_t> root_device)
+u64 print_space_usage(ByteString const& path, DuOption const& du_option, size_t current_depth, Optional<dev_t> root_device)
 {
     u64 size = 0;
     auto path_stat_or_error = Core::System::lstat(path);
@@ -240,7 +240,7 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
             break;
         }
 
-        auto const formatted_time = Core::DateTime::from_timestamp(time).to_deprecated_string();
+        auto const formatted_time = Core::DateTime::from_timestamp(time).to_byte_string();
         outln("\t{}\t{}", formatted_time, path);
     }
 

@@ -115,7 +115,7 @@ void Job::on_socket_connected()
 
     if constexpr (JOB_DEBUG) {
         dbgln("Job: raw_request:");
-        dbgln("{}", DeprecatedString::copy(raw_request));
+        dbgln("{}", ByteString::copy(raw_request));
     }
     bool success = write(raw_request);
     if (!success)

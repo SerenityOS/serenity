@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -54,53 +54,53 @@ private:
 
 class TypeName : public ASTNode {
 public:
-    TypeName(DeprecatedString name, Vector<NonnullRefPtr<SignedNumber>> signed_numbers)
+    TypeName(ByteString name, Vector<NonnullRefPtr<SignedNumber>> signed_numbers)
         : m_name(move(name))
         , m_signed_numbers(move(signed_numbers))
     {
         VERIFY(m_signed_numbers.size() <= 2);
     }
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
     Vector<NonnullRefPtr<SignedNumber>> const& signed_numbers() const { return m_signed_numbers; }
 
 private:
-    DeprecatedString m_name;
+    ByteString m_name;
     Vector<NonnullRefPtr<SignedNumber>> m_signed_numbers;
 };
 
 class ColumnDefinition : public ASTNode {
 public:
-    ColumnDefinition(DeprecatedString name, NonnullRefPtr<TypeName> type_name)
+    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name)
         : m_name(move(name))
         , m_type_name(move(type_name))
     {
     }
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
     NonnullRefPtr<TypeName> const& type_name() const { return m_type_name; }
 
 private:
-    DeprecatedString m_name;
+    ByteString m_name;
     NonnullRefPtr<TypeName> m_type_name;
 };
 
 class CommonTableExpression : public ASTNode {
 public:
-    CommonTableExpression(DeprecatedString table_name, Vector<DeprecatedString> column_names, NonnullRefPtr<Select> select_statement)
+    CommonTableExpression(ByteString table_name, Vector<ByteString> column_names, NonnullRefPtr<Select> select_statement)
         : m_table_name(move(table_name))
         , m_column_names(move(column_names))
         , m_select_statement(move(select_statement))
     {
     }
 
-    DeprecatedString const& table_name() const { return m_table_name; }
-    Vector<DeprecatedString> const& column_names() const { return m_column_names; }
+    ByteString const& table_name() const { return m_table_name; }
+    Vector<ByteString> const& column_names() const { return m_column_names; }
     NonnullRefPtr<Select> const& select_statement() const { return m_select_statement; }
 
 private:
-    DeprecatedString m_table_name;
-    Vector<DeprecatedString> m_column_names;
+    ByteString m_table_name;
+    Vector<ByteString> m_column_names;
     NonnullRefPtr<Select> m_select_statement;
 };
 
@@ -123,28 +123,28 @@ private:
 
 class QualifiedTableName : public ASTNode {
 public:
-    QualifiedTableName(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias)
+    QualifiedTableName(ByteString schema_name, ByteString table_name, ByteString alias)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_alias(move(alias))
     {
     }
 
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
-    DeprecatedString const& alias() const { return m_alias; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
+    ByteString const& alias() const { return m_alias; }
 
 private:
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
-    DeprecatedString m_alias;
+    ByteString m_schema_name;
+    ByteString m_table_name;
+    ByteString m_alias;
 };
 
 class ReturningClause : public ASTNode {
 public:
     struct ColumnClause {
         NonnullRefPtr<Expression> expression;
-        DeprecatedString column_alias;
+        ByteString column_alias;
     };
 
     ReturningClause() = default;
@@ -171,13 +171,13 @@ class ResultColumn : public ASTNode {
 public:
     ResultColumn() = default;
 
-    explicit ResultColumn(DeprecatedString table_name)
+    explicit ResultColumn(ByteString table_name)
         : m_type(ResultType::Table)
         , m_table_name(move(table_name))
     {
     }
 
-    ResultColumn(NonnullRefPtr<Expression> expression, DeprecatedString column_alias)
+    ResultColumn(NonnullRefPtr<Expression> expression, ByteString column_alias)
         : m_type(ResultType::Expression)
         , m_expression(move(expression))
         , m_column_alias(move(column_alias))
@@ -187,19 +187,19 @@ public:
     ResultType type() const { return m_type; }
 
     bool select_from_table() const { return m_table_name.has_value(); }
-    Optional<DeprecatedString> const& table_name() const { return m_table_name; }
+    Optional<ByteString> const& table_name() const { return m_table_name; }
 
     bool select_from_expression() const { return !m_expression.is_null(); }
     RefPtr<Expression> const& expression() const { return m_expression; }
-    DeprecatedString const& column_alias() const { return m_column_alias; }
+    ByteString const& column_alias() const { return m_column_alias; }
 
 private:
     ResultType m_type { ResultType::All };
 
-    Optional<DeprecatedString> m_table_name {};
+    Optional<ByteString> m_table_name {};
 
     RefPtr<Expression> m_expression {};
-    DeprecatedString m_column_alias {};
+    ByteString m_column_alias {};
 };
 
 class GroupByClause : public ASTNode {
@@ -223,7 +223,7 @@ class TableOrSubquery : public ASTNode {
 public:
     TableOrSubquery() = default;
 
-    TableOrSubquery(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString table_alias)
+    TableOrSubquery(ByteString schema_name, ByteString table_name, ByteString table_alias)
         : m_is_table(true)
         , m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
@@ -238,18 +238,18 @@ public:
     }
 
     bool is_table() const { return m_is_table; }
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
-    DeprecatedString const& table_alias() const { return m_table_alias; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
+    ByteString const& table_alias() const { return m_table_alias; }
 
     bool is_subquery() const { return m_is_subquery; }
     Vector<NonnullRefPtr<TableOrSubquery>> const& subqueries() const { return m_subqueries; }
 
 private:
     bool m_is_table { false };
-    DeprecatedString m_schema_name {};
-    DeprecatedString m_table_name {};
-    DeprecatedString m_table_alias {};
+    ByteString m_schema_name {};
+    ByteString m_table_name {};
+    ByteString m_table_alias {};
 
     bool m_is_subquery { false };
     Vector<NonnullRefPtr<TableOrSubquery>> m_subqueries {};
@@ -257,7 +257,7 @@ private:
 
 class OrderingTerm : public ASTNode {
 public:
-    OrderingTerm(NonnullRefPtr<Expression> expression, DeprecatedString collation_name, Order order, Nulls nulls)
+    OrderingTerm(NonnullRefPtr<Expression> expression, ByteString collation_name, Order order, Nulls nulls)
         : m_expression(move(expression))
         , m_collation_name(move(collation_name))
         , m_order(order)
@@ -266,13 +266,13 @@ public:
     }
 
     NonnullRefPtr<Expression> const& expression() const { return m_expression; }
-    DeprecatedString const& collation_name() const { return m_collation_name; }
+    ByteString const& collation_name() const { return m_collation_name; }
     Order order() const { return m_order; }
     Nulls nulls() const { return m_nulls; }
 
 private:
     NonnullRefPtr<Expression> m_expression;
-    DeprecatedString m_collation_name;
+    ByteString m_collation_name;
     Order m_order;
     Nulls m_nulls;
 };
@@ -331,29 +331,29 @@ private:
 
 class StringLiteral : public Expression {
 public:
-    explicit StringLiteral(DeprecatedString value)
+    explicit StringLiteral(ByteString value)
         : m_value(move(value))
     {
     }
 
-    DeprecatedString const& value() const { return m_value; }
+    ByteString const& value() const { return m_value; }
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
-    DeprecatedString m_value;
+    ByteString m_value;
 };
 
 class BlobLiteral : public Expression {
 public:
-    explicit BlobLiteral(DeprecatedString value)
+    explicit BlobLiteral(ByteString value)
         : m_value(move(value))
     {
     }
 
-    DeprecatedString const& value() const { return m_value; }
+    ByteString const& value() const { return m_value; }
 
 private:
-    DeprecatedString m_value;
+    ByteString m_value;
 };
 
 class BooleanLiteral : public Expression {
@@ -455,22 +455,22 @@ private:
 
 class ColumnNameExpression : public Expression {
 public:
-    ColumnNameExpression(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString column_name)
+    ColumnNameExpression(ByteString schema_name, ByteString table_name, ByteString column_name)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_column_name(move(column_name))
     {
     }
 
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
-    DeprecatedString const& column_name() const { return m_column_name; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
+    ByteString const& column_name() const { return m_column_name; }
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
-    DeprecatedString m_column_name;
+    ByteString m_schema_name;
+    ByteString m_table_name;
+    ByteString m_column_name;
 };
 
 #define __enum_UnaryOperator(S) \
@@ -641,16 +641,16 @@ private:
 
 class CollateExpression : public NestedExpression {
 public:
-    CollateExpression(NonnullRefPtr<Expression> expression, DeprecatedString collation_name)
+    CollateExpression(NonnullRefPtr<Expression> expression, ByteString collation_name)
         : NestedExpression(move(expression))
         , m_collation_name(move(collation_name))
     {
     }
 
-    DeprecatedString const& collation_name() const { return m_collation_name; }
+    ByteString const& collation_name() const { return m_collation_name; }
 
 private:
-    DeprecatedString m_collation_name;
+    ByteString m_collation_name;
 };
 
 enum class MatchOperator {
@@ -738,19 +738,19 @@ private:
 
 class InTableExpression : public InvertibleNestedExpression {
 public:
-    InTableExpression(NonnullRefPtr<Expression> expression, DeprecatedString schema_name, DeprecatedString table_name, bool invert_expression)
+    InTableExpression(NonnullRefPtr<Expression> expression, ByteString schema_name, ByteString table_name, bool invert_expression)
         : InvertibleNestedExpression(move(expression), invert_expression)
         , m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
     {
     }
 
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
 
 private:
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
+    ByteString m_schema_name;
+    ByteString m_table_name;
 };
 
 //==================================================================================================
@@ -772,25 +772,25 @@ class ErrorStatement final : public Statement {
 
 class CreateSchema : public Statement {
 public:
-    CreateSchema(DeprecatedString schema_name, bool is_error_if_schema_exists)
+    CreateSchema(ByteString schema_name, bool is_error_if_schema_exists)
         : m_schema_name(move(schema_name))
         , m_is_error_if_schema_exists(is_error_if_schema_exists)
     {
     }
 
-    DeprecatedString const& schema_name() const { return m_schema_name; }
+    ByteString const& schema_name() const { return m_schema_name; }
     bool is_error_if_schema_exists() const { return m_is_error_if_schema_exists; }
 
     ResultOr<ResultSet> execute(ExecutionContext&) const override;
 
 private:
-    DeprecatedString m_schema_name;
+    ByteString m_schema_name;
     bool m_is_error_if_schema_exists;
 };
 
 class CreateTable : public Statement {
 public:
-    CreateTable(DeprecatedString schema_name, DeprecatedString table_name, RefPtr<Select> select_statement, bool is_temporary, bool is_error_if_table_exists)
+    CreateTable(ByteString schema_name, ByteString table_name, RefPtr<Select> select_statement, bool is_temporary, bool is_error_if_table_exists)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_select_statement(move(select_statement))
@@ -799,7 +799,7 @@ public:
     {
     }
 
-    CreateTable(DeprecatedString schema_name, DeprecatedString table_name, Vector<NonnullRefPtr<ColumnDefinition>> columns, bool is_temporary, bool is_error_if_table_exists)
+    CreateTable(ByteString schema_name, ByteString table_name, Vector<NonnullRefPtr<ColumnDefinition>> columns, bool is_temporary, bool is_error_if_table_exists)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_columns(move(columns))
@@ -808,8 +808,8 @@ public:
     {
     }
 
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
 
     bool has_selection() const { return !m_select_statement.is_null(); }
     RefPtr<Select> const& select_statement() const { return m_select_statement; }
@@ -823,8 +823,8 @@ public:
     ResultOr<ResultSet> execute(ExecutionContext&) const override;
 
 private:
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
+    ByteString m_schema_name;
+    ByteString m_table_name;
     RefPtr<Select> m_select_statement;
     Vector<NonnullRefPtr<ColumnDefinition>> m_columns;
     bool m_is_temporary;
@@ -833,55 +833,55 @@ private:
 
 class AlterTable : public Statement {
 public:
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
 
 protected:
-    AlterTable(DeprecatedString schema_name, DeprecatedString table_name)
+    AlterTable(ByteString schema_name, ByteString table_name)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
     {
     }
 
 private:
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
+    ByteString m_schema_name;
+    ByteString m_table_name;
 };
 
 class RenameTable : public AlterTable {
 public:
-    RenameTable(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString new_table_name)
+    RenameTable(ByteString schema_name, ByteString table_name, ByteString new_table_name)
         : AlterTable(move(schema_name), move(table_name))
         , m_new_table_name(move(new_table_name))
     {
     }
 
-    DeprecatedString const& new_table_name() const { return m_new_table_name; }
+    ByteString const& new_table_name() const { return m_new_table_name; }
 
 private:
-    DeprecatedString m_new_table_name;
+    ByteString m_new_table_name;
 };
 
 class RenameColumn : public AlterTable {
 public:
-    RenameColumn(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString column_name, DeprecatedString new_column_name)
+    RenameColumn(ByteString schema_name, ByteString table_name, ByteString column_name, ByteString new_column_name)
         : AlterTable(move(schema_name), move(table_name))
         , m_column_name(move(column_name))
         , m_new_column_name(move(new_column_name))
     {
     }
 
-    DeprecatedString const& column_name() const { return m_column_name; }
-    DeprecatedString const& new_column_name() const { return m_new_column_name; }
+    ByteString const& column_name() const { return m_column_name; }
+    ByteString const& new_column_name() const { return m_new_column_name; }
 
 private:
-    DeprecatedString m_column_name;
-    DeprecatedString m_new_column_name;
+    ByteString m_column_name;
+    ByteString m_new_column_name;
 };
 
 class AddColumn : public AlterTable {
 public:
-    AddColumn(DeprecatedString schema_name, DeprecatedString table_name, NonnullRefPtr<ColumnDefinition> column)
+    AddColumn(ByteString schema_name, ByteString table_name, NonnullRefPtr<ColumnDefinition> column)
         : AlterTable(move(schema_name), move(table_name))
         , m_column(move(column))
     {
@@ -895,34 +895,34 @@ private:
 
 class DropColumn : public AlterTable {
 public:
-    DropColumn(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString column_name)
+    DropColumn(ByteString schema_name, ByteString table_name, ByteString column_name)
         : AlterTable(move(schema_name), move(table_name))
         , m_column_name(move(column_name))
     {
     }
 
-    DeprecatedString const& column_name() const { return m_column_name; }
+    ByteString const& column_name() const { return m_column_name; }
 
 private:
-    DeprecatedString m_column_name;
+    ByteString m_column_name;
 };
 
 class DropTable : public Statement {
 public:
-    DropTable(DeprecatedString schema_name, DeprecatedString table_name, bool is_error_if_table_does_not_exist)
+    DropTable(ByteString schema_name, ByteString table_name, bool is_error_if_table_does_not_exist)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_is_error_if_table_does_not_exist(is_error_if_table_does_not_exist)
     {
     }
 
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
     bool is_error_if_table_does_not_exist() const { return m_is_error_if_table_does_not_exist; }
 
 private:
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
+    ByteString m_schema_name;
+    ByteString m_table_name;
     bool m_is_error_if_table_does_not_exist;
 };
 
@@ -936,7 +936,7 @@ enum class ConflictResolution {
 
 class Insert : public Statement {
 public:
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names, Vector<NonnullRefPtr<ChainedExpression>> chained_expressions)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, ByteString schema_name, ByteString table_name, ByteString alias, Vector<ByteString> column_names, Vector<NonnullRefPtr<ChainedExpression>> chained_expressions)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -947,7 +947,7 @@ public:
     {
     }
 
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names, RefPtr<Select> select_statement)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, ByteString schema_name, ByteString table_name, ByteString alias, Vector<ByteString> column_names, RefPtr<Select> select_statement)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -958,7 +958,7 @@ public:
     {
     }
 
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, ByteString schema_name, ByteString table_name, ByteString alias, Vector<ByteString> column_names)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -970,10 +970,10 @@ public:
 
     RefPtr<CommonTableExpressionList> const& common_table_expression_list() const { return m_common_table_expression_list; }
     ConflictResolution conflict_resolution() const { return m_conflict_resolution; }
-    DeprecatedString const& schema_name() const { return m_schema_name; }
-    DeprecatedString const& table_name() const { return m_table_name; }
-    DeprecatedString const& alias() const { return m_alias; }
-    Vector<DeprecatedString> const& column_names() const { return m_column_names; }
+    ByteString const& schema_name() const { return m_schema_name; }
+    ByteString const& table_name() const { return m_table_name; }
+    ByteString const& alias() const { return m_alias; }
+    Vector<ByteString> const& column_names() const { return m_column_names; }
 
     bool default_values() const { return !has_expressions() && !has_selection(); }
 
@@ -988,10 +988,10 @@ public:
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
     ConflictResolution m_conflict_resolution;
-    DeprecatedString m_schema_name;
-    DeprecatedString m_table_name;
-    DeprecatedString m_alias;
-    Vector<DeprecatedString> m_column_names;
+    ByteString m_schema_name;
+    ByteString m_table_name;
+    ByteString m_alias;
+    Vector<ByteString> m_column_names;
     Vector<NonnullRefPtr<ChainedExpression>> m_chained_expressions;
     RefPtr<Select> m_select_statement;
 };
@@ -999,7 +999,7 @@ private:
 class Update : public Statement {
 public:
     struct UpdateColumns {
-        Vector<DeprecatedString> column_names;
+        Vector<ByteString> column_names;
         NonnullRefPtr<Expression> expression;
     };
 

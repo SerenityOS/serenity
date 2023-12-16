@@ -24,7 +24,7 @@ public:
     virtual ~Script() override;
 
     AK::URL const& base_url() const { return m_base_url; }
-    DeprecatedString const& filename() const { return m_filename; }
+    ByteString const& filename() const { return m_filename; }
 
     EnvironmentSettingsObject& settings_object() { return m_settings_object; }
 
@@ -35,7 +35,7 @@ public:
     void set_parse_error(JS::Value value) { m_parse_error = value; }
 
 protected:
-    Script(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object);
+    Script(AK::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
 
     virtual void visit_edges(Visitor&) override;
 
@@ -43,7 +43,7 @@ private:
     virtual void visit_host_defined_self(JS::Cell::Visitor&) override;
 
     AK::URL m_base_url;
-    DeprecatedString m_filename;
+    ByteString m_filename;
     JS::NonnullGCPtr<EnvironmentSettingsObject> m_settings_object;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-parse-error

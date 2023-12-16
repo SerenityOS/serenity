@@ -167,9 +167,9 @@ ErrorOr<String> UnsignedBigInteger::to_base(u16 N) const
     return TRY(builder.to_string()).reverse();
 }
 
-DeprecatedString UnsignedBigInteger::to_base_deprecated(u16 N) const
+ByteString UnsignedBigInteger::to_base_deprecated(u16 N) const
 {
-    return MUST(to_base(N)).to_deprecated_string();
+    return MUST(to_base(N)).to_byte_string();
 }
 
 u64 UnsignedBigInteger::to_u64() const

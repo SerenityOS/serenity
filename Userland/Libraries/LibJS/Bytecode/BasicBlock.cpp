@@ -46,7 +46,7 @@ void BasicBlock::dump(Bytecode::Executable const& executable) const
     }
     warnln(":");
     while (!it.at_end()) {
-        warnln("[{:4x}] {}", it.offset(), (*it).to_deprecated_string(executable));
+        warnln("[{:4x}] {}", it.offset(), (*it).to_byte_string(executable));
         ++it;
     }
 }

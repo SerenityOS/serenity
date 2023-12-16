@@ -164,7 +164,7 @@ NonnullRefPtr<Encoding> Encoding::zapf_encoding()
     return encoding;
 }
 
-u16 Encoding::get_char_code(DeprecatedString const& name) const
+u16 Encoding::get_char_code(ByteString const& name) const
 {
     auto code_iterator = m_name_mapping.find(name);
     if (code_iterator != m_name_mapping.end())

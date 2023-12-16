@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
@@ -30,7 +30,7 @@ public:
     void set_max_guesses(size_t max_guesses);
     Gfx::IntSize game_size() const;
 
-    Optional<DeprecatedString> random_word(size_t length);
+    Optional<ByteString> random_word(size_t length);
     size_t shortest_word();
     size_t longest_word();
     bool is_checking_guesses() const;
@@ -77,15 +77,15 @@ private:
     };
 
     struct Guess {
-        AK::DeprecatedString text;
+        AK::ByteString text;
         AK::Vector<LetterState> letter_states;
     };
 
     AK::Vector<Guess> m_guesses;
-    AK::DeprecatedString m_current_guess;
-    AK::DeprecatedString m_current_word;
+    AK::ByteString m_current_guess;
+    AK::ByteString m_current_word;
 
-    HashMap<size_t, AK::Vector<DeprecatedString>> m_words;
+    HashMap<size_t, AK::Vector<ByteString>> m_words;
 
     NonnullRefPtr<Core::Timer> m_clear_message_timer;
 };

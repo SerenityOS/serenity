@@ -18,7 +18,7 @@ ShellComprehensionEngine::ShellComprehensionEngine(FileDB const& filedb)
 {
 }
 
-ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_or_create_document_data(DeprecatedString const& file)
+ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_or_create_document_data(ByteString const& file)
 {
     auto absolute_path = filedb().to_absolute_path(file);
     if (!m_documents.contains(absolute_path)) {
@@ -27,7 +27,7 @@ ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_or_c
     return get_document_data(absolute_path);
 }
 
-ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_document_data(DeprecatedString const& file) const
+ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_document_data(ByteString const& file) const
 {
     auto absolute_path = filedb().to_absolute_path(file);
     auto document_data = m_documents.get(absolute_path);
@@ -35,7 +35,7 @@ ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_docu
     return *document_data.value();
 }
 
-OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(DeprecatedString const& file)
+OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(ByteString const& file)
 {
     auto document = filedb().get_or_read_from_filesystem(file);
     if (!document.has_value())
@@ -50,19 +50,19 @@ OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_
     return document_data;
 }
 
-void ShellComprehensionEngine::set_document_data(DeprecatedString const& file, OwnPtr<DocumentData>&& data)
+void ShellComprehensionEngine::set_document_data(ByteString const& file, OwnPtr<DocumentData>&& data)
 {
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-ShellComprehensionEngine::DocumentData::DocumentData(DeprecatedString&& _text, DeprecatedString _filename)
+ShellComprehensionEngine::DocumentData::DocumentData(ByteString&& _text, ByteString _filename)
     : filename(move(_filename))
     , text(move(_text))
     , node(parse())
 {
 }
 
-Vector<DeprecatedString> const& ShellComprehensionEngine::DocumentData::sourced_paths() const
+Vector<ByteString> const& ShellComprehensionEngine::DocumentData::sourced_paths() const
 {
     if (all_sourced_paths.has_value())
         return all_sourced_paths.value();
@@ -82,19 +82,19 @@ Vector<DeprecatedString> const& ShellComprehensionEngine::DocumentData::sourced_
                         auto name_list = name_list_node->resolve_as_list(nullptr).release_value_but_fixme_should_propagate_errors();
                         StringBuilder builder;
                         builder.join(' ', name_list);
-                        sourced_files.set(builder.to_deprecated_string());
+                        sourced_files.set(builder.to_byte_string());
                     }
                 }
             }
             ::Shell::AST::NodeVisitor::visit(node);
         }
 
-        HashTable<DeprecatedString> sourced_files;
+        HashTable<ByteString> sourced_files;
     } visitor;
 
     node->visit(visitor);
 
-    Vector<DeprecatedString> sourced_paths;
+    Vector<ByteString> sourced_paths;
     for (auto& entry : visitor.sourced_files)
         sourced_paths.append(move(entry));
 
@@ -134,7 +134,7 @@ size_t ShellComprehensionEngine::resolve(ShellComprehensionEngine::DocumentData 
     return offset;
 }
 
-Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get_suggestions(DeprecatedString const& file, const GUI::TextPosition& position)
+Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get_suggestions(ByteString const& file, const GUI::TextPosition& position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "ShellComprehensionEngine position {}:{}", position.line(), position.column());
 
@@ -155,17 +155,17 @@ Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get
     return entries;
 }
 
-void ShellComprehensionEngine::on_edit(DeprecatedString const& file)
+void ShellComprehensionEngine::on_edit(ByteString const& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-void ShellComprehensionEngine::file_opened([[maybe_unused]] DeprecatedString const& file)
+void ShellComprehensionEngine::file_opened([[maybe_unused]] ByteString const& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_declaration_of(DeprecatedString const& filename, const GUI::TextPosition& identifier_position)
+Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_declaration_of(ByteString const& filename, const GUI::TextPosition& identifier_position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
     auto const& document = get_or_create_document_data(filename);
@@ -196,7 +196,7 @@ Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_decl
 void ShellComprehensionEngine::update_declared_symbols(DocumentData const& document)
 {
     struct Visitor : public ::Shell::AST::NodeVisitor {
-        explicit Visitor(DeprecatedString const& filename)
+        explicit Visitor(ByteString const& filename)
             : filename(filename)
         {
         }
@@ -208,9 +208,9 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
                 if (!literal)
                     continue;
 
-                DeprecatedString name;
+                ByteString name;
                 if (literal->is_bareword())
-                    name = static_ptr_cast<::Shell::AST::BarewordLiteral const>(literal)->text().to_deprecated_string();
+                    name = static_ptr_cast<::Shell::AST::BarewordLiteral const>(literal)->text().to_byte_string();
 
                 if (!name.is_empty()) {
                     dbgln("Found variable {}", name);
@@ -223,10 +223,10 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
         void visit(::Shell::AST::FunctionDeclaration const* node) override
         {
             dbgln("Found function {}", node->name().name);
-            declarations.append({ node->name().name.to_deprecated_string(), { filename, node->position().start_line.line_number, node->position().start_line.line_column }, CodeComprehension::DeclarationType::Function, {} });
+            declarations.append({ node->name().name.to_byte_string(), { filename, node->position().start_line.line_number, node->position().start_line.line_column }, CodeComprehension::DeclarationType::Function, {} });
         }
 
-        DeprecatedString const& filename;
+        ByteString const& filename;
         Vector<CodeComprehension::Declaration> declarations;
     } visitor { document.filename };
 

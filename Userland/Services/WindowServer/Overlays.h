@@ -154,7 +154,7 @@ private:
     Gfx::IntRect calculate_ideal_overlay_rect() const;
 
     WeakPtr<Window> m_window;
-    DeprecatedString m_label;
+    ByteString m_label;
     Gfx::IntRect m_label_rect;
     Gfx::IntRect m_ideal_overlay_rect;
 
@@ -182,7 +182,7 @@ private:
 
 class DndOverlay : public BitmapOverlay {
 public:
-    DndOverlay(DeprecatedString const&, Gfx::Bitmap const*);
+    DndOverlay(ByteString const&, Gfx::Bitmap const*);
 
     void cursor_moved()
     {
@@ -197,7 +197,7 @@ private:
     void update_rect();
 
     RefPtr<Gfx::Bitmap const> m_bitmap;
-    DeprecatedString m_text;
+    ByteString m_text;
     Gfx::IntRect m_label_rect;
 };
 

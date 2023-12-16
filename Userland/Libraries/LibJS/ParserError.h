@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -16,12 +16,12 @@
 namespace JS {
 
 struct ParserError {
-    DeprecatedString message;
+    ByteString message;
     Optional<Position> position;
 
     ErrorOr<String> to_string() const;
-    DeprecatedString to_deprecated_string() const;
-    DeprecatedString source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
+    ByteString to_byte_string() const;
+    ByteString source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
 };
 
 }

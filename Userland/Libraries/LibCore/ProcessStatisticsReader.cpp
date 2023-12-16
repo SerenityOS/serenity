@@ -14,7 +14,7 @@
 
 namespace Core {
 
-HashMap<uid_t, DeprecatedString> ProcessStatisticsReader::s_usernames;
+HashMap<uid_t, ByteString> ProcessStatisticsReader::s_usernames;
 
 ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream& proc_all_file, bool include_usernames)
 {
@@ -37,11 +37,11 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
         process.gid = process_object.get_u32("gid"sv).value_or(0);
         process.ppid = process_object.get_u32("ppid"sv).value_or(0);
         process.kernel = process_object.get_bool("kernel"sv).value_or(false);
-        process.name = process_object.get_deprecated_string("name"sv).value_or("");
-        process.executable = process_object.get_deprecated_string("executable"sv).value_or("");
-        process.tty = process_object.get_deprecated_string("tty"sv).value_or("");
-        process.pledge = process_object.get_deprecated_string("pledge"sv).value_or("");
-        process.veil = process_object.get_deprecated_string("veil"sv).value_or("");
+        process.name = process_object.get_byte_string("name"sv).value_or("");
+        process.executable = process_object.get_byte_string("executable"sv).value_or("");
+        process.tty = process_object.get_byte_string("tty"sv).value_or("");
+        process.pledge = process_object.get_byte_string("pledge"sv).value_or("");
+        process.veil = process_object.get_byte_string("veil"sv).value_or("");
         process.creation_time = UnixDateTime::from_nanoseconds_since_epoch(process_object.get_i64("creation_time"sv).value_or(0));
         process.amount_virtual = process_object.get_u32("amount_virtual"sv).value_or(0);
         process.amount_resident = process_object.get_u32("amount_resident"sv).value_or(0);
@@ -58,8 +58,8 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
             Core::ThreadStatistics thread;
             thread.tid = thread_object.get_u32("tid"sv).value_or(0);
             thread.times_scheduled = thread_object.get_u32("times_scheduled"sv).value_or(0);
-            thread.name = thread_object.get_deprecated_string("name"sv).value_or("");
-            thread.state = thread_object.get_deprecated_string("state"sv).value_or("");
+            thread.name = thread_object.get_byte_string("name"sv).value_or("");
+            thread.state = thread_object.get_byte_string("state"sv).value_or("");
             thread.time_user = thread_object.get_u64("time_user"sv).value_or(0);
             thread.time_kernel = thread_object.get_u64("time_kernel"sv).value_or(0);
             thread.cpu = thread_object.get_u32("cpu"sv).value_or(0);
@@ -95,7 +95,7 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(bool include_us
     return get_all(*proc_all_file, include_usernames);
 }
 
-DeprecatedString ProcessStatisticsReader::username_from_uid(uid_t uid)
+ByteString ProcessStatisticsReader::username_from_uid(uid_t uid)
 {
     if (s_usernames.is_empty()) {
         setpwent();
@@ -107,6 +107,6 @@ DeprecatedString ProcessStatisticsReader::username_from_uid(uid_t uid)
     auto it = s_usernames.find(uid);
     if (it != s_usernames.end())
         return (*it).value;
-    return DeprecatedString::number(uid);
+    return ByteString::number(uid);
 }
 }

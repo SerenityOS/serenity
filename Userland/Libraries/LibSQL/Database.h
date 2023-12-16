@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <LibSQL/Forward.h>
@@ -25,7 +25,7 @@ namespace SQL {
  */
 class Database : public RefCounted<Database> {
 public:
-    static ErrorOr<NonnullRefPtr<Database>> create(DeprecatedString);
+    static ErrorOr<NonnullRefPtr<Database>> create(ByteString);
     ~Database();
 
     ResultOr<void> open();
@@ -34,12 +34,12 @@ public:
     ErrorOr<size_t> file_size_in_bytes() const { return m_heap->file_size_in_bytes(); }
 
     ResultOr<void> add_schema(SchemaDef const&);
-    static Key get_schema_key(DeprecatedString const&);
-    ResultOr<NonnullRefPtr<SchemaDef>> get_schema(DeprecatedString const&);
+    static Key get_schema_key(ByteString const&);
+    ResultOr<NonnullRefPtr<SchemaDef>> get_schema(ByteString const&);
 
     ResultOr<void> add_table(TableDef& table);
-    static Key get_table_key(DeprecatedString const&, DeprecatedString const&);
-    ResultOr<NonnullRefPtr<TableDef>> get_table(DeprecatedString const&, DeprecatedString const&);
+    static Key get_table_key(ByteString const&, ByteString const&);
+    ResultOr<NonnullRefPtr<TableDef>> get_table(ByteString const&, ByteString const&);
 
     ErrorOr<Vector<Row>> select_all(TableDef&);
     ErrorOr<Vector<Row>> match(TableDef&, Key const&);

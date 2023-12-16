@@ -287,7 +287,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     VERIFY(config.has_group(name));
 
     set_name(name);
-    m_executable_path = config.read_entry(name, "Executable", DeprecatedString::formatted("/bin/{}", this->name()));
+    m_executable_path = config.read_entry(name, "Executable", ByteString::formatted("/bin/{}", this->name()));
     m_extra_arguments = config.read_entry(name, "Arguments");
     m_stdio_file_path = config.read_entry_optional(name, "StdIO");
 
@@ -321,12 +321,12 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
     m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
 
-    DeprecatedString socket_entry = config.read_entry(name, "Socket");
-    DeprecatedString socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
+    ByteString socket_entry = config.read_entry(name, "Socket");
+    ByteString socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
 
     if (!socket_entry.is_empty()) {
-        Vector<DeprecatedString> socket_paths = socket_entry.split(',');
-        Vector<DeprecatedString> socket_perms = socket_permissions_entry.split(',');
+        Vector<ByteString> socket_paths = socket_entry.split(',');
+        Vector<ByteString> socket_perms = socket_permissions_entry.split(',');
         m_sockets.ensure_capacity(socket_paths.size());
 
         // Need i here to iterate along with all other vectors.

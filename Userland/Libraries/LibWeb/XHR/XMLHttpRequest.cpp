@@ -305,7 +305,7 @@ void XMLHttpRequest::set_document_response()
         document = DOM::Document::create(realm());
         if (!charset.has_value())
             if (auto found_charset = HTML::run_prescan_byte_stream_algorithm(*document, m_received_bytes); found_charset.has_value())
-                charset = MUST(String::from_deprecated_string(found_charset.value())).bytes_as_string_view();
+                charset = MUST(String::from_byte_string(found_charset.value())).bytes_as_string_view();
 
         // 5.3. If charset is null, then set charset to UTF-8.
         if (!charset.has_value())

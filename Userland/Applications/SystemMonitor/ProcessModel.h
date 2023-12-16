@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibGUI/Icon.h>
@@ -110,14 +110,14 @@ private:
         u64 time_user { 0 };
         u64 time_kernel { 0 };
         bool kernel { false };
-        DeprecatedString executable { "" };
-        DeprecatedString name { "" };
+        ByteString executable { "" };
+        ByteString name { "" };
         Variant<String, EmptyCommand> command { EmptyCommand::NotInitialized };
         uid_t uid { 0 };
-        DeprecatedString state { "" };
-        DeprecatedString user { "" };
-        DeprecatedString pledge { "" };
-        DeprecatedString veil { "" };
+        ByteString state { "" };
+        ByteString user { "" };
+        ByteString pledge { "" };
+        ByteString veil { "" };
         u32 cpu { 0 };
         u32 priority { 0 };
         size_t amount_virtual { 0 };

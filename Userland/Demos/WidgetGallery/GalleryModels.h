@@ -60,7 +60,7 @@ public:
     {
         m_cursors.clear();
 
-        Core::DirIterator iterator(DeprecatedString::formatted("/res/cursor-themes/{}", GUI::ConnectionToWindowServer::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
+        Core::DirIterator iterator(ByteString::formatted("/res/cursor-themes/{}", GUI::ConnectionToWindowServer::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
             auto path = iterator.next_full_path();
@@ -90,8 +90,8 @@ private:
 
     struct Cursor {
         RefPtr<Gfx::Bitmap> bitmap;
-        DeprecatedString path;
-        DeprecatedString name;
+        ByteString path;
+        ByteString name;
         Gfx::CursorParams params;
     };
 
@@ -194,7 +194,7 @@ private:
     struct IconSet {
         RefPtr<Gfx::Bitmap> big_icon;
         RefPtr<Gfx::Bitmap> little_icon;
-        DeprecatedString name;
+        ByteString name;
     };
 
     Vector<IconSet> m_icon_sets;

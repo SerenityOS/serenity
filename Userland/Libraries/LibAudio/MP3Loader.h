@@ -37,7 +37,7 @@ public:
     virtual u32 sample_rate() override { return m_sample_rate; }
     virtual u16 num_channels() override { return m_num_channels; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
-    virtual DeprecatedString format_name() override { return "MP3 (.mp3)"; }
+    virtual ByteString format_name() override { return "MP3 (.mp3)"; }
 
 private:
     MaybeLoaderError initialize();

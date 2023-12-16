@@ -23,7 +23,7 @@ int main(int argc, char** argv, char** env)
 {
     Vector<StringView> arguments;
     bool pause_on_startup { false };
-    DeprecatedString profile_dump_path;
+    ByteString profile_dump_path;
     bool enable_roi_mode { false };
     bool dump_profile { false };
     unsigned profile_instruction_interval { 0 };
@@ -51,13 +51,13 @@ int main(int argc, char** argv, char** env)
         reportln("Cannot find executable for '{}'."sv, arguments[0]);
         return 1;
     }
-    auto executable_path = executable_path_or_error.release_value().to_deprecated_string();
+    auto executable_path = executable_path_or_error.release_value().to_byte_string();
 
     if (dump_profile && profile_dump_path.is_empty())
-        profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
+        profile_dump_path = ByteString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
     OwnPtr<Stream> profile_stream;
-    OwnPtr<Vector<NonnullOwnPtr<DeprecatedString>>> profile_strings;
+    OwnPtr<Vector<NonnullOwnPtr<ByteString>>> profile_strings;
     OwnPtr<Vector<int>> profile_string_id_map;
 
     if (dump_profile) {
@@ -67,21 +67,21 @@ int main(int argc, char** argv, char** env)
             return 1;
         }
         profile_stream = profile_stream_or_error.release_value();
-        profile_strings = make<Vector<NonnullOwnPtr<DeprecatedString>>>();
+        profile_strings = make<Vector<NonnullOwnPtr<ByteString>>>();
         profile_string_id_map = make<Vector<int>>();
 
         profile_stream->write_until_depleted(R"({"events":[)"sv.bytes()).release_value_but_fixme_should_propagate_errors();
         timeval tv {};
         gettimeofday(&tv, nullptr);
         profile_stream->write_until_depleted(
-                          DeprecatedString::formatted(
+                          ByteString::formatted(
                               R"~({{"type": "process_create", "parent_pid": 1, "executable": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": []}})~",
                               executable_path, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000)
                               .bytes())
             .release_value_but_fixme_should_propagate_errors();
     }
 
-    Vector<DeprecatedString> environment;
+    Vector<ByteString> environment;
     for (int i = 0; env[i]; ++i) {
         environment.append(env[i]);
     }
@@ -112,8 +112,8 @@ int main(int argc, char** argv, char** env)
         emulator.profile_stream().write_until_depleted("], \"strings\": ["sv.bytes()).release_value_but_fixme_should_propagate_errors();
         if (emulator.profiler_strings().size()) {
             for (size_t i = 0; i < emulator.profiler_strings().size() - 1; ++i)
-                emulator.profile_stream().write_until_depleted(DeprecatedString::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes()).release_value_but_fixme_should_propagate_errors();
-            emulator.profile_stream().write_until_depleted(DeprecatedString::formatted("\"{}\"", emulator.profiler_strings().last()).bytes()).release_value_but_fixme_should_propagate_errors();
+                emulator.profile_stream().write_until_depleted(ByteString::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes()).release_value_but_fixme_should_propagate_errors();
+            emulator.profile_stream().write_until_depleted(ByteString::formatted("\"{}\"", emulator.profiler_strings().last()).bytes()).release_value_but_fixme_should_propagate_errors();
         }
         emulator.profile_stream().write_until_depleted("]}"sv.bytes()).release_value_but_fixme_should_propagate_errors();
     }

@@ -35,7 +35,7 @@ public:
             return PropertyKey { value.as_symbol() };
         if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
             return static_cast<u32>(value.as_double());
-        return TRY(value.to_deprecated_string(vm));
+        return TRY(value.to_byte_string(vm));
     }
 
     PropertyKey() = default;
@@ -48,7 +48,7 @@ public:
         VERIFY(index >= 0);
         if constexpr (NumericLimits<T>::max() >= NumericLimits<u32>::max()) {
             if (index >= NumericLimits<u32>::max()) {
-                m_string = DeprecatedString::number(index);
+                m_string = ByteString::number(index);
                 m_type = Type::String;
                 m_string_may_be_number = false;
                 return;
@@ -65,7 +65,7 @@ public:
     {
     }
 
-    PropertyKey(DeprecatedString const& string)
+    PropertyKey(ByteString const& string)
         : m_type(Type::String)
         , m_string(DeprecatedFlyString(string))
     {
@@ -164,13 +164,13 @@ public:
         return m_symbol;
     }
 
-    DeprecatedString to_string() const
+    ByteString to_string() const
     {
         VERIFY(is_valid());
         VERIFY(!is_symbol());
         if (is_string())
             return as_string();
-        return DeprecatedString::number(as_number());
+        return ByteString::number(as_number());
     }
 
     StringOrSymbol to_string_or_symbol() const

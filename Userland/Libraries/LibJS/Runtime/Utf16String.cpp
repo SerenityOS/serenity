@@ -107,9 +107,9 @@ String Utf16String::to_utf8() const
     return MUST(view().to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
 }
 
-DeprecatedString Utf16String::to_deprecated_string() const
+ByteString Utf16String::to_byte_string() const
 {
-    return MUST(view().to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes));
+    return MUST(view().to_byte_string(Utf16View::AllowInvalidCodeUnits::Yes));
 }
 
 u16 Utf16String::code_unit_at(size_t index) const

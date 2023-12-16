@@ -80,7 +80,7 @@ void Shell::print_path(StringView path)
     out("\033]8;;{}\033\\{}\033]8;;\033\\", url.serialize(), path);
 }
 
-DeprecatedString Shell::prompt() const
+ByteString Shell::prompt() const
 {
     if (m_next_scheduled_prompt_text.has_value())
         return m_next_scheduled_prompt_text.release_value();
@@ -93,7 +93,7 @@ DeprecatedString Shell::prompt() const
         StringBuilder builder;
         builder.appendff("\033]0;{}@{}:{}\007", username, hostname, cwd);
         builder.appendff("\033[31;1m{}\033[0m@\033[37;1m{}\033[0m:\033[32;1m{}\033[0m$> ", username, hostname, cwd);
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
 
     StringBuilder builder;
@@ -121,7 +121,7 @@ DeprecatedString Shell::prompt() const
             builder.append({ hostname, strlen(hostname) });
 
         } else if (lexer.consume_specific('w') || lexer.consume_specific('W')) {
-            DeprecatedString const home_path = getenv("HOME");
+            ByteString const home_path = getenv("HOME");
             if (cwd.starts_with(home_path)) {
                 builder.append('~');
                 builder.append(cwd.substring_view(home_path.length(), cwd.length() - home_path.length()));
@@ -139,7 +139,7 @@ DeprecatedString Shell::prompt() const
 
             auto const max_component_count = number_string.to_uint().value();
 
-            DeprecatedString const home_path = getenv("HOME");
+            ByteString const home_path = getenv("HOME");
 
             auto const should_collapse_path = cwd.starts_with(home_path);
             auto const should_use_ellipsis = (next_char == 'w');
@@ -172,13 +172,13 @@ DeprecatedString Shell::prompt() const
             builder.append(uid == 0 ? '#' : '$');
 
         } else if (lexer.consume_specific('t')) {
-            builder.append(Core::DateTime::now().to_deprecated_string("%H:%M:%S"sv));
+            builder.append(Core::DateTime::now().to_byte_string("%H:%M:%S"sv));
 
         } else if (lexer.consume_specific('T')) {
-            builder.append(Core::DateTime::now().to_deprecated_string("%I:%M:%S"sv));
+            builder.append(Core::DateTime::now().to_byte_string("%I:%M:%S"sv));
 
         } else if (lexer.consume_specific('@')) {
-            builder.append(Core::DateTime::now().to_deprecated_string("%I:%M %p"sv));
+            builder.append(Core::DateTime::now().to_byte_string("%I:%M %p"sv));
 
         } else if (lexer.consume_specific("D{"sv)) {
             auto format = lexer.consume_until('}');
@@ -187,7 +187,7 @@ DeprecatedString Shell::prompt() const
 
             if (format.is_empty())
                 format = "%y-%m-%d"sv;
-            builder.append(Core::DateTime::now().to_deprecated_string(format));
+            builder.append(Core::DateTime::now().to_byte_string(format));
 
         } else if (lexer.consume_specific('j')) {
             builder.appendff("{}", jobs.size());
@@ -205,10 +205,10 @@ DeprecatedString Shell::prompt() const
             lexer.consume();
         }
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString Shell::expand_tilde(StringView expression)
+ByteString Shell::expand_tilde(StringView expression)
 {
     VERIFY(expression.starts_with('~'));
 
@@ -231,17 +231,17 @@ DeprecatedString Shell::expand_tilde(StringView expression)
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
-            return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_deprecated_string());
+            return ByteString::formatted("{}/{}", passwd->pw_dir, path.to_byte_string());
         }
-        return DeprecatedString::formatted("{}/{}", home, path.to_deprecated_string());
+        return ByteString::formatted("{}/{}", home, path.to_byte_string());
     }
 
-    auto passwd = getpwnam(login_name.to_deprecated_string().characters());
+    auto passwd = getpwnam(login_name.to_byte_string().characters());
     if (!passwd)
         return expression;
     VERIFY(passwd->pw_dir);
 
-    return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_deprecated_string());
+    return ByteString::formatted("{}/{}", passwd->pw_dir, path.to_byte_string());
 }
 
 bool Shell::is_glob(StringView s)
@@ -254,7 +254,7 @@ bool Shell::is_glob(StringView s)
     return false;
 }
 
-ErrorOr<Vector<DeprecatedString>> Shell::expand_globs(StringView path, StringView base)
+ErrorOr<Vector<ByteString>> Shell::expand_globs(StringView path, StringView base)
 {
     auto explicitly_set_base = false;
     if (path.starts_with('/')) {
@@ -288,10 +288,10 @@ ErrorOr<Vector<DeprecatedString>> Shell::expand_globs(StringView path, StringVie
     return results;
 }
 
-Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, StringView base)
+Vector<ByteString> Shell::expand_globs(Vector<StringView> path_segments, StringView base)
 {
     if (path_segments.is_empty()) {
-        DeprecatedString base_str = base;
+        ByteString base_str = base;
         struct stat statbuf;
         if (lstat(base_str.characters(), &statbuf) < 0)
             return {};
@@ -300,7 +300,7 @@ Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, S
 
     auto first_segment = path_segments.take_first();
     if (is_glob(first_segment)) {
-        Vector<DeprecatedString> result;
+        Vector<ByteString> result;
 
         auto const is_glob_directory = first_segment.ends_with('/');
         if (is_glob_directory)
@@ -389,12 +389,12 @@ ErrorOr<Vector<AST::Command>> Shell::expand_aliases(Vector<AST::Command> initial
     return commands;
 }
 
-DeprecatedString Shell::resolve_path(DeprecatedString path) const
+ByteString Shell::resolve_path(ByteString path) const
 {
     if (!path.starts_with('/'))
-        path = DeprecatedString::formatted("{}/{}", cwd, path);
+        path = ByteString::formatted("{}/{}", cwd, path);
 
-    return FileSystem::real_path(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return FileSystem::real_path(path).release_value_but_fixme_should_propagate_errors().to_byte_string();
 }
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
@@ -421,7 +421,7 @@ ErrorOr<RefPtr<AST::Value const>> Shell::look_up_local_variable(StringView name)
 ErrorOr<RefPtr<AST::Value const>> Shell::get_argument(size_t index) const
 {
     if (index == 0) {
-        auto current_script_string = TRY(String::from_deprecated_string(current_script));
+        auto current_script_string = TRY(String::from_byte_string(current_script));
         return adopt_ref(*new AST::StringValue(current_script_string));
     }
 
@@ -444,18 +444,18 @@ ErrorOr<RefPtr<AST::Value const>> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-ErrorOr<DeprecatedString> Shell::local_variable_or(StringView name, DeprecatedString const& replacement) const
+ErrorOr<ByteString> Shell::local_variable_or(StringView name, ByteString const& replacement) const
 {
     auto value = TRY(look_up_local_variable(name));
     if (value) {
         StringBuilder builder;
         builder.join(' ', TRY(const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this))));
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
     return replacement;
 }
 
-void Shell::set_local_variable(DeprecatedString const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
+void Shell::set_local_variable(ByteString const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name)) {
@@ -487,7 +487,7 @@ void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
     m_local_frames.last()->local_variables.remove(name);
 }
 
-void Shell::define_function(DeprecatedString name, Vector<DeprecatedString> argnames, RefPtr<AST::Node> body)
+void Shell::define_function(ByteString name, Vector<ByteString> argnames, RefPtr<AST::Node> body)
 {
     add_entry_to_cache({ RunnablePath::Kind::Function, name });
     m_functions.set(name, { name, move(argnames), move(body) });
@@ -505,7 +505,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
     StringView name = command.argv.first();
 
-    TemporaryChange<DeprecatedString> script_change { current_script, name };
+    TemporaryChange<ByteString> script_change { current_script, name };
 
     auto function_option = m_functions.get(name);
     if (!function_option.has_value())
@@ -519,12 +519,12 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     }
 
     if (command.argv.size() - 1 < function.arguments.size()) {
-        raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected at least {} arguments to {}, but got {}", function.arguments.size(), function.name, command.argv.size() - 1), command.position);
+        raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Expected at least {} arguments to {}, but got {}", function.arguments.size(), function.name, command.argv.size() - 1), command.position);
         retval = 1;
         return true;
     }
 
-    auto frame = push_frame(DeprecatedString::formatted("function {}", function.name), LocalFrameKind::FunctionOrGlobal);
+    auto frame = push_frame(ByteString::formatted("function {}", function.name), LocalFrameKind::FunctionOrGlobal);
     size_t index = 0;
     for (auto& arg : function.arguments) {
         ++index;
@@ -547,7 +547,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     return true;
 }
 
-DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
+ByteString Shell::format(StringView source, ssize_t& cursor) const
 {
     Formatter formatter(source, cursor, m_in_posix_mode);
     auto result = formatter.format();
@@ -556,7 +556,7 @@ DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
     return result;
 }
 
-Shell::Frame Shell::push_frame(DeprecatedString name, Shell::LocalFrameKind kind)
+Shell::Frame Shell::push_frame(ByteString name, Shell::LocalFrameKind kind)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}, kind));
     dbgln_if(SH_DEBUG, "New frame '{}' at {:p}", name, &m_local_frames.last());
@@ -583,7 +583,7 @@ Shell::Frame::~Frame()
     (void)frames.take_last();
 }
 
-Optional<DeprecatedString> Shell::resolve_alias(StringView name) const
+Optional<ByteString> Shell::resolve_alias(StringView name) const
 {
     return m_aliases.get(name);
 }
@@ -606,7 +606,7 @@ Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
     return *found;
 }
 
-Optional<DeprecatedString> Shell::help_path_for(Vector<RunnablePath> visited, Shell::RunnablePath const& runnable_path)
+Optional<ByteString> Shell::help_path_for(Vector<RunnablePath> visited, Shell::RunnablePath const& runnable_path)
 {
     switch (runnable_path.kind) {
     case RunnablePath::Kind::Executable: {
@@ -806,11 +806,11 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     }
 
     Vector<char const*> argv;
-    Vector<DeprecatedString> copy_argv;
+    Vector<ByteString> copy_argv;
     argv.ensure_capacity(command.argv.size() + 1);
 
     for (auto& arg : command.argv) {
-        copy_argv.append(arg.to_deprecated_string());
+        copy_argv.append(arg.to_byte_string());
         argv.append(copy_argv.last().characters());
     }
 
@@ -920,7 +920,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     // as the child will run this chain.
     if (command.should_immediately_execute_next)
         command_copy.next_chain.clear();
-    auto job = Job::create(child, pgid, cmd.to_deprecated_string(), find_last_job_id() + 1, move(command_copy));
+    auto job = Job::create(child, pgid, cmd.to_byte_string(), find_last_job_id() + 1, move(command_copy));
     jobs.set((u64)child, job);
 
     job->on_exit = [this](auto job) {
@@ -951,7 +951,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
 
 ErrorOr<void> Shell::execute_process(Span<StringView> argv)
 {
-    Vector<DeprecatedString> strings;
+    Vector<ByteString> strings;
     Vector<char const*> args;
     TRY(strings.try_ensure_capacity(argv.size()));
     TRY(args.try_ensure_capacity(argv.size() + 1));
@@ -1016,7 +1016,7 @@ void Shell::execute_process(Vector<char const*>&& argv)
                 if (!line.starts_with("#!"sv))
                     break;
                 GenericLexer shebang_lexer { line.substring_view(2) };
-                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r"sv)).to_deprecated_string();
+                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r"sv)).to_byte_string();
                 argv.prepend(shebang.characters());
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
                 if (rc < 0) {
@@ -1114,7 +1114,7 @@ Vector<NonnullRefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
         }
         auto job_result = run_command(command);
         if (job_result.is_error()) {
-            raise_error(ShellError::LaunchError, DeprecatedString::formatted("{} while running '{}'", job_result.error(), command.argv.first()), command.position);
+            raise_error(ShellError::LaunchError, ByteString::formatted("{} while running '{}'", job_result.error(), command.argv.first()), command.position);
             break;
         }
 
@@ -1141,7 +1141,7 @@ Vector<NonnullRefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
     return spawned_jobs;
 }
 
-bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
+bool Shell::run_file(ByteString const& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
     TemporaryChange interactive_change { m_is_interactive, false };
@@ -1149,7 +1149,7 @@ bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
 
     auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
-        auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_or_error.error());
+        auto error = ByteString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_or_error.error());
         if (explicitly_invoked)
             raise_error(ShellError::OpenFailure, error);
         else
@@ -1159,7 +1159,7 @@ bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
     auto file = file_or_error.release_value();
     auto data_or_error = file->read_until_eof();
     if (data_or_error.is_error()) {
-        auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), data_or_error.error());
+        auto error = ByteString::formatted("'{}': {}", escape_token_for_single_quotes(filename), data_or_error.error());
         if (explicitly_invoked)
             raise_error(ShellError::OpenFailure, error);
         else
@@ -1242,14 +1242,14 @@ void Shell::block_on_job(RefPtr<Job> job)
         block_on_pipeline(command->pipeline);
 }
 
-DeprecatedString Shell::get_history_path()
+ByteString Shell::get_history_path()
 {
     if (auto histfile = getenv("HISTFILE"))
         return { histfile };
-    return DeprecatedString::formatted("{}/.history", home);
+    return ByteString::formatted("{}/.history", home);
 }
 
-DeprecatedString Shell::escape_token_for_single_quotes(StringView token)
+ByteString Shell::escape_token_for_single_quotes(StringView token)
 {
     // `foo bar \n '` -> `'foo bar \n '"'"`
 
@@ -1276,10 +1276,10 @@ DeprecatedString Shell::escape_token_for_single_quotes(StringView token)
     if (started_single_quote)
         builder.append("'"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
+ByteString Shell::escape_token_for_double_quotes(StringView token)
 {
     // `foo bar \n $x 'blah "hello` -> `"foo bar \\n $x 'blah \"hello"`
 
@@ -1302,7 +1302,7 @@ DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
 
     builder.append('"');
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point, EscapeMode mode)
@@ -1346,7 +1346,7 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
 }
 
 template<typename... Offsets>
-static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token, Offsets&... offsets)
+static ByteString do_escape(Shell::EscapeMode escape_mode, auto& token, Offsets&... offsets)
 {
     StringBuilder builder;
     size_t offset_from_original = 0;
@@ -1431,15 +1431,15 @@ static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token, Of
         }
     }
     check_offsets();
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString Shell::escape_token(Utf32View token, EscapeMode escape_mode)
+ByteString Shell::escape_token(Utf32View token, EscapeMode escape_mode)
 {
     return do_escape(escape_mode, token);
 }
 
-DeprecatedString Shell::escape_token(StringView token, EscapeMode escape_mode)
+ByteString Shell::escape_token(StringView token, EscapeMode escape_mode)
 {
     Utf8View view { token };
     if (view.validate())
@@ -1447,7 +1447,7 @@ DeprecatedString Shell::escape_token(StringView token, EscapeMode escape_mode)
     return do_escape(escape_mode, token);
 }
 
-DeprecatedString Shell::unescape_token(StringView token)
+ByteString Shell::unescape_token(StringView token)
 {
     StringBuilder builder;
 
@@ -1474,7 +1474,7 @@ DeprecatedString Shell::unescape_token(StringView token)
     if (state == Escaped)
         builder.append('\\');
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 void Shell::cache_path()
@@ -1506,14 +1506,14 @@ void Shell::cache_path()
     }
 
     // TODO: Can we make this rely on Core::System::resolve_executable_from_environment()?
-    DeprecatedString path = getenv("PATH");
+    ByteString path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
         for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
-                auto program_path = DeprecatedString::formatted("{}/{}", directory, program);
+                auto program_path = ByteString::formatted("{}/{}", directory, program);
                 auto escaped_name = escape_token(program);
                 if (cached_path.contains_slow(escaped_name))
                     continue;
@@ -1577,7 +1577,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
 Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const* node, EscapeMode escape_mode)
 {
     auto token = offset ? part.substring_view(0, offset) : ""sv;
-    DeprecatedString path;
+    ByteString path;
 
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
@@ -1615,7 +1615,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
         path_builder.append('/');
         path_builder.append(init_slash_part);
     }
-    path = path_builder.to_deprecated_string();
+    path = path_builder.to_byte_string();
     token = last_slash_part;
 
     // the invariant part of the token is actually just the last segment
@@ -1638,7 +1638,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
         auto file = files.next_path();
         if (file.starts_with(token)) {
             struct stat program_status;
-            auto file_path = DeprecatedString::formatted("{}/{}", path, file);
+            auto file_path = ByteString::formatted("{}/{}", path, file);
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
@@ -1678,7 +1678,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
     if (!match)
         return complete_path(""sv, name, offset, ExecutableOnly::Yes, nullptr, nullptr, escape_mode);
 
-    DeprecatedString completion = match->path;
+    ByteString completion = match->path;
     auto token_length = escape_token(name, escape_mode).length();
     auto invariant_offset = token_length;
     size_t static_offset = 0;
@@ -1732,7 +1732,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
             auto parts = entry.split_view('=');
             if (parts.is_empty() || parts.first().is_empty())
                 continue;
-            DeprecatedString name = parts.first();
+            ByteString name = parts.first();
             if (suggestions.contains_slow(name))
                 continue;
             suggestions.append(move(name));
@@ -1764,7 +1764,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
         return suggestions;
 
     while (di.has_next()) {
-        DeprecatedString name = di.next_path();
+        ByteString name = di.next_path();
         if (name.starts_with(pattern)) {
             suggestions.append(name);
             auto& suggestion = suggestions.last();
@@ -2029,27 +2029,27 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto parsed = parsed_result.release_value();
             if (parsed.is_object()) {
                 auto& object = parsed.as_object();
-                auto kind = object.get_deprecated_string("kind"sv).value_or("plain");
+                auto kind = object.get_byte_string("kind"sv).value_or("plain");
                 if (kind == "path") {
-                    auto base = object.get_deprecated_string("base"sv).value_or("");
-                    auto part = object.get_deprecated_string("part"sv).value_or("");
+                    auto base = object.get_byte_string("base"sv).value_or("");
+                    auto part = object.get_byte_string("part"sv).value_or("");
                     auto executable_only = object.get_bool("executable_only"sv).value_or(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
                     suggestions.extend(complete_path(base, part, part.length(), executable_only, nullptr, nullptr));
                 } else if (kind == "program") {
-                    auto name = object.get_deprecated_string("name"sv).value_or("");
+                    auto name = object.get_byte_string("name"sv).value_or("");
                     suggestions.extend(complete_program_name(name, name.length()));
                 } else if (kind == "proxy") {
                     if (m_completion_stack_info.size_free() < 4 * KiB) {
                         dbgln("Not enough stack space, recursion?");
                         return IterationDecision::Continue;
                     }
-                    auto argv = object.get_deprecated_string("argv"sv).value_or("");
+                    auto argv = object.get_byte_string("argv"sv).value_or("");
                     dbgln("Proxy completion for {}", argv);
                     suggestions.extend(complete(argv));
                 } else if (kind == "plain") {
-                    auto completion_text = object.get_deprecated_string("completion"sv).value_or("");
-                    auto trailing_text = object.get_deprecated_string("trailing_trivia"sv).value_or("");
-                    auto display_text = object.get_deprecated_string("display_trivia"sv).value_or("");
+                    auto completion_text = object.get_byte_string("completion"sv).value_or("");
+                    auto trailing_text = object.get_byte_string("trailing_trivia"sv).value_or("");
+                    auto display_text = object.get_byte_string("display_trivia"sv).value_or("");
                     auto static_offset = object.get_u64("static_offset"sv).value_or(0);
                     auto invariant_offset = object.get_u64("invariant_offset"sv).value_or(0);
                     if (!object.get_bool("treat_as_code"sv).value_or(false)) {
@@ -2067,7 +2067,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     dbgln("LibLine: Unhandled completion kind: {}", kind);
                 }
             } else {
-                suggestions.append(parsed.to_deprecated_string());
+                suggestions.append(parsed.to_byte_string());
             }
 
             return IterationDecision::Continue;
@@ -2123,7 +2123,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
     // Black with Cyan background.
     constexpr auto default_mark = "\e[30;46m%\e[0m";
     auto eol_mark_ptr = getenv("PROMPT_EOL_MARK");
-    DeprecatedString eol_mark = eol_mark_ptr ?: default_mark;
+    ByteString eol_mark = eol_mark_ptr ?: default_mark;
     size_t eol_mark_length = Line::Editor::actual_rendered_string_metrics(eol_mark).line_metrics.last().total_length();
     if (eol_mark_length >= ws.ws_col) {
         eol_mark = default_mark;
@@ -2135,7 +2135,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
     // We write a line's worth of whitespace to the terminal. This way, we ensure that
     // the prompt ends up on a new line even if there is dangling output on the current line.
     size_t fill_count = ws.ws_col - eol_mark_length;
-    auto fill_buffer = DeprecatedString::repeated(' ', fill_count);
+    auto fill_buffer = ByteString::repeated(' ', fill_count);
     fwrite(fill_buffer.characters(), 1, fill_count, stderr);
 
     putc('\r', stderr);
@@ -2351,7 +2351,7 @@ Shell::Shell()
         if (path.length())
             path.append(":"sv);
         path.append(DEFAULT_PATH_SV);
-        setenv("PATH", path.to_deprecated_string().characters(), true);
+        setenv("PATH", path.to_byte_string().characters(), true);
     }
 
     cache_path();

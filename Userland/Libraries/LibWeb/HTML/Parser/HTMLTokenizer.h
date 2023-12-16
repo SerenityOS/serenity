@@ -103,7 +103,7 @@ namespace Web::HTML {
 class HTMLTokenizer {
 public:
     explicit HTMLTokenizer();
-    explicit HTMLTokenizer(StringView input, DeprecatedString const& encoding);
+    explicit HTMLTokenizer(StringView input, ByteString const& encoding);
 
     enum class State {
 #define __ENUMERATE_TOKENIZER_STATE(state) state,
@@ -124,7 +124,7 @@ public:
     void set_blocked(bool b) { m_blocked = b; }
     bool is_blocked() const { return m_blocked; }
 
-    DeprecatedString source() const { return m_decoded_input; }
+    ByteString source() const { return m_decoded_input; }
 
     void insert_input_at_insertion_point(StringView input);
     void insert_eof();
@@ -184,7 +184,7 @@ private:
 
     Vector<u32> m_temporary_buffer;
 
-    DeprecatedString m_decoded_input;
+    ByteString m_decoded_input;
 
     struct InsertionPoint {
         size_t position { 0 };
@@ -200,7 +200,7 @@ private:
     HTMLToken m_current_token;
     StringBuilder m_current_builder;
 
-    Optional<DeprecatedString> m_last_emitted_start_tag_name;
+    Optional<ByteString> m_last_emitted_start_tag_name;
 
     bool m_explicit_eof_inserted { false };
     bool m_has_emitted_eof { false };

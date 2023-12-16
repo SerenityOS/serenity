@@ -15,12 +15,12 @@ Object::Object(Core::EventReceiver* parent)
 
 Object::~Object() = default;
 
-void Object::register_property(DeprecatedString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
+void Object::register_property(ByteString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
 {
     m_properties.set(name, make<Property>(name, move(getter), move(setter)));
 }
 
-JsonValue Object::property(DeprecatedString const& name) const
+JsonValue Object::property(ByteString const& name) const
 {
     auto it = m_properties.find(name);
     if (it == m_properties.end())
@@ -28,7 +28,7 @@ JsonValue Object::property(DeprecatedString const& name) const
     return it->value->get();
 }
 
-bool Object::set_property(DeprecatedString const& name, JsonValue const& value)
+bool Object::set_property(ByteString const& name, JsonValue const& value)
 {
     auto it = m_properties.find(name);
     if (it == m_properties.end())

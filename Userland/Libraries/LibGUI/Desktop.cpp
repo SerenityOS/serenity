@@ -49,7 +49,7 @@ void Desktop::set_wallpaper_mode(StringView mode)
     ConnectionToWindowServer::the().async_set_wallpaper_mode(mode);
 }
 
-DeprecatedString Desktop::wallpaper_path() const
+ByteString Desktop::wallpaper_path() const
 {
     return Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv);
 }

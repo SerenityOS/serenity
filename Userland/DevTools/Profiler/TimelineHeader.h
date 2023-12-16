@@ -33,7 +33,7 @@ private:
     Profile& m_profile;
     Process const& m_process;
     RefPtr<Gfx::Bitmap const> m_icon;
-    DeprecatedString m_text;
+    ByteString m_text;
     bool m_selected;
 };
 

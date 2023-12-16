@@ -129,7 +129,7 @@ void MainWidget::image_editor_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
 
     auto& undo_stack = image_editor->undo_stack();
@@ -141,7 +141,7 @@ void MainWidget::image_editor_did_update_undo_stack()
 }
 
 // Note: Update these together! v
-static Vector<DeprecatedString> const s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
+static Vector<ByteString> const s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
 static constexpr int s_zoom_level_fit_width = 8;
 static constexpr int s_zoom_level_fit_height = 9;
 static constexpr int s_zoom_level_fit_image = 10;
@@ -174,7 +174,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
                 auto& editor = create_new_editor(*image);
                 auto image_title = dialog->image_name().trim_whitespace();
-                editor.set_title((image_title.is_empty() ? "Untitled"_string : String::from_deprecated_string(image_title)).release_value_but_fixme_should_propagate_errors());
+                editor.set_title((image_title.is_empty() ? "Untitled"_string : String::from_byte_string(image_title)).release_value_but_fixme_should_propagate_errors());
                 editor.set_unmodified();
 
                 m_histogram_widget->set_image(image);
@@ -205,7 +205,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project_as();
-        auto path_string = String::from_deprecated_string(editor->path()).release_value_but_fixme_should_propagate_errors();
+        auto path_string = String::from_byte_string(editor->path()).release_value_but_fixme_should_propagate_errors();
         GUI::Application::the()->set_most_recently_open_file(path_string);
     });
 
@@ -213,7 +213,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project();
-        auto path_string = String::from_deprecated_string(editor->path()).release_value_but_fixme_should_propagate_errors();
+        auto path_string = String::from_byte_string(editor->path()).release_value_but_fixme_should_propagate_errors();
         GUI::Application::the()->set_most_recently_open_file(path_string);
     });
 
@@ -230,7 +230,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP...", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "bmp");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_byte_string(), "bmp");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -245,7 +245,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
-                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "png");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_byte_string(), "png");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -259,7 +259,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             "As &QOI...", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "qoi");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_byte_string(), "qoi");
                 if (response.is_error())
                     return;
                 auto result = editor->image().export_qoi_to_file(response.value().release_stream());
@@ -325,9 +325,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         }
         auto layer_rect = editor->active_layer()->relative_rect();
-        HashMap<DeprecatedString, DeprecatedString> layer_metadata;
-        layer_metadata.set("pixelpaint-layer-x", DeprecatedString::number(layer_rect.x()));
-        layer_metadata.set("pixelpaint-layer-y", DeprecatedString::number(layer_rect.y()));
+        HashMap<ByteString, ByteString> layer_metadata;
+        layer_metadata.set("pixelpaint-layer-x", ByteString::number(layer_rect.x()));
+        layer_metadata.set("pixelpaint-layer-y", ByteString::number(layer_rect.y()));
 
         GUI::Clipboard::the().set_bitmap(*bitmap, layer_metadata);
     });
@@ -1192,8 +1192,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_zoom_combobox = toolbar.add<GUI::ComboBox>();
     m_zoom_combobox->set_max_width(75);
-    m_zoom_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(s_suggested_zoom_levels));
-    m_zoom_combobox->on_change = [this](DeprecatedString const& value, GUI::ModelIndex const& index) {
+    m_zoom_combobox->set_model(*GUI::ItemListModel<ByteString>::create(s_suggested_zoom_levels));
+    m_zoom_combobox->on_change = [this](ByteString const& value, GUI::ModelIndex const& index) {
         auto* editor = current_image_editor();
         VERIFY(editor);
 
@@ -1295,7 +1295,7 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
     editor.set_loaded_from_image(m_loader.is_raw_image());
-    editor.set_path(file.filename().to_deprecated_string());
+    editor.set_path(file.filename().to_byte_string());
     editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
     GUI::Application::the()->set_most_recently_open_file(file.filename());
@@ -1415,7 +1415,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     };
 
     image_editor.on_scale_change = Core::debounce(100, [this](float scale) {
-        m_zoom_combobox->set_text(DeprecatedString::formatted("{}%", roundf(scale * 100)));
+        m_zoom_combobox->set_text(ByteString::formatted("{}%", roundf(scale * 100)));
         current_image_editor()->update_tool_cursor();
     });
 
@@ -1440,7 +1440,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             if (!value.is_object())
                 return;
             auto& json_object = value.as_object();
-            auto orientation_value = json_object.get_deprecated_string("orientation"sv);
+            auto orientation_value = json_object.get_byte_string("orientation"sv);
             if (!orientation_value.has_value())
                 return;
 
@@ -1502,10 +1502,10 @@ void MainWidget::update_window_modified()
 {
     window()->set_modified(m_tab_widget->is_any_tab_modified());
 }
-void MainWidget::update_status_bar(DeprecatedString appended_text)
+void MainWidget::update_status_bar(ByteString appended_text)
 {
     StringBuilder builder = StringBuilder();
-    builder.append(m_last_image_editor_mouse_position.to_deprecated_string());
+    builder.append(m_last_image_editor_mouse_position.to_byte_string());
     if (!appended_text.is_empty()) {
         builder.append(" "sv);
         builder.append(appended_text);

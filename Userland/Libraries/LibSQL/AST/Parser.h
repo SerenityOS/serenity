@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringView.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/AST/Lexer.h>
@@ -24,12 +24,12 @@ constexpr size_t maximum_bound_parameters = 1000;
 
 class Parser {
     struct Error {
-        DeprecatedString message;
+        ByteString message;
         SourcePosition position;
 
-        DeprecatedString to_deprecated_string() const
+        ByteString to_byte_string() const
         {
-            return DeprecatedString::formatted("{} (line: {}, column: {})", message, position.line, position.column);
+            return ByteString::formatted("{} (line: {}, column: {})", message, position.line, position.column);
         }
     };
 
@@ -74,7 +74,7 @@ private:
     bool match_secondary_expression() const;
     RefPtr<Expression> parse_literal_value_expression();
     RefPtr<Expression> parse_bind_parameter_expression();
-    RefPtr<Expression> parse_column_name_expression(Optional<DeprecatedString> with_parsed_identifier = {}, bool with_parsed_period = false);
+    RefPtr<Expression> parse_column_name_expression(Optional<ByteString> with_parsed_identifier = {}, bool with_parsed_period = false);
     RefPtr<Expression> parse_unary_operator_expression();
     RefPtr<Expression> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);
     RefPtr<Expression> parse_chained_expression(bool surrounded_by_parentheses = true);
@@ -97,7 +97,7 @@ private:
     NonnullRefPtr<ResultColumn> parse_result_column();
     NonnullRefPtr<TableOrSubquery> parse_table_or_subquery();
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
-    void parse_schema_and_table_name(DeprecatedString& schema_name, DeprecatedString& table_name);
+    void parse_schema_and_table_name(ByteString& schema_name, ByteString& table_name);
     ConflictResolution parse_conflict_resolution();
 
     template<typename ParseCallback>
@@ -125,7 +125,7 @@ private:
     bool match(TokenType type) const;
 
     void expected(StringView what);
-    void syntax_error(DeprecatedString message);
+    void syntax_error(ByteString message);
 
     SourcePosition position() const;
 

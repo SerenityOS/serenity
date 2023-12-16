@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     bool inplace = false;
-    Vector<DeprecatedString> files;
+    Vector<ByteString> files;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Format GML files.");

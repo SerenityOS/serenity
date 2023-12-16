@@ -42,7 +42,7 @@ void WebSocketImplSerenity::connect(ConnectionInfo const& connection_info)
     VERIFY(on_connection_error);
     VERIFY(on_ready_to_read);
     auto socket_result = [&]() -> ErrorOr<NonnullOwnPtr<Core::BufferedSocketBase>> {
-        auto host = TRY(connection_info.url().serialized_host()).to_deprecated_string();
+        auto host = TRY(connection_info.url().serialized_host()).to_byte_string();
         if (connection_info.is_secure()) {
             TLS::Options options;
             options.set_alert_handler([this](auto) {
@@ -82,11 +82,11 @@ ErrorOr<ByteBuffer> WebSocketImplSerenity::read(int max_size)
     return buffer.slice(0, read_bytes.size());
 }
 
-ErrorOr<DeprecatedString> WebSocketImplSerenity::read_line(size_t size)
+ErrorOr<ByteString> WebSocketImplSerenity::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     auto line = TRY(m_socket->read_line(buffer));
-    return line.to_deprecated_string();
+    return line.to_byte_string();
 }
 
 }

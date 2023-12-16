@@ -22,7 +22,7 @@ namespace HackStudio {
 
 struct InstructionData {
     X86::Instruction insn;
-    DeprecatedString disassembly;
+    ByteString disassembly;
     StringView bytes;
     FlatPtr address { 0 };
 };

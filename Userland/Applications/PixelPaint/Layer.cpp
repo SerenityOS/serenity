@@ -18,7 +18,7 @@
 
 namespace PixelPaint {
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_size(Image& image, Gfx::IntSize size, DeprecatedString name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_size(Image& image, Gfx::IntSize size, ByteString name)
 {
     VERIFY(!size.is_empty());
 
@@ -29,7 +29,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_size(Image& image, Gfx::IntSize
     return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, move(bitmap), move(name)));
 }
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, DeprecatedString name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, ByteString name)
 {
     VERIFY(!bitmap->size().is_empty());
 
@@ -64,7 +64,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::create_snapshot(Image& image, Layer const& 
     return snapshot;
 }
 
-Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, DeprecatedString name)
+Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, ByteString name)
     : m_image(image)
     , m_name(move(name))
     , m_content_bitmap(move(bitmap))
@@ -112,7 +112,7 @@ void Layer::set_opacity_percent(int opacity_percent)
     m_image.layer_did_modify_properties({}, *this);
 }
 
-void Layer::set_name(DeprecatedString name)
+void Layer::set_name(ByteString name)
 {
     if (m_name == name)
         return;
@@ -486,7 +486,7 @@ Optional<Gfx::IntRect> Layer::editing_mask_bounding_rect() const
         *max_content_y - *min_content_y + 1
     };
 }
-ErrorOr<NonnullRefPtr<Layer>> Layer::duplicate(DeprecatedString name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::duplicate(ByteString name)
 {
     auto duplicated_layer = TRY(Layer::create_snapshot(m_image, *this));
     duplicated_layer->m_name = move(name);

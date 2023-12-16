@@ -6,13 +6,13 @@
  */
 
 #include "FontPlugin.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/String.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Font/FontDatabase.h>
 
-extern DeprecatedString s_serenity_resource_root;
+extern ByteString s_serenity_resource_root;
 
 namespace Ladybird {
 

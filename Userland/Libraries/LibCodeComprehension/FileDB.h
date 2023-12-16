@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringView.h>
 
 namespace CodeComprehension {
@@ -18,7 +18,7 @@ class FileDB {
 public:
     virtual ~FileDB() = default;
 
-    virtual Optional<DeprecatedString> get_or_read_from_filesystem(StringView filename) const = 0;
+    virtual Optional<ByteString> get_or_read_from_filesystem(StringView filename) const = 0;
     void set_project_root(StringView project_root)
     {
         if (project_root.is_null())
@@ -26,14 +26,14 @@ public:
         else
             m_project_root = project_root;
     }
-    Optional<DeprecatedString> const& project_root() const { return m_project_root; }
-    DeprecatedString to_absolute_path(StringView filename) const;
+    Optional<ByteString> const& project_root() const { return m_project_root; }
+    ByteString to_absolute_path(StringView filename) const;
 
 protected:
     FileDB() = default;
 
 private:
-    Optional<DeprecatedString> m_project_root;
+    Optional<ByteString> m_project_root;
 };
 
 }

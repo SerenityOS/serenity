@@ -31,8 +31,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    DeprecatedString first_query_parameter;
-    DeprecatedString second_query_parameter;
+    ByteString first_query_parameter;
+    ByteString second_query_parameter;
 
     Core::ArgsParser args_parser;
     // The actual "page query" parsing happens when we set the main widget's start page.

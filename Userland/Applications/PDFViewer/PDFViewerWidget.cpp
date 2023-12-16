@@ -7,7 +7,7 @@
 
 #include "PDFViewerWidget.h"
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
@@ -38,7 +38,7 @@ class PagedErrorsModel : public GUI::Model {
         _Count
     };
 
-    using PageErrors = AK::OrderedHashTable<DeprecatedString>;
+    using PageErrors = AK::OrderedHashTable<ByteString>;
     using PagedErrors = HashMap<u32, PageErrors>;
 
 public:
@@ -102,7 +102,7 @@ public:
             case Columns::Page:
                 return m_pages_with_errors[index.row()] + 1;
             case Columns::Message:
-                return DeprecatedString::formatted("{} errors", error_count_in_page(index));
+                return ByteString::formatted("{} errors", error_count_in_page(index));
             default:
                 VERIFY_NOT_REACHED();
             }
@@ -366,14 +366,14 @@ void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
     if (maybe_error.is_error()) {
         auto error = maybe_error.release_error();
         warnln("{}", error.message());
-        auto user_error_message = DeprecatedString::formatted("Failed to load the document. Error:\n{}.", error.message());
+        auto user_error_message = ByteString::formatted("Failed to load the document. Error:\n{}.", error.message());
         GUI::MessageBox::show_error(nullptr, user_error_message.view());
     }
 }
 
 PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
-    window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", path));
+    window()->set_title(ByteString::formatted("{} - PDF Viewer", path));
 
     m_buffer = TRY(file->read_until_eof());
     auto document = TRY(PDF::Document::create(m_buffer));

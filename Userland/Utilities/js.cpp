@@ -120,7 +120,7 @@ static ErrorOr<String> read_next_piece()
     auto line_level_delta_for_next_line { 0 };
 
     do {
-        auto line_result = s_editor->get_line(TRY(prompt_for_level(s_repl_line_level)).to_deprecated_string());
+        auto line_result = s_editor->get_line(TRY(prompt_for_level(s_repl_line_level)).to_byte_string());
 
         line_level_delta_for_next_line = 0;
 
@@ -276,7 +276,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 {
     auto& realm = *vm.current_realm();
 
-    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto filename = TRY(vm.argument(0).to_byte_string(vm));
     auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to open '{}': {}", filename, file_or_error.error())));
@@ -599,12 +599,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto& global_environment = realm.global_environment();
 
         s_editor = Line::Editor::construct();
-        s_editor->load_history(s_history_path.to_deprecated_string());
+        s_editor->load_history(s_history_path.to_byte_string());
 
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
                 sigint_handler();
-            s_editor->save_history(s_history_path.to_deprecated_string());
+            s_editor->save_history(s_history_path.to_byte_string());
         });
 
         s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
@@ -667,7 +667,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            editor.set_prompt(prompt_for_level(open_indents).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+            editor.set_prompt(prompt_for_level(open_indents).release_value_but_fixme_should_propagate_errors().to_byte_string());
         };
 
         auto complete = [&realm, &global_environment](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
@@ -749,7 +749,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     if (key.view().starts_with(property_pattern)) {
                         Line::CompletionSuggestion completion { key, Line::CompletionSuggestion::ForSearch };
                         if (!results.contains_slow(completion)) { // hide duplicates
-                            results.append(DeprecatedString(key));
+                            results.append(ByteString(key));
                             results.last().invariant_offset = property_pattern.length();
                         }
                     }
@@ -799,7 +799,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
         s_editor->on_tab_complete = move(complete);
         TRY(repl(realm));
-        s_editor->save_history(s_history_path.to_deprecated_string());
+        s_editor->save_history(s_history_path.to_byte_string());
     } else {
         OwnPtr<JS::ExecutionContext> root_execution_context;
         if (use_test262_global)

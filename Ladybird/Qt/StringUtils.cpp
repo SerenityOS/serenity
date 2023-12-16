@@ -6,9 +6,9 @@
 
 #include "StringUtils.h"
 
-AK::DeprecatedString ak_deprecated_string_from_qstring(QString const& qstring)
+AK::ByteString ak_byte_string_from_qstring(QString const& qstring)
 {
-    return AK::DeprecatedString(qstring.toUtf8().data());
+    return AK::ByteString(qstring.toUtf8().data());
 }
 
 String ak_string_from_qstring(QString const& qstring)

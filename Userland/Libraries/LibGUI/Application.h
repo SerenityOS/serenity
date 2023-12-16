@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
@@ -52,8 +52,8 @@ public:
     void did_create_window(Badge<Window>);
     void did_delete_last_window(Badge<Window>);
 
-    DeprecatedString const& invoked_as() const { return m_invoked_as; }
-    Vector<DeprecatedString> const& args() const { return m_args; }
+    ByteString const& invoked_as() const { return m_invoked_as; }
+    Vector<ByteString> const& args() const { return m_args; }
 
     Gfx::Palette palette() const;
     void set_palette(Gfx::Palette&);
@@ -123,8 +123,8 @@ private:
     bool m_focus_debugging_enabled { false };
     bool m_hover_debugging_enabled { false };
     bool m_dnd_debugging_enabled { false };
-    DeprecatedString m_invoked_as;
-    Vector<DeprecatedString> m_args;
+    ByteString m_invoked_as;
+    Vector<ByteString> m_args;
     WeakPtr<Widget> m_drag_hovered_widget;
     WeakPtr<Widget> m_pending_drop_widget;
 

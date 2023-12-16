@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullRefPtr.h>
 
 struct Object : public RefCounted<Object> {

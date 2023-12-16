@@ -8,7 +8,7 @@
 #include "Formatter.h"
 #include "PosixParser.h"
 #include "Shell.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
@@ -98,13 +98,13 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    auto const look_up_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
+    auto const look_up_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<ByteString> {
         if (do_only_path_search)
             return {};
         return m_aliases.get(alias);
     };
 
-    auto const look_up_builtin = [do_only_path_search](StringView builtin) -> Optional<DeprecatedString> {
+    auto const look_up_builtin = [do_only_path_search](StringView builtin) -> Optional<ByteString> {
         if (do_only_path_search)
             return {};
         for (auto const& _builtin : builtin_names) {
@@ -162,7 +162,7 @@ ErrorOr<int> Shell::builtin_reset(Main::Arguments)
 
 ErrorOr<int> Shell::builtin_alias(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> aliases;
+    Vector<ByteString> aliases;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(aliases, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
@@ -198,7 +198,7 @@ ErrorOr<int> Shell::builtin_alias(Main::Arguments arguments)
 ErrorOr<int> Shell::builtin_unalias(Main::Arguments arguments)
 {
     bool remove_all { false };
-    Vector<DeprecatedString> aliases;
+    Vector<ByteString> aliases;
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
@@ -371,7 +371,7 @@ ErrorOr<String> Shell::serialize_function_definition(ShellFunction const& fn) co
 
 ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> commands;
+    Vector<ByteString> commands;
     bool dont_show_function_source = false;
 
     Core::ArgsParser parser;
@@ -434,7 +434,7 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    DeprecatedString new_path;
+    ByteString new_path;
 
     if (arg_path.is_empty()) {
         new_path = home;
@@ -454,7 +454,7 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
         warnln("Invalid path '{}'", new_path);
         return 1;
     }
-    auto real_path = real_path_or_error.release_value().to_deprecated_string();
+    auto real_path = real_path_or_error.release_value().to_byte_string();
 
     if (cd_history.is_empty() || cd_history.last() != real_path)
         cd_history.enqueue(real_path);
@@ -520,7 +520,7 @@ ErrorOr<int> Shell::builtin_dirs(Main::Arguments arguments)
     bool number_when_printing = false;
     char separator = ' ';
 
-    Vector<DeprecatedString> paths;
+    Vector<ByteString> paths;
 
     Core::ArgsParser parser;
     parser.add_option(clear, "Clear the directory stack", "clear", 'c');
@@ -627,7 +627,7 @@ ErrorOr<int> Shell::builtin_exit(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> vars;
+    Vector<ByteString> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
@@ -654,7 +654,7 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
                 auto values = TRY(const_cast<AST::Value&>(*value).resolve_as_list(*this));
                 StringBuilder builder;
                 builder.join(' ', values);
-                parts.append(builder.to_deprecated_string());
+                parts.append(builder.to_byte_string());
             } else {
                 // Ignore the export.
                 continue;
@@ -677,7 +677,7 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_glob(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> globs;
+    Vector<ByteString> globs;
     Core::ArgsParser parser;
     parser.add_positional_argument(globs, "Globs to resolve", "glob");
 
@@ -907,8 +907,8 @@ ErrorOr<int> Shell::builtin_pushd(Main::Arguments arguments)
             return 1;
         }
 
-        DeprecatedString dir1 = directory_stack.take_first();
-        DeprecatedString dir2 = directory_stack.take_first();
+        ByteString dir1 = directory_stack.take_first();
+        ByteString dir2 = directory_stack.take_first();
         directory_stack.insert(0, dir2);
         directory_stack.insert(1, dir1);
 
@@ -949,7 +949,7 @@ ErrorOr<int> Shell::builtin_pushd(Main::Arguments arguments)
         }
     }
 
-    auto real_path = LexicalPath::canonicalized_path(path_builder.to_deprecated_string());
+    auto real_path = LexicalPath::canonicalized_path(path_builder.to_byte_string());
 
     struct stat st;
     int rc = stat(real_path.characters(), &st);
@@ -1134,7 +1134,7 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
 
         warnln("Timing report: {} ms", iteration_times.sum());
         warnln("==============");
-        warnln("Command:         {}", DeprecatedString::join(' ', arguments.strings));
+        warnln("Command:         {}", ByteString::join(' ', arguments.strings));
         warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})",
             iteration_times.average(), iteration_times.median(),
             iteration_times.standard_deviation(),
@@ -1283,7 +1283,7 @@ ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> vars;
+    Vector<ByteString> vars;
     bool unset_only_variables = false; // POSIX only.
 
     Core::ArgsParser parser;
@@ -1321,7 +1321,7 @@ ErrorOr<int> Shell::builtin_set(Main::Arguments arguments)
         for (auto& frame : m_local_frames) {
             for (auto& var : frame->local_variables) {
                 builder.join(" "sv, TRY(var.value->resolve_as_list(*this)));
-                vars.set(TRY(String::from_deprecated_string(var.key)), TRY(builder.to_string()));
+                vars.set(TRY(String::from_byte_string(var.key)), TRY(builder.to_string()));
                 builder.clear();
             }
         }
@@ -1518,11 +1518,11 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
     Vector<StringView> descriptors;
     Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
-    DeprecatedString help_string_storage;
-    DeprecatedString long_name_storage;
-    DeprecatedString value_name_storage;
-    DeprecatedString name_storage;
-    DeprecatedString current_variable;
+    ByteString help_string_storage;
+    ByteString long_name_storage;
+    ByteString value_name_storage;
+    ByteString name_storage;
+    ByteString current_variable;
     // if max > 1 or min < 1, or explicit `--list`.
     bool treat_arg_as_list = false;
     enum class Type {
@@ -1556,7 +1556,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             warnln("Invalid value for type u32|size: {}", value);
             return OptionalNone {};
         case Type::Double: {
-            DeprecatedString string = value;
+            ByteString string = value;
             char* endptr = nullptr;
             auto number = strtod(string.characters(), &endptr);
             if (endptr != string.characters() + string.length()) {
@@ -1938,7 +1938,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
 {
     bool no_escape = false;
-    Vector<DeprecatedString> variables;
+    Vector<ByteString> variables;
 
     Core::ArgsParser parser;
     parser.add_option(no_escape, "Do not interpret backslash escapes", "no-escape", 'r');
@@ -2023,7 +2023,7 @@ ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_run_with_env(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> environment_variables;
+    Vector<ByteString> environment_variables;
     Vector<StringView> command_and_arguments;
 
     Core::ArgsParser parser;
@@ -2046,7 +2046,7 @@ ErrorOr<int> Shell::builtin_run_with_env(Main::Arguments arguments)
 
     auto commands = TRY(expand_aliases({ move(command) }));
 
-    HashMap<DeprecatedString, Optional<DeprecatedString>> old_environment_entries;
+    HashMap<ByteString, Optional<ByteString>> old_environment_entries;
     for (auto& variable : environment_variables) {
         auto parts = variable.split_limit('=', 2, SplitBehavior::KeepEmpty);
         if (parts.size() != 2) {
@@ -2054,10 +2054,10 @@ ErrorOr<int> Shell::builtin_run_with_env(Main::Arguments arguments)
             return 1;
         }
 
-        DeprecatedString name = parts[0];
-        old_environment_entries.set(name, getenv(name.characters()) ?: Optional<DeprecatedString> {});
+        ByteString name = parts[0];
+        old_environment_entries.set(name, getenv(name.characters()) ?: Optional<ByteString> {});
 
-        DeprecatedString value = parts[1];
+        ByteString value = parts[1];
         setenv(name.characters(), value.characters(), 1);
     }
 

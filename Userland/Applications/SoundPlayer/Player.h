@@ -35,12 +35,12 @@ public:
     explicit Player(Audio::ConnectionToServer& audio_client_connection);
     virtual ~Player() = default;
 
-    void play_file_path(DeprecatedString const& path);
-    bool is_playlist(DeprecatedString const& path);
+    void play_file_path(ByteString const& path);
+    bool is_playlist(ByteString const& path);
 
     Playlist& playlist() { return m_playlist; }
     PlaybackManager const& playback_manager() const { return m_playback_manager; }
-    DeprecatedString const& loaded_filename() const { return m_loaded_filename; }
+    ByteString const& loaded_filename() const { return m_loaded_filename; }
 
     PlayState play_state() const { return m_play_state; }
     void set_play_state(PlayState);
@@ -98,7 +98,7 @@ private:
     Audio::ConnectionToServer& m_audio_client_connection;
     PlaybackManager m_playback_manager;
 
-    DeprecatedString m_loaded_filename;
+    ByteString m_loaded_filename;
     double m_volume { 0 };
     bool m_muted { false };
 };

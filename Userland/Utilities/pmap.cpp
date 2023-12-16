@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::File::open(DeprecatedString::formatted("/proc/{}/vm", pid), Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open(ByteString::formatted("/proc/{}/vm", pid), Core::File::OpenMode::Read));
 
     outln("{}:", pid);
 
@@ -49,9 +49,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
         auto address = map.get_addr("address"sv).value_or(0);
-        auto size = map.get("size"sv).value_or({}).to_deprecated_string();
+        auto size = map.get("size"sv).value_or({}).to_byte_string();
 
-        auto access = DeprecatedString::formatted("{}{}{}{}{}",
+        auto access = ByteString::formatted("{}{}{}{}{}",
             (map.get_bool("readable"sv).value_or(false) ? "r" : "-"),
             (map.get_bool("writable"sv).value_or(false) ? "w" : "-"),
             (map.get_bool("executable"sv).value_or(false) ? "x" : "-"),
@@ -61,13 +61,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         out("{:p}  ", address);
         out("{:>10} ", size);
         if (extended) {
-            auto resident = map.get("amount_resident"sv).value_or({}).to_deprecated_string();
-            auto dirty = map.get("amount_dirty"sv).value_or({}).to_deprecated_string();
-            auto vmobject = map.get_deprecated_string("vmobject"sv).value_or({});
+            auto resident = map.get("amount_resident"sv).value_or({}).to_byte_string();
+            auto dirty = map.get("amount_dirty"sv).value_or({}).to_byte_string();
+            auto vmobject = map.get_byte_string("vmobject"sv).value_or({});
             if (vmobject.ends_with("VMObject"sv))
                 vmobject = vmobject.substring(0, vmobject.length() - 8);
-            auto purgeable = map.get("purgeable"sv).value_or({}).to_deprecated_string();
-            auto cow_pages = map.get("cow_pages"sv).value_or({}).to_deprecated_string();
+            auto purgeable = map.get("purgeable"sv).value_or({}).to_byte_string();
+            auto cow_pages = map.get("cow_pages"sv).value_or({}).to_byte_string();
             out("{:>10} ", resident);
             out("{:>10} ", dirty);
             out("{:6} ", access);
@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             out("{:6} ", access);
         }
-        auto name = map.get_deprecated_string("name"sv).value_or({});
+        auto name = map.get_byte_string("name"sv).value_or({});
         out("{:20}", name);
         outln();
     }

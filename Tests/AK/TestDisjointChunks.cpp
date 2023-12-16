@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/DisjointChunks.h>
 #include <AK/FixedArray.h>
 #include <AK/Vector.h>

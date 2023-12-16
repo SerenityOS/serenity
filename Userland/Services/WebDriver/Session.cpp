@@ -98,7 +98,7 @@ ErrorOr<void> Session::start(LaunchBrowserCallbacks const& callbacks)
 {
     auto promise = TRY(ServerPromise::try_create());
 
-    m_web_content_socket_path = DeprecatedString::formatted("{}/webdriver/session_{}_{}", TRY(Core::StandardPaths::runtime_directory()), getpid(), m_id);
+    m_web_content_socket_path = ByteString::formatted("{}/webdriver/session_{}_{}", TRY(Core::StandardPaths::runtime_directory()), getpid(), m_id);
     m_web_content_server = TRY(create_server(promise));
 
     if (m_options.headless)

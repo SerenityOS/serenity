@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/FixedArray.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -202,7 +202,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
         { nullptr, 0 },
     };
 
-    DeprecatedString parsed_path;
+    ByteString parsed_path;
     if (!path.is_null()) {
         parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
         params.path = { parsed_path.characters(), parsed_path.length() };
@@ -215,7 +215,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
 
 ErrorOr<void> unveil_after_exec(StringView path, StringView permissions)
 {
-    DeprecatedString parsed_path;
+    ByteString parsed_path;
     Syscall::SC_unveil_params params {
         static_cast<int>(UnveilFlags::AfterExec),
         { nullptr, 0 },
@@ -448,7 +448,7 @@ ErrorOr<struct stat> fstatat(int fd, StringView path, int flags)
     Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, fd, !(flags & AT_SYMLINK_NOFOLLOW) };
     int rc = syscall(SC_stat, &params);
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     int rc = ::fstatat(fd, path_string.characters(), &st, flags);
 #endif
     HANDLE_SYSCALL_RETURN_VALUE("fstatat", rc, st);
@@ -531,7 +531,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
 #elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_EMSCRIPTEN) || defined(AK_OS_HAIKU)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
-    auto name = DeprecatedString::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
+    auto name = ByteString::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
     fd = shm_open(name.characters(), O_RDWR | O_CREAT | options, 0600);
 
     if (shm_unlink(name.characters()) == -1) {
@@ -576,7 +576,7 @@ ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode)
     HANDLE_SYSCALL_RETURN_VALUE("open", rc, rc);
 #else
     // NOTE: We have to ensure that the path is null-terminated.
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     int rc = ::openat(fd, path_string.characters(), options, mode);
     if (rc < 0)
         return Error::from_syscall("open"sv, -errno);
@@ -609,7 +609,7 @@ ErrorOr<struct stat> stat(StringView path)
     int rc = syscall(SC_stat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("stat", rc, st);
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::stat(path_string.characters(), &st) < 0)
         return Error::from_syscall("stat"sv, -errno);
     return st;
@@ -627,7 +627,7 @@ ErrorOr<struct stat> lstat(StringView path)
     int rc = syscall(SC_stat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("lstat", rc, st);
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::lstat(path_string.characters(), &st) < 0)
         return Error::from_syscall("lstat"sv, -errno);
     return st;
@@ -680,21 +680,21 @@ ErrorOr<int> dup2(int source_fd, int destination_fd)
     return fd;
 }
 
-ErrorOr<DeprecatedString> ptsname(int fd)
+ErrorOr<ByteString> ptsname(int fd)
 {
     auto* name = ::ptsname(fd);
     if (!name)
         return Error::from_syscall("ptsname"sv, -errno);
-    return DeprecatedString(name);
+    return ByteString(name);
 }
 
-ErrorOr<DeprecatedString> gethostname()
+ErrorOr<ByteString> gethostname()
 {
     char hostname[HOST_NAME_MAX];
     int rc = ::gethostname(hostname, sizeof(hostname));
     if (rc < 0)
         return Error::from_syscall("gethostname"sv, -errno);
-    return DeprecatedString(&hostname[0]);
+    return ByteString(&hostname[0]);
 }
 
 ErrorOr<void> sethostname(StringView hostname)
@@ -709,13 +709,13 @@ ErrorOr<void> sethostname(StringView hostname)
     return {};
 }
 
-ErrorOr<DeprecatedString> getcwd()
+ErrorOr<ByteString> getcwd()
 {
     auto* cwd = ::getcwd(nullptr, 0);
     if (!cwd)
         return Error::from_syscall("getcwd"sv, -errno);
 
-    DeprecatedString string_cwd(cwd);
+    ByteString string_cwd(cwd);
     free(cwd);
     return string_cwd;
 }
@@ -773,7 +773,7 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode)
     int rc = syscall(SC_chmod, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chmod", rc, {});
 #else
-    DeprecatedString path = pathname;
+    ByteString path = pathname;
     if (::chmod(path.characters(), mode) < 0)
         return Error::from_syscall("chmod"sv, -errno);
     return {};
@@ -804,7 +804,7 @@ ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid)
     int rc = syscall(SC_chown, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chown", rc, {});
 #else
-    DeprecatedString path = pathname;
+    ByteString path = pathname;
     if (::chown(path.characters(), uid, gid) < 0)
         return Error::from_syscall("chown"sv, -errno);
     return {};
@@ -821,7 +821,7 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
     int rc = syscall(SC_chown, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chown", rc, {});
 #else
-    DeprecatedString path = pathname;
+    ByteString path = pathname;
     if (::lchown(path.characters(), uid, gid) < 0)
         return Error::from_syscall("lchown"sv, -errno);
     return {};
@@ -913,7 +913,7 @@ ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
 static ALWAYS_INLINE ErrorOr<pid_t> posix_spawn_wrapper(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[], StringView function_name, decltype(::posix_spawn) spawn_function)
 {
     pid_t child_pid;
-    if ((errno = spawn_function(&child_pid, path.to_deprecated_string().characters(), file_actions, attr, arguments, envp)))
+    if ((errno = spawn_function(&child_pid, path.to_byte_string().characters(), file_actions, attr, arguments, envp)))
         return Error::from_syscall(function_name, -errno);
     return child_pid;
 }
@@ -1036,8 +1036,8 @@ ErrorOr<void> link(StringView old_path, StringView new_path)
     int rc = syscall(SC_link, &params);
     HANDLE_SYSCALL_RETURN_VALUE("link", rc, {});
 #else
-    DeprecatedString old_path_string = old_path;
-    DeprecatedString new_path_string = new_path;
+    ByteString old_path_string = old_path;
+    ByteString new_path_string = new_path;
     if (::link(old_path_string.characters(), new_path_string.characters()) < 0)
         return Error::from_syscall("link"sv, -errno);
     return {};
@@ -1055,8 +1055,8 @@ ErrorOr<void> symlink(StringView target, StringView link_path)
     int rc = syscall(SC_symlink, &params);
     HANDLE_SYSCALL_RETURN_VALUE("symlink", rc, {});
 #else
-    DeprecatedString target_string = target;
-    DeprecatedString link_path_string = link_path;
+    ByteString target_string = target;
+    ByteString link_path_string = link_path;
     if (::symlink(target_string.characters(), link_path_string.characters()) < 0)
         return Error::from_syscall("symlink"sv, -errno);
     return {};
@@ -1071,7 +1071,7 @@ ErrorOr<void> mkdir(StringView path, mode_t mode)
     int rc = syscall(SC_mkdir, AT_FDCWD, path.characters_without_null_termination(), path.length(), mode);
     HANDLE_SYSCALL_RETURN_VALUE("mkdir", rc, {});
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::mkdir(path_string.characters(), mode) < 0)
         return Error::from_syscall("mkdir"sv, -errno);
     return {};
@@ -1086,7 +1086,7 @@ ErrorOr<void> chdir(StringView path)
     int rc = syscall(SC_chdir, path.characters_without_null_termination(), path.length());
     HANDLE_SYSCALL_RETURN_VALUE("chdir", rc, {});
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::chdir(path_string.characters()) < 0)
         return Error::from_syscall("chdir"sv, -errno);
     return {};
@@ -1101,7 +1101,7 @@ ErrorOr<void> rmdir(StringView path)
     int rc = syscall(SC_rmdir, path.characters_without_null_termination(), path.length());
     HANDLE_SYSCALL_RETURN_VALUE("rmdir", rc, {});
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::rmdir(path_string.characters()) < 0)
         return Error::from_syscall("rmdir"sv, -errno);
     return {};
@@ -1149,8 +1149,8 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
     int rc = syscall(SC_rename, &params);
     HANDLE_SYSCALL_RETURN_VALUE("rename", rc, {});
 #else
-    DeprecatedString old_path_string = old_path;
-    DeprecatedString new_path_string = new_path;
+    ByteString old_path_string = old_path;
+    ByteString new_path_string = new_path;
     if (::rename(old_path_string.characters(), new_path_string.characters()) < 0)
         return Error::from_syscall("rename"sv, -errno);
     return {};
@@ -1166,7 +1166,7 @@ ErrorOr<void> unlink(StringView path)
     int rc = syscall(SC_unlink, AT_FDCWD, path.characters_without_null_termination(), path.length(), 0);
     HANDLE_SYSCALL_RETURN_VALUE("unlink", rc, {});
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::unlink(path_string.characters()) < 0)
         return Error::from_syscall("unlink"sv, -errno);
     return {};
@@ -1185,7 +1185,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
     int rc = syscall(SC_utime, path.characters_without_null_termination(), path.length(), buf);
     HANDLE_SYSCALL_RETURN_VALUE("utime", rc, {});
 #else
-    DeprecatedString path_string = path;
+    ByteString path_string = path;
     if (::utime(path_string.characters(), buf) < 0)
         return Error::from_syscall("utime"sv, -errno);
     return {};
@@ -1364,22 +1364,22 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
     TRY(run_exec(params));
     VERIFY_NOT_REACHED();
 #else
-    DeprecatedString filename_string { filename };
+    ByteString filename_string { filename };
 
-    auto argument_strings = TRY(FixedArray<DeprecatedString>::create(arguments.size()));
+    auto argument_strings = TRY(FixedArray<ByteString>::create(arguments.size()));
     auto argv = TRY(FixedArray<char*>::create(arguments.size() + 1));
     for (size_t i = 0; i < arguments.size(); ++i) {
-        argument_strings[i] = arguments[i].to_deprecated_string();
+        argument_strings[i] = arguments[i].to_byte_string();
         argv[i] = const_cast<char*>(argument_strings[i].characters());
     }
     argv[arguments.size()] = nullptr;
 
     int rc = 0;
     if (environment.has_value()) {
-        auto environment_strings = TRY(FixedArray<DeprecatedString>::create(environment->size()));
+        auto environment_strings = TRY(FixedArray<ByteString>::create(environment->size()));
         auto envp = TRY(FixedArray<char*>::create(environment->size() + 1));
         for (size_t i = 0; i < environment->size(); ++i) {
-            environment_strings[i] = environment->at(i).to_deprecated_string();
+            environment_strings[i] = environment->at(i).to_byte_string();
             envp[i] = const_cast<char*>(environment_strings[i].characters());
         }
         envp[environment->size()] = nullptr;
@@ -1396,7 +1396,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
                 return executable_or_error.release_error();
             }
 
-            DeprecatedString executable = executable_or_error.release_value().to_deprecated_string();
+            ByteString executable = executable_or_error.release_value().to_byte_string();
             rc = ::execve(executable.characters(), argv.data(), envp.data());
 #    else
             rc = ::execvpe(filename_string.characters(), argv.data(), envp.data());
@@ -1611,7 +1611,7 @@ ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
     int rc = syscall(SC_mknod, &params);
     HANDLE_SYSCALL_RETURN_VALUE("mknod", rc, {});
 #else
-    DeprecatedString path_string = pathname;
+    ByteString path_string = pathname;
     if (::mknod(path_string.characters(), mode, dev) < 0)
         return Error::from_syscall("mknod"sv, -errno);
     return {};
@@ -1705,7 +1705,7 @@ ErrorOr<void> access(StringView pathname, int mode, int flags)
     int rc = ::syscall(Syscall::SC_faccessat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("access", rc, {});
 #else
-    DeprecatedString path_string = pathname;
+    ByteString path_string = pathname;
     (void)flags;
     if (::access(path_string.characters(), mode) < 0)
         return Error::from_syscall("access"sv, -errno);
@@ -1713,7 +1713,7 @@ ErrorOr<void> access(StringView pathname, int mode, int flags)
 #endif
 }
 
-ErrorOr<DeprecatedString> readlink(StringView pathname)
+ErrorOr<ByteString> readlink(StringView pathname)
 {
     // FIXME: Try again with a larger buffer.
 #ifdef AK_OS_SERENITY
@@ -1724,7 +1724,7 @@ ErrorOr<DeprecatedString> readlink(StringView pathname)
         .dirfd = AT_FDCWD,
     };
     int rc = syscall(SC_readlink, &small_params);
-    HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, DeprecatedString(data, rc));
+    HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, ByteString(data, rc));
 #elif defined(AK_OS_GNU_HURD)
     // PATH_MAX is not defined, nor is there an upper limit on path lengths.
     // Let's do this the right way.
@@ -1732,15 +1732,15 @@ ErrorOr<DeprecatedString> readlink(StringView pathname)
     auto file = TRY(File::adopt_fd(fd, File::OpenMode::Read));
     auto buffer = TRY(file->read_until_eof());
     // TODO: Get rid of this copy here.
-    return DeprecatedString::copy(buffer);
+    return ByteString::copy(buffer);
 #else
     char data[PATH_MAX];
-    DeprecatedString path_string = pathname;
+    ByteString path_string = pathname;
     int rc = ::readlink(path_string.characters(), data, sizeof(data));
     if (rc == -1)
         return Error::from_syscall("readlink"sv, -errno);
 
-    return DeprecatedString(data, rc);
+    return ByteString(data, rc);
 #endif
 }
 
@@ -1806,7 +1806,7 @@ char** environment()
 #endif
 }
 
-ErrorOr<DeprecatedString> current_executable_path()
+ErrorOr<ByteString> current_executable_path()
 {
     char path[4096] = {};
 #if defined(AK_OS_LINUX) || defined(AK_OS_ANDROID) || defined(AK_OS_SERENITY)
@@ -1862,7 +1862,7 @@ ErrorOr<DeprecatedString> current_executable_path()
     return Error::from_string_view("current_executable_path unknown"sv);
 #endif
     path[sizeof(path) - 1] = '\0';
-    return DeprecatedString { path, strlen(path) };
+    return ByteString { path, strlen(path) };
 }
 
 ErrorOr<Bytes> allocate(size_t count, size_t size)

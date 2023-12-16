@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
@@ -28,18 +28,18 @@ public:
 
     static RefPtr<ConnectionFromClient> client_connection_for(int client_id);
 
-    void set_database_path(DeprecatedString);
+    void set_database_path(ByteString);
     Function<void()> on_disconnect;
 
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
-    virtual Messages::SQLServer::ConnectResponse connect(DeprecatedString const&) override;
-    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(SQL::ConnectionID, DeprecatedString const&) override;
+    virtual Messages::SQLServer::ConnectResponse connect(ByteString const&) override;
+    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(SQL::ConnectionID, ByteString const&) override;
     virtual Messages::SQLServer::ExecuteStatementResponse execute_statement(SQL::StatementID, Vector<SQL::Value> const& placeholder_values) override;
     virtual void disconnect(SQL::ConnectionID) override;
 
-    DeprecatedString m_database_path;
+    ByteString m_database_path;
 };
 
 }

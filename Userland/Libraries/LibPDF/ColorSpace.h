@@ -131,7 +131,7 @@ public:
 private:
     DeviceNColorSpace(NonnullRefPtr<ColorSpace>, NonnullRefPtr<Function>);
 
-    Vector<DeprecatedString> m_names;
+    Vector<ByteString> m_names;
     NonnullRefPtr<ColorSpace> m_alternate_space;
     NonnullRefPtr<Function> m_tint_transform;
     Vector<float> mutable m_tint_input_values;
@@ -247,7 +247,7 @@ public:
 private:
     SeparationColorSpace(NonnullRefPtr<ColorSpace>, NonnullRefPtr<Function>);
 
-    DeprecatedString m_name;
+    ByteString m_name;
     NonnullRefPtr<ColorSpace> m_alternate_space;
     NonnullRefPtr<Function> m_tint_transform;
     Vector<Value> mutable m_tint_output_values;

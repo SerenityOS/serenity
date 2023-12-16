@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -16,7 +16,7 @@ namespace XML {
 
 struct Attribute {
     Name name;
-    DeprecatedString value;
+    ByteString value;
 };
 
 struct Offset {
@@ -30,11 +30,11 @@ struct Node {
         StringBuilder builder;
     };
     struct Comment {
-        DeprecatedString text;
+        ByteString text;
     };
     struct Element {
         Name name;
-        HashMap<Name, DeprecatedString> attributes;
+        HashMap<Name, ByteString> attributes;
         Vector<NonnullOwnPtr<Node>> children;
     };
 

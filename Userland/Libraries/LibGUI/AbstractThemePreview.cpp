@@ -38,14 +38,14 @@ AbstractThemePreview::AbstractThemePreview(Gfx::Palette const& preview_palette)
 
 void AbstractThemePreview::load_theme_bitmaps()
 {
-    auto load_bitmap = [](DeprecatedString const& path, DeprecatedString& last_path, RefPtr<Gfx::Bitmap>& bitmap) {
+    auto load_bitmap = [](ByteString const& path, ByteString& last_path, RefPtr<Gfx::Bitmap>& bitmap) {
         if (path.is_empty()) {
-            last_path = DeprecatedString::empty();
+            last_path = ByteString::empty();
             bitmap = nullptr;
         } else if (last_path != path) {
             auto bitmap_or_error = Gfx::Bitmap::load_from_file(path);
             if (bitmap_or_error.is_error()) {
-                last_path = DeprecatedString::empty();
+                last_path = ByteString::empty();
                 bitmap = nullptr;
             } else {
                 last_path = path;

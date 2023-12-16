@@ -274,7 +274,7 @@ ErrorOr<void> FormatBuilder::put_u64(
 
     size_t used_by_prefix = 0;
     if (align == Align::Right && zero_pad) {
-        // We want DeprecatedString::formatted("{:#08x}", 32) to produce '0x00000020' instead of '0x000020'. This
+        // We want ByteString::formatted("{:#08x}", 32) to produce '0x00000020' instead of '0x000020'. This
         // behavior differs from both fmtlib and printf, but is more intuitive.
         used_by_prefix = 0;
     } else {
@@ -1131,13 +1131,13 @@ void vout(LogLevel log_level, StringView fmtstr, TypeErasedFormatParams& params,
 
 #ifndef KERNEL
 // FIXME: Deduplicate with Core::Process:get_name()
-[[gnu::used]] static DeprecatedString process_name_helper()
+[[gnu::used]] static ByteString process_name_helper()
 {
 #    if defined(AK_OS_SERENITY)
     char buffer[BUFSIZ] = {};
     int rc = get_process_name(buffer, BUFSIZ);
     if (rc != 0)
-        return DeprecatedString {};
+        return ByteString {};
     return StringView { buffer, strlen(buffer) };
 #    elif defined(AK_LIBC_GLIBC) || (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID))
     return StringView { program_invocation_name, strlen(program_invocation_name) };

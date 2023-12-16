@@ -18,7 +18,7 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(ClassicScript);
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
+JS::NonnullGCPtr<ClassicScript> ClassicScript::create(ByteString filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
 {
     auto& vm = environment_settings_object.realm().vm();
 
@@ -56,7 +56,7 @@ JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename,
     // 11. If result is a list of errors, then:
     if (result.is_error()) {
         auto& parse_error = result.error().first();
-        dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Failed to parse: {}", parse_error.to_deprecated_string());
+        dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Failed to parse: {}", parse_error.to_byte_string());
 
         // 1. Set script's parse error and its error to rethrow to result[0].
         script->set_parse_error(JS::SyntaxError::create(environment_settings_object.realm(), parse_error.to_string().release_value_but_fixme_should_propagate_errors()));
@@ -147,7 +147,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors, JS::GCPtr<JS::En
     //            Return Completion { [[Type]]: throw, [[Value]]: a new "QuotaExceededError" DOMException, [[Target]]: empty }.
 }
 
-ClassicScript::ClassicScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object)
+ClassicScript::ClassicScript(AK::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object)
     : Script(move(base_url), move(filename), environment_settings_object)
 {
 }

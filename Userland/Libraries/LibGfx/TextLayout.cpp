@@ -44,7 +44,7 @@ FloatRect TextLayout::bounding_rect(TextWrapping wrapping) const
     return bounding_rect;
 }
 
-Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping) const
+Vector<ByteString, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping) const
 {
     Vector<Block> blocks;
 
@@ -110,14 +110,14 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
         });
     }
 
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
     StringBuilder builder;
     float line_width = 0;
     size_t current_block = 0;
     for (Block& block : blocks) {
         switch (block.type) {
         case BlockType::Newline: {
-            lines.append(builder.to_deprecated_string());
+            lines.append(builder.to_byte_string());
             builder.clear();
             line_width = 0;
             current_block++;
@@ -133,7 +133,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
             }
 
             if (wrapping == TextWrapping::Wrap && line_width + block_width > m_rect.width()) {
-                lines.append(builder.to_deprecated_string());
+                lines.append(builder.to_byte_string());
                 builder.clear();
                 line_width = 0;
             }
@@ -145,7 +145,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
         }
     }
 
-    auto last_line = builder.to_deprecated_string();
+    auto last_line = builder.to_byte_string();
     if (!last_line.is_empty())
         lines.append(last_line);
 
@@ -161,7 +161,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
     return lines;
 }
 
-DeprecatedString TextLayout::elide_text_from_right(Utf8View text) const
+ByteString TextLayout::elide_text_from_right(Utf8View text) const
 {
     float text_width = m_font.width(text);
     if (text_width > static_cast<float>(m_rect.width())) {
@@ -189,7 +189,7 @@ DeprecatedString TextLayout::elide_text_from_right(Utf8View text) const
             StringBuilder builder;
             builder.append(text.substring_view(0, offset).as_string());
             builder.append("..."sv);
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         }
     }
 

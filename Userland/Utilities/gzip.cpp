@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         keep_input_files = true;
 
     for (auto const& input_filename : filenames) {
-        DeprecatedString output_filename;
+        ByteString output_filename;
         if (decompress) {
             if (!input_filename.ends_with(".gz"sv)) {
                 warnln("unknown suffix for: {}, skipping", input_filename);
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             output_filename = input_filename.substring_view(0, input_filename.length() - ".gz"sv.length());
         } else {
-            output_filename = DeprecatedString::formatted("{}.gz", input_filename);
+            output_filename = ByteString::formatted("{}.gz", input_filename);
         }
 
         auto output_stream = write_to_stdout ? TRY(Core::File::standard_output()) : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));

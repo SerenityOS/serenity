@@ -1069,7 +1069,7 @@ AST::MatchEntry Parser::parse_match_entry()
             if (names.is_empty()) {
                 for (auto& name : regex.parser_result.capture_groups)
                     names.append(TRY_OR(
-                        String::from_deprecated_string(name),
+                        String::from_byte_string(name),
                         error = create<AST::SyntaxError>(MUST(String::from_utf8(_error.string_literal())));
                         break;));
             } else {
@@ -1077,7 +1077,7 @@ AST::MatchEntry Parser::parse_match_entry()
                 for (auto& name : regex.parser_result.capture_groups) {
                     if (names.size() <= index) {
                         names.append(TRY_OR(
-                            String::from_deprecated_string(name),
+                            String::from_byte_string(name),
                             error = create<AST::SyntaxError>(MUST(String::from_utf8(_error.string_literal())));
                             break;));
                         continue;

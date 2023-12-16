@@ -29,7 +29,7 @@ SQL::ResultOr<NonnullRefPtr<SQLStatement>> SQLStatement::create(DatabaseConnecti
     auto statement = parser.next_statement();
 
     if (parser.has_errors())
-        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::SyntaxError, parser.errors()[0].to_deprecated_string() };
+        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::SyntaxError, parser.errors()[0].to_byte_string() };
 
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SQLStatement(connection, move(statement))));
 }

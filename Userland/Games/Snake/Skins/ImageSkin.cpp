@@ -14,7 +14,7 @@ namespace Snake {
 
 ErrorOr<NonnullOwnPtr<ImageSkin>> ImageSkin::create(StringView skin_name)
 {
-    auto skin_directory = TRY(Core::Directory::create(DeprecatedString::formatted("/res/graphics/snake/skins/{}", skin_name), Core::Directory::CreateDirectories::No));
+    auto skin_directory = TRY(Core::Directory::create(ByteString::formatted("/res/graphics/snake/skins/{}", skin_name), Core::Directory::CreateDirectories::No));
 
     auto head = TRY(Gfx::Bitmap::load_from_file(TRY(skin_directory.open("head.png"sv, Core::File::OpenMode::Read)), "head.png"sv));
     Vector<NonnullRefPtr<Gfx::Bitmap>> head_bitmaps;

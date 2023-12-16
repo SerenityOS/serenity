@@ -10,7 +10,7 @@
 #include <sys/arch/regs.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace ELF::Core {
@@ -39,9 +39,9 @@ struct [[gnu::packed]] ProcessInfo {
     // Keys:
     // - "pid" (int)
     // - "termination_signal" (u8)
-    // - "executable_path" (DeprecatedString)
-    // - "arguments" (Vector<DeprecatedString>)
-    // - "environment" (Vector<DeprecatedString>)
+    // - "executable_path" (ByteString)
+    // - "arguments" (Vector<ByteString>)
+    // - "environment" (Vector<ByteString>)
     char json_data[]; // Null terminated
 };
 
@@ -59,7 +59,7 @@ struct [[gnu::packed]] MemoryRegionInfo {
     char region_name[]; // Null terminated
 
 #ifndef KERNEL
-    DeprecatedString object_name() const
+    ByteString object_name() const
     {
         StringView memory_region_name { region_name, strlen(region_name) };
         if (memory_region_name.contains("Loader.so"sv))
@@ -67,7 +67,7 @@ struct [[gnu::packed]] MemoryRegionInfo {
         auto maybe_colon_index = memory_region_name.find(':');
         if (!maybe_colon_index.has_value())
             return {};
-        return memory_region_name.substring_view(0, *maybe_colon_index).to_deprecated_string();
+        return memory_region_name.substring_view(0, *maybe_colon_index).to_byte_string();
     }
 #endif
 };

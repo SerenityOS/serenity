@@ -9,7 +9,7 @@
 #include "Presentation.h"
 #include <AK/JsonObject.h>
 
-Slide::Slide(unsigned frame_count, Vector<NonnullRefPtr<SlideObject>> slide_objects, DeprecatedString title)
+Slide::Slide(unsigned frame_count, Vector<NonnullRefPtr<SlideObject>> slide_objects, ByteString title)
     : m_frame_count(move(frame_count))
     , m_slide_objects(move(slide_objects))
     , m_title(move(title))
@@ -19,7 +19,7 @@ Slide::Slide(unsigned frame_count, Vector<NonnullRefPtr<SlideObject>> slide_obje
 ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, unsigned slide_index)
 {
     // FIXME: Use the text with the "title" role for a title, if there is no title given.
-    auto title = slide_json.get_deprecated_string("title"sv).value_or("Untitled slide");
+    auto title = slide_json.get_byte_string("title"sv).value_or("Untitled slide");
     auto frame_count = slide_json.get_u32("frame_count"sv).value_or(1);
     auto maybe_slide_objects = slide_json.get_array("objects"sv);
     if (!maybe_slide_objects.has_value())

@@ -200,7 +200,7 @@ public:
                 if (!hint.is_empty())
                     warnln("{}", hint);
             }
-            warnln("SyntaxError: {}", error.to_deprecated_string());
+            warnln("SyntaxError: {}", error.to_byte_string());
         }
     }
 
@@ -211,7 +211,7 @@ public:
     // Needs to mess with m_state, and we're not going to expose a non-const getter for that :^)
     friend ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(VM&, FunctionObject&, FunctionObject*, FunctionKind, MarkedVector<Value> const&);
 
-    static Parser parse_function_body_from_string(DeprecatedString const& body_string, u16 parse_options, Vector<FunctionParameter> const& parameters, FunctionKind kind, bool& contains_direct_call_to_eval);
+    static Parser parse_function_body_from_string(ByteString const& body_string, u16 parse_options, Vector<FunctionParameter> const& parameters, FunctionKind kind, bool& contains_direct_call_to_eval);
 
 private:
     friend class ScopePusher;
@@ -244,7 +244,7 @@ private:
     bool match(TokenType type) const;
     bool done() const;
     void expected(char const* what);
-    void syntax_error(DeprecatedString const& message, Optional<Position> = {});
+    void syntax_error(ByteString const& message, Optional<Position> = {});
     Token consume();
     Token consume_and_allow_division();
     Token consume_identifier();

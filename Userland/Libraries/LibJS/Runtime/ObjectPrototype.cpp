@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -147,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     // 4. Let isArray be ? IsArray(O).
     auto is_array = TRY(Value(object).is_array(vm));
 
-    DeprecatedString builtin_tag;
+    ByteString builtin_tag;
 
     // 5. If isArray is true, let builtinTag be "Array".
     if (is_array)
@@ -184,16 +184,16 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     auto to_string_tag = TRY(object->get(vm.well_known_symbol_to_string_tag()));
 
     // Optimization: Instead of creating another PrimitiveString from builtin_tag, we separate tag and to_string_tag and add an additional branch to step 16.
-    DeprecatedString tag;
+    ByteString tag;
 
     // 16. If Type(tag) is not String, set tag to builtinTag.
     if (!to_string_tag.is_string())
         tag = move(builtin_tag);
     else
-        tag = to_string_tag.as_string().deprecated_string();
+        tag = to_string_tag.as_string().byte_string();
 
     // 17. Return the string-concatenation of "[object ", tag, and "]".
-    return PrimitiveString::create(vm, DeprecatedString::formatted("[object {}]", tag));
+    return PrimitiveString::create(vm, ByteString::formatted("[object {}]", tag));
 }
 
 // 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof

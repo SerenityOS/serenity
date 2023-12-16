@@ -115,15 +115,15 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
     Vector<u8, 256> buffer;
 
     Optional<unsigned> content_length;
-    DeprecatedString method;
-    DeprecatedString resource;
-    DeprecatedString protocol;
+    ByteString method;
+    ByteString resource;
+    ByteString protocol;
     Vector<Header> headers;
     Header current_header;
     ByteBuffer body;
 
     auto commit_and_advance_to = [&](auto& output, State new_state) {
-        output = DeprecatedString::copy(buffer);
+        output = ByteString::copy(buffer);
         buffer.clear();
         state = new_state;
     };
@@ -237,8 +237,8 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
     request.m_headers = move(headers);
     auto url_parts = resource.split_limit('?', 2, SplitBehavior::KeepEmpty);
 
-    auto url_part_to_string = [](DeprecatedString const& url_part) -> ErrorOr<String, ParseError> {
-        auto query_string_or_error = String::from_deprecated_string(url_part);
+    auto url_part_to_string = [](ByteString const& url_part) -> ErrorOr<String, ParseError> {
+        auto query_string_or_error = String::from_byte_string(url_part);
         if (!query_string_or_error.is_error())
             return query_string_or_error.release_value();
 
@@ -263,7 +263,7 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
     return request;
 }
 
-void HttpRequest::set_headers(HashMap<DeprecatedString, DeprecatedString> const& headers)
+void HttpRequest::set_headers(HashMap<ByteString, ByteString> const& headers)
 {
     for (auto& it : headers)
         m_headers.append({ it.key, it.value });
@@ -283,10 +283,10 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
     builder.clear();
     builder.append("Basic "sv);
     builder.append(token);
-    return Header { "Authorization", builder.to_deprecated_string() };
+    return Header { "Authorization", builder.to_byte_string() };
 }
 
-Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(DeprecatedString const& value)
+Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(ByteString const& value)
 {
     if (!value.starts_with("Basic "sv, AK::CaseSensitivity::CaseInsensitive))
         return {};
@@ -296,7 +296,7 @@ Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_ba
     auto decoded_token_bb = decode_base64(token);
     if (decoded_token_bb.is_error())
         return {};
-    auto decoded_token = DeprecatedString::copy(decoded_token_bb.value());
+    auto decoded_token = ByteString::copy(decoded_token_bb.value());
     auto colon_index = decoded_token.find(':');
     if (!colon_index.has_value())
         return {};

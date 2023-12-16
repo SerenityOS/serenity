@@ -10,7 +10,7 @@
 #include <LibCrypto/Hash/HashFunction.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace Crypto::Hash {
@@ -56,7 +56,7 @@ public:
     virtual DigestType peek() override;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const override
+    virtual ByteString class_name() const override
     {
         return "MD5";
     }

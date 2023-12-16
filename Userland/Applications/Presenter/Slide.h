@@ -8,7 +8,7 @@
 #pragma once
 
 #include "SlideObject.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 
 // A single slide of a presentation.
@@ -22,9 +22,9 @@ public:
     ErrorOr<HTMLElement> render(Presentation const&) const;
 
 private:
-    Slide(unsigned frame_count, Vector<NonnullRefPtr<SlideObject>> slide_objects, DeprecatedString title);
+    Slide(unsigned frame_count, Vector<NonnullRefPtr<SlideObject>> slide_objects, ByteString title);
 
     unsigned m_frame_count;
     Vector<NonnullRefPtr<SlideObject>> m_slide_objects;
-    DeprecatedString m_title;
+    ByteString m_title;
 };

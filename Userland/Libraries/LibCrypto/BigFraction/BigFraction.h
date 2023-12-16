@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 
 namespace Crypto {
@@ -54,7 +54,7 @@ public:
     //      - m_denominator = 10000
     BigFraction rounded(unsigned rounding_threshold) const;
 
-    DeprecatedString to_deprecated_string(unsigned rounding_threshold) const;
+    ByteString to_byte_string(unsigned rounding_threshold) const;
     double to_double() const;
 
 private:

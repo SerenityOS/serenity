@@ -1424,7 +1424,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                     // FIXME: Getting to the page client reliably is way too complicated, and going via the document won't work in workers.
                     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
                     if (!document)
-                        return DeprecatedString::empty();
+                        return ByteString::empty();
                     return document->page().client().page_did_request_cookie(http_request->current_url(), Cookie::Source::Http);
                 })();
 
@@ -1604,8 +1604,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 // FIXME: 2. Let username and password be the result of prompting the end user for a username and password,
                 //           respectively, in request’s window.
                 dbgln("Fetch: Username/password prompt is not implemented, using empty strings. This request will probably fail.");
-                auto username = DeprecatedString::empty();
-                auto password = DeprecatedString::empty();
+                auto username = ByteString::empty();
+                auto password = ByteString::empty();
 
                 // 3. Set the username given request’s current URL and username.
                 MUST(request->current_url().set_username(username));
@@ -1729,9 +1729,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
     LoadRequest load_request;
     load_request.set_url(request->current_url());
     load_request.set_page(page);
-    load_request.set_method(DeprecatedString::copy(request->method()));
+    load_request.set_method(ByteString::copy(request->method()));
     for (auto const& header : *request->header_list())
-        load_request.set_header(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value));
+        load_request.set_header(ByteString::copy(header.name), ByteString::copy(header.value));
     if (auto const* body = request->body().get_pointer<JS::NonnullGCPtr<Infrastructure::Body>>()) {
         TRY((*body)->source().visit(
             [&](ByteBuffer const& byte_buffer) -> WebIDL::ExceptionOr<void> {

@@ -13,7 +13,7 @@
 
 namespace Debug {
 
-DebugInfo::DebugInfo(ELF::Image const& elf, DeprecatedString source_root, FlatPtr base_address)
+DebugInfo::DebugInfo(ELF::Image const& elf, ByteString source_root, FlatPtr base_address)
     : m_elf(elf)
     , m_source_root(move(source_root))
     , m_base_address(base_address)
@@ -91,8 +91,8 @@ ErrorOr<void> DebugInfo::prepare_lines()
         return {};
     }));
 
-    HashMap<DeprecatedFlyString, Optional<DeprecatedString>> memoized_full_paths;
-    auto compute_full_path = [&](DeprecatedFlyString const& file_path) -> Optional<DeprecatedString> {
+    HashMap<DeprecatedFlyString, Optional<ByteString>> memoized_full_paths;
+    auto compute_full_path = [&](DeprecatedFlyString const& file_path) -> Optional<ByteString> {
         if (file_path.view().contains("Toolchain/"sv) || file_path.view().contains("libgcc"sv))
             return {};
         if (file_path.view().starts_with("./"sv) && !m_source_root.is_empty())
@@ -135,11 +135,11 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(FlatPtr targe
     return {};
 }
 
-Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source_position(DeprecatedString const& file, size_t line) const
+Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source_position(ByteString const& file, size_t line) const
 {
-    DeprecatedString file_path = file;
+    ByteString file_path = file;
     if (!file_path.starts_with('/'))
-        file_path = DeprecatedString::formatted("/{}", file_path);
+        file_path = ByteString::formatted("/{}", file_path);
 
     Optional<SourcePositionAndAddress> result;
     for (auto const& line_entry : m_sorted_lines) {
@@ -327,10 +327,10 @@ ErrorOr<void> DebugInfo::add_type_info_to_variable(Dwarf::DIE const& type_die, P
             array_type_name.append(type_info->type_name);
             for (auto array_size : type_info->dimension_sizes) {
                 array_type_name.append('[');
-                array_type_name.append(DeprecatedString::formatted("{:d}", array_size));
+                array_type_name.append(ByteString::formatted("{:d}", array_size));
                 array_type_name.append(']');
             }
-            parent_variable->type_name = array_type_name.to_deprecated_string();
+            parent_variable->type_name = array_type_name.to_byte_string();
         }
         parent_variable->type = move(type_info);
         parent_variable->type->type_tag = type_die.tag();
@@ -350,7 +350,7 @@ bool DebugInfo::is_variable_tag_supported(Dwarf::EntryTag const& tag)
         || tag == Dwarf::EntryTag::ArrayType;
 }
 
-DeprecatedString DebugInfo::name_of_containing_function(FlatPtr address) const
+ByteString DebugInfo::name_of_containing_function(FlatPtr address) const
 {
     auto function = get_containing_function(address);
     if (!function.has_value())
@@ -408,7 +408,7 @@ ErrorOr<DebugInfo::SourcePositionWithInlines> DebugInfo::get_source_position_wit
             return {};
         }
 
-        inline_chain.append({ DeprecatedString::formatted("{}/{}", caller_source_path->directory, caller_source_path->filename), caller_line.value() });
+        inline_chain.append({ ByteString::formatted("{}/{}", caller_source_path->directory, caller_source_path->filename), caller_line.value() });
         return {};
     };
 

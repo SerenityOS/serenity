@@ -237,7 +237,7 @@ void VideoPlayerWidget::on_decoding_error(Video::DecoderError const& error)
         break;
     }
 
-    GUI::MessageBox::show(window(), DeprecatedString::formatted(text_format, error.string_literal()), "Video Player encountered an error"sv);
+    GUI::MessageBox::show(window(), ByteString::formatted(text_format, error.string_literal()), "Video Player encountered an error"sv);
 }
 
 void VideoPlayerWidget::update_seek_slider_max()
@@ -352,7 +352,7 @@ void VideoPlayerWidget::update_title()
     }
 
     string_builder.append("[*] - Video Player"sv);
-    window()->set_title(string_builder.to_deprecated_string());
+    window()->set_title(string_builder.to_byte_string());
 }
 
 Video::PlaybackManager::SeekMode VideoPlayerWidget::seek_mode()

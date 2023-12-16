@@ -200,8 +200,8 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     auto* button = window.button();
     if (!button)
         return;
-    button->set_text(String::from_deprecated_string(window.title()).release_value_but_fixme_should_propagate_errors());
-    button->set_tooltip(String::from_deprecated_string(window.title()).release_value_but_fixme_should_propagate_errors());
+    button->set_text(String::from_byte_string(window.title()).release_value_but_fixme_should_propagate_errors());
+    button->set_tooltip(String::from_byte_string(window.title()).release_value_but_fixme_should_propagate_errors());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));
 }

@@ -122,17 +122,17 @@ ClockWidget::ClockWidget()
     };
 }
 
-void ClockWidget::update_format(DeprecatedString const& format)
+void ClockWidget::update_format(ByteString const& format)
 {
     m_time_format = format;
-    m_time_width = font().width(Core::DateTime::create(122, 2, 22, 22, 22, 22).to_deprecated_string(format));
+    m_time_width = font().width(Core::DateTime::create(122, 2, 22, 22, 22, 22).to_byte_string(format));
     set_fixed_size(m_time_width + 20, 21);
 }
 
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
-    auto time_text = Core::DateTime::now().to_deprecated_string(m_time_format);
+    auto time_text = Core::DateTime::now().to_byte_string(m_time_format);
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
 

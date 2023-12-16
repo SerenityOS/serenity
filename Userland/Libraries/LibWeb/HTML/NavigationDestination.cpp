@@ -43,7 +43,7 @@ void NavigationDestination::visit_edges(JS::Cell::Visitor& visitor)
 WebIDL::ExceptionOr<String> NavigationDestination::url() const
 {
     // The url getter steps are to return this's URL, serialized.
-    return TRY_OR_THROW_OOM(vm(), String::from_deprecated_string(m_url.serialize()));
+    return TRY_OR_THROW_OOM(vm(), String::from_byte_string(m_url.serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigationdestination-key

@@ -50,7 +50,7 @@ WebSocketQt::WebSocketQt(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
             }
         }
     };
-    m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, DeprecatedString reason, bool was_clean) {
+    m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, ByteString reason, bool was_clean) {
         if (auto strong_this = weak_this.strong_ref())
             if (strong_this->on_close)
                 strong_this->on_close(code, move(reason), was_clean);
@@ -74,7 +74,7 @@ Web::WebSockets::WebSocket::ReadyState WebSocketQt::ready_state()
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString WebSocketQt::subprotocol_in_use()
+ByteString WebSocketQt::subprotocol_in_use()
 {
     return m_websocket->subprotocol_in_use();
 }
@@ -89,7 +89,7 @@ void WebSocketQt::send(StringView message)
     m_websocket->send(WebSocket::Message(message));
 }
 
-void WebSocketQt::close(u16 code, DeprecatedString reason)
+void WebSocketQt::close(u16 code, ByteString reason)
 {
     m_websocket->close(code, reason);
 }

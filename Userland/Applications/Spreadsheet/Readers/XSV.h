@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -31,8 +31,8 @@ ParserBehavior operator&(ParserBehavior left, ParserBehavior right);
 ParserBehavior operator|(ParserBehavior left, ParserBehavior right);
 
 struct ParserTraits {
-    DeprecatedString separator;
-    DeprecatedString quote { "\"" };
+    ByteString separator;
+    ByteString quote { "\"" };
     enum QuoteEscape {
         Repeat,
         Backslash,
@@ -73,7 +73,7 @@ public:
     void parse();
     bool has_error() const { return m_error != ReadError::None; }
     ReadError error() const { return m_error; }
-    DeprecatedString error_string() const
+    ByteString error_string() const
     {
         switch (m_error) {
 #define E(x, y)        \
@@ -87,7 +87,7 @@ public:
     }
 
     size_t size() const { return m_rows.size(); }
-    Vector<DeprecatedString> headers() const;
+    Vector<ByteString> headers() const;
     [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviors) & static_cast<u32>(ParserBehavior::ReadHeaders)) != 0; }
 
     class Row {
@@ -185,7 +185,7 @@ public:
 private:
     struct Field {
         StringView as_string_view;
-        DeprecatedString as_string; // This member only used if the parser couldn't use the original source verbatim.
+        ByteString as_string; // This member only used if the parser couldn't use the original source verbatim.
         bool is_string_view { true };
 
         bool operator==(StringView other) const

@@ -9,8 +9,8 @@
 
 #include "HexEditor.h"
 #include "SearchResultsModel.h"
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
@@ -180,7 +180,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
     for (size_t i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.appendff("{:02X} ", m_document->get(i).value);
 
-    GUI::Clipboard::the().set_plain_text(output_string_builder.to_deprecated_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_byte_string());
     return true;
 }
 
@@ -193,7 +193,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
     for (size_t i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.append(isprint(m_document->get(i).value) ? m_document->get(i).value : '.');
 
-    GUI::Clipboard::the().set_plain_text(output_string_builder.to_deprecated_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_byte_string());
     return true;
 }
 
@@ -216,7 +216,7 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     }
     output_string_builder.append("\n};\n"sv);
 
-    GUI::Clipboard::the().set_plain_text(output_string_builder.to_deprecated_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_byte_string());
     return true;
 }
 
@@ -490,7 +490,7 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
             result = text_mode_keydown_event(event);
         }
         if (result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("{}", result.error()));
     }
 
     event.ignore();

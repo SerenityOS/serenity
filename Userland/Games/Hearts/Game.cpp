@@ -147,7 +147,7 @@ void Game::show_score_card(bool game_over)
     title_builder.append("Score Card"sv);
     if (game_over)
         title_builder.append(" - Game Over"sv);
-    score_dialog->set_title(title_builder.to_deprecated_string());
+    score_dialog->set_title(title_builder.to_byte_string());
 
     RefPtr<Core::Timer> close_timer;
     if (!m_players[0].is_human) {
@@ -160,7 +160,7 @@ void Game::show_score_card(bool game_over)
     score_dialog->exec();
 }
 
-void Game::setup(DeprecatedString player_name, int hand_number)
+void Game::setup(ByteString player_name, int hand_number)
 {
     m_players[0].name = move(player_name);
 
@@ -619,7 +619,7 @@ void Game::play_card(Player& player, size_t card_index)
         0);
 }
 
-bool Game::is_valid_play(Player& player, Card& card, DeprecatedString* explanation) const
+bool Game::is_valid_play(Player& player, Card& card, ByteString* explanation) const
 {
     // First card must be 2 of Clubs.
     if (m_trick_number == 0 && m_trick.is_empty()) {
@@ -692,7 +692,7 @@ void Game::card_clicked_during_passing(size_t, Card& card)
 
 void Game::card_clicked_during_play(size_t card_index, Card& card)
 {
-    DeprecatedString explanation;
+    ByteString explanation;
     if (!is_valid_play(m_players[0], card, &explanation)) {
         if (m_inverted_card)
             m_inverted_card->set_inverted(false);

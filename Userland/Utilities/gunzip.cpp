@@ -35,13 +35,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     for (auto filename : filenames) {
 
-        DeprecatedString input_filename;
-        DeprecatedString output_filename;
+        ByteString input_filename;
+        ByteString output_filename;
         if (filename.ends_with(".gz"sv)) {
             input_filename = filename;
             output_filename = filename.substring_view(0, filename.length() - 3);
         } else {
-            input_filename = DeprecatedString::formatted("{}.gz", filename);
+            input_filename = ByteString::formatted("{}.gz", filename);
             output_filename = filename;
         }
 

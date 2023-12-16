@@ -30,7 +30,7 @@ namespace Detail {
 
 JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM&, Wasm::Module const&);
 JS::ThrowCompletionOr<size_t> parse_module(JS::VM&, JS::Object* buffer);
-JS::NativeFunction* create_native_function(JS::VM&, Wasm::FunctionAddress address, DeprecatedString const& name);
+JS::NativeFunction* create_native_function(JS::VM&, Wasm::FunctionAddress address, ByteString const& name);
 JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM&, JS::Value value, Wasm::ValueType const& type);
 JS::Value to_js_value(JS::VM&, Wasm::Value& wasm_value);
 

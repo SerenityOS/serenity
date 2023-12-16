@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -1042,7 +1042,7 @@ ThrowCompletionOr<MarkedVector<Value>> Object::internal_own_property_keys() cons
     // 2. For each own property key P of O such that P is an array index, in ascending numeric index order, do
     for (auto& entry : m_indexed_properties) {
         // a. Add P as the last element of keys.
-        keys.append(PrimitiveString::create(vm, DeprecatedString::number(entry.index())));
+        keys.append(PrimitiveString::create(vm, ByteString::number(entry.index())));
     }
 
     // 3. For each own property key P of O such that Type(P) is String and P is not an array index, in ascending chronological order of property creation, do
@@ -1347,7 +1347,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
         for (auto& key : own_keys) {
             if (!key.is_string())
                 continue;
-            DeprecatedFlyString property_key = key.as_string().deprecated_string();
+            DeprecatedFlyString property_key = key.as_string().byte_string();
             if (visited.contains(property_key))
                 continue;
             auto descriptor = TRY(target->internal_get_own_property(property_key));

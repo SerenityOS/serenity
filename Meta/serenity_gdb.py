@@ -38,7 +38,7 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKSinglyLinkedList
     elif klass == 'AK::String':
         return AKString
-    elif klass == 'AK::DeprecatedString':
+    elif klass == 'AK::ByteString':
         return AKDeprecatedString
     elif klass == 'AK::StringView':
         return AKStringView
@@ -178,7 +178,7 @@ class AKDeprecatedString:
 
     @classmethod
     def prettyprint_type(cls, type):
-        return 'AK::DeprecatedString'
+        return 'AK::ByteString'
 
 
 class AKStringView:

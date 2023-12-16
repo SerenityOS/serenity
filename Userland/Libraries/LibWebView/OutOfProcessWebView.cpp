@@ -6,7 +6,7 @@
 
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -65,7 +65,7 @@ OutOfProcessWebView::OutOfProcessWebView()
     };
 
     on_enter_tooltip_area = [](auto, auto tooltip) {
-        GUI::Application::the()->show_tooltip(MUST(String::from_deprecated_string(tooltip)), nullptr);
+        GUI::Application::the()->show_tooltip(MUST(String::from_byte_string(tooltip)), nullptr);
     };
 
     on_leave_tooltip_area = []() {
@@ -228,7 +228,7 @@ void OutOfProcessWebView::did_scroll()
     request_repaint();
 }
 
-DeprecatedString OutOfProcessWebView::dump_layout_tree()
+ByteString OutOfProcessWebView::dump_layout_tree()
 {
     return client().dump_layout_tree();
 }
@@ -258,12 +258,12 @@ void OutOfProcessWebView::set_autoplay_allowlist(Vector<String> allowlist)
     client().async_set_autoplay_allowlist(move(allowlist));
 }
 
-void OutOfProcessWebView::set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings)
+void OutOfProcessWebView::set_proxy_mappings(Vector<ByteString> proxies, HashMap<ByteString, size_t> mappings)
 {
     client().async_set_proxy_mappings(move(proxies), move(mappings));
 }
 
-void OutOfProcessWebView::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
+void OutOfProcessWebView::connect_to_webdriver(ByteString const& webdriver_ipc_path)
 {
     client().async_connect_to_webdriver(webdriver_ipc_path);
 }

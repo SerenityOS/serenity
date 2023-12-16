@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget.path(), widget.image()->size().to_deprecated_string(), (int)(scale * 100)));
+        window->set_title(ByteString::formatted("{} {} {}% - Image Viewer", widget.path(), widget.image()->size().to_byte_string(), (int)(scale * 100)));
 
         if (!widget.scaled_for_first_image()) {
             widget.set_scaled_for_first_image(true);
@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return;
 
             auto msgbox_result = GUI::MessageBox::show(window,
-                DeprecatedString::formatted("Are you sure you want to delete {}?", path),
+                ByteString::formatted("Are you sure you want to delete {}?", path),
                 "Confirm Deletion"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
@@ -151,7 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto unlinked_or_error = Core::System::unlink(widget.path());
             if (unlinked_or_error.is_error()) {
                 GUI::MessageBox::show(window,
-                    DeprecatedString::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
+                    ByteString::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
                     "Delete Failed"sv,
                     GUI::MessageBox::Type::Error);
 
@@ -188,7 +188,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](auto&) {
             if (!GUI::Desktop::the().set_wallpaper(widget.image()->bitmap(GUI::Desktop::the().rect().size()).release_value_but_fixme_should_propagate_errors(), widget.path())) {
                 GUI::MessageBox::show(window,
-                    DeprecatedString::formatted("set_wallpaper({}) failed", widget.path()),
+                    ByteString::formatted("set_wallpaper({}) failed", widget.path()),
                     "Could not set wallpaper"sv,
                     GUI::MessageBox::Type::Error);
             }

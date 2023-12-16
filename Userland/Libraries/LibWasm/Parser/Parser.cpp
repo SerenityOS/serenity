@@ -75,14 +75,14 @@ static auto parse_vector(Stream& stream)
     }
 }
 
-static ParseResult<DeprecatedString> parse_name(Stream& stream)
+static ParseResult<ByteString> parse_name(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
     auto data = parse_vector<u8>(stream);
     if (data.is_error())
         return data.error();
 
-    return DeprecatedString::copy(data.value());
+    return ByteString::copy(data.value());
 }
 
 template<typename T>
@@ -1725,7 +1725,7 @@ bool Module::populate_sections()
     return is_ok;
 }
 
-DeprecatedString parse_error_to_deprecated_string(ParseError error)
+ByteString parse_error_to_byte_string(ParseError error)
 {
     switch (error) {
     case ParseError::UnexpectedEof:

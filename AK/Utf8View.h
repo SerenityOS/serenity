@@ -12,7 +12,7 @@
 #include <AK/Types.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace AK {
@@ -72,12 +72,12 @@ public:
     }
 
 #ifndef KERNEL
-    explicit Utf8View(DeprecatedString& string)
+    explicit Utf8View(ByteString& string)
         : m_string(string.view())
     {
     }
 
-    explicit Utf8View(DeprecatedString&&) = delete;
+    explicit Utf8View(ByteString&&) = delete;
 #endif
 
     ~Utf8View() = default;
@@ -255,14 +255,14 @@ public:
         return Utf8View(m_string).byte_offset_of(m_it);
     }
 
-    DeprecatedStringCodePointIterator(DeprecatedString string)
+    DeprecatedStringCodePointIterator(ByteString string)
         : m_string(move(string))
         , m_it(Utf8View(m_string).begin())
     {
     }
 
 private:
-    DeprecatedString m_string;
+    ByteString m_string;
     Utf8CodePointIterator m_it;
 };
 #endif

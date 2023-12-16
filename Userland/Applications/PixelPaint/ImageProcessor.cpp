@@ -31,7 +31,7 @@ void FilterApplicationCommand::execute()
 
     m_filter->m_editor->gui_event_loop().deferred_invoke([strong_this = NonnullRefPtr(*this)]() {
         strong_this->m_target_layer->did_modify_bitmap(strong_this->m_target_layer->rect());
-        strong_this->m_filter->m_editor->did_complete_action(DeprecatedString::formatted("Filter {}", strong_this->m_filter->filter_name()));
+        strong_this->m_filter->m_editor->did_complete_action(ByteString::formatted("Filter {}", strong_this->m_filter->filter_name()));
     });
 }
 

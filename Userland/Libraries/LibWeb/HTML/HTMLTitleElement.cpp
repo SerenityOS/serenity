@@ -30,15 +30,15 @@ void HTMLTitleElement::children_changed()
 {
     HTMLElement::children_changed();
     if (navigable() && navigable()->is_traversable()) {
-        navigable()->traversable_navigable()->page().client().page_did_change_title(document().title().to_deprecated_string());
+        navigable()->traversable_navigable()->page().client().page_did_change_title(document().title().to_byte_string());
     }
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text
-DeprecatedString HTMLTitleElement::text()
+ByteString HTMLTitleElement::text()
 {
     // The text attribute's getter must return this title element's child text content.
-    return child_text_content().to_deprecated_string();
+    return child_text_content().to_byte_string();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text

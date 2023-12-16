@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-static DeprecatedString program_name;
+static ByteString program_name;
 
 template<typename... Parameters>
 [[noreturn]] static void err(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
@@ -192,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     program_name = arguments.strings[0];
 
-    Vector<DeprecatedString> paths;
+    Vector<ByteString> paths;
 
     timespec times[2];
     auto& atime = times[0];
@@ -202,9 +202,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool update_mtime = false;
     bool no_create_file = false;
 
-    DeprecatedString input_datetime = "";
-    DeprecatedString input_time = "";
-    DeprecatedString reference_path = "";
+    ByteString input_datetime = "";
+    ByteString input_time = "";
+    ByteString reference_path = "";
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a file or update file access time and/or modification time.");

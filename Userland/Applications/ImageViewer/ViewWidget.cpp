@@ -118,14 +118,14 @@ bool ViewWidget::is_previous_available() const
 
 // FIXME: Convert to `String` & use LibFileSystemAccessClient + `Core::System::unveil(nullptr, nullptr)`
 //        - Converting to String is not super-trivial due to the LexicalPath usage, while we can do a bunch of
-//          String::from_deprecated_string() and String.to_deprecated_string(), it is quite ugly to read and
+//          String::from_byte_string() and String.to_byte_string(), it is quite ugly to read and
 //          probably not the best approach.
 //
 //        - If we go full-unveil (`Core::System::unveil(nullptr, nullptr)`) this functionality does not work,
 //          we can not access the list of contents of a directory through LibFileSystemAccessClient at the moment.
-Vector<DeprecatedString> ViewWidget::load_files_from_directory(DeprecatedString const& path) const
+Vector<ByteString> ViewWidget::load_files_from_directory(ByteString const& path) const
 {
-    Vector<DeprecatedString> files_in_directory;
+    Vector<ByteString> files_in_directory;
 
     auto current_dir = LexicalPath(path).parent().string();
     // FIXME: Propagate errors
@@ -141,8 +141,8 @@ Vector<DeprecatedString> ViewWidget::load_files_from_directory(DeprecatedString 
 void ViewWidget::set_path(String const& path)
 {
     m_path = path;
-    m_files_in_same_dir = load_files_from_directory(path.to_deprecated_string());
-    m_current_index = m_files_in_same_dir.find_first_index(path.to_deprecated_string());
+    m_files_in_same_dir = load_files_from_directory(path.to_byte_string());
+    m_current_index = m_files_in_same_dir.find_first_index(path.to_byte_string());
 }
 
 void ViewWidget::navigate(Directions direction)

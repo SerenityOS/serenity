@@ -151,7 +151,7 @@ size_t TreeNode::length() const
 
 bool TreeNode::insert(Key const& key)
 {
-    dbgln_if(SQL_DEBUG, "[#{}] INSERT({})", block_index(), key.to_deprecated_string());
+    dbgln_if(SQL_DEBUG, "[#{}] INSERT({})", block_index(), key.to_byte_string());
     if (!is_leaf())
         return node_for(key)->insert_in_leaf(key);
     return insert_in_leaf(key);
@@ -159,14 +159,14 @@ bool TreeNode::insert(Key const& key)
 
 bool TreeNode::update_key_pointer(Key const& key)
 {
-    dbgln_if(SQL_DEBUG, "[#{}] UPDATE({}, {})", block_index(), key.to_deprecated_string(), key.block_index());
+    dbgln_if(SQL_DEBUG, "[#{}] UPDATE({}, {})", block_index(), key.to_byte_string(), key.block_index());
     if (!is_leaf())
         return node_for(key)->update_key_pointer(key);
 
     for (auto ix = 0u; ix < size(); ix++) {
         if (key == m_entries[ix]) {
             dbgln_if(SQL_DEBUG, "[#{}] {} == {}",
-                block_index(), key.to_deprecated_string(), m_entries[ix].to_deprecated_string());
+                block_index(), key.to_byte_string(), m_entries[ix].to_byte_string());
             if (m_entries[ix].block_index() != key.block_index()) {
                 m_entries[ix].set_block_index(key.block_index());
                 dump_if(SQL_DEBUG, "To WAL");
@@ -184,13 +184,13 @@ bool TreeNode::insert_in_leaf(Key const& key)
     if (!m_tree.duplicates_allowed()) {
         for (auto& entry : m_entries) {
             if (key == entry) {
-                dbgln_if(SQL_DEBUG, "[#{}] duplicate key {}", block_index(), key.to_deprecated_string());
+                dbgln_if(SQL_DEBUG, "[#{}] duplicate key {}", block_index(), key.to_byte_string());
                 return false;
             }
         }
     }
 
-    dbgln_if(SQL_DEBUG, "[#{}] insert_in_leaf({})", block_index(), key.to_deprecated_string());
+    dbgln_if(SQL_DEBUG, "[#{}] insert_in_leaf({})", block_index(), key.to_byte_string());
     just_insert(key, nullptr);
     return true;
 }
@@ -207,56 +207,56 @@ TreeNode* TreeNode::down_node(size_t ix)
 
 TreeNode* TreeNode::node_for(Key const& key)
 {
-    dump_if(SQL_DEBUG, DeprecatedString::formatted("node_for(Key {})", key.to_deprecated_string()));
+    dump_if(SQL_DEBUG, ByteString::formatted("node_for(Key {})", key.to_byte_string()));
     if (is_leaf())
         return this;
     for (size_t ix = 0; ix < size(); ix++) {
         if (key < m_entries[ix]) {
             dbgln_if(SQL_DEBUG, "[{}] {} < {} v{}",
-                block_index(), (DeprecatedString)key, (DeprecatedString)m_entries[ix], m_down[ix].block_index());
+                block_index(), (ByteString)key, (ByteString)m_entries[ix], m_down[ix].block_index());
             return down_node(ix)->node_for(key);
         }
     }
     dbgln_if(SQL_DEBUG, "[#{}] {} >= {} v{}",
-        block_index(), key.to_deprecated_string(), (DeprecatedString)m_entries[size() - 1], m_down[size()].block_index());
+        block_index(), key.to_byte_string(), (ByteString)m_entries[size() - 1], m_down[size()].block_index());
     return down_node(size())->node_for(key);
 }
 
 Optional<u32> TreeNode::get(Key& key)
 {
-    dump_if(SQL_DEBUG, DeprecatedString::formatted("get({})", key.to_deprecated_string()));
+    dump_if(SQL_DEBUG, ByteString::formatted("get({})", key.to_byte_string()));
     for (auto ix = 0u; ix < size(); ix++) {
         if (key < m_entries[ix]) {
             if (is_leaf()) {
                 dbgln_if(SQL_DEBUG, "[#{}] {} < {} -> 0",
-                    block_index(), key.to_deprecated_string(), (DeprecatedString)m_entries[ix]);
+                    block_index(), key.to_byte_string(), (ByteString)m_entries[ix]);
                 return {};
             } else {
                 dbgln_if(SQL_DEBUG, "[{}] {} < {} ({} -> {})",
-                    block_index(), key.to_deprecated_string(), (DeprecatedString)m_entries[ix],
+                    block_index(), key.to_byte_string(), (ByteString)m_entries[ix],
                     ix, m_down[ix].block_index());
                 return down_node(ix)->get(key);
             }
         }
         if (key == m_entries[ix]) {
             dbgln_if(SQL_DEBUG, "[#{}] {} == {} -> {}",
-                block_index(), key.to_deprecated_string(), (DeprecatedString)m_entries[ix],
+                block_index(), key.to_byte_string(), (ByteString)m_entries[ix],
                 m_entries[ix].block_index());
             key.set_block_index(m_entries[ix].block_index());
             return m_entries[ix].block_index();
         }
     }
     if (m_entries.is_empty()) {
-        dbgln_if(SQL_DEBUG, "[#{}] {} Empty node??", block_index(), key.to_deprecated_string());
+        dbgln_if(SQL_DEBUG, "[#{}] {} Empty node??", block_index(), key.to_byte_string());
         VERIFY_NOT_REACHED();
     }
     if (is_leaf()) {
         dbgln_if(SQL_DEBUG, "[#{}] {} > {} -> 0",
-            block_index(), key.to_deprecated_string(), (DeprecatedString)m_entries[size() - 1]);
+            block_index(), key.to_byte_string(), (ByteString)m_entries[size() - 1]);
         return {};
     }
     dbgln_if(SQL_DEBUG, "[#{}] {} > {} ({} -> {})",
-        block_index(), key.to_deprecated_string(), (DeprecatedString)m_entries[size() - 1],
+        block_index(), key.to_byte_string(), (ByteString)m_entries[size() - 1],
         size(), m_down[size()].block_index());
     return down_node(size())->get(key);
 }
@@ -264,7 +264,7 @@ Optional<u32> TreeNode::get(Key& key)
 void TreeNode::just_insert(Key const& key, TreeNode* right)
 {
     dbgln_if(SQL_DEBUG, "[#{}] just_insert({}, right = {})",
-        block_index(), (DeprecatedString)key, (right) ? right->block_index() : 0);
+        block_index(), (ByteString)key, (right) ? right->block_index() : 0);
     dump_if(SQL_DEBUG, "Before");
     for (auto ix = 0u; ix < size(); ix++) {
         if (key < m_entries[ix]) {
@@ -331,7 +331,7 @@ void TreeNode::split()
     m_up->just_insert(median, new_node);
 }
 
-void TreeNode::dump_if(int flag, DeprecatedString&& msg)
+void TreeNode::dump_if(int flag, ByteString&& msg)
 {
     if (!flag)
         return;
@@ -349,7 +349,7 @@ void TreeNode::dump_if(int flag, DeprecatedString&& msg)
             builder.appendff("[v{}] ", m_down[ix].block_index());
         else
             VERIFY(m_down[ix].block_index() == 0);
-        builder.appendff("'{}' ", (DeprecatedString)m_entries[ix]);
+        builder.appendff("'{}' ", (ByteString)m_entries[ix]);
     }
     if (!is_leaf())
         builder.appendff("[v{}]", m_down[size()].block_index());
@@ -359,7 +359,7 @@ void TreeNode::dump_if(int flag, DeprecatedString&& msg)
     if (is_leaf())
         builder.append(", leaf"sv);
     builder.append(')');
-    dbgln(builder.to_deprecated_string());
+    dbgln(builder.to_byte_string());
 }
 
 void TreeNode::list_node(int indent)
@@ -374,7 +374,7 @@ void TreeNode::list_node(int indent)
         if (!is_leaf())
             down_node(ix)->list_node(indent + 2);
         do_indent();
-        warnln("{}", m_entries[ix].to_deprecated_string());
+        warnln("{}", m_entries[ix].to_byte_string());
     }
     if (!is_leaf())
         down_node(size())->list_node(indent + 2);

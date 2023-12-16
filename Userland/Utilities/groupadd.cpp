@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     gid_t gid = 0;
     StringView group_name;
-    Vector<DeprecatedString> group_members;
+    Vector<ByteString> group_members;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(gid, "Group ID (gid) for the new group", "gid", 'g', "gid");
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (accounts_or_error.is_error())
                 return false;
 
-            OrderedHashTable<DeprecatedString> unique_group_members;
+            OrderedHashTable<ByteString> unique_group_members;
             auto accounts = accounts_or_error.release_value();
             for (auto const& username : comma_separated_users.split_view(',')) {
                 auto matching_account = accounts.first_matching([&](auto const& account) { return username == account.username(); });

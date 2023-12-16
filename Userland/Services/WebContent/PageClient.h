@@ -31,7 +31,7 @@ public:
     virtual Web::Page& page() override { return *m_page; }
     virtual Web::Page const& page() const override { return *m_page; }
 
-    ErrorOr<void> connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
+    ErrorOr<void> connect_to_webdriver(ByteString const& webdriver_ipc_path);
 
     virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&, Web::PaintOptions = {}) override;
 
@@ -78,7 +78,7 @@ private:
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
-    virtual void page_did_change_title(DeprecatedString const&) override;
+    virtual void page_did_change_title(ByteString const&) override;
     virtual void page_did_request_navigate_back() override;
     virtual void page_did_request_navigate_forward() override;
     virtual void page_did_request_refresh() override;
@@ -91,16 +91,16 @@ private:
     virtual void page_did_request_scroll(i32, i32) override;
     virtual void page_did_request_scroll_to(Web::CSSPixelPoint) override;
     virtual void page_did_request_scroll_into_view(Web::CSSPixelRect const&) override;
-    virtual void page_did_enter_tooltip_area(Web::CSSPixelPoint, DeprecatedString const&) override;
+    virtual void page_did_enter_tooltip_area(Web::CSSPixelPoint, ByteString const&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
-    virtual void page_did_click_link(const URL&, DeprecatedString const& target, unsigned modifiers) override;
-    virtual void page_did_middle_click_link(const URL&, DeprecatedString const& target, unsigned modifiers) override;
+    virtual void page_did_click_link(const URL&, ByteString const& target, unsigned modifiers) override;
+    virtual void page_did_middle_click_link(const URL&, ByteString const& target, unsigned modifiers) override;
     virtual void page_did_request_context_menu(Web::CSSPixelPoint) override;
-    virtual void page_did_request_link_context_menu(Web::CSSPixelPoint, URL const&, DeprecatedString const& target, unsigned modifiers) override;
-    virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
-    virtual void page_did_request_media_context_menu(Web::CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu) override;
+    virtual void page_did_request_link_context_menu(Web::CSSPixelPoint, URL const&, ByteString const& target, unsigned modifiers) override;
+    virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, const URL&, ByteString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
+    virtual void page_did_request_media_context_menu(Web::CSSPixelPoint, ByteString const& target, unsigned modifiers, Web::Page::MediaContextMenu) override;
     virtual void page_did_start_loading(const URL&, bool) override;
     virtual void page_did_create_new_document(Web::DOM::Document&) override;
     virtual void page_did_destroy_document(Web::DOM::Document&) override;
@@ -113,8 +113,8 @@ private:
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
-    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, DeprecatedString const&) override;
-    virtual DeprecatedString page_did_request_cookie(const URL&, Web::Cookie::Source) override;
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, ByteString const&) override;
+    virtual ByteString page_did_request_cookie(const URL&, Web::Cookie::Source) override;
     virtual void page_did_set_cookie(const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
     virtual void page_did_update_cookie(Web::Cookie::Cookie) override;
     virtual void page_did_update_resource_count(i32) override;

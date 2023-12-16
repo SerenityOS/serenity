@@ -135,10 +135,10 @@ ErrorOr<void> kill(pid_t, int signal);
 ErrorOr<void> killpg(int pgrp, int signal);
 ErrorOr<int> dup(int source_fd);
 ErrorOr<int> dup2(int source_fd, int destination_fd);
-ErrorOr<DeprecatedString> ptsname(int fd);
-ErrorOr<DeprecatedString> gethostname();
+ErrorOr<ByteString> ptsname(int fd);
+ErrorOr<ByteString> gethostname();
 ErrorOr<void> sethostname(StringView);
-ErrorOr<DeprecatedString> getcwd();
+ErrorOr<ByteString> getcwd();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
 ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
@@ -235,7 +235,7 @@ ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
 ErrorOr<void> unlockpt(int fildes);
 ErrorOr<void> access(StringView pathname, int mode, int flags = 0);
-ErrorOr<DeprecatedString> readlink(StringView pathname);
+ErrorOr<ByteString> readlink(StringView pathname);
 ErrorOr<int> poll(Span<struct pollfd>, int timeout);
 
 #ifdef AK_OS_SERENITY
@@ -279,7 +279,7 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
 
 char** environment();
 
-ErrorOr<DeprecatedString> current_executable_path();
+ErrorOr<ByteString> current_executable_path();
 
 ErrorOr<Bytes> allocate(size_t count, size_t size);
 

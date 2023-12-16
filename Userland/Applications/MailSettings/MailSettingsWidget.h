@@ -24,11 +24,11 @@ private:
     MailSettingsWidget() = default;
     ErrorOr<void> setup();
 
-    DeprecatedString m_server;
-    DeprecatedString m_port;
+    ByteString m_server;
+    ByteString m_port;
     bool m_tls { false };
-    DeprecatedString m_email;
-    Vector<DeprecatedString> m_common_ports;
+    ByteString m_email;
+    Vector<ByteString> m_common_ports;
 
     RefPtr<GUI::TextBox> m_server_inputbox;
     RefPtr<GUI::ComboBox> m_port_combobox;

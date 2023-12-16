@@ -79,7 +79,7 @@ GUI::Model::MatchResult HistoryModel::data_matches(GUI::ModelIndex const& index,
         return { TriState::True };
 
     auto const& history_entry = m_entries[index.row()];
-    auto haystack = DeprecatedString::formatted("{} {}", history_entry.title, history_entry.url.serialize());
+    auto haystack = ByteString::formatted("{} {}", history_entry.title, history_entry.url.serialize());
     auto match_result = fuzzy_match(needle, haystack);
     if (match_result.score > 0)
         return { TriState::True, match_result.score };

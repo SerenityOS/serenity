@@ -8,13 +8,13 @@
 
 namespace Web {
 
-FileRequest::FileRequest(DeprecatedString path, Function<void(ErrorOr<i32>)> on_file_request_finish_callback)
+FileRequest::FileRequest(ByteString path, Function<void(ErrorOr<i32>)> on_file_request_finish_callback)
     : on_file_request_finish(move(on_file_request_finish_callback))
     , m_path(move(path))
 {
 }
 
-DeprecatedString FileRequest::path() const
+ByteString FileRequest::path() const
 {
     return m_path;
 }

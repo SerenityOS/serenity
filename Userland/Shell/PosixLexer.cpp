@@ -598,7 +598,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
     if (m_state.escaping && consume_specific('\n')) {
         m_state.escaping = false;
 
-        auto buffer = m_state.buffer.to_deprecated_string().substring(0, m_state.buffer.length() - 1);
+        auto buffer = m_state.buffer.to_byte_string().substring(0, m_state.buffer.length() - 1);
         m_state.buffer.clear();
         m_state.buffer.append(buffer);
 

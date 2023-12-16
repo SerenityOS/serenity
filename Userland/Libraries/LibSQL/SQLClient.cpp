@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/String.h>
 #include <LibSQL/SQLClient.h>
 
@@ -23,7 +23,7 @@ namespace SQL {
 #if !defined(AK_OS_SERENITY)
 
 // This is heavily based on how SystemServer's Service creates its socket.
-static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
+static ErrorOr<int> create_database_socket(ByteString const& socket_path)
 {
     if (FileSystem::exists(socket_path))
         TRY(Core::System::unlink(socket_path));
@@ -51,7 +51,7 @@ static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
     return socket_fd;
 }
 
-static ErrorOr<void> launch_server(DeprecatedString const& socket_path, DeprecatedString const& pid_path, Vector<String> candidate_server_paths)
+static ErrorOr<void> launch_server(ByteString const& socket_path, ByteString const& pid_path, Vector<String> candidate_server_paths)
 {
     auto server_fd_or_error = create_database_socket(socket_path);
     if (server_fd_or_error.is_error()) {
@@ -73,14 +73,14 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
 
         if (server_pid != 0) {
             auto server_pid_file = TRY(Core::File::open(pid_path, Core::File::OpenMode::Write));
-            TRY(server_pid_file->write_until_depleted(DeprecatedString::number(server_pid).bytes()));
+            TRY(server_pid_file->write_until_depleted(ByteString::number(server_pid).bytes()));
 
             TRY(Core::System::kill(getpid(), SIGTERM));
         }
 
         server_fd = TRY(Core::System::dup(server_fd));
 
-        auto takeover_string = DeprecatedString::formatted("SQLServer:{}", server_fd);
+        auto takeover_string = ByteString::formatted("SQLServer:{}", server_fd);
         TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
         ErrorOr<void> result;
@@ -110,7 +110,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
     return {};
 }
 
-static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
+static ErrorOr<bool> should_launch_server(ByteString const& pid_path)
 {
     if (!FileSystem::exists(pid_path))
         return true;
@@ -149,8 +149,8 @@ static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
 ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vector<String> candidate_server_paths)
 {
     auto runtime_directory = TRY(Core::StandardPaths::runtime_directory());
-    auto socket_path = DeprecatedString::formatted("{}/SQLServer.socket", runtime_directory);
-    auto pid_path = DeprecatedString::formatted("{}/SQLServer.pid", runtime_directory);
+    auto socket_path = ByteString::formatted("{}/SQLServer.socket", runtime_directory);
+    auto pid_path = ByteString::formatted("{}/SQLServer.pid", runtime_directory);
 
     if (TRY(should_launch_server(pid_path)))
         TRY(launch_server(socket_path, pid_path, move(candidate_server_paths)));
@@ -163,7 +163,7 @@ ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vec
 
 #endif
 
-void SQLClient::execution_success(u64 statement_id, u64 execution_id, Vector<DeprecatedString> const& column_names, bool has_results, size_t created, size_t updated, size_t deleted)
+void SQLClient::execution_success(u64 statement_id, u64 execution_id, Vector<ByteString> const& column_names, bool has_results, size_t created, size_t updated, size_t deleted)
 {
     if (!on_execution_success) {
         outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
@@ -173,7 +173,7 @@ void SQLClient::execution_success(u64 statement_id, u64 execution_id, Vector<Dep
     ExecutionSuccess success {
         .statement_id = statement_id,
         .execution_id = execution_id,
-        .column_names = move(const_cast<Vector<DeprecatedString>&>(column_names)),
+        .column_names = move(const_cast<Vector<ByteString>&>(column_names)),
         .has_results = has_results,
         .rows_created = created,
         .rows_updated = updated,
@@ -183,7 +183,7 @@ void SQLClient::execution_success(u64 statement_id, u64 execution_id, Vector<Dep
     on_execution_success(move(success));
 }
 
-void SQLClient::execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, DeprecatedString const& message)
+void SQLClient::execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, ByteString const& message)
 {
     if (!on_execution_error) {
         warnln("Execution error for statement_id {}: {} ({})", statement_id, message, to_underlying(code));
@@ -194,7 +194,7 @@ void SQLClient::execution_error(u64 statement_id, u64 execution_id, SQLErrorCode
         .statement_id = statement_id,
         .execution_id = execution_id,
         .error_code = code,
-        .error_message = move(const_cast<DeprecatedString&>(message)),
+        .error_message = move(const_cast<ByteString&>(message)),
     };
 
     on_execution_error(move(error));

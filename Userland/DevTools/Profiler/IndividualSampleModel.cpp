@@ -50,7 +50,7 @@ GUI::Variant IndividualSampleModel::data(GUI::ModelIndex const& index, GUI::Mode
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)
-            return DeprecatedString::formatted("{:p}", frame.address);
+            return ByteString::formatted("{:p}", frame.address);
 
         if (index.column() == Column::Symbol) {
             return frame.symbol;

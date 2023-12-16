@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 
@@ -23,12 +23,12 @@ public:
 
     Error(AK::Error error)
         : m_type(Type::Internal)
-        , m_message(DeprecatedString::formatted("Internal error while processing PDF file: {}", error.string_literal()))
+        , m_message(ByteString::formatted("Internal error while processing PDF file: {}", error.string_literal()))
     {
     }
 
-    Error(Type type, DeprecatedString const& message)
-        : Error(type, String::from_deprecated_string(message).release_value_but_fixme_should_propagate_errors())
+    Error(Type type, ByteString const& message)
+        : Error(type, String::from_byte_string(message).release_value_but_fixme_should_propagate_errors())
     {
     }
 
@@ -37,22 +37,22 @@ public:
     {
         switch (type) {
         case Type::Parse:
-            m_message = DeprecatedString::formatted("Failed to parse PDF file: {}", message);
+            m_message = ByteString::formatted("Failed to parse PDF file: {}", message);
             break;
         case Type::Internal:
-            m_message = DeprecatedString::formatted("Internal error while processing PDF file: {}", message);
+            m_message = ByteString::formatted("Internal error while processing PDF file: {}", message);
             break;
         case Type::MalformedPDF:
-            m_message = DeprecatedString::formatted("Malformed PDF file: {}", message);
+            m_message = ByteString::formatted("Malformed PDF file: {}", message);
             break;
         case Type::RenderingUnsupported:
-            m_message = DeprecatedString::formatted("Rendering of feature not supported: {}", message);
+            m_message = ByteString::formatted("Rendering of feature not supported: {}", message);
             break;
         }
     }
 
     Type type() const { return m_type; }
-    DeprecatedString const& message() const { return m_message; }
+    ByteString const& message() const { return m_message; }
 
 #define DEFINE_STATIC_ERROR_FUNCTIONS(name, type)                                                           \
     static Error name##_error(StringView message)                                                           \
@@ -73,7 +73,7 @@ public:
 
 private:
     Type m_type;
-    DeprecatedString m_message;
+    ByteString m_message;
 
     static Error maybe_with_string(Type type, ErrorOr<String> maybe_string)
     {

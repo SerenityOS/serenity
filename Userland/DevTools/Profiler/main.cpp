@@ -62,18 +62,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"sv));
 
-    DeprecatedString perfcore_file;
+    ByteString perfcore_file;
     if (perfcore_file_arg.is_empty()) {
         if (!generate_profile(pid))
             return 0;
-        perfcore_file = DeprecatedString::formatted("/proc/{}/perf_events", pid);
+        perfcore_file = ByteString::formatted("/proc/{}/perf_events", pid);
     } else {
         perfcore_file = perfcore_file_arg;
     }
 
     auto profile_or_error = Profile::load_from_perfcore_file(perfcore_file);
     if (profile_or_error.is_error()) {
-        GUI::MessageBox::show(nullptr, DeprecatedString::formatted("{}", profile_or_error.error()), "Profiler"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, ByteString::formatted("{}", profile_or_error.error()), "Profiler"sv, GUI::MessageBox::Type::Error);
         return 0;
     }
 
@@ -224,8 +224,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Make this constexpr once String is able to.
     auto const format_sample_count = [&profile](auto const sample_count) {
         if (profile->show_percentages())
-            return DeprecatedString::formatted("{}%", sample_count.as_string());
-        return DeprecatedString::formatted("{} Samples", sample_count.to_i32());
+            return ByteString::formatted("{}%", sample_count.as_string());
+        return ByteString::formatted("{} Samples", sample_count.to_i32());
     };
 
     auto& statusbar = main_widget->add<GUI::Statusbar>();
@@ -235,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto flamegraph_hovered_index = flamegraph_view.hovered_index();
         if (flamegraph_hovered_index.is_valid()) {
-            auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_deprecated_string();
+            auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_byte_string();
             auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount));
             auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount));
             builder.appendff("{}, ", stack);
@@ -312,10 +312,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return app->exec();
 }
 
-static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_name)
+static bool prompt_to_stop_profiling(pid_t pid, ByteString const& process_name)
 {
     auto window = GUI::Window::construct();
-    window->set_title(DeprecatedString::formatted("Profiling {}({})", process_name, pid));
+    window->set_title(ByteString::formatted("Profiling {}({})", process_name, pid));
     window->resize(240, 100);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();
@@ -351,7 +351,7 @@ bool generate_profile(pid_t& pid)
         pid = process_chooser->pid();
     }
 
-    DeprecatedString process_name;
+    ByteString process_name;
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
     if (!all_processes.is_error()) {
@@ -369,7 +369,7 @@ bool generate_profile(pid_t& pid)
 
     if (profiling_enable(pid, event_mask) < 0) {
         int saved_errno = errno;
-        GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, ByteString::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 

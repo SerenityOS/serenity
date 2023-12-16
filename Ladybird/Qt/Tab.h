@@ -40,7 +40,7 @@ public:
     void forward();
     void reload();
 
-    void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
+    void debug_request(ByteString const& request, ByteString const& argument);
 
     void open_file();
     void update_reset_zoom_button();

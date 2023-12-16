@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TrackManager track_manager;
 
     Threading::MutexProtected<Audio::WavWriter> wav_writer;
-    Optional<DeprecatedString> save_path;
+    Optional<ByteString> save_path;
     Atomic<bool> need_to_write_wav = false;
     Atomic<int> wav_percent_written = 0;
 
@@ -65,11 +65,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;
-        DeprecatedString error;
+        ByteString error;
         wav_writer.with_locked([&](auto& wav_writer) {
             auto error_or_void = wav_writer.set_file(save_path.value());
             if (error_or_void.is_error())
-                error = DeprecatedString::formatted("Failed to export WAV file: {}", error_or_void.error());
+                error = ByteString::formatted("Failed to export WAV file: {}", error_or_void.error());
         });
         if (!error.is_empty()) {
             GUI::MessageBox::show_error(window, error);

@@ -37,7 +37,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->use_native_user_style_sheet();
     auto path = TRY(String::formatted("{}/README.md", Core::StandardPaths::home_directory()));
-    m_web_view->load(URL::create_with_file_scheme(path.to_deprecated_string()));
+    m_web_view->load(URL::create_with_file_scheme(path.to_byte_string()));
 
     m_tip_label = find_descendant_of_type_named<GUI::Label>("tip_label");
     m_tip_frame = find_descendant_of_type_named<GUI::Frame>("tip_frame");

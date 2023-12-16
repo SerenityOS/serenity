@@ -349,7 +349,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
     //    then set selected source to the value of the element's src attribute
     //    and set selected pixel density to 1.0.
     if (!uses_srcset_or_picture() && has_attribute(HTML::AttributeNames::src) && !deprecated_attribute(HTML::AttributeNames::src).is_empty()) {
-        selected_source = TRY(String::from_deprecated_string(deprecated_attribute(HTML::AttributeNames::src)));
+        selected_source = TRY(String::from_byte_string(deprecated_attribute(HTML::AttributeNames::src)));
         selected_pixel_density = 1.0f;
     }
 
@@ -361,7 +361,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
         // 1. Parse selected source, relative to the element's node document.
         //    If that is not successful, then abort this inner set of steps.
         //    Otherwise, let urlString be the resulting URL string.
-        auto url_string = document().parse_url(selected_source.value().to_deprecated_string());
+        auto url_string = document().parse_url(selected_source.value().to_byte_string());
         if (!url_string.is_valid())
             goto after_step_7;
 
@@ -460,7 +460,7 @@ after_step_7:
         }
 
         // 12. Parse selected source, relative to the element's node document, and let urlString be the resulting URL string.
-        auto url_string = document().parse_url(selected_source.value().url.to_deprecated_string());
+        auto url_string = document().parse_url(selected_source.value().url.to_byte_string());
         // If that is not successful, then:
         if (!url_string.is_valid()) {
             // 1. Abort the image request for the current request and the pending request.

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stream.h>
@@ -26,8 +26,8 @@ enum class WriterBehavior : u32 {
 AK_ENUM_BITWISE_OPERATORS(WriterBehavior);
 
 struct WriterTraits {
-    DeprecatedString separator;
-    DeprecatedString quote { "\"" };
+    ByteString separator;
+    ByteString quote { "\"" };
     enum QuoteEscape {
         Repeat,
         Backslash,
@@ -121,7 +121,7 @@ private:
     template<typename T>
     ErrorOr<void> write_entry(T&& entry)
     {
-        auto string = DeprecatedString::formatted("{}", FormatIfSupported(entry));
+        auto string = ByteString::formatted("{}", FormatIfSupported(entry));
 
         auto safe_to_write_normally = !has_flag(m_behaviors, WriterBehavior::QuoteAll)
             && !string.contains('\n')

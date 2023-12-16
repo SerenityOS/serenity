@@ -26,11 +26,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     static auto const default_port = 8000;
     static auto const default_document_root_path = "/www"_string;
 
-    DeprecatedString listen_address = default_listen_address.to_deprecated_string();
+    ByteString listen_address = default_listen_address.to_byte_string();
     int port = default_port;
-    DeprecatedString username;
-    DeprecatedString password;
-    DeprecatedString document_root_path = default_document_root_path.to_deprecated_string();
+    ByteString username;
+    ByteString password;
+    ByteString document_root_path = default_document_root_path.to_byte_string();
 
     Core::ArgsParser args_parser;
     args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address");

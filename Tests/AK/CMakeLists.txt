@@ -13,13 +13,13 @@ set(AK_TEST_SOURCES
     TestBitStream.cpp
     TestBuiltinWrappers.cpp
     TestByteBuffer.cpp
+    TestByteString.cpp
     TestCharacterTypes.cpp
     TestChecked.cpp
     TestCircularBuffer.cpp
     TestCircularDeque.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
-    TestDeprecatedString.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
     TestDoublyLinkedList.cpp

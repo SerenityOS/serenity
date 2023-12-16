@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Types.h>
 #include <LibCpp/Parser.h>
 #include <LibGUI/AutocompleteProvider.h>
@@ -29,10 +29,10 @@ inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::AutocompleteRes
 template<>
 inline ErrorOr<CodeComprehension::AutocompleteResultEntry> decode(Decoder& decoder)
 {
-    auto completion = TRY(decoder.decode<DeprecatedString>());
+    auto completion = TRY(decoder.decode<ByteString>());
     auto partial_input_length = TRY(decoder.decode<size_t>());
     auto language = TRY(decoder.decode<CodeComprehension::Language>());
-    auto display_text = TRY(decoder.decode<DeprecatedString>());
+    auto display_text = TRY(decoder.decode<ByteString>());
     auto hide_autocomplete_after_applying = TRY(decoder.decode<CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying>());
 
     return CodeComprehension::AutocompleteResultEntry { move(completion), partial_input_length, language, move(display_text), hide_autocomplete_after_applying };
@@ -50,7 +50,7 @@ inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::ProjectLocation
 template<>
 inline ErrorOr<CodeComprehension::ProjectLocation> decode(Decoder& decoder)
 {
-    auto file = TRY(decoder.decode<DeprecatedString>());
+    auto file = TRY(decoder.decode<ByteString>());
     auto line = TRY(decoder.decode<size_t>());
     auto column = TRY(decoder.decode<size_t>());
 
@@ -70,10 +70,10 @@ inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::Declaration con
 template<>
 inline ErrorOr<CodeComprehension::Declaration> decode(Decoder& decoder)
 {
-    auto name = TRY(decoder.decode<DeprecatedString>());
+    auto name = TRY(decoder.decode<ByteString>());
     auto position = TRY(decoder.decode<CodeComprehension::ProjectLocation>());
     auto type = TRY(decoder.decode<CodeComprehension::DeclarationType>());
-    auto scope = TRY(decoder.decode<DeprecatedString>());
+    auto scope = TRY(decoder.decode<ByteString>());
 
     return CodeComprehension::Declaration { move(name), position, type, move(scope) };
 }
@@ -91,8 +91,8 @@ inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::TodoEntry const
 template<>
 inline ErrorOr<CodeComprehension::TodoEntry> decode(Decoder& decoder)
 {
-    auto content = TRY(decoder.decode<DeprecatedString>());
-    auto filename = TRY(decoder.decode<DeprecatedString>());
+    auto content = TRY(decoder.decode<ByteString>());
+    auto filename = TRY(decoder.decode<ByteString>());
     auto line = TRY(decoder.decode<size_t>());
     auto column = TRY(decoder.decode<size_t>());
 

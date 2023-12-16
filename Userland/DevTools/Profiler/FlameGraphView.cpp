@@ -180,7 +180,7 @@ String FlameGraphView::bar_label(StackBar const& bar) const
     auto label_index = bar.index.sibling_at_column(m_text_column);
     String label = "All"_string;
     if (label_index.is_valid()) {
-        label = MUST(String::from_deprecated_string(m_model.data(label_index).to_deprecated_string()));
+        label = MUST(String::from_byte_string(m_model.data(label_index).to_byte_string()));
     }
     return label;
 }

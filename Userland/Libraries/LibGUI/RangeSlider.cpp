@@ -52,7 +52,7 @@ void RangeSlider::paint_event(PaintEvent& event)
 
     // Text label
     if (m_show_label) {
-        auto range_text = DeprecatedString::formatted("{} to {}", lower_range(), upper_range());
+        auto range_text = ByteString::formatted("{} to {}", lower_range(), upper_range());
         painter.draw_text(inner_rect.translated(1, 1), range_text, Gfx::TextAlignment::Center, Color::Black);
         painter.draw_text(inner_rect, range_text, Gfx::TextAlignment::Center, Color::White);
     }

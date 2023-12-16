@@ -38,7 +38,7 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
     };
 }
 
-void Player::play_file_path(DeprecatedString const& path)
+void Player::play_file_path(ByteString const& path)
 {
     if (!FileSystem::exists(path)) {
         audio_load_error(path, "File does not exist"sv);
@@ -66,7 +66,7 @@ void Player::play_file_path(DeprecatedString const& path)
     play();
 }
 
-bool Player::is_playlist(DeprecatedString const& path)
+bool Player::is_playlist(ByteString const& path)
 {
     return (path.ends_with(".m3u"sv, AK::CaseSensitivity::CaseInsensitive)
         || path.ends_with(".m3u8"sv, AK::CaseSensitivity::CaseInsensitive));

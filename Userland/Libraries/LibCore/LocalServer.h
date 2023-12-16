@@ -16,9 +16,9 @@ class LocalServer : public EventReceiver {
 public:
     virtual ~LocalServer() override;
 
-    ErrorOr<void> take_over_from_system_server(DeprecatedString const& path = DeprecatedString());
+    ErrorOr<void> take_over_from_system_server(ByteString const& path = ByteString());
     bool is_listening() const { return m_listening; }
-    bool listen(DeprecatedString const& address);
+    bool listen(ByteString const& address);
 
     ErrorOr<NonnullOwnPtr<LocalSocket>> accept();
 

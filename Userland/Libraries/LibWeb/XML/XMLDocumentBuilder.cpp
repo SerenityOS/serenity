@@ -16,7 +16,7 @@ extern char const* s_xhtml_unified_dtd;
 
 namespace Web {
 
-ErrorOr<DeprecatedString> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const& public_id)
+ErrorOr<ByteString> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const& public_id)
 {
     if (!public_id.has_value())
         return Error::from_string_literal("Refusing to load disallowed external entity");
@@ -45,12 +45,12 @@ XMLDocumentBuilder::XMLDocumentBuilder(DOM::Document& document, XMLScriptingSupp
     m_namespace_stack.append({ m_namespace, 1 });
 }
 
-void XMLDocumentBuilder::set_source(DeprecatedString source)
+void XMLDocumentBuilder::set_source(ByteString source)
 {
-    m_document->set_source(MUST(String::from_deprecated_string(source)));
+    m_document->set_source(MUST(String::from_byte_string(source)));
 }
 
-void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name, DeprecatedString> const& attributes)
+void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name, ByteString> const& attributes)
 {
     if (m_has_error)
         return;
@@ -85,7 +85,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
     }
 
     for (auto const& attribute : attributes)
-        MUST(node->set_attribute(MUST(FlyString::from_deprecated_fly_string(attribute.key)), MUST(String::from_deprecated_string(attribute.value))));
+        MUST(node->set_attribute(MUST(FlyString::from_deprecated_fly_string(attribute.key)), MUST(String::from_byte_string(attribute.value))));
 
     m_current_node = node.ptr();
 }
@@ -144,11 +144,11 @@ void XMLDocumentBuilder::text(StringView data)
         text_node.set_data(MUST(text_builder.to_string()));
         text_builder.clear();
     } else {
-        auto string = DeprecatedString::empty();
+        auto string = ByteString::empty();
         if (!data.is_null())
-            string = data.to_deprecated_string();
+            string = data.to_byte_string();
         if (!string.is_empty()) {
-            auto node = m_document->create_text_node(MUST(String::from_deprecated_string(string)));
+            auto node = m_document->create_text_node(MUST(String::from_byte_string(string)));
             MUST(m_current_node->append_child(node));
         }
     }
@@ -158,10 +158,10 @@ void XMLDocumentBuilder::comment(StringView data)
 {
     if (m_has_error)
         return;
-    auto string = DeprecatedString::empty();
+    auto string = ByteString::empty();
     if (!data.is_null())
-        string = data.to_deprecated_string();
-    MUST(m_document->append_child(m_document->create_comment(MUST(String::from_deprecated_string(string)))));
+        string = data.to_byte_string();
+    MUST(m_document->append_child(m_document->create_comment(MUST(String::from_byte_string(string)))));
 }
 
 void XMLDocumentBuilder::document_end()

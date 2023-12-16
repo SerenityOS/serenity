@@ -19,7 +19,7 @@ UsersMapWidget::UsersMapWidget(Options const& options)
 void UsersMapWidget::get_users()
 {
     // Start HTTP GET request to load people.json
-    HashMap<DeprecatedString, DeprecatedString> headers;
+    HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
     URL url("https://usermap.serenityos.org/people.json");
@@ -48,7 +48,7 @@ void UsersMapWidget::get_users()
         for (size_t i = 0; i < json_users.size(); i++) {
             auto const& json_user = json_users.at(i).as_object();
             User user {
-                MUST(String::from_deprecated_string(json_user.get_deprecated_string("nick"sv).release_value())),
+                MUST(String::from_byte_string(json_user.get_byte_string("nick"sv).release_value())),
                 { json_user.get_array("coordinates"sv).release_value().at(0).to_double(),
                     json_user.get_array("coordinates"sv).release_value().at(1).to_double() },
                 json_user.has_bool("contributor"sv),

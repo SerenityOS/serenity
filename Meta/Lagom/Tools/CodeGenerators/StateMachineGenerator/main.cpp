@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
@@ -22,8 +22,8 @@ struct Range {
 };
 
 struct StateTransition {
-    Optional<DeprecatedString> new_state;
-    Optional<DeprecatedString> action;
+    Optional<ByteString> new_state;
+    Optional<ByteString> action;
 };
 
 struct MatchedAction {
@@ -32,18 +32,18 @@ struct MatchedAction {
 };
 
 struct State {
-    DeprecatedString name;
+    ByteString name;
     Vector<MatchedAction> actions;
-    Optional<DeprecatedString> entry_action;
-    Optional<DeprecatedString> exit_action;
+    Optional<ByteString> entry_action;
+    Optional<ByteString> exit_action;
 };
 
 struct StateMachine {
-    DeprecatedString name;
-    DeprecatedString initial_state;
+    ByteString name;
+    ByteString initial_state;
     Vector<State> states;
     Optional<State> anywhere;
-    Optional<DeprecatedString> namespaces;
+    Optional<ByteString> namespaces;
 };
 
 static OwnPtr<StateMachine>
@@ -159,7 +159,7 @@ parse_state_machine(StringView input)
                       consume_whitespace();
                       state.exit_action = consume_identifier();
                   } else if (lexer.next_is('@')) {
-                      auto directive = consume_identifier().to_deprecated_string();
+                      auto directive = consume_identifier().to_byte_string();
                       fprintf(stderr, "Unimplemented @ directive %s\n", directive.characters());
                       exit(1);
                   } else {
@@ -189,7 +189,7 @@ parse_state_machine(StringView input)
             lexer.consume_specific('@');
             state_machine->anywhere = consume_state_description();
         } else if (lexer.consume_specific('@')) {
-            auto directive = consume_identifier().to_deprecated_string();
+            auto directive = consume_identifier().to_byte_string();
             fprintf(stderr, "Unimplemented @ directive %s\n", directive.characters());
             exit(1);
         } else {
@@ -238,9 +238,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-HashTable<DeprecatedString> actions(StateMachine const& machine)
+HashTable<ByteString> actions(StateMachine const& machine)
 {
-    HashTable<DeprecatedString> table;
+    HashTable<ByteString> table;
 
     auto do_state = [&](State const& state) {
         if (state.entry_action.has_value())
@@ -302,7 +302,7 @@ void output_header(StateMachine const& machine, SourceGenerator& generator)
 {
     generator.set("class_name", machine.name);
     generator.set("initial_state", machine.initial_state);
-    generator.set("state_count", DeprecatedString::number(machine.states.size() + 1));
+    generator.set("state_count", ByteString::number(machine.states.size() + 1));
 
     generator.append(R"~~~(
 #pragma once

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
@@ -54,7 +54,7 @@ private:
         if (action.icon())
             set_icon(action.icon());
         else
-            set_text(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
+            set_text(String::from_byte_string(action.text()).release_value_but_fixme_should_propagate_errors());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
 
@@ -74,7 +74,7 @@ private:
         builder.append(action.tooltip());
         if (action.shortcut().is_valid()) {
             builder.append(" ("sv);
-            builder.append(action.shortcut().to_deprecated_string());
+            builder.append(action.shortcut().to_byte_string());
             builder.append(')');
         }
         return MUST(builder.to_string());

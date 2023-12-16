@@ -118,7 +118,7 @@ void GitWidget::refresh()
     m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
 }
 
-void GitWidget::stage_file(DeprecatedString const& file)
+void GitWidget::stage_file(ByteString const& file)
 {
     dbgln("staging: {}", file);
     bool rc = m_git_repo->stage(file);
@@ -126,7 +126,7 @@ void GitWidget::stage_file(DeprecatedString const& file)
     refresh();
 }
 
-void GitWidget::unstage_file(DeprecatedString const& file)
+void GitWidget::unstage_file(ByteString const& file)
 {
     dbgln("unstaging: {}", file);
     bool rc = m_git_repo->unstage(file);
@@ -154,7 +154,7 @@ void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
     m_view_diff_callback = move(callback);
 }
 
-void GitWidget::show_diff(DeprecatedString const& file_path)
+void GitWidget::show_diff(ByteString const& file_path)
 {
     if (!m_git_repo->is_tracked(file_path)) {
         auto file = Core::File::open(file_path, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
@@ -168,7 +168,7 @@ void GitWidget::show_diff(DeprecatedString const& file_path)
     m_view_diff_callback(original_content.value(), diff.value());
 }
 
-void GitWidget::change_repo(DeprecatedString const& repo_root)
+void GitWidget::change_repo(ByteString const& repo_root)
 {
     m_repo_root = repo_root;
     m_git_repo = nullptr;

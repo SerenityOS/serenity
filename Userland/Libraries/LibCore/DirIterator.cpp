@@ -11,7 +11,7 @@
 
 namespace Core {
 
-DirIterator::DirIterator(DeprecatedString path, Flags flags)
+DirIterator::DirIterator(ByteString path, Flags flags)
     : m_path(move(path))
     , m_flags(flags)
 {
@@ -93,7 +93,7 @@ Optional<DirectoryEntry> DirIterator::next()
     return result;
 }
 
-DeprecatedString DirIterator::next_path()
+ByteString DirIterator::next_path()
 {
     auto entry = next();
     if (entry.has_value())
@@ -101,14 +101,14 @@ DeprecatedString DirIterator::next_path()
     return "";
 }
 
-DeprecatedString DirIterator::next_full_path()
+ByteString DirIterator::next_full_path()
 {
     StringBuilder builder;
     builder.append(m_path);
     if (!m_path.ends_with('/'))
         builder.append('/');
     builder.append(next_path());
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 int DirIterator::fd() const

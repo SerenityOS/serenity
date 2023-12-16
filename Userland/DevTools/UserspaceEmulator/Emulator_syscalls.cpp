@@ -292,7 +292,7 @@ FlatPtr Emulator::virt$perf_event(int event, FlatPtr arg1, FlatPtr arg2)
     if (event == PERF_EVENT_SIGNPOST) {
         if (is_profiling()) {
             if (profiler_string_id_map().size() > arg1)
-                emit_profile_event(profile_stream(), "signpost"sv, DeprecatedString::formatted("\"arg1\": {}, \"arg2\": {}", arg1, arg2));
+                emit_profile_event(profile_stream(), "signpost"sv, ByteString::formatted("\"arg1\": {}, \"arg2\": {}", arg1, arg2));
             syscall(SC_perf_event, PERF_EVENT_SIGNPOST, profiler_string_id_map().at(arg1), arg2);
         } else {
             syscall(SC_perf_event, PERF_EVENT_SIGNPOST, arg1, arg2);
@@ -311,7 +311,7 @@ FlatPtr Emulator::virt$perf_register_string(FlatPtr string, size_t size)
     auto ret = (int)syscall(SC_perf_register_string, buffer, size + 4);
 
     if (ret >= 0 && is_profiling()) {
-        profiler_strings().append(make<DeprecatedString>(StringView { buffer + 4, size }));
+        profiler_strings().append(make<ByteString>(StringView { buffer + 4, size }));
         profiler_string_id_map().append(ret);
         ret = profiler_string_id_map().size() - 1;
     }
@@ -564,7 +564,7 @@ int Emulator::virt$set_mmap_name(FlatPtr params_addr)
     auto* region = mmu().find_region({ 0x23, (FlatPtr)params.addr });
     if (!region || !is<MmapRegion>(*region))
         return -EINVAL;
-    static_cast<MmapRegion&>(*region).set_name(DeprecatedString::copy(name));
+    static_cast<MmapRegion&>(*region).set_name(ByteString::copy(name));
     return 0;
 }
 
@@ -802,7 +802,7 @@ static void round_to_page_size(FlatPtr& address, size_t& size)
 u32 Emulator::virt$munmap(FlatPtr address, size_t size)
 {
     if (is_profiling())
-        emit_profile_event(profile_stream(), "munmap"sv, DeprecatedString::formatted("\"ptr\": {}, \"size\": {}", address, size));
+        emit_profile_event(profile_stream(), "munmap"sv, ByteString::formatted("\"ptr\": {}, \"size\": {}", address, size));
     round_to_page_size(address, size);
     Vector<Region*, 4> marked_for_deletion;
     bool has_non_mmap_region = false;
@@ -861,7 +861,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
     final_address = result.value().base().get();
     auto final_size = result.value().size();
 
-    DeprecatedString name_str;
+    ByteString name_str;
     if (params.name.characters) {
         auto buffer_result = ByteBuffer::create_uninitialized(params.name.length);
         if (buffer_result.is_error())
@@ -872,7 +872,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
     }
 
     if (is_profiling())
-        emit_profile_event(profile_stream(), "mmap"sv, DeprecatedString::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
+        emit_profile_event(profile_stream(), "mmap"sv, ByteString::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
 
     if (params.flags & MAP_ANONYMOUS) {
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
@@ -1216,15 +1216,15 @@ int Emulator::virt$execve(FlatPtr params_addr)
     Syscall::SC_execve_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
-    auto path = DeprecatedString::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
-    Vector<DeprecatedString> arguments;
-    Vector<DeprecatedString> environment;
+    auto path = ByteString::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
+    Vector<ByteString> arguments;
+    Vector<ByteString> environment;
 
     auto copy_string_list = [this](auto& output_vector, auto& string_list) {
         for (size_t i = 0; i < string_list.length; ++i) {
             Syscall::StringArgument string;
             mmu().copy_from_vm(&string, (FlatPtr)&string_list.strings[i], sizeof(string));
-            output_vector.append(DeprecatedString::copy(mmu().copy_buffer_from_vm((FlatPtr)string.characters, string.length)));
+            output_vector.append(ByteString::copy(mmu().copy_buffer_from_vm((FlatPtr)string.characters, string.length)));
         }
     };
 
@@ -1270,7 +1270,7 @@ int Emulator::virt$stat(FlatPtr params_addr)
     Syscall::SC_stat_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
-    auto path = DeprecatedString::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
+    auto path = ByteString::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
     struct stat host_statbuf;
     int rc;
     if (params.follow_symlinks)

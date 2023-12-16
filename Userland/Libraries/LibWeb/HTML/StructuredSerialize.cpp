@@ -231,8 +231,8 @@ public:
             // Note: A Regex<ECMA262> object is perfectly happy to be reconstructed with just the source+flags
             //       In the future, we could optimize the work being done on the deserialize step by serializing
             //       more of the internal state (the [[RegExpMatcher]] internal slot)
-            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_deprecated_string(regexp_object.pattern()))));
-            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_deprecated_string(regexp_object.flags()))));
+            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.pattern()))));
+            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.flags()))));
         }
 
         // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
@@ -847,7 +847,7 @@ public:
                     auto deserialized_value = TRY(deserialize());
 
                     // 2. Let result be ! CreateDataProperty(value, entry.[[Key]], deserializedValue).
-                    auto result = MUST(object.create_data_property(key.to_deprecated_string(), deserialized_value));
+                    auto result = MUST(object.create_data_property(key.to_byte_string(), deserialized_value));
 
                     // 3. Assert: result is true.
                     VERIFY(result);

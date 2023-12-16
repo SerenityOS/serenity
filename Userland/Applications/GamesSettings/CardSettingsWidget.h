@@ -35,7 +35,7 @@ private:
     String card_back_image_path() const;
     String card_front_images_set_name() const;
 
-    Vector<DeprecatedString> m_card_front_sets;
+    Vector<ByteString> m_card_front_sets;
 
     RefPtr<CardGamePreview> m_preview_frame;
     RefPtr<GUI::ColorInput> m_background_color_input;

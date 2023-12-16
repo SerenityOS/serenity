@@ -17,7 +17,7 @@
 #ifdef KERNEL
 #    include <Kernel/Library/StdLib.h>
 #else
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #    include <AK/FloatingPointStringConversions.h>
 #    include <string.h>
 #endif
@@ -465,7 +465,7 @@ Optional<size_t> find_any_of(StringView haystack, StringView needles, SearchDire
 }
 
 #ifndef KERNEL
-DeprecatedString to_snakecase(StringView str)
+ByteString to_snakecase(StringView str)
 {
     auto should_insert_underscore = [&](auto i, auto current_char) {
         if (i == 0)
@@ -488,10 +488,10 @@ DeprecatedString to_snakecase(StringView str)
             builder.append('_');
         builder.append_as_lowercase(ch);
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString to_titlecase(StringView str)
+ByteString to_titlecase(StringView str)
 {
     StringBuilder builder;
     bool next_is_upper = true;
@@ -504,10 +504,10 @@ DeprecatedString to_titlecase(StringView str)
         next_is_upper = ch == ' ';
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString invert_case(StringView str)
+ByteString invert_case(StringView str)
 {
     StringBuilder builder(str.length());
 
@@ -518,10 +518,10 @@ DeprecatedString invert_case(StringView str)
             builder.append(to_ascii_lowercase(ch));
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)
+ByteString replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)
 {
     if (str.is_empty())
         return str;
@@ -546,7 +546,7 @@ DeprecatedString replace(StringView str, StringView needle, StringView replaceme
         last_position = position + needle.length();
     }
     replaced_string.append(str.substring_view(last_position, str.length() - last_position));
-    return replaced_string.to_deprecated_string();
+    return replaced_string.to_byte_string();
 }
 
 ErrorOr<String> replace(String const& haystack, StringView needle, StringView replacement, ReplaceMode replace_mode)

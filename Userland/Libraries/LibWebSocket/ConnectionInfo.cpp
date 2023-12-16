@@ -20,7 +20,7 @@ bool ConnectionInfo::is_secure() const
     return m_url.scheme().bytes_as_string_view().equals_ignoring_ascii_case("wss"sv);
 }
 
-DeprecatedString ConnectionInfo::resource_name() const
+ByteString ConnectionInfo::resource_name() const
 {
     // RFC 6455 Section 3 :
     // The "resource-name" can be constructed by concatenating the following:
@@ -37,7 +37,7 @@ DeprecatedString ConnectionInfo::resource_name() const
         // the query component
         builder.append(*m_url.query());
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

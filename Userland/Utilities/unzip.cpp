@@ -43,8 +43,8 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
             outln(" extracting: {}", zip_member.name);
         return true;
     }
-    MUST(Core::Directory::create(LexicalPath(zip_member.name.to_deprecated_string()).parent(), Core::Directory::CreateDirectories::Yes));
-    auto new_file_or_error = Core::File::open(zip_member.name.to_deprecated_string(), Core::File::OpenMode::Write);
+    MUST(Core::Directory::create(LexicalPath(zip_member.name.to_byte_string()).parent(), Core::Directory::CreateDirectories::Yes));
+    auto new_file_or_error = Core::File::open(zip_member.name.to_byte_string(), Core::File::OpenMode::Write);
     if (new_file_or_error.is_error()) {
         warnln("Can't write file {}: {}", zip_member.name, new_file_or_error.release_error());
         return false;

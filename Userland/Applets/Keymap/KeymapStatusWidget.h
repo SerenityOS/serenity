@@ -15,7 +15,7 @@ class KeymapStatusWidget final : public GUI::Widget {
 
 public:
     virtual ~KeymapStatusWidget() override;
-    void set_current_keymap(DeprecatedString const& keymap);
+    void set_current_keymap(ByteString const& keymap);
 
 private:
     KeymapStatusWidget();
@@ -27,6 +27,6 @@ private:
 
     RefPtr<GUI::Menu> m_context_menu;
 
-    DeprecatedString m_current_keymap;
+    ByteString m_current_keymap;
     GUI::ActionGroup m_keymaps_group;
 };

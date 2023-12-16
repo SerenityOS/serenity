@@ -9,7 +9,7 @@
 #include "Cell.h"
 #include "Forward.h"
 #include "Readers/XSV.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/StringBuilder.h>
@@ -23,7 +23,7 @@ namespace Spreadsheet {
 
 class CellChange {
 public:
-    CellChange(Cell&, DeprecatedString const&);
+    CellChange(Cell&, ByteString const&);
     CellChange(Cell&, CellTypeMetadata const&);
 
     auto& cell() { return m_cell; }
@@ -34,8 +34,8 @@ public:
 
 private:
     Cell& m_cell;
-    DeprecatedString m_previous_data;
-    DeprecatedString m_new_data;
+    ByteString m_previous_data;
+    ByteString m_new_data;
     CellTypeMetadata m_previous_type_metadata;
     CellTypeMetadata m_new_type_metadata;
 };
@@ -51,7 +51,7 @@ public:
 
     Optional<Position> parse_cell_name(StringView) const;
     Optional<size_t> column_index(StringView column_name) const;
-    Optional<DeprecatedString> column_arithmetic(StringView column_name, int offset);
+    Optional<ByteString> column_arithmetic(StringView column_name, int offset);
 
     Cell* from_url(const URL&);
     Cell const* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
@@ -64,10 +64,10 @@ public:
     JsonObject to_json() const;
     static RefPtr<Sheet> from_json(JsonObject const&, Workbook&);
 
-    Vector<Vector<DeprecatedString>> to_xsv() const;
+    Vector<Vector<ByteString>> to_xsv() const;
     static RefPtr<Sheet> from_xsv(Reader::XSV const&, Workbook&);
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
     void set_name(StringView name) { m_name = name; }
 
     JsonObject gather_documentation() const;
@@ -89,17 +89,17 @@ public:
         if (auto cell = at(position))
             return *cell;
 
-        m_cells.set(position, make<Cell>(DeprecatedString::empty(), position, *this));
+        m_cells.set(position, make<Cell>(ByteString::empty(), position, *this));
         return *at(position);
     }
 
     size_t add_row();
-    DeprecatedString add_column();
+    ByteString add_column();
 
     size_t row_count() const { return m_rows; }
     size_t column_count() const { return m_columns.size(); }
-    Vector<DeprecatedString> const& columns() const { return m_columns; }
-    DeprecatedString const& column(size_t index)
+    Vector<ByteString> const& columns() const { return m_columns; }
+    ByteString const& column(size_t index)
     {
         for (size_t i = column_count(); i < index; ++i)
             add_column();
@@ -107,7 +107,7 @@ public:
         VERIFY(column_count() > index);
         return m_columns[index];
     }
-    DeprecatedString const& column(size_t index) const
+    ByteString const& column(size_t index) const
     {
         VERIFY(column_count() > index);
         return m_columns[index];
@@ -145,7 +145,7 @@ public:
 
     bool columns_are_standard() const;
 
-    DeprecatedString generate_inline_documentation_for(StringView function, size_t argument_index);
+    ByteString generate_inline_documentation_for(StringView function, size_t argument_index);
 
     JS::Realm& realm() const { return *m_root_execution_context->realm; }
     JS::VM& vm() const { return realm().vm(); }
@@ -154,8 +154,8 @@ private:
     explicit Sheet(Workbook&);
     explicit Sheet(StringView name, Workbook&);
 
-    DeprecatedString m_name;
-    Vector<DeprecatedString> m_columns;
+    ByteString m_name;
+    Vector<ByteString> m_columns;
     size_t m_rows { 0 };
     HashMap<Position, NonnullOwnPtr<Cell>> m_cells;
     HashTable<Position> m_selected_cells;

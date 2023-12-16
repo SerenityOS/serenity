@@ -25,8 +25,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto json = TRY(JsonValue::from_string(file_contents));
     json.as_array().for_each([](auto& value) {
         auto& jail = value.as_object();
-        auto index = jail.get_deprecated_string("index"sv).value_or({});
-        auto name = jail.get_deprecated_string("name"sv).value_or({});
+        auto index = jail.get_byte_string("index"sv).value_or({});
+        auto name = jail.get_byte_string("name"sv).value_or({});
 
         outln("{:4}     {:10}", index, name);
     });

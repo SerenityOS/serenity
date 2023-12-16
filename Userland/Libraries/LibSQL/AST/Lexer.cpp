@@ -11,9 +11,9 @@
 
 namespace SQL::AST {
 
-HashMap<DeprecatedString, TokenType> Lexer::s_keywords;
+HashMap<ByteString, TokenType> Lexer::s_keywords;
 HashMap<char, TokenType> Lexer::s_one_char_tokens;
-HashMap<DeprecatedString, TokenType> Lexer::s_two_char_tokens;
+HashMap<ByteString, TokenType> Lexer::s_two_char_tokens;
 
 Lexer::Lexer(StringView source)
     : m_source(source)
@@ -109,7 +109,7 @@ Token Lexer::next()
         }
     }
 
-    Token token(token_type, current_token.to_deprecated_string(),
+    Token token(token_type, current_token.to_byte_string(),
         { value_start_line_number, value_start_column_number },
         { m_line_number, m_line_column });
 

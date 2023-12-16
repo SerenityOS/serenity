@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
 #include <fcntl.h>
@@ -34,7 +34,7 @@ ALWAYS_INLINE int graphics_connector_get_head_edid(int fd, GraphicsHeadEDID* inf
     }
     auto minor_number = minor(display_connector_stat.st_rdev);
 
-    auto edid_fd = open(DeprecatedString::formatted("/sys/devices/graphics/connectors/{}/edid", minor_number).characters(), O_RDONLY);
+    auto edid_fd = open(ByteString::formatted("/sys/devices/graphics/connectors/{}/edid", minor_number).characters(), O_RDONLY);
     if (edid_fd < 0) {
         return edid_fd;
     }

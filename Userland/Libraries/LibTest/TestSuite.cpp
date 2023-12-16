@@ -99,7 +99,7 @@ void disable_reporting()
     TestSuite::the().disable_reporting();
 }
 
-static DeprecatedString test_result_to_string(TestResult result)
+static ByteString test_result_to_string(TestResult result)
 {
     switch (result) {
     case TestResult::NotRun:
@@ -117,7 +117,7 @@ static DeprecatedString test_result_to_string(TestResult result)
     }
 }
 
-int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> arguments)
+int TestSuite::main(ByteString const& suite_name, Span<StringView> arguments)
 {
     m_suite_name = suite_name;
 
@@ -154,7 +154,7 @@ int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> argumen
     return run(matching_tests);
 }
 
-Vector<NonnullRefPtr<TestCase>> TestSuite::find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks)
+Vector<NonnullRefPtr<TestCase>> TestSuite::find_cases(ByteString const& search, bool find_tests, bool find_benchmarks)
 {
     Vector<NonnullRefPtr<TestCase>> matches;
     for (auto& t : m_cases) {

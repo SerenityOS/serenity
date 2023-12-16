@@ -63,7 +63,7 @@ SpinBox::SpinBox()
 void SpinBox::set_value(int value, AllowCallback allow_callback)
 {
     value = clamp(value, m_min, m_max);
-    m_editor->set_text(DeprecatedString::number(value));
+    m_editor->set_text(ByteString::number(value));
     if (m_value == value)
         return;
     m_value = value;
@@ -105,7 +105,7 @@ void SpinBox::set_range(int min, int max, AllowCallback allow_callback)
     int old_value = m_value;
     m_value = clamp(m_value, m_min, m_max);
     if (m_value != old_value) {
-        m_editor->set_text(DeprecatedString::number(m_value));
+        m_editor->set_text(ByteString::number(m_value));
         if (on_change && allow_callback == AllowCallback::Yes)
             on_change(m_value);
     }

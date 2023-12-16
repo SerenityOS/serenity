@@ -57,7 +57,7 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
 
     m_family_list_view->on_selection_change = [this] {
         const auto& index = m_family_list_view->selection().first();
-        m_family = MUST(String::from_deprecated_string(index.data().to_deprecated_string()));
+        m_family = MUST(String::from_byte_string(index.data().to_byte_string()));
         m_variants.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
@@ -78,7 +78,7 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     m_variant_list_view->on_selection_change = [this] {
         const auto& index = m_variant_list_view->selection().first();
         bool font_is_fixed_size = false;
-        m_variant = MUST(String::from_deprecated_string(index.data().to_deprecated_string()));
+        m_variant = MUST(String::from_byte_string(index.data().to_byte_string()));
         m_sizes.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())

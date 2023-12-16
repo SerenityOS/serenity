@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <LibGUI/Forward.h>
 #include <sys/types.h>
@@ -16,8 +16,8 @@ namespace GUI {
 class CommonLocationsProvider {
 public:
     struct CommonLocation {
-        DeprecatedString name;
-        DeprecatedString path;
+        ByteString name;
+        ByteString path;
     };
 
     static ErrorOr<void> load_from_json(StringView json_path);

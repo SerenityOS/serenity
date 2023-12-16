@@ -95,7 +95,7 @@ GUI::Model::MatchResult CookiesModel::data_matches(GUI::ModelIndex const& index,
         return { TriState::True };
 
     auto const& cookie = m_cookies[index.row()];
-    auto haystack = DeprecatedString::formatted("{} {} {} {}", cookie.domain, cookie.path, cookie.name, cookie.value);
+    auto haystack = ByteString::formatted("{} {} {} {}", cookie.domain, cookie.path, cookie.name, cookie.value);
     auto match_result = fuzzy_match(needle, haystack);
     if (match_result.score > 0)
         return { TriState::True, match_result.score };

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -67,8 +67,8 @@ public:
 
     virtual bool is_widget() const { return false; }
 
-    DeprecatedString const& name() const { return m_name; }
-    void set_name(DeprecatedString name) { m_name = move(name); }
+    ByteString const& name() const { return m_name; }
+    void set_name(ByteString name) { m_name = move(name); }
 
     Vector<NonnullRefPtr<EventReceiver>>& children() { return m_children; }
     Vector<NonnullRefPtr<EventReceiver>> const& children() const { return m_children; }
@@ -168,7 +168,7 @@ protected:
 
 private:
     EventReceiver* m_parent { nullptr };
-    DeprecatedString m_name;
+    ByteString m_name;
     int m_timer_id { 0 };
     Vector<NonnullRefPtr<EventReceiver>> m_children;
     Function<bool(Core::Event&)> m_event_filter;

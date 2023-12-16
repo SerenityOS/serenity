@@ -11,7 +11,7 @@
 #include <AK/StringBuilder.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #    include <AK/Utf16View.h>
 #endif
 
@@ -186,7 +186,7 @@ template ErrorOr<u64> GenericLexer::consume_decimal_integer<u64>();
 template ErrorOr<i64> GenericLexer::consume_decimal_integer<i64>();
 
 #ifndef KERNEL
-Optional<DeprecatedString> GenericLexer::consume_and_unescape_string(char escape_char)
+Optional<ByteString> GenericLexer::consume_and_unescape_string(char escape_char)
 {
     auto view = consume_quoted_string(escape_char);
     if (view.is_null())
@@ -195,7 +195,7 @@ Optional<DeprecatedString> GenericLexer::consume_and_unescape_string(char escape
     StringBuilder builder;
     for (size_t i = 0; i < view.length(); ++i)
         builder.append(consume_escaped_character(escape_char));
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 auto GenericLexer::consume_escaped_code_point(bool combine_surrogate_pairs) -> Result<u32, UnicodeEscapeError>

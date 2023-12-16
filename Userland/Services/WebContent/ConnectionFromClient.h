@@ -52,12 +52,12 @@ private:
 
     virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle() override;
     virtual void set_window_handle(String const& handle) override;
-    virtual void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path) override;
+    virtual void connect_to_webdriver(ByteString const& webdriver_ipc_path) override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
-    virtual void update_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
+    virtual void update_system_fonts(ByteString const&, ByteString const&, ByteString const&) override;
     virtual void update_screen_rects(Vector<Web::DevicePixelRect> const&, u32) override;
     virtual void load_url(URL const&) override;
-    virtual void load_html(DeprecatedString const&) override;
+    virtual void load_html(ByteString const&) override;
     virtual void paint(Web::DevicePixelRect const&, i32) override;
     virtual void set_viewport_rect(Web::DevicePixelRect const&) override;
     virtual void mouse_down(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
@@ -69,7 +69,7 @@ private:
     virtual void key_up(i32, unsigned, u32) override;
     virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
     virtual void remove_backing_store(i32) override;
-    virtual void debug_request(DeprecatedString const&, DeprecatedString const&) override;
+    virtual void debug_request(ByteString const&, ByteString const&) override;
     virtual void get_source() override;
     virtual void inspect_dom_tree() override;
     virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
@@ -92,7 +92,7 @@ private:
     virtual void set_content_filters(Vector<String> const&) override;
     virtual void set_autoplay_allowed_on_all_websites() override;
     virtual void set_autoplay_allowlist(Vector<String> const& allowlist) override;
-    virtual void set_proxy_mappings(Vector<DeprecatedString> const&, HashMap<DeprecatedString, size_t> const&) override;
+    virtual void set_proxy_mappings(Vector<ByteString> const&, HashMap<ByteString, size_t> const&) override;
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
@@ -102,8 +102,8 @@ private:
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
     virtual void set_system_visibility_state(bool visible) override;
 
-    virtual void js_console_input(DeprecatedString const&) override;
-    virtual void run_javascript(DeprecatedString const&) override;
+    virtual void js_console_input(ByteString const&) override;
+    virtual void run_javascript(ByteString const&) override;
     virtual void js_console_request_messages(i32) override;
 
     virtual void alert_closed() override;

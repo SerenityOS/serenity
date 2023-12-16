@@ -18,7 +18,7 @@ public:
     static ErrorOr<NonnullRefPtr<PathBreadcrumbbar>> try_create();
     virtual ~PathBreadcrumbbar() override;
 
-    void set_current_path(DeprecatedString const&);
+    void set_current_path(ByteString const&);
 
     void show_location_text_box();
     void hide_location_text_box();
@@ -39,7 +39,7 @@ private:
     NonnullRefPtr<GUI::TextBox> m_location_text_box;
     NonnullRefPtr<GUI::Breadcrumbbar> m_breadcrumbbar;
 
-    DeprecatedString m_current_path;
+    ByteString m_current_path;
 };
 
 }

@@ -89,7 +89,7 @@ Window::Window(Core::EventReceiver* parent)
         "title",
         [this] { return title(); },
         [this](auto& value) {
-            set_title(value.to_deprecated_string());
+            set_title(value.to_byte_string());
             return true;
         });
 
@@ -247,7 +247,7 @@ void Window::hide()
     }
 }
 
-void Window::set_title(DeprecatedString title)
+void Window::set_title(ByteString title)
 {
     m_title_when_windowless = move(title);
     if (!is_visible())
@@ -255,7 +255,7 @@ void Window::set_title(DeprecatedString title)
     ConnectionToWindowServer::the().async_set_window_title(m_window_id, m_title_when_windowless);
 }
 
-DeprecatedString Window::title() const
+ByteString Window::title() const
 {
     if (!is_visible())
         return m_title_when_windowless;

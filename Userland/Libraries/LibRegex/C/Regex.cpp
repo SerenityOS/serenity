@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Variant.h>
 #include <LibRegex/Regex.h>
@@ -23,7 +23,7 @@ struct internal_regex_t {
     Optional<Variant<NonnullOwnPtr<Regex<PosixExtended>>, NonnullOwnPtr<Regex<PosixBasic>>>> re;
     size_t re_pat_errpos;
     ReError re_pat_err;
-    DeprecatedString re_pat;
+    ByteString re_pat;
 };
 
 static internal_regex_t* impl_from(regex_t* re)
@@ -55,7 +55,7 @@ int regcomp(regex_t* reg, char const* pattern, int cflags)
 
     preg->cflags = cflags;
 
-    DeprecatedString pattern_str(pattern);
+    ByteString pattern_str(pattern);
     if (is_extended)
         preg->re = make<Regex<PosixExtended>>(pattern_str, PosixOptions {} | (PosixFlags)cflags | PosixFlags::SkipTrimEmptyMatches);
     else
@@ -193,7 +193,7 @@ static StringView get_error(ReError errcode)
 
 size_t regerror(int errcode, regex_t const* reg, char* errbuf, size_t errbuf_size)
 {
-    DeprecatedString error;
+    ByteString error;
     auto const* preg = impl_from(reg);
 
     if (!preg)

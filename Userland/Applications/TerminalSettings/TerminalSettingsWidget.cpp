@@ -236,7 +236,7 @@ VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView b
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString TerminalSettingsMainWidget::stringify_bell(VT::TerminalWidget::BellMode bell_mode)
+ByteString TerminalSettingsMainWidget::stringify_bell(VT::TerminalWidget::BellMode bell_mode)
 {
     if (bell_mode == VT::TerminalWidget::BellMode::AudibleBeep)
         return "AudibleBeep";

@@ -1291,107 +1291,107 @@ StringView Instruction::reg64_name() const
     return register_name(static_cast<RegisterIndex64>(register_index()));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_o8(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_o8(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg8());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_o16(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_o16(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg16());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_o32(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_o32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg32());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_o64(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_o64(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg64());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu_reg() const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu_reg() const
 {
     VERIFY(is_register());
     return register_name(reg_fpu());
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu_mem(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu_mem(Instruction const& insn) const
 {
     VERIFY(!is_register());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu_ax16() const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu_ax16() const
 {
     VERIFY(is_register());
     return register_name(reg16());
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu16(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu16(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
-    return DeprecatedString::formatted("word ptr [{}]", to_deprecated_string(insn));
+    return ByteString::formatted("word ptr [{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu32(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
-    return DeprecatedString::formatted("dword ptr [{}]", to_deprecated_string(insn));
+    return ByteString::formatted("dword ptr [{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu64(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu64(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
-    return DeprecatedString::formatted("qword ptr [{}]", to_deprecated_string(insn));
+    return ByteString::formatted("qword ptr [{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu80(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_fpu80(Instruction const& insn) const
 {
     VERIFY(!is_register());
-    return DeprecatedString::formatted("tbyte ptr [{}]", to_deprecated_string(insn));
+    return ByteString::formatted("tbyte ptr [{}]", to_byte_string(insn));
 }
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_mm(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_mm(Instruction const& insn) const
 {
     if (is_register())
         return register_name(static_cast<MMXRegisterIndex>(m_register_index));
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_xmm(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string_xmm(Instruction const& insn) const
 {
     if (is_register())
         return register_name(static_cast<XMMRegisterIndex>(m_register_index));
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return ByteString::formatted("[{}]", to_byte_string(insn));
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string(Instruction const& insn) const
+ByteString MemoryOrRegisterReference::to_byte_string(Instruction const& insn) const
 {
     switch (insn.address_size()) {
     case AddressSize::Size64:
-        return to_deprecated_string_a64();
+        return to_byte_string_a64();
     case AddressSize::Size32:
-        return insn.mode() == ProcessorMode::Long ? to_deprecated_string_a64() : to_deprecated_string_a32();
+        return insn.mode() == ProcessorMode::Long ? to_byte_string_a64() : to_byte_string_a32();
     case AddressSize::Size16:
-        return to_deprecated_string_a16();
+        return to_byte_string_a16();
     }
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a16() const
+ByteString MemoryOrRegisterReference::to_byte_string_a16() const
 {
-    DeprecatedString base;
+    ByteString base;
     bool hasDisplacement = false;
 
     switch (rm()) {
@@ -1418,7 +1418,7 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a16() const
         break;
     case 6:
         if (mod() == 0)
-            base = DeprecatedString::formatted("{:#04x}", m_displacement16);
+            base = ByteString::formatted("{:#04x}", m_displacement16);
         else
             base = "bp";
         break;
@@ -1433,14 +1433,14 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a16() const
     if (!hasDisplacement)
         return base;
 
-    return DeprecatedString::formatted("{}{:+#x}", base, (i16)m_displacement16);
+    return ByteString::formatted("{}{:+#x}", base, (i16)m_displacement16);
 }
 
-DeprecatedString MemoryOrRegisterReference::sib_to_deprecated_string(ProcessorMode mode) const
+ByteString MemoryOrRegisterReference::sib_to_byte_string(ProcessorMode mode) const
 {
-    DeprecatedString scale;
-    DeprecatedString index;
-    DeprecatedString base;
+    ByteString scale;
+    ByteString index;
+    ByteString base;
     switch (m_sib_scale) {
     case 0:;
         break;
@@ -1477,10 +1477,10 @@ DeprecatedString MemoryOrRegisterReference::sib_to_deprecated_string(ProcessorMo
         builder.append(index);
         builder.append(scale);
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a64() const
+ByteString MemoryOrRegisterReference::to_byte_string_a64() const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex64>(m_register_index));
@@ -1497,7 +1497,7 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a64() const
     if (m_has_sib && m_sib_base == 5)
         has_displacement = true;
 
-    DeprecatedString base;
+    ByteString base;
     switch (m_rm) {
     case 5:
         if (mod() == 0)
@@ -1506,7 +1506,7 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a64() const
             base = "rbp";
         break;
     case 4:
-        base = sib_to_deprecated_string(ProcessorMode::Long);
+        base = sib_to_byte_string(ProcessorMode::Long);
         break;
     default:
         base = register_name(RegisterIndex64(m_rm));
@@ -1515,10 +1515,10 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a64() const
     if (!has_displacement)
         return base;
 
-    return DeprecatedString::formatted("{}{:+#x}", base, (i32)m_displacement32);
+    return ByteString::formatted("{}{:+#x}", base, (i32)m_displacement32);
 }
 
-DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a32() const
+ByteString MemoryOrRegisterReference::to_byte_string_a32() const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex32>(m_register_index));
@@ -1532,16 +1532,16 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a32() const
     if (m_has_sib && m_sib_base == 5)
         has_displacement = true;
 
-    DeprecatedString base;
+    ByteString base;
     switch (m_rm) {
     case 5:
         if (mod() == 0)
-            base = DeprecatedString::formatted("{:x}", m_displacement32);
+            base = ByteString::formatted("{:x}", m_displacement32);
         else
             base = "ebp";
         break;
     case 4:
-        base = sib_to_deprecated_string(ProcessorMode::Protected);
+        base = sib_to_byte_string(ProcessorMode::Protected);
         break;
     default:
         base = register_name(RegisterIndex32(m_rm));
@@ -1550,27 +1550,27 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_a32() const
     if (!has_displacement)
         return base;
 
-    return DeprecatedString::formatted("{}{:+#x}", base, (i32)m_displacement32);
+    return ByteString::formatted("{}{:+#x}", base, (i32)m_displacement32);
 }
 
-static DeprecatedString relative_address(u32 origin, bool x32, i8 imm)
+static ByteString relative_address(u32 origin, bool x32, i8 imm)
 {
     if (x32)
-        return DeprecatedString::formatted("{:x}", origin + imm);
+        return ByteString::formatted("{:x}", origin + imm);
     u16 w = origin & 0xffff;
-    return DeprecatedString::formatted("{:x}", w + imm);
+    return ByteString::formatted("{:x}", w + imm);
 }
 
-static DeprecatedString relative_address(u32 origin, bool x32, i32 imm)
+static ByteString relative_address(u32 origin, bool x32, i32 imm)
 {
     if (x32)
-        return DeprecatedString::formatted("{:x}", origin + imm);
+        return ByteString::formatted("{:x}", origin + imm);
     u16 w = origin & 0xffff;
     i16 si = imm;
-    return DeprecatedString::formatted("{:x}", w + si);
+    return ByteString::formatted("{:x}", w + si);
 }
 
-DeprecatedString Instruction::to_deprecated_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
+ByteString Instruction::to_byte_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
 {
     StringBuilder builder;
     if (has_segment_prefix())
@@ -1606,18 +1606,18 @@ DeprecatedString Instruction::to_deprecated_string(u32 origin, SymbolProvider co
     // Note: SSE instructions use these to toggle between packed and single data
     if (has_rep_prefix() && !(m_descriptor->format > __SSE && m_descriptor->format < __EndFormatsWithRMByte))
         builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz "sv : "repz "sv);
-    to_deprecated_string_internal(builder, origin, symbol_provider, x32);
-    return builder.to_deprecated_string();
+    to_byte_string_internal(builder, origin, symbol_provider, x32);
+    return builder.to_byte_string();
 }
 
-void Instruction::to_deprecated_string_internal(StringBuilder& builder, u32 origin, SymbolProvider const* symbol_provider, bool x32) const
+void Instruction::to_byte_string_internal(StringBuilder& builder, u32 origin, SymbolProvider const* symbol_provider, bool x32) const
 {
     if (!m_descriptor) {
         builder.appendff("db {:02x}", m_op);
         return;
     }
 
-    DeprecatedString mnemonic = DeprecatedString(m_descriptor->mnemonic).to_lowercase();
+    ByteString mnemonic = ByteString(m_descriptor->mnemonic).to_lowercase();
 
     auto append_mnemonic = [&] { builder.append(mnemonic); };
 
@@ -1636,22 +1636,22 @@ void Instruction::to_deprecated_string_internal(StringBuilder& builder, u32 orig
         }
     };
 
-    auto append_rm8 = [&] { builder.append(m_modrm.to_deprecated_string_o8(*this)); };
-    auto append_rm16 = [&] { builder.append(m_modrm.to_deprecated_string_o16(*this)); };
+    auto append_rm8 = [&] { builder.append(m_modrm.to_byte_string_o8(*this)); };
+    auto append_rm16 = [&] { builder.append(m_modrm.to_byte_string_o16(*this)); };
     auto append_rm32 = [&] {
         if (m_operand_size == OperandSize::Size64)
-            builder.append(m_modrm.to_deprecated_string_o64(*this));
+            builder.append(m_modrm.to_byte_string_o64(*this));
         else
-            builder.append(m_modrm.to_deprecated_string_o32(*this));
+            builder.append(m_modrm.to_byte_string_o32(*this));
     };
-    auto append_rm64 = [&] { builder.append(m_modrm.to_deprecated_string_o64(*this)); };
-    auto append_fpu_reg = [&] { builder.append(m_modrm.to_deprecated_string_fpu_reg()); };
-    auto append_fpu_mem = [&] { builder.append(m_modrm.to_deprecated_string_fpu_mem(*this)); };
-    auto append_fpu_ax16 = [&] { builder.append(m_modrm.to_deprecated_string_fpu_ax16()); };
-    auto append_fpu_rm16 = [&] { builder.append(m_modrm.to_deprecated_string_fpu16(*this)); };
-    auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_deprecated_string_fpu32(*this)); };
-    auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_deprecated_string_fpu64(*this)); };
-    auto append_fpu_rm80 = [&] { builder.append(m_modrm.to_deprecated_string_fpu80(*this)); };
+    auto append_rm64 = [&] { builder.append(m_modrm.to_byte_string_o64(*this)); };
+    auto append_fpu_reg = [&] { builder.append(m_modrm.to_byte_string_fpu_reg()); };
+    auto append_fpu_mem = [&] { builder.append(m_modrm.to_byte_string_fpu_mem(*this)); };
+    auto append_fpu_ax16 = [&] { builder.append(m_modrm.to_byte_string_fpu_ax16()); };
+    auto append_fpu_rm16 = [&] { builder.append(m_modrm.to_byte_string_fpu16(*this)); };
+    auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_byte_string_fpu32(*this)); };
+    auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_byte_string_fpu64(*this)); };
+    auto append_fpu_rm80 = [&] { builder.append(m_modrm.to_byte_string_fpu80(*this)); };
     auto append_imm8 = [&] { builder.appendff("{:#02x}", imm8()); };
     auto append_imm8_2 = [&] { builder.appendff("{:#02x}", imm8_2()); };
     auto append_imm16 = [&] { builder.appendff("{:#04x}", imm16()); };
@@ -1694,12 +1694,12 @@ void Instruction::to_deprecated_string_internal(StringBuilder& builder, u32 orig
     auto append_relative_imm32 = [&] { formatted_address(origin + 5, x32, i32(imm32())); };
 
     auto append_mm = [&] { builder.appendff("mm{}", register_index()); };
-    auto append_mmrm32 = [&] { builder.append(m_modrm.to_deprecated_string_mm(*this)); };
-    auto append_mmrm64 = [&] { builder.append(m_modrm.to_deprecated_string_mm(*this)); };
+    auto append_mmrm32 = [&] { builder.append(m_modrm.to_byte_string_mm(*this)); };
+    auto append_mmrm64 = [&] { builder.append(m_modrm.to_byte_string_mm(*this)); };
     auto append_xmm = [&] { builder.appendff("xmm{}", register_index()); };
-    auto append_xmmrm32 = [&] { builder.append(m_modrm.to_deprecated_string_xmm(*this)); };
-    auto append_xmmrm64 = [&] { builder.append(m_modrm.to_deprecated_string_xmm(*this)); };
-    auto append_xmmrm128 = [&] { builder.append(m_modrm.to_deprecated_string_xmm(*this)); };
+    auto append_xmmrm32 = [&] { builder.append(m_modrm.to_byte_string_xmm(*this)); };
+    auto append_xmmrm64 = [&] { builder.append(m_modrm.to_byte_string_xmm(*this)); };
+    auto append_xmmrm128 = [&] { builder.append(m_modrm.to_byte_string_xmm(*this)); };
 
     auto append_mm_or_xmm = [&] {
         if (has_operand_size_override_prefix())
@@ -2476,12 +2476,12 @@ void Instruction::to_deprecated_string_internal(StringBuilder& builder, u32 orig
     case MultibyteWithSlash:
     case __BeginFormatsWithRMByte:
     case __EndFormatsWithRMByte:
-        builder.append(DeprecatedString::formatted("(!{})", mnemonic));
+        builder.append(ByteString::formatted("(!{})", mnemonic));
         break;
     }
 }
 
-DeprecatedString Instruction::mnemonic() const
+ByteString Instruction::mnemonic() const
 {
     if (!m_descriptor) {
         VERIFY_NOT_REACHED();

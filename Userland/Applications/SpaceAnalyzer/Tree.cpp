@@ -40,19 +40,19 @@ void TreeNode::sort_children_by_area() const
 }
 
 struct QueueEntry {
-    QueueEntry(DeprecatedString path, TreeNode* node)
+    QueueEntry(ByteString path, TreeNode* node)
         : path(move(path))
         , node(node) {};
-    DeprecatedString path;
+    ByteString path;
     TreeNode* node { nullptr };
 };
 
-static MountInfo* find_mount_for_path(DeprecatedString path, Vector<MountInfo>& mounts)
+static MountInfo* find_mount_for_path(ByteString path, Vector<MountInfo>& mounts)
 {
     MountInfo* result = nullptr;
     size_t length = 0;
     for (auto& mount_info : mounts) {
-        DeprecatedString& mount_point = mount_info.mount_point;
+        ByteString& mount_point = mount_info.mount_point;
         if (path.starts_with(mount_point)) {
             if (!result || mount_point.length() > length) {
                 result = &mount_info;
@@ -81,7 +81,7 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
     StringBuilder builder = StringBuilder();
     builder.append(m_name);
     builder.append('/');
-    MountInfo* root_mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
+    MountInfo* root_mount_info = find_mount_for_path(builder.to_byte_string(), mounts);
     if (!root_mount_info) {
         return error_accumulator;
     }
@@ -92,7 +92,7 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
         builder.append(queue_entry.path);
         builder.append('/');
 
-        MountInfo* mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
+        MountInfo* mount_info = find_mount_for_path(builder.to_byte_string(), mounts);
         if (!mount_info || (mount_info != root_mount_info && mount_info->source != root_mount_info->source)) {
             continue;
         }
@@ -123,7 +123,7 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
                 } else {
                     auto st = st_or_error.release_value();
                     if (S_ISDIR(st.st_mode)) {
-                        queue.enqueue(QueueEntry(builder.to_deprecated_string(), &child));
+                        queue.enqueue(QueueEntry(builder.to_byte_string(), &child));
                     } else {
                         child.m_area = st.st_size;
                     }
@@ -137,7 +137,7 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
     return error_accumulator;
 }
 
-Optional<TreeNode const&> TreeNode::child_with_name(DeprecatedString name) const
+Optional<TreeNode const&> TreeNode::child_with_name(ByteString name) const
 {
     for (auto& child : *m_children) {
         if (child.name() == name)

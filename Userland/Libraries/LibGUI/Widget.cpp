@@ -92,11 +92,11 @@ Widget::Widget()
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
         [this](auto& value) {
-            if (value.to_deprecated_string() == "FixedWidth") {
+            if (value.to_byte_string() == "FixedWidth") {
                 set_font_fixed_width(true);
                 return true;
             }
-            if (value.to_deprecated_string() == "Normal") {
+            if (value.to_byte_string() == "Normal") {
                 set_font_fixed_width(false);
                 return true;
             }
@@ -138,9 +138,9 @@ Widget::Widget()
         });
 
     register_property(
-        "foreground_color", [this]() -> JsonValue { return palette().color(foreground_role()).to_deprecated_string(); },
+        "foreground_color", [this]() -> JsonValue { return palette().color(foreground_role()).to_byte_string(); },
         [this](auto& value) {
-            auto c = Color::from_string(value.to_deprecated_string());
+            auto c = Color::from_string(value.to_byte_string());
             if (c.has_value()) {
                 auto _palette = palette();
                 _palette.set_color(foreground_role(), c.value());
@@ -151,9 +151,9 @@ Widget::Widget()
         });
 
     register_property(
-        "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_deprecated_string(); },
+        "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_byte_string(); },
         [this](JsonValue const& value) {
-            auto color_str = String::from_deprecated_string(value.to_deprecated_string());
+            auto color_str = String::from_byte_string(value.to_byte_string());
             if (color_str.is_error())
                 return false;
 
@@ -1084,7 +1084,7 @@ void Widget::set_foreground_role(ColorRole role)
 
 bool Widget::set_background_color(String color_str)
 {
-    auto color = Color::from_string(color_str.to_deprecated_string());
+    auto color = Color::from_string(color_str.to_byte_string());
     if (!color.has_value())
         return false;
     set_background_color(color.release_value());
@@ -1188,12 +1188,12 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast,
         if (auto* registration = GUI::ObjectClassRegistration::find(class_name)) {
             auto layout = TRY(registration->construct());
             if (!registration->is_derived_from(layout_class)) {
-                dbgln("Invalid layout class: '{}'", class_name.to_deprecated_string());
+                dbgln("Invalid layout class: '{}'", class_name.to_byte_string());
                 return Error::from_string_literal("Invalid layout class");
             }
             set_layout(static_ptr_cast<Layout>(layout));
         } else {
-            dbgln("Unknown layout class: '{}'", class_name.to_deprecated_string());
+            dbgln("Unknown layout class: '{}'", class_name.to_byte_string());
             return Error::from_string_literal("Unknown layout class");
         }
 

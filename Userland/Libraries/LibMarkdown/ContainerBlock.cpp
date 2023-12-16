@@ -17,7 +17,7 @@
 
 namespace Markdown {
 
-DeprecatedString ContainerBlock::render_to_html(bool tight) const
+ByteString ContainerBlock::render_to_html(bool tight) const
 {
     StringBuilder builder;
 
@@ -37,12 +37,12 @@ DeprecatedString ContainerBlock::render_to_html(bool tight) const
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<DeprecatedString> ContainerBlock::render_lines_for_terminal(size_t view_width) const
+Vector<ByteString> ContainerBlock::render_lines_for_terminal(size_t view_width) const
 {
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
 
     for (auto& block : m_blocks) {
         for (auto& line : block->render_lines_for_terminal(view_width))
@@ -97,7 +97,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
     auto flush_paragraph = [&] {
         if (paragraph_text.is_empty())
             return;
-        auto paragraph = make<Paragraph>(Text::parse(paragraph_text.to_deprecated_string()));
+        auto paragraph = make<Paragraph>(Text::parse(paragraph_text.to_byte_string()));
         blocks.append(move(paragraph));
         paragraph_text.clear();
     };

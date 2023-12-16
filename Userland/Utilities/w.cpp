@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         auto maybe_account = Core::Account::from_uid(uid, Core::Account::Read::PasswdOnly);
         String username;
         if (!maybe_account.is_error())
-            username = TRY(String::from_deprecated_string(maybe_account.release_value().username()));
+            username = TRY(String::from_byte_string(maybe_account.release_value().username()));
         else
             username = TRY(String::formatted("{}", uid));
 
@@ -103,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             tty_display_name = tty_pseudo_name;
             for (auto& process : process_statistics.processes) {
                 if (tty_pseudo_name == process.tty.view() && process.pid == process.pgid) {
-                    what = TRY(String::from_deprecated_string(process.name));
+                    what = TRY(String::from_byte_string(process.name));
                     break;
                 }
             }

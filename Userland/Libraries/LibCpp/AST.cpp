@@ -32,10 +32,10 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
 
-    DeprecatedString qualifiers_string;
+    ByteString qualifiers_string;
     if (!m_qualifiers.is_empty()) {
         print_indent(output, indent + 1);
-        outln(output, "[{}]", DeprecatedString::join(' ', m_qualifiers));
+        outln(output, "[{}]", ByteString::join(' ', m_qualifiers));
     }
 
     m_return_type->dump(output, indent + 1);
@@ -72,51 +72,51 @@ void Type::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
     print_indent(output, indent + 1);
-    outln(output, "{}", to_deprecated_string());
+    outln(output, "{}", to_byte_string());
 }
 
-DeprecatedString NamedType::to_deprecated_string() const
+ByteString NamedType::to_byte_string() const
 {
-    DeprecatedString qualifiers_string;
+    ByteString qualifiers_string;
     if (!qualifiers().is_empty())
-        qualifiers_string = DeprecatedString::formatted("[{}] ", DeprecatedString::join(' ', qualifiers()));
+        qualifiers_string = ByteString::formatted("[{}] ", ByteString::join(' ', qualifiers()));
 
-    DeprecatedString name;
+    ByteString name;
     if (is_auto())
         name = "auto";
     else
         name = m_name.is_null() ? ""sv : m_name->full_name();
 
-    return DeprecatedString::formatted("{}{}", qualifiers_string, name);
+    return ByteString::formatted("{}{}", qualifiers_string, name);
 }
 
-DeprecatedString Pointer::to_deprecated_string() const
+ByteString Pointer::to_byte_string() const
 {
     if (!m_pointee)
         return {};
     StringBuilder builder;
-    builder.append(m_pointee->to_deprecated_string());
+    builder.append(m_pointee->to_byte_string());
     builder.append('*');
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString Reference::to_deprecated_string() const
+ByteString Reference::to_byte_string() const
 {
     if (!m_referenced_type)
         return {};
     StringBuilder builder;
-    builder.append(m_referenced_type->to_deprecated_string());
+    builder.append(m_referenced_type->to_byte_string());
     if (m_kind == Kind::Lvalue)
         builder.append('&');
     else
         builder.append("&&"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString FunctionType::to_deprecated_string() const
+ByteString FunctionType::to_byte_string() const
 {
     StringBuilder builder;
-    builder.append(m_return_type->to_deprecated_string());
+    builder.append(m_return_type->to_byte_string());
     builder.append('(');
     bool first = true;
     for (auto& parameter : m_parameters) {
@@ -125,14 +125,14 @@ DeprecatedString FunctionType::to_deprecated_string() const
         else
             builder.append(", "sv);
         if (parameter->type())
-            builder.append(parameter->type()->to_deprecated_string());
+            builder.append(parameter->type()->to_byte_string());
         if (parameter->name() && !parameter->full_name().is_empty()) {
             builder.append(' ');
             builder.append(parameter->full_name());
         }
     }
     builder.append(')');
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 void Parameter::dump(FILE* output, size_t indent) const
@@ -552,7 +552,7 @@ StringView Name::full_name() const
             builder.appendff("{}::", scope->name());
         }
     }
-    m_full_name = DeprecatedString::formatted("{}{}", builder.to_deprecated_string(), m_name.is_null() ? ""sv : m_name->name());
+    m_full_name = ByteString::formatted("{}{}", builder.to_byte_string(), m_name.is_null() ? ""sv : m_name->name());
     return *m_full_name;
 }
 
@@ -565,10 +565,10 @@ StringView TemplatizedName::full_name() const
     name.append(Name::full_name());
     name.append('<');
     for (auto& type : m_template_arguments) {
-        name.append(type->to_deprecated_string());
+        name.append(type->to_byte_string());
     }
     name.append('>');
-    m_full_name = name.to_deprecated_string();
+    m_full_name = name.to_byte_string();
     return *m_full_name;
 }
 
@@ -587,7 +587,7 @@ void SizedName::dump(FILE* output, size_t indent) const
     if (dimension_info.is_empty()) {
         dimension_info.append("[]"sv);
     }
-    outln(output, "{}", dimension_info.to_deprecated_string());
+    outln(output, "{}", dimension_info.to_byte_string());
 }
 
 void CppCastExpression::dump(FILE* output, size_t indent) const
@@ -670,7 +670,7 @@ StringView Declaration::full_name() const
         if (m_name)
             m_full_name = m_name->full_name();
         else
-            m_full_name = DeprecatedString::empty();
+            m_full_name = ByteString::empty();
     }
 
     return *m_full_name;

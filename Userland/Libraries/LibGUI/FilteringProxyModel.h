@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/EnumBits.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
@@ -68,7 +68,7 @@ private:
     // Maps row to actual model index.
     Vector<ModelIndexWithScore> m_matching_indices;
 
-    DeprecatedString m_filter_term;
+    ByteString m_filter_term;
     FilteringOptions m_filtering_options;
 };
 

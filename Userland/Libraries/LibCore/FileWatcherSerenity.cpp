@@ -6,8 +6,8 @@
  */
 
 #include "FileWatcher.h"
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/API/InodeWatcherEvent.h>
@@ -36,7 +36,7 @@ static constexpr unsigned file_watcher_flags_to_inode_watcher_flags(FileWatcherF
     return static_cast<unsigned>(result);
 }
 
-static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, DeprecatedString> const& wd_to_path)
+static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, ByteString> const& wd_to_path)
 {
     u8 buffer[MAXIMUM_EVENT_SIZE];
     int rc = read(fd, &buffer, MAXIMUM_EVENT_SIZE);
@@ -55,7 +55,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, De
         dbgln_if(FILE_WATCHER_DEBUG, "get_event_from_fd: Got an event for a non-existent wd {}?!", event->watch_descriptor);
         return {};
     }
-    DeprecatedString const& path = it->value;
+    ByteString const& path = it->value;
 
     switch (event->type) {
     case InodeWatcherEvent::Type::ChildCreated:
@@ -80,7 +80,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, De
 
     // We trust that the kernel only sends the name when appropriate.
     if (event->name_length > 0) {
-        DeprecatedString child_name { event->name, event->name_length - 1 };
+        ByteString child_name { event->name, event->name_length - 1 };
         result.event_path = LexicalPath::join(path, child_name).string();
     } else {
         result.event_path = path;
@@ -90,7 +90,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, De
     return result;
 }
 
-static DeprecatedString canonicalize_path(DeprecatedString path)
+static ByteString canonicalize_path(ByteString path)
 {
     if (!path.is_empty() && path[0] == '/')
         return LexicalPath::canonicalized_path(move(path));
@@ -99,9 +99,9 @@ static DeprecatedString canonicalize_path(DeprecatedString path)
     return LexicalPath::join({ cwd, strlen(cwd) }, move(path)).string();
 }
 
-ErrorOr<bool> FileWatcherBase::add_watch(DeprecatedString path, FileWatcherEvent::Type event_mask)
+ErrorOr<bool> FileWatcherBase::add_watch(ByteString path, FileWatcherEvent::Type event_mask)
 {
-    DeprecatedString canonical_path = canonicalize_path(move(path));
+    ByteString canonical_path = canonicalize_path(move(path));
 
     if (m_path_to_wd.find(canonical_path) != m_path_to_wd.end()) {
         dbgln_if(FILE_WATCHER_DEBUG, "add_watch: path '{}' is already being watched", canonical_path);
@@ -131,9 +131,9 @@ ErrorOr<bool> FileWatcherBase::add_watch(DeprecatedString path, FileWatcherEvent
     return true;
 }
 
-ErrorOr<bool> FileWatcherBase::remove_watch(DeprecatedString path)
+ErrorOr<bool> FileWatcherBase::remove_watch(ByteString path)
 {
-    DeprecatedString canonical_path = canonicalize_path(move(path));
+    ByteString canonical_path = canonicalize_path(move(path));
 
     auto it = m_path_to_wd.find(canonical_path);
     if (it == m_path_to_wd.end()) {

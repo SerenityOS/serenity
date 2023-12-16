@@ -24,7 +24,7 @@ void RequestManagerQt::reply_finished(QNetworkReply* reply)
     request->did_finish();
 }
 
-RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy)
+RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(ByteString const& method, AK::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy)
 {
     if (!url.scheme().bytes_as_string_view().is_one_of_ignoring_ascii_case("http"sv, "https"sv)) {
         return nullptr;
@@ -38,9 +38,9 @@ RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(Depr
     return request;
 }
 
-ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::create(QNetworkAccessManager& qnam, DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
+ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::create(QNetworkAccessManager& qnam, ByteString const& method, AK::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
 {
-    QNetworkRequest request { QString(url.to_deprecated_string().characters()) };
+    QNetworkRequest request { QString(url.to_byte_string().characters()) };
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
     request.setAttribute(QNetworkRequest::CookieLoadControlAttribute, QNetworkRequest::Manual);
     request.setAttribute(QNetworkRequest::CookieSaveControlAttribute, QNetworkRequest::Manual);
@@ -87,11 +87,11 @@ void RequestManagerQt::Request::did_finish()
 {
     auto buffer = m_reply.readAll();
     auto http_status_code = m_reply.attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt();
-    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
-    Vector<DeprecatedString> set_cookie_headers;
+    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
+    Vector<ByteString> set_cookie_headers;
     for (auto& it : m_reply.rawHeaderPairs()) {
-        auto name = DeprecatedString(it.first.data(), it.first.length());
-        auto value = DeprecatedString(it.second.data(), it.second.length());
+        auto name = ByteString(it.first.data(), it.first.length());
+        auto value = ByteString(it.second.data(), it.second.length());
         if (name.equals_ignoring_ascii_case("set-cookie"sv)) {
             // NOTE: Qt may have bundled multiple Set-Cookie headers into a single one.
             //       We have to extract the full list of cookies via QNetworkReply::header().
@@ -104,7 +104,7 @@ void RequestManagerQt::Request::did_finish()
         }
     }
     if (!set_cookie_headers.is_empty()) {
-        response_headers.set("set-cookie"sv, JsonArray { set_cookie_headers }.to_deprecated_string());
+        response_headers.set("set-cookie"sv, JsonArray { set_cookie_headers }.to_byte_string());
     }
     bool success = http_status_code != 0;
     on_buffered_request_finish(success, buffer.length(), response_headers, http_status_code, ReadonlyBytes { buffer.data(), (size_t)buffer.size() });

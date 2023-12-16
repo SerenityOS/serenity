@@ -5,16 +5,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGUI/Shortcut.h>
 
 namespace GUI {
 
-DeprecatedString Shortcut::to_deprecated_string() const
+ByteString Shortcut::to_byte_string() const
 {
-    Vector<DeprecatedString, 8> parts;
+    Vector<ByteString, 8> parts;
 
     if (m_modifiers & Mod_Ctrl)
         parts.append("Ctrl");
@@ -34,14 +34,14 @@ DeprecatedString Shortcut::to_deprecated_string() const
             parts.append("(Invalid)");
     } else {
         if (m_mouse_button != MouseButton::None)
-            parts.append(DeprecatedString::formatted("Mouse {}", mouse_button_to_string(m_mouse_button)));
+            parts.append(ByteString::formatted("Mouse {}", mouse_button_to_string(m_mouse_button)));
         else
             parts.append("(Invalid)");
     }
 
     StringBuilder builder;
     builder.join('+', parts);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

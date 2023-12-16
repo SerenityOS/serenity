@@ -111,7 +111,7 @@ bool is_valid_date_string(StringView value)
     if (parts.size() != 3)
         return false;
 
-    if (!is_valid_month_string(DeprecatedString::formatted("{}-{}", parts[0], parts[1])))
+    if (!is_valid_month_string(ByteString::formatted("{}-{}", parts[0], parts[1])))
         return false;
 
     if (parts[2].length() != 2)

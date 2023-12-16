@@ -138,7 +138,7 @@ private:
 
     void set_image(Image const* image);
     void animate();
-    Vector<DeprecatedString> load_files_from_directory(DeprecatedString const& path) const;
+    Vector<ByteString> load_files_from_directory(ByteString const& path) const;
     ErrorOr<void> try_open_file(String const&, Core::File&);
 
     String m_path;
@@ -162,7 +162,7 @@ private:
 
     int m_toolbar_height { 28 };
     bool m_scaled_for_first_image { false };
-    Vector<DeprecatedString> m_files_in_same_dir;
+    Vector<ByteString> m_files_in_same_dir;
     Optional<size_t> m_current_index;
     Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::NearestNeighbor };
 };

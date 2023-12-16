@@ -56,7 +56,7 @@ static void handle_print_registers(PtraceRegisters const& regs)
 #endif
 }
 
-static bool handle_disassemble_command(DeprecatedString const& command, FlatPtr first_instruction)
+static bool handle_disassemble_command(ByteString const& command, FlatPtr first_instruction)
 {
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
@@ -88,7 +88,7 @@ static bool handle_disassemble_command(DeprecatedString const& command, FlatPtr 
         if (!insn.has_value())
             break;
 
-        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_deprecated_string(offset));
+        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_byte_string(offset));
     }
 
     return true;
@@ -106,7 +106,7 @@ static bool insert_breakpoint_at_address(FlatPtr address)
     return g_debug_session->insert_breakpoint(address);
 }
 
-static bool insert_breakpoint_at_source_position(DeprecatedString const& file, size_t line)
+static bool insert_breakpoint_at_source_position(ByteString const& file, size_t line)
 {
     auto result = g_debug_session->insert_breakpoint(file, line);
     if (!result.has_value()) {
@@ -117,7 +117,7 @@ static bool insert_breakpoint_at_source_position(DeprecatedString const& file, s
     return true;
 }
 
-static bool insert_breakpoint_at_symbol(DeprecatedString const& symbol)
+static bool insert_breakpoint_at_symbol(ByteString const& symbol)
 {
     auto result = g_debug_session->insert_breakpoint(symbol);
     if (!result.has_value()) {
@@ -128,7 +128,7 @@ static bool insert_breakpoint_at_symbol(DeprecatedString const& symbol)
     return true;
 }
 
-static bool handle_breakpoint_command(DeprecatedString const& command)
+static bool handle_breakpoint_command(ByteString const& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)
@@ -155,7 +155,7 @@ static bool handle_breakpoint_command(DeprecatedString const& command)
     return insert_breakpoint_at_symbol(argument);
 }
 
-static bool handle_examine_command(DeprecatedString const& command)
+static bool handle_examine_command(ByteString const& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)

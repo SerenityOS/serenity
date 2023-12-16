@@ -20,18 +20,18 @@ public:
 
     URL const& url() const { return m_url; }
 
-    DeprecatedString const& origin() const { return m_origin; }
-    void set_origin(DeprecatedString origin) { m_origin = move(origin); }
+    ByteString const& origin() const { return m_origin; }
+    void set_origin(ByteString origin) { m_origin = move(origin); }
 
-    Vector<DeprecatedString> const& protocols() const { return m_protocols; }
-    void set_protocols(Vector<DeprecatedString> protocols) { m_protocols = move(protocols); }
+    Vector<ByteString> const& protocols() const { return m_protocols; }
+    void set_protocols(Vector<ByteString> protocols) { m_protocols = move(protocols); }
 
-    Vector<DeprecatedString> const& extensions() const { return m_extensions; }
-    void set_extensions(Vector<DeprecatedString> extensions) { m_extensions = move(extensions); }
+    Vector<ByteString> const& extensions() const { return m_extensions; }
+    void set_extensions(Vector<ByteString> extensions) { m_extensions = move(extensions); }
 
     struct Header {
-        DeprecatedString name;
-        DeprecatedString value;
+        ByteString name;
+        ByteString value;
     };
     Vector<Header> const& headers() const { return m_headers; }
     void set_headers(Vector<Header> headers) { m_headers = move(headers); }
@@ -40,13 +40,13 @@ public:
     bool is_secure() const;
 
     // "resource-name" or "/resource name/" - defined in RFC 6455 Section 3
-    DeprecatedString resource_name() const;
+    ByteString resource_name() const;
 
 private:
     URL m_url;
-    DeprecatedString m_origin;
-    Vector<DeprecatedString> m_protocols {};
-    Vector<DeprecatedString> m_extensions {};
+    ByteString m_origin;
+    Vector<ByteString> m_protocols {};
+    Vector<ByteString> m_extensions {};
     Vector<Header> m_headers {};
 };
 

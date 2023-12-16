@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Rect.h>
@@ -14,15 +14,15 @@
 namespace Gfx {
 
 template<>
-DeprecatedString IntRect::to_deprecated_string() const
+ByteString IntRect::to_byte_string() const
 {
-    return DeprecatedString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
+    return ByteString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 template<>
-DeprecatedString FloatRect::to_deprecated_string() const
+ByteString FloatRect::to_byte_string() const
 {
-    return DeprecatedString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
+    return ByteString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 }

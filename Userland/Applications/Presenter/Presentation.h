@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Slide.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
@@ -38,21 +38,21 @@ public:
     void previous_frame();
     void go_to_first_slide();
 
-    ErrorOr<DeprecatedString> render();
+    ErrorOr<ByteString> render();
 
 private:
-    static HashMap<DeprecatedString, DeprecatedString> parse_metadata(JsonObject const& metadata_object);
+    static HashMap<ByteString, ByteString> parse_metadata(JsonObject const& metadata_object);
     static ErrorOr<Gfx::IntSize> parse_presentation_size(JsonObject const& metadata_object);
 
-    Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata);
-    static NonnullOwnPtr<Presentation> construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata);
+    Presentation(Gfx::IntSize normative_size, HashMap<ByteString, ByteString> metadata);
+    static NonnullOwnPtr<Presentation> construct(Gfx::IntSize normative_size, HashMap<ByteString, ByteString> metadata);
 
     void append_slide(Slide slide);
 
     Vector<Slide> m_slides {};
     // This is not a pixel size, but an abstract size used by the slide objects for relative positioning.
     Gfx::IntSize m_normative_size;
-    HashMap<DeprecatedString, DeprecatedString> m_metadata;
+    HashMap<ByteString, ByteString> m_metadata;
 
     Checked<unsigned> m_current_slide { 0 };
     Checked<unsigned> m_current_frame_in_slide { 0 };

@@ -142,7 +142,7 @@ static ErrorOr<String> display_name_from_edid(EDID::Parser const& edid)
 
     auto build_manufacturer_product_name = [&]() -> ErrorOr<String> {
         if (product_name.is_empty())
-            return TRY(String::from_deprecated_string(manufacturer_name));
+            return TRY(String::from_byte_string(manufacturer_name));
         return String::formatted("{} {}", manufacturer_name, product_name);
     };
 
@@ -170,7 +170,7 @@ ErrorOr<void> MonitorSettingsWidget::load_current_settings()
                 TRY(m_screen_edids.try_append(edid.release_value()));
             } else {
                 dbgln("Error getting EDID from device {}: {}", m_screen_layout.screens[i].device.value(), edid.error());
-                screen_display_name = TRY(String::from_deprecated_string(m_screen_layout.screens[i].device.value()));
+                screen_display_name = TRY(String::from_byte_string(m_screen_layout.screens[i].device.value()));
                 TRY(m_screen_edids.try_append({}));
             }
         } else {

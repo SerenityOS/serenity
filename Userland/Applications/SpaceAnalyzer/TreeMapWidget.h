@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Tree.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Rect.h>
 
@@ -50,11 +50,11 @@ private:
     template<typename Function>
     void lay_out_children(TreeNode const&, Gfx::IntRect const&, int depth, Function);
     void paint_cell_frame(GUI::Painter&, TreeNode const&, Gfx::IntRect const&, Gfx::IntRect const&, int depth, HasLabel has_label) const;
-    Vector<DeprecatedString> path_to_position(Gfx::IntPoint);
+    Vector<ByteString> path_to_position(Gfx::IntPoint);
     void recalculate_path_for_new_tree();
 
     OwnPtr<Tree> m_tree;
-    Vector<DeprecatedString> m_path_segments;
+    Vector<ByteString> m_path_segments;
     size_t m_viewpoint { 0 }; // Current position within m_path_segments.
     void const* m_selected_node_cache;
 };

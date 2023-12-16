@@ -63,13 +63,13 @@ static ErrorOr<int> get_source_fd(StringView source)
     return fd_or_error;
 }
 
-static bool mount_by_line(DeprecatedString const& line)
+static bool mount_by_line(ByteString const& line)
 {
     // Skip comments and blank lines.
     if (line.is_empty() || line.starts_with('#'))
         return true;
 
-    Vector<DeprecatedString> parts = line.split('\t');
+    Vector<ByteString> parts = line.split('\t');
     if (parts.size() < 3) {
         warnln("Invalid fstab entry: {}", line);
         return false;
@@ -163,9 +163,9 @@ static ErrorOr<void> print_mounts()
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
-        auto class_name = fs_object.get_deprecated_string("class_name"sv).value_or({});
-        auto mount_point = fs_object.get_deprecated_string("mount_point"sv).value_or({});
-        auto source = fs_object.get_deprecated_string("source"sv).value_or("none");
+        auto class_name = fs_object.get_byte_string("class_name"sv).value_or({});
+        auto mount_point = fs_object.get_byte_string("mount_point"sv).value_or({});
+        auto source = fs_object.get_byte_string("source"sv).value_or("none");
         auto readonly = fs_object.get_bool("readonly"sv).value_or(false);
         auto mount_flags = fs_object.get_u32("mount_flags"sv).value_or(0);
 

@@ -7,7 +7,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/Result.h>
 #include <AK/StringBuilder.h>
@@ -31,7 +31,7 @@ public:
     }
 };
 
-using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Expression>, DeprecatedString>;
+using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Expression>, ByteString>;
 
 ParseResult parse(StringView sql)
 {
@@ -39,7 +39,7 @@ ParseResult parse(StringView sql)
     auto expression = parser.parse();
 
     if (parser.has_errors()) {
-        return parser.errors()[0].to_deprecated_string();
+        return parser.errors()[0].to_byte_string();
     }
 
     return expression;
@@ -225,14 +225,14 @@ TEST_CASE(binary_operator)
         StringBuilder builder;
         builder.append("1 "sv);
         builder.append(op.key);
-        EXPECT(parse(builder.to_deprecated_string()).is_error());
+        EXPECT(parse(builder.to_byte_string()).is_error());
 
         builder.clear();
 
         if (op.key != "+" && op.key != "-") { // "+1" and "-1" are fine (unary operator).
             builder.append(op.key);
             builder.append(" 1"sv);
-            EXPECT(parse(builder.to_deprecated_string()).is_error());
+            EXPECT(parse(builder.to_byte_string()).is_error());
         }
     }
 
@@ -251,7 +251,7 @@ TEST_CASE(binary_operator)
         builder.append("1 "sv);
         builder.append(op.key);
         builder.append(" 1"sv);
-        validate(builder.to_deprecated_string(), op.value);
+        validate(builder.to_byte_string(), op.value);
     }
 }
 
@@ -438,12 +438,12 @@ TEST_CASE(match_expression)
         StringBuilder builder;
         builder.append("1 "sv);
         builder.append(op.key);
-        EXPECT(parse(builder.to_deprecated_string()).is_error());
+        EXPECT(parse(builder.to_byte_string()).is_error());
 
         builder.clear();
         builder.append(op.key);
         builder.append(" 1"sv);
-        EXPECT(parse(builder.to_deprecated_string()).is_error());
+        EXPECT(parse(builder.to_byte_string()).is_error());
     }
 
     auto validate = [](StringView sql, SQL::AST::MatchOperator expected_operator, bool expected_invert_expression, bool expect_escape) {
@@ -463,19 +463,19 @@ TEST_CASE(match_expression)
         builder.append("1 "sv);
         builder.append(op.key);
         builder.append(" 1"sv);
-        validate(builder.to_deprecated_string(), op.value, false, false);
+        validate(builder.to_byte_string(), op.value, false, false);
 
         builder.clear();
         builder.append("1 NOT "sv);
         builder.append(op.key);
         builder.append(" 1"sv);
-        validate(builder.to_deprecated_string(), op.value, true, false);
+        validate(builder.to_byte_string(), op.value, true, false);
 
         builder.clear();
         builder.append("1 NOT "sv);
         builder.append(op.key);
         builder.append(" 1 ESCAPE '+'"sv);
-        validate(builder.to_deprecated_string(), op.value, true, true);
+        validate(builder.to_byte_string(), op.value, true, true);
     }
 }
 
@@ -598,7 +598,7 @@ TEST_CASE(in_selection_expression)
 
 TEST_CASE(expression_tree_depth_limit)
 {
-    auto too_deep_expression = DeprecatedString::formatted("{:+^{}}1", "", SQL::AST::Limits::maximum_expression_tree_depth);
+    auto too_deep_expression = ByteString::formatted("{:+^{}}1", "", SQL::AST::Limits::maximum_expression_tree_depth);
     EXPECT(!parse(too_deep_expression.substring_view(1)).is_error());
     EXPECT(parse(too_deep_expression).is_error());
 }

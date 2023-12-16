@@ -31,7 +31,7 @@ private:
     TrackManager& m_track_manager;
     MainWidget& m_main_widget;
     AudioPlayerLoop& m_audio_loop;
-    Vector<DeprecatedString> m_track_number_choices;
+    Vector<ByteString> m_track_number_choices;
 
     RefPtr<Gfx::Bitmap> m_play_icon;
     RefPtr<Gfx::Bitmap> m_pause_icon;

@@ -60,7 +60,7 @@ WindowActions::WindowActions(GUI::Window& window)
 
     for (auto i = 0; i <= 7; ++i) {
         m_tab_actions.append(GUI::Action::create(
-            DeprecatedString::formatted("Tab {}", i + 1), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
+            ByteString::formatted("Tab {}", i + 1), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
                 if (on_tabs[i])
                     on_tabs[i]();
             },

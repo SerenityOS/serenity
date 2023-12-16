@@ -52,7 +52,7 @@ TEST_CASE(can_write_with_header)
 
 TEST_CASE(can_write_with_different_behaviors)
 {
-    Vector<Vector<DeprecatedString>> data = {
+    Vector<Vector<ByteString>> data = {
         { "Well", "Hello\"", "Friends" },
         { "We\"ll", "Hello,", "   Friends" },
     };

@@ -76,7 +76,7 @@ struct GraphicsState {
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
     ColorOrStyle stroke_style { Color::Black };
     ColorOrStyle paint_style { Color::Black };
-    DeprecatedString color_rendering_intent { "RelativeColorimetric"sv };
+    ByteString color_rendering_intent { "RelativeColorimetric"sv };
     float flatness_tolerance { 0.0f };
     float line_width { 1.0f };
     LineCapStyle line_cap_style { LineCapStyle::ButtCap };
@@ -132,7 +132,7 @@ private:
     void begin_path_paint();
     void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
-    PDFErrorOr<void> show_text(DeprecatedString const&);
+    PDFErrorOr<void> show_text(ByteString const&);
     PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_image(NonnullRefPtr<StreamObject>);
     PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
     void show_empty_image(int width, int height);
@@ -235,7 +235,7 @@ struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
         }
 
         builder.appendff("] {}", pattern.phase);
-        return format_builder.put_string(builder.to_deprecated_string());
+        return format_builder.put_string(builder.to_byte_string());
     }
 };
 
@@ -279,7 +279,7 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    rise={}\n", state.rise);
         builder.appendff("    knockout={}\n", state.knockout);
         builder.append(" }"sv);
-        return format_builder.put_string(builder.to_deprecated_string());
+        return format_builder.put_string(builder.to_byte_string());
     }
 };
 
@@ -309,7 +309,7 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.appendff("  line_dash_pattern={}\n", state.line_dash_pattern);
         builder.appendff("  text_state={}\n", state.text_state);
         builder.append('}');
-        return format_builder.put_string(builder.to_deprecated_string());
+        return format_builder.put_string(builder.to_byte_string());
     }
 };
 

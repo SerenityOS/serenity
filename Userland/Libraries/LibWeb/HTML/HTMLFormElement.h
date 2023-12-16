@@ -35,7 +35,7 @@ class HTMLFormElement final : public HTMLElement {
 public:
     virtual ~HTMLFormElement() override;
 
-    DeprecatedString action_from_form_element(JS::NonnullGCPtr<HTMLElement> element) const;
+    ByteString action_from_form_element(JS::NonnullGCPtr<HTMLElement> element) const;
 
     enum class MethodAttributeState {
 #define __ENUMERATE_FORM_METHOD_ATTRIBUTE(_, state) state,

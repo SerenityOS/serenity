@@ -88,12 +88,12 @@ private:
         };
     }
 
-    DeprecatedString title() const
+    ByteString title() const
     {
         return m_title_textbox->text();
     }
 
-    DeprecatedString url() const
+    ByteString url() const
     {
         return m_url_textbox->text();
     }
@@ -111,7 +111,7 @@ BookmarksBarWidget& BookmarksBarWidget::the()
     return *s_the;
 }
 
-BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, bool enabled)
+BookmarksBarWidget::BookmarksBarWidget(ByteString const& bookmarks_file, bool enabled)
 {
     s_the = this;
     set_layout<GUI::HorizontalBoxLayout>(2, 0);
@@ -207,8 +207,8 @@ void BookmarksBarWidget::model_did_update(unsigned)
     int width = 0;
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto title = model()->index(item_index, 0).data().to_deprecated_string();
-        auto url = model()->index(item_index, 1).data().to_deprecated_string();
+        auto title = model()->index(item_index, 0).data().to_byte_string();
+        auto url = model()->index(item_index, 1).data().to_byte_string();
 
         Gfx::IntRect rect { width, 0, font().width_rounded_up(title) + 32, height() };
 
@@ -216,12 +216,12 @@ void BookmarksBarWidget::model_did_update(unsigned)
         m_bookmarks.append(button);
 
         button.set_button_style(Gfx::ButtonStyle::Coolbar);
-        button.set_text(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
+        button.set_text(String::from_byte_string(title).release_value_but_fixme_should_propagate_errors());
         button.set_icon(g_icon_bag.filetype_html);
         button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
-        button.set_tooltip(MUST(String::from_deprecated_string(url)));
+        button.set_tooltip(MUST(String::from_byte_string(url)));
         button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
 
         button.on_click = [title, url, this](auto) {
@@ -275,7 +275,7 @@ void BookmarksBarWidget::update_content_size()
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);
             bookmark->set_visible(false);
-            m_additional_menu->add_action(GUI::Action::create(bookmark->text().to_deprecated_string(), g_icon_bag.filetype_html, [&](auto&) { bookmark->on_click(0); }));
+            m_additional_menu->add_action(GUI::Action::create(bookmark->text().to_byte_string(), g_icon_bag.filetype_html, [&](auto&) { bookmark->on_click(0); }));
         }
     }
 }
@@ -284,7 +284,7 @@ bool BookmarksBarWidget::contains_bookmark(StringView url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
+        auto item_url = model()->index(item_index, 1).data().to_byte_string();
         if (item_url == url) {
             return true;
         }
@@ -296,7 +296,7 @@ ErrorOr<void> BookmarksBarWidget::remove_bookmark(StringView url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
+        auto item_url = model()->index(item_index, 1).data().to_byte_string();
         if (item_url == url) {
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
 
@@ -332,7 +332,7 @@ ErrorOr<void> BookmarksBarWidget::add_bookmark(StringView url, StringView title)
 
     auto model_has_updated = false;
     for (int item_index = 0; item_index < model()->row_count(); item_index++) {
-        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
+        auto item_url = model()->index(item_index, 1).data().to_byte_string();
 
         if (item_url == url) {
             TRY(update_model(values, [item_index](auto& model, auto&& values) {
@@ -355,8 +355,8 @@ ErrorOr<void> BookmarksBarWidget::add_bookmark(StringView url, StringView title)
 ErrorOr<void> BookmarksBarWidget::edit_bookmark(StringView url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
-        auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
-        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
+        auto item_title = model()->index(item_index, 0).data().to_byte_string();
+        auto item_url = model()->index(item_index, 1).data().to_byte_string();
 
         if (item_url == url) {
             auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url, PerformEditOn::ExistingBookmark);

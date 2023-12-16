@@ -72,11 +72,11 @@ bool Variant::operator==(Variant const& other) const
                     return &own_value.impl() == &other_value.impl();
                 // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 else
-                    return to_deprecated_string() == other.to_deprecated_string();
+                    return to_byte_string() == other.to_byte_string();
             },
             [&](auto const&) {
                 // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
-                return to_deprecated_string() == other.to_deprecated_string();
+                return to_byte_string() == other.to_byte_string();
             });
     });
 }
@@ -98,10 +98,10 @@ bool Variant::operator<(Variant const& other) const
                     return own_value < other_value;
                 // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 else
-                    return to_deprecated_string() < other.to_deprecated_string();
+                    return to_byte_string() < other.to_byte_string();
             },
             [&](auto const&) -> bool {
-                return to_deprecated_string() < other.to_deprecated_string(); // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
+                return to_byte_string() < other.to_byte_string(); // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
             });
     });
 }

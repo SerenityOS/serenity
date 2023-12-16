@@ -527,7 +527,7 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(VM& vm, Object const& norm
 
     // 10. If value is undefined and default is required, throw a RangeError exception.
     if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
-        return vm.throw_completion<RangeError>(ErrorType::IsUndefined, DeprecatedString::formatted("{} option value", key.as_string()));
+        return vm.throw_completion<RangeError>(ErrorType::IsUndefined, ByteString::formatted("{} option value", key.as_string()));
 
     auto value = option_value.is_undefined()
         ? Optional<String> {}
@@ -1794,7 +1794,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     // 3. For each value property of fieldNames, do
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
-        auto value = TRY(fields.get(property.to_deprecated_string()));
+        auto value = TRY(fields.get(property.to_byte_string()));
 
         // b. If value is not undefined, then
         if (!value.is_undefined()) {
@@ -1823,7 +1823,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
-            MUST(result->create_data_property_or_throw(property.to_deprecated_string(), value));
+            MUST(result->create_data_property_or_throw(property.to_byte_string(), value));
         }
         // c. Else if requiredFields is a List, then
         else if (required_fields.has<Vector<StringView>>()) {
@@ -1840,7 +1840,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
-            MUST(result->create_data_property_or_throw(property.to_deprecated_string(), value));
+            MUST(result->create_data_property_or_throw(property.to_byte_string(), value));
         }
     }
 

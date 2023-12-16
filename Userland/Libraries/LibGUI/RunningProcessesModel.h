@@ -39,7 +39,7 @@ private:
         pid_t pid;
         uid_t uid;
         RefPtr<Gfx::Bitmap const> icon;
-        DeprecatedString name;
+        ByteString name;
     };
     Vector<Process> m_processes;
 };

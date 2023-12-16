@@ -387,7 +387,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
             case CallGsubr:
                 if (!is_type2)
-                    return error(DeprecatedString::formatted("CFF Gsubr only valid in type2 data"));
+                    return error(ByteString::formatted("CFF Gsubr only valid in type2 data"));
                 [[fallthrough]];
             case CallSubr: {
                 Vector<ByteBuffer> const& subroutines = v == CallSubr ? local_subroutines : global_subroutines;
@@ -725,7 +725,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 }
 
 Error Type1FontProgram::error(
-    DeprecatedString const& message
+    ByteString const& message
 #ifdef PDF_DEBUG
     ,
     SourceLocation loc

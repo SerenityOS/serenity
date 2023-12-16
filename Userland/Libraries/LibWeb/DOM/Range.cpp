@@ -1187,7 +1187,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual
     }
 
     // 3. Let fragment node be the result of invoking the fragment parsing algorithm with fragment as markup, and element as the context element.
-    auto fragment_node = TRY(DOMParsing::parse_fragment(fragment.to_deprecated_string(), *element));
+    auto fragment_node = TRY(DOMParsing::parse_fragment(fragment.to_byte_string(), *element));
 
     // 4. Unmark all scripts in fragment node as "already started" and as "parser-inserted".
     fragment_node->for_each_in_subtree_of_type<HTML::HTMLScriptElement>([&](HTML::HTMLScriptElement& script_element) {

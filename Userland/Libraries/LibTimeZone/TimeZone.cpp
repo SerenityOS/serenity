@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
 #include <LibTimeZone/TimeZone.h>
 #include <limits.h>
@@ -45,7 +45,7 @@ public:
         }
     }
 
-    ErrorOr<DeprecatedString> read_time_zone()
+    ErrorOr<ByteString> read_time_zone()
     {
         if (!m_file)
             return Error::from_string_literal("Could not open /etc/timezone");
@@ -56,7 +56,7 @@ public:
         if (bytes == 0)
             return Error::from_string_literal("Could not read time zone from /etc/timezone");
 
-        return DeprecatedString(buffer.span().slice(0, bytes)).trim_whitespace();
+        return ByteString(buffer.span().slice(0, bytes)).trim_whitespace();
     }
 
     ErrorOr<void> write_time_zone(StringView time_zone)

@@ -123,7 +123,7 @@ void ViewImplementation::set_preferred_color_scheme(Web::CSS::PreferredColorSche
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
-DeprecatedString ViewImplementation::selected_text()
+ByteString ViewImplementation::selected_text()
 {
     return client().get_selected_text();
 }
@@ -162,11 +162,11 @@ ErrorOr<ViewImplementation::DOMNodeProperties> ViewImplementation::inspect_dom_n
     if (!response.has_style())
         return Error::from_string_view("Inspected node returned no style"sv);
     return DOMNodeProperties {
-        .computed_style_json = TRY(String::from_deprecated_string(response.take_computed_style())),
-        .resolved_style_json = TRY(String::from_deprecated_string(response.take_resolved_style())),
-        .custom_properties_json = TRY(String::from_deprecated_string(response.take_custom_properties())),
-        .node_box_sizing_json = TRY(String::from_deprecated_string(response.take_node_box_sizing())),
-        .aria_properties_state_json = TRY(String::from_deprecated_string(response.take_aria_properties_state())),
+        .computed_style_json = TRY(String::from_byte_string(response.take_computed_style())),
+        .resolved_style_json = TRY(String::from_byte_string(response.take_resolved_style())),
+        .custom_properties_json = TRY(String::from_byte_string(response.take_custom_properties())),
+        .node_box_sizing_json = TRY(String::from_byte_string(response.take_node_box_sizing())),
+        .aria_properties_state_json = TRY(String::from_byte_string(response.take_aria_properties_state())),
     };
 }
 
@@ -225,7 +225,7 @@ Optional<String> ViewImplementation::get_dom_node_html(i32 node_id)
     return client().get_dom_node_html(node_id);
 }
 
-void ViewImplementation::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
+void ViewImplementation::debug_request(ByteString const& request, ByteString const& argument)
 {
     client().async_debug_request(request, argument);
 }
@@ -235,7 +235,7 @@ void ViewImplementation::run_javascript(StringView js_source)
     client().async_run_javascript(js_source);
 }
 
-void ViewImplementation::js_console_input(DeprecatedString const& js_source)
+void ViewImplementation::js_console_input(ByteString const& js_source)
 {
     client().async_js_console_input(js_source);
 }
@@ -380,17 +380,17 @@ void ViewImplementation::handle_web_content_process_crash()
     handle_resize();
     StringBuilder builder;
     builder.append("<html><head><title>Crashed: "sv);
-    builder.append(escape_html_entities(m_url.to_deprecated_string()));
+    builder.append(escape_html_entities(m_url.to_byte_string()));
     builder.append("</title></head><body>"sv);
     builder.append("<h1>Web page crashed"sv);
     if (!m_url.host().has<Empty>()) {
         builder.appendff(" on {}", escape_html_entities(m_url.serialized_host().release_value_but_fixme_should_propagate_errors()));
     }
     builder.append("</h1>"sv);
-    auto escaped_url = escape_html_entities(m_url.to_deprecated_string());
+    auto escaped_url = escape_html_entities(m_url.to_byte_string());
     builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
     builder.append("</body></html>"sv);
-    load_html(builder.to_deprecated_string());
+    load_html(builder.to_byte_string());
 }
 
 static ErrorOr<LexicalPath> save_screenshot(Gfx::ShareableBitmap const& bitmap)

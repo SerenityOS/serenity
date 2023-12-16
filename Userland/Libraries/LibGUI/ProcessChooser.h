@@ -29,7 +29,7 @@ private:
 
     pid_t m_pid { 0 };
 
-    DeprecatedString m_window_title;
+    ByteString m_window_title;
     String m_button_label;
     RefPtr<Gfx::Bitmap const> m_window_icon;
     RefPtr<TableView> m_table_view;

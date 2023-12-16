@@ -20,7 +20,7 @@ namespace Coredump {
 
 ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, MemoryRegionInfo const& region)
 {
-    DeprecatedString path = coredump.resolve_object_path(region.object_name());
+    ByteString path = coredump.resolve_object_path(region.object_name());
 
     auto maybe_ptr = m_debug_info_cache.get(path);
     if (maybe_ptr.has_value())
@@ -127,13 +127,13 @@ void Backtrace::add_entry(Reader const& coredump, FlatPtr ip)
     m_entries.append({ ip, object_name, function_name, source_position });
 }
 
-DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
+ByteString Backtrace::Entry::to_byte_string(bool color) const
 {
     StringBuilder builder;
     builder.appendff("{:p}: ", eip);
     if (object_name.is_empty()) {
         builder.append("???"sv);
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
     builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
     builder.append(" ("sv);
@@ -160,7 +160,7 @@ DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
 
     builder.append(')');
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

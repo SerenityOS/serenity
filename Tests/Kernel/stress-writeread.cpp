@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     for (auto i = 0; i < argc; ++i)
         arguments.append({ argv[i], strlen(argv[i]) });
 
-    DeprecatedString target;
+    ByteString target;
     int min_block_offset = 0;
     int block_length = 2048;
     int block_size = 512;

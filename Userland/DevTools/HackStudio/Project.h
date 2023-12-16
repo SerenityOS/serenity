@@ -20,28 +20,28 @@ class Project {
     AK_MAKE_NONMOVABLE(Project);
 
 public:
-    static OwnPtr<Project> open_with_root_path(DeprecatedString const& root_path);
+    static OwnPtr<Project> open_with_root_path(ByteString const& root_path);
 
     GUI::FileSystemModel& model() { return *m_model; }
     const GUI::FileSystemModel& model() const { return *m_model; }
-    DeprecatedString name() const { return LexicalPath::basename(m_root_path); }
-    DeprecatedString root_path() const { return m_root_path; }
+    ByteString name() const { return LexicalPath::basename(m_root_path); }
+    ByteString root_path() const { return m_root_path; }
 
-    NonnullRefPtr<ProjectFile> create_file(DeprecatedString const& path) const;
+    NonnullRefPtr<ProjectFile> create_file(ByteString const& path) const;
 
     void for_each_text_file(Function<void(ProjectFile const&)>) const;
-    DeprecatedString to_absolute_path(DeprecatedString const&) const;
+    ByteString to_absolute_path(ByteString const&) const;
     bool project_is_serenity() const;
 
     static constexpr auto config_file_path = ".hackstudio/config.json"sv;
     NonnullOwnPtr<ProjectConfig> config() const;
 
 private:
-    explicit Project(DeprecatedString const& root_path);
+    explicit Project(ByteString const& root_path);
 
     RefPtr<GUI::FileSystemModel> m_model;
 
-    DeprecatedString m_root_path;
+    ByteString m_root_path;
 };
 
 }

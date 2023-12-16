@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Forward.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Color.h>
 
@@ -19,7 +19,7 @@ struct Format {
 };
 
 struct ConditionalFormat : public Format {
-    DeprecatedString condition;
+    ByteString condition;
 };
 
 enum class FormatType {

@@ -34,7 +34,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     , m_gui_event_loop(Core::EventLoop::current())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image, DeprecatedString()));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, ByteString()));
     m_image->add_client(*this);
     m_image->selection().add_client(*this);
     set_original_rect(m_image->rect());
@@ -61,7 +61,7 @@ ImageEditor::~ImageEditor()
     m_image->remove_client(*this);
 }
 
-void ImageEditor::did_complete_action(DeprecatedString action_text)
+void ImageEditor::did_complete_action(ByteString action_text)
 {
     set_modified(move(action_text));
 }
@@ -110,13 +110,13 @@ void ImageEditor::set_title(String title)
         on_title_change(m_title);
 }
 
-void ImageEditor::set_path(DeprecatedString path)
+void ImageEditor::set_path(ByteString path)
 {
     m_path = move(path);
-    set_title(String::from_deprecated_string(LexicalPath::title(m_path)).release_value_but_fixme_should_propagate_errors());
+    set_title(String::from_byte_string(LexicalPath::title(m_path)).release_value_but_fixme_should_propagate_errors());
 }
 
-void ImageEditor::set_modified(DeprecatedString action_text)
+void ImageEditor::set_modified(ByteString action_text)
 {
     m_undo_stack.push(make<ImageUndoCommand>(*m_image, move(action_text)));
     update_modified();
@@ -227,7 +227,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             int const editor_x = content_to_frame_position({ x, 0 }).x();
             painter.draw_line({ editor_x, 0 }, { editor_x, m_ruler_thickness }, ruler_fg_color);
-            painter.draw_text(Gfx::IntRect { { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, DeprecatedString::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
+            painter.draw_text(Gfx::IntRect { { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, ByteString::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
         }
 
         // Vertical ruler
@@ -244,7 +244,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             int const editor_y = content_to_frame_position({ 0, y }).y();
             painter.draw_line({ 0, editor_y }, { m_ruler_thickness, editor_y }, ruler_fg_color);
-            painter.draw_text(Gfx::IntRect { { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, DeprecatedString::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
+            painter.draw_text(Gfx::IntRect { { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, ByteString::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
         }
 
         // Mouse position indicator
@@ -360,7 +360,7 @@ void ImageEditor::set_status_info_to_color_at_mouse_position(Gfx::IntPoint posit
     if (!color.has_value())
         return;
 
-    set_appended_status_info(DeprecatedString::formatted("R:{}, G:{}, B:{}, A:{} [{}]", color->red(), color->green(), color->blue(), color->alpha(), color->to_deprecated_string()));
+    set_appended_status_info(ByteString::formatted("R:{}, G:{}, B:{}, A:{} [{}]", color->red(), color->green(), color->blue(), color->alpha(), color->to_byte_string()));
 }
 
 void ImageEditor::set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers = false)
@@ -767,7 +767,7 @@ void ImageEditor::save_project()
 
 void ImageEditor::save_project_as()
 {
-    auto response = FileSystemAccessClient::Client::the().save_file(window(), m_title.to_deprecated_string(), "pp");
+    auto response = FileSystemAccessClient::Client::the().save_file(window(), m_title.to_byte_string(), "pp");
     if (response.is_error())
         return;
     auto file = response.release_value();
@@ -776,7 +776,7 @@ void ImageEditor::save_project_as()
         GUI::MessageBox::show_error(window(), MUST(String::formatted("Could not save {}: {}", file.filename(), result.release_error())));
         return;
     }
-    set_path(file.filename().to_deprecated_string());
+    set_path(file.filename().to_byte_string());
     set_loaded_from_image(false);
     set_unmodified();
 }
@@ -911,25 +911,25 @@ void ImageEditor::selection_did_change()
     update();
 }
 
-void ImageEditor::set_appended_status_info(DeprecatedString new_status_info)
+void ImageEditor::set_appended_status_info(ByteString new_status_info)
 {
     m_appended_status_info = new_status_info;
     if (on_appended_status_info_change)
         on_appended_status_info_change(m_appended_status_info);
 }
 
-DeprecatedString ImageEditor::generate_unique_layer_name(DeprecatedString const& original_layer_name)
+ByteString ImageEditor::generate_unique_layer_name(ByteString const& original_layer_name)
 {
     constexpr StringView copy_string_view = " copy"sv;
     auto copy_suffix_index = original_layer_name.find_last(copy_string_view);
     if (!copy_suffix_index.has_value())
-        return DeprecatedString::formatted("{}{}", original_layer_name, copy_string_view);
+        return ByteString::formatted("{}{}", original_layer_name, copy_string_view);
 
     auto after_copy_suffix_view = original_layer_name.substring_view(copy_suffix_index.value() + copy_string_view.length());
     if (!after_copy_suffix_view.is_empty()) {
         auto after_copy_suffix_number = after_copy_suffix_view.trim_whitespace().to_int();
         if (!after_copy_suffix_number.has_value())
-            return DeprecatedString::formatted("{}{}", original_layer_name, copy_string_view);
+            return ByteString::formatted("{}{}", original_layer_name, copy_string_view);
     }
 
     auto layer_with_name_exists = [this](auto name) {
@@ -948,7 +948,7 @@ DeprecatedString ImageEditor::generate_unique_layer_name(DeprecatedString const&
         new_layer_name.appendff("{}{} {}", base_layer_name, copy_string_view, ++duplicate_name_count);
     } while (layer_with_name_exists(new_layer_name.string_view()));
 
-    return new_layer_name.to_deprecated_string();
+    return new_layer_name.to_byte_string();
 }
 
 Gfx::IntRect ImageEditor::active_layer_visible_rect()

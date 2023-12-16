@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/OwnPtr.h>
 #include <LibMarkdown/Block.h>
 #include <LibMarkdown/LineIterator.h>
@@ -16,19 +16,19 @@ namespace Markdown {
 
 class CommentBlock final : public Block {
 public:
-    CommentBlock(DeprecatedString const& comment)
+    CommentBlock(ByteString const& comment)
         : m_comment(comment)
     {
     }
     virtual ~CommentBlock() override = default;
 
-    virtual DeprecatedString render_to_html(bool tight = false) const override;
-    virtual Vector<DeprecatedString> render_lines_for_terminal(size_t view_width = 0) const override;
+    virtual ByteString render_to_html(bool tight = false) const override;
+    virtual Vector<ByteString> render_lines_for_terminal(size_t view_width = 0) const override;
     virtual RecursionDecision walk(Visitor&) const override;
     static OwnPtr<CommentBlock> parse(LineIterator& lines);
 
 private:
-    DeprecatedString m_comment;
+    ByteString m_comment;
 };
 
 }

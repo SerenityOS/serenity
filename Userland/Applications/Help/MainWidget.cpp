@@ -132,7 +132,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
                 return;
             }
             m_history.push(path.string());
-            auto string_path = String::from_deprecated_string(path.string());
+            auto string_path = String::from_byte_string(path.string());
             if (string_path.is_error())
                 return;
             open_page(string_path.value());
@@ -156,7 +156,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     };
     m_web_view->on_link_hover = [this](URL const& url) {
         if (url.is_valid())
-            m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
+            m_statusbar->set_text(String::from_byte_string(url.to_byte_string()).release_value_but_fixme_should_propagate_errors());
         else
             m_statusbar->set_text({});
     };
@@ -166,12 +166,12 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
         m_history.go_back();
-        open_page(MUST(String::from_deprecated_string(m_history.current())));
+        open_page(MUST(String::from_byte_string(m_history.current())));
     });
 
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) {
         m_history.go_forward();
-        open_page(MUST(String::from_deprecated_string(m_history.current())));
+        open_page(MUST(String::from_byte_string(m_history.current())));
     });
 
     m_go_back_action->set_enabled(false);
@@ -261,7 +261,7 @@ void MainWidget::open_url(URL const& url)
                 return;
             auto title = String::formatted("{} - Help", page_and_section.value());
             if (!title.is_error())
-                window()->set_title(title.release_value().to_deprecated_string());
+                window()->set_title(title.release_value().to_byte_string());
         } else {
             window()->set_title("Help");
         }
@@ -271,7 +271,7 @@ void MainWidget::open_url(URL const& url)
 void MainWidget::open_external(URL const& url)
 {
     if (!Desktop::Launcher::open(url))
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), ByteString::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);
 }
 
 void MainWidget::open_page(Optional<String> const& path)
@@ -285,7 +285,7 @@ void MainWidget::open_page(Optional<String> const& path)
         return;
     }
     dbgln("open page: {}", path.value());
-    open_url(URL::create_with_url_or_path(path.value().to_deprecated_string()));
+    open_url(URL::create_with_url_or_path(path.value().to_byte_string()));
 }
 
 }

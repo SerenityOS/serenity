@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -82,7 +82,7 @@ public:
 
     // NOTE: This is for the JS bindings
     FlyString const& tag_name() const { return html_uppercased_qualified_name(); }
-    DeprecatedString deprecated_tag_name() const { return html_uppercased_qualified_name().to_deprecated_fly_string(); }
+    ByteString deprecated_tag_name() const { return html_uppercased_qualified_name().to_deprecated_fly_string(); }
 
     Optional<FlyString> const& prefix() const { return m_qualified_name.prefix(); }
 
@@ -97,19 +97,19 @@ public:
     bool has_attributes() const;
 
     // FIXME: This should be taking a 'FlyString const&'
-    DeprecatedString deprecated_attribute(StringView name) const { return deprecated_get_attribute(name); }
+    ByteString deprecated_attribute(StringView name) const { return deprecated_get_attribute(name); }
     Optional<String> attribute(StringView name) const { return get_attribute(name); }
 
     // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
     Optional<String> get_attribute(StringView name) const;
-    DeprecatedString deprecated_get_attribute(StringView name) const;
-    DeprecatedString get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
+    ByteString deprecated_get_attribute(StringView name) const;
+    ByteString get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
 
     // FIXME: This should be taking an Optional<FlyString>
     WebIDL::ExceptionOr<void> set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value);
-    void set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix = {}, Optional<FlyString> const& namespace_ = {});
+    void set_attribute_value(FlyString const& local_name, ByteString const& value, Optional<FlyString> const& prefix = {}, Optional<FlyString> const& namespace_ = {});
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
 
@@ -140,7 +140,7 @@ public:
 
     void for_each_attribute(Function<void(Attr const&)>) const;
 
-    void for_each_attribute(Function<void(FlyString const&, DeprecatedString const&)>) const;
+    void for_each_attribute(Function<void(FlyString const&, ByteString const&)>) const;
 
     bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     Vector<FlyString> const& class_names() const { return m_classes; }
@@ -179,7 +179,7 @@ public:
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;
 
-    DeprecatedString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
+    ByteString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
     CSS::StyleProperties* computed_css_values() { return m_computed_css_values.ptr(); }
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
@@ -395,7 +395,7 @@ private:
 
     void invalidate_style_after_attribute_change(FlyString const& attribute_name);
 
-    WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node);
+    WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(ByteString const& where, JS::NonnullGCPtr<Node> node);
 
     void enqueue_an_element_on_the_appropriate_element_queue();
 

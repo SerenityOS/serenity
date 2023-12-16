@@ -50,7 +50,7 @@ String HTMLHyperlinkElementUtils::origin() const
         return String {};
 
     // 3. Return the serialization of this element's url's origin.
-    return MUST(String::from_deprecated_string(m_url->serialize_origin()));
+    return MUST(String::from_byte_string(m_url->serialize_origin()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-protocol
@@ -294,7 +294,7 @@ String HTMLHyperlinkElementUtils::pathname() const
     // 4. If url's cannot-be-a-base-URL is true, then return url's path[0].
     // 5. If url's path is empty, then return the empty string.
     // 6. Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/".
-    return MUST(String::from_deprecated_string(m_url->serialize_path()));
+    return MUST(String::from_byte_string(m_url->serialize_path()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-pathname
@@ -437,7 +437,7 @@ String HTMLHyperlinkElementUtils::href() const
         return href_content_attribute.release_value();
 
     // 5. Return url, serialized.
-    return MUST(String::from_deprecated_string(url->serialize()));
+    return MUST(String::from_byte_string(url->serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-href
@@ -505,7 +505,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
         return;
 
     // 10. If that is successful, let URL be the resulting URL string.
-    auto url_string = url.to_deprecated_string();
+    auto url_string = url.to_byte_string();
 
     // 12. If hyperlinkSuffix is non-null, then append it to URL.
     if (hyperlink_suffix.has_value()) {
@@ -513,7 +513,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
         url_builder.append(url_string);
         url_builder.append(*hyperlink_suffix);
 
-        url_string = url_builder.to_deprecated_string();
+        url_string = url_builder.to_byte_string();
     }
 
     // FIXME: 12. If subject's link types includes the noreferrer keyword, then set referrerPolicy to "no-referrer".

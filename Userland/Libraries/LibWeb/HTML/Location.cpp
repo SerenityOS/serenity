@@ -116,7 +116,7 @@ WebIDL::ExceptionOr<String> Location::href() const
         return WebIDL::SecurityError::create(realm(), "Location's relevant document is not same origin-domain with the entry settings object's origin"_fly_string);
 
     // 2. Return this's url, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url().serialize()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(url().serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
@@ -131,7 +131,7 @@ WebIDL::ExceptionOr<void> Location::set_href(String const& new_href)
         return {};
 
     // 2. Parse the given value relative to the entry settings object. If that failed, throw a TypeError exception.
-    auto href_url = window.associated_document().parse_url(new_href.to_deprecated_string());
+    auto href_url = window.associated_document().parse_url(new_href.to_byte_string());
     if (!href_url.is_valid())
         return vm.throw_completion<JS::URIError>(TRY_OR_THROW_OOM(vm, String::formatted("Invalid URL '{}'", new_href)));
 
@@ -152,7 +152,7 @@ WebIDL::ExceptionOr<String> Location::origin() const
         return WebIDL::SecurityError::create(realm(), "Location's relevant document is not same origin-domain with the entry settings object's origin"_fly_string);
 
     // 2. Return the serialization of this's url's origin.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url().serialize_origin()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(url().serialize_origin()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
@@ -269,7 +269,7 @@ WebIDL::ExceptionOr<String> Location::pathname() const
         return WebIDL::SecurityError::create(realm(), "Location's relevant document is not same origin-domain with the entry settings object's origin"_fly_string);
 
     // 2. Return the result of URL path serializing this Location object's url.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url().serialize_path()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(url().serialize_path()));
 }
 
 WebIDL::ExceptionOr<void> Location::set_pathname(String const&)

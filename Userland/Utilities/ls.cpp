@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
@@ -36,8 +36,8 @@
 #include <unistd.h>
 
 struct FileMetadata {
-    DeprecatedString name;
-    DeprecatedString path;
+    ByteString name;
+    ByteString path;
     ino_t raw_inode_number;
     struct stat stat {
     };
@@ -60,8 +60,8 @@ enum class IndicatorStyle {
 };
 AK_ENUM_BITWISE_OPERATORS(IndicatorStyle)
 
-static int do_file_system_object_long(DeprecatedString const& path);
-static int do_file_system_object_short(DeprecatedString const& path);
+static int do_file_system_object_long(ByteString const& path);
+static int do_file_system_object_short(ByteString const& path);
 
 static bool print_names(char const* path, size_t longest_name, Vector<FileMetadata> const& files);
 
@@ -91,8 +91,8 @@ static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
 static bool output_is_terminal = false;
 
-static HashMap<uid_t, DeprecatedString> users;
-static HashMap<gid_t, DeprecatedString> groups;
+static HashMap<uid_t, ByteString> users;
+static HashMap<gid_t, ByteString> groups;
 
 static bool is_a_tty = false;
 
@@ -162,7 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         endgrent();
     }
 
-    auto do_file_system_object = [&](DeprecatedString const& path) {
+    auto do_file_system_object = [&](ByteString const& path) {
         if (flag_long)
             return do_file_system_object_long(path);
         return do_file_system_object_short(path);
@@ -176,7 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         FileMetadata metadata {};
         metadata.name = path;
 
-        int rc = lstat(DeprecatedString(path).characters(), &metadata.stat);
+        int rc = lstat(ByteString(path).characters(), &metadata.stat);
         if (rc < 0) {
             perror("lstat");
             continue;
@@ -201,7 +201,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             while (di.has_next()) {
-                DeprecatedString directory = di.next_full_path();
+                ByteString directory = di.next_full_path();
                 if (FileSystem::is_directory(directory) && !FileSystem::is_link(directory)) {
                     ++subdirs;
                     FileMetadata new_file;
@@ -248,9 +248,9 @@ static int print_escaped(StringView name)
     return printed;
 }
 
-static DeprecatedString& hostname()
+static ByteString& hostname()
 {
-    static Optional<DeprecatedString> s_hostname;
+    static Optional<ByteString> s_hostname;
     if (!s_hostname.has_value()) {
         char buffer[HOST_NAME_MAX];
         if (gethostname(buffer, sizeof(buffer)) == 0)
@@ -261,13 +261,13 @@ static DeprecatedString& hostname()
     return *s_hostname;
 }
 
-static size_t print_name(const struct stat& st, DeprecatedString const& name, Optional<StringView> path_for_link_resolution, StringView path_for_hyperlink)
+static size_t print_name(const struct stat& st, ByteString const& name, Optional<StringView> path_for_link_resolution, StringView path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
         auto full_path_or_error = FileSystem::real_path(path_for_hyperlink);
         if (!full_path_or_error.is_error()) {
             auto fullpath = full_path_or_error.release_value();
-            auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string(), {}, hostname());
+            auto url = URL::create_with_file_scheme(fullpath.to_byte_string(), {}, hostname());
             out("\033]8;;{}\033\\", url.serialize());
         }
     }
@@ -334,13 +334,13 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, Op
     return nprinted;
 }
 
-static bool print_filesystem_object(DeprecatedString const& path, DeprecatedString const& name, const struct stat& st, Optional<ino_t> raw_inode_number)
+static bool print_filesystem_object(ByteString const& path, ByteString const& name, const struct stat& st, Optional<ino_t> raw_inode_number)
 {
     if (flag_show_inode) {
-        printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
+        printf("%s ", ByteString::formatted("{}", st.st_ino).characters());
     } else if (flag_show_raw_inode) {
         if (raw_inode_number.has_value())
-            printf("%s ", DeprecatedString::formatted("{}", raw_inode_number.value()).characters());
+            printf("%s ", ByteString::formatted("{}", raw_inode_number.value()).characters());
         else
             printf("n/a ");
     }
@@ -409,7 +409,7 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
         }
     }
 
-    printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string().characters());
+    printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_byte_string().characters());
 
     print_name(st, name, path.view(), path);
 
@@ -422,7 +422,7 @@ static bool print_filesystem_metadata_object(FileMetadata const& file)
     return print_filesystem_object(file.path, file.name, file.stat, file.raw_inode_number);
 }
 
-static int do_file_system_object_long(DeprecatedString const& path)
+static int do_file_system_object_long(ByteString const& path)
 {
     if (flag_list_directories_only) {
         struct stat stat {
@@ -478,7 +478,7 @@ static int do_file_system_object_long(DeprecatedString const& path)
         builder.append(path);
         builder.append('/');
         builder.append(metadata.name);
-        metadata.path = builder.to_deprecated_string();
+        metadata.path = builder.to_byte_string();
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0)
             perror("lstat");
@@ -495,7 +495,7 @@ static int do_file_system_object_long(DeprecatedString const& path)
     return 0;
 }
 
-static bool print_filesystem_object_short(DeprecatedString const& path, char const* name, Optional<ino_t> raw_inode_number, size_t* nprinted)
+static bool print_filesystem_object_short(ByteString const& path, char const* name, Optional<ino_t> raw_inode_number, size_t* nprinted)
 {
     struct stat st;
     int rc = lstat(path.characters(), &st);
@@ -505,10 +505,10 @@ static bool print_filesystem_object_short(DeprecatedString const& path, char con
     }
 
     if (flag_show_inode) {
-        printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
+        printf("%s ", ByteString::formatted("{}", st.st_ino).characters());
     } else if (flag_show_raw_inode) {
         if (raw_inode_number.has_value())
-            printf("%s ", DeprecatedString::formatted("{}", raw_inode_number.value()).characters());
+            printf("%s ", ByteString::formatted("{}", raw_inode_number.value()).characters());
         else
             printf("n/a ");
     }
@@ -527,7 +527,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
         builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(name);
-        if (!print_filesystem_object_short(builder.to_deprecated_string(), name.characters(), files[i].raw_inode_number, &nprinted))
+        if (!print_filesystem_object_short(builder.to_byte_string(), name.characters(), files[i].raw_inode_number, &nprinted))
             return 2;
         int offset = 0;
         if (terminal_columns > longest_name)
@@ -551,7 +551,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
     return printed_on_row;
 }
 
-int do_file_system_object_short(DeprecatedString const& path)
+int do_file_system_object_short(ByteString const& path)
 {
     if (flag_list_directories_only) {
         if (flag_show_raw_inode)
@@ -602,7 +602,7 @@ int do_file_system_object_short(DeprecatedString const& path)
         builder.append(path);
         builder.append('/');
         builder.append(metadata.name);
-        metadata.path = builder.to_deprecated_string();
+        metadata.path = builder.to_byte_string();
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0)
             perror("lstat");

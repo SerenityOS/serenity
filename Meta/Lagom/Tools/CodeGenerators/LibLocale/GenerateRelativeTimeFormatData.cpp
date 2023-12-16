@@ -5,7 +5,7 @@
  */
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
@@ -39,9 +39,9 @@ struct RelativeTimeFormat {
             && (pattern == other.pattern);
     }
 
-    DeprecatedString time_unit;
-    DeprecatedString style;
-    DeprecatedString plurality;
+    ByteString time_unit;
+    ByteString style;
+    ByteString plurality;
     size_t tense_or_number { 0 };
     size_t pattern { 0 };
 };
@@ -73,10 +73,10 @@ struct CLDR {
     UniqueStringStorage unique_strings;
     UniqueStorage<RelativeTimeFormat> unique_formats;
 
-    HashMap<DeprecatedString, LocaleData> locales;
+    HashMap<ByteString, LocaleData> locales;
 };
 
-static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_date_fields(ByteString locale_dates_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath date_fields_path(move(locale_dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
@@ -135,9 +135,9 @@ static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR&
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(DeprecatedString dates_path, CLDR& cldr)
+static ErrorOr<void> parse_all_locales(ByteString dates_path, CLDR& cldr)
 {
-    auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
+    auto remove_variants_from_path = [&](ByteString path) -> ErrorOr<ByteString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
@@ -147,7 +147,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString dates_path, CLDR& cldr)
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
 
     TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", dates_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
@@ -225,9 +225,9 @@ struct RelativeTimeFormatImpl {
 
     cldr.unique_formats.generate(generator, "RelativeTimeFormatImpl"sv, "s_relative_time_formats"sv, 10);
 
-    auto append_list = [&](DeprecatedString name, auto const& list) {
+    auto append_list = [&](ByteString name, auto const& list) {
         generator.set("name", name);
-        generator.set("size", DeprecatedString::number(list.size()));
+        generator.set("size", ByteString::number(list.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~");
@@ -235,7 +235,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
         bool first = true;
         for (auto index : list) {
             generator.append(first ? " "sv : ", "sv);
-            generator.append(DeprecatedString::number(index));
+            generator.append(ByteString::number(index));
             first = false;
         }
 

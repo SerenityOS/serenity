@@ -14,14 +14,14 @@
 
 namespace Shell {
 
-DeprecatedString Formatter::format()
+ByteString Formatter::format()
 {
     auto node = m_root_node ?: (m_parse_as_posix ? Posix::Parser(m_source).parse() : Parser(m_source).parse());
     if (m_cursor >= 0)
         m_output_cursor = m_cursor;
 
     if (!node)
-        return DeprecatedString();
+        return ByteString();
 
     if (node->is_syntax_error())
         return m_source;
@@ -45,7 +45,7 @@ DeprecatedString Formatter::format()
     if (!string.ends_with(' '))
         current_builder().append(m_trivia);
 
-    return current_builder().to_deprecated_string();
+    return current_builder().to_byte_string();
 }
 
 void Formatter::with_added_indent(int indent, Function<void()> callback)
@@ -67,11 +67,11 @@ void Formatter::in_new_block(Function<void()> callback)
     current_builder().append('}');
 }
 
-DeprecatedString Formatter::in_new_builder(Function<void()> callback, StringBuilder new_builder)
+ByteString Formatter::in_new_builder(Function<void()> callback, StringBuilder new_builder)
 {
     m_builders.append(move(new_builder));
     callback();
-    return m_builders.take_last().to_deprecated_string();
+    return m_builders.take_last().to_byte_string();
 }
 
 void Formatter::test_and_update_output_cursor(const AST::Node* node)
@@ -598,7 +598,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                         if (!first)
                             current_builder().append(" | "sv);
                         first = false;
-                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, String::from_deprecated_string(option.pattern_value).release_value_but_fixme_should_propagate_errors());
+                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, String::from_byte_string(option.pattern_value).release_value_but_fixme_should_propagate_errors());
                         node->visit(*this);
                     }
                 });

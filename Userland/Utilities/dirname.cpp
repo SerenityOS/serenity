@@ -12,7 +12,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool null_terminated = false;
-    Vector<DeprecatedString> paths;
+    Vector<ByteString> paths;
     Core::ArgsParser args_parser;
     args_parser.add_option(null_terminated, "End each output line with \\0, rather than \\n", "zero", 'z');
     args_parser.add_positional_argument(paths, "Path", "path");

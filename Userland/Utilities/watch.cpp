@@ -6,7 +6,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
@@ -53,7 +53,7 @@ static void teardown_tty()
     out("\e[?1047l\e[u");
 }
 
-static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, Duration const& interval)
+static ByteString build_header_string(Vector<ByteString> const& command, Duration const& interval)
 {
     StringBuilder builder;
     auto interval_seconds = interval.to_truncated_seconds();
@@ -61,16 +61,16 @@ static DeprecatedString build_header_string(Vector<DeprecatedString> const& comm
     builder.appendff("Every {}.{}s: \x1b[1m", interval_seconds, interval_fractional_seconds);
     builder.join(' ', command);
     builder.append("\x1b[0m"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, Vector<DeprecatedString> const& filenames)
+static ByteString build_header_string(Vector<ByteString> const& command, Vector<ByteString> const& filenames)
 {
     StringBuilder builder;
     builder.appendff("Every time any of {} changes: \x1b[1m", filenames);
     builder.join(' ', command);
     builder.append("\x1b[0m"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 static void handle_signal(int signal)
@@ -93,7 +93,7 @@ static void handle_signal(int signal)
     exit(exit_code);
 }
 
-static int run_command(Vector<DeprecatedString> const& command)
+static int run_command(Vector<ByteString> const& command)
 {
     Vector<char const*> argv;
     argv.ensure_capacity(command.size() + 1);
@@ -135,8 +135,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio proc exec rpath tty sigaction"));
 
-    Vector<DeprecatedString> files_to_watch;
-    Vector<DeprecatedString> command;
+    Vector<ByteString> files_to_watch;
+    Vector<ByteString> command;
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.set_general_help("Execute a command repeatedly, and watch its output over time.");
@@ -166,7 +166,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::sigaction(SIGTERM, &quit_action, nullptr));
     TRY(Core::System::sigaction(SIGINT, &quit_action, nullptr));
 
-    DeprecatedString header;
+    ByteString header;
 
     auto watch_callback = [&] {
         // Clear the screen, then reset the cursor position to the top left.

@@ -5,21 +5,21 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibGfx/Triangle.h>
 
 namespace Gfx {
 
 template<>
-DeprecatedString Triangle<int>::to_deprecated_string() const
+ByteString Triangle<int>::to_byte_string() const
 {
-    return DeprecatedString::formatted("({},{},{})", m_a, m_b, m_c);
+    return ByteString::formatted("({},{},{})", m_a, m_b, m_c);
 }
 
 template<>
-DeprecatedString Triangle<float>::to_deprecated_string() const
+ByteString Triangle<float>::to_byte_string() const
 {
-    return DeprecatedString::formatted("({},{},{})", m_a, m_b, m_c);
+    return ByteString::formatted("({},{},{})", m_a, m_b, m_c);
 }
 
 }

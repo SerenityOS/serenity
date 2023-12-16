@@ -134,11 +134,11 @@ void FileOperationProgressWidget::did_error(StringView message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
-    GUI::MessageBox::show(window(), DeprecatedString::formatted("An error occurred: {}", message), "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+    GUI::MessageBox::show(window(), ByteString::formatted("An error occurred: {}", message), "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
     window()->close();
 }
 
-DeprecatedString FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
+ByteString FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
 {
     i64 const elapsed_seconds = m_elapsed_timer.elapsed_time().to_seconds();
 
@@ -149,7 +149,7 @@ DeprecatedString FileOperationProgressWidget::estimate_time(off_t bytes_done, of
     int seconds_remaining = (bytes_left * elapsed_seconds) / bytes_done;
 
     if (seconds_remaining < 30)
-        return DeprecatedString::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
+        return ByteString::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
     if (seconds_remaining < 60)
         return "About a minute";
     if (seconds_remaining < 90)
@@ -162,14 +162,14 @@ DeprecatedString FileOperationProgressWidget::estimate_time(off_t bytes_done, of
 
     if (minutes_remaining < 60) {
         if (seconds_remaining < 30)
-            return DeprecatedString::formatted("About {} minutes", minutes_remaining);
-        return DeprecatedString::formatted("Over {} minutes", minutes_remaining);
+            return ByteString::formatted("About {} minutes", minutes_remaining);
+        return ByteString::formatted("Over {} minutes", minutes_remaining);
     }
 
     time_t hours_remaining = minutes_remaining / 60;
     minutes_remaining %= 60;
 
-    return DeprecatedString::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
+    return ByteString::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
 }
 
 void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, StringView current_filename)
@@ -195,7 +195,7 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
         VERIFY_NOT_REACHED();
     }
 
-    estimated_time_label.set_text(String::from_deprecated_string(estimate_time(bytes_done, total_byte_count)).release_value_but_fixme_should_propagate_errors());
+    estimated_time_label.set_text(String::from_byte_string(estimate_time(bytes_done, total_byte_count)).release_value_but_fixme_should_propagate_errors());
 
     if (total_byte_count) {
         window()->set_progress(100.0f * bytes_done / total_byte_count);

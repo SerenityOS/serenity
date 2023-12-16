@@ -12,11 +12,11 @@
 
 namespace Markdown {
 
-Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) const
+Vector<ByteString> Table::render_lines_for_terminal(size_t view_width) const
 {
     auto unit_width_length = view_width == 0 ? 4 : ((float)(view_width - m_columns.size()) / (float)m_total_width);
     StringBuilder builder;
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
 
     auto write_aligned = [&](auto const& text, auto width, auto alignment) {
         size_t original_length = text.terminal_length();
@@ -44,12 +44,12 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
         write_aligned(col.header, width, col.alignment);
     }
 
-    lines.append(builder.to_deprecated_string());
+    lines.append(builder.to_byte_string());
     builder.clear();
 
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
-    lines.append(builder.to_deprecated_string());
+    lines.append(builder.to_byte_string());
     builder.clear();
 
     for (size_t i = 0; i < m_row_count; ++i) {
@@ -65,7 +65,7 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
             size_t width = col.relative_width * unit_width_length;
             write_aligned(cell, width, col.alignment);
         }
-        lines.append(builder.to_deprecated_string());
+        lines.append(builder.to_byte_string());
         builder.clear();
     }
 
@@ -74,7 +74,7 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
     return lines;
 }
 
-DeprecatedString Table::render_to_html(bool) const
+ByteString Table::render_to_html(bool) const
 {
     auto alignment_string = [](Alignment alignment) {
         switch (alignment) {
@@ -114,7 +114,7 @@ DeprecatedString Table::render_to_html(bool) const
     builder.append("</tbody>"sv);
     builder.append("</table>"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 RecursionDecision Table::walk(Visitor& visitor) const

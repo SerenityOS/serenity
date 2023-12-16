@@ -67,7 +67,7 @@ public:
 
     virtual ~JITSymbolProvider() override = default;
 
-    virtual DeprecatedString symbolicate(FlatPtr address, u32* offset = nullptr) const override
+    virtual ByteString symbolicate(FlatPtr address, u32* offset = nullptr) const override
     {
         auto base = bit_cast<FlatPtr>(m_executable.code_bytes().data());
         auto native_offset = static_cast<u32>(address - base);
@@ -83,9 +83,9 @@ public:
             return BytecodeMapping::EXECUTABLE_LABELS[entry.bytecode_offset];
 
         if (entry.bytecode_offset == 0)
-            return DeprecatedString::formatted("Block {}", entry.block_index + 1);
+            return ByteString::formatted("Block {}", entry.block_index + 1);
 
-        return DeprecatedString::formatted("{}:{:x}", entry.block_index + 1, entry.bytecode_offset);
+        return ByteString::formatted("{}:{:x}", entry.block_index + 1, entry.bytecode_offset);
     }
 
 private:
@@ -127,7 +127,7 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
                 if (block.size() != 0) {
                     VERIFY(mapping->bytecode_offset < block.size());
                     auto const& instruction = *reinterpret_cast<Bytecode::Instruction const*>(block.data() + mapping->bytecode_offset);
-                    dbgln("{}:{:x} {}:", mapping->block_index + 1, mapping->bytecode_offset, instruction.to_deprecated_string(executable));
+                    dbgln("{}:{:x} {}:", mapping->block_index + 1, mapping->bytecode_offset, instruction.to_byte_string(executable));
                 }
             }
         }
@@ -146,7 +146,7 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
                 builder.append("   "sv);
         }
         builder.append(" "sv);
-        builder.append(insn.value().to_deprecated_string(virtual_offset, &symbol_provider));
+        builder.append(insn.value().to_byte_string(virtual_offset, &symbol_provider));
         dbgln("{}", builder.string_view());
 
         for (size_t bytes_printed = 7; bytes_printed < length; bytes_printed += 7) {

@@ -8,7 +8,7 @@
 #pragma once
 
 #include "HitTestResult.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/IntrusiveList.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/EventReceiver.h>
@@ -152,10 +152,10 @@ public:
     bool is_internal() const { return m_client_id == -1; }
     i32 client_id() const { return m_client_id; }
 
-    DeprecatedString title() const { return m_title; }
-    void set_title(DeprecatedString const&);
+    ByteString title() const { return m_title; }
+    void set_title(ByteString const&);
 
-    DeprecatedString computed_title() const;
+    ByteString computed_title() const;
 
     void set_hit_testing_enabled(bool value)
     {
@@ -387,7 +387,7 @@ private:
     void ensure_window_menu();
     void update_window_menu_items();
     void tile_type_changed(Optional<Screen const&> = {});
-    ErrorOr<Optional<DeprecatedString>> compute_title_username(ConnectionFromClient* client);
+    ErrorOr<Optional<ByteString>> compute_title_username(ConnectionFromClient* client);
 
     void exit_roll_up_mode();
 
@@ -398,8 +398,8 @@ private:
 
     Menubar m_menubar;
 
-    DeprecatedString m_title;
-    Optional<DeprecatedString> m_title_username;
+    ByteString m_title;
+    Optional<ByteString> m_title_username;
     Gfx::IntRect m_rect;
     Gfx::IntRect m_saved_before_roll_up_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;

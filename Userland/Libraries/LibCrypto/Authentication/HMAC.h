@@ -13,7 +13,7 @@
 #include <AK/Vector.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 constexpr static auto IPAD = 0x36;
@@ -73,12 +73,12 @@ public:
     }
 
 #ifndef KERNEL
-    DeprecatedString class_name() const
+    ByteString class_name() const
     {
         StringBuilder builder;
         builder.append("HMAC-"sv);
         builder.append(m_inner_hasher.class_name());
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
 #endif
 

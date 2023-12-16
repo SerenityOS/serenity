@@ -7,7 +7,7 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Utf8View.h>
 #include <LibIPC/File.h>
@@ -165,10 +165,10 @@ static StringView normalize_feature_name(StringView name)
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-window-open-features-tokenize
-static OrderedHashMap<DeprecatedString, DeprecatedString> tokenize_open_features(StringView features)
+static OrderedHashMap<ByteString, ByteString> tokenize_open_features(StringView features)
 {
     // 1. Let tokenizedFeatures be a new ordered map.
-    OrderedHashMap<DeprecatedString, DeprecatedString> tokenized_features;
+    OrderedHashMap<ByteString, ByteString> tokenized_features;
 
     // 2. Let position point at the first code point of features.
     GenericLexer lexer(features);
@@ -181,10 +181,10 @@ static OrderedHashMap<DeprecatedString, DeprecatedString> tokenize_open_features
     // 3. While position is not past the end of features:
     while (!lexer.is_eof()) {
         // 1. Let name be the empty string.
-        DeprecatedString name;
+        ByteString name;
 
         // 2. Let value be the empty string.
-        DeprecatedString value;
+        ByteString value;
 
         // 3. Collect a sequence of code points that are feature separators from features given position. This skips past leading separators before the name.
         lexer.ignore_while(is_feature_separator);
@@ -246,7 +246,7 @@ static T parse_boolean_feature(StringView value)
 }
 
 //  https://html.spec.whatwg.org/multipage/window-object.html#popup-window-is-requested
-static TokenizedFeature::Popup check_if_a_popup_window_is_requested(OrderedHashMap<DeprecatedString, DeprecatedString> const& tokenized_features)
+static TokenizedFeature::Popup check_if_a_popup_window_is_requested(OrderedHashMap<ByteString, ByteString> const& tokenized_features)
 {
     // 1. If tokenizedFeatures is empty, then return false.
     if (tokenized_features.is_empty())
@@ -1078,7 +1078,7 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
         // with the origin attribute initialized to origin and the source attribute initialized to source, and then return.
         if (deserialize_record_or_error.is_exception()) {
             MessageEventInit message_event_init {};
-            message_event_init.origin = MUST(String::from_deprecated_string(origin));
+            message_event_init.origin = MUST(String::from_byte_string(origin));
             message_event_init.source = JS::make_handle(source);
 
             auto message_error_event = MessageEvent::create(target_realm, EventNames::messageerror, message_event_init);
@@ -1104,7 +1104,7 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
         //    the source attribute initialized to source, the data attribute initialized to messageClone, and the ports attribute
         //    initialized to newPorts.
         MessageEventInit message_event_init {};
-        message_event_init.origin = MUST(String::from_deprecated_string(origin));
+        message_event_init.origin = MUST(String::from_byte_string(origin));
         message_event_init.source = JS::make_handle(source);
         message_event_init.data = message_clone;
         message_event_init.ports = move(new_ports);

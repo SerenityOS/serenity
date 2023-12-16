@@ -6,7 +6,7 @@
 
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/URL.h>
@@ -22,7 +22,7 @@ HttpProtocol::HttpProtocol()
 {
 }
 
-OwnPtr<Request> HttpProtocol::start_request(ConnectionFromClient& client, DeprecatedString const& method, const URL& url, HashMap<DeprecatedString, DeprecatedString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data)
+OwnPtr<Request> HttpProtocol::start_request(ConnectionFromClient& client, ByteString const& method, const URL& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data)
 {
     return Detail::start_request(Badge<HttpProtocol> {}, client, method, url, headers, body, get_pipe_for_request(), proxy_data);
 }

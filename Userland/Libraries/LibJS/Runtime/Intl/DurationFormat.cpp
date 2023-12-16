@@ -275,7 +275,7 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, ReadonlySpan<StringView> styles_list, StringView digital_base, StringView previous_style)
 {
     // 1. Let style be ? GetOption(options, unit, string, stylesList, undefined).
-    auto style_value = TRY(get_option(vm, options, unit.to_deprecated_string(), OptionType::String, styles_list, Empty {}));
+    auto style_value = TRY(get_option(vm, options, unit.to_byte_string(), OptionType::String, styles_list, Empty {}));
 
     // 2. Let displayDefault be "always".
     auto display_default = "always"sv;
@@ -319,7 +319,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
     auto display_field = MUST(String::formatted("{}Display", unit));
 
     // 5. Let display be ? GetOption(options, displayField, string, « "auto", "always" », displayDefault).
-    auto display = TRY(get_option(vm, options, display_field.to_deprecated_string(), OptionType::String, { "auto"sv, "always"sv }, display_default));
+    auto display = TRY(get_option(vm, options, display_field.to_byte_string(), OptionType::String, { "auto"sv, "always"sv }, display_default));
 
     // 6. If prevStyle is "numeric" or "2-digit", then
     if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {

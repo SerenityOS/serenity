@@ -29,11 +29,11 @@ void MapsSettingsWidget::apply_settings()
         Config::remove_key("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv);
         Config::remove_key("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv);
     } else {
-        auto tile_provider_url_format = m_tile_provider_combobox->model()->index(m_tile_provider_combobox->selected_index(), 1).data().to_deprecated_string();
+        auto tile_provider_url_format = m_tile_provider_combobox->model()->index(m_tile_provider_combobox->selected_index(), 1).data().to_byte_string();
         Config::write_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, tile_provider_url_format);
-        auto tile_provider_attribution_text = m_tile_provider_combobox->model()->index(m_tile_provider_combobox->selected_index(), 2).data().to_deprecated_string();
+        auto tile_provider_attribution_text = m_tile_provider_combobox->model()->index(m_tile_provider_combobox->selected_index(), 2).data().to_byte_string();
         Config::write_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv, tile_provider_attribution_text);
-        auto tile_provider_attribution_url = m_tile_provider_combobox->model()->index(m_tile_provider_combobox->selected_index(), 3).data().to_deprecated_string();
+        auto tile_provider_attribution_url = m_tile_provider_combobox->model()->index(m_tile_provider_combobox->selected_index(), 3).data().to_byte_string();
         Config::write_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv, tile_provider_attribution_url);
     }
 }
@@ -51,7 +51,7 @@ ErrorOr<void> MapsSettingsWidget::setup()
     tile_provider_fields.empend("url_format", "URL format"_string, Gfx::TextAlignment::CenterLeft);
     tile_provider_fields.empend("attribution_text", "Attribution text"_string, Gfx::TextAlignment::CenterLeft);
     tile_provider_fields.empend("attribution_url", "Attribution URL"_string, Gfx::TextAlignment::CenterLeft);
-    auto tile_providers = GUI::JsonArrayModel::create(DeprecatedString::formatted("{}/MapsTileProviders.json", Core::StandardPaths::config_directory()), move(tile_provider_fields));
+    auto tile_providers = GUI::JsonArrayModel::create(ByteString::formatted("{}/MapsTileProviders.json", Core::StandardPaths::config_directory()), move(tile_provider_fields));
     tile_providers->invalidate();
 
     Vector<JsonValue> custom_tile_provider;
@@ -71,8 +71,8 @@ ErrorOr<void> MapsSettingsWidget::setup()
     m_custom_tile_provider_textbox->set_placeholder(Maps::default_tile_provider_url_format);
     m_custom_tile_provider_textbox->on_change = [&]() { set_modified(true); };
 
-    m_tile_provider_combobox->on_change = [&](DeprecatedString const&, GUI::ModelIndex const& index) {
-        auto tile_provider_url_format = m_tile_provider_combobox->model()->index(index.row(), 1).data().to_deprecated_string();
+    m_tile_provider_combobox->on_change = [&](ByteString const&, GUI::ModelIndex const& index) {
+        auto tile_provider_url_format = m_tile_provider_combobox->model()->index(index.row(), 1).data().to_byte_string();
         m_is_custom_tile_provider = tile_provider_url_format.is_empty();
         m_custom_tile_provider_group->set_enabled(m_is_custom_tile_provider);
         set_modified(true);
@@ -86,7 +86,7 @@ void MapsSettingsWidget::set_tile_provider(StringView tile_provider_url_format)
 {
     bool found = false;
     for (int index = 0; index < m_tile_provider_combobox->model()->row_count(); index++) {
-        auto url_format = m_tile_provider_combobox->model()->index(index, 1).data().to_deprecated_string();
+        auto url_format = m_tile_provider_combobox->model()->index(index, 1).data().to_byte_string();
         if (url_format == tile_provider_url_format) {
             m_tile_provider_combobox->set_selected_index(index, GUI::AllowCallback::No);
             found = true;

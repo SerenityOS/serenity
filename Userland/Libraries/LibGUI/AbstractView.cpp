@@ -611,7 +611,7 @@ void AbstractView::keydown_event(KeyEvent& event)
                     }
                     auto index = find_next_search_match(sb.string_view());
                     if (index.is_valid()) {
-                        m_highlighted_search = sb.to_deprecated_string();
+                        m_highlighted_search = sb.to_byte_string();
                         highlight_search(index);
                         start_highlighted_search_timer();
                     }
@@ -637,7 +637,7 @@ void AbstractView::keydown_event(KeyEvent& event)
 
             auto index = find_next_search_match(sb.string_view());
             if (index.is_valid()) {
-                m_highlighted_search = sb.to_deprecated_string();
+                m_highlighted_search = sb.to_byte_string();
                 highlight_search(index);
                 start_highlighted_search_timer();
                 set_cursor(index, SelectionUpdate::None, true);

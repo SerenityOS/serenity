@@ -5,8 +5,8 @@
  */
 
 #include "Lexer.h"
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/StdLibExtras.h>
@@ -203,7 +203,7 @@ constexpr StringView s_known_types[] = {
 
 static bool is_keyword(StringView string)
 {
-    static HashTable<DeprecatedString> keywords(array_size(s_known_keywords));
+    static HashTable<ByteString> keywords(array_size(s_known_keywords));
     if (keywords.is_empty()) {
         keywords.set_from(s_known_keywords);
     }
@@ -212,7 +212,7 @@ static bool is_keyword(StringView string)
 
 static bool is_known_type(StringView string)
 {
-    static HashTable<DeprecatedString> types(array_size(s_known_types));
+    static HashTable<ByteString> types(array_size(s_known_types));
     if (types.is_empty()) {
         types.set_from(s_known_types);
     }

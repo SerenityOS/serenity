@@ -14,7 +14,7 @@
 
 namespace HackStudio {
 
-using ViewDiffCallback = Function<void(DeprecatedString const& original_content, DeprecatedString const& diff)>;
+using ViewDiffCallback = Function<void(ByteString const& original_content, ByteString const& diff)>;
 
 class GitWidget final : public GUI::Widget {
     C_OBJECT(GitWidget)
@@ -24,19 +24,19 @@ public:
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
     bool initialized() const { return !m_git_repo.is_null(); }
-    void change_repo(DeprecatedString const& repo_root);
+    void change_repo(ByteString const& repo_root);
 
 private:
     explicit GitWidget();
 
     bool initialize();
     bool initialize_if_needed();
-    void stage_file(DeprecatedString const&);
-    void unstage_file(DeprecatedString const&);
+    void stage_file(ByteString const&);
+    void unstage_file(ByteString const&);
     void commit();
-    void show_diff(DeprecatedString const&);
+    void show_diff(ByteString const&);
 
-    DeprecatedString m_repo_root;
+    ByteString m_repo_root;
     RefPtr<GitFilesView> m_unstaged_files;
     RefPtr<GitFilesView> m_staged_files;
     RefPtr<GitRepo> m_git_repo;

@@ -35,7 +35,7 @@
 static constexpr StringView text_system_mode = "text"sv;
 static constexpr StringView selftest_system_mode = "self-test"sv;
 static constexpr StringView graphical_system_mode = "graphical"sv;
-DeprecatedString g_system_mode = graphical_system_mode;
+ByteString g_system_mode = graphical_system_mode;
 Vector<NonnullRefPtr<Service>> g_services;
 
 // NOTE: This handler ensures that the destructor of g_services is called.
@@ -91,7 +91,7 @@ static ErrorOr<void> determine_system_mode()
         // Continue and assume "text" mode.
         return {};
     }
-    DeprecatedString const system_mode = DeprecatedString::copy(system_mode_buf_or_error.value(), Chomp);
+    ByteString const system_mode = ByteString::copy(system_mode_buf_or_error.value(), Chomp);
 
     g_system_mode = system_mode;
     declare_text_mode_on_failure.disarm();

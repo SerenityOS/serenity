@@ -50,7 +50,7 @@ GUI::ModelIndex BasicModel::index(int row, int column, GUI::ModelIndex const& pa
     return create_index(row, column);
 }
 
-void BasicModel::add_item(DeprecatedString const& item)
+void BasicModel::add_item(ByteString const& item)
 {
     begin_insert_rows({}, m_items.size(), m_items.size());
     m_items.append(item);
