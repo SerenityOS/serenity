@@ -788,8 +788,6 @@ public:
     StringView state_string() const;
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
-    size_t thread_specific_region_size() const;
-    size_t thread_specific_region_alignment() const;
 
     ALWAYS_INLINE void yield_if_stopped()
     {

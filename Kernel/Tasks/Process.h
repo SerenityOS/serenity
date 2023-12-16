@@ -924,8 +924,6 @@ private:
     Vector<NonnullOwnPtr<KString>> m_arguments;
     Vector<NonnullOwnPtr<KString>> m_environment;
 
-    LockWeakPtr<Memory::Region> m_master_tls_region;
-
     IntrusiveListNode<Process> m_jail_process_list_node;
     IntrusiveListNode<Process> m_all_processes_list_node;
 
@@ -937,8 +935,12 @@ private:
     SpinlockProtected<RefPtr<ProcessList>, LockRank::None> m_jail_process_list;
     SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail {};
 
-    size_t m_master_tls_size { 0 };
-    size_t m_master_tls_alignment { 0 };
+    struct MasterThreadLocalStorage {
+        LockWeakPtr<Memory::Region> region;
+        size_t size { 0 };
+        size_t alignment { 0 };
+    };
+    SpinlockProtected<MasterThreadLocalStorage, LockRank::None> m_master_tls;
 
     Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace"sv };
