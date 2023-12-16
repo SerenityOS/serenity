@@ -14,6 +14,10 @@
 #include <LibWeb/PixelUnits.h>
 #include <WebContent/Forward.h>
 
+#ifdef HAS_ACCELERATED_GRAPHICS
+#    include <LibAccelGfx/Context.h>
+#endif
+
 namespace WebContent {
 
 class PageClient final : public Web::PageClient {
@@ -151,6 +155,10 @@ private:
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;
+
+#ifdef HAS_ACCELERATED_GRAPHICS
+    OwnPtr<AccelGfx::Context> m_accelerated_graphics_context;
+#endif
 };
 
 }

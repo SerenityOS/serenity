@@ -9,10 +9,11 @@
 
 namespace Web::Painting {
 
-PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap)
+PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Context& context, Gfx::Bitmap& bitmap)
     : m_target_bitmap(bitmap)
+    , m_context(context)
 {
-    auto painter = AccelGfx::Painter::create();
+    auto painter = AccelGfx::Painter::create(m_context);
     auto canvas = AccelGfx::Canvas::create(bitmap.size());
     painter->set_target_canvas(canvas);
     m_stacking_contexts.append({ .canvas = canvas,
@@ -114,7 +115,7 @@ CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, b
     final_transform.multiply(stacking_context_transform);
     final_transform.multiply(inverse_origin_translation);
     if (opacity < 1 || !stacking_context_transform.is_identity_or_translation()) {
-        auto painter = AccelGfx::Painter::create();
+        auto painter = AccelGfx::Painter::create(m_context);
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
         painter->set_target_canvas(canvas);
         painter->translate(-source_paintable_rect.location().to_type<float>());
@@ -168,7 +169,7 @@ CommandResult PaintingCommandExecutorGPU::paint_inner_box_shadow(PaintOuterBoxSh
 CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
 {
     auto text_shadow_canvas = AccelGfx::Canvas::create(shadow_bounding_rect.size());
-    auto text_shadow_painter = AccelGfx::Painter::create();
+    auto text_shadow_painter = AccelGfx::Painter::create(m_context);
     text_shadow_painter->set_target_canvas(text_shadow_canvas);
     text_shadow_painter->clear(color.with_alpha(0));
 
@@ -182,7 +183,7 @@ CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx
     }
 
     auto horizontal_blur_canvas = AccelGfx::Canvas::create(shadow_bounding_rect.size());
-    auto horizontal_blur_painter = AccelGfx::Painter::create();
+    auto horizontal_blur_painter = AccelGfx::Painter::create(m_context);
     horizontal_blur_painter->set_target_canvas(horizontal_blur_canvas);
     horizontal_blur_painter->clear(color.with_alpha(0));
     horizontal_blur_painter->blit_blurred_canvas(shadow_bounding_rect.to_type<float>(), *text_shadow_canvas, blur_radius, AccelGfx::Painter::BlurDirection::Horizontal);
