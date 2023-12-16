@@ -137,7 +137,7 @@ ErrorOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
 
 ErrorOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::thread));
 
     auto thread = TRY(get_thread_from_thread_list(tid));
