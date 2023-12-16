@@ -193,6 +193,7 @@ Painter::~Painter()
 
 void Painter::clear(Gfx::Color color)
 {
+    bind_target_canvas();
     GL::clear_color(color);
 }
 
