@@ -335,10 +335,9 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
         return verify_cast<Promise>(m_top_level_capability->promise().ptr());
 
     // 3. If module.[[Status]] is either evaluating-async or evaluated, set module to module.[[CycleRoot]].
-    if (m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated) {
+    if ((m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated) && m_cycle_root != this) {
         // Note: This will continue this function with module.[[CycleRoot]]
         VERIFY(m_cycle_root);
-        VERIFY(this != m_cycle_root);
         VERIFY(m_cycle_root->m_status == ModuleStatus::Linked);
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root.ptr());
         return m_cycle_root->evaluate(vm);
