@@ -117,7 +117,7 @@ ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixe
         .bottom_right = border_radii.bottom_right.as_corner(context),
         .bottom_left = border_radii.bottom_left.as_corner(context)
     };
-    m_context.recording_painter().sample_under_corners(m_id, corner_radii, context.recording_painter().state().translation.map(border_rect.to_type<int>()), corner_clip);
+    m_context.recording_painter().sample_under_corners(m_id, corner_radii, border_rect.to_type<int>(), corner_clip);
 }
 
 ScopedCornerRadiusClip::~ScopedCornerRadiusClip()

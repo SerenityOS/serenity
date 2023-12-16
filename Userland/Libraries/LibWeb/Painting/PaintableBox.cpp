@@ -485,7 +485,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         if (border_radii_data.has_any_radius()) {
             VERIFY(!m_corner_clipper_id.has_value());
             m_corner_clipper_id = context.allocate_corner_clipper_id();
-            context.recording_painter().sample_under_corners(*m_corner_clipper_id, corner_radii, context.recording_painter().state().translation.map(context.rounded_device_rect(*clip_rect).to_type<int>()), CornerClip::Outside);
+            context.recording_painter().sample_under_corners(*m_corner_clipper_id, corner_radii, context.rounded_device_rect(*clip_rect).to_type<int>(), CornerClip::Outside);
         }
     }
 }
@@ -503,7 +503,7 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
     if (m_corner_clipper_id.has_value()) {
         VERIFY(m_corner_clipper_id.has_value());
         auto clip_rect = this->calculate_overflow_clipped_rect();
-        context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.recording_painter().state().translation.map(context.rounded_device_rect(*clip_rect).to_type<int>()));
+        context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*clip_rect).to_type<int>());
         m_corner_clipper_id = {};
     }
 }
@@ -677,7 +677,6 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     Optional<u32> corner_clip_id;
 
     auto clip_box = context.rounded_device_rect(absolute_padding_box_rect());
-    auto border_radius_clip_rect = context.recording_painter().state().translation.map(clip_box.to_type<int>());
 
     if (should_clip_overflow) {
         context.recording_painter().save();
@@ -695,7 +694,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         };
         if (border_radii.has_any_radius()) {
             corner_clip_id = context.allocate_corner_clipper_id();
-            context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, border_radius_clip_rect, CornerClip::Outside);
+            context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, clip_box.to_type<int>(), CornerClip::Outside);
         }
     }
 
@@ -746,7 +745,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     if (should_clip_overflow) {
         context.recording_painter().restore();
         if (corner_clip_id.has_value()) {
-            context.recording_painter().blit_corner_clipping(*corner_clip_id, border_radius_clip_rect);
+            context.recording_painter().blit_corner_clipping(*corner_clip_id, clip_box.to_type<int>());
             corner_clip_id = {};
         }
     }
