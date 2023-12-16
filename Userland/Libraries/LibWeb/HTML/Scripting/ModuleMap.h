@@ -72,6 +72,8 @@ private:
 
     HashMap<ModuleLocationTuple, Entry> m_values;
     HashMap<ModuleLocationTuple, Vector<CallbackFunction>> m_callbacks;
+
+    bool m_firing_callbacks { false };
 };
 
 }

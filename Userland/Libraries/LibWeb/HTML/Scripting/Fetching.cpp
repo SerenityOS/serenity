@@ -579,13 +579,13 @@ void fetch_single_module_script(JS::Realm& realm,
     // 5. If moduleMap[(url, moduleType)] is "fetching", wait in parallel until that entry's value changes,
     //    then queue a task on the networking task source to proceed with running the following steps.
     if (module_map.is_fetching(url, module_type)) {
-        module_map.wait_for_change(realm.heap(), url, module_type, [on_complete](auto entry) -> void {
-            // FIXME: This should queue a task.
+        module_map.wait_for_change(realm.heap(), url, module_type, [on_complete, &realm](auto entry) -> void {
+            HTML::queue_global_task(HTML::Task::Source::Networking, realm.global_object(), [on_complete, entry] {
+                // FIXME: This should run other steps, for now we just assume the script loaded.
+                VERIFY(entry.type == ModuleMap::EntryType::ModuleScript);
 
-            // FIXME: This should run other steps, for now we just assume the script loaded.
-            VERIFY(entry.type == ModuleMap::EntryType::ModuleScript);
-
-            on_complete->function()(entry.module_script);
+                on_complete->function()(entry.module_script);
+            });
         });
 
         return;

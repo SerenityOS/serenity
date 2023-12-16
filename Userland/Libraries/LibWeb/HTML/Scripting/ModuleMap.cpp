@@ -47,12 +47,18 @@ Optional<ModuleMap::Entry> ModuleMap::get(AK::URL const& url, DeprecatedString c
 
 AK::HashSetResult ModuleMap::set(AK::URL const& url, DeprecatedString const& type, Entry entry)
 {
+    // NOTE: Re-entering this function while firing wait_for_change callbacks is not allowed.
+    VERIFY(!m_firing_callbacks);
+
     auto value = m_values.set({ url, type }, entry);
 
     auto callbacks = m_callbacks.get({ url, type });
-    if (callbacks.has_value())
+    if (callbacks.has_value()) {
+        m_firing_callbacks = true;
         for (auto const& callback : *callbacks)
             callback->function()(entry);
+        m_firing_callbacks = false;
+    }
 
     return value;
 }
