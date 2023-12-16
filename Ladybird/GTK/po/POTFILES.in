@@ -1,9 +1,0 @@
-# List of source files containing translatable strings.
-Application.cpp
-Window.cpp
-Tab.cpp
-shortcuts-dialog.blp
-tab.blp
-window.blp
-location-entry.blp
-js-console.blp
