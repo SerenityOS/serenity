@@ -120,27 +120,27 @@ Optional<String> Element::get_attribute(StringView name) const
     return attribute->value();
 }
 
-DeprecatedString Element::deprecated_get_attribute(StringView name) const
+ByteString Element::deprecated_get_attribute(StringView name) const
 {
     auto maybe_attribute = get_attribute(name);
     if (!maybe_attribute.has_value())
-        return DeprecatedString::empty();
+        return ByteString::empty();
 
-    return maybe_attribute->to_deprecated_string();
+    return maybe_attribute->to_byte_string();
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value
-DeprecatedString Element::get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_) const
+ByteString Element::get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_) const
 {
     // 1. Let attr be the result of getting an attribute given namespace, localName, and element.
     auto const* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
 
     // 2. If attr is null, then return the empty string.
     if (!attribute)
-        return DeprecatedString::empty();
+        return ByteString::empty();
 
     // 3. Return attr’s value.
-    return attribute->value().to_deprecated_string();
+    return attribute->value().to_byte_string();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
@@ -247,7 +247,7 @@ void Element::append_attribute(Attr& attribute)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
-void Element::set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
+void Element::set_attribute_value(FlyString const& local_name, ByteString const& value, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
 {
     // 1. Let attribute be the result of getting an attribute given namespace, localName, and element.
     auto* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
@@ -258,14 +258,14 @@ void Element::set_attribute_value(FlyString const& local_name, DeprecatedString 
     if (!attribute) {
         QualifiedName name { local_name, prefix, namespace_ };
 
-        auto new_attribute = Attr::create(document(), move(name), MUST(String::from_deprecated_string(value)));
+        auto new_attribute = Attr::create(document(), move(name), MUST(String::from_byte_string(value)));
         m_attributes->append_attribute(new_attribute);
 
         return;
     }
 
     // 3. Change attribute to value.
-    attribute->change_attribute(MUST(String::from_deprecated_string(value)));
+    attribute->change_attribute(MUST(String::from_byte_string(value)));
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributenode
@@ -1457,7 +1457,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
 }
 
 // https://dom.spec.whatwg.org/#insert-adjacent
-WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node)
+WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(ByteString const& where, JS::NonnullGCPtr<Node> node)
 {
     // To insert adjacent, given an element element, string where, and a node node, run the steps associated with the first ASCII case-insensitive match for where:
     if (Infra::is_ascii_case_insensitive_match(where, "beforebegin"sv)) {
@@ -1501,7 +1501,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString c
 WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element)
 {
     // The insertAdjacentElement(where, element) method steps are to return the result of running insert adjacent, give this, where, and element.
-    auto returned_node = TRY(insert_adjacent(where.to_deprecated_string(), move(element)));
+    auto returned_node = TRY(insert_adjacent(where.to_byte_string(), move(element)));
     if (!returned_node)
         return JS::GCPtr<Element> { nullptr };
     return JS::GCPtr<Element> { verify_cast<Element>(*returned_node) };
@@ -1515,7 +1515,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_text(String const& where, Str
 
     // 2. Run insert adjacent, given this, where, and text.
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.
-    (void)TRY(insert_adjacent(where.to_deprecated_string(), text));
+    (void)TRY(insert_adjacent(where.to_byte_string(), text));
     return {};
 }
 
@@ -2019,10 +2019,10 @@ void Element::for_each_attribute(Function<void(Attr const&)> callback) const
         callback(*m_attributes->item(i));
 }
 
-void Element::for_each_attribute(Function<void(FlyString const&, DeprecatedString const&)> callback) const
+void Element::for_each_attribute(Function<void(FlyString const&, ByteString const&)> callback) const
 {
     for_each_attribute([&callback](Attr const& attr) {
-        callback(attr.name(), attr.value().to_deprecated_string());
+        callback(attr.name(), attr.value().to_byte_string());
     });
 }
 

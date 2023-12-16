@@ -181,7 +181,7 @@ public:
         return Size<U>(*this);
     }
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
 
     template<Integral I>
     [[nodiscard]] Size<I> to_rounded() const

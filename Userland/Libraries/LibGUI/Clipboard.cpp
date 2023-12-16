@@ -24,7 +24,7 @@ private:
     {
     }
 
-    virtual void clipboard_data_changed(DeprecatedString const& mime_type) override
+    virtual void clipboard_data_changed(ByteString const& mime_type) override
     {
         Clipboard::the().clipboard_data_changed({}, mime_type);
     }
@@ -131,8 +131,8 @@ ErrorOr<Clipboard::DataAndType> Clipboard::DataAndType::from_json(JsonObject con
         return Error::from_string_literal("JsonObject does not contain necessary fields");
 
     DataAndType result;
-    result.data = object.get_deprecated_string("data"sv)->to_byte_buffer();
-    result.mime_type = *object.get_deprecated_string("mime_type"sv);
+    result.data = object.get_byte_string("data"sv)->to_byte_buffer();
+    result.mime_type = *object.get_byte_string("mime_type"sv);
     // FIXME: Also read metadata
 
     return result;
@@ -141,14 +141,14 @@ ErrorOr<Clipboard::DataAndType> Clipboard::DataAndType::from_json(JsonObject con
 ErrorOr<JsonObject> Clipboard::DataAndType::to_json() const
 {
     JsonObject object;
-    object.set("data", TRY(DeprecatedString::from_utf8(data.bytes())));
+    object.set("data", TRY(ByteString::from_utf8(data.bytes())));
     object.set("mime_type", mime_type);
     // FIXME: Also write metadata
 
     return object;
 }
 
-void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
+void Clipboard::set_data(ReadonlyBytes data, ByteString const& type, HashMap<ByteString, ByteString> const& metadata)
 {
     if (data.is_empty()) {
         connection().async_set_clipboard_data({}, type, metadata.clone().release_value_but_fixme_should_propagate_errors());
@@ -165,14 +165,14 @@ void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashM
     connection().async_set_clipboard_data(move(buffer), type, metadata.clone().release_value_but_fixme_should_propagate_errors());
 }
 
-void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap, HashMap<DeprecatedString, DeprecatedString> const& additional_metadata)
+void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap, HashMap<ByteString, ByteString> const& additional_metadata)
 {
-    HashMap<DeprecatedString, DeprecatedString> metadata = additional_metadata.clone().release_value_but_fixme_should_propagate_errors();
-    metadata.set("width", DeprecatedString::number(bitmap.width()));
-    metadata.set("height", DeprecatedString::number(bitmap.height()));
-    metadata.set("scale", DeprecatedString::number(bitmap.scale()));
-    metadata.set("format", DeprecatedString::number((int)bitmap.format()));
-    metadata.set("pitch", DeprecatedString::number(bitmap.pitch()));
+    HashMap<ByteString, ByteString> metadata = additional_metadata.clone().release_value_but_fixme_should_propagate_errors();
+    metadata.set("width", ByteString::number(bitmap.width()));
+    metadata.set("height", ByteString::number(bitmap.height()));
+    metadata.set("scale", ByteString::number(bitmap.scale()));
+    metadata.set("format", ByteString::number((int)bitmap.format()));
+    metadata.set("pitch", ByteString::number(bitmap.pitch()));
     set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", move(metadata));
 }
 
@@ -181,7 +181,7 @@ void Clipboard::clear()
     connection().async_set_clipboard_data({}, {}, {});
 }
 
-void Clipboard::clipboard_data_changed(Badge<ConnectionToClipboardServer>, DeprecatedString const& mime_type)
+void Clipboard::clipboard_data_changed(Badge<ConnectionToClipboardServer>, ByteString const& mime_type)
 {
     if (on_change)
         on_change(mime_type);

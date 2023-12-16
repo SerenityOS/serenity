@@ -119,7 +119,7 @@ static ErrorOr<String> summary_string(Vector<int> const& pages)
 
 static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document, bool json)
 {
-    HashMap<DeprecatedString, Vector<int>> diags_to_pages;
+    HashMap<ByteString, Vector<int>> diags_to_pages;
     for (u32 page_number = 1; page_number <= document.get_page_count(); ++page_number) {
         if (!json) {
             out("page number {} / {}", page_number, document.get_page_count());
@@ -165,7 +165,7 @@ static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document, bool
     }
     if (json) {
         json_output.set("issues", issues);
-        outln("{}", json_output.to_deprecated_string());
+        outln("{}", json_output.to_byte_string());
     }
     return {};
 }

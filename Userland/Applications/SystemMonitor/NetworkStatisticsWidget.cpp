@@ -48,22 +48,22 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
                 if (!object.get_bool("link_up"sv).value_or(false))
                     return *m_network_link_down_bitmap;
                 else
-                    return object.get_deprecated_string("ipv4_address"sv).value_or("").is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
+                    return object.get_byte_string("ipv4_address"sv).value_or("").is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
             });
         net_adapters_fields.empend("name", "Name"_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("class_name", "Class"_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC"_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("Link status"_string, Gfx::TextAlignment::CenterLeft,
-            [](JsonObject const& object) -> DeprecatedString {
+            [](JsonObject const& object) -> ByteString {
                 if (!object.get_bool("link_up"sv).value_or(false))
                     return "Down";
 
-                return DeprecatedString::formatted("{} Mb/s {}-duplex", object.get_i32("link_speed"sv).value_or(0),
+                return ByteString::formatted("{} Mb/s {}-duplex", object.get_i32("link_speed"sv).value_or(0),
                     object.get_bool("link_full_duplex"sv).value_or(false) ? "full"sv : "half"sv);
             });
         net_adapters_fields.empend("IPv4"_string, Gfx::TextAlignment::CenterLeft,
-            [](JsonObject const& object) -> DeprecatedString {
-                return object.get_deprecated_string("ipv4_address"sv).value_or(""sv);
+            [](JsonObject const& object) -> ByteString {
+                return object.get_byte_string("ipv4_address"sv).value_or(""sv);
             });
         net_adapters_fields.empend("packets_in", "Pkt In"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("packets_out", "Pkt Out"_string, Gfx::TextAlignment::CenterRight);

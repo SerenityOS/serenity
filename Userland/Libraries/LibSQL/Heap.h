@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
@@ -68,10 +68,10 @@ class Heap : public RefCounted<Heap> {
 public:
     static constexpr u32 VERSION = 4;
 
-    static ErrorOr<NonnullRefPtr<Heap>> create(DeprecatedString);
+    static ErrorOr<NonnullRefPtr<Heap>> create(ByteString);
     virtual ~Heap();
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
 
     ErrorOr<void> open();
     ErrorOr<size_t> file_size_in_bytes() const;
@@ -122,7 +122,7 @@ public:
     ErrorOr<void> flush();
 
 private:
-    explicit Heap(DeprecatedString);
+    explicit Heap(ByteString);
 
     ErrorOr<ByteBuffer> read_raw_block(Block::Index);
     ErrorOr<void> write_raw_block(Block::Index, ReadonlyBytes);
@@ -136,7 +136,7 @@ private:
     ErrorOr<void> initialize_zero_block();
     ErrorOr<void> update_zero_block();
 
-    DeprecatedString m_name;
+    ByteString m_name;
 
     OwnPtr<Core::InputBufferedFile> m_file;
     Block::Index m_highest_block_written { 0 };

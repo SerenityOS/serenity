@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
@@ -56,7 +56,7 @@ public:
 
     virtual bool truth() const = 0;
     virtual int integer() const = 0;
-    virtual DeprecatedString string() const = 0;
+    virtual ByteString string() const = 0;
     virtual Type type() const = 0;
     virtual ~Expression() = default;
 };
@@ -69,7 +69,7 @@ public:
     {
     }
 
-    ValueExpression(DeprecatedString&& v)
+    ValueExpression(ByteString&& v)
         : as_string(move(v))
         , m_type(Type::String)
     {
@@ -96,11 +96,11 @@ private:
         }
         VERIFY_NOT_REACHED();
     }
-    virtual DeprecatedString string() const override
+    virtual ByteString string() const override
     {
         switch (m_type) {
         case Type::Integer:
-            return DeprecatedString::formatted("{}", as_integer);
+            return ByteString::formatted("{}", as_integer);
         case Type::String:
             return as_string;
         }
@@ -110,7 +110,7 @@ private:
 
     union {
         int as_integer;
-        DeprecatedString as_string;
+        ByteString as_string;
     };
     Type m_type { Type::String };
 };
@@ -161,7 +161,7 @@ private:
         VERIFY_NOT_REACHED();
     }
 
-    virtual DeprecatedString string() const override
+    virtual ByteString string() const override
     {
         switch (m_op) {
         case BooleanOperator::And:
@@ -260,7 +260,7 @@ private:
         VERIFY_NOT_REACHED();
     }
     virtual int integer() const override { return truth(); }
-    virtual DeprecatedString string() const override { return truth() ? "1" : "0"; }
+    virtual ByteString string() const override { return truth() ? "1" : "0"; }
     virtual Type type() const override { return Type::Integer; }
 
     ComparisonOperation m_op { ComparisonOperation::Less };
@@ -330,9 +330,9 @@ private:
         }
         VERIFY_NOT_REACHED();
     }
-    virtual DeprecatedString string() const override
+    virtual ByteString string() const override
     {
-        return DeprecatedString::formatted("{}", integer());
+        return ByteString::formatted("{}", integer());
     }
     virtual Type type() const override
     {
@@ -388,7 +388,7 @@ private:
 
         VERIFY_NOT_REACHED();
     }
-    static auto safe_substring(DeprecatedString const& str, int start, int length)
+    static auto safe_substring(ByteString const& str, int start, int length)
     {
         if (start < 1 || (size_t)start > str.length())
             fail("Index out of range");
@@ -397,7 +397,7 @@ private:
             fail("Index out of range");
         return str.substring(start, length);
     }
-    virtual DeprecatedString string() const override
+    virtual ByteString string() const override
     {
         if (m_op == StringOperation::Substring)
             return safe_substring(m_str->string(), m_pos_or_chars->integer(), m_length->integer());
@@ -412,7 +412,7 @@ private:
                 for (auto& m : match.matches)
                     count += m.view.length();
 
-                return DeprecatedString::number(count);
+                return ByteString::number(count);
             } else {
                 if (!match.success)
                     return "";
@@ -421,11 +421,11 @@ private:
                 for (auto& e : match.capture_group_matches[0])
                     result.append(e.view.string_view());
 
-                return result.to_deprecated_string();
+                return result.to_byte_string();
             }
         }
 
-        return DeprecatedString::number(integer());
+        return ByteString::number(integer());
     }
     virtual Type type() const override
     {

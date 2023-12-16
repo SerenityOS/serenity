@@ -298,25 +298,25 @@ size_t Text::terminal_length() const
     return m_node->terminal_length();
 }
 
-DeprecatedString Text::render_to_html() const
+ByteString Text::render_to_html() const
 {
     StringBuilder builder;
     m_node->render_to_html(builder);
-    return builder.to_deprecated_string().trim(" \n\t"sv);
+    return builder.to_byte_string().trim(" \n\t"sv);
 }
 
-DeprecatedString Text::render_for_raw_print() const
+ByteString Text::render_for_raw_print() const
 {
     StringBuilder builder;
     m_node->render_for_raw_print(builder);
-    return builder.to_deprecated_string().trim(" \n\t"sv);
+    return builder.to_byte_string().trim(" \n\t"sv);
 }
 
-DeprecatedString Text::render_for_terminal() const
+ByteString Text::render_for_terminal() const
 {
     StringBuilder builder;
     m_node->render_for_terminal(builder);
-    return builder.to_deprecated_string().trim(" \n\t"sv);
+    return builder.to_byte_string().trim(" \n\t"sv);
 }
 
 RecursionDecision Text::walk(Visitor& visitor) const
@@ -366,7 +366,7 @@ Vector<Text::Token> Text::tokenize(StringView str)
             return;
 
         tokens.append({
-            current_token.to_deprecated_string(),
+            current_token.to_byte_string(),
             left_flanking,
             right_flanking,
             punct_before,
@@ -671,11 +671,11 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
         if (*iterator == ")"sv) {
             tokens = iterator;
 
-            DeprecatedString href = address.to_deprecated_string().trim_whitespace();
+            ByteString href = address.to_byte_string().trim_whitespace();
 
             // Add file:// if the link is an absolute path otherwise it will be assumed relative.
             if (AK::StringUtils::starts_with(href, "/"sv, CaseSensitivity::CaseSensitive))
-                href = DeprecatedString::formatted("file://{}", href);
+                href = ByteString::formatted("file://{}", href);
 
             return make<LinkNode>(is_image, move(link_text), move(href), image_width, image_height);
         }

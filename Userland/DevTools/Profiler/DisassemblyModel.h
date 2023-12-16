@@ -18,7 +18,7 @@ class ProfileNode;
 
 struct InstructionData {
     X86::Instruction insn;
-    DeprecatedString disassembly;
+    ByteString disassembly;
     StringView bytes;
     FlatPtr address { 0 };
     u32 event_count { 0 };

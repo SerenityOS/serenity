@@ -225,14 +225,14 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
     case Op::PropertyKind::Getter: {
         auto& function = value.as_function();
         if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
-            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("get {}", name));
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(ByteString::formatted("get {}", name));
         object->define_direct_accessor(name, &function, nullptr, Attribute::Configurable | Attribute::Enumerable);
         break;
     }
     case Op::PropertyKind::Setter: {
         auto& function = value.as_function();
         if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
-            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("set {}", name));
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(ByteString::formatted("set {}", name));
         object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
         break;
     }
@@ -511,7 +511,7 @@ ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::
 }
 
 // 13.2.7.3 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation
-Value new_regexp(VM& vm, ParsedRegex const& parsed_regex, DeprecatedString const& pattern, DeprecatedString const& flags)
+Value new_regexp(VM& vm, ParsedRegex const& parsed_regex, ByteString const& pattern, ByteString const& flags)
 {
     // 1. Let pattern be CodePointsToString(BodyText of RegularExpressionLiteral).
     // 2. Let flags be CodePointsToString(FlagText of RegularExpressionLiteral).

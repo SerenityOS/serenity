@@ -32,7 +32,7 @@ JS::ThrowCompletionOr<UnderlyingSource> UnderlyingSource::from_value(JS::VM& vm,
         if (type_string == "bytes"sv)
             underlying_source.type = ReadableStreamType::Bytes;
         else
-            return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Unknown stream type '{}'", type_value));
+            return vm.throw_completion<JS::TypeError>(ByteString::formatted("Unknown stream type '{}'", type_value));
     }
 
     if (TRY(object.has_property("autoAllocateChunkSize")))

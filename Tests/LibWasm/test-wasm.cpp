@@ -21,7 +21,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
         return StringView { error_string, strlen(error_string) };
     };
 
-    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto filename = TRY(vm.argument(0).to_byte_string(vm));
     auto file = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(error_code_to_string(file.error().code()));
@@ -114,7 +114,7 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     FixedMemoryStream stream { array.data() };
     auto result = Wasm::Module::parse(stream);
     if (result.is_error())
-        return vm.throw_completion<JS::SyntaxError>(Wasm::parse_error_to_deprecated_string(result.error()));
+        return vm.throw_completion<JS::SyntaxError>(Wasm::parse_error_to_byte_string(result.error()));
 
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> imports;
     auto import_value = vm.argument(1);
@@ -157,7 +157,7 @@ void WebAssemblyModule::initialize(JS::Realm& realm)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
-    auto name = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto name = TRY(vm.argument(0).to_byte_string(vm));
     auto this_value = vm.this_value();
     auto object = TRY(this_value.to_object(vm));
     if (!is<WebAssemblyModule>(*object))

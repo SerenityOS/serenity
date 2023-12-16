@@ -5,7 +5,7 @@
  */
 
 #include "Token.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 
 namespace Cpp {
 
@@ -26,12 +26,12 @@ bool Position::operator<=(Position const& other) const
     return !(*this > other);
 }
 
-DeprecatedString Token::to_deprecated_string() const
+ByteString Token::to_byte_string() const
 {
-    return DeprecatedString::formatted("{}  {}:{}-{}:{} ({})", type_to_string(m_type), start().line, start().column, end().line, end().column, text());
+    return ByteString::formatted("{}  {}:{}-{}:{} ({})", type_to_string(m_type), start().line, start().column, end().line, end().column, text());
 }
 
-DeprecatedString Token::type_as_deprecated_string() const
+ByteString Token::type_as_byte_string() const
 {
     return type_to_string(m_type);
 }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     // Read files, compute their hashes, ignore collisions for now.
-    HashMap<u32, Vector<DeprecatedString>> inverse_hashes;
+    HashMap<u32, Vector<ByteString>> inverse_hashes;
     bool had_errors = false;
     for (auto filename : arguments.strings.slice(1)) {
 
@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto file = file_or_error.release_value();
 
-        DeprecatedString endpoint_name;
+        ByteString endpoint_name;
 
         auto const read_lines = [&]() -> ErrorOr<void> {
             while (TRY(file->can_read_line())) {

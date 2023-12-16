@@ -47,7 +47,7 @@ private:
     Vector<ModuleWithSpecifier> m_loaded_modules; // [[LoadedModules]]
 
     // Needed for potential lookups of modules.
-    DeprecatedString m_filename;
+    ByteString m_filename;
     HostDefined* m_host_defined { nullptr }; // [[HostDefined]]
 };
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Hex.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
@@ -38,19 +38,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     while (di.has_next()) {
         auto dir = di.next_path();
-        auto command_set_filename = DeprecatedString::formatted("/sys/devices/storage/{}/command_set", dir);
+        auto command_set_filename = ByteString::formatted("/sys/devices/storage/{}/command_set", dir);
         auto command_set_file = Core::File::open(command_set_filename, Core::File::OpenMode::Read);
         if (command_set_file.is_error()) {
             dbgln("Error: Could not open {}: {}", command_set_filename, command_set_file.error());
             continue;
         }
-        auto last_lba_filename = DeprecatedString::formatted("/sys/devices/storage/{}/last_lba", dir);
+        auto last_lba_filename = ByteString::formatted("/sys/devices/storage/{}/last_lba", dir);
         auto last_lba_file = Core::File::open(last_lba_filename, Core::File::OpenMode::Read);
         if (last_lba_file.is_error()) {
             dbgln("Error: Could not open {}: {}", last_lba_filename, last_lba_file.error());
             continue;
         }
-        auto sector_size_filename = DeprecatedString::formatted("/sys/devices/storage/{}/sector_size", dir);
+        auto sector_size_filename = ByteString::formatted("/sys/devices/storage/{}/sector_size", dir);
         auto sector_size_file = Core::File::open(sector_size_filename, Core::File::OpenMode::Read);
         if (sector_size_file.is_error()) {
             dbgln("Error: Could not open {}: {}", sector_size_filename, sector_size_file.error());
@@ -62,21 +62,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Error: Could not read {}: {}", command_set_filename, maybe_command_set.error());
             continue;
         }
-        DeprecatedString command_set = StringView(maybe_command_set.value().bytes());
+        ByteString command_set = StringView(maybe_command_set.value().bytes());
 
         auto maybe_last_lba = last_lba_file.value()->read_until_eof();
         if (maybe_last_lba.is_error()) {
             dbgln("Error: Could not read {}: {}", last_lba_filename, maybe_last_lba.error());
             continue;
         }
-        DeprecatedString last_lba = StringView(maybe_last_lba.value().bytes());
+        ByteString last_lba = StringView(maybe_last_lba.value().bytes());
 
         auto maybe_sector_size = sector_size_file.value()->read_until_eof();
         if (maybe_sector_size.is_error()) {
             dbgln("Error: Could not read {}: {}", sector_size_filename, maybe_sector_size.error());
             continue;
         }
-        DeprecatedString sector_size = StringView(maybe_sector_size.value().bytes());
+        ByteString sector_size = StringView(maybe_sector_size.value().bytes());
 
         outln(format_row, dir, command_set, sector_size, last_lba);
     }

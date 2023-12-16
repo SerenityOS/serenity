@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Queue.h>
 #include <AK/URL.h>
 #include <LibDesktop/AppFile.h>
@@ -27,7 +27,7 @@ public:
 
     virtual Gfx::Bitmap const* bitmap() const = 0;
 
-    DeprecatedString const& title() const { return m_title; }
+    ByteString const& title() const { return m_title; }
     String const& tooltip() const { return m_tooltip; }
     int score() const { return m_score; }
     bool equals(Result const& other) const
@@ -38,7 +38,7 @@ public:
     }
 
 protected:
-    Result(DeprecatedString title, String tooltip, int score = 0)
+    Result(ByteString title, String tooltip, int score = 0)
         : m_title(move(title))
         , m_tooltip(move(tooltip))
         , m_score(score)
@@ -46,14 +46,14 @@ protected:
     }
 
 private:
-    DeprecatedString m_title;
+    ByteString m_title;
     String m_tooltip;
     int m_score { 0 };
 };
 
 class AppResult final : public Result {
 public:
-    AppResult(RefPtr<Gfx::Bitmap const> bitmap, DeprecatedString title, String tooltip, NonnullRefPtr<Desktop::AppFile> af, DeprecatedString arguments, int score)
+    AppResult(RefPtr<Gfx::Bitmap const> bitmap, ByteString title, String tooltip, NonnullRefPtr<Desktop::AppFile> af, ByteString arguments, int score)
         : Result(move(title), move(tooltip), score)
         , m_app_file(move(af))
         , m_arguments(move(arguments))
@@ -67,13 +67,13 @@ public:
 
 private:
     NonnullRefPtr<Desktop::AppFile> m_app_file;
-    DeprecatedString m_arguments;
+    ByteString m_arguments;
     RefPtr<Gfx::Bitmap const> m_bitmap;
 };
 
 class CalculatorResult final : public Result {
 public:
-    explicit CalculatorResult(DeprecatedString title)
+    explicit CalculatorResult(ByteString title)
         : Result(move(title), "Copy to Clipboard"_string, 100)
         , m_bitmap(GUI::Icon::default_icon("app-calculator"sv).bitmap_for_size(16))
     {
@@ -89,7 +89,7 @@ private:
 
 class FileResult final : public Result {
 public:
-    explicit FileResult(DeprecatedString title, int score)
+    explicit FileResult(ByteString title, int score)
         : Result(move(title), String(), score)
     {
     }
@@ -101,7 +101,7 @@ public:
 
 class TerminalResult final : public Result {
 public:
-    explicit TerminalResult(DeprecatedString command)
+    explicit TerminalResult(ByteString command)
         : Result(move(command), "Run command in Terminal"_string, 100)
         , m_bitmap(GUI::Icon::default_icon("app-terminal"sv).bitmap_for_size(16))
     {
@@ -118,7 +118,7 @@ private:
 class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
-        : Result(url.to_deprecated_string(), "Open URL in Browser"_string, 50)
+        : Result(url.to_byte_string(), "Open URL in Browser"_string, 50)
         , m_bitmap(GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16))
     {
     }
@@ -135,14 +135,14 @@ class Provider : public RefCounted<Provider> {
 public:
     virtual ~Provider() = default;
 
-    virtual void query(DeprecatedString const&, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) = 0;
+    virtual void query(ByteString const&, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) = 0;
 };
 
 class AppProvider final : public Provider {
 public:
     AppProvider();
 
-    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 
 private:
     Vector<NonnullRefPtr<Desktop::AppFile>> m_app_file_cache;
@@ -150,31 +150,31 @@ private:
 
 class CalculatorProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 class FileProvider final : public Provider {
 public:
     FileProvider();
 
-    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
     void build_filesystem_cache();
 
 private:
     RefPtr<Threading::BackgroundAction<Optional<Vector<NonnullRefPtr<Result>>>>> m_fuzzy_match_work;
     bool m_building_cache { false };
-    Vector<DeprecatedString> m_full_path_cache;
-    Queue<DeprecatedString> m_work_queue;
+    Vector<ByteString> m_full_path_cache;
+    Queue<ByteString> m_work_queue;
 };
 
 class TerminalProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 class URLProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 }

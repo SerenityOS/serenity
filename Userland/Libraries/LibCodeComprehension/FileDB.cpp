@@ -9,14 +9,14 @@
 
 namespace CodeComprehension {
 
-DeprecatedString FileDB::to_absolute_path(StringView filename) const
+ByteString FileDB::to_absolute_path(StringView filename) const
 {
     if (LexicalPath { filename }.is_absolute()) {
         return filename;
     }
     if (!m_project_root.has_value())
         return filename;
-    return LexicalPath { DeprecatedString::formatted("{}/{}", *m_project_root, filename) }.string();
+    return LexicalPath { ByteString::formatted("{}/{}", *m_project_root, filename) }.string();
 }
 
 }

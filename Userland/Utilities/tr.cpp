@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Optional.h>
 #include <LibCore/ArgsParser.h>
@@ -28,7 +28,7 @@ static ErrorOr<void> generate_character_class(Function<int(int)> oracle, StringB
     return {};
 }
 
-static ErrorOr<DeprecatedString> build_set(StringView specification)
+static ErrorOr<ByteString> build_set(StringView specification)
 {
     StringBuilder out;
     GenericLexer lexer(specification);
@@ -89,7 +89,7 @@ static ErrorOr<DeprecatedString> build_set(StringView specification)
             TRY(out.try_append(lexer.consume(1)));
     }
 
-    return out.to_deprecated_string();
+    return out.to_byte_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -135,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!from_str.contains(static_cast<char>(ch)))
                 TRY(complement_set.try_append(static_cast<char>(ch)));
         }
-        from_str = complement_set.to_deprecated_string();
+        from_str = complement_set.to_byte_string();
     }
 
     auto to_str = TRY(build_set(to_chars));

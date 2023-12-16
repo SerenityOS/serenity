@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -16,4 +16,4 @@ void platform_init();
 ErrorOr<String> application_directory();
 ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name);
 
-extern DeprecatedString s_serenity_resource_root;
+extern ByteString s_serenity_resource_root;

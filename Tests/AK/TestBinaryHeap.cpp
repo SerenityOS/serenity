@@ -7,7 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/BinaryHeap.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 
 using namespace Test::Randomized;
 
@@ -46,7 +46,7 @@ TEST_CASE(populate_int)
 
 TEST_CASE(populate_string)
 {
-    BinaryHeap<int, DeprecatedString, 5> strings;
+    BinaryHeap<int, ByteString, 5> strings;
     strings.insert(1, "ABC");
     strings.insert(2, "DEF");
     EXPECT_EQ(strings.size(), 2u);

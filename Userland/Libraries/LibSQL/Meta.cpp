@@ -15,17 +15,17 @@ u32 Relation::hash() const
     return key().hash();
 }
 
-ErrorOr<NonnullRefPtr<SchemaDef>> SchemaDef::create(DeprecatedString name)
+ErrorOr<NonnullRefPtr<SchemaDef>> SchemaDef::create(ByteString name)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) SchemaDef(move(name)));
 }
 
 ErrorOr<NonnullRefPtr<SchemaDef>> SchemaDef::create(Key const& key)
 {
-    return create(key["schema_name"].to_deprecated_string());
+    return create(key["schema_name"].to_byte_string());
 }
 
-SchemaDef::SchemaDef(DeprecatedString name)
+SchemaDef::SchemaDef(ByteString name)
     : Relation(move(name))
 {
 }
@@ -52,12 +52,12 @@ NonnullRefPtr<IndexDef> SchemaDef::index_def()
     return s_index_def;
 }
 
-ErrorOr<NonnullRefPtr<ColumnDef>> ColumnDef::create(Relation* parent, size_t column_number, DeprecatedString name, SQLType sql_type)
+ErrorOr<NonnullRefPtr<ColumnDef>> ColumnDef::create(Relation* parent, size_t column_number, ByteString name, SQLType sql_type)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) ColumnDef(parent, column_number, move(name), sql_type));
 }
 
-ColumnDef::ColumnDef(Relation* parent, size_t column_number, DeprecatedString name, SQLType sql_type)
+ColumnDef::ColumnDef(Relation* parent, size_t column_number, ByteString name, SQLType sql_type)
     : Relation(move(name), parent)
     , m_index(column_number)
     , m_type(sql_type)
@@ -100,35 +100,35 @@ NonnullRefPtr<IndexDef> ColumnDef::index_def()
     return s_index_def;
 }
 
-ErrorOr<NonnullRefPtr<KeyPartDef>> KeyPartDef::create(IndexDef* index, DeprecatedString name, SQLType sql_type, Order sort_order)
+ErrorOr<NonnullRefPtr<KeyPartDef>> KeyPartDef::create(IndexDef* index, ByteString name, SQLType sql_type, Order sort_order)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) KeyPartDef(index, move(name), sql_type, sort_order));
 }
 
-KeyPartDef::KeyPartDef(IndexDef* index, DeprecatedString name, SQLType sql_type, Order sort_order)
+KeyPartDef::KeyPartDef(IndexDef* index, ByteString name, SQLType sql_type, Order sort_order)
     : ColumnDef(index, index->size(), move(name), sql_type)
     , m_sort_order(sort_order)
 {
 }
 
-ErrorOr<NonnullRefPtr<IndexDef>> IndexDef::create(TableDef* table, DeprecatedString name, bool unique, u32 pointer)
+ErrorOr<NonnullRefPtr<IndexDef>> IndexDef::create(TableDef* table, ByteString name, bool unique, u32 pointer)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) IndexDef(table, move(name), unique, pointer));
 }
 
-ErrorOr<NonnullRefPtr<IndexDef>> IndexDef::create(DeprecatedString name, bool unique, u32 pointer)
+ErrorOr<NonnullRefPtr<IndexDef>> IndexDef::create(ByteString name, bool unique, u32 pointer)
 {
     return create(nullptr, move(name), unique, pointer);
 }
 
-IndexDef::IndexDef(TableDef* table, DeprecatedString name, bool unique, u32 pointer)
+IndexDef::IndexDef(TableDef* table, ByteString name, bool unique, u32 pointer)
     : Relation(move(name), pointer, table)
     , m_key_definition()
     , m_unique(unique)
 {
 }
 
-void IndexDef::append_column(DeprecatedString name, SQLType sql_type, Order sort_order)
+void IndexDef::append_column(ByteString name, SQLType sql_type, Order sort_order)
 {
     auto part = KeyPartDef::create(this, move(name), sql_type, sort_order).release_value_but_fixme_should_propagate_errors();
     m_key_definition.append(part);
@@ -170,12 +170,12 @@ NonnullRefPtr<IndexDef> IndexDef::index_def()
     return s_index_def;
 }
 
-ErrorOr<NonnullRefPtr<TableDef>> TableDef::create(SchemaDef* schema, DeprecatedString name)
+ErrorOr<NonnullRefPtr<TableDef>> TableDef::create(SchemaDef* schema, ByteString name)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) TableDef(schema, move(name)));
 }
 
-TableDef::TableDef(SchemaDef* schema, DeprecatedString name)
+TableDef::TableDef(SchemaDef* schema, ByteString name)
     : Relation(move(name), schema)
     , m_columns()
     , m_indexes()
@@ -200,7 +200,7 @@ Key TableDef::key() const
     return key;
 }
 
-void TableDef::append_column(DeprecatedString name, SQLType sql_type)
+void TableDef::append_column(ByteString name, SQLType sql_type)
 {
     auto column = ColumnDef::create(this, num_columns(), move(name), sql_type).release_value_but_fixme_should_propagate_errors();
     m_columns.append(column);
@@ -211,7 +211,7 @@ void TableDef::append_column(Key const& column)
     auto column_type = column["column_type"].to_int<UnderlyingType<SQLType>>();
     VERIFY(column_type.has_value());
 
-    append_column(column["column_name"].to_deprecated_string(), static_cast<SQLType>(*column_type));
+    append_column(column["column_name"].to_byte_string(), static_cast<SQLType>(*column_type));
 }
 
 Key TableDef::make_key(SchemaDef const& schema_def)

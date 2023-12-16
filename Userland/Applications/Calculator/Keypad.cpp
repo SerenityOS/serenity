@@ -124,12 +124,12 @@ void Keypad::set_to_0()
 ErrorOr<String> Keypad::to_string() const
 {
     if (m_state == State::External || m_state == State::TypedExternal)
-        return String::from_deprecated_string(m_internal_value.to_deprecated_string(m_displayed_fraction_length));
+        return String::from_byte_string(m_internal_value.to_byte_string(m_displayed_fraction_length));
 
     StringBuilder builder;
 
-    DeprecatedString const integer_value = m_int_value.to_base_deprecated(10);
-    DeprecatedString const frac_value = m_frac_value.to_base_deprecated(10);
+    ByteString const integer_value = m_int_value.to_base_deprecated(10);
+    ByteString const frac_value = m_frac_value.to_base_deprecated(10);
     unsigned const number_pre_zeros = m_frac_length.to_u64() - (frac_value.length() - 1) - (frac_value == "0" ? 0 : 1);
 
     builder.append(integer_value);

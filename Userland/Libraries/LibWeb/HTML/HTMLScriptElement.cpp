@@ -177,7 +177,7 @@ void HTMLScriptElement::prepare_script()
     //    - el has a type attribute whose value is the empty string;
     //    - el has no type attribute but it has a language attribute and that attribute's value is the empty string; or
     //    - el has neither a type attribute nor a language attribute
-    DeprecatedString script_block_type;
+    ByteString script_block_type;
     bool has_type_attribute = has_attribute(HTML::AttributeNames::type);
     bool has_language_attribute = has_attribute(HTML::AttributeNames::language);
     if ((has_type_attribute && deprecated_attribute(HTML::AttributeNames::type).is_empty())
@@ -194,7 +194,7 @@ void HTMLScriptElement::prepare_script()
     // Otherwise, el has a non-empty language attribute;
     else if (!deprecated_attribute(HTML::AttributeNames::language).is_empty()) {
         // let the script block's type string be the concatenation of "text/" and the value of el's language attribute.
-        script_block_type = DeprecatedString::formatted("text/{}", deprecated_attribute(HTML::AttributeNames::language));
+        script_block_type = ByteString::formatted("text/{}", deprecated_attribute(HTML::AttributeNames::language));
     }
 
     // 9. If the script block's type string is a JavaScript MIME type essence match,
@@ -307,7 +307,7 @@ void HTMLScriptElement::prepare_script()
     String integrity_metadata;
     if (has_attribute(HTML::AttributeNames::integrity)) {
         auto integrity = deprecated_attribute(HTML::AttributeNames::integrity);
-        integrity_metadata = String::from_deprecated_string(integrity).release_value_but_fixme_should_propagate_errors();
+        integrity_metadata = String::from_byte_string(integrity).release_value_but_fixme_should_propagate_errors();
     }
 
     // 26. Let referrer policy be the current state of el's referrerpolicy content attribute.
@@ -409,7 +409,7 @@ void HTMLScriptElement::prepare_script()
         if (m_script_type == ScriptType::Classic) {
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
             // FIXME: Pass options.
-            auto script = ClassicScript::create(m_document->url().to_deprecated_string(), source_text, settings_object, base_url, m_source_line_number);
+            auto script = ClassicScript::create(m_document->url().to_byte_string(), source_text, settings_object, base_url, m_source_line_number);
 
             // 2. Mark as ready el given script.
             mark_as_ready(Result(move(script)));
@@ -429,7 +429,7 @@ void HTMLScriptElement::prepare_script()
 
             // 2. Fetch an inline module script graph, given source text, base URL, settings object, options, and with the following steps given result:
             // FIXME: Pass options
-            fetch_inline_module_script_graph(realm(), m_document->url().to_deprecated_string(), source_text.to_deprecated_string(), base_url, document().relevant_settings_object(), steps);
+            fetch_inline_module_script_graph(realm(), m_document->url().to_byte_string(), source_text.to_byte_string(), base_url, document().relevant_settings_object(), steps);
         }
         // -> "importmap"
         else if (m_script_type == ScriptType::ImportMap) {

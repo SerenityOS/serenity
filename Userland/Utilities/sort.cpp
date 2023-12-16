@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
@@ -18,7 +18,7 @@
 struct Line {
     StringView key;
     long int numeric_key;
-    DeprecatedString line;
+    ByteString line;
     bool numeric;
 
     bool operator<(Line const& other) const
@@ -58,7 +58,7 @@ struct Options {
     bool reverse { false };
     bool zero_terminated { false };
     StringView separator {};
-    Vector<DeprecatedString> files;
+    Vector<ByteString> files;
 };
 
 static ErrorOr<void> load_file(Options const& options, StringView filename, StringView line_delimiter, Vector<Line>& lines, HashTable<Line>& seen)
@@ -69,7 +69,7 @@ static ErrorOr<void> load_file(Options const& options, StringView filename, Stri
     // FIXME: Unlimited line length
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(file->can_read_line())) {
-        DeprecatedString line { TRY(file->read_until(buffer, line_delimiter)) };
+        ByteString line { TRY(file->read_until(buffer, line_delimiter)) };
         StringView key = line;
         if (options.key_field != 0) {
             auto split = (!options.separator.is_empty())

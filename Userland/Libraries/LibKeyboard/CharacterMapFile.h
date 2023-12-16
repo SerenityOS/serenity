@@ -14,10 +14,10 @@ namespace Keyboard {
 class CharacterMapFile {
 
 public:
-    static ErrorOr<CharacterMapData> load_from_file(DeprecatedString const& filename);
+    static ErrorOr<CharacterMapData> load_from_file(ByteString const& filename);
 
 private:
-    static Vector<u32> read_map(JsonObject const& json, DeprecatedString const& name);
+    static Vector<u32> read_map(JsonObject const& json, ByteString const& name);
 };
 
 }

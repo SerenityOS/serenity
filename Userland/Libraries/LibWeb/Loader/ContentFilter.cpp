@@ -24,7 +24,7 @@ bool ContentFilter::is_filtered(const AK::URL& url) const
     if (url.scheme() == "data")
         return false;
 
-    auto url_string = url.to_deprecated_string();
+    auto url_string = url.to_byte_string();
 
     for (auto& pattern : m_patterns) {
         if (url_string.matches(pattern.text, CaseSensitivity::CaseSensitive))

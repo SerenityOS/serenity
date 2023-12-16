@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     uid_t current_uid = getuid();
 
-    HashMap<pid_t, DeprecatedString> programs;
+    HashMap<pid_t, ByteString> programs;
 
     if (flag_program) {
         auto processes = TRY(Core::ProcessStatisticsReader::get_all());
@@ -75,10 +75,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        DeprecatedString title;
+        ByteString title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        DeprecatedString buffer;
+        ByteString buffer;
     };
 
     Vector<Column> columns;
@@ -118,22 +118,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    auto get_formatted_address = [&](DeprecatedString const& address, String const& port) {
+    auto get_formatted_address = [&](ByteString const& address, String const& port) {
         if (flag_wide)
-            return DeprecatedString::formatted("{}:{}", address, port);
+            return ByteString::formatted("{}:{}", address, port);
 
         if ((address.length() + port.bytes().size()) <= max_formatted_address_length)
-            return DeprecatedString::formatted("{}:{}", address, port);
+            return ByteString::formatted("{}:{}", address, port);
 
-        return DeprecatedString::formatted("{}:{}", address.substring_view(0, max_formatted_address_length - port.bytes().size()), port);
+        return ByteString::formatted("{}:{}", address.substring_view(0, max_formatted_address_length - port.bytes().size()), port);
     };
 
     auto get_formatted_program = [&](pid_t pid) {
         if (pid == -1)
-            return DeprecatedString("-");
+            return ByteString("-");
 
         auto program = programs.get(pid);
-        return DeprecatedString::formatted("{}/{}", pid, program.value());
+        return ByteString::formatted("{}/{}", pid, program.value());
     };
 
     auto get_formatted_user = [&](i32 uid) -> ErrorOr<String> {
@@ -185,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto bytes_in = if_object.get_u32("bytes_in"sv).value_or({});
             auto bytes_out = if_object.get_u32("bytes_out"sv).value_or({});
 
-            auto peer_address = if_object.get_deprecated_string("peer_address"sv).value_or({});
+            auto peer_address = if_object.get_byte_string("peer_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -207,7 +207,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_address = if_object.get_deprecated_string("local_address"sv).value_or({});
+            auto local_address = if_object.get_byte_string("local_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -229,7 +229,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto state = if_object.get_deprecated_string("state"sv).value_or({});
+            auto state = if_object.get_byte_string("state"sv).value_or({});
             auto origin_uid = if_object.get_i32("origin_uid"sv).value_or(-1);
             auto origin_pid = if_object.get_i32("origin_pid"sv).value_or(-1);
 
@@ -239,9 +239,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "tcp";
             if (bytes_in_column != -1)
-                columns[bytes_in_column].buffer = TRY(String::number(bytes_in)).to_deprecated_string();
+                columns[bytes_in_column].buffer = TRY(String::number(bytes_in)).to_byte_string();
             if (bytes_out_column != -1)
-                columns[bytes_out_column].buffer = TRY(String::number(bytes_out)).to_deprecated_string();
+                columns[bytes_out_column].buffer = TRY(String::number(bytes_out)).to_byte_string();
             if (local_address_column != -1)
                 columns[local_address_column].buffer = get_formatted_address(local_address, local_port);
             if (peer_address_column != -1)
@@ -249,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (state_column != -1)
                 columns[state_column].buffer = state;
             if (flag_extend && user_column != -1)
-                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_deprecated_string();
+                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_byte_string();
             if (flag_program && program_column != -1)
                 columns[program_column].buffer = get_formatted_program(origin_pid);
 
@@ -272,7 +272,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto local_address = if_object.get_deprecated_string("local_address"sv).value_or({});
+            auto local_address = if_object.get_byte_string("local_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -294,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_address = if_object.get_deprecated_string("peer_address"sv).value_or({});
+            auto peer_address = if_object.get_byte_string("peer_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -332,7 +332,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (state_column != -1)
                 columns[state_column].buffer = "-";
             if (flag_extend && user_column != -1)
-                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_deprecated_string();
+                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_byte_string();
             if (flag_program && program_column != -1)
                 columns[program_column].buffer = get_formatted_program(origin_pid);
 

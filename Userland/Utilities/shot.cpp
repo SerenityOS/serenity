@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    DeprecatedString output_path;
+    ByteString output_path;
     bool output_to_clipboard = false;
     unsigned delay = 0;
     bool select_region = false;
@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (output_path.is_empty()) {
-        output_path = Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
+        output_path = Core::DateTime::now().to_byte_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
     }
 
     auto app = TRY(GUI::Application::create(arguments));
@@ -158,7 +158,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto encoded_bitmap = encoded_bitmap_or_error.release_value();
 
     if (edit_image)
-        output_path = Core::DateTime::now().to_deprecated_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
+        output_path = Core::DateTime::now().to_byte_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
 
     auto file_or_error = Core::File::open(output_path, Core::File::OpenMode::Write);
     if (file_or_error.is_error()) {
@@ -179,7 +179,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             char hostname[HOST_NAME_MAX];
             VERIFY(gethostname(hostname, sizeof(hostname)) == 0);
 
-            auto url = URL::create_with_file_scheme(full_path_or_error.value().to_deprecated_string(), {}, hostname);
+            auto url = URL::create_with_file_scheme(full_path_or_error.value().to_byte_string(), {}, hostname);
             out("\033]8;;{}\033\\", url.serialize());
             printed_hyperlink = true;
         }

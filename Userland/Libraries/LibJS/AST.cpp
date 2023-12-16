@@ -51,7 +51,7 @@ SourceRange ASTNode::source_range() const
     return m_source_code->range_from_offsets(m_start_offset, m_end_offset);
 }
 
-DeprecatedString ASTNode::class_name() const
+ByteString ASTNode::class_name() const
 {
     // NOTE: We strip the "JS::" prefix.
     auto const* typename_ptr = typeid(*this).name();
@@ -60,7 +60,7 @@ DeprecatedString ASTNode::class_name() const
 
 static void print_indent(int indent)
 {
-    out("{}", DeprecatedString::repeated(' ', indent * 2));
+    out("{}", ByteString::repeated(' ', indent * 2));
 }
 
 static void update_function_name(Value value, DeprecatedFlyString const& name)
@@ -116,7 +116,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, Depre
     return closure;
 }
 
-Optional<DeprecatedString> CallExpression::expression_string() const
+Optional<ByteString> CallExpression::expression_string() const
 {
     if (is<Identifier>(*m_callee))
         return static_cast<Identifier const&>(*m_callee).string();
@@ -157,23 +157,23 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
     method_function.make_method(target);
 
-    auto set_function_name = [&](DeprecatedString prefix = "") {
+    auto set_function_name = [&](ByteString prefix = "") {
         auto name = property_key_or_private_name.visit(
-            [&](PropertyKey const& property_key) -> DeprecatedString {
+            [&](PropertyKey const& property_key) -> ByteString {
                 if (property_key.is_symbol()) {
                     auto description = property_key.as_symbol()->description();
                     if (!description.has_value() || description->is_empty())
                         return "";
-                    return DeprecatedString::formatted("[{}]", *description);
+                    return ByteString::formatted("[{}]", *description);
                 } else {
                     return property_key.to_string();
                 }
             },
-            [&](PrivateName const& private_name) -> DeprecatedString {
+            [&](PrivateName const& private_name) -> ByteString {
                 return private_name.description;
             });
 
-        update_function_name(method_value, DeprecatedString::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", name));
+        update_function_name(method_value, ByteString::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", name));
     };
 
     if (property_key_or_private_name.has<PropertyKey>()) {
@@ -230,16 +230,16 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     if (m_initializer) {
         auto copy_initializer = m_initializer;
         auto name = property_key_or_private_name.visit(
-            [&](PropertyKey const& property_key) -> DeprecatedString {
+            [&](PropertyKey const& property_key) -> ByteString {
                 return property_key.is_number() ? property_key.to_string() : property_key.to_string_or_symbol().to_display_string();
             },
-            [&](PrivateName const& private_name) -> DeprecatedString {
+            [&](PrivateName const& private_name) -> ByteString {
                 return private_name.description;
             });
 
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
-        initializer = make_handle(*ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *function_code, {}, 0, {}, vm.lexical_environment(), vm.running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
+        initializer = make_handle(*ECMAScriptFunctionObject::create(realm, ByteString::empty(), ByteString::empty(), *function_code, {}, 0, {}, vm.lexical_environment(), vm.running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
         initializer->make_method(target);
     }
 
@@ -283,7 +283,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
     // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto body_function = ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *m_function_body, {}, 0, m_function_body->local_variables_names(), lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+    auto body_function = ECMAScriptFunctionObject::create(realm, ByteString::empty(), ByteString::empty(), *m_function_body, {}, 0, m_function_body->local_variables_names(), lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
     body_function->make_method(home_object);
@@ -868,7 +868,7 @@ void BindingPattern::dump(int indent) const
     }
 }
 
-void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
+void FunctionNode::dump(int indent, ByteString const& class_name) const
 {
     print_indent(indent);
     auto is_async = m_kind == FunctionKind::Async || m_kind == FunctionKind::AsyncGenerator;
@@ -1253,16 +1253,16 @@ void MemberExpression::dump(int indent) const
     m_property->dump(indent + 1);
 }
 
-DeprecatedString MemberExpression::to_string_approximation() const
+ByteString MemberExpression::to_string_approximation() const
 {
-    DeprecatedString object_string = "<object>";
+    ByteString object_string = "<object>";
     if (is<Identifier>(*m_object))
         object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
-        return DeprecatedString::formatted("{}[<computed>]", object_string);
+        return ByteString::formatted("{}[<computed>]", object_string);
     if (is<PrivateIdentifier>(*m_property))
-        return DeprecatedString::formatted("{}.{}", object_string, verify_cast<PrivateIdentifier>(*m_property).string());
-    return DeprecatedString::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
+        return ByteString::formatted("{}.{}", object_string, verify_cast<PrivateIdentifier>(*m_property).string());
+    return ByteString::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
 }
 
 bool MemberExpression::ends_in_private_name() const
@@ -1309,7 +1309,7 @@ void OptionalChain::dump(int indent) const
 
 void MetaProperty::dump(int indent) const
 {
-    DeprecatedString name;
+    ByteString name;
     if (m_type == MetaProperty::Type::NewTarget)
         name = "new.target";
     else if (m_type == MetaProperty::Type::ImportMeta)
@@ -1550,11 +1550,11 @@ void ExportStatement::dump(int indent) const
     print_indent(indent + 1);
     outln("(ExportEntries)");
 
-    auto string_or_null = [](DeprecatedString const& string) -> DeprecatedString {
+    auto string_or_null = [](ByteString const& string) -> ByteString {
         if (string.is_empty()) {
             return "null";
         }
-        return DeprecatedString::formatted("\"{}\"", string);
+        return ByteString::formatted("\"{}\"", string);
     };
 
     for (auto& entry : m_entries) {
@@ -1895,9 +1895,9 @@ ModuleRequest::ModuleRequest(DeprecatedFlyString module_specifier_, Vector<Impor
     });
 }
 
-DeprecatedString SourceRange::filename() const
+ByteString SourceRange::filename() const
 {
-    return code->filename().to_deprecated_string();
+    return code->filename().to_byte_string();
 }
 
 NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens)

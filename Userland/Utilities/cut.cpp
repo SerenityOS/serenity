@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
@@ -33,9 +33,9 @@ struct Range {
     }
 };
 
-static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
+static bool expand_list(ByteString& list, Vector<Range>& ranges)
 {
-    Vector<DeprecatedString> tokens = list.split(',', SplitBehavior::KeepEmpty);
+    Vector<ByteString> tokens = list.split(',', SplitBehavior::KeepEmpty);
 
     for (auto& token : tokens) {
         if (token.length() == 0) {
@@ -128,7 +128,7 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
             continue;
 
         auto to = min(i.m_to, line.length());
-        auto sub_string = DeprecatedString(line).substring(i.m_from - 1, to - i.m_from + 1);
+        auto sub_string = ByteString(line).substring(i.m_from - 1, to - i.m_from + 1);
         out("{}", sub_string);
     }
     outln();
@@ -136,7 +136,7 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
 
 static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter, bool only_print_delimited_lines)
 {
-    auto string_split = DeprecatedString(line).split(delimiter, SplitBehavior::KeepEmpty);
+    auto string_split = ByteString(line).split(delimiter, SplitBehavior::KeepEmpty);
     if (string_split.size() == 1) {
         if (!only_print_delimited_lines)
             outln("{}", line);
@@ -144,21 +144,21 @@ static void process_line_fields(StringView line, Vector<Range> const& ranges, ch
         return;
     }
 
-    Vector<DeprecatedString> output_fields;
+    Vector<ByteString> output_fields;
     for (auto& range : ranges) {
         for (size_t i = range.m_from - 1; i < min(range.m_to, string_split.size()); i++) {
             output_fields.append(string_split[i]);
         }
     }
 
-    outln("{}", DeprecatedString::join(delimiter, output_fields));
+    outln("{}", ByteString::join(delimiter, output_fields));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    DeprecatedString byte_list = "";
-    DeprecatedString fields_list = "";
-    DeprecatedString delimiter = "\t";
+    ByteString byte_list = "";
+    ByteString fields_list = "";
+    ByteString delimiter = "\t";
     bool only_print_delimited_lines = false;
 
     Vector<StringView> files;
@@ -194,7 +194,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    DeprecatedString ranges_list;
+    ByteString ranges_list;
     Vector<Range> ranges_vector;
 
     if (selected_bytes) {

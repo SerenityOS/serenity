@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
     Core::EventLoop loop;
 
-    Core::DirIterator iterator(DeprecatedString::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
+    Core::DirIterator iterator(ByteString::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
     if (iterator.has_error()) {
         warnln("Error: pid '{}' doesn't appear to exist.", pid);
         return 1;
@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                     // See if we can find the sources in /usr/src
                     // FIXME: I'm sure this can be improved!
-                    auto full_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("/usr/src/serenity/dummy/dummy/{}", source_position.file_path));
+                    auto full_path = LexicalPath::canonicalized_path(ByteString::formatted("/usr/src/serenity/dummy/dummy/{}", source_position.file_path));
                     if (access(full_path.characters(), F_OK) == 0) {
                         linked = true;
                         auto url = URL::create_with_file_scheme(full_path, {}, hostname);

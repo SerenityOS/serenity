@@ -54,13 +54,13 @@ ErrorOr<String> load_error_page(AK::URL const& url)
 {
     // Generate HTML error page from error template file
     // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
-    auto template_path = AK::URL::create_with_url_or_path(error_page_url().to_deprecated_string()).serialize_path();
+    auto template_path = AK::URL::create_with_url_or_path(error_page_url().to_byte_string()).serialize_path();
     auto template_file = TRY(Core::File::open(template_path, Core::File::OpenMode::Read));
     auto template_contents = TRY(template_file->read_until_eof());
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("resource_directory_url", resource_directory_url());
-    generator.set("failed_url", url.to_deprecated_string());
+    generator.set("failed_url", url.to_byte_string());
     generator.append(template_contents);
     return TRY(String::from_utf8(generator.as_string_view()));
 }
@@ -70,7 +70,7 @@ ErrorOr<String> load_file_directory_page(LoadRequest const& request)
     // Generate HTML contents entries table
     auto lexical_path = LexicalPath(request.url().serialize_path());
     Core::DirIterator dt(lexical_path.string(), Core::DirIterator::Flags::SkipParentAndBaseDir);
-    Vector<DeprecatedString> names;
+    Vector<ByteString> names;
     while (dt.has_next())
         names.append(dt.next_path());
     quick_sort(names);
@@ -88,7 +88,7 @@ ErrorOr<String> load_file_directory_page(LoadRequest const& request)
             contents.appendff("<td><span class=\"{}\"></span></td>", is_directory ? "folder" : "file");
             contents.appendff("<td><a href=\"file://{}\">{}</a></td><td>&nbsp;</td>"sv, path, name);
             contents.appendff("<td>{:10}</td><td>&nbsp;</td>", is_directory ? "-" : human_readable_size(st.st_size));
-            contents.appendff("<td>{}</td>"sv, Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string());
+            contents.appendff("<td>{}</td>"sv, Core::DateTime::from_timestamp(st.st_mtime).to_byte_string());
             contents.append("</tr>\n"sv);
         }
     }
@@ -96,7 +96,7 @@ ErrorOr<String> load_file_directory_page(LoadRequest const& request)
 
     // Generate HTML directory page from directory template file
     // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
-    auto template_path = AK::URL::create_with_url_or_path(directory_page_url().to_deprecated_string()).serialize_path();
+    auto template_path = AK::URL::create_with_url_or_path(directory_page_url().to_byte_string()).serialize_path();
     auto template_file = TRY(Core::File::open(template_path, Core::File::OpenMode::Read));
     auto template_contents = TRY(template_file->read_until_eof());
     StringBuilder builder;
@@ -104,7 +104,7 @@ ErrorOr<String> load_file_directory_page(LoadRequest const& request)
     generator.set("resource_directory_url", resource_directory_url());
     generator.set("path", escape_html_entities(lexical_path.string()));
     generator.set("parent_path", escape_html_entities(lexical_path.parent().string()));
-    generator.set("contents", contents.to_deprecated_string());
+    generator.set("contents", contents.to_byte_string());
     generator.append(template_contents);
     return TRY(String::from_utf8(generator.as_string_view()));
 }

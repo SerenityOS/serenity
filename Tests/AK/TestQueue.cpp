@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Queue.h>
 
 TEST_CASE(construct)
@@ -32,7 +32,7 @@ TEST_CASE(populate_int)
 
 TEST_CASE(populate_string)
 {
-    Queue<DeprecatedString> strings;
+    Queue<ByteString> strings;
     strings.enqueue("ABC");
     strings.enqueue("DEF");
     EXPECT_EQ(strings.size(), 2u);
@@ -43,11 +43,11 @@ TEST_CASE(populate_string)
 
 TEST_CASE(order)
 {
-    Queue<DeprecatedString> strings;
+    Queue<ByteString> strings;
     EXPECT(strings.is_empty());
 
     for (size_t i = 0; i < 10000; ++i) {
-        strings.enqueue(DeprecatedString::number(i));
+        strings.enqueue(ByteString::number(i));
         EXPECT_EQ(strings.size(), i + 1);
     }
 

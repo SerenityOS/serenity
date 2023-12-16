@@ -9,18 +9,18 @@
 
 namespace IMAP {
 
-DeprecatedString Sequence::serialize() const
+ByteString Sequence::serialize() const
 {
     if (start == end) {
-        return AK::DeprecatedString::formatted("{}", start);
+        return AK::ByteString::formatted("{}", start);
     } else {
-        auto start_char = start != -1 ? DeprecatedString::formatted("{}", start) : "*";
-        auto end_char = end != -1 ? DeprecatedString::formatted("{}", end) : "*";
-        return DeprecatedString::formatted("{}:{}", start_char, end_char);
+        auto start_char = start != -1 ? ByteString::formatted("{}", start) : "*";
+        auto end_char = end != -1 ? ByteString::formatted("{}", end) : "*";
+        return ByteString::formatted("{}:{}", start_char, end_char);
     }
 }
 
-DeprecatedString FetchCommand::DataItem::Section::serialize() const
+ByteString FetchCommand::DataItem::Section::serialize() const
 {
     StringBuilder headers_builder;
     switch (type) {
@@ -41,7 +41,7 @@ DeprecatedString FetchCommand::DataItem::Section::serialize() const
             first = false;
         }
         headers_builder.append(')');
-        return headers_builder.to_deprecated_string();
+        return headers_builder.to_byte_string();
     }
     case SectionType::Text:
         return "TEXT";
@@ -57,12 +57,12 @@ DeprecatedString FetchCommand::DataItem::Section::serialize() const
         if (ends_with_mime) {
             sb.append(".MIME"sv);
         }
-        return sb.to_deprecated_string();
+        return sb.to_byte_string();
     }
     }
     VERIFY_NOT_REACHED();
 }
-DeprecatedString FetchCommand::DataItem::serialize() const
+ByteString FetchCommand::DataItem::serialize() const
 {
     switch (type) {
     case DataItemType::Envelope:
@@ -84,14 +84,14 @@ DeprecatedString FetchCommand::DataItem::serialize() const
             sb.appendff("<{}.{}>", start, octets);
         }
 
-        return sb.to_deprecated_string();
+        return sb.to_byte_string();
     }
     case DataItemType::BodyStructure:
         return "BODYSTRUCTURE";
     }
     VERIFY_NOT_REACHED();
 }
-DeprecatedString FetchCommand::serialize()
+ByteString FetchCommand::serialize()
 {
     StringBuilder sequence_builder;
     bool first = true;
@@ -113,9 +113,9 @@ DeprecatedString FetchCommand::serialize()
         first = false;
     }
 
-    return AK::DeprecatedString::formatted("{} ({})", sequence_builder.to_deprecated_string(), data_items_builder.to_deprecated_string());
+    return AK::ByteString::formatted("{} ({})", sequence_builder.to_byte_string(), data_items_builder.to_byte_string());
 }
-DeprecatedString serialize_astring(StringView string)
+ByteString serialize_astring(StringView string)
 {
     // Try to send an atom
     auto is_non_atom_char = [](char x) {
@@ -131,31 +131,31 @@ DeprecatedString serialize_astring(StringView string)
     auto can_be_quoted = !(string.contains('\n') || string.contains('\r'));
     if (can_be_quoted) {
         auto escaped_str = string.replace("\\"sv, "\\\\"sv, ReplaceMode::All).replace("\""sv, "\\\""sv, ReplaceMode::All);
-        return DeprecatedString::formatted("\"{}\"", escaped_str);
+        return ByteString::formatted("\"{}\"", escaped_str);
     }
 
     // Just send a literal
-    return DeprecatedString::formatted("{{{}}}\r\n{}", string.length(), string);
+    return ByteString::formatted("{{{}}}\r\n{}", string.length(), string);
 }
-DeprecatedString SearchKey::serialize() const
+ByteString SearchKey::serialize() const
 {
     return data.visit(
-        [&](All const&) { return DeprecatedString("ALL"); },
-        [&](Answered const&) { return DeprecatedString("ANSWERED"); },
-        [&](Bcc const& x) { return DeprecatedString::formatted("BCC {}", serialize_astring(x.bcc)); },
-        [&](Cc const& x) { return DeprecatedString::formatted("CC {}", serialize_astring(x.cc)); },
-        [&](Deleted const&) { return DeprecatedString("DELETED"); },
-        [&](Draft const&) { return DeprecatedString("DRAFT"); },
-        [&](From const& x) { return DeprecatedString::formatted("FROM {}", serialize_astring(x.from)); },
-        [&](Header const& x) { return DeprecatedString::formatted("HEADER {} {}", serialize_astring(x.header), serialize_astring(x.value)); },
-        [&](Keyword const& x) { return DeprecatedString::formatted("KEYWORD {}", x.keyword); },
-        [&](Larger const& x) { return DeprecatedString::formatted("LARGER {}", x.number); },
-        [&](New const&) { return DeprecatedString("NEW"); },
-        [&](Not const& x) { return DeprecatedString::formatted("NOT {}", x.operand->serialize()); },
-        [&](Old const&) { return DeprecatedString("OLD"); },
-        [&](On const& x) { return DeprecatedString::formatted("ON {}", x.date.to_deprecated_string("%d-%b-%Y"sv)); },
-        [&](Or const& x) { return DeprecatedString::formatted("OR {} {}", x.lhs->serialize(), x.rhs->serialize()); },
-        [&](Recent const&) { return DeprecatedString("RECENT"); },
+        [&](All const&) { return ByteString("ALL"); },
+        [&](Answered const&) { return ByteString("ANSWERED"); },
+        [&](Bcc const& x) { return ByteString::formatted("BCC {}", serialize_astring(x.bcc)); },
+        [&](Cc const& x) { return ByteString::formatted("CC {}", serialize_astring(x.cc)); },
+        [&](Deleted const&) { return ByteString("DELETED"); },
+        [&](Draft const&) { return ByteString("DRAFT"); },
+        [&](From const& x) { return ByteString::formatted("FROM {}", serialize_astring(x.from)); },
+        [&](Header const& x) { return ByteString::formatted("HEADER {} {}", serialize_astring(x.header), serialize_astring(x.value)); },
+        [&](Keyword const& x) { return ByteString::formatted("KEYWORD {}", x.keyword); },
+        [&](Larger const& x) { return ByteString::formatted("LARGER {}", x.number); },
+        [&](New const&) { return ByteString("NEW"); },
+        [&](Not const& x) { return ByteString::formatted("NOT {}", x.operand->serialize()); },
+        [&](Old const&) { return ByteString("OLD"); },
+        [&](On const& x) { return ByteString::formatted("ON {}", x.date.to_byte_string("%d-%b-%Y"sv)); },
+        [&](Or const& x) { return ByteString::formatted("OR {} {}", x.lhs->serialize(), x.rhs->serialize()); },
+        [&](Recent const&) { return ByteString("RECENT"); },
         [&](SearchKeys const& x) {
             StringBuilder sb;
             sb.append('(');
@@ -166,23 +166,23 @@ DeprecatedString SearchKey::serialize() const
                 sb.append(item->serialize());
                 first = false;
             }
-            return sb.to_deprecated_string();
+            return sb.to_byte_string();
         },
-        [&](Seen const&) { return DeprecatedString("SEEN"); },
-        [&](SentBefore const& x) { return DeprecatedString::formatted("SENTBEFORE {}", x.date.to_deprecated_string("%d-%b-%Y"sv)); },
-        [&](SentOn const& x) { return DeprecatedString::formatted("SENTON {}", x.date.to_deprecated_string("%d-%b-%Y"sv)); },
-        [&](SentSince const& x) { return DeprecatedString::formatted("SENTSINCE {}", x.date.to_deprecated_string("%d-%b-%Y"sv)); },
+        [&](Seen const&) { return ByteString("SEEN"); },
+        [&](SentBefore const& x) { return ByteString::formatted("SENTBEFORE {}", x.date.to_byte_string("%d-%b-%Y"sv)); },
+        [&](SentOn const& x) { return ByteString::formatted("SENTON {}", x.date.to_byte_string("%d-%b-%Y"sv)); },
+        [&](SentSince const& x) { return ByteString::formatted("SENTSINCE {}", x.date.to_byte_string("%d-%b-%Y"sv)); },
         [&](SequenceSet const& x) { return x.sequence.serialize(); },
-        [&](Since const& x) { return DeprecatedString::formatted("SINCE {}", x.date.to_deprecated_string("%d-%b-%Y"sv)); },
-        [&](Smaller const& x) { return DeprecatedString::formatted("SMALLER {}", x.number); },
-        [&](Subject const& x) { return DeprecatedString::formatted("SUBJECT {}", serialize_astring(x.subject)); },
-        [&](Text const& x) { return DeprecatedString::formatted("TEXT {}", serialize_astring(x.text)); },
-        [&](To const& x) { return DeprecatedString::formatted("TO {}", serialize_astring(x.to)); },
-        [&](UID const& x) { return DeprecatedString::formatted("UID {}", x.uid); },
-        [&](Unanswered const&) { return DeprecatedString("UNANSWERED"); },
-        [&](Undeleted const&) { return DeprecatedString("UNDELETED"); },
-        [&](Undraft const&) { return DeprecatedString("UNDRAFT"); },
-        [&](Unkeyword const& x) { return DeprecatedString::formatted("UNKEYWORD {}", serialize_astring(x.flag_keyword)); },
-        [&](Unseen const&) { return DeprecatedString("UNSEEN"); });
+        [&](Since const& x) { return ByteString::formatted("SINCE {}", x.date.to_byte_string("%d-%b-%Y"sv)); },
+        [&](Smaller const& x) { return ByteString::formatted("SMALLER {}", x.number); },
+        [&](Subject const& x) { return ByteString::formatted("SUBJECT {}", serialize_astring(x.subject)); },
+        [&](Text const& x) { return ByteString::formatted("TEXT {}", serialize_astring(x.text)); },
+        [&](To const& x) { return ByteString::formatted("TO {}", serialize_astring(x.to)); },
+        [&](UID const& x) { return ByteString::formatted("UID {}", x.uid); },
+        [&](Unanswered const&) { return ByteString("UNANSWERED"); },
+        [&](Undeleted const&) { return ByteString("UNDELETED"); },
+        [&](Undraft const&) { return ByteString("UNDRAFT"); },
+        [&](Unkeyword const& x) { return ByteString::formatted("UNKEYWORD {}", serialize_astring(x.flag_keyword)); },
+        [&](Unseen const&) { return ByteString("UNSEEN"); });
 }
 }

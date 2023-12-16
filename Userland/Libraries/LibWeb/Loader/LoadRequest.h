@@ -34,8 +34,8 @@ public:
     const AK::URL& url() const { return m_url; }
     void set_url(const AK::URL& url) { m_url = url; }
 
-    DeprecatedString const& method() const { return m_method; }
-    void set_method(DeprecatedString const& method) { m_method = method; }
+    ByteString const& method() const { return m_method; }
+    void set_method(ByteString const& method) { m_method = method; }
 
     ByteBuffer const& body() const { return m_body; }
     void set_body(ByteBuffer body) { m_body = move(body); }
@@ -50,7 +50,7 @@ public:
     {
         auto body_hash = string_hash((char const*)m_body.data(), m_body.size());
         auto body_and_headers_hash = pair_int_hash(body_hash, m_headers.hash());
-        auto url_and_method_hash = pair_int_hash(m_url.to_deprecated_string().hash(), m_method.hash());
+        auto url_and_method_hash = pair_int_hash(m_url.to_byte_string().hash(), m_method.hash());
         return pair_int_hash(body_and_headers_hash, url_and_method_hash);
     }
 
@@ -68,15 +68,15 @@ public:
         return m_url == other.m_url && m_method == other.m_method && m_body == other.m_body;
     }
 
-    void set_header(DeprecatedString const& name, DeprecatedString const& value) { m_headers.set(name, value); }
-    DeprecatedString header(DeprecatedString const& name) const { return m_headers.get(name).value_or({}); }
+    void set_header(ByteString const& name, ByteString const& value) { m_headers.set(name, value); }
+    ByteString header(ByteString const& name) const { return m_headers.get(name).value_or({}); }
 
-    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
+    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
 
 private:
     AK::URL m_url;
-    DeprecatedString m_method { "GET" };
-    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_headers;
+    ByteString m_method { "GET" };
+    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> m_headers;
     ByteBuffer m_body;
     Core::ElapsedTimer m_load_timer;
     JS::Handle<Page> m_page;

@@ -84,14 +84,14 @@ ErrorOr<int> AvailablePort::update_available_ports_list_file()
     }
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> request_headers;
+    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> request_headers;
     Core::ProxyData proxy_data {};
 
     auto output_stream = TRY(Core::File::open("/usr/Ports/AvailablePorts.md"sv, Core::File::OpenMode::ReadWrite, 0644));
     Core::EventLoop loop;
 
     URL url("https://raw.githubusercontent.com/SerenityOS/serenity/master/Ports/AvailablePorts.md");
-    DeprecatedString method = "GET";
+    ByteString method = "GET";
     outln("pkg: Syncing packages database...");
     request = protocol_client->start_request(method, url, request_headers, ReadonlyBytes {}, proxy_data);
     request->on_finish = [&](bool success, auto) {
@@ -161,11 +161,11 @@ ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list
     HashMap<String, AvailablePort> available_ports;
     for (size_t port_index = 0; port_index < port_name_column.rows.size(); port_index++) {
         auto name = TRY(extract_port_name_from_column(port_name_column, port_index));
-        auto website = TRY(String::from_deprecated_string(port_website_column.rows[port_index].render_for_terminal()));
+        auto website = TRY(String::from_byte_string(port_website_column.rows[port_index].render_for_terminal()));
         if (website.is_empty())
             website = "n/a"_string;
 
-        auto version = TRY(String::from_deprecated_string(port_version_column.rows[port_index].render_for_terminal()));
+        auto version = TRY(String::from_byte_string(port_version_column.rows[port_index].render_for_terminal()));
         if (version.is_empty())
             version = "n/a"_string;
 

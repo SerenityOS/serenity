@@ -288,12 +288,12 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::PurgeableNonvolatile:
             return human_readable_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
-            return DeprecatedString::formatted("{:.2}", thread.current_state.cpu_percent);
+            return ByteString::formatted("{:.2}", thread.current_state.cpu_percent);
         case Column::Processor:
             return thread.current_state.cpu;
         case Column::Name:
             if (thread.current_state.kernel)
-                return DeprecatedString::formatted("{} (*)", thread.current_state.name);
+                return ByteString::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
         case Column::Command:
             return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_string; });

@@ -16,9 +16,9 @@
 
 namespace Desktop {
 
-DeprecatedString AppFile::app_file_path_for_app(StringView app_name)
+ByteString AppFile::app_file_path_for_app(StringView app_name)
 {
-    return DeprecatedString::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
+    return ByteString::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
 }
 
 bool AppFile::exists_for_app(StringView app_name)
@@ -45,7 +45,7 @@ void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, StringVi
         auto name = di.next_path();
         if (!name.ends_with(".af"sv))
             continue;
-        auto path = DeprecatedString::formatted("{}/{}", directory, name);
+        auto path = ByteString::formatted("{}/{}", directory, name);
         auto af = AppFile::open(path);
         if (!af->is_valid())
             continue;
@@ -68,36 +68,36 @@ bool AppFile::validate() const
     return true;
 }
 
-DeprecatedString AppFile::name() const
+ByteString AppFile::name() const
 {
     auto name = m_config->read_entry("App", "Name").trim_whitespace();
     VERIFY(!name.is_empty());
     return name;
 }
 
-DeprecatedString AppFile::executable() const
+ByteString AppFile::executable() const
 {
     auto executable = m_config->read_entry("App", "Executable").trim_whitespace();
     VERIFY(!executable.is_empty());
     return executable;
 }
 
-DeprecatedString AppFile::description() const
+ByteString AppFile::description() const
 {
     return m_config->read_entry("App", "Description").trim_whitespace();
 }
 
-DeprecatedString AppFile::category() const
+ByteString AppFile::category() const
 {
     return m_config->read_entry("App", "Category").trim_whitespace();
 }
 
-DeprecatedString AppFile::working_directory() const
+ByteString AppFile::working_directory() const
 {
     return m_config->read_entry("App", "WorkingDirectory").trim_whitespace();
 }
 
-DeprecatedString AppFile::icon_path() const
+ByteString AppFile::icon_path() const
 {
     return m_config->read_entry("App", "IconPath").trim_whitespace();
 }
@@ -127,9 +127,9 @@ bool AppFile::exclude_from_system_menu() const
     return m_config->read_bool_entry("App", "ExcludeFromSystemMenu", false);
 }
 
-Vector<DeprecatedString> AppFile::launcher_mime_types() const
+Vector<ByteString> AppFile::launcher_mime_types() const
 {
-    Vector<DeprecatedString> mime_types;
+    Vector<ByteString> mime_types;
     for (auto& entry : m_config->read_entry("Launcher", "MimeTypes").split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
@@ -138,9 +138,9 @@ Vector<DeprecatedString> AppFile::launcher_mime_types() const
     return mime_types;
 }
 
-Vector<DeprecatedString> AppFile::launcher_file_types() const
+Vector<ByteString> AppFile::launcher_file_types() const
 {
-    Vector<DeprecatedString> file_types;
+    Vector<ByteString> file_types;
     for (auto& entry : m_config->read_entry("Launcher", "FileTypes").split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
@@ -149,9 +149,9 @@ Vector<DeprecatedString> AppFile::launcher_file_types() const
     return file_types;
 }
 
-Vector<DeprecatedString> AppFile::launcher_protocols() const
+Vector<ByteString> AppFile::launcher_protocols() const
 {
-    Vector<DeprecatedString> protocols;
+    Vector<ByteString> protocols;
     for (auto& entry : m_config->read_entry("Launcher", "Protocols").split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())

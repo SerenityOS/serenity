@@ -84,7 +84,7 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
     };
 
     m_inspector_client->on_requested_dom_node_tag_context_menu = [this](auto position, auto const& tag) {
-        m_edit_node_action->set_text(DeprecatedString::formatted("&Edit \"{}\"", tag));
+        m_edit_node_action->set_text(ByteString::formatted("&Edit \"{}\"", tag));
         m_copy_node_action->set_text("&Copy HTML");
 
         m_dom_node_tag_context_menu->popup(to_widget_position(position));
@@ -94,9 +94,9 @@ InspectorWidget::InspectorWidget(WebView::OutOfProcessWebView& content_view)
         static constexpr size_t MAX_ATTRIBUTE_VALUE_LENGTH = 32;
 
         m_copy_node_action->set_text("&Copy HTML");
-        m_edit_node_action->set_text(DeprecatedString::formatted("&Edit attribute \"{}\"", attribute.name));
-        m_remove_attribute_action->set_text(DeprecatedString::formatted("&Remove attribute \"{}\"", attribute.name));
-        m_copy_attribute_value_action->set_text(DeprecatedString::formatted("Copy attribute &value \"{:.{}}{}\"",
+        m_edit_node_action->set_text(ByteString::formatted("&Edit attribute \"{}\"", attribute.name));
+        m_remove_attribute_action->set_text(ByteString::formatted("&Remove attribute \"{}\"", attribute.name));
+        m_copy_attribute_value_action->set_text(ByteString::formatted("Copy attribute &value \"{:.{}}{}\"",
             attribute.value, MAX_ATTRIBUTE_VALUE_LENGTH,
             attribute.value.bytes_as_string_view().length() > MAX_ATTRIBUTE_VALUE_LENGTH ? "..."sv : ""sv));
 

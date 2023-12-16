@@ -58,13 +58,13 @@ void SVGUseElement::attribute_changed(FlyString const& name, Optional<String> co
         m_y = AttributeParser::parse_coordinate(value.value_or(String {}));
     } else if (name == SVG::AttributeNames::href) {
         // FIXME: Support the xlink:href attribute as a fallback
-        m_referenced_id = parse_id_from_href(value.value_or(String {}).to_deprecated_string());
+        m_referenced_id = parse_id_from_href(value.value_or(String {}).to_byte_string());
 
         clone_element_tree_as_our_shadow_tree(referenced_element());
     }
 }
 
-Optional<FlyString> SVGUseElement::parse_id_from_href(DeprecatedString const& href)
+Optional<FlyString> SVGUseElement::parse_id_from_href(ByteString const& href)
 {
     auto id_seperator = href.find('#');
     if (!id_seperator.has_value()) {

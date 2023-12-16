@@ -33,17 +33,17 @@
 
 namespace Browser {
 
-DeprecatedString g_search_engine;
-DeprecatedString g_home_url;
-DeprecatedString g_new_tab_url;
+ByteString g_search_engine;
+ByteString g_home_url;
+ByteString g_new_tab_url;
 Vector<String> g_content_filters;
 bool g_content_filters_enabled { true };
 Vector<String> g_autoplay_allowlist;
 bool g_autoplay_allowed_on_all_websites { false };
-Vector<DeprecatedString> g_proxies;
-HashMap<DeprecatedString, size_t> g_proxy_mappings;
+Vector<ByteString> g_proxies;
+HashMap<ByteString, size_t> g_proxy_mappings;
 IconBag g_icon_bag;
-DeprecatedString g_webdriver_content_ipc_path;
+ByteString g_webdriver_content_ipc_path;
 
 }
 
@@ -182,7 +182,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         window->content_filters_changed();
     };
-    TRY(content_filters_watcher->add_watch(DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
+    TRY(content_filters_watcher->add_watch(ByteString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
     auto autoplay_allowlist_watcher = TRY(Core::FileWatcher::create());
     autoplay_allowlist_watcher->on_change = [&](Core::FileWatcherEvent const&) {
@@ -193,7 +193,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         window->autoplay_allowlist_changed();
     };
-    TRY(autoplay_allowlist_watcher->add_watch(DeprecatedString::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
+    TRY(autoplay_allowlist_watcher->add_watch(ByteString::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
     app->on_action_enter = [&](GUI::Action& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {

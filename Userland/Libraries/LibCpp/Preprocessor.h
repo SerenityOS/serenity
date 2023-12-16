@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
@@ -20,24 +20,24 @@ namespace Cpp {
 class Preprocessor {
 
 public:
-    explicit Preprocessor(DeprecatedString const& filename, StringView program);
+    explicit Preprocessor(ByteString const& filename, StringView program);
     Vector<Token> process_and_lex();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
     struct Definition {
-        DeprecatedString key;
-        Vector<DeprecatedString> parameters;
-        DeprecatedString value;
+        ByteString key;
+        Vector<ByteString> parameters;
+        ByteString value;
         DeprecatedFlyString filename;
         size_t line { 0 };
         size_t column { 0 };
     };
-    using Definitions = HashMap<DeprecatedString, Definition>;
+    using Definitions = HashMap<ByteString, Definition>;
 
     struct Substitution {
         Vector<Token> original_tokens;
         Definition defined_value;
-        DeprecatedString processed_value;
+        ByteString processed_value;
     };
 
     Definitions const& definitions() const { return m_definitions; }
@@ -55,7 +55,7 @@ private:
     void handle_preprocessor_statement(StringView);
     void handle_include_statement(StringView);
     void handle_preprocessor_keyword(StringView keyword, GenericLexer& line_lexer);
-    DeprecatedString remove_escaped_newlines(StringView value);
+    ByteString remove_escaped_newlines(StringView value);
 
     size_t do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const&);
     Optional<Definition> create_definition(StringView line);
@@ -69,10 +69,10 @@ private:
         size_t end_token_index { 0 };
     };
     Optional<MacroCall> parse_macro_call(Vector<Token> const& tokens, size_t token_index);
-    DeprecatedString evaluate_macro_call(MacroCall const&, Definition const&);
+    ByteString evaluate_macro_call(MacroCall const&, Definition const&);
 
-    DeprecatedString m_filename;
-    DeprecatedString m_program;
+    ByteString m_filename;
+    ByteString m_program;
 
     Vector<Token> m_unprocessed_tokens;
     Vector<Token> m_processed_tokens;

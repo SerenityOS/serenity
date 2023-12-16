@@ -39,7 +39,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register src() const { return m_src; }
 
@@ -56,7 +56,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Value value() const { return m_value; }
 
@@ -73,7 +73,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register dst() const { return m_dst; }
 
@@ -105,22 +105,22 @@ private:
     O(RightShift, right_shift)                \
     O(UnsignedRightShift, unsigned_right_shift)
 
-#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                        \
-    class OpTitleCase final : public Instruction {                                     \
-    public:                                                                            \
-        explicit OpTitleCase(Register lhs_reg)                                         \
-            : Instruction(Type::OpTitleCase, sizeof(*this))                            \
-            , m_lhs_reg(lhs_reg)                                                       \
-        {                                                                              \
-        }                                                                              \
-                                                                                       \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
-        DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
-                                                                                       \
-        Register lhs() const { return m_lhs_reg; }                                     \
-                                                                                       \
-    private:                                                                           \
-        Register m_lhs_reg;                                                            \
+#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)             \
+    class OpTitleCase final : public Instruction {                          \
+    public:                                                                 \
+        explicit OpTitleCase(Register lhs_reg)                              \
+            : Instruction(Type::OpTitleCase, sizeof(*this))                 \
+            , m_lhs_reg(lhs_reg)                                            \
+        {                                                                   \
+        }                                                                   \
+                                                                            \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
+                                                                            \
+        Register lhs() const { return m_lhs_reg; }                          \
+                                                                            \
+    private:                                                                \
+        Register m_lhs_reg;                                                 \
     };
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
@@ -133,16 +133,16 @@ JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
     O(UnaryMinus, unary_minus)           \
     O(Typeof, typeof_)
 
-#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                         \
-    class OpTitleCase final : public Instruction {                                     \
-    public:                                                                            \
-        OpTitleCase()                                                                  \
-            : Instruction(Type::OpTitleCase, sizeof(*this))                            \
-        {                                                                              \
-        }                                                                              \
-                                                                                       \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
-        DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
+#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)              \
+    class OpTitleCase final : public Instruction {                          \
+    public:                                                                 \
+        OpTitleCase()                                                       \
+            : Instruction(Type::OpTitleCase, sizeof(*this))                 \
+        {                                                                   \
+        }                                                                   \
+                                                                            \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
     };
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
@@ -157,7 +157,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     StringTableIndex index() const { return m_string; }
 
@@ -173,7 +173,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class NewRegExp final : public Instruction {
@@ -187,7 +187,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     StringTableIndex source_index() const { return m_source_index; }
     StringTableIndex flags_index() const { return m_flags_index; }
@@ -202,22 +202,22 @@ private:
 #define JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(O) \
     O(TypeError)
 
-#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                                     \
-    class New##ErrorName final : public Instruction {                                  \
-    public:                                                                            \
-        explicit New##ErrorName(StringTableIndex error_string)                         \
-            : Instruction(Type::New##ErrorName, sizeof(*this))                         \
-            , m_error_string(error_string)                                             \
-        {                                                                              \
-        }                                                                              \
-                                                                                       \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
-        DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
-                                                                                       \
-        StringTableIndex error_string() const { return m_error_string; }               \
-                                                                                       \
-    private:                                                                           \
-        StringTableIndex m_error_string;                                               \
+#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                          \
+    class New##ErrorName final : public Instruction {                       \
+    public:                                                                 \
+        explicit New##ErrorName(StringTableIndex error_string)              \
+            : Instruction(Type::New##ErrorName, sizeof(*this))              \
+            , m_error_string(error_string)                                  \
+        {                                                                   \
+        }                                                                   \
+                                                                            \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
+                                                                            \
+        StringTableIndex error_string() const { return m_error_string; }    \
+                                                                            \
+    private:                                                                \
+        StringTableIndex m_error_string;                                    \
     };
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DECLARE_NEW_BUILTIN_ERROR_OP)
@@ -236,7 +236,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     size_t length_impl(size_t excluded_names_count) const
     {
@@ -262,7 +262,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Crypto::SignedBigInteger const& bigint() const { return m_bigint; }
 
@@ -288,7 +288,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     size_t length_impl(size_t element_count) const
     {
@@ -323,7 +323,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     ReadonlySpan<Value> values() const { return m_values.span(); }
 
@@ -341,7 +341,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register lhs() const { return m_lhs; }
     bool is_spread() const { return m_is_spread; }
@@ -361,7 +361,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register specifier() const { return m_specifier; }
     Register options() const { return m_options; }
@@ -379,7 +379,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ConcatString final : public Instruction {
@@ -391,7 +391,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register lhs() const { return m_lhs; }
 
@@ -412,7 +412,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class EnterObjectEnvironment final : public Instruction {
@@ -423,7 +423,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class Catch final : public Instruction {
@@ -434,7 +434,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class CreateVariable final : public Instruction {
@@ -450,7 +450,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     EnvironmentMode mode() const { return m_mode; }
@@ -482,7 +482,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     EnvironmentMode mode() const { return m_mode; }
@@ -505,7 +505,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     size_t index() const { return m_index; }
 
@@ -525,7 +525,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     u32 cache_index() const { return m_cache_index; }
@@ -549,7 +549,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     u32 cache_index() const { return m_cache_index; }
@@ -569,7 +569,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     u32 cache_index() const { return m_cache_index; }
@@ -588,7 +588,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     size_t index() const { return m_index; }
 
@@ -605,7 +605,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
 
@@ -623,7 +623,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex property() const { return m_property; }
     u32 cache_index() const { return m_cache_index; }
@@ -644,7 +644,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex property() const { return m_property; }
     Register this_value() const { return m_this_value; }
@@ -665,7 +665,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex property() const { return m_property; }
 
@@ -682,7 +682,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex property() const { return m_property; }
 
@@ -711,7 +711,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
     IdentifierTableIndex property() const { return m_property; }
@@ -738,7 +738,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
     Register this_value() const { return m_this_value; }
@@ -765,7 +765,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
     IdentifierTableIndex property() const { return m_property; }
@@ -785,7 +785,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex property() const { return m_property; }
 
@@ -803,7 +803,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register this_value() const { return m_this_value; }
     IdentifierTableIndex property() const { return m_property; }
@@ -822,7 +822,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
 
@@ -840,7 +840,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
     Register this_value() const { return m_this_value; }
@@ -861,7 +861,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
     Register property() const { return m_property; }
@@ -885,7 +885,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
     Register property() const { return m_property; }
@@ -908,7 +908,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register base() const { return m_base; }
 
@@ -929,7 +929,7 @@ public:
     Register this_value() const { return m_this_value; }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
 private:
     Register m_base;
@@ -955,7 +955,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     auto& true_target() const { return m_true_target; }
     auto& false_target() const { return m_false_target; }
@@ -973,7 +973,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class JumpNullish final : public Jump {
@@ -984,7 +984,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class JumpUndefined final : public Jump {
@@ -995,7 +995,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 enum class CallType {
@@ -1029,7 +1029,7 @@ public:
     Optional<Builtin> const& builtin() const { return m_builtin; }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
 private:
     Register m_callee;
@@ -1058,7 +1058,7 @@ public:
     Optional<StringTableIndex> const& expression_string() const { return m_expression_string; }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
 private:
     Register m_callee;
@@ -1076,7 +1076,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     bool is_synthetic() const { return m_is_synthetic; }
 
@@ -1094,7 +1094,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     ClassExpression const& class_expression() const { return m_class_expression; }
     Optional<IdentifierTableIndex> const& lhs_name() const { return m_lhs_name; }
@@ -1115,7 +1115,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     FunctionExpression const& function_node() const { return m_function_node; }
     Optional<IdentifierTableIndex> const& lhs_name() const { return m_lhs_name; }
@@ -1136,7 +1136,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     ScopeNode const& scope_node() const { return m_scope_node; }
 
@@ -1154,7 +1154,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class Increment final : public Instruction {
@@ -1165,7 +1165,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class Decrement final : public Instruction {
@@ -1176,7 +1176,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ToNumeric final : public Instruction {
@@ -1187,7 +1187,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class Throw final : public Instruction {
@@ -1200,7 +1200,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ThrowIfNotObject final : public Instruction {
@@ -1211,7 +1211,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ThrowIfNullish final : public Instruction {
@@ -1222,7 +1222,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class EnterUnwindContext final : public Instruction {
@@ -1236,7 +1236,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     auto& entry_point() const { return m_entry_point; }
 
@@ -1266,7 +1266,7 @@ public:
     Label target() const { return m_target; }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
 private:
     Label m_target;
@@ -1280,7 +1280,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class LeaveUnwindContext final : public Instruction {
@@ -1291,7 +1291,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ContinuePendingUnwind final : public Instruction {
@@ -1305,7 +1305,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     auto& resume_target() const { return m_resume_target; }
 
@@ -1329,7 +1329,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     auto& continuation() const { return m_continuation_label; }
 
@@ -1348,7 +1348,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     auto& continuation() const { return m_continuation_label; }
 
@@ -1365,7 +1365,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IteratorHint hint() const { return m_hint; }
 
@@ -1383,7 +1383,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register object() const { return m_object; }
     Register iterator_record() const { return m_iterator_record; }
@@ -1403,7 +1403,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Register next_method() const { return m_next_method; }
     Register iterator_record() const { return m_iterator_record; }
@@ -1422,7 +1422,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex property() const { return m_property; }
 
@@ -1438,7 +1438,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class IteratorClose final : public Instruction {
@@ -1451,7 +1451,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Completion::Type completion_type() const { return m_completion_type; }
     Optional<Value> const& completion_value() const { return m_completion_value; }
@@ -1471,7 +1471,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Completion::Type completion_type() const { return m_completion_type; }
     Optional<Value> const& completion_value() const { return m_completion_value; }
@@ -1489,7 +1489,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ResolveThisBinding final : public Instruction {
@@ -1500,7 +1500,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class ResolveSuperBase final : public Instruction {
@@ -1511,7 +1511,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class GetNewTarget final : public Instruction {
@@ -1522,7 +1522,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class GetImportMeta final : public Instruction {
@@ -1533,7 +1533,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class TypeofVariable final : public Instruction {
@@ -1545,7 +1545,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
 
@@ -1562,7 +1562,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     size_t index() const { return m_index; }
 

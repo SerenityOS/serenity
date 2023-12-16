@@ -21,27 +21,27 @@ struct MappedObject {
     ELF::Image elf;
 };
 
-extern HashMap<DeprecatedString, OwnPtr<MappedObject>> g_mapped_object_cache;
+extern HashMap<ByteString, OwnPtr<MappedObject>> g_mapped_object_cache;
 
 class LibraryMetadata {
 public:
     struct Library {
         FlatPtr base;
         size_t size;
-        DeprecatedString name;
+        ByteString name;
         MappedObject* object { nullptr };
         // This is loaded lazily because we only need it in disassembly view
         mutable OwnPtr<Debug::DebugInfo> debug_info;
 
-        DeprecatedString symbolicate(FlatPtr, u32* offset) const;
+        ByteString symbolicate(FlatPtr, u32* offset) const;
         Debug::DebugInfo const& load_debug_info(FlatPtr base_address) const;
     };
 
-    void handle_mmap(FlatPtr base, size_t size, DeprecatedString const& name);
+    void handle_mmap(FlatPtr base, size_t size, ByteString const& name);
     Library const* library_containing(FlatPtr) const;
 
 private:
-    mutable HashMap<DeprecatedString, NonnullOwnPtr<Library>> m_libraries;
+    mutable HashMap<ByteString, NonnullOwnPtr<Library>> m_libraries;
 };
 
 struct Thread {
@@ -57,8 +57,8 @@ struct Thread {
 
 struct Process {
     pid_t pid {};
-    DeprecatedString executable;
-    DeprecatedString basename;
+    ByteString executable;
+    ByteString basename;
     HashMap<int, Vector<Thread>> threads {};
     LibraryMetadata library_metadata {};
     EventSerialNumber start_valid;

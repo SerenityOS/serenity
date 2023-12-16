@@ -30,7 +30,7 @@ public:
     RefPtr<AST::Node> parse_word_list(AllowNewlines = AllowNewlines::No);
 
     struct Error {
-        DeprecatedString message;
+        ByteString message;
         Optional<AST::Position> position;
     };
     auto& errors() const { return m_errors; }
@@ -106,7 +106,7 @@ private:
     void error(Token const& token, CheckedFormatString<Ts...> fmt, Ts&&... args)
     {
         m_errors.append(Error {
-            DeprecatedString::formatted(fmt.view(), forward<Ts>(args)...),
+            ByteString::formatted(fmt.view(), forward<Ts>(args)...),
             token.position,
         });
     }

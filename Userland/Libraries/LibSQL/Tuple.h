@@ -34,8 +34,8 @@ public:
 
     Tuple& operator=(Tuple const&);
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
-    explicit operator DeprecatedString() const { return to_deprecated_string(); }
+    [[nodiscard]] ByteString to_byte_string() const;
+    explicit operator ByteString() const { return to_byte_string(); }
 
     bool operator<(Tuple const& other) const { return compare(other) < 0; }
     bool operator<=(Tuple const& other) const { return compare(other) <= 0; }
@@ -45,12 +45,12 @@ public:
     bool operator>=(Tuple const& other) const { return compare(other) >= 0; }
 
     [[nodiscard]] bool is_null() const { return m_data.is_empty(); }
-    [[nodiscard]] bool has(DeprecatedString const& name) const { return index_of(name).has_value(); }
+    [[nodiscard]] bool has(ByteString const& name) const { return index_of(name).has_value(); }
 
     Value const& operator[](size_t ix) const { return m_data[ix]; }
     Value& operator[](size_t ix) { return m_data[ix]; }
-    Value const& operator[](DeprecatedString const& name) const;
-    Value& operator[](DeprecatedString const& name);
+    Value const& operator[](ByteString const& name) const;
+    Value& operator[](ByteString const& name);
     void append(Value const&);
     Tuple& operator+=(Value const&);
     void extend(Tuple const&);

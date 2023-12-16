@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -39,14 +39,14 @@ public:
     static Font& default_fixed_width_font();
     static Font& window_title_font();
 
-    static DeprecatedString default_font_query();
-    static DeprecatedString window_title_font_query();
-    static DeprecatedString fixed_width_font_query();
+    static ByteString default_font_query();
+    static ByteString window_title_font_query();
+    static ByteString fixed_width_font_query();
 
-    static DeprecatedString default_fonts_lookup_path();
-    static void set_default_font_query(DeprecatedString);
-    static void set_window_title_font_query(DeprecatedString);
-    static void set_fixed_width_font_query(DeprecatedString);
+    static ByteString default_fonts_lookup_path();
+    static void set_default_font_query(ByteString);
+    static void set_window_title_font_query(ByteString);
+    static void set_fixed_width_font_query(ByteString);
 
     RefPtr<Gfx::Font> get(FlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);

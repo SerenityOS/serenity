@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
 #include <AK/String.h>
@@ -22,42 +22,42 @@
 
 namespace Core {
 
-DeprecatedString StandardPaths::home_directory()
+ByteString StandardPaths::home_directory()
 {
     if (auto* home_env = getenv("HOME"))
         return LexicalPath::canonicalized_path(home_env);
 
     auto* pwd = getpwuid(getuid());
-    DeprecatedString path = pwd ? pwd->pw_dir : "/";
+    ByteString path = pwd ? pwd->pw_dir : "/";
     endpwent();
     return LexicalPath::canonicalized_path(path);
 }
 
-DeprecatedString StandardPaths::desktop_directory()
+ByteString StandardPaths::desktop_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Desktop"sv);
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
-DeprecatedString StandardPaths::documents_directory()
+ByteString StandardPaths::documents_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Documents"sv);
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
-DeprecatedString StandardPaths::downloads_directory()
+ByteString StandardPaths::downloads_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Downloads"sv);
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
-DeprecatedString StandardPaths::config_directory()
+ByteString StandardPaths::config_directory()
 {
     if (auto* config_directory = getenv("XDG_CONFIG_HOME"))
         return LexicalPath::canonicalized_path(config_directory);
@@ -71,10 +71,10 @@ DeprecatedString StandardPaths::config_directory()
 #else
     builder.append("/.config"sv);
 #endif
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
-DeprecatedString StandardPaths::data_directory()
+ByteString StandardPaths::data_directory()
 {
     if (auto* data_directory = getenv("XDG_DATA_HOME"))
         return LexicalPath::canonicalized_path(data_directory);
@@ -91,10 +91,10 @@ DeprecatedString StandardPaths::data_directory()
     builder.append("/.local/share"sv);
 #endif
 
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
-ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
+ErrorOr<ByteString> StandardPaths::runtime_directory()
 {
     if (auto* data_directory = getenv("XDG_RUNTIME_DIR"))
         return LexicalPath::canonicalized_path(data_directory);
@@ -114,10 +114,10 @@ ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
     builder.appendff("/run/user/{}", uid);
 #endif
 
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
-DeprecatedString StandardPaths::tempfile_directory()
+ByteString StandardPaths::tempfile_directory()
 {
     return "/tmp";
 }

@@ -45,9 +45,9 @@ Optional<TextAnchor> SVGTextContentElement::text_anchor() const
     }
 }
 
-DeprecatedString SVGTextContentElement::text_contents() const
+ByteString SVGTextContentElement::text_contents() const
 {
-    return child_text_content().to_deprecated_string().trim_whitespace();
+    return child_text_content().to_byte_string().trim_whitespace();
 }
 
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars

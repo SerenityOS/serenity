@@ -63,7 +63,7 @@ ErrorOr<void> Command::write(StringView input)
     return {};
 }
 
-ErrorOr<void> Command::write_lines(Span<DeprecatedString> lines)
+ErrorOr<void> Command::write_lines(Span<ByteString> lines)
 {
     // It's possible the process dies before we can write everything to the
     // stdin. So make sure that we don't crash but just stop writing.
@@ -83,8 +83,8 @@ ErrorOr<void> Command::write_lines(Span<DeprecatedString> lines)
             perror("sigaction");
     });
 
-    for (DeprecatedString const& line : lines)
-        TRY(m_stdin->write_until_depleted(DeprecatedString::formatted("{}\n", line).bytes()));
+    for (ByteString const& line : lines)
+        TRY(m_stdin->write_until_depleted(ByteString::formatted("{}\n", line).bytes()));
 
     return {};
 }
@@ -120,7 +120,7 @@ ErrorOr<Command::ProcessResult> Command::status(int options)
 // Only supported in serenity mode because we use `posix_spawn_file_actions_addchdir`
 #ifdef AK_OS_SERENITY
 
-ErrorOr<CommandResult> command(DeprecatedString const& command_string, Optional<LexicalPath> chdir)
+ErrorOr<CommandResult> command(ByteString const& command_string, Optional<LexicalPath> chdir)
 {
     auto parts = command_string.split(' ');
     if (parts.is_empty())
@@ -130,7 +130,7 @@ ErrorOr<CommandResult> command(DeprecatedString const& command_string, Optional<
     return command(program, parts, chdir);
 }
 
-ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<DeprecatedString> const& arguments, Optional<LexicalPath> chdir)
+ErrorOr<CommandResult> command(ByteString const& program, Vector<ByteString> const& arguments, Optional<LexicalPath> chdir)
 {
     int stdout_pipe[2] = {};
     int stderr_pipe[2] = {};

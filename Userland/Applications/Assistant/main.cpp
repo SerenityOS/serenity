@@ -7,7 +7,7 @@
 
 #include "Providers.h"
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
@@ -40,7 +40,7 @@ struct AppState {
     size_t visible_result_count { 0 };
 
     Threading::Mutex lock;
-    DeprecatedString last_query;
+    ByteString last_query;
 };
 
 class ResultRow final : public GUI::Button {
@@ -57,7 +57,7 @@ class ResultRow final : public GUI::Button {
             if (!m_context_menu) {
                 m_context_menu = GUI::Menu::construct();
 
-                if (LexicalPath path { text().to_deprecated_string() }; path.is_absolute()) {
+                if (LexicalPath path { text().to_byte_string() }; path.is_absolute()) {
                     m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
                         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
                     }));
@@ -86,7 +86,7 @@ public:
 
     Function<void(Vector<NonnullRefPtr<Result const>>&&)> on_new_results;
 
-    void search(DeprecatedString const& query)
+    void search(ByteString const& query)
     {
         auto should_display_precached_results = false;
         for (size_t i = 0; i < ProviderCount; ++i) {
@@ -139,7 +139,7 @@ private:
     Array<NonnullRefPtr<Provider>, ProviderCount> m_providers;
 
     Threading::Mutex m_mutex;
-    HashMap<DeprecatedString, Array<OwnPtr<Vector<NonnullRefPtr<Result>>>, ProviderCount>> m_result_cache;
+    HashMap<ByteString, Array<OwnPtr<Vector<NonnullRefPtr<Result>>>, ProviderCount>> m_result_cache;
 };
 
 }
@@ -249,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& result = app_state.results[i];
             auto& match = results_container.add<Assistant::ResultRow>();
             match.set_icon(result->bitmap());
-            match.set_text(String::from_deprecated_string(result->title()).release_value_but_fixme_should_propagate_errors());
+            match.set_text(String::from_byte_string(result->title()).release_value_but_fixme_should_propagate_errors());
             match.set_tooltip(result->tooltip());
             match.on_click = [&result](auto) {
                 result->activate();

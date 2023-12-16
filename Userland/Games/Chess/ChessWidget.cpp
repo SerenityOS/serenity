@@ -638,11 +638,11 @@ ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
     // Tag Pair Section
     TRY(file.write_until_depleted("[Event \"Casual Game\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("[Site \"SerenityOS Chess\"]\n"sv.bytes()));
-    TRY(file.write_formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)));
+    TRY(file.write_formatted("[Date \"{}\"]\n", Core::DateTime::now().to_byte_string("%Y.%m.%d"sv)));
     TRY(file.write_until_depleted("[Round \"1\"]\n"sv.bytes()));
 
     auto current_user = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
-    auto const username = TRY(String::from_deprecated_string(current_user.username()));
+    auto const username = TRY(String::from_byte_string(current_user.username()));
 
     auto const player1 = (!username.is_empty() ? username : "?"sv);
     auto const player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv : "?"sv);

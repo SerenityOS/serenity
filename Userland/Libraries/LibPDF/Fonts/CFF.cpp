@@ -812,7 +812,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader, HashMap<Card8, SID>&
                 TRY(encoding_codes.try_append(code));
         }
     } else
-        return error(DeprecatedString::formatted("Invalid encoding format: {}", format));
+        return error(ByteString::formatted("Invalid encoding format: {}", format));
 
     if (format_raw & 0x80) {
         // CFF spec, "Table 14 Supplemental Encoding Data"
@@ -975,6 +975,6 @@ PDFErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Reader& reader)
         return load_float_dict_operand(reader);
     if (b0 >= 28)
         return load_int_dict_operand(b0, reader);
-    return Error { Error::Type::MalformedPDF, DeprecatedString::formatted("Unknown CFF dict element prefix: {}", b0) };
+    return Error { Error::Type::MalformedPDF, ByteString::formatted("Unknown CFF dict element prefix: {}", b0) };
 }
 }

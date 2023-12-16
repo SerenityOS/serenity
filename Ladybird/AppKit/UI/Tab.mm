@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <Ladybird/Utilities.h>
@@ -247,7 +247,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     }
 }
 
-- (void)onTitleChange:(DeprecatedString const&)title
+- (void)onTitleChange:(ByteString const&)title
 {
     [[self tabController] onTitleChange:title];
 

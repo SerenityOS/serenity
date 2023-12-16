@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/Types.h>
 
@@ -17,5 +17,5 @@ enum class BreakpointChange {
     Removed,
 };
 
-using BreakpointChangeCallback = Function<void(DeprecatedString const& file, size_t line, BreakpointChange)>;
+using BreakpointChangeCallback = Function<void(ByteString const& file, size_t line, BreakpointChange)>;
 }

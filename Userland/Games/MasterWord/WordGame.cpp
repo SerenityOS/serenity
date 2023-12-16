@@ -40,7 +40,7 @@ void WordGame::reset()
     if (maybe_word.has_value())
         m_current_word = maybe_word.value();
     else {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord"sv);
+        GUI::MessageBox::show(window(), ByteString::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord"sv);
         if (m_num_letters != 5) {
             m_num_letters = 5;
             reset();
@@ -53,7 +53,7 @@ void WordGame::reset()
 
 void WordGame::pick_font()
 {
-    DeprecatedString best_font_name;
+    ByteString best_font_name;
     auto best_font_size = -1;
     auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](Gfx::Font const& font) {
@@ -61,7 +61,7 @@ void WordGame::pick_font()
             return;
         auto size = font.pixel_size_rounded_up();
         if (size * 2 <= m_letter_height && size > best_font_size) {
-            best_font_name = font.qualified_name().to_deprecated_string();
+            best_font_name = font.qualified_name().to_byte_string();
             best_font_size = size;
         }
     });
@@ -80,7 +80,7 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
 {
     // If we can still add a letter and the key was alpha
     if (m_current_guess.length() < m_num_letters && is_ascii_alpha(event.code_point())) {
-        m_current_guess = DeprecatedString::formatted("{}{}", m_current_guess, event.text().to_uppercase());
+        m_current_guess = ByteString::formatted("{}{}", m_current_guess, event.text().to_uppercase());
         m_last_word_invalid = false;
     }
     // If backspace pressed and already have some letters entered
@@ -107,7 +107,7 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
                 GUI::MessageBox::show(window(), "You win!"sv, "MasterWord"sv);
                 reset();
             } else if (m_guesses.size() == m_max_guesses) {
-                GUI::MessageBox::show(window(), DeprecatedString::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
+                GUI::MessageBox::show(window(), ByteString::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
                 reset();
             }
         }
@@ -194,7 +194,7 @@ void WordGame::read_words()
     }
 }
 
-Optional<DeprecatedString> WordGame::random_word(size_t length)
+Optional<ByteString> WordGame::random_word(size_t length)
 {
     auto words_for_length = m_words.get(length);
     if (words_for_length.has_value()) {

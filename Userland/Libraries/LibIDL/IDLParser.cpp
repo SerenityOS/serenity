@@ -49,7 +49,7 @@
     exit(EXIT_FAILURE);
 }
 
-static DeprecatedString convert_enumeration_value_to_cpp_enum_member(DeprecatedString const& value, HashTable<DeprecatedString>& names_already_seen)
+static ByteString convert_enumeration_value_to_cpp_enum_member(ByteString const& value, HashTable<ByteString>& names_already_seen)
 {
     StringBuilder builder;
     GenericLexer lexer { value };
@@ -73,7 +73,7 @@ static DeprecatedString convert_enumeration_value_to_cpp_enum_member(DeprecatedS
         builder.append('_');
 
     names_already_seen.set(builder.string_view());
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 namespace IDL {
@@ -81,7 +81,7 @@ namespace IDL {
 void Parser::assert_specific(char ch)
 {
     if (!lexer.consume_specific(ch))
-        report_parsing_error(DeprecatedString::formatted("expected '{}'", ch), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("expected '{}'", ch), filename, input, lexer.tell());
 }
 
 void Parser::consume_whitespace()
@@ -101,12 +101,12 @@ void Parser::consume_whitespace()
 void Parser::assert_string(StringView expected)
 {
     if (!lexer.consume_specific(expected))
-        report_parsing_error(DeprecatedString::formatted("expected '{}'", expected), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("expected '{}'", expected), filename, input, lexer.tell());
 }
 
-HashMap<DeprecatedString, DeprecatedString> Parser::parse_extended_attributes()
+HashMap<ByteString, ByteString> Parser::parse_extended_attributes()
 {
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    HashMap<ByteString, ByteString> extended_attributes;
     for (;;) {
         consume_whitespace();
         if (lexer.consume_specific(']'))
@@ -134,32 +134,32 @@ HashMap<DeprecatedString, DeprecatedString> Parser::parse_extended_attributes()
     return extended_attributes;
 }
 
-static HashTable<DeprecatedString> import_stack;
+static HashTable<ByteString> import_stack;
 Optional<Interface&> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
     if (!FileSystem::exists(include_path))
-        report_parsing_error(DeprecatedString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
     auto real_path_error_or = FileSystem::real_path(include_path);
     if (real_path_error_or.is_error())
-        report_parsing_error(DeprecatedString::formatted("Failed to resolve path {}: {}", include_path, real_path_error_or.error()), filename, input, lexer.tell());
-    auto real_path = real_path_error_or.release_value().to_deprecated_string();
+        report_parsing_error(ByteString::formatted("Failed to resolve path {}: {}", include_path, real_path_error_or.error()), filename, input, lexer.tell());
+    auto real_path = real_path_error_or.release_value().to_byte_string();
 
     if (top_level_resolved_imports().contains(real_path))
         return *top_level_resolved_imports().find(real_path)->value;
 
     if (import_stack.contains(real_path))
-        report_parsing_error(DeprecatedString::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
     import_stack.set(real_path);
 
     auto file_or_error = Core::File::open(real_path, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        report_parsing_error(DeprecatedString::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
     auto data_or_error = file_or_error.value()->read_until_eof();
     if (data_or_error.is_error())
-        report_parsing_error(DeprecatedString::formatted("Failed to read {}: {}", real_path, data_or_error.error()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Failed to read {}: {}", real_path, data_or_error.error()), filename, input, lexer.tell());
     auto& result = Parser(this, real_path, data_or_error.value(), import_base_path).parse();
     import_stack.remove(real_path);
 
@@ -255,12 +255,12 @@ NonnullRefPtr<Type const> Parser::parse_type()
     }
 
     if (is_parameterized_type)
-        return adopt_ref(*new ParameterizedType(builder.to_deprecated_string(), nullable, move(parameters)));
+        return adopt_ref(*new ParameterizedType(builder.to_byte_string(), nullable, move(parameters)));
 
-    return adopt_ref(*new Type(builder.to_deprecated_string(), nullable));
+    return adopt_ref(*new Type(builder.to_byte_string(), nullable));
 }
 
-void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_attribute(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     bool inherit = lexer.consume_specific("inherit");
     if (inherit)
@@ -282,9 +282,9 @@ void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extend
 
     assert_specific(';');
 
-    auto name_as_string = name.to_deprecated_string();
-    auto getter_callback_name = DeprecatedString::formatted("{}_getter", name_as_string.to_snakecase());
-    auto setter_callback_name = DeprecatedString::formatted("{}_setter", name_as_string.to_snakecase());
+    auto name_as_string = name.to_byte_string();
+    auto getter_callback_name = ByteString::formatted("{}_getter", name_as_string.to_snakecase());
+    auto setter_callback_name = ByteString::formatted("{}_setter", name_as_string.to_snakecase());
 
     Attribute attribute {
         inherit,
@@ -328,7 +328,7 @@ Vector<Parameter> Parser::parse_parameters()
     for (;;) {
         if (lexer.next_is(')'))
             break;
-        HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+        HashMap<ByteString, ByteString> extended_attributes;
         if (lexer.consume_specific('['))
             extended_attributes = parse_extended_attributes();
         bool optional = lexer.consume_specific("optional");
@@ -370,7 +370,7 @@ Vector<Parameter> Parser::parse_parameters()
     return parameters;
 }
 
-Function Parser::parse_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface, IsSpecialOperation is_special_operation)
+Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface, IsSpecialOperation is_special_operation)
 {
     bool static_ = false;
     if (lexer.consume_specific("static")) {
@@ -401,7 +401,7 @@ Function Parser::parse_function(HashMap<DeprecatedString, DeprecatedString>& ext
     return function;
 }
 
-void Parser::parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_constructor(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     assert_string("constructor"sv);
     consume_whitespace();
@@ -414,7 +414,7 @@ void Parser::parse_constructor(HashMap<DeprecatedString, DeprecatedString>& exte
     interface.constructors.append(Constructor { interface.name, move(parameters), move(extended_attributes) });
 }
 
-void Parser::parse_stringifier(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_stringifier(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     assert_string("stringifier"sv);
     consume_whitespace();
@@ -450,14 +450,14 @@ void Parser::parse_iterable(Interface& interface)
     assert_specific(';');
 }
 
-void Parser::parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_getter(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     assert_string("getter"sv);
     consume_whitespace();
     auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
 
     if (function.parameters.size() != 1)
-        report_parsing_error(DeprecatedString::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
 
     auto& identifier = function.parameters.first();
 
@@ -480,18 +480,18 @@ void Parser::parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_
 
         interface.indexed_property_getter = move(function);
     } else {
-        report_parsing_error(DeprecatedString::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
 }
 
-void Parser::parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_setter(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     assert_string("setter"sv);
     consume_whitespace();
     auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
 
     if (function.parameters.size() != 2)
-        report_parsing_error(DeprecatedString::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
 
     auto& identifier = function.parameters.first();
 
@@ -520,18 +520,18 @@ void Parser::parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_
 
         interface.indexed_property_setter = move(function);
     } else {
-        report_parsing_error(DeprecatedString::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
 }
 
-void Parser::parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_deleter(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     assert_string("deleter"sv);
     consume_whitespace();
     auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
 
     if (function.parameters.size() != 1)
-        report_parsing_error(DeprecatedString::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
 
     auto& identifier = function.parameters.first();
 
@@ -552,7 +552,7 @@ void Parser::parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended
 
         interface.named_property_deleter = move(function);
     } else {
-        report_parsing_error(DeprecatedString::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
+        report_parsing_error(ByteString::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
 }
 
@@ -569,7 +569,7 @@ void Parser::parse_interface(Interface& interface)
     assert_specific('{');
 
     for (;;) {
-        HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+        HashMap<ByteString, ByteString> extended_attributes;
 
         consume_whitespace();
 
@@ -629,14 +629,14 @@ void Parser::parse_interface(Interface& interface)
     }
 
     if (auto legacy_namespace = interface.extended_attributes.get("LegacyNamespace"sv); legacy_namespace.has_value())
-        interface.namespaced_name = DeprecatedString::formatted("{}.{}", *legacy_namespace, interface.name);
+        interface.namespaced_name = ByteString::formatted("{}.{}", *legacy_namespace, interface.name);
     else
         interface.namespaced_name = interface.name;
 
-    interface.constructor_class = DeprecatedString::formatted("{}Constructor", interface.name);
-    interface.prototype_class = DeprecatedString::formatted("{}Prototype", interface.name);
-    interface.prototype_base_class = DeprecatedString::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);
-    interface.global_mixin_class = DeprecatedString::formatted("{}GlobalMixin", interface.name);
+    interface.constructor_class = ByteString::formatted("{}Constructor", interface.name);
+    interface.prototype_class = ByteString::formatted("{}Prototype", interface.name);
+    interface.prototype_base_class = ByteString::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);
+    interface.global_mixin_class = ByteString::formatted("{}GlobalMixin", interface.name);
     consume_whitespace();
 }
 
@@ -659,15 +659,15 @@ void Parser::parse_namespace(Interface& interface)
             break;
         }
 
-        HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+        HashMap<ByteString, ByteString> extended_attributes;
         parse_function(extended_attributes, interface);
     }
 
-    interface.namespace_class = DeprecatedString::formatted("{}Namespace", interface.name);
+    interface.namespace_class = ByteString::formatted("{}Namespace", interface.name);
     consume_whitespace();
 }
 
-void Parser::parse_enumeration(HashMap<DeprecatedString, DeprecatedString> extended_attributes, Interface& interface)
+void Parser::parse_enumeration(HashMap<ByteString, ByteString> extended_attributes, Interface& interface)
 {
     assert_string("enum"sv);
     consume_whitespace();
@@ -696,7 +696,7 @@ void Parser::parse_enumeration(HashMap<DeprecatedString, DeprecatedString> exten
         consume_whitespace();
 
         if (enumeration.values.contains(string))
-            report_parsing_error(DeprecatedString::formatted("Enumeration {} contains duplicate member '{}'", name, string), filename, input, lexer.tell());
+            report_parsing_error(ByteString::formatted("Enumeration {} contains duplicate member '{}'", name, string), filename, input, lexer.tell());
         else
             enumeration.values.set(string);
 
@@ -710,7 +710,7 @@ void Parser::parse_enumeration(HashMap<DeprecatedString, DeprecatedString> exten
     assert_specific('}');
     assert_specific(';');
 
-    HashTable<DeprecatedString> names_already_seen;
+    HashTable<ByteString> names_already_seen;
     for (auto& entry : enumeration.values)
         enumeration.translated_cpp_names.set(entry, convert_enumeration_value_to_cpp_enum_member(entry, names_already_seen));
 
@@ -723,7 +723,7 @@ void Parser::parse_typedef(Interface& interface)
     assert_string("typedef"sv);
     consume_whitespace();
 
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    HashMap<ByteString, ByteString> extended_attributes;
     if (lexer.consume_specific('['))
         extended_attributes = parse_extended_attributes();
 
@@ -764,7 +764,7 @@ void Parser::parse_dictionary(Interface& interface)
         }
 
         bool required = false;
-        HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+        HashMap<ByteString, ByteString> extended_attributes;
 
         if (lexer.consume_specific("required")) {
             required = true;
@@ -796,7 +796,7 @@ void Parser::parse_dictionary(Interface& interface)
             move(type),
             name,
             move(extended_attributes),
-            Optional<DeprecatedString>(move(default_value)),
+            Optional<ByteString>(move(default_value)),
         };
         dictionary.members.append(move(member));
     }
@@ -831,7 +831,7 @@ void Parser::parse_interface_mixin(Interface& interface)
     interface.mixins.set(move(name), &mixin_interface);
 }
 
-void Parser::parse_callback_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+void Parser::parse_callback_function(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
 {
     assert_string("callback"sv);
     consume_whitespace();
@@ -859,7 +859,7 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
     consume_whitespace();
 
     while (!lexer.is_eof()) {
-        HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+        HashMap<ByteString, ByteString> extended_attributes;
         if (lexer.consume_specific('['))
             extended_attributes = parse_extended_attributes();
         if (lexer.next_is("dictionary")) {
@@ -897,7 +897,7 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
 
 static void resolve_union_typedefs(Interface& interface, UnionType& union_);
 
-static void resolve_typedef(Interface& interface, NonnullRefPtr<Type const>& type, HashMap<DeprecatedString, DeprecatedString>* extended_attributes = {})
+static void resolve_typedef(Interface& interface, NonnullRefPtr<Type const>& type, HashMap<ByteString, ByteString>* extended_attributes = {})
 {
     if (is<ParameterizedType>(*type)) {
         auto& parameterized_type = const_cast<Type&>(*type).as_parameterized();
@@ -963,10 +963,10 @@ Interface& Parser::parse()
 {
     auto this_module_or_error = FileSystem::real_path(filename);
     if (this_module_or_error.is_error()) {
-        report_parsing_error(DeprecatedString::formatted("Failed to resolve path '{}': {}", filename, this_module_or_error.error()), filename, input, 0);
+        report_parsing_error(ByteString::formatted("Failed to resolve path '{}': {}", filename, this_module_or_error.error()), filename, input, 0);
         VERIFY_NOT_REACHED();
     }
-    auto this_module = this_module_or_error.release_value().to_deprecated_string();
+    auto this_module = this_module_or_error.release_value().to_byte_string();
 
     auto interface_ptr = make<Interface>();
     auto& interface = *interface_ptr;
@@ -976,7 +976,7 @@ Interface& Parser::parse()
 
     Vector<Interface&> imports;
     {
-        HashTable<DeprecatedString> required_imported_paths;
+        HashTable<ByteString> required_imported_paths;
         while (lexer.consume_specific("#import")) {
             consume_whitespace();
             assert_specific('<');
@@ -1018,7 +1018,7 @@ Interface& Parser::parse()
 
         for (auto& mixin : import.mixins) {
             if (auto it = interface.mixins.find(mixin.key); it != interface.mixins.end() && it->value != mixin.value)
-                report_parsing_error(DeprecatedString::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
+                report_parsing_error(ByteString::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
             interface.mixins.set(mixin.key, mixin.value);
         }
 
@@ -1031,7 +1031,7 @@ Interface& Parser::parse()
         for (auto& entry : it->value) {
             auto mixin_it = interface.mixins.find(entry);
             if (mixin_it == interface.mixins.end())
-                report_parsing_error(DeprecatedString::formatted("Mixin '{}' was never defined", entry), filename, input, lexer.tell());
+                report_parsing_error(ByteString::formatted("Mixin '{}' was never defined", entry), filename, input, lexer.tell());
 
             auto& mixin = mixin_it->value;
             interface.attributes.extend(mixin->attributes);
@@ -1039,7 +1039,7 @@ Interface& Parser::parse()
             interface.functions.extend(mixin->functions);
             interface.static_functions.extend(mixin->static_functions);
             if (interface.has_stringifier && mixin->has_stringifier)
-                report_parsing_error(DeprecatedString::formatted("Both interface '{}' and mixin '{}' have defined stringifier attributes", interface.name, mixin->name), filename, input, lexer.tell());
+                report_parsing_error(ByteString::formatted("Both interface '{}' and mixin '{}' have defined stringifier attributes", interface.name, mixin->name), filename, input, lexer.tell());
 
             if (mixin->has_stringifier) {
                 interface.stringifier_attribute = mixin->stringifier_attribute;
@@ -1122,7 +1122,7 @@ Interface& Parser::parse()
     return interface;
 }
 
-Parser::Parser(DeprecatedString filename, StringView contents, DeprecatedString import_base_path)
+Parser::Parser(ByteString filename, StringView contents, ByteString import_base_path)
     : import_base_path(move(import_base_path))
     , filename(move(filename))
     , input(contents)
@@ -1130,7 +1130,7 @@ Parser::Parser(DeprecatedString filename, StringView contents, DeprecatedString 
 {
 }
 
-Parser::Parser(Parser* parent, DeprecatedString filename, StringView contents, DeprecatedString import_base_path)
+Parser::Parser(Parser* parent, ByteString filename, StringView contents, ByteString import_base_path)
     : import_base_path(move(import_base_path))
     , filename(move(filename))
     , input(contents)
@@ -1147,7 +1147,7 @@ Parser* Parser::top_level_parser()
     return current;
 }
 
-HashMap<DeprecatedString, Interface*>& Parser::top_level_resolved_imports()
+HashMap<ByteString, Interface*>& Parser::top_level_resolved_imports()
 {
     return top_level_parser()->resolved_imports;
 }
@@ -1157,7 +1157,7 @@ HashTable<NonnullOwnPtr<Interface>>& Parser::top_level_interfaces()
     return top_level_parser()->interfaces;
 }
 
-Vector<DeprecatedString> Parser::imported_files() const
+Vector<ByteString> Parser::imported_files() const
 {
     return const_cast<Parser*>(this)->top_level_resolved_imports().keys();
 }

@@ -44,7 +44,7 @@ TEST_CASE(test_decode)
             illegal_character_builder.append(byte);
     }
 
-    auto illegal_character_decode = MUST(IMAP::decode_quoted_printable(illegal_character_builder.to_deprecated_string()));
+    auto illegal_character_decode = MUST(IMAP::decode_quoted_printable(illegal_character_builder.to_byte_string()));
     EXPECT(illegal_character_decode.is_empty());
 
     // If an escape sequence is invalid the characters are output unaltered. Illegal characters are ignored as usual.

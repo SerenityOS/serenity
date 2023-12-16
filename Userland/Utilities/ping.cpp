@@ -30,7 +30,7 @@ static Optional<size_t> count;
 static uint32_t total_ms;
 static int min_ms;
 static int max_ms;
-static DeprecatedString host;
+static ByteString host;
 static int payload_size = -1;
 static bool quiet = false;
 static Optional<size_t> ttl;

@@ -262,7 +262,7 @@ void Path::close_all_subpaths()
         close_previous_subpath();
 }
 
-DeprecatedString Path::to_deprecated_string() const
+ByteString Path::to_byte_string() const
 {
     StringBuilder builder;
     builder.append("Path { "sv);
@@ -289,13 +289,13 @@ DeprecatedString Path::to_deprecated_string() const
         switch (segment->type()) {
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append(", "sv);
-            builder.append(static_cast<QuadraticBezierCurveSegment const&>(*segment).through().to_deprecated_string());
+            builder.append(static_cast<QuadraticBezierCurveSegment const&>(*segment).through().to_byte_string());
             break;
         case Segment::Type::CubicBezierCurveTo:
             builder.append(", "sv);
-            builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_0().to_deprecated_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_0().to_byte_string());
             builder.append(", "sv);
-            builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_1().to_deprecated_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_1().to_byte_string());
             break;
         default:
             break;
@@ -304,7 +304,7 @@ DeprecatedString Path::to_deprecated_string() const
         builder.append(") "sv);
     }
     builder.append('}');
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 void Path::segmentize_path()

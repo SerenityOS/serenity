@@ -37,7 +37,7 @@ static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder
     }
 }
 
-static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<DeprecatedString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
+static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<ByteString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
 {
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
@@ -57,7 +57,7 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
     decode_image_to_bitmaps_and_durations_with_decoder(*decoder, bitmaps, durations);
 }
 
-Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer, Optional<DeprecatedString> const& mime_type)
+Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer, Optional<ByteString> const& mime_type)
 {
     if (!encoded_buffer.is_valid()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");

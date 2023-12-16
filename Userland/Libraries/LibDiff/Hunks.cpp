@@ -65,7 +65,7 @@ ErrorOr<String> Parser::parse_file_line(Optional<size_t> const& strip_count)
 
     // No strip count given. Default to basename of file.
     if (!strip_count.has_value())
-        return String::from_deprecated_string(LexicalPath::basename(path));
+        return String::from_byte_string(LexicalPath::basename(path));
 
     // NOTE: We cannot use LexicalPath::parts as we want to strip the non-canonicalized path.
     auto const& parts = path.split_view('/');

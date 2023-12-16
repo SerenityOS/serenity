@@ -22,8 +22,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    DeprecatedString file1_path;
-    DeprecatedString file2_path;
+    ByteString file1_path;
+    ByteString file2_path;
     bool suppress_col1 { false };
     bool suppress_col2 { false };
     bool suppress_col3 { false };
@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto open_file = [](DeprecatedString const& path, auto& file, int file_number) {
+    auto open_file = [](ByteString const& path, auto& file, int file_number) {
         auto file_or_error = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Failed to open file{} '{}': {}", file_number, path, file_or_error.error());
@@ -90,17 +90,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char tab { '\t' };
     size_t tab_count { 0 };
-    DeprecatedString col1_fmt;
-    DeprecatedString col2_fmt;
-    DeprecatedString col3_fmt;
+    ByteString col1_fmt;
+    ByteString col2_fmt;
+    ByteString col3_fmt;
     if (!suppress_col1)
-        col1_fmt = DeprecatedString::formatted("{}{}", DeprecatedString::repeated(tab, tab_count++), print_color ? COL1_COLOR : "{}");
+        col1_fmt = ByteString::formatted("{}{}", ByteString::repeated(tab, tab_count++), print_color ? COL1_COLOR : "{}");
     if (!suppress_col2)
-        col2_fmt = DeprecatedString::formatted("{}{}", DeprecatedString::repeated(tab, tab_count++), print_color ? COL2_COLOR : "{}");
+        col2_fmt = ByteString::formatted("{}{}", ByteString::repeated(tab, tab_count++), print_color ? COL2_COLOR : "{}");
     if (!suppress_col3)
-        col3_fmt = DeprecatedString::formatted("{}{}", DeprecatedString::repeated(tab, tab_count++), print_color ? COL3_COLOR : "{}");
+        col3_fmt = ByteString::formatted("{}{}", ByteString::repeated(tab, tab_count++), print_color ? COL3_COLOR : "{}");
 
-    auto cmp = [&](DeprecatedString const& str1, DeprecatedString const& str2) {
+    auto cmp = [&](ByteString const& str1, ByteString const& str2) {
         if (case_insensitive)
             return strcasecmp(str1.characters(), str2.characters());
         return strcmp(str1.characters(), str2.characters());
@@ -111,8 +111,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int col1_count { 0 };
     int col2_count { 0 };
     int col3_count { 0 };
-    DeprecatedString file1_line;
-    DeprecatedString file2_line;
+    ByteString file1_line;
+    ByteString file2_line;
     Array<u8, PAGE_SIZE> buffer;
 
     auto should_continue_comparing_files = [&]() {
@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln(col2_fmt, file2_line);
     }
 
-    auto process_remaining = [&](DeprecatedString const& fmt, auto& file, int& count, bool print) {
+    auto process_remaining = [&](ByteString const& fmt, auto& file, int& count, bool print) {
         while (true) {
             auto can_read_result = file->can_read_line();
             if (can_read_result.is_error() || !can_read_result.value())

@@ -140,6 +140,6 @@ struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
             first_card = false;
         }
 
-        return Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}"sv, type, stack.bounding_box(), cards.to_deprecated_string());
+        return Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}"sv, type, stack.bounding_box(), cards.to_byte_string());
     }
 };

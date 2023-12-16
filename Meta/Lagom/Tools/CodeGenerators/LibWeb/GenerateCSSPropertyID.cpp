@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto properties = json.as_object();
 
     // Check we're in alphabetical order
-    DeprecatedString most_recent_name = "";
+    ByteString most_recent_name = "";
     properties.for_each_member([&](auto& name, auto&) {
         if (name < most_recent_name) {
             warnln("`{}` is in the wrong position in `{}`. Please keep this list alphabetical!", name, properties_json_path);
@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 void replace_logical_aliases(JsonObject& properties)
 {
-    AK::HashMap<DeprecatedString, DeprecatedString> logical_aliases;
+    AK::HashMap<ByteString, ByteString> logical_aliases;
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         const auto& value_as_object = value.as_object();
@@ -73,7 +73,7 @@ void replace_logical_aliases(JsonObject& properties)
         if (logical_alias_for.has_value()) {
             auto const& aliased_properties = logical_alias_for.value();
             for (auto const& aliased_property : aliased_properties.values()) {
-                logical_aliases.set(name, aliased_property.to_deprecated_string());
+                logical_aliases.set(name, aliased_property.to_byte_string());
             }
         }
     });
@@ -116,8 +116,8 @@ enum class PropertyID {
     All,
 )~~~");
 
-    Vector<DeprecatedString> shorthand_property_ids;
-    Vector<DeprecatedString> longhand_property_ids;
+    Vector<ByteString> shorthand_property_ids;
+    Vector<ByteString> longhand_property_ids;
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
@@ -518,7 +518,7 @@ NonnullRefPtr<StyleValue> property_initial_value(JS::Realm& context_realm, Prope
             dbgln("No initial value specified for property '{}'", name);
             VERIFY_NOT_REACHED();
         }
-        auto initial_value = object.get_deprecated_string("initial"sv);
+        auto initial_value = object.get_byte_string("initial"sv);
         VERIFY(initial_value.has_value());
         auto& initial_value_string = initial_value.value();
 
@@ -739,7 +739,7 @@ Optional<ValueType> property_resolves_percentages_relative_to(PropertyID propert
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (auto resolved_type = value.as_object().get_deprecated_string("percentages-resolve-to"sv); resolved_type.has_value()) {
+        if (auto resolved_type = value.as_object().get_byte_string("percentages-resolve-to"sv); resolved_type.has_value()) {
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
             property_generator.set("resolved_type:titlecase", title_casify(resolved_type.value()));
@@ -768,7 +768,7 @@ size_t property_maximum_value_count(PropertyID property_id)
             VERIFY(max_values.has_value() && max_values->is_number() && !max_values->is_double());
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
-            property_generator.set("max_values", max_values->to_deprecated_string());
+            property_generator.set("max_values", max_values->to_byte_string());
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return @max_values@;
@@ -834,10 +834,10 @@ Vector<PropertyID> longhands_for_shorthand(PropertyID property_id)
                     first = false;
                 else
                     builder.append(", "sv);
-                builder.appendff("PropertyID::{}", title_casify(longhand.to_deprecated_string()));
+                builder.appendff("PropertyID::{}", title_casify(longhand.to_byte_string()));
                 return IterationDecision::Continue;
             });
-            property_generator.set("longhands", builder.to_deprecated_string());
+            property_generator.set("longhands", builder.to_byte_string());
             property_generator.append(R"~~~(
         case PropertyID::@name:titlecase@:
                 return { @longhands@ };

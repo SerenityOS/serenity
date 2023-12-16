@@ -56,7 +56,7 @@ void Progressbar::paint_event(PaintEvent& event)
     painter.add_clip_rect(rect);
     painter.add_clip_rect(event.rect());
 
-    DeprecatedString progress_text;
+    ByteString progress_text;
     if (m_format != Format::NoText) {
         // Then we draw the progress text over the gradient.
         // We draw it twice, once offset (1, 1) for a drop shadow look.
@@ -69,7 +69,7 @@ void Progressbar::paint_event(PaintEvent& event)
         } else if (m_format == Format::ValueSlashMax) {
             builder.appendff("{}/{}", m_value, m_max);
         }
-        progress_text = builder.to_deprecated_string();
+        progress_text = builder.to_byte_string();
     }
 
     Gfx::StylePainter::paint_progressbar(painter, rect, palette(), m_min, m_max, m_value, progress_text, m_orientation);

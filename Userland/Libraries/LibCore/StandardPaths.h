@@ -14,14 +14,14 @@ namespace Core {
 
 class StandardPaths {
 public:
-    static DeprecatedString home_directory();
-    static DeprecatedString desktop_directory();
-    static DeprecatedString documents_directory();
-    static DeprecatedString downloads_directory();
-    static DeprecatedString tempfile_directory();
-    static DeprecatedString config_directory();
-    static DeprecatedString data_directory();
-    static ErrorOr<DeprecatedString> runtime_directory();
+    static ByteString home_directory();
+    static ByteString desktop_directory();
+    static ByteString documents_directory();
+    static ByteString downloads_directory();
+    static ByteString tempfile_directory();
+    static ByteString config_directory();
+    static ByteString data_directory();
+    static ErrorOr<ByteString> runtime_directory();
     static ErrorOr<Vector<String>> font_directories();
 };
 

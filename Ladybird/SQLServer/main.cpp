@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
-    DeprecatedString pid_file;
+    ByteString pid_file;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(pid_file, "Path to the PID file for the SQLServer singleton process", "pid-file", 'p', "pid_file");
@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     VERIFY(!pid_file.is_empty());
 
-    auto database_path = DeprecatedString::formatted("{}/Ladybird", Core::StandardPaths::data_directory());
+    auto database_path = ByteString::formatted("{}/Ladybird", Core::StandardPaths::data_directory());
     TRY(Core::Directory::create(database_path, Core::Directory::CreateDirectories::Yes));
 
     Core::EventLoop loop;

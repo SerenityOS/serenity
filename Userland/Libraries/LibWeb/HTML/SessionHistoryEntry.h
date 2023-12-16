@@ -78,7 +78,7 @@ struct SessionHistoryEntry final : public JS::Cell {
     // FIXME: scroll position data, which is scroll position data for the document's restorable scrollable regions
 
     // browsing context name, a browsing context name or null, initially null
-    Optional<DeprecatedString> browsing_context_name;
+    Optional<ByteString> browsing_context_name;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-other
     // FIXME: persisted user state, which is implementation-defined, initially null

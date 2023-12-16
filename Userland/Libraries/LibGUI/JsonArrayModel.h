@@ -16,7 +16,7 @@ namespace GUI {
 class JsonArrayModel final : public Model {
 public:
     struct FieldSpec {
-        FieldSpec(DeprecatedString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment)
+        FieldSpec(ByteString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment)
             : json_field_name(a_json_field_name)
             , column_name(a_column_name)
             , text_alignment(a_text_alignment)
@@ -32,7 +32,7 @@ public:
         {
         }
 
-        FieldSpec(DeprecatedString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(JsonObject const&)>&& a_massage_for_display, Function<Variant(JsonObject const&)>&& a_massage_for_sort = {}, Function<Variant(JsonObject const&)>&& a_massage_for_custom = {})
+        FieldSpec(ByteString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(JsonObject const&)>&& a_massage_for_display, Function<Variant(JsonObject const&)>&& a_massage_for_sort = {}, Function<Variant(JsonObject const&)>&& a_massage_for_custom = {})
             : json_field_name(a_json_field_name)
             , column_name(a_column_name)
             , text_alignment(a_text_alignment)
@@ -42,7 +42,7 @@ public:
         {
         }
 
-        DeprecatedString json_field_name;
+        ByteString json_field_name;
         String column_name;
         Gfx::TextAlignment text_alignment;
         Function<Variant(JsonObject const&)> massage_for_display;
@@ -50,7 +50,7 @@ public:
         Function<Variant(JsonObject const&)> massage_for_custom;
     };
 
-    static NonnullRefPtr<JsonArrayModel> create(DeprecatedString const& json_path, Vector<FieldSpec>&& fields)
+    static NonnullRefPtr<JsonArrayModel> create(ByteString const& json_path, Vector<FieldSpec>&& fields)
     {
         return adopt_ref(*new JsonArrayModel(json_path, move(fields)));
     }
@@ -64,8 +64,8 @@ public:
     virtual void invalidate() override;
     virtual void update();
 
-    DeprecatedString const& json_path() const { return m_json_path; }
-    void set_json_path(DeprecatedString const& json_path);
+    ByteString const& json_path() const { return m_json_path; }
+    void set_json_path(ByteString const& json_path);
 
     ErrorOr<void> add(Vector<JsonValue> const&& fields);
     ErrorOr<void> set(int row, Vector<JsonValue>&& fields);
@@ -73,13 +73,13 @@ public:
     ErrorOr<void> store();
 
 private:
-    JsonArrayModel(DeprecatedString const& json_path, Vector<FieldSpec>&& fields)
+    JsonArrayModel(ByteString const& json_path, Vector<FieldSpec>&& fields)
         : m_json_path(json_path)
         , m_fields(move(fields))
     {
     }
 
-    DeprecatedString m_json_path;
+    ByteString m_json_path;
     Vector<FieldSpec> m_fields;
     JsonArray m_array;
 };

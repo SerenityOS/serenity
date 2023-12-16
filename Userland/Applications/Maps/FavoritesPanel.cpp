@@ -33,7 +33,7 @@ ErrorOr<void> FavoritesPanel::setup()
         if (!index.is_valid())
             return;
         auto& model = *m_favorites_list->model();
-        on_selected_favorite_change({ MUST(String::from_deprecated_string(model.index(index.row(), 0).data().to_deprecated_string())),
+        on_selected_favorite_change({ MUST(String::from_byte_string(model.index(index.row(), 0).data().to_byte_string())),
             { model.index(index.row(), 1).data().as_double(),
                 model.index(index.row(), 2).data().as_double() },
             model.index(index.row(), 3).data().to_i32() });
@@ -63,15 +63,15 @@ void FavoritesPanel::load_favorites()
 {
     Vector<GUI::JsonArrayModel::FieldSpec> favorites_fields;
     favorites_fields.empend("name", "Name"_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) -> GUI::Variant {
-        DeprecatedString name = object.get_deprecated_string("name"sv).release_value();
+        ByteString name = object.get_byte_string("name"sv).release_value();
         double latitude = object.get_double_with_precision_loss("latitude"sv).release_value();
         double longitude = object.get_double_with_precision_loss("longitude"sv).release_value();
-        return DeprecatedString::formatted("{}\n{:.5}, {:.5}", name, latitude, longitude);
+        return ByteString::formatted("{}\n{:.5}, {:.5}", name, latitude, longitude);
     });
     favorites_fields.empend("latitude", "Latitude"_string, Gfx::TextAlignment::CenterLeft);
     favorites_fields.empend("longitude", "Longitude"_string, Gfx::TextAlignment::CenterLeft);
     favorites_fields.empend("zoom", "Zoom"_string, Gfx::TextAlignment::CenterLeft);
-    m_favorites_list->set_model(*GUI::JsonArrayModel::create(DeprecatedString::formatted("{}/MapsFavorites.json", Core::StandardPaths::config_directory()), move(favorites_fields)));
+    m_favorites_list->set_model(*GUI::JsonArrayModel::create(ByteString::formatted("{}/MapsFavorites.json", Core::StandardPaths::config_directory()), move(favorites_fields)));
     m_favorites_list->model()->invalidate();
     favorites_changed();
 }
@@ -80,7 +80,7 @@ ErrorOr<void> FavoritesPanel::add_favorite(Favorite const& favorite)
 {
     auto& model = *static_cast<GUI::JsonArrayModel*>(m_favorites_list->model());
     Vector<JsonValue> favorite_json;
-    favorite_json.append(favorite.name.to_deprecated_string());
+    favorite_json.append(favorite.name.to_byte_string());
     favorite_json.append(favorite.latlng.latitude);
     favorite_json.append(favorite.latlng.longitude);
     favorite_json.append(favorite.zoom);
@@ -109,7 +109,7 @@ ErrorOr<void> FavoritesPanel::edit_favorite(int row)
     edit_dialog->set_main_widget(widget);
 
     auto& name_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("name_textbox");
-    name_textbox.set_text(model.index(row, 0).data().to_deprecated_string().split('\n').at(0));
+    name_textbox.set_text(model.index(row, 0).data().to_byte_string().split('\n').at(0));
     name_textbox.set_focus(true);
     name_textbox.select_all();
 
@@ -144,7 +144,7 @@ void FavoritesPanel::favorites_changed()
 
     Vector<Favorite> favorites;
     for (int index = 0; index < model.row_count(); index++)
-        favorites.append({ MUST(String::from_deprecated_string(model.index(index, 0).data().to_deprecated_string())),
+        favorites.append({ MUST(String::from_byte_string(model.index(index, 0).data().to_byte_string())),
             { model.index(index, 1).data().as_double(),
                 model.index(index, 2).data().as_double() },
             model.index(index, 3).data().to_i32() });

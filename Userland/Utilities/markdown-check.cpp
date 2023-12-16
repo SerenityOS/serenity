@@ -63,9 +63,9 @@ static bool is_missing_file_acceptable(String const& filename)
 }
 
 struct FileLink {
-    DeprecatedString file_path; // May be empty, but not null
-    DeprecatedString anchor;    // May be null ("foo.md", "bar.png"), may be empty ("baz.md#")
-    DeprecatedString label;     // May be empty, but not null
+    ByteString file_path; // May be empty, but not null
+    ByteString anchor;    // May be null ("foo.md", "bar.png"), may be empty ("baz.md#")
+    ByteString label;     // May be empty, but not null
 };
 
 class MarkdownLinkage final : Markdown::Visitor {
@@ -74,8 +74,8 @@ public:
 
     static MarkdownLinkage analyze(Markdown::Document const&, bool verbose);
 
-    bool has_anchor(DeprecatedString const& anchor) const { return m_anchors.contains(anchor); }
-    HashTable<DeprecatedString> const& anchors() const { return m_anchors; }
+    bool has_anchor(ByteString const& anchor) const { return m_anchors.contains(anchor); }
+    HashTable<ByteString> const& anchors() const { return m_anchors; }
     bool has_invalid_link() const { return m_has_invalid_link; }
     Vector<FileLink> const& file_links() const { return m_file_links; }
 
@@ -94,12 +94,12 @@ private:
     virtual RecursionDecision visit(Markdown::Heading const&) override;
     virtual RecursionDecision visit(Markdown::Text::LinkNode const&) override;
 
-    HashTable<DeprecatedString> m_anchors;
+    HashTable<ByteString> m_anchors;
     Vector<FileLink> m_file_links;
     bool m_has_invalid_link { false };
     bool m_verbose { false };
 
-    DeprecatedString m_serenity_source_directory;
+    ByteString m_serenity_source_directory;
 };
 
 MarkdownLinkage MarkdownLinkage::analyze(Markdown::Document const& document, bool verbose)
@@ -116,16 +116,16 @@ public:
     StringCollector() = default;
     virtual ~StringCollector() = default;
 
-    DeprecatedString build() { return m_builder.to_deprecated_string(); }
+    ByteString build() { return m_builder.to_byte_string(); }
 
-    static DeprecatedString from(Markdown::Heading const& heading)
+    static ByteString from(Markdown::Heading const& heading)
     {
         StringCollector collector;
         heading.walk(collector);
         return collector.build();
     }
 
-    static DeprecatedString from(Markdown::Text::Node const& node)
+    static ByteString from(Markdown::Text::Node const& node)
     {
         StringCollector collector;
         node.walk(collector);
@@ -133,7 +133,7 @@ public:
     }
 
 private:
-    virtual RecursionDecision visit(DeprecatedString const& text) override
+    virtual RecursionDecision visit(ByteString const& text) override
     {
         m_builder.append(text);
         return RecursionDecision::Recurse;
@@ -142,10 +142,10 @@ private:
     StringBuilder m_builder;
 };
 
-static DeprecatedString slugify(DeprecatedString const& text)
+static ByteString slugify(ByteString const& text)
 {
     // TODO: This feels like it belongs into LibWeb.
-    DeprecatedString slug = text.to_lowercase();
+    ByteString slug = text.to_lowercase();
     // Reverse-engineered through github, using:
     // find AK/ Base/ Documentation/ Kernel/ Meta/ Ports/ Tests/ Userland/ -name '*.md' | xargs grep --color=always -Pin '^##+ .*[^a-z0-9 ?()`_:/!&|.$'"'"',<>"+-]' README.md
     slug = slug.replace(" "sv, "-"sv, ReplaceMode::All)
@@ -178,7 +178,7 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Heading const& heading)
 
 RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_node)
 {
-    DeprecatedString const& href = link_node.href;
+    ByteString const& href = link_node.href;
     if (href.is_empty()) {
         // Nothing to do here.
         return RecursionDecision::Recurse;
@@ -204,9 +204,9 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             }
 
             // Remove leading '/' from the path.
-            auto file = DeprecatedString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, url.serialize_path().substring(1));
+            auto file = ByteString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, url.serialize_path().substring(1));
 
-            m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
+            m_file_links.append({ file, ByteString(), StringCollector::from(*link_node.text) });
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
@@ -218,8 +218,8 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             }
             // TODO: Check more possible links other than icons.
             if (file_path.starts_with("/res/icons/"sv)) {
-                auto file = DeprecatedString::formatted("{}/Base{}", m_serenity_source_directory, file_path);
-                m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
+                auto file = ByteString::formatted("{}/Base{}", m_serenity_source_directory, file_path);
+                m_file_links.append({ file, ByteString(), StringCollector::from(*link_node.text) });
             } else if (file_path.starts_with("/bin"sv)) {
                 StringBuilder builder;
                 link_node.text->render_to_html(builder);
@@ -235,12 +235,12 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
         }
     }
 
-    DeprecatedString label = StringCollector::from(*link_node.text);
+    ByteString label = StringCollector::from(*link_node.text);
     Optional<size_t> last_hash = href.find_last('#');
     if (last_hash.has_value()) {
         m_file_links.append({ href.substring(0, last_hash.value()), href.substring(last_hash.value() + 1), label });
     } else {
-        m_file_links.append({ href, DeprecatedString(), label });
+        m_file_links.append({ href, ByteString(), label });
     }
 
     return RecursionDecision::Recurse;
@@ -339,14 +339,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto file_lexical_path = LexicalPath(file_item.key.to_deprecated_string());
+        auto file_lexical_path = LexicalPath(file_item.key.to_byte_string());
         auto file_dir = file_lexical_path.dirname();
         for (auto const& file_link : file_item.value.file_links()) {
             String pointee_file;
             if (file_link.file_path.is_empty()) {
                 pointee_file = file_item.key;
             } else {
-                pointee_file = TRY(String::from_deprecated_string(LexicalPath::absolute_path(file_dir, file_link.file_path)));
+                pointee_file = TRY(String::from_byte_string(LexicalPath::absolute_path(file_dir, file_link.file_path)));
             }
             if (!FileSystem::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
@@ -404,7 +404,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     dbgln("Not including {} in the link graph since it's not a man page.", link.file_path);
                     continue;
                 }
-                TRY(pages.try_set(TRY(String::from_deprecated_string(link.file_path)), maybe_target_page.value()));
+                TRY(pages.try_set(TRY(String::from_byte_string(link.file_path)), maybe_target_page.value()));
             }
         }
 
@@ -416,7 +416,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             Vector<NonnullRefPtr<Manual::PageNode const>> linked_pages;
             for (auto const& link : file.value.file_links()) {
-                auto linked_page = pages.get(TRY(String::from_deprecated_string(link.file_path)));
+                auto linked_page = pages.get(TRY(String::from_byte_string(link.file_path)));
                 if (!linked_page.has_value())
                     continue;
 

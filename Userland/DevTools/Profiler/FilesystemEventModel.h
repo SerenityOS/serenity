@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/Time.h>
@@ -18,23 +18,23 @@ class Profile;
 
 class FileEventNode : public RefCounted<FileEventNode> {
 public:
-    static NonnullRefPtr<FileEventNode> create(DeprecatedString const& path, FileEventNode* parent = nullptr)
+    static NonnullRefPtr<FileEventNode> create(ByteString const& path, FileEventNode* parent = nullptr)
     {
         return adopt_ref(*new FileEventNode(path, parent));
     }
 
-    FileEventNode& find_or_create_node(DeprecatedString const&);
+    FileEventNode& find_or_create_node(ByteString const&);
 
     Vector<NonnullRefPtr<FileEventNode>>& children() { return m_children; }
     Vector<NonnullRefPtr<FileEventNode>> const& children() const { return m_children; }
 
     FileEventNode* parent() { return m_parent; }
 
-    FileEventNode& create_recursively(DeprecatedString);
+    FileEventNode& create_recursively(ByteString);
 
     void for_each_parent_node(Function<void(FileEventNode&)> callback);
 
-    DeprecatedString const& path() const { return m_path; }
+    ByteString const& path() const { return m_path; }
 
     u64 total_count() const;
     Duration total_duration() const;
@@ -51,11 +51,11 @@ public:
     FileEventType& pread() { return m_pread; }
 
 private:
-    FileEventNode(DeprecatedString const& path, FileEventNode* parent = nullptr)
+    FileEventNode(ByteString const& path, FileEventNode* parent = nullptr)
         : m_path(path)
         , m_parent(parent) {};
 
-    DeprecatedString m_path;
+    ByteString m_path;
 
     FileEventType m_open;
     FileEventType m_close;

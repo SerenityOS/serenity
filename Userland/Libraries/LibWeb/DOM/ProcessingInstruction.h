@@ -19,14 +19,14 @@ public:
 
     virtual FlyString node_name() const override { return MUST(FlyString::from_deprecated_fly_string(m_target)); }
 
-    DeprecatedString const& target() const { return m_target; }
+    ByteString const& target() const { return m_target; }
 
 private:
-    ProcessingInstruction(Document&, DeprecatedString const& data, DeprecatedString const& target);
+    ProcessingInstruction(Document&, ByteString const& data, ByteString const& target);
 
     virtual void initialize(JS::Realm&) override;
 
-    DeprecatedString m_target;
+    ByteString m_target;
 };
 
 template<>

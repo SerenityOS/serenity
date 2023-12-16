@@ -123,7 +123,7 @@ void CalendarWidget::load_file(FileSystemAccessClient::File file)
 {
     auto result = m_event_calendar->event_manager().load_file(file);
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot load file: {}", result.error()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Cannot load file: {}", result.error()));
         return;
     }
 
@@ -139,13 +139,13 @@ NonnullRefPtr<GUI::Action> CalendarWidget::create_save_action(GUI::Action& save_
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename().to_deprecated_string(), Core::File::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename().to_byte_string(), Core::File::OpenMode::Write);
         if (response.is_error())
             return;
 
         auto result = m_event_calendar->event_manager().save(response.value());
         if (result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot save file: {}", result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Cannot save file: {}", result.error()));
             return;
         }
 
@@ -163,7 +163,7 @@ NonnullRefPtr<GUI::Action> CalendarWidget::create_save_as_action()
 
         auto result = m_event_calendar->event_manager().save(response.value());
         if (result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot save file: {}", result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Cannot save file: {}", result.error()));
             return;
         }
 
@@ -184,7 +184,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_new_calendar_action()
 
         auto result = m_event_calendar->event_manager().save(response.value());
         if (result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot save file: {}", result.error()));
+            GUI::MessageBox::show_error(window(), ByteString::formatted("Cannot save file: {}", result.error()));
             return;
         }
 
@@ -225,7 +225,7 @@ void CalendarWidget::update_window_title()
         builder.append(current_filename());
     builder.append("[*] - Calendar"sv);
 
-    window()->set_title(builder.to_deprecated_string());
+    window()->set_title(builder.to_byte_string());
 }
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_add_event_action()

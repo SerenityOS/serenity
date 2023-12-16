@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
@@ -198,7 +198,7 @@ public:
     Path copy_transformed(AffineTransform const&) const;
     void add_path(Path const&);
     void ensure_subpath(FloatPoint point);
-    DeprecatedString to_deprecated_string() const;
+    ByteString to_byte_string() const;
 
     Path stroke_to_fill(float thickness) const;
 

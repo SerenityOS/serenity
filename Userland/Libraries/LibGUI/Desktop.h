@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/SystemEffects.h>
@@ -31,7 +31,7 @@ public:
 
     void set_wallpaper_mode(StringView mode);
 
-    DeprecatedString wallpaper_path() const;
+    ByteString wallpaper_path() const;
     RefPtr<Gfx::Bitmap> wallpaper_bitmap() const;
     bool set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path);
 

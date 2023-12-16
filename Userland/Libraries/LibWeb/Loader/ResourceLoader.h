@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/URL.h>
@@ -69,8 +69,8 @@ public:
     virtual ~ResourceLoaderConnectorRequest();
 
     struct CertificateAndKey {
-        DeprecatedString certificate;
-        DeprecatedString key;
+        ByteString certificate;
+        ByteString key;
     };
 
     virtual void set_should_buffer_all_input(bool) = 0;
@@ -78,7 +78,7 @@ public:
 
     virtual void stream_into(Stream&) = 0;
 
-    Function<void(bool success, u64 total_size, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
+    Function<void(bool success, u64 total_size, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
     Function<void(bool success, u64 total_size)> on_finish;
     Function<void(Optional<u64> total_size, u64 downloaded_size)> on_progress;
     Function<CertificateAndKey()> on_certificate_requested;
@@ -94,7 +94,7 @@ public:
     virtual void prefetch_dns(AK::URL const&) = 0;
     virtual void preconnect(AK::URL const&) = 0;
 
-    virtual RefPtr<ResourceLoaderConnectorRequest> start_request(DeprecatedString const& method, AK::URL const&, HashMap<DeprecatedString, DeprecatedString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) = 0;
+    virtual RefPtr<ResourceLoaderConnectorRequest> start_request(ByteString const& method, AK::URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) = 0;
 
 protected:
     explicit ResourceLoaderConnector();
@@ -108,8 +108,8 @@ public:
 
     RefPtr<Resource> load_resource(Resource::Type, LoadRequest&);
 
-    using SuccessCallback = Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)>;
-    using ErrorCallback = Function<void(DeprecatedString const&, Optional<u32> status_code, ReadonlyBytes payload, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers)>;
+    using SuccessCallback = Function<void(ReadonlyBytes, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)>;
+    using ErrorCallback = Function<void(ByteString const&, Optional<u32> status_code, ReadonlyBytes payload, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers)>;
     using TimeoutCallback = Function<void()>;
 
     void load(LoadRequest&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);

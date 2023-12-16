@@ -135,7 +135,7 @@ public:
 
     Type type() const { return m_type; }
     size_t length() const { return m_length; }
-    DeprecatedString to_deprecated_string(Bytecode::Executable const&) const;
+    ByteString to_byte_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     static void destroy(Instruction&);
 

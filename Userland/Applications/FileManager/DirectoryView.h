@@ -51,8 +51,8 @@ public:
 
     virtual ~DirectoryView() override;
 
-    bool open(DeprecatedString const& path);
-    DeprecatedString path() const { return model().root_path(); }
+    bool open(ByteString const& path);
+    ByteString path() const { return model().root_path(); }
     void open_parent_directory();
     void open_previous_directory();
     void open_next_directory();
@@ -60,7 +60,7 @@ public:
     int path_history_position() const { return m_path_history_position; }
     static RefPtr<LauncherHandler> get_default_launch_handler(Vector<NonnullRefPtr<LauncherHandler>> const& handlers);
     static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(URL const& url);
-    static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(DeprecatedString const& path);
+    static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(ByteString const& path);
 
     void refresh();
 
@@ -82,7 +82,7 @@ public:
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
-    void set_view_mode_from_string(DeprecatedString const&);
+    void set_view_mode_from_string(ByteString const&);
 
     GUI::AbstractView& current_view()
     {
@@ -120,7 +120,7 @@ public:
 
     bool is_desktop() const { return m_mode == Mode::Desktop; }
 
-    Vector<DeprecatedString> selected_file_paths() const;
+    Vector<ByteString> selected_file_paths() const;
 
     GUI::Action& mkdir_action() { return *m_mkdir_action; }
     GUI::Action& touch_action() { return *m_touch_action; }
@@ -166,8 +166,8 @@ private:
     NonnullRefPtr<GUI::FileSystemModel> m_model;
     NonnullRefPtr<GUI::SortingProxyModel> m_sorting_model;
     size_t m_path_history_position { 0 };
-    Vector<DeprecatedString> m_path_history;
-    void add_path_to_history(DeprecatedString);
+    Vector<ByteString> m_path_history;
+    void add_path_to_history(ByteString);
 
     RefPtr<GUI::Label> m_error_label;
 

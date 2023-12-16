@@ -622,7 +622,7 @@ void DDSLoadingContext::dump_debug()
         builder.append(" DDS_ALPHA_MODE_CUSTOM"sv);
     builder.append("\n"sv);
 
-    dbgln("{}", builder.to_deprecated_string());
+    dbgln("{}", builder.to_byte_string());
 }
 
 DDSImageDecoderPlugin::DDSImageDecoderPlugin(FixedMemoryStream stream)

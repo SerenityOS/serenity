@@ -19,7 +19,7 @@ class Endpoint : public Core::EventReceiver {
 public:
     virtual ~Endpoint() override = default;
 
-    Function<void(DeprecatedString, Error)> on_command_read_error;
+    Function<void(ByteString, Error)> on_command_read_error;
 
     virtual void handle_uci() { }
     virtual void handle_debug(DebugCommand const&) { }

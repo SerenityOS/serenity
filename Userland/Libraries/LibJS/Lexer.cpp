@@ -17,8 +17,8 @@
 namespace JS {
 
 HashMap<DeprecatedFlyString, TokenType> Lexer::s_keywords;
-HashMap<DeprecatedString, TokenType> Lexer::s_three_char_tokens;
-HashMap<DeprecatedString, TokenType> Lexer::s_two_char_tokens;
+HashMap<ByteString, TokenType> Lexer::s_three_char_tokens;
+HashMap<ByteString, TokenType> Lexer::s_two_char_tokens;
 HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
 Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
@@ -159,7 +159,7 @@ void Lexer::consume()
 
     if (is_line_terminator()) {
         if constexpr (LEXER_DEBUG) {
-            DeprecatedString type;
+            ByteString type;
             if (m_current_char == '\n')
                 type = "LINE FEED";
             else if (m_current_char == '\r')
@@ -567,7 +567,7 @@ Token Lexer::next()
     // This is being used to communicate info about invalid tokens to the parser, which then
     // can turn that into more specific error messages - instead of us having to make up a
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
-    DeprecatedString token_message;
+    ByteString token_message;
 
     Optional<DeprecatedFlyString> identifier;
     size_t identifier_length = 0;
@@ -844,7 +844,7 @@ Token Lexer::next()
     } else {
         m_current_token = Token(
             token_type,
-            String::from_deprecated_string(token_message).release_value_but_fixme_should_propagate_errors(),
+            String::from_byte_string(token_message).release_value_but_fixme_should_propagate_errors(),
             m_source.substring_view(trivia_start - 1, value_start - trivia_start),
             m_source.substring_view(value_start - 1, m_position - value_start),
             m_filename,

@@ -71,7 +71,7 @@ void MemoryStatsWidget::set_graph_widget(GraphWidget& graph)
     m_graph = &graph;
 }
 
-void MemoryStatsWidget::set_graph_widget_via_name(DeprecatedString name)
+void MemoryStatsWidget::set_graph_widget_via_name(ByteString name)
 {
     m_graph_widget_name = move(name);
     if (!m_graph_widget_name.is_empty()) {
@@ -87,7 +87,7 @@ void MemoryStatsWidget::set_graph_widget_via_name(DeprecatedString name)
     }
 }
 
-DeprecatedString MemoryStatsWidget::graph_widget_name()
+ByteString MemoryStatsWidget::graph_widget_name()
 {
     if (m_graph)
         return m_graph->name();

@@ -21,17 +21,17 @@ void ModuleMap::visit_edges(Visitor& visitor)
             visitor.visit(callback);
 }
 
-bool ModuleMap::is_fetching(AK::URL const& url, DeprecatedString const& type) const
+bool ModuleMap::is_fetching(AK::URL const& url, ByteString const& type) const
 {
     return is(url, type, EntryType::Fetching);
 }
 
-bool ModuleMap::is_failed(AK::URL const& url, DeprecatedString const& type) const
+bool ModuleMap::is_failed(AK::URL const& url, ByteString const& type) const
 {
     return is(url, type, EntryType::Failed);
 }
 
-bool ModuleMap::is(AK::URL const& url, DeprecatedString const& type, EntryType entry_type) const
+bool ModuleMap::is(AK::URL const& url, ByteString const& type, EntryType entry_type) const
 {
     auto value = m_values.get({ url, type });
     if (!value.has_value())
@@ -40,12 +40,12 @@ bool ModuleMap::is(AK::URL const& url, DeprecatedString const& type, EntryType e
     return value->type == entry_type;
 }
 
-Optional<ModuleMap::Entry> ModuleMap::get(AK::URL const& url, DeprecatedString const& type) const
+Optional<ModuleMap::Entry> ModuleMap::get(AK::URL const& url, ByteString const& type) const
 {
     return m_values.get({ url, type });
 }
 
-AK::HashSetResult ModuleMap::set(AK::URL const& url, DeprecatedString const& type, Entry entry)
+AK::HashSetResult ModuleMap::set(AK::URL const& url, ByteString const& type, Entry entry)
 {
     // NOTE: Re-entering this function while firing wait_for_change callbacks is not allowed.
     VERIFY(!m_firing_callbacks);
@@ -63,7 +63,7 @@ AK::HashSetResult ModuleMap::set(AK::URL const& url, DeprecatedString const& typ
     return value;
 }
 
-void ModuleMap::wait_for_change(JS::Heap& heap, AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback)
+void ModuleMap::wait_for_change(JS::Heap& heap, AK::URL const& url, ByteString const& type, Function<void(Entry)> callback)
 {
     m_callbacks.ensure({ url, type }).append(JS::create_heap_function(heap, move(callback)));
 }

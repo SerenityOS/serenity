@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Archive::ZipOutputStream zip_stream(move(file_stream));
 
     auto add_file = [&](StringView path) -> ErrorOr<void> {
-        auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
+        auto canonicalized_path = TRY(String::from_byte_string(LexicalPath::canonicalized_path(path)));
 
         auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto stat = TRY(Core::System::fstat(file->fd()));

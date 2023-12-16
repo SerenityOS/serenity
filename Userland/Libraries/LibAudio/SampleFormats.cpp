@@ -48,10 +48,10 @@ Optional<PcmSampleFormat> integer_sample_format_for(u16 bits_per_sample)
     }
 }
 
-DeprecatedString sample_format_name(PcmSampleFormat format)
+ByteString sample_format_name(PcmSampleFormat format)
 {
     bool is_float = format == PcmSampleFormat::Float32 || format == PcmSampleFormat::Float64;
-    return DeprecatedString::formatted("PCM {}bit {}", pcm_bits_per_sample(format), is_float ? "Float" : "LE");
+    return ByteString::formatted("PCM {}bit {}", pcm_bits_per_sample(format), is_float ? "Float" : "LE");
 }
 
 }

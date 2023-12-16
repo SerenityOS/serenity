@@ -39,7 +39,7 @@ static Optional<u8> parse_hex_number(GenericLexer& lexer)
     return value;
 }
 
-static DeprecatedString interpret_backslash_escapes(StringView string, bool& no_trailing_newline)
+static ByteString interpret_backslash_escapes(StringView string, bool& no_trailing_newline)
 {
     static constexpr auto escape_map = "a\ab\be\ef\fn\nr\rt\tv\v"sv;
     static constexpr auto unescaped_chars = "\a\b\e\f\n\r\t\v\\"sv;
@@ -94,14 +94,14 @@ static DeprecatedString interpret_backslash_escapes(StringView string, bool& no_
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
-    Vector<DeprecatedString> text;
+    Vector<ByteString> text;
     bool no_trailing_newline = false;
     bool should_interpret_backslash_escapes = false;
 
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto output = DeprecatedString::join(' ', text);
+    auto output = ByteString::join(' ', text);
     if (should_interpret_backslash_escapes)
         output = interpret_backslash_escapes(output, no_trailing_newline);
     out("{}", output);

@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<unsigned> last_rounding_mode = 1;
     for (unsigned i {}; i < rounding_modes.size(); ++i) {
-        auto round_action = GUI::Action::create_checkable(DeprecatedString::formatted("To &{} Digits", rounding_modes[i]),
+        auto round_action = GUI::Action::create_checkable(ByteString::formatted("To &{} Digits", rounding_modes[i]),
             [&widget, rounding_mode = rounding_modes[i], &last_rounding_mode, i](auto&) {
                 widget->set_rounding_length(rounding_mode);
                 last_rounding_mode = i;
@@ -96,11 +96,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     constexpr auto format { "&Custom - {}..."sv };
-    auto round_custom = GUI::Action::create_checkable(DeprecatedString::formatted(format, 0), [&](auto& action) {
+    auto round_custom = GUI::Action::create_checkable(ByteString::formatted(format, 0), [&](auto& action) {
         int custom_rounding_length = widget->rounding_length();
         auto result = GUI::InputBox::show_numeric(window, custom_rounding_length, 0, 100, "Digits to Round"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
-            action.set_text(DeprecatedString::formatted(format, custom_rounding_length));
+            action.set_text(ByteString::formatted(format, custom_rounding_length));
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
         } else if (last_rounding_mode.has_value())
@@ -115,7 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto result = GUI::InputBox::show_numeric(window, shrink_length, 0, 100, "Digits to Shrink"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
             round_custom->set_checked(true);
-            round_custom->set_text(DeprecatedString::formatted(format, shrink_length));
+            round_custom->set_text(ByteString::formatted(format, shrink_length));
             widget->set_rounding_length(shrink_length);
             widget->shrink(shrink_length);
         }

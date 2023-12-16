@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-using ModuleSpecifierMap = HashMap<DeprecatedString, Optional<AK::URL>>;
+using ModuleSpecifierMap = HashMap<ByteString, Optional<AK::URL>>;
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#import-map
 class ImportMap {

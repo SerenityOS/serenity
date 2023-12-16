@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibTest/TestCase.h>
 #include <fcntl.h>
@@ -81,11 +81,11 @@ TEST_CASE(test_change_file_location)
     ftruncate(fd, 0);
     EXPECT(fchmod(fd, 06755) != -1);
 
-    auto suid_path_string = TRY_OR_FAIL(FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd)));
+    auto suid_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
 
-    auto suid_path = suid_path_string.to_deprecated_string();
+    auto suid_path = suid_path_string.to_byte_string();
     EXPECT(suid_path.characters());
-    auto new_path = DeprecatedString::formatted("{}.renamed", suid_path);
+    auto new_path = ByteString::formatted("{}.renamed", suid_path);
 
     rename(suid_path.characters(), new_path.characters());
 

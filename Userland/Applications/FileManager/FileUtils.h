@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Forward.h>
 
@@ -19,8 +19,8 @@ enum class FileOperation {
     Delete,
 };
 
-void delete_paths(Vector<DeprecatedString> const&, bool should_confirm, GUI::Window*);
+void delete_paths(Vector<ByteString> const&, bool should_confirm, GUI::Window*);
 
-ErrorOr<void> run_file_operation(FileOperation, Vector<DeprecatedString> const& sources, DeprecatedString const& destination, GUI::Window*);
-ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window);
+ErrorOr<void> run_file_operation(FileOperation, Vector<ByteString> const& sources, ByteString const& destination, GUI::Window*);
+ErrorOr<bool> handle_drop(GUI::DropEvent const& event, ByteString const& destination, GUI::Window* window);
 }

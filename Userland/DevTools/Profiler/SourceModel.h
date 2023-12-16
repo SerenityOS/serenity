@@ -16,9 +16,9 @@ class ProfileNode;
 struct SourceLineData {
     u32 event_count { 0 };
     float percent { 0 };
-    DeprecatedString location;
+    ByteString location;
     u32 line_number { 0 };
-    DeprecatedString source_code;
+    ByteString source_code;
 };
 
 class SourceModel final : public GUI::Model {

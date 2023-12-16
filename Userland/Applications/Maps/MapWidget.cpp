@@ -73,12 +73,12 @@ MapWidget::MapWidget(Options const& options)
 {
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
     if (options.attribution_enabled) {
-        auto attribution_text = options.attribution_text.value_or(MUST(String::from_deprecated_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv, Maps::default_tile_provider_attribution_text))));
+        auto attribution_text = options.attribution_text.value_or(MUST(String::from_byte_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv, Maps::default_tile_provider_attribution_text))));
         URL attribution_url = options.attribution_url.value_or(URL(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv, Maps::default_tile_provider_attribution_url)));
         add_panel({ attribution_text, Panel::Position::BottomRight, attribution_url, "attribution"_string });
     }
     m_marker_image = Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-blue.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_default_tile_provider = MUST(String::from_deprecated_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, Maps::default_tile_provider_url_format)));
+    m_default_tile_provider = MUST(String::from_byte_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, Maps::default_tile_provider_url_format)));
 }
 
 void MapWidget::set_zoom(int zoom)
@@ -315,7 +315,7 @@ void MapWidget::process_tile_queue()
     auto tile_key = m_tile_queue.dequeue();
 
     // Start HTTP GET request to load image
-    HashMap<DeprecatedString, DeprecatedString> headers;
+    HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "image/png");
     URL url(MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y)));

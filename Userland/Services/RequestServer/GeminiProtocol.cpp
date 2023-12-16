@@ -17,7 +17,7 @@ GeminiProtocol::GeminiProtocol()
 {
 }
 
-OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, DeprecatedString const&, const URL& url, HashMap<DeprecatedString, DeprecatedString> const&, ReadonlyBytes, Core::ProxyData proxy_data)
+OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, ByteString const&, const URL& url, HashMap<ByteString, ByteString> const&, ReadonlyBytes, Core::ProxyData proxy_data)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);

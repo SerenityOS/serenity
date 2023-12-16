@@ -148,8 +148,8 @@ void ConnectionFromClient::add_menu(i32 window_id, i32 menu_id)
 }
 
 void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submenu_id,
-    DeprecatedString const& text, bool enabled, bool visible, bool checkable, bool checked, bool is_default,
-    DeprecatedString const& shortcut, Gfx::ShareableBitmap const& icon, bool exclusive)
+    ByteString const& text, bool enabled, bool visible, bool checkable, bool checked, bool is_default,
+    ByteString const& shortcut, Gfx::ShareableBitmap const& icon, bool exclusive)
 {
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
@@ -193,8 +193,8 @@ void ConnectionFromClient::dismiss_menu(i32 menu_id)
 }
 
 void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unused]] i32 submenu_id,
-    DeprecatedString const& text, bool enabled, bool visible, bool checkable, bool checked, bool is_default,
-    DeprecatedString const& shortcut, Gfx::ShareableBitmap const& icon)
+    ByteString const& text, bool enabled, bool visible, bool checkable, bool checked, bool is_default,
+    ByteString const& shortcut, Gfx::ShareableBitmap const& icon)
 {
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
@@ -327,12 +327,12 @@ Messages::WindowServer::SetWallpaperResponse ConnectionFromClient::set_wallpaper
     return Compositor::the().set_wallpaper(bitmap.bitmap());
 }
 
-void ConnectionFromClient::set_background_color(DeprecatedString const& background_color)
+void ConnectionFromClient::set_background_color(ByteString const& background_color)
 {
     Compositor::the().set_background_color(background_color);
 }
 
-void ConnectionFromClient::set_wallpaper_mode(DeprecatedString const& mode)
+void ConnectionFromClient::set_wallpaper_mode(ByteString const& mode)
 {
     Compositor::the().set_wallpaper_mode(mode);
 }
@@ -344,7 +344,7 @@ Messages::WindowServer::GetWallpaperResponse ConnectionFromClient::get_wallpaper
 
 Messages::WindowServer::SetScreenLayoutResponse ConnectionFromClient::set_screen_layout(ScreenLayout const& screen_layout, bool save)
 {
-    DeprecatedString error_msg;
+    ByteString error_msg;
     bool success = WindowManager::the().set_screen_layout(ScreenLayout(screen_layout), save, error_msg);
     return { success, move(error_msg) };
 }
@@ -356,7 +356,7 @@ Messages::WindowServer::GetScreenLayoutResponse ConnectionFromClient::get_screen
 
 Messages::WindowServer::SaveScreenLayoutResponse ConnectionFromClient::save_screen_layout()
 {
-    DeprecatedString error_msg;
+    ByteString error_msg;
     bool success = WindowManager::the().save_screen_layout(error_msg);
     return { success, move(error_msg) };
 }
@@ -386,7 +386,7 @@ void ConnectionFromClient::show_screen_numbers(bool show)
         Compositor::the().decrement_show_screen_number({});
 }
 
-void ConnectionFromClient::set_window_title(i32 window_id, DeprecatedString const& title)
+void ConnectionFromClient::set_window_title(i32 window_id, ByteString const& title)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -478,7 +478,7 @@ Messages::WindowServer::SetWindowRectResponse ConnectionFromClient::set_window_r
         return nullptr;
     }
     if (rect.width() > INT16_MAX || rect.height() > INT16_MAX) {
-        did_misbehave(DeprecatedString::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds INT16_MAX", rect.width(), rect.height()).characters());
+        did_misbehave(ByteString::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds INT16_MAX", rect.width(), rect.height()).characters());
         return nullptr;
     }
 
@@ -616,7 +616,7 @@ void ConnectionFromClient::create_window(i32 window_id, i32 process_id, Gfx::Int
     bool fullscreen, bool frameless, bool forced_shadow,
     float alpha_hit_threshold, Gfx::IntSize base_size, Gfx::IntSize size_increment,
     Gfx::IntSize minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
-    DeprecatedString const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
+    ByteString const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
 {
     Window* parent_window = nullptr;
     if (parent_window_id) {
@@ -871,7 +871,7 @@ void ConnectionFromClient::start_window_resize(i32 window_id, i32 resize_directi
     WindowManager::the().start_window_resize(window, ScreenInput::the().cursor_location(), MouseButton::Primary, (ResizeDirection)resize_direction);
 }
 
-Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(DeprecatedString const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
+Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(ByteString const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
 {
     auto& wm = WindowManager::the();
     if (wm.dnd_client() || !(wm.last_processed_buttons() & MouseButton::Primary))
@@ -888,7 +888,7 @@ void ConnectionFromClient::set_accepts_drag(bool accepts)
     wm.set_accepts_drag(accepts);
 }
 
-Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(DeprecatedString const& theme_path, DeprecatedString const& theme_name, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path)
+Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(ByteString const& theme_path, ByteString const& theme_name, bool keep_desktop_background, Optional<ByteString> const& color_scheme_path)
 {
     bool success = WindowManager::the().update_theme(theme_path, theme_name, keep_desktop_background, color_scheme_path);
     return success;
@@ -925,7 +925,7 @@ Messages::WindowServer::GetPreferredColorSchemeResponse ConnectionFromClient::ge
     return WindowManager::the().get_preferred_color_scheme();
 }
 
-void ConnectionFromClient::apply_cursor_theme(DeprecatedString const& name)
+void ConnectionFromClient::apply_cursor_theme(ByteString const& name)
 {
     WindowManager::the().apply_cursor_theme(name);
 }
@@ -955,7 +955,7 @@ Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_
     return g_config->read_entry("Mouse", "CursorTheme");
 }
 
-Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
+Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(ByteString const& default_font_query, ByteString const& fixed_width_font_query, ByteString const& window_title_font_query)
 {
     if (!Gfx::FontDatabase::the().get_by_name(default_font_query)
         || !Gfx::FontDatabase::the().get_by_name(fixed_width_font_query)) {

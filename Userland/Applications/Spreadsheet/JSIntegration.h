@@ -14,7 +14,7 @@
 namespace Spreadsheet {
 
 struct FunctionAndArgumentIndex {
-    DeprecatedString function_name;
+    ByteString function_name;
     size_t argument_index { 0 };
 };
 Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView source);

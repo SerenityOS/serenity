@@ -76,7 +76,7 @@ static timeval timeval_from_ntp_timestamp(NtpTimestamp const& ntp_timestamp)
     return t;
 }
 
-static DeprecatedString format_ntp_timestamp(NtpTimestamp ntp_timestamp)
+static ByteString format_ntp_timestamp(NtpTimestamp ntp_timestamp)
 {
     char buffer[28]; // YYYY-MM-DDTHH:MM:SS.UUUUUUZ is 27 characters long.
     timeval t = timeval_from_ntp_timestamp(ntp_timestamp);
@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Leap seconds smearing NTP servers:
     // - time.facebook.com , https://engineering.fb.com/production-engineering/ntp-service/ , sine-smears over 18 hours
     // - time.google.com , https://developers.google.com/time/smear , linear-smears over 24 hours
-    DeprecatedString host = "time.google.com"sv;
+    ByteString host = "time.google.com"sv;
     Core::ArgsParser args_parser;
     args_parser.add_option(adjust_time, "Gradually adjust system time (requires root)", "adjust", 'a');
     args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's');

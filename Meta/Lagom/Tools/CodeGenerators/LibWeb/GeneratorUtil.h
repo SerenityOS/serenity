@@ -52,7 +52,7 @@ String camel_casify(StringView dashy_name)
 String snake_casify(StringView dashy_name)
 {
     // FIXME: We don't really need to convert dashy_name to a String first, but currently
-    //        all the `replace` functions that take a StringView return DeprecatedString.
+    //        all the `replace` functions that take a StringView return ByteString.
     return MUST(MUST(String::from_utf8(dashy_name)).replace("-"sv, "_"sv, ReplaceMode::All));
 }
 

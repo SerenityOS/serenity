@@ -6,7 +6,7 @@
  */
 
 #include <AK/BuiltinWrappers.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
@@ -947,7 +947,7 @@ int vasprintf(char** strp, char const* fmt, va_list ap)
     builder.appendvf(fmt, ap);
     VERIFY(builder.length() <= NumericLimits<int>::max());
     int length = builder.length();
-    *strp = strdup(builder.to_deprecated_string().characters());
+    *strp = strdup(builder.to_byte_string().characters());
     return length;
 }
 
@@ -961,7 +961,7 @@ int asprintf(char** strp, char const* fmt, ...)
     va_end(ap);
     VERIFY(builder.length() <= NumericLimits<int>::max());
     int length = builder.length();
-    *strp = strdup(builder.to_deprecated_string().characters());
+    *strp = strdup(builder.to_byte_string().characters());
     return length;
 }
 

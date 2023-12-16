@@ -251,12 +251,12 @@ ErrorOr<void> ChessSettingsWidget::initialize()
         TRY(m_piece_sets.try_append(entry.name));
         return IterationDecision::Continue;
     }));
-    auto piece_set_model = GUI::ItemListModel<DeprecatedString>::create(m_piece_sets);
+    auto piece_set_model = GUI::ItemListModel<ByteString>::create(m_piece_sets);
     m_piece_set_combobox->set_model(piece_set_model);
     m_piece_set_combobox->set_text(piece_set_name, GUI::AllowCallback::No);
     m_piece_set_combobox->on_change = [&](auto& value, auto&) {
         set_modified(true);
-        m_preview->set_piece_set_name(MUST(String::from_deprecated_string(value)));
+        m_preview->set_piece_set_name(MUST(String::from_byte_string(value)));
     };
 
     m_board_theme_combobox = find_descendant_of_type_named<GUI::ComboBox>("board_theme");
@@ -283,7 +283,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
         set_modified(true);
     };
 
-    m_preview->set_piece_set_name(TRY(String::from_deprecated_string(piece_set_name)));
+    m_preview->set_piece_set_name(TRY(String::from_byte_string(piece_set_name)));
     m_preview->set_dark_square_color(board_theme.dark_square_color);
     m_preview->set_light_square_color(board_theme.light_square_color);
     m_preview->set_show_coordinates(show_coordinates);

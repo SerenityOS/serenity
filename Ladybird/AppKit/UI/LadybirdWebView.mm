@@ -180,7 +180,7 @@ struct HideCursor {
     m_web_view_bridge->set_preferred_color_scheme(color_scheme);
 }
 
-- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument
+- (void)debugRequest:(ByteString const&)request argument:(ByteString const&)argument
 {
     m_web_view_bridge->debug_request(request, argument);
 }
@@ -634,7 +634,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         return [delegate cookieJar].get_named_cookie(url, name);
     };
 
-    m_web_view_bridge->on_get_cookie = [](auto const& url, auto source) -> DeprecatedString {
+    m_web_view_bridge->on_get_cookie = [](auto const& url, auto source) -> ByteString {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         return [delegate cookieJar].get_cookie(url, source);
     };

@@ -51,7 +51,7 @@ void WindowEnvironmentSettingsObject::setup(Page& page, AK::URL const& creation_
         settings_object->target_browsing_context = reserved_environment->target_browsing_context;
 
         // 2. Set reservedEnvironment's id to the empty string.
-        reserved_environment->id = DeprecatedString::empty();
+        reserved_environment->id = ByteString::empty();
     }
 
     // 5. Otherwise, ...
@@ -60,7 +60,7 @@ void WindowEnvironmentSettingsObject::setup(Page& page, AK::URL const& creation_
         //        settings object's target browsing context to null,
         //        and settings object's active service worker to null.
         static i64 next_id = 1;
-        settings_object->id = DeprecatedString::number(next_id++);
+        settings_object->id = ByteString::number(next_id++);
         settings_object->target_browsing_context = nullptr;
     }
 
@@ -90,10 +90,10 @@ JS::GCPtr<DOM::Document> WindowEnvironmentSettingsObject::responsible_document()
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:api-url-character-encoding
-DeprecatedString WindowEnvironmentSettingsObject::api_url_character_encoding()
+ByteString WindowEnvironmentSettingsObject::api_url_character_encoding()
 {
     // Return the current character encoding of window's associated Document.
-    return m_window->associated_document().encoding_or_default().to_deprecated_string();
+    return m_window->associated_document().encoding_or_default().to_byte_string();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:api-base-url

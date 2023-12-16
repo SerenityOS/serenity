@@ -23,7 +23,7 @@ public:
 private:
     ErrorOr<JsonValue> parse_helper();
 
-    ErrorOr<DeprecatedString> consume_and_unescape_string();
+    ErrorOr<ByteString> consume_and_unescape_string();
     ErrorOr<JsonValue> parse_array();
     ErrorOr<JsonValue> parse_object();
     ErrorOr<JsonValue> parse_number();

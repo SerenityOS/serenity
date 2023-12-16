@@ -147,7 +147,7 @@ PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
     pseudo_classes_data.for_each_member([&](auto& name, JsonValue const& value) {
         auto member_generator = generator.fork();
         auto& pseudo_class = value.as_object();
-        auto argument_string = pseudo_class.get_deprecated_string("argument"sv).value();
+        auto argument_string = pseudo_class.get_byte_string("argument"sv).value();
 
         bool is_valid_as_identifier = argument_string.is_empty();
         bool is_valid_as_function = !argument_string.is_empty();

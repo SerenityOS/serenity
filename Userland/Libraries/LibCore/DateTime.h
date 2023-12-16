@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringView.h>
 #include <LibIPC/Forward.h>
 #include <time.h>
@@ -32,7 +32,7 @@ public:
 
     void set_time(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
     ErrorOr<String> to_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
-    DeprecatedString to_deprecated_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
+    ByteString to_byte_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
 
     static DateTime create(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
     static DateTime now();

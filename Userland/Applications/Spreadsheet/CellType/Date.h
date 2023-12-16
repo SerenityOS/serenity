@@ -16,7 +16,7 @@ class DateCell : public CellType {
 public:
     DateCell();
     virtual ~DateCell() override = default;
-    virtual JS::ThrowCompletionOr<DeprecatedString> display(Cell&, CellTypeMetadata const&) const override;
+    virtual JS::ThrowCompletionOr<ByteString> display(Cell&, CellTypeMetadata const&) const override;
     virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, CellTypeMetadata const&) const override;
     virtual String metadata_hint(MetadataName) const override;
 };

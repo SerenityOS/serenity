@@ -93,7 +93,7 @@ struct ResolvedParameterExpansion {
         Word,
     } expand { Expand::Nothing };
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         StringBuilder builder;
         builder.append("{"sv);
@@ -171,7 +171,7 @@ struct ResolvedParameterExpansion {
         builder.append(argument);
         builder.append(")"sv);
         builder.append("}"sv);
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
 };
 

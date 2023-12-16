@@ -16,7 +16,7 @@ class Property {
     AK_MAKE_NONCOPYABLE(Property);
 
 public:
-    Property(DeprecatedString name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
+    Property(ByteString name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
     ~Property() = default;
 
     bool set(JsonValue const& value)
@@ -33,11 +33,11 @@ public:
         return m_getter();
     }
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
     bool is_readonly() const { return !m_setter; }
 
 private:
-    DeprecatedString m_name;
+    ByteString m_name;
     Function<JsonValue()> m_getter;
     Function<bool(JsonValue const&)> m_setter;
 };

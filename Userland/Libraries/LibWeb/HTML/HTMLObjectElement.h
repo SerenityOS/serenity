@@ -40,7 +40,7 @@ public:
     String data() const;
     void set_data(String const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
 
-    DeprecatedString type() const { return deprecated_attribute(HTML::AttributeNames::type); }
+    ByteString type() const { return deprecated_attribute(HTML::AttributeNames::type); }
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
@@ -58,7 +58,7 @@ private:
     bool has_ancestor_media_element_or_object_element_not_showing_fallback_content() const;
 
     void queue_element_task_to_run_object_representation_steps();
-    void run_object_representation_handler_steps(Optional<DeprecatedString> resource_type);
+    void run_object_representation_handler_steps(Optional<ByteString> resource_type);
     void run_object_representation_completed_steps(Representation);
     void run_object_representation_fallback_steps();
 

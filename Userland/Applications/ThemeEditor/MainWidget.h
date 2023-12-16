@@ -52,7 +52,7 @@ private:
     AlignmentModel() = default;
 
     struct AlignmentValue {
-        DeprecatedString title;
+        ByteString title;
         Gfx::TextAlignment setting_value;
     };
     Vector<AlignmentValue> m_alignments {
@@ -67,7 +67,7 @@ struct Property {
 };
 
 struct PropertyGroup {
-    DeprecatedString title;
+    ByteString title;
     Vector<Property> properties;
 };
 
@@ -96,7 +96,7 @@ private:
 
     void save_to_file(String const& filename, NonnullOwnPtr<Core::File> file);
     ErrorOr<Core::AnonymousBuffer> encode();
-    void set_path(DeprecatedString);
+    void set_path(ByteString);
 
     void build_override_controls();
 
@@ -105,7 +105,7 @@ private:
     void set_color(Gfx::ColorRole, Gfx::Color);
     void set_flag(Gfx::FlagRole, bool);
     void set_metric(Gfx::MetricRole, int);
-    void set_path(Gfx::PathRole, DeprecatedString);
+    void set_path(Gfx::PathRole, ByteString);
 
     void set_palette(Gfx::Palette);
 
@@ -123,7 +123,7 @@ private:
     RefPtr<GUI::Button> m_theme_override_apply;
     RefPtr<GUI::Button> m_theme_override_reset;
 
-    Optional<DeprecatedString> m_path;
+    Optional<ByteString> m_path;
     Gfx::Palette m_current_palette;
     MonotonicTime m_last_modified_time { MonotonicTime::now() };
 

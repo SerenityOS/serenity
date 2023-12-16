@@ -118,8 +118,8 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
             TRY(stderr_stream->write_until_depleted(suggestion.text_string().bytes()));
             TRY(stderr_stream->write_until_depleted(suggestion.display_trivia_string().bytes()));
         } else {
-            auto field = DeprecatedString::formatted("{: <{}}  {}", suggestion.text_string(), longest_suggestion_byte_length_without_trivia, suggestion.display_trivia_string());
-            TRY(stderr_stream->write_until_depleted(DeprecatedString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()));
+            auto field = ByteString::formatted("{: <{}}  {}", suggestion.text_string(), longest_suggestion_byte_length_without_trivia, suggestion.display_trivia_string());
+            TRY(stderr_stream->write_until_depleted(ByteString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()));
             num_printed += longest_suggestion_length + 2;
         }
 
@@ -141,7 +141,7 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
     if (m_pages.size() > 1) {
         auto left_arrow = page_index > 0 ? '<' : ' ';
         auto right_arrow = page_index < m_pages.size() - 1 ? '>' : ' ';
-        auto string = DeprecatedString::formatted("{:c} page {} of {} {:c}", left_arrow, page_index + 1, m_pages.size(), right_arrow);
+        auto string = ByteString::formatted("{:c} page {} of {} {:c}", left_arrow, page_index + 1, m_pages.size(), right_arrow);
 
         if (string.length() > m_num_columns - 1) {
             // This would overflow into the next line, so just don't print an indicator.

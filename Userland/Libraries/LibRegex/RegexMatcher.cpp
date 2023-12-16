@@ -5,8 +5,8 @@
  */
 
 #include <AK/BumpAllocator.h>
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibRegex/RegexMatcher.h>
 #include <LibRegex/RegexParser.h>
@@ -31,7 +31,7 @@ regex::Parser::Result Regex<Parser>::parse_pattern(StringView pattern, typename 
 }
 
 template<class Parser>
-Regex<Parser>::Regex(DeprecatedString pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+Regex<Parser>::Regex(ByteString pattern, typename ParserTraits<Parser>::OptionsType regex_options)
     : pattern_value(move(pattern))
 {
     regex::Lexer lexer(pattern_value);
@@ -45,7 +45,7 @@ Regex<Parser>::Regex(DeprecatedString pattern, typename ParserTraits<Parser>::Op
 }
 
 template<class Parser>
-Regex<Parser>::Regex(regex::Parser::Result parse_result, DeprecatedString pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+Regex<Parser>::Regex(regex::Parser::Result parse_result, ByteString pattern, typename ParserTraits<Parser>::OptionsType regex_options)
     : pattern_value(move(pattern))
     , parser_result(move(parse_result))
 {
@@ -87,7 +87,7 @@ typename ParserTraits<Parser>::OptionsType Regex<Parser>::options() const
 }
 
 template<class Parser>
-DeprecatedString Regex<Parser>::error_string(Optional<DeprecatedString> message) const
+ByteString Regex<Parser>::error_string(Optional<ByteString> message) const
 {
     StringBuilder eb;
     eb.append("Error during parsing of regular expression:\n"sv);
@@ -96,7 +96,7 @@ DeprecatedString Regex<Parser>::error_string(Optional<DeprecatedString> message)
         eb.append(' ');
 
     eb.appendff("^---- {}", message.value_or(get_error_string(parser_result.error)));
-    return eb.to_deprecated_string();
+    return eb.to_byte_string();
 }
 
 template<typename Parser>
@@ -169,7 +169,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
         VERIFY(start_position + state.string_position - start_position <= input.view.length());
         if (input.regex_options.has_flag_set(AllFlags::StringCopyMatches)) {
-            state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_deprecated_string(), input.line, start_position, input.global_offset + start_position };
+            state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_byte_string(), input.line, start_position, input.global_offset + start_position };
         } else { // let the view point to the original string ...
             state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position), input.line, start_position, input.global_offset + start_position };
         }

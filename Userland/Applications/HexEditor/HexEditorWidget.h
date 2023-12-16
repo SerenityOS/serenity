@@ -46,9 +46,9 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<HexEditor> m_editor;
-    DeprecatedString m_path;
-    DeprecatedString m_name;
-    DeprecatedString m_extension;
+    ByteString m_path;
+    ByteString m_name;
+    ByteString m_extension;
 
     int m_goto_history { 0 };
     String m_search_text;

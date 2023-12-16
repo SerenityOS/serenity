@@ -122,7 +122,7 @@ TEST_CASE(regex_lexer)
 
 TEST_CASE(parser_error_parens)
 {
-    DeprecatedString pattern = "test()test";
+    ByteString pattern = "test()test";
     Lexer l(pattern);
     PosixExtendedParser p(l);
     p.parse();
@@ -132,7 +132,7 @@ TEST_CASE(parser_error_parens)
 
 TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 {
-    DeprecatedString pattern;
+    ByteString pattern;
     Vector<char, 5> chars = { '*', '+', '?', '{' };
     StringBuilder b;
 
@@ -143,7 +143,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         // First in ere
         b.clear();
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -153,7 +153,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append("a|"sv);
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -163,7 +163,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('^');
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -173,7 +173,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('$');
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -184,7 +184,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.append('(');
         b.append(ch);
         b.append(')');
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -267,7 +267,7 @@ TEST_CASE(catch_all_newline)
     Regex<PosixExtended> re("^.*$", PosixFlags::Multiline | PosixFlags::StringCopyMatches);
     RegexResult result;
     auto lambda = [&result, &re]() {
-        DeprecatedString aaa = "Hello World\nTest\n1234\n";
+        ByteString aaa = "Hello World\nTest\n1234\n";
         result = match(aaa, re);
         EXPECT_EQ(result.success, true);
     };
@@ -283,11 +283,11 @@ TEST_CASE(catch_all_newline_view)
     Regex<PosixExtended> re("^.*$", PosixFlags::Multiline);
     RegexResult result;
 
-    DeprecatedString aaa = "Hello World\nTest\n1234\n";
+    ByteString aaa = "Hello World\nTest\n1234\n";
     result = match(aaa, re);
     EXPECT_EQ(result.success, true);
     EXPECT_EQ(result.count, 3u);
-    DeprecatedString str = "Hello World";
+    ByteString str = "Hello World";
     EXPECT_EQ(result.matches.at(0).view, str.view());
     EXPECT_EQ(result.matches.at(1).view, "Test");
     EXPECT_EQ(result.matches.at(2).view, "1234");
@@ -313,7 +313,7 @@ TEST_CASE(catch_all_newline_2)
 TEST_CASE(match_all_character_class)
 {
     Regex<PosixExtended> re("[[:alpha:]]");
-    DeprecatedString str = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString str = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     RegexResult result = match(str, re, PosixFlags::Global | PosixFlags::StringCopyMatches);
 
     EXPECT_EQ(result.success, true);
@@ -326,7 +326,7 @@ TEST_CASE(match_all_character_class)
 TEST_CASE(match_character_class_with_assertion)
 {
     Regex<PosixExtended> re("[[:alpha:]]+$");
-    DeprecatedString str = "abcdef";
+    ByteString str = "abcdef";
     RegexResult result = match(str, re);
 
     EXPECT_EQ(result.success, true);
@@ -372,13 +372,13 @@ TEST_CASE(ini_file_entries)
         regex_dbg.print_bytecode(re);
     }
 
-    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 3u);
 
     if constexpr (REGEX_DEBUG) {
         for (auto& v : result.matches)
-            fprintf(stderr, "%s\n", v.view.to_deprecated_string().characters());
+            fprintf(stderr, "%s\n", v.view.to_byte_string().characters());
     }
 
     EXPECT_EQ(result.matches.at(0).view, "[Window]");
@@ -400,7 +400,7 @@ TEST_CASE(ini_file_entries2)
     Regex<PosixExtended> re("[[:alpha:]]*=([[:digit:]]*)");
     RegexResult result;
 
-    DeprecatedString haystack = "ViewMode=Icon";
+    ByteString haystack = "ViewMode=Icon";
 
     EXPECT_EQ(re.match(haystack.view(), result), false);
     EXPECT_EQ(result.count, 0u);
@@ -421,7 +421,7 @@ TEST_CASE(named_capture_group)
         regex_dbg.print_bytecode(re);
     }
 
-    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack, result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 2u);
     EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
@@ -444,7 +444,7 @@ TEST_CASE(ecma262_named_capture_group_with_dollar_sign)
         regex_dbg.print_bytecode(re);
     }
 
-    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack, result, ECMAScriptFlags::Multiline), true);
     EXPECT_EQ(result.count, 2u);
     EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
@@ -467,7 +467,7 @@ TEST_CASE(a_star)
         regex_dbg.print_bytecode(re);
     }
 
-    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 32u);
     if (result.count == 32u) {
@@ -500,7 +500,7 @@ TEST_CASE(posix_extended_nested_capture_group)
     EXPECT_EQ(result.capture_group_matches[0][2].view, "llo"sv);
 }
 
-auto parse_test_case_long_disjunction_chain = DeprecatedString::repeated("a|"sv, 100000);
+auto parse_test_case_long_disjunction_chain = ByteString::repeated("a|"sv, 100000);
 
 TEST_CASE(ECMA262_parse)
 {
@@ -730,7 +730,7 @@ TEST_CASE(ECMA262_unicode_match)
     StringBuilder builder;
     for (u32 code_point : space_and_line_terminator_code_points)
         builder.append_code_point(code_point);
-    auto space_and_line_terminators = builder.to_deprecated_string();
+    auto space_and_line_terminators = builder.to_byte_string();
 
     struct _test {
         StringView pattern;
@@ -969,7 +969,7 @@ TEST_CASE(case_insensitive_match)
 TEST_CASE(extremely_long_fork_chain)
 {
     Regex<ECMA262> re("(?:aa)*");
-    auto result = re.match(DeprecatedString::repeated('a', 1000));
+    auto result = re.match(ByteString::repeated('a', 1000));
     EXPECT_EQ(result.success, true);
 }
 
@@ -988,7 +988,7 @@ TEST_CASE(theoretically_infinite_loop)
     }
 }
 
-static auto g_lots_of_a_s = DeprecatedString::repeated('a', 10'000'000);
+static auto g_lots_of_a_s = ByteString::repeated('a', 10'000'000);
 
 BENCHMARK_CASE(fork_performance)
 {
@@ -1137,7 +1137,7 @@ TEST_CASE(single_match_flag)
         auto result = re.match("ABC"sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), "A"sv);
+        EXPECT_EQ(result.matches.first().view.to_byte_string(), "A"sv);
     }
 }
 
@@ -1149,7 +1149,7 @@ TEST_CASE(empty_string_wildcard_match)
         auto result = re.match(""sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), ""sv);
+        EXPECT_EQ(result.matches.first().view.to_byte_string(), ""sv);
     }
 }
 
@@ -1162,7 +1162,7 @@ TEST_CASE(inversion_state_in_char_class)
         auto result = re.match("hello"sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), "h"sv);
+        EXPECT_EQ(result.matches.first().view.to_byte_string(), "h"sv);
     }
     {
         Regex<ECMA262> re("^(?:([^\\s!\"#%-,\\./;->@\\[-\\^`\\{-~]+(?=([=~}\\s/.)|]))))"sv, ECMAScriptFlags::Global);
@@ -1170,8 +1170,8 @@ TEST_CASE(inversion_state_in_char_class)
         auto result = re.match("slideNumbers}}"sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), "slideNumbers"sv);
-        EXPECT_EQ(result.capture_group_matches.first()[0].view.to_deprecated_string(), "slideNumbers"sv);
-        EXPECT_EQ(result.capture_group_matches.first()[1].view.to_deprecated_string(), "}"sv);
+        EXPECT_EQ(result.matches.first().view.to_byte_string(), "slideNumbers"sv);
+        EXPECT_EQ(result.capture_group_matches.first()[0].view.to_byte_string(), "slideNumbers"sv);
+        EXPECT_EQ(result.capture_group_matches.first()[1].view.to_byte_string(), "}"sv);
     }
 }

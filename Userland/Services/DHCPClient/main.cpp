@@ -12,7 +12,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    Vector<DeprecatedString> interfaces;
+    Vector<ByteString> interfaces;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(interfaces, "Interfaces to run DHCP server on", "interfaces");

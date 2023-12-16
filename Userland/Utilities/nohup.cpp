@@ -16,7 +16,7 @@ namespace {
 void dup_out_file(int fd_to_redirect)
 {
     int fd = -1;
-    DeprecatedString path = "nohup.out";
+    ByteString path = "nohup.out";
     auto options = O_CREAT | O_WRONLY | O_APPEND;
     auto mode = S_IRUSR | S_IWUSR;
     auto fd_or_error = Core::System::open(path, options, mode);

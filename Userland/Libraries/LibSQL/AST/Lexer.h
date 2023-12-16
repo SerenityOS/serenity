@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Token.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
 
@@ -46,9 +46,9 @@ private:
     bool is_line_break() const;
     bool is_eof() const;
 
-    static HashMap<DeprecatedString, TokenType> s_keywords;
+    static HashMap<ByteString, TokenType> s_keywords;
     static HashMap<char, TokenType> s_one_char_tokens;
-    static HashMap<DeprecatedString, TokenType> s_two_char_tokens;
+    static HashMap<ByteString, TokenType> s_two_char_tokens;
 
     StringView m_source;
     size_t m_line_number { 1 };

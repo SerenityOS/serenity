@@ -31,7 +31,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     m_console_global_environment_extensions = realm.heap().allocate<ConsoleGlobalEnvironmentExtensions>(realm, realm, window);
 }
 
-void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
+void WebContentConsoleClient::handle_input(ByteString const& js_source)
 {
     if (!m_console_global_environment_extensions)
         return;
@@ -46,16 +46,16 @@ void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
 
     if (result.value().has_value()) {
         m_console_global_environment_extensions->set_most_recent_result(result.value().value());
-        print_html(JS::MarkupGenerator::html_from_value(*result.value()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+        print_html(JS::MarkupGenerator::html_from_value(*result.value()).release_value_but_fixme_should_propagate_errors().to_byte_string());
     }
 }
 
 void WebContentConsoleClient::report_exception(JS::Error const& exception, bool in_promise)
 {
-    print_html(JS::MarkupGenerator::html_from_error(exception, in_promise).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+    print_html(JS::MarkupGenerator::html_from_error(exception, in_promise).release_value_but_fixme_should_propagate_errors().to_byte_string());
 }
 
-void WebContentConsoleClient::print_html(DeprecatedString const& line)
+void WebContentConsoleClient::print_html(ByteString const& line)
 {
     m_message_log.append({ .type = ConsoleOutput::Type::HTML, .data = line });
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
@@ -67,7 +67,7 @@ void WebContentConsoleClient::clear_output()
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
 }
 
-void WebContentConsoleClient::begin_group(DeprecatedString const& label, bool start_expanded)
+void WebContentConsoleClient::begin_group(ByteString const& label, bool start_expanded)
 {
     m_message_log.append({ .type = start_expanded ? ConsoleOutput::Type::BeginGroup : ConsoleOutput::Type::BeginGroupCollapsed, .data = label });
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
@@ -93,8 +93,8 @@ void WebContentConsoleClient::send_messages(i32 start_index)
     }
 
     // FIXME: Replace with a single Vector of message structs
-    Vector<DeprecatedString> message_types;
-    Vector<DeprecatedString> messages;
+    Vector<ByteString> message_types;
+    Vector<ByteString> messages;
     message_types.ensure_capacity(messages_to_send);
     messages.ensure_capacity(messages_to_send);
 
@@ -152,7 +152,7 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
 
     if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
         auto group = arguments.get<JS::Console::Group>();
-        begin_group(DeprecatedString::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
+        begin_group(ByteString::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
         return JS::js_undefined();
     }
 

@@ -126,7 +126,7 @@ private:
     void handle_menu_mouse_event(Menu&, MouseEvent const&);
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
-    DeprecatedString computed_title() const;
+    ByteString computed_title() const;
 
     Gfx::IntRect constrained_render_rect_to_screen(Gfx::IntRect const&) const;
     Gfx::IntRect leftmost_titlebar_button_rect() const;

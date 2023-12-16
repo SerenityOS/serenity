@@ -85,7 +85,7 @@ GUI::Model::MatchResult StorageModel::data_matches(GUI::ModelIndex const& index,
     auto const& local_storage_key = keys[index.row()];
     auto const& local_storage_value = m_local_storage_entries.get(local_storage_key).value_or({});
 
-    auto haystack = DeprecatedString::formatted("{} {}", local_storage_key, local_storage_value);
+    auto haystack = ByteString::formatted("{} {}", local_storage_key, local_storage_value);
     auto match_result = fuzzy_match(needle, haystack);
     if (match_result.score > 0)
         return { TriState::True, match_result.score };

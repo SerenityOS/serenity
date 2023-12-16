@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
@@ -51,7 +51,7 @@ public:
     Utf16View substring_view(size_t code_unit_offset) const;
 
     [[nodiscard]] String to_utf8() const;
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
     u16 code_unit_at(size_t index) const;
 
     size_t length_in_code_units() const;

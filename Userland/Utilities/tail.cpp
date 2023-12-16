@@ -86,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 line.append(ch);
                 if (ch == '\n' || i == bytes.size() - 1) {
                     if (wanted_line_count > line_count || line_index >= line_count - wanted_line_count)
-                        out("{}", line.to_deprecated_string());
+                        out("{}", line.to_byte_string());
                     line_index++;
                     line.clear();
                 }

@@ -30,10 +30,10 @@ ErrorOr<void> SearchPanel::setup()
     m_places_list->set_visible(false);
 
     m_search_textbox->on_return_pressed = [this]() {
-        search(MUST(String::from_deprecated_string(m_search_textbox->text())));
+        search(MUST(String::from_byte_string(m_search_textbox->text())));
     };
     m_search_button->on_click = [this](unsigned) {
-        search(MUST(String::from_deprecated_string(m_search_textbox->text())));
+        search(MUST(String::from_byte_string(m_search_textbox->text())));
     };
 
     m_places_list->set_item_height(m_places_list->font().preferred_line_height() * 2 + m_places_list->vertical_padding());
@@ -59,7 +59,7 @@ void SearchPanel::search(StringView query)
     m_start_container->set_visible(false);
 
     // Start HTTP GET request to load people.json
-    HashMap<DeprecatedString, DeprecatedString> headers;
+    HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
     URL url(MUST(String::formatted("https://nominatim.openstreetmap.org/search?q={}&format=json", AK::URL::percent_encode(query, AK::URL::PercentEncodeSet::Query))));
@@ -96,9 +96,9 @@ void SearchPanel::search(StringView query)
             // FIXME: Handle JSON parsing errors
             auto const& json_place = json_places.at(i).as_object();
 
-            MapWidget::LatLng latlng = { json_place.get_deprecated_string("lat"sv).release_value().to_double().release_value(),
-                json_place.get_deprecated_string("lon"sv).release_value().to_double().release_value() };
-            String name = MUST(String::formatted("{}\n{:.5}, {:.5}", json_place.get_deprecated_string("display_name"sv).release_value(), latlng.latitude, latlng.longitude));
+            MapWidget::LatLng latlng = { json_place.get_byte_string("lat"sv).release_value().to_double().release_value(),
+                json_place.get_byte_string("lon"sv).release_value().to_double().release_value() };
+            String name = MUST(String::formatted("{}\n{:.5}, {:.5}", json_place.get_byte_string("display_name"sv).release_value(), latlng.latitude, latlng.longitude));
 
             // Calculate the right zoom level for bounding box
             auto const& json_boundingbox = json_place.get_array("boundingbox"sv);

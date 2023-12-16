@@ -122,7 +122,7 @@ void _entry(int argc, char** argv, char** envp)
     init_libc();
 
     int main_program_fd = -1;
-    DeprecatedString main_program_path;
+    ByteString main_program_path;
     bool is_secure = false;
     for (; auxvp->a_type != AT_NULL; ++auxvp) {
         if (auxvp->a_type == ELF::AuxiliaryValue::ExecFileDescriptor) {

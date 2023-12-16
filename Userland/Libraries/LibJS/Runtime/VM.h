@@ -65,9 +65,9 @@ public:
         return m_string_cache;
     }
 
-    HashMap<DeprecatedString, GCPtr<PrimitiveString>>& deprecated_string_cache()
+    HashMap<ByteString, GCPtr<PrimitiveString>>& byte_string_cache()
     {
-        return m_deprecated_string_cache;
+        return m_byte_string_cache;
     }
 
     PrimitiveString& empty_string() { return *m_empty_string; }
@@ -186,7 +186,7 @@ public:
     template<typename T, typename... Args>
     Completion throw_completion(ErrorType type, Args&&... args)
     {
-        return throw_completion<T>(DeprecatedString::formatted(type.message(), forward<Args>(args)...));
+        return throw_completion<T>(ByteString::formatted(type.message(), forward<Args>(args)...));
     }
 
     Value get_new_target();
@@ -234,7 +234,7 @@ public:
     Function<HashMap<PropertyKey, Value>(SourceTextModule&)> host_get_import_meta_properties;
     Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
 
-    Function<Vector<DeprecatedString>()> host_get_supported_import_attributes;
+    Function<Vector<ByteString>()> host_get_supported_import_attributes;
 
     void set_dynamic_imports_allowed(bool value) { m_dynamic_imports_allowed = value; }
 
@@ -275,7 +275,7 @@ private:
     Vector<FlatPtr> get_native_stack_trace() const;
 
     HashMap<String, GCPtr<PrimitiveString>> m_string_cache;
-    HashMap<DeprecatedString, GCPtr<PrimitiveString>> m_deprecated_string_cache;
+    HashMap<ByteString, GCPtr<PrimitiveString>> m_byte_string_cache;
 
     Heap m_heap;
 
@@ -298,13 +298,13 @@ private:
 
     struct StoredModule {
         ImportedModuleReferrer referrer;
-        DeprecatedString filename;
-        DeprecatedString type;
+        ByteString filename;
+        ByteString type;
         Handle<Module> module;
         bool has_once_started_linking { false };
     };
 
-    StoredModule* get_stored_module(ImportedModuleReferrer const& script_or_module, DeprecatedString const& filename, DeprecatedString const& type);
+    StoredModule* get_stored_module(ImportedModuleReferrer const& script_or_module, ByteString const& filename, ByteString const& type);
 
     Vector<StoredModule> m_loaded_modules;
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/Vector.h>
 
@@ -21,13 +21,13 @@ class StringTable {
 public:
     StringTable() = default;
 
-    StringTableIndex insert(DeprecatedString);
-    DeprecatedString const& get(StringTableIndex) const;
+    StringTableIndex insert(ByteString);
+    ByteString const& get(StringTableIndex) const;
     void dump() const;
     bool is_empty() const { return m_strings.is_empty(); }
 
 private:
-    Vector<DeprecatedString> m_strings;
+    Vector<ByteString> m_strings;
 };
 
 }

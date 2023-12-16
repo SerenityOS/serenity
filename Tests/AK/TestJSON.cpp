@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -14,7 +14,7 @@
 
 TEST_CASE(load_form)
 {
-    DeprecatedString raw_form_json = R"(
+    ByteString raw_form_json = R"(
     {
         "name": "Form1",
         "widgets": [
@@ -40,7 +40,7 @@ TEST_CASE(load_form)
 
     EXPECT(form_json.is_object());
 
-    auto name = form_json.as_object().get_deprecated_string("name"sv);
+    auto name = form_json.as_object().get_byte_string("name"sv);
     EXPECT(name.has_value());
 
     EXPECT_EQ(name.value(), "Form1");
@@ -50,7 +50,7 @@ TEST_CASE(load_form)
 
     widgets->for_each([&](JsonValue const& widget_value) {
         auto& widget_object = widget_value.as_object();
-        auto widget_class = widget_object.get_deprecated_string("class"sv).value();
+        auto widget_class = widget_object.get_byte_string("class"sv).value();
         widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] const JsonValue& property_value) {
         });
     });
@@ -109,13 +109,13 @@ TEST_CASE(json_duplicate_keys)
     json.set("test", "foo");
     json.set("test", "bar");
     json.set("test", "baz");
-    EXPECT_EQ(json.to_deprecated_string(), "{\"test\":\"baz\"}");
+    EXPECT_EQ(json.to_byte_string(), "{\"test\":\"baz\"}");
 }
 
 TEST_CASE(json_u64_roundtrip)
 {
     auto big_value = 0xffffffffffffffffull;
-    auto json = JsonValue(big_value).to_deprecated_string();
+    auto json = JsonValue(big_value).to_byte_string();
     auto value = JsonValue::from_string(json);
     EXPECT_EQ_FORCE(value.is_error(), false);
     EXPECT_EQ(value.value().as_u64(), big_value);
@@ -292,7 +292,7 @@ private:
 
 TEST_CASE(fallible_json_object_for_each)
 {
-    DeprecatedString raw_json = R"(
+    ByteString raw_json = R"(
     {
         "name": "anon",
         "home": "/home/anon",
@@ -332,7 +332,7 @@ TEST_CASE(fallible_json_object_for_each)
 
 TEST_CASE(fallible_json_array_for_each)
 {
-    DeprecatedString raw_json = R"(
+    ByteString raw_json = R"(
     [
         "anon",
         "/home/anon",
@@ -489,7 +489,7 @@ TEST_CASE(json_array_serialize)
     auto array = json_value.as_array();
     StringBuilder builder {};
     array.serialize(builder);
-    EXPECT_EQ(builder.to_deprecated_string(), raw_json);
+    EXPECT_EQ(builder.to_byte_string(), raw_json);
 }
 
 TEST_CASE(json_array_values)

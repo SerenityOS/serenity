@@ -576,7 +576,7 @@ static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget, 
 
     auto theme_file = mode == WebContentView::PaletteMode::Default ? "Default"sv : "Dark"sv;
     auto theme_ini = MUST(Core::Resource::load_from_uri(MUST(String::formatted("resource://themes/{}.ini", theme_file))));
-    auto theme = Gfx::load_system_theme(theme_ini->filesystem_path().to_deprecated_string()).release_value_but_fixme_should_propagate_errors();
+    auto theme = Gfx::load_system_theme(theme_ini->filesystem_path().to_byte_string()).release_value_but_fixme_should_propagate_errors();
 
     auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
     auto palette = Gfx::Palette(move(palette_impl));
@@ -752,7 +752,7 @@ bool WebContentView::event(QEvent* event)
 
 ErrorOr<String> WebContentView::dump_layout_tree()
 {
-    return String::from_deprecated_string(client().dump_layout_tree());
+    return String::from_byte_string(client().dump_layout_tree());
 }
 
 }

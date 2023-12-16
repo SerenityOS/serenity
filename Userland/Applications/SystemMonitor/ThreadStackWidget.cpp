@@ -49,7 +49,7 @@ public:
         auto& symbol = m_symbols[model_index.row()];
         switch (model_index.column()) {
         case Column::Address:
-            return DeprecatedString::formatted("{:p}", symbol.address);
+            return ByteString::formatted("{:p}", symbol.address);
         case Column::Object:
             return symbol.object;
         case Column::Symbol:

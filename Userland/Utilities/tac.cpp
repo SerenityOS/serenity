@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (path == "-"sv) {
                 stream = stdin;
             } else {
-                stream = fopen(DeprecatedString(path).characters(), "r");
+                stream = fopen(ByteString(path).characters(), "r");
                 if (!stream) {
                     warnln("Failed to open {}: {}", path, strerror(errno));
                     continue;
@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio"));
 
     for (auto* stream : streams) {
-        Vector<DeprecatedString> lines;
+        Vector<ByteString> lines;
         for (;;) {
             size_t n = 0;
             errno = 0;

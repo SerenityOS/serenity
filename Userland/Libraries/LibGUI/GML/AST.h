@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
@@ -35,11 +35,11 @@ public:
         return try_make_ref_counted<NodeT>(token.m_view);
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         StringBuilder builder;
         format(builder, 0, false);
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
 
     // Format this AST node with the builder at the given indentation level.
@@ -64,7 +64,7 @@ public:
 // Single line comments with //.
 class Comment : public Node {
 public:
-    Comment(DeprecatedString text)
+    Comment(ByteString text)
         : m_text(move(text))
     {
     }
@@ -82,13 +82,13 @@ public:
     virtual ~Comment() override = default;
 
 private:
-    DeprecatedString m_text {};
+    ByteString m_text {};
 };
 
 // Any JSON-like key: value pair.
 class KeyValuePair : public Node {
 public:
-    KeyValuePair(DeprecatedString key, NonnullRefPtr<ValueNode> value)
+    KeyValuePair(ByteString key, NonnullRefPtr<ValueNode> value)
         : m_key(move(key))
         , m_value(move(value))
     {
@@ -104,11 +104,11 @@ public:
             builder.append('\n');
     }
 
-    DeprecatedString key() const { return m_key; }
+    ByteString key() const { return m_key; }
     NonnullRefPtr<ValueNode> value() const { return m_value; }
 
 private:
-    DeprecatedString m_key;
+    ByteString m_key;
     NonnullRefPtr<ValueNode> m_value;
 };
 
@@ -151,7 +151,7 @@ public:
 class Object : public ValueNode {
 public:
     Object() = default;
-    Object(DeprecatedString name, Vector<NonnullRefPtr<Node const>> properties, Vector<NonnullRefPtr<Node const>> sub_objects)
+    Object(ByteString name, Vector<NonnullRefPtr<Node const>> properties, Vector<NonnullRefPtr<Node const>> sub_objects)
         : m_properties(move(properties))
         , m_sub_objects(move(sub_objects))
         , m_name(move(name))
@@ -161,7 +161,7 @@ public:
     virtual ~Object() override = default;
 
     StringView name() const { return m_name; }
-    void set_name(DeprecatedString name) { m_name = move(name); }
+    void set_name(ByteString name) { m_name = move(name); }
 
     ErrorOr<void> add_sub_object_child(NonnullRefPtr<Node const> child)
     {
@@ -289,7 +289,7 @@ private:
     Vector<NonnullRefPtr<Node const>> m_properties;
     // Sub objects and comments
     Vector<NonnullRefPtr<Node const>> m_sub_objects;
-    DeprecatedString m_name {};
+    ByteString m_name {};
 };
 
 class GMLFile : public Node {

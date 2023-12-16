@@ -33,8 +33,8 @@ protected:
     void update_preview();
 
 private:
-    Vector<Vector<DeprecatedString>> m_data;
-    Vector<DeprecatedString> m_headers;
+    Vector<Vector<ByteString>> m_data;
+    Vector<ByteString> m_headers;
     RefPtr<GUI::WizardPage> m_page;
     RefPtr<GUI::RadioButton> m_delimiter_comma_radio;
     RefPtr<GUI::RadioButton> m_delimiter_semicolon_radio;
@@ -50,7 +50,7 @@ private:
     RefPtr<GUI::CheckBox> m_export_header_check_box;
     RefPtr<GUI::CheckBox> m_quote_all_fields_check_box;
     RefPtr<GUI::TextEditor> m_data_preview_text_editor;
-    Vector<DeprecatedString> m_quote_escape_items {
+    Vector<ByteString> m_quote_escape_items {
         // Note: Keep in sync with Writer::WriterTraits::QuoteEscape.
         "Repeat",
         "Backslash",
@@ -58,7 +58,7 @@ private:
 };
 
 struct ExportDialog {
-    static ErrorOr<void> make_and_run_for(StringView mime, Core::File&, DeprecatedString filename, Workbook&);
+    static ErrorOr<void> make_and_run_for(StringView mime, Core::File&, ByteString filename, Workbook&);
 };
 
 }

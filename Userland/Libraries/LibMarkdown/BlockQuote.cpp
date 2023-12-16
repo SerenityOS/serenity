@@ -11,21 +11,21 @@
 
 namespace Markdown {
 
-DeprecatedString BlockQuote::render_to_html(bool) const
+ByteString BlockQuote::render_to_html(bool) const
 {
     StringBuilder builder;
     builder.append("<blockquote>\n"sv);
     builder.append(m_contents->render_to_html());
     builder.append("</blockquote>\n"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<DeprecatedString> BlockQuote::render_lines_for_terminal(size_t view_width) const
+Vector<ByteString> BlockQuote::render_lines_for_terminal(size_t view_width) const
 {
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
     size_t child_width = view_width < 4 ? 0 : view_width - 4;
     for (auto& line : m_contents->render_lines_for_terminal(child_width))
-        lines.append(DeprecatedString::formatted("    {}", line));
+        lines.append(ByteString::formatted("    {}", line));
 
     return lines;
 }

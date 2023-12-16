@@ -6,8 +6,8 @@
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/AllOf.h>
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
@@ -22,14 +22,14 @@
 #include <LibCore/Directory.h>
 #include <LibFileSystem/FileSystem.h>
 
-static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
+static ByteString format_identifier(StringView owner, ByteString identifier)
 {
     identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
-        return DeprecatedString::formatted("{}_{}", owner[0], identifier);
+        return ByteString::formatted("{}_{}", owner[0], identifier);
     if (is_ascii_lower_alpha(identifier[0]))
-        return DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+        return ByteString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
     return identifier;
 }
 
@@ -153,9 +153,9 @@ using KeywordList = Vector<size_t>;
 using ListPatternList = Vector<size_t>;
 
 struct LocaleData {
-    DeprecatedString language;
-    Optional<DeprecatedString> territory;
-    Optional<DeprecatedString> variant;
+    ByteString language;
+    Optional<ByteString> territory;
+    Optional<ByteString> variant;
     size_t display_patterns { 0 };
     size_t languages { 0 };
     size_t territories { 0 };
@@ -195,25 +195,25 @@ struct CLDR {
     UniqueStorage<ListPatternList> unique_list_pattern_lists;
     UniqueStorage<TextLayout> unique_text_layouts;
 
-    HashMap<DeprecatedString, LocaleData> locales;
+    HashMap<ByteString, LocaleData> locales;
     Vector<Alias> locale_aliases;
 
-    Vector<DeprecatedString> languages;
+    Vector<ByteString> languages;
     HashMap<StringView, size_t> language_indices;
 
-    Vector<DeprecatedString> territories;
+    Vector<ByteString> territories;
     HashMap<StringView, size_t> territory_indices;
 
-    Vector<DeprecatedString> scripts;
+    Vector<ByteString> scripts;
     HashMap<StringView, size_t> script_indices;
 
-    Vector<DeprecatedString> variants;
+    Vector<ByteString> variants;
     HashMap<StringView, size_t> variant_indices;
 
-    Vector<DeprecatedString> currencies;
+    Vector<ByteString> currencies;
     HashMap<StringView, size_t> currency_indices;
 
-    Vector<DeprecatedString> date_fields;
+    Vector<ByteString> date_fields;
     HashMap<StringView, size_t> date_fields_indices;
 
     Vector<Alias> date_field_aliases {
@@ -224,17 +224,17 @@ struct CLDR {
         { "zone"sv, "timeZoneName"sv },
     };
 
-    HashMap<DeprecatedString, Vector<DeprecatedString>> keywords;
-    HashMap<DeprecatedString, Vector<Alias>> keyword_aliases;
-    HashMap<DeprecatedString, DeprecatedString> keyword_names;
+    HashMap<ByteString, Vector<ByteString>> keywords;
+    HashMap<ByteString, Vector<Alias>> keyword_aliases;
+    HashMap<ByteString, ByteString> keyword_names;
 
-    Vector<DeprecatedString> list_pattern_types;
-    Vector<DeprecatedString> character_orders;
-    HashMap<DeprecatedString, size_t> language_aliases;
-    HashMap<DeprecatedString, size_t> territory_aliases;
-    HashMap<DeprecatedString, size_t> script_aliases;
-    HashMap<DeprecatedString, size_t> variant_aliases;
-    HashMap<DeprecatedString, size_t> subdivision_aliases;
+    Vector<ByteString> list_pattern_types;
+    Vector<ByteString> character_orders;
+    HashMap<ByteString, size_t> language_aliases;
+    HashMap<ByteString, size_t> territory_aliases;
+    HashMap<ByteString, size_t> script_aliases;
+    HashMap<ByteString, size_t> variant_aliases;
+    HashMap<ByteString, size_t> subdivision_aliases;
     Vector<LanguageMapping> complex_mappings;
     Vector<LanguageMapping> likely_subtags;
     size_t max_variant_size { 0 };
@@ -253,9 +253,9 @@ struct CLDR {
     })
 
 // NOTE: We return a pointer only because ErrorOr cannot store references. You may safely assume the pointer is non-null.
-ErrorOr<JsonValue const*> read_json_file_with_cache(DeprecatedString const& path)
+ErrorOr<JsonValue const*> read_json_file_with_cache(ByteString const& path)
 {
-    static HashMap<DeprecatedString, JsonValue> parsed_json_cache;
+    static HashMap<ByteString, JsonValue> parsed_json_cache;
 
     if (auto parsed_json = parsed_json_cache.get(path); parsed_json.has_value())
         return &parsed_json.value();
@@ -273,7 +273,7 @@ static ErrorOr<LanguageMapping> parse_language_mapping(CLDR& cldr, StringView ke
     return LanguageMapping { move(parsed_key), move(parsed_alias) };
 }
 
-static ErrorOr<void> parse_core_aliases(DeprecatedString core_supplemental_path, CLDR& cldr)
+static ErrorOr<void> parse_core_aliases(ByteString core_supplemental_path, CLDR& cldr)
 {
     LexicalPath core_aliases_path(move(core_supplemental_path));
     core_aliases_path = core_aliases_path.append("aliases.json"sv);
@@ -285,7 +285,7 @@ static ErrorOr<void> parse_core_aliases(DeprecatedString core_supplemental_path,
 
     auto append_aliases = [&](auto& alias_object, auto& alias_map) {
         alias_object.for_each_member([&](auto const& key, JsonValue const& value) {
-            auto alias = value.as_object().get_deprecated_string("_replacement"sv).value();
+            auto alias = value.as_object().get_byte_string("_replacement"sv).value();
 
             if (key.contains('-')) {
                 auto mapping = TRY_OR_DISCARD(parse_language_mapping(cldr, key, alias));
@@ -307,7 +307,7 @@ static ErrorOr<void> parse_core_aliases(DeprecatedString core_supplemental_path,
     return {};
 }
 
-static ErrorOr<void> parse_likely_subtags(DeprecatedString core_supplemental_path, CLDR& cldr)
+static ErrorOr<void> parse_likely_subtags(ByteString core_supplemental_path, CLDR& cldr)
 {
     LexicalPath likely_subtags_path(move(core_supplemental_path));
     likely_subtags_path = likely_subtags_path.append("likelySubtags.json"sv);
@@ -326,7 +326,7 @@ static ErrorOr<void> parse_likely_subtags(DeprecatedString core_supplemental_pat
     return {};
 }
 
-static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_identity(ByteString locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath locale_display_names_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
@@ -335,10 +335,10 @@ static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, Lo
     auto const& main_object = locale_display_names.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& identity_object = locale_object.get_object("identity"sv).value();
-    auto const& language_string = identity_object.get_deprecated_string("language"sv).value();
-    auto const& territory_string = identity_object.get_deprecated_string("territory"sv);
-    auto const& script_string = identity_object.get_deprecated_string("script"sv);
-    auto const& variant_string = identity_object.get_deprecated_string("variant"sv);
+    auto const& language_string = identity_object.get_byte_string("language"sv).value();
+    auto const& territory_string = identity_object.get_byte_string("territory"sv);
+    auto const& script_string = identity_object.get_byte_string("script"sv);
+    auto const& variant_string = identity_object.get_byte_string("variant"sv);
 
     locale.language = language_string;
 
@@ -372,7 +372,7 @@ static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, Lo
     return {};
 }
 
-static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_display_patterns(ByteString locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
@@ -382,8 +382,8 @@ static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path,
     auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
     auto const& locale_display_patterns_object = locale_display_names_object.get_object("localeDisplayPattern"sv).value();
-    auto const& locale_pattern = locale_display_patterns_object.get_deprecated_string("localePattern"sv).value();
-    auto const& locale_separator = locale_display_patterns_object.get_deprecated_string("localeSeparator"sv).value();
+    auto const& locale_pattern = locale_display_patterns_object.get_byte_string("localePattern"sv).value();
+    auto const& locale_separator = locale_display_patterns_object.get_byte_string("localeSeparator"sv).value();
 
     DisplayPattern patterns {};
     patterns.locale_pattern = cldr.unique_strings.ensure(locale_pattern);
@@ -393,7 +393,7 @@ static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path,
     return {};
 }
 
-static ErrorOr<void> preprocess_languages(DeprecatedString locale_path, CLDR& cldr)
+static ErrorOr<void> preprocess_languages(ByteString locale_path, CLDR& cldr)
 {
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
@@ -417,7 +417,7 @@ static ErrorOr<void> preprocess_languages(DeprecatedString locale_path, CLDR& cl
     return {};
 }
 
-static ErrorOr<void> preprocess_currencies(DeprecatedString numbers_path, CLDR& cldr)
+static ErrorOr<void> preprocess_currencies(ByteString numbers_path, CLDR& cldr)
 {
     LexicalPath currencies_path(move(numbers_path));
     currencies_path = currencies_path.append("currencies.json"sv);
@@ -445,7 +445,7 @@ static bool is_sanctioned_date_field(StringView field)
     return field.is_one_of("era"sv, "year"sv, "quarter"sv, "month"sv, "week"sv, "weekday"sv, "day"sv, "dayperiod"sv, "hour"sv, "minute"sv, "second"sv, "zone"sv);
 }
 
-static ErrorOr<void> preprocess_date_fields(DeprecatedString dates_path, CLDR& cldr)
+static ErrorOr<void> preprocess_date_fields(ByteString dates_path, CLDR& cldr)
 {
     LexicalPath date_fields_path(move(dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
@@ -469,7 +469,7 @@ static ErrorOr<void> preprocess_date_fields(DeprecatedString dates_path, CLDR& c
     return {};
 }
 
-static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_path, CLDR& cldr)
+static ErrorOr<void> parse_unicode_extension_keywords(ByteString bcp47_path, CLDR& cldr)
 {
     constexpr auto desired_keywords = Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
     auto keywords = TRY(read_json_file(bcp47_path));
@@ -483,7 +483,7 @@ static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_pat
         if (!desired_keywords.span().contains_slow(key))
             return;
 
-        auto const& name = value.as_object().get_deprecated_string("_alias"sv).value();
+        auto const& name = value.as_object().get_byte_string("_alias"sv).value();
         cldr.keyword_names.set(key, name);
 
         auto& keywords = cldr.keywords.ensure(key);
@@ -505,12 +505,12 @@ static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_pat
             if (key == "nu"sv && keyword.is_one_of("finance"sv, "native"sv, "traditio"sv))
                 return;
 
-            if (auto const& preferred = properties.as_object().get_deprecated_string("_preferred"sv); preferred.has_value()) {
+            if (auto const& preferred = properties.as_object().get_byte_string("_preferred"sv); preferred.has_value()) {
                 cldr.keyword_aliases.ensure(key).append({ preferred.value(), keyword });
                 return;
             }
 
-            if (auto const& alias = properties.as_object().get_deprecated_string("_alias"sv); alias.has_value())
+            if (auto const& alias = properties.as_object().get_byte_string("_alias"sv); alias.has_value())
                 cldr.keyword_aliases.ensure(key).append({ keyword, alias.value() });
 
             keywords.append(keyword);
@@ -520,7 +520,7 @@ static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_pat
     return {};
 }
 
-static Optional<DeprecatedString> find_keyword_alias(StringView key, StringView calendar, CLDR& cldr)
+static Optional<ByteString> find_keyword_alias(StringView key, StringView calendar, CLDR& cldr)
 {
     auto it = cldr.keyword_aliases.find(key);
     if (it == cldr.keyword_aliases.end())
@@ -533,7 +533,7 @@ static Optional<DeprecatedString> find_keyword_alias(StringView key, StringView 
     return alias->name;
 }
 
-static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_languages(ByteString locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
@@ -567,7 +567,7 @@ static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& 
     return {};
 }
 
-static ErrorOr<void> parse_locale_territories(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_territories(ByteString locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath territories_path(move(locale_path));
     territories_path = territories_path.append("territories.json"sv);
@@ -598,7 +598,7 @@ static ErrorOr<void> parse_locale_territories(DeprecatedString locale_path, CLDR
     return {};
 }
 
-static ErrorOr<void> parse_locale_scripts(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_scripts(ByteString locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath scripts_path(move(locale_path));
     scripts_path = scripts_path.append("scripts.json"sv);
@@ -629,7 +629,7 @@ static ErrorOr<void> parse_locale_scripts(DeprecatedString locale_path, CLDR& cl
     return {};
 }
 
-static ErrorOr<void> parse_locale_list_patterns(DeprecatedString misc_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_list_patterns(ByteString misc_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath list_patterns_path(move(misc_path));
     list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
@@ -664,10 +664,10 @@ static ErrorOr<void> parse_locale_list_patterns(DeprecatedString misc_path, CLDR
         auto type = list_pattern_type(key);
         auto style = list_pattern_style(key);
 
-        auto start = cldr.unique_strings.ensure(value.as_object().get_deprecated_string("start"sv).value());
-        auto middle = cldr.unique_strings.ensure(value.as_object().get_deprecated_string("middle"sv).value());
-        auto end = cldr.unique_strings.ensure(value.as_object().get_deprecated_string("end"sv).value());
-        auto pair = cldr.unique_strings.ensure(value.as_object().get_deprecated_string("2"sv).value());
+        auto start = cldr.unique_strings.ensure(value.as_object().get_byte_string("start"sv).value());
+        auto middle = cldr.unique_strings.ensure(value.as_object().get_byte_string("middle"sv).value());
+        auto end = cldr.unique_strings.ensure(value.as_object().get_byte_string("end"sv).value());
+        auto pair = cldr.unique_strings.ensure(value.as_object().get_byte_string("2"sv).value());
 
         if (!cldr.list_pattern_types.contains_slow(type))
             cldr.list_pattern_types.append(type);
@@ -680,7 +680,7 @@ static ErrorOr<void> parse_locale_list_patterns(DeprecatedString misc_path, CLDR
     return {};
 }
 
-static ErrorOr<void> parse_locale_layout(DeprecatedString misc_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_layout(ByteString misc_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath layout_path(move(misc_path));
     layout_path = layout_path.append("layout.json"sv);
@@ -699,7 +699,7 @@ static ErrorOr<void> parse_locale_layout(DeprecatedString misc_path, CLDR& cldr,
         VERIFY_NOT_REACHED();
     };
 
-    auto character_order = orientation_object.get_deprecated_string("characterOrder"sv).value();
+    auto character_order = orientation_object.get_byte_string("characterOrder"sv).value();
 
     TextLayout layout {};
     layout.character_order = text_layout_character_order(character_order);
@@ -711,7 +711,7 @@ static ErrorOr<void> parse_locale_layout(DeprecatedString misc_path, CLDR& cldr,
     return {};
 }
 
-static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_currencies(ByteString numbers_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath currencies_path(move(numbers_path));
     currencies_path = currencies_path.append("currencies.json"sv);
@@ -735,10 +735,10 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
     numeric_currencies.resize(cldr.currencies.size());
 
     currencies_object.for_each_member([&](auto const& key, JsonValue const& value) {
-        auto long_name = value.as_object().get_deprecated_string("displayName"sv).value_or(key);
-        auto short_name = value.as_object().get_deprecated_string("symbol"sv).value_or(key);
-        auto narrow_name = value.as_object().get_deprecated_string("symbol-alt-narrow"sv);
-        auto numeric_name = value.as_object().get_deprecated_string("displayName-count-other"sv);
+        auto long_name = value.as_object().get_byte_string("displayName"sv).value_or(key);
+        auto short_name = value.as_object().get_byte_string("symbol"sv).value_or(key);
+        auto narrow_name = value.as_object().get_byte_string("symbol-alt-narrow"sv);
+        auto numeric_name = value.as_object().get_byte_string("displayName-count-other"sv);
 
         auto index = cldr.currency_indices.get(key).value();
         long_currencies[index] = cldr.unique_strings.ensure(move(long_name));
@@ -754,7 +754,7 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
     return {};
 }
 
-static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_calendars(ByteString locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
@@ -789,7 +789,7 @@ static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& 
     return {};
 }
 
-static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_locale_date_fields(ByteString dates_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath date_fields_path(move(dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
@@ -813,9 +813,9 @@ static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR&
         if (!is_sanctioned_date_field(key))
             return;
 
-        auto const& long_name = value.as_object().get_deprecated_string("displayName"sv).value();
-        auto const& short_name = fields_object.get_object(DeprecatedString::formatted("{}-short", key))->get_deprecated_string("displayName"sv).value();
-        auto const& narrow_name = fields_object.get_object(DeprecatedString::formatted("{}-narrow", key))->get_deprecated_string("displayName"sv).value();
+        auto const& long_name = value.as_object().get_byte_string("displayName"sv).value();
+        auto const& short_name = fields_object.get_object(ByteString::formatted("{}-short", key))->get_byte_string("displayName"sv).value();
+        auto const& narrow_name = fields_object.get_object(ByteString::formatted("{}-narrow", key))->get_byte_string("displayName"sv).value();
 
         auto index = cldr.date_fields_indices.get(key).value();
         long_date_fields[index] = cldr.unique_strings.ensure(long_name);
@@ -829,7 +829,7 @@ static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR&
     return {};
 }
 
-static ErrorOr<void> parse_number_system_keywords(DeprecatedString locale_numbers_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_number_system_keywords(ByteString locale_numbers_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
@@ -838,12 +838,12 @@ static ErrorOr<void> parse_number_system_keywords(DeprecatedString locale_number
     auto const& main_object = numbers.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(numbers_path.parent().basename()).value();
     auto const& locale_numbers_object = locale_object.get_object("numbers"sv).value();
-    auto const& default_numbering_system_object = locale_numbers_object.get_deprecated_string("defaultNumberingSystem"sv).value();
+    auto const& default_numbering_system_object = locale_numbers_object.get_byte_string("defaultNumberingSystem"sv).value();
     auto const& other_numbering_systems_object = locale_numbers_object.get_object("otherNumberingSystems"sv).value();
 
     KeywordList keywords {};
 
-    auto append_numbering_system = [&](DeprecatedString system_name) {
+    auto append_numbering_system = [&](ByteString system_name) {
         if (auto system_alias = find_keyword_alias("nu"sv, system_name, cldr); system_alias.has_value())
             system_name = system_alias.release_value();
 
@@ -868,7 +868,7 @@ static ErrorOr<void> parse_number_system_keywords(DeprecatedString locale_number
     return {};
 }
 
-static ErrorOr<void> parse_calendar_keywords(DeprecatedString locale_dates_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_calendar_keywords(ByteString locale_dates_path, CLDR& cldr, LocaleData& locale)
 {
     KeywordList keywords {};
 
@@ -934,7 +934,7 @@ static void fill_in_collation_keywords(CLDR& cldr, LocaleData& locale)
     locale.collation_numeric_keywords = kn_index;
 }
 
-static ErrorOr<void> parse_default_content_locales(DeprecatedString core_path, CLDR& cldr)
+static ErrorOr<void> parse_default_content_locales(ByteString core_path, CLDR& cldr)
 {
     LexicalPath default_content_path(move(core_path));
     default_content_path = default_content_path.append("defaultContent.json"sv);
@@ -983,7 +983,7 @@ static ErrorOr<void> define_aliases_without_scripts(CLDR& cldr)
         if ((parsed_locale.language == 0) || (parsed_locale.script == 0) || (parsed_locale.region == 0))
             return {};
 
-        auto locale_without_script = DeprecatedString::formatted("{}-{}",
+        auto locale_without_script = ByteString::formatted("{}-{}",
             cldr.unique_strings.get(parsed_locale.language),
             cldr.unique_strings.get(parsed_locale.region));
 
@@ -1008,7 +1008,7 @@ static ErrorOr<void> define_aliases_without_scripts(CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedString core_path, DeprecatedString locale_names_path, DeprecatedString misc_path, DeprecatedString numbers_path, DeprecatedString dates_path, CLDR& cldr)
+static ErrorOr<void> parse_all_locales(ByteString bcp47_path, ByteString core_path, ByteString locale_names_path, ByteString misc_path, ByteString numbers_path, ByteString dates_path, CLDR& cldr)
 {
     LexicalPath core_supplemental_path(core_path);
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
@@ -1017,7 +1017,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
     TRY(parse_core_aliases(core_supplemental_path.string(), cldr));
     TRY(parse_likely_subtags(core_supplemental_path.string(), cldr));
 
-    auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
+    auto remove_variants_from_path = [&](ByteString path) -> ErrorOr<ByteString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
@@ -1027,7 +1027,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     };
 
     TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", locale_names_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
@@ -1156,7 +1156,7 @@ namespace Locale {
 
     for (auto& keyword : cldr.keywords) {
         auto const& keyword_name = cldr.keyword_names.find(keyword.key)->value;
-        auto enum_name = DeprecatedString::formatted("Keyword{}", format_identifier({}, keyword_name));
+        auto enum_name = ByteString::formatted("Keyword{}", format_identifier({}, keyword_name));
 
         if (auto aliases = cldr.keyword_aliases.find(keyword.key); aliases != cldr.keyword_aliases.end())
             generate_enum(generator, format_identifier, enum_name, {}, keyword.value, aliases->value);
@@ -1179,9 +1179,9 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::InputBufferedF
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("string_index_type"sv, string_index_type);
-    generator.set("locales_size"sv, DeprecatedString::number(cldr.locales.size()));
-    generator.set("territories_size", DeprecatedString::number(cldr.territories.size()));
-    generator.set("variants_size", DeprecatedString::number(cldr.max_variant_size));
+    generator.set("locales_size"sv, ByteString::number(cldr.locales.size()));
+    generator.set("territories_size", ByteString::number(cldr.territories.size()));
+    generator.set("variants_size", ByteString::number(cldr.max_variant_size));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -1285,7 +1285,7 @@ ReadonlySpan<StringView> get_available_keyword_values(StringView key)
     cldr.unique_text_layouts.generate(generator, "TextLayout"sv, "s_text_layouts"sv, 30);
 
     auto append_index = [&](auto index) {
-        generator.append(DeprecatedString::formatted(", {}", index));
+        generator.append(ByteString::formatted(", {}", index));
     };
 
     auto append_list_and_size = [&](auto const& list) {
@@ -1298,16 +1298,16 @@ ReadonlySpan<StringView> get_available_keyword_values(StringView key)
         generator.append(", {");
         for (auto const& item : list) {
             generator.append(first ? " "sv : ", "sv);
-            generator.append(DeprecatedString::number(item));
+            generator.append(ByteString::number(item));
             first = false;
         }
-        generator.append(DeprecatedString::formatted(" }}, {}", list.size()));
+        generator.append(ByteString::formatted(" }}, {}", list.size()));
     };
 
     auto append_mapping = [&](auto const& keys, auto const& map, auto type, auto name, auto mapping_getter) {
         generator.set("type", type);
         generator.set("name", name);
-        generator.set("size", DeprecatedString::number(keys.size()));
+        generator.set("size", ByteString::number(keys.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {)~~~");
@@ -1318,7 +1318,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             auto mapping = mapping_getter(value);
 
             generator.append(first ? " "sv : ", "sv);
-            generator.append(DeprecatedString::number(mapping));
+            generator.append(ByteString::number(mapping));
             first = false;
         }
 
@@ -1396,7 +1396,7 @@ struct LanguageMapping {
 )~~~");
 
     auto append_complex_mapping = [&](StringView name, auto& mappings) {
-        generator.set("size", DeprecatedString::number(mappings.size()));
+        generator.set("size", ByteString::number(mappings.size()));
         generator.set("name"sv, name);
 
         generator.append(R"~~~(
@@ -1416,14 +1416,14 @@ static constexpr Array<LanguageMapping, @size@> s_@name@ { {
         });
 
         for (auto const& mapping : mappings) {
-            generator.set("language"sv, DeprecatedString::number(mapping.key.language));
+            generator.set("language"sv, ByteString::number(mapping.key.language));
             generator.append("    { { @language@");
 
             append_index(mapping.key.script);
             append_index(mapping.key.region);
             append_list_and_size(mapping.key.variants);
 
-            generator.set("language"sv, DeprecatedString::number(mapping.alias.language));
+            generator.set("language"sv, ByteString::number(mapping.alias.language));
             generator.append(" }, { @language@");
 
             append_index(mapping.alias.script);
@@ -1563,7 +1563,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     };
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) -> ErrorOr<void> {
-        HashValueMap<DeprecatedString> hashes;
+        HashValueMap<ByteString> hashes;
         TRY(hashes.try_ensure_capacity(values.size()));
 
         for (auto const& value : values)
@@ -1621,8 +1621,8 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     for (auto const& keyword : cldr.keywords) {
         auto const& keyword_name = cldr.keyword_names.find(keyword.key)->value;
-        auto enum_name = DeprecatedString::formatted("Keyword{}", format_identifier({}, keyword_name));
-        auto enum_snake = DeprecatedString::formatted("keyword_{}", keyword.key);
+        auto enum_name = ByteString::formatted("Keyword{}", format_identifier({}, keyword_name));
+        auto enum_snake = ByteString::formatted("keyword_{}", keyword.key);
 
         if (auto aliases = cldr.keyword_aliases.find(keyword.key); aliases != cldr.keyword_aliases.end())
             TRY(append_from_string(enum_name, enum_snake, keyword.value, aliases->value));

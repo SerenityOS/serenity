@@ -87,17 +87,17 @@ void KeymapSwitcher::next_keymap()
     }
 }
 
-DeprecatedString KeymapSwitcher::get_current_keymap() const
+ByteString KeymapSwitcher::get_current_keymap() const
 {
     auto proc_keymap = Core::File::open("/sys/kernel/keymap"sv, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
     auto proc_keymap_data = proc_keymap->read_until_eof().release_value_but_fixme_should_propagate_errors();
     auto json = JsonValue::from_string(proc_keymap_data).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has_string("keymap"sv));
-    return keymap_object.get_deprecated_string("keymap"sv).value();
+    return keymap_object.get_byte_string("keymap"sv).value();
 }
 
-void KeymapSwitcher::set_keymap(const AK::DeprecatedString& keymap)
+void KeymapSwitcher::set_keymap(const AK::ByteString& keymap)
 {
     if (Core::Process::spawn("/bin/keymap"sv, Array { "-m", keymap.characters() }).is_error())
         dbgln("Failed to call /bin/keymap, error: {} ({})", errno, strerror(errno));

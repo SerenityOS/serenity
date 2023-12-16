@@ -49,7 +49,7 @@ EM_JS(void, user_display, (char const* string, u32 length), { globalDisplayToUse
 template<typename... Args>
 void display(CheckedFormatString<Args...> format_string, Args const&... args)
 {
-    auto string = DeprecatedString::formatted(format_string.view(), args...);
+    auto string = ByteString::formatted(format_string.view(), args...);
     user_display(string.characters(), string.length());
 }
 
@@ -247,7 +247,7 @@ public:
     // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments arguments) override
     {
-        DeprecatedString indent = DeprecatedString::repeated("  "sv, m_group_stack_depth);
+        ByteString indent = ByteString::repeated("  "sv, m_group_stack_depth);
 
         if (log_level == JS::Console::LogLevel::Trace) {
             auto trace = arguments.get<JS::Console::Trace>();
@@ -269,7 +269,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+        auto output = ByteString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
         switch (log_level) {
         case JS::Console::LogLevel::Debug:
             displayln("{}{}", indent, output);

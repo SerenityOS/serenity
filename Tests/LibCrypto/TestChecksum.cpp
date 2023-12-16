@@ -15,11 +15,11 @@ TEST_CASE(test_adler32)
         EXPECT_EQ(digest, expected_result);
     };
 
-    do_test(DeprecatedString("").bytes(), 0x1);
-    do_test(DeprecatedString("a").bytes(), 0x00620062);
-    do_test(DeprecatedString("abc").bytes(), 0x024d0127);
-    do_test(DeprecatedString("message digest").bytes(), 0x29750586);
-    do_test(DeprecatedString("abcdefghijklmnopqrstuvwxyz").bytes(), 0x90860b20);
+    do_test(ByteString("").bytes(), 0x1);
+    do_test(ByteString("a").bytes(), 0x00620062);
+    do_test(ByteString("abc").bytes(), 0x024d0127);
+    do_test(ByteString("message digest").bytes(), 0x29750586);
+    do_test(ByteString("abcdefghijklmnopqrstuvwxyz").bytes(), 0x90860b20);
 }
 
 TEST_CASE(test_crc32)
@@ -29,7 +29,7 @@ TEST_CASE(test_crc32)
         EXPECT_EQ(digest, expected_result);
     };
 
-    do_test(DeprecatedString("").bytes(), 0x0);
-    do_test(DeprecatedString("The quick brown fox jumps over the lazy dog").bytes(), 0x414FA339);
-    do_test(DeprecatedString("various CRC algorithms input data").bytes(), 0x9BD366AE);
+    do_test(ByteString("").bytes(), 0x0);
+    do_test(ByteString("The quick brown fox jumps over the lazy dog").bytes(), 0x414FA339);
+    do_test(ByteString("various CRC algorithms input data").bytes(), 0x9BD366AE);
 }

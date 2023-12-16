@@ -14,7 +14,7 @@ WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::LocalSocket> socket)
 {
 }
 
-RefPtr<WebSocket> WebSocketClient::connect(const URL& url, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols, Vector<DeprecatedString> const& extensions, HashMap<DeprecatedString, DeprecatedString> const& request_headers)
+RefPtr<WebSocket> WebSocketClient::connect(const URL& url, ByteString const& origin, Vector<ByteString> const& protocols, Vector<ByteString> const& extensions, HashMap<ByteString, ByteString> const& request_headers)
 {
     auto headers_or_error = request_headers.clone();
     if (headers_or_error.is_error())
@@ -34,10 +34,10 @@ u32 WebSocketClient::ready_state(Badge<WebSocket>, WebSocket& connection)
     return IPCProxy::ready_state(connection.id());
 }
 
-DeprecatedString WebSocketClient::subprotocol_in_use(Badge<WebSocket>, WebSocket& connection)
+ByteString WebSocketClient::subprotocol_in_use(Badge<WebSocket>, WebSocket& connection)
 {
     if (!m_connections.contains(connection.id()))
-        return DeprecatedString::empty();
+        return ByteString::empty();
     return IPCProxy::subprotocol_in_use(connection.id());
 }
 
@@ -48,14 +48,14 @@ void WebSocketClient::send(Badge<WebSocket>, WebSocket& connection, ByteBuffer d
     async_send(connection.id(), is_text, move(data));
 }
 
-void WebSocketClient::close(Badge<WebSocket>, WebSocket& connection, u16 code, DeprecatedString message)
+void WebSocketClient::close(Badge<WebSocket>, WebSocket& connection, u16 code, ByteString message)
 {
     if (!m_connections.contains(connection.id()))
         return;
     async_close(connection.id(), code, move(message));
 }
 
-bool WebSocketClient::set_certificate(Badge<WebSocket>, WebSocket& connection, DeprecatedString certificate, DeprecatedString key)
+bool WebSocketClient::set_certificate(Badge<WebSocket>, WebSocket& connection, ByteString certificate, ByteString key)
 {
     if (!m_connections.contains(connection.id()))
         return false;
@@ -83,7 +83,7 @@ void WebSocketClient::errored(i32 connection_id, i32 message)
         maybe_connection.value()->did_error({}, message);
 }
 
-void WebSocketClient::closed(i32 connection_id, u16 code, DeprecatedString const& reason, bool clean)
+void WebSocketClient::closed(i32 connection_id, u16 code, ByteString const& reason, bool clean)
 {
     auto maybe_connection = m_connections.get(connection_id);
     if (maybe_connection.has_value())

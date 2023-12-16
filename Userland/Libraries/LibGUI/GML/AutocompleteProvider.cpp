@@ -25,8 +25,8 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
         InIdentifier,
         AfterIdentifier, // Can we introspect this?
     } state { Free };
-    DeprecatedString identifier_string;
-    Vector<DeprecatedString> class_names;
+    ByteString identifier_string;
+    Vector<ByteString> class_names;
     Vector<State> previous_states;
     bool should_push_state { true };
     Token* last_seen_token { nullptr };
@@ -118,26 +118,26 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
             fuzzy_str_builder.append(character);
             fuzzy_str_builder.append('*');
         }
-        return fuzzy_str_builder.to_deprecated_string();
+        return fuzzy_str_builder.to_byte_string();
     };
 
     Vector<CodeComprehension::AutocompleteResultEntry> class_entries, identifier_entries;
 
-    auto register_layouts_matching_pattern = [&](DeprecatedString pattern, size_t partial_input_length) {
+    auto register_layouts_matching_pattern = [&](ByteString pattern, size_t partial_input_length) {
         GUI::ObjectClassRegistration::for_each([&](const GUI::ObjectClassRegistration& registration) {
             if (registration.is_derived_from(layout_class) && &registration != &layout_class && registration.class_name().matches(pattern))
-                class_entries.empend(DeprecatedString::formatted("@{}", registration.class_name()), partial_input_length);
+                class_entries.empend(ByteString::formatted("@{}", registration.class_name()), partial_input_length);
         });
     };
 
-    auto register_widgets_matching_pattern = [&](DeprecatedString pattern, size_t partial_input_length) {
+    auto register_widgets_matching_pattern = [&](ByteString pattern, size_t partial_input_length) {
         GUI::ObjectClassRegistration::for_each([&](const GUI::ObjectClassRegistration& registration) {
             if (registration.is_derived_from(widget_class) && registration.class_name().matches(pattern))
-                class_entries.empend(DeprecatedString::formatted("@{}", registration.class_name()), partial_input_length);
+                class_entries.empend(ByteString::formatted("@{}", registration.class_name()), partial_input_length);
         });
     };
 
-    auto register_class_properties_matching_pattern = [&](DeprecatedString pattern, size_t partial_input_length) {
+    auto register_class_properties_matching_pattern = [&](ByteString pattern, size_t partial_input_length) {
         auto class_name = class_names.last();
 
         // FIXME: Don't show properties that are already specified in the scope.
@@ -146,7 +146,7 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
             if (auto instance = registration->construct(); !instance.is_error()) {
                 for (auto& it : instance.value()->properties()) {
                     if (!it.value->is_readonly() && it.key.matches(pattern))
-                        identifier_entries.empend(DeprecatedString::formatted("{}: ", it.key), partial_input_length, CodeComprehension::Language::Unspecified, it.key);
+                        identifier_entries.empend(ByteString::formatted("{}: ", it.key), partial_input_length, CodeComprehension::Language::Unspecified, it.key);
                 }
             }
         }
@@ -157,7 +157,7 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
             identifier_entries.empend("content_widget: ", partial_input_length, CodeComprehension::Language::Unspecified, "content_widget", CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
     };
 
-    auto register_properties_and_widgets_matching_pattern = [&](DeprecatedString pattern, size_t partial_input_length) {
+    auto register_properties_and_widgets_matching_pattern = [&](ByteString pattern, size_t partial_input_length) {
         if (!class_names.is_empty()) {
             register_class_properties_matching_pattern(pattern, partial_input_length);
 

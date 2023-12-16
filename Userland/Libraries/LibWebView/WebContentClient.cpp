@@ -100,7 +100,7 @@ void WebContentClient::did_layout(Gfx::IntSize content_size)
         m_view.on_did_layout(content_size);
 }
 
-void WebContentClient::did_change_title(DeprecatedString const& title)
+void WebContentClient::did_change_title(ByteString const& title)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeTitle! title={}", title);
 
@@ -108,7 +108,7 @@ void WebContentClient::did_change_title(DeprecatedString const& title)
         return;
 
     if (title.is_empty())
-        m_view.on_title_change(m_view.url().to_deprecated_string());
+        m_view.on_title_change(m_view.url().to_byte_string());
     else
         m_view.on_title_change(title);
 }
@@ -132,7 +132,7 @@ void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
         m_view.on_scroll_into_view(rect);
 }
 
-void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint content_position, DeprecatedString const& title)
+void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint content_position, ByteString const& title)
 {
     if (m_view.on_enter_tooltip_area)
         m_view.on_enter_tooltip_area(m_view.to_widget_position(content_position), title);
@@ -160,13 +160,13 @@ void WebContentClient::did_unhover_link()
         m_view.on_link_unhover();
 }
 
-void WebContentClient::did_click_link(AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
+void WebContentClient::did_click_link(AK::URL const& url, ByteString const& target, unsigned modifiers)
 {
     if (m_view.on_link_click)
         m_view.on_link_click(url, target, modifiers);
 }
 
-void WebContentClient::did_middle_click_link(AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
+void WebContentClient::did_middle_click_link(AK::URL const& url, ByteString const& target, unsigned modifiers)
 {
     if (m_view.on_link_middle_click)
         m_view.on_link_middle_click(url, target, modifiers);
@@ -178,37 +178,37 @@ void WebContentClient::did_request_context_menu(Gfx::IntPoint content_position)
         m_view.on_context_menu_request(m_view.to_widget_position(content_position));
 }
 
-void WebContentClient::did_request_link_context_menu(Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned)
+void WebContentClient::did_request_link_context_menu(Gfx::IntPoint content_position, AK::URL const& url, ByteString const&, unsigned)
 {
     if (m_view.on_link_context_menu_request)
         m_view.on_link_context_menu_request(url, m_view.to_widget_position(content_position));
 }
 
-void WebContentClient::did_request_image_context_menu(Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
+void WebContentClient::did_request_image_context_menu(Gfx::IntPoint content_position, AK::URL const& url, ByteString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     if (m_view.on_image_context_menu_request)
         m_view.on_image_context_menu_request(url, m_view.to_widget_position(content_position), bitmap);
 }
 
-void WebContentClient::did_request_media_context_menu(Gfx::IntPoint content_position, DeprecatedString const&, unsigned, Web::Page::MediaContextMenu const& menu)
+void WebContentClient::did_request_media_context_menu(Gfx::IntPoint content_position, ByteString const&, unsigned, Web::Page::MediaContextMenu const& menu)
 {
     if (m_view.on_media_context_menu_request)
         m_view.on_media_context_menu_request(m_view.to_widget_position(content_position), menu);
 }
 
-void WebContentClient::did_get_source(AK::URL const& url, DeprecatedString const& source)
+void WebContentClient::did_get_source(AK::URL const& url, ByteString const& source)
 {
     if (m_view.on_received_source)
         m_view.on_received_source(url, source);
 }
 
-void WebContentClient::did_get_dom_tree(DeprecatedString const& dom_tree)
+void WebContentClient::did_get_dom_tree(ByteString const& dom_tree)
 {
     if (m_view.on_received_dom_tree)
         m_view.on_received_dom_tree(dom_tree);
 }
 
-void WebContentClient::did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
+void WebContentClient::did_get_accessibility_tree(ByteString const& accessibility_tree)
 {
     if (m_view.on_received_accessibility_tree)
         m_view.on_received_accessibility_tree(accessibility_tree);
@@ -220,7 +220,7 @@ void WebContentClient::did_output_js_console_message(i32 message_index)
         m_view.on_received_console_message(message_index);
 }
 
-void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
+void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)
 {
     if (m_view.on_received_console_messages)
         m_view.on_received_console_messages(start_index, message_types, messages);
@@ -280,7 +280,7 @@ Messages::WebContentClient::DidRequestAllCookiesResponse WebContentClient::did_r
     return Vector<Web::Cookie::Cookie> {};
 }
 
-Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, DeprecatedString const& name)
+Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, ByteString const& name)
 {
     if (m_view.on_get_named_cookie)
         return m_view.on_get_named_cookie(url, name);
@@ -291,7 +291,7 @@ Messages::WebContentClient::DidRequestCookieResponse WebContentClient::did_reque
 {
     if (m_view.on_get_cookie)
         return m_view.on_get_cookie(url, static_cast<Web::Cookie::Source>(source));
-    return DeprecatedString {};
+    return ByteString {};
 }
 
 void WebContentClient::did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, u8 source)
@@ -372,7 +372,7 @@ Messages::WebContentClient::DidRequestFullscreenWindowResponse WebContentClient:
     return Gfx::IntRect {};
 }
 
-void WebContentClient::did_request_file(DeprecatedString const& path, i32 request_id)
+void WebContentClient::did_request_file(ByteString const& path, i32 request_id)
 {
     if (m_view.on_request_file)
         m_view.on_request_file(path, request_id);

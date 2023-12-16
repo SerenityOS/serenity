@@ -50,7 +50,7 @@ private:
 
     void request_console_messages();
     void handle_console_message(i32 message_index);
-    void handle_console_messages(i32 start_index, ReadonlySpan<DeprecatedString> message_types, ReadonlySpan<DeprecatedString> messages);
+    void handle_console_messages(i32 start_index, ReadonlySpan<ByteString> message_types, ReadonlySpan<ByteString> messages);
 
     void append_console_source(StringView);
     void append_console_message(StringView);

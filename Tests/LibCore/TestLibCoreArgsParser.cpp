@@ -115,7 +115,7 @@ TEST_CASE(bool_option)
 TEST_CASE(positional_string_argument)
 {
     // Single required string argument
-    DeprecatedString name = "";
+    ByteString name = "";
     auto parser_result = run_parser({ "app"sv, "buggie"sv }, [&](auto& parser) {
         parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::Yes);
     });

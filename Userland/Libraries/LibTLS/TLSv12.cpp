@@ -107,12 +107,12 @@ bool Certificate::is_valid() const
     auto now = Core::DateTime::now();
 
     if (now < validity.not_before) {
-        dbgln("certificate expired (not yet valid, signed for {})", validity.not_before.to_deprecated_string());
+        dbgln("certificate expired (not yet valid, signed for {})", validity.not_before.to_byte_string());
         return false;
     }
 
     if (validity.not_after < now) {
-        dbgln("certificate expired (expiry date {})", validity.not_after.to_deprecated_string());
+        dbgln("certificate expired (expiry date {})", validity.not_after.to_byte_string());
         return false;
     }
 
@@ -212,7 +212,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
         }
         // FIXME: Figure out what we should do when our root certs are invalid.
 
-        m_context.root_certificates.set(MUST(cert.subject.to_string()).to_deprecated_string(), cert);
+        m_context.root_certificates.set(MUST(cert.subject.to_string()).to_byte_string(), cert);
     }
     dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
 }
@@ -294,7 +294,7 @@ bool Context::verify_chain(StringView host) const
             return false;
         }
 
-        auto maybe_root_certificate = root_certificates.get(issuer_string.to_deprecated_string());
+        auto maybe_root_certificate = root_certificates.get(issuer_string.to_byte_string());
         if (maybe_root_certificate.has_value()) {
             auto& root_certificate = *maybe_root_certificate;
             auto verification_correct = verify_certificate_pair(cert, root_certificate);

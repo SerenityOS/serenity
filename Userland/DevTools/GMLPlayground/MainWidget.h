@@ -51,5 +51,5 @@ private:
     RefPtr<GUI::Action> m_view_window_action;
 
     GUI::Icon m_icon;
-    DeprecatedString m_file_path;
+    ByteString m_file_path;
 };

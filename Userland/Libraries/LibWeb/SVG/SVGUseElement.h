@@ -48,7 +48,7 @@ private:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    Optional<FlyString> parse_id_from_href(DeprecatedString const& href);
+    Optional<FlyString> parse_id_from_href(ByteString const& href);
 
     JS::GCPtr<DOM::Element> referenced_element();
 

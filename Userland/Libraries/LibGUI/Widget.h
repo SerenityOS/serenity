@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtr.h>
@@ -424,7 +424,7 @@ private:
     int dummy_fixed_height() { return 0; }
     Gfx::IntSize dummy_fixed_size() { return {}; }
 
-    // HACK: Used as property getter for the font_family property, can be removed when Font is migrated from DeprecatedString.
+    // HACK: Used as property getter for the font_family property, can be removed when Font is migrated from ByteString.
     String font_family() const;
 
     Window* m_window { nullptr };

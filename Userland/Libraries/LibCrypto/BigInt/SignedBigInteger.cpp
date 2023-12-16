@@ -64,9 +64,9 @@ ErrorOr<String> SignedBigInteger::to_base(u16 N) const
     return builder.to_string();
 }
 
-DeprecatedString SignedBigInteger::to_base_deprecated(u16 N) const
+ByteString SignedBigInteger::to_base_deprecated(u16 N) const
 {
-    return MUST(to_base(N)).to_deprecated_string();
+    return MUST(to_base(N)).to_byte_string();
 }
 
 u64 SignedBigInteger::to_u64() const

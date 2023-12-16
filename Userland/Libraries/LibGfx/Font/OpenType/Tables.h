@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>

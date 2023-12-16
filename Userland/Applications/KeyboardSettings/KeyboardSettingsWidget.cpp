@@ -34,7 +34,7 @@ class KeymapSelectionDialog final : public GUI::Dialog {
 public:
     virtual ~KeymapSelectionDialog() override = default;
 
-    static DeprecatedString select_keymap(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
+    static ByteString select_keymap(Window* parent_window, Vector<ByteString> const& selected_keymaps)
     {
         auto dialog = KeymapSelectionDialog::construct(parent_window, selected_keymaps);
         dialog->set_title("Add a keymap");
@@ -43,13 +43,13 @@ public:
             return dialog->selected_keymap();
         }
 
-        return DeprecatedString::empty();
+        return ByteString::empty();
     }
 
-    DeprecatedString selected_keymap() { return m_selected_keymap; }
+    ByteString selected_keymap() { return m_selected_keymap; }
 
 private:
-    KeymapSelectionDialog(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
+    KeymapSelectionDialog(Window* parent_window, Vector<ByteString> const& selected_keymaps)
         : Dialog(parent_window)
     {
         auto widget = set_main_widget<GUI::Widget>();
@@ -68,7 +68,7 @@ private:
         });
 
         if (iterator_result.is_error()) {
-            GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Error on reading mapping file list: {}", iterator_result.error()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(nullptr, ByteString::formatted("Error on reading mapping file list: {}", iterator_result.error()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
             GUI::Application::the()->quit(-1);
         }
 
@@ -78,7 +78,7 @@ private:
 
         m_keymaps_combobox = *widget->find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
         m_keymaps_combobox->set_only_allow_values_from_model(true);
-        m_keymaps_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_character_map_files));
+        m_keymaps_combobox->set_model(*GUI::ItemListModel<ByteString>::create(m_character_map_files));
         m_keymaps_combobox->set_selected_index(0);
 
         m_keymaps_combobox->on_change = [&](auto& keymap, auto) {
@@ -97,8 +97,8 @@ private:
     }
 
     RefPtr<GUI::ComboBox> m_keymaps_combobox;
-    Vector<DeprecatedString> m_character_map_files;
-    DeprecatedString m_selected_keymap;
+    Vector<ByteString> m_character_map_files;
+    ByteString m_selected_keymap;
 };
 
 class KeymapModel final : public GUI::Model {
@@ -110,7 +110,7 @@ public:
 
     GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
-        DeprecatedString const& data = m_data.at(index.row());
+        ByteString const& data = m_data.at(index.row());
         if (role == GUI::ModelRole::Font && data == m_active_keymap)
             return Gfx::FontDatabase::default_font().bold_variant();
 
@@ -123,30 +123,30 @@ public:
         invalidate();
     }
 
-    void add_keymap(DeprecatedString const& keymap)
+    void add_keymap(ByteString const& keymap)
     {
         m_data.append(keymap);
         invalidate();
     }
 
-    void set_active_keymap(DeprecatedString const& keymap)
+    void set_active_keymap(ByteString const& keymap)
     {
         m_active_keymap = keymap;
         invalidate();
     }
 
-    DeprecatedString const& active_keymap() { return m_active_keymap; }
+    ByteString const& active_keymap() { return m_active_keymap; }
 
-    DeprecatedString const& keymap_at(size_t index)
+    ByteString const& keymap_at(size_t index)
     {
         return m_data[index];
     }
 
-    Vector<DeprecatedString> const& keymaps() const { return m_data; }
+    Vector<ByteString> const& keymaps() const { return m_data; }
 
 private:
-    Vector<DeprecatedString> m_data;
-    DeprecatedString m_active_keymap;
+    Vector<ByteString> m_data;
+    ByteString m_active_keymap;
 };
 
 ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> KeyboardSettingsWidget::try_create()
@@ -165,7 +165,7 @@ ErrorOr<void> KeyboardSettingsWidget::setup()
     auto json = TRY(JsonValue::from_string(keymap));
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"sv));
-    m_initial_active_keymap = keymap_object.get_deprecated_string("keymap"sv).value();
+    m_initial_active_keymap = keymap_object.get_byte_string("keymap"sv).value();
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
     auto mapper_config(TRY(Core::ConfigFile::open("/etc/Keyboard.ini")));
@@ -265,7 +265,7 @@ ErrorOr<void> KeyboardSettingsWidget::setup()
     m_caps_lock_checkbox = find_descendant_of_type_named<GUI::CheckBox>("caps_lock_remapped_to_ctrl_checkbox");
     auto caps_lock_is_remapped = read_caps_lock_to_ctrl_sys_variable();
     if (caps_lock_is_remapped.is_error()) {
-        auto error_message = DeprecatedString::formatted("Could not determine if Caps Lock is remapped to Ctrl: {}", caps_lock_is_remapped.error());
+        auto error_message = ByteString::formatted("Could not determine if Caps Lock is remapped to Ctrl: {}", caps_lock_is_remapped.error());
         GUI::MessageBox::show_error(window(), error_message);
     } else {
         m_caps_lock_checkbox->set_checked(caps_lock_is_remapped.value());
@@ -305,9 +305,9 @@ void KeyboardSettingsWidget::apply_settings()
     write_caps_lock_to_ctrl_sys_variable(m_caps_lock_checkbox->is_checked());
 }
 
-void KeyboardSettingsWidget::set_keymaps(Vector<DeprecatedString> const& keymaps, DeprecatedString const& active_keymap)
+void KeyboardSettingsWidget::set_keymaps(Vector<ByteString> const& keymaps, ByteString const& active_keymap)
 {
-    auto keymaps_string = DeprecatedString::join(',', keymaps);
+    auto keymaps_string = ByteString::join(',', keymaps);
     GUI::Process::spawn_or_show_error(window(), "/bin/keymap"sv, Array { "-s", keymaps_string.characters(), "-m", active_keymap.characters() });
 }
 
@@ -316,7 +316,7 @@ void KeyboardSettingsWidget::write_caps_lock_to_ctrl_sys_variable(bool caps_lock
     if (getuid() != 0)
         return;
 
-    auto write_command = DeprecatedString::formatted("caps_lock_to_ctrl={}", caps_lock_to_ctrl ? "1" : "0");
+    auto write_command = ByteString::formatted("caps_lock_to_ctrl={}", caps_lock_to_ctrl ? "1" : "0");
     GUI::Process::spawn_or_show_error(window(), "/bin/sysctl"sv, Array { "-w", write_command.characters() });
 }
 

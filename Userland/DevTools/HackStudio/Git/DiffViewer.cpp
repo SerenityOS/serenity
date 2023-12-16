@@ -135,7 +135,7 @@ Gfx::IntRect DiffViewer::separator_rect() const
         frame_inner_rect().height() };
 }
 
-void DiffViewer::set_content(DeprecatedString const& original, DeprecatedString const& diff)
+void DiffViewer::set_content(ByteString const& original, ByteString const& diff)
 {
     m_original_lines = split_to_lines(original);
     m_hunks = Diff::parse_hunks(diff).release_value_but_fixme_should_propagate_errors();
@@ -151,7 +151,7 @@ DiffViewer::DiffViewer()
     setup_properties();
 }
 
-DiffViewer::DiffViewer(DeprecatedString const& original, DeprecatedString const& diff)
+DiffViewer::DiffViewer(ByteString const& original, ByteString const& diff)
     : m_original_lines(split_to_lines(original))
     , m_hunks(Diff::parse_hunks(diff).release_value_but_fixme_should_propagate_errors())
 {
@@ -165,10 +165,10 @@ void DiffViewer::setup_properties()
     set_foreground_role(ColorRole::BaseText);
 }
 
-Vector<DeprecatedString> DiffViewer::split_to_lines(DeprecatedString const& text)
+Vector<ByteString> DiffViewer::split_to_lines(ByteString const& text)
 {
     // NOTE: This is slightly different than text.split('\n')
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
     size_t next_line_start_index = 0;
     for (size_t i = 0; i < text.length(); ++i) {
         if (text[i] == '\n') {

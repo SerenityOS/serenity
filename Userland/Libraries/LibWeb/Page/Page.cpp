@@ -353,7 +353,7 @@ void Page::select_dropdown_closed(Optional<String> value)
     }
 }
 
-void Page::did_request_media_context_menu(i32 media_id, CSSPixelPoint position, DeprecatedString const& target, unsigned modifiers, MediaContextMenu menu)
+void Page::did_request_media_context_menu(i32 media_id, CSSPixelPoint position, ByteString const& target, unsigned modifiers, MediaContextMenu menu)
 {
     m_media_context_menu_element_id = media_id;
     client().page_did_request_media_context_menu(position, target, modifiers, move(menu));

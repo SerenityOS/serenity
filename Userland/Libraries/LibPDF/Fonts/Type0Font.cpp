@@ -13,15 +13,15 @@ namespace PDF {
 class CIDFontType {
 public:
     virtual ~CIDFontType() = default;
-    virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&) = 0;
+    virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) = 0;
 };
 
 class CIDFontType0 : public CIDFontType {
 public:
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&) override;
+    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) override;
 };
 
-PDFErrorOr<Gfx::FloatPoint> CIDFontType0::draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&)
+PDFErrorOr<Gfx::FloatPoint> CIDFontType0::draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&)
 {
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "When the CIDFont contains an embedded font program that is represented in the Compact Font Format (CFF),
@@ -39,7 +39,7 @@ class CIDFontType2 : public CIDFontType {
 public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType2>> create(Document*, NonnullRefPtr<DictObject> const& descendant, float font_size);
 
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&) override;
+    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) override;
 };
 
 PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document, NonnullRefPtr<DictObject> const& descendant, float font_size)
@@ -70,7 +70,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType2()));
 }
 
-PDFErrorOr<Gfx::FloatPoint> CIDFontType2::draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&)
+PDFErrorOr<Gfx::FloatPoint> CIDFontType2::draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&)
 {
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "For Type 2, the CIDFont program is actually a TrueType font program, which has no native notion of CIDs.
@@ -175,7 +175,7 @@ void Type0Font::set_font_size(float)
 {
 }
 
-PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Renderer const&)
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const&)
 {
     // Type0 fonts map bytes to character IDs ("CIDs"), and then CIDs to glyphs.
 

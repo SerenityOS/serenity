@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Result.h>
 
 struct DlErrorMessage {
-    DlErrorMessage(DeprecatedString&& other)
+    DlErrorMessage(ByteString&& other)
         : text(move(other))
     {
     }
@@ -21,7 +21,7 @@ struct DlErrorMessage {
     // from the one in libc.so
     virtual ~DlErrorMessage() = default;
 
-    DeprecatedString text;
+    ByteString text;
 };
 
 struct __Dl_info;

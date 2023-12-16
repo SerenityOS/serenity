@@ -7,7 +7,7 @@
 // Has to be defined before including due to legacy Unices
 #define SYSLOG_NAMES 1
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <stdio.h>
 #include <string.h>
@@ -124,7 +124,7 @@ void vsyslog_r(int priority, struct syslog_data* data, char const* message, va_l
         combined.appendff("{}: ", get_syslog_ident(data));
 
     combined.appendvf(message, args);
-    auto combined_string = combined.to_deprecated_string();
+    auto combined_string = combined.to_byte_string();
 
     if (data->logopt & LOG_CONS)
         dbgputstr(combined_string.characters(), combined_string.length());

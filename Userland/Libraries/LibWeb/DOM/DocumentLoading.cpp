@@ -88,7 +88,7 @@ static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
     auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
-    auto title_text = document.create_text_node(MUST(String::from_deprecated_string(document.url().basename())));
+    auto title_text = document.create_text_node(MUST(String::from_byte_string(document.url().basename())));
     MUST(title_element->append_child(title_text));
 
     auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
@@ -137,7 +137,7 @@ static bool build_gemini_document(DOM::Document& document, ByteBuffer const& dat
 {
     StringView gemini_data { data };
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
-    DeprecatedString html_data = gemini_document->render_to_html();
+    ByteString html_data = gemini_document->render_to_html();
 
     dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
     dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);

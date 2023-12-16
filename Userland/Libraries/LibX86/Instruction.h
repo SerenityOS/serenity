@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
@@ -21,7 +21,7 @@ typedef void (Interpreter::*InstructionHandler)(Instruction const&);
 
 class SymbolProvider {
 public:
-    virtual DeprecatedString symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
+    virtual ByteString symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
 
 protected:
     virtual ~SymbolProvider() = default;
@@ -519,20 +519,20 @@ class MemoryOrRegisterReference {
     friend class Instruction;
 
 public:
-    DeprecatedString to_deprecated_string_o8(Instruction const&) const;
-    DeprecatedString to_deprecated_string_o16(Instruction const&) const;
-    DeprecatedString to_deprecated_string_o32(Instruction const&) const;
-    DeprecatedString to_deprecated_string_o64(Instruction const&) const;
-    DeprecatedString to_deprecated_string_fpu_reg() const;
-    DeprecatedString to_deprecated_string_fpu_mem(Instruction const&) const;
-    DeprecatedString to_deprecated_string_fpu_ax16() const;
-    DeprecatedString to_deprecated_string_fpu16(Instruction const&) const;
-    DeprecatedString to_deprecated_string_fpu32(Instruction const&) const;
-    DeprecatedString to_deprecated_string_fpu64(Instruction const&) const;
-    DeprecatedString to_deprecated_string_fpu80(Instruction const&) const;
-    DeprecatedString to_deprecated_string_mm(Instruction const&) const;
-    DeprecatedString to_deprecated_string_xmm(Instruction const&) const;
-    DeprecatedString sib_to_deprecated_string(ProcessorMode) const;
+    ByteString to_byte_string_o8(Instruction const&) const;
+    ByteString to_byte_string_o16(Instruction const&) const;
+    ByteString to_byte_string_o32(Instruction const&) const;
+    ByteString to_byte_string_o64(Instruction const&) const;
+    ByteString to_byte_string_fpu_reg() const;
+    ByteString to_byte_string_fpu_mem(Instruction const&) const;
+    ByteString to_byte_string_fpu_ax16() const;
+    ByteString to_byte_string_fpu16(Instruction const&) const;
+    ByteString to_byte_string_fpu32(Instruction const&) const;
+    ByteString to_byte_string_fpu64(Instruction const&) const;
+    ByteString to_byte_string_fpu80(Instruction const&) const;
+    ByteString to_byte_string_mm(Instruction const&) const;
+    ByteString to_byte_string_xmm(Instruction const&) const;
+    ByteString sib_to_byte_string(ProcessorMode) const;
 
     bool is_register() const { return m_register_index != 0x7f; }
 
@@ -581,10 +581,10 @@ public:
 private:
     MemoryOrRegisterReference() = default;
 
-    DeprecatedString to_deprecated_string(Instruction const&) const;
-    DeprecatedString to_deprecated_string_a16() const;
-    DeprecatedString to_deprecated_string_a32() const;
-    DeprecatedString to_deprecated_string_a64() const;
+    ByteString to_byte_string(Instruction const&) const;
+    ByteString to_byte_string_a16() const;
+    ByteString to_byte_string_a32() const;
+    ByteString to_byte_string_a64() const;
 
     template<typename InstructionStreamType>
     void decode(InstructionStreamType&, AddressSize, bool has_rex_r, bool has_rex_x, bool has_rex_b);
@@ -646,7 +646,7 @@ public:
 
     unsigned length() const;
 
-    DeprecatedString mnemonic() const;
+    ByteString mnemonic() const;
 
     u8 op() const { return m_op; }
     u8 modrm_byte() const { return m_modrm.modrm_byte(); }
@@ -698,13 +698,13 @@ public:
     OperandSize operand_size() const { return m_operand_size; }
     ProcessorMode mode() const { return m_mode; }
 
-    DeprecatedString to_deprecated_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
+    ByteString to_byte_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
 
 private:
     template<typename InstructionStreamType>
     Instruction(InstructionStreamType&, ProcessorMode);
 
-    void to_deprecated_string_internal(StringBuilder&, u32 origin, SymbolProvider const*, bool x32) const;
+    void to_byte_string_internal(StringBuilder&, u32 origin, SymbolProvider const*, bool x32) const;
 
     StringView reg8_name() const;
     StringView reg16_name() const;

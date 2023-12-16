@@ -21,17 +21,17 @@ namespace {
 
 constexpr char const* db_name = "/tmp/test.db";
 
-SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql, Vector<SQL::Value> placeholder_values = {})
+SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, ByteString const& sql, Vector<SQL::Value> placeholder_values = {})
 {
     auto parser = SQL::AST::Parser(SQL::AST::Lexer(sql));
     auto statement = parser.next_statement();
     EXPECT(!parser.has_errors());
     if (parser.has_errors())
-        outln("{}", parser.errors()[0].to_deprecated_string());
+        outln("{}", parser.errors()[0].to_byte_string());
     return statement->execute(move(database), placeholder_values);
 }
 
-SQL::ResultSet execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql, Vector<SQL::Value> placeholder_values = {})
+SQL::ResultSet execute(NonnullRefPtr<SQL::Database> database, ByteString const& sql, Vector<SQL::Value> placeholder_values = {})
 {
     auto result = try_execute(move(database), sql, move(placeholder_values));
     if (result.is_error()) {
@@ -101,7 +101,7 @@ TEST_CASE(insert_into_table)
     int count = 0;
     auto rows = TRY_OR_FAIL(database->select_all(*table));
     for (auto& row : rows) {
-        EXPECT_EQ(row["TEXTCOLUMN"].to_deprecated_string(), "Test");
+        EXPECT_EQ(row["TEXTCOLUMN"].to_byte_string(), "Test");
         EXPECT_EQ(row["INTCOLUMN"].to_int<i32>(), 42);
         count++;
     }
@@ -380,8 +380,8 @@ TEST_CASE(select_inner_join)
     EXPECT_EQ(result.size(), 1u);
     EXPECT_EQ(result[0].row.size(), 3u);
     EXPECT_EQ(result[0].row[0].to_int<i32>(), 42);
-    EXPECT_EQ(result[0].row[1].to_deprecated_string(), "Test_1");
-    EXPECT_EQ(result[0].row[2].to_deprecated_string(), "Test_12");
+    EXPECT_EQ(result[0].row[1].to_byte_string(), "Test_1");
+    EXPECT_EQ(result[0].row[2].to_byte_string(), "Test_12");
 }
 
 TEST_CASE(select_with_like)
@@ -467,11 +467,11 @@ TEST_CASE(select_with_order)
 
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_1");
-    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_2");
-    EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_3");
-    EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_4");
-    EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_5");
+    EXPECT_EQ(result[0].row[0].to_byte_string(), "Test_1");
+    EXPECT_EQ(result[1].row[0].to_byte_string(), "Test_2");
+    EXPECT_EQ(result[2].row[0].to_byte_string(), "Test_3");
+    EXPECT_EQ(result[3].row[0].to_byte_string(), "Test_4");
+    EXPECT_EQ(result[4].row[0].to_byte_string(), "Test_5");
 }
 
 TEST_CASE(select_with_regexp)
@@ -542,15 +542,15 @@ TEST_CASE(select_with_order_two_columns)
 
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn, IntColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_1");
+    EXPECT_EQ(result[0].row[0].to_byte_string(), "Test_1");
     EXPECT_EQ(result[0].row[1].to_int<i32>(), 47);
-    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_2");
+    EXPECT_EQ(result[1].row[0].to_byte_string(), "Test_2");
     EXPECT_EQ(result[1].row[1].to_int<i32>(), 40);
-    EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_2");
+    EXPECT_EQ(result[2].row[0].to_byte_string(), "Test_2");
     EXPECT_EQ(result[2].row[1].to_int<i32>(), 42);
-    EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_4");
+    EXPECT_EQ(result[3].row[0].to_byte_string(), "Test_4");
     EXPECT_EQ(result[3].row[1].to_int<i32>(), 41);
-    EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_5");
+    EXPECT_EQ(result[4].row[0].to_byte_string(), "Test_5");
     EXPECT_EQ(result[4].row[1].to_int<i32>(), 44);
 }
 
@@ -571,11 +571,11 @@ TEST_CASE(select_with_order_by_column_not_in_result)
 
     result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_3");
-    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_4");
-    EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_2");
-    EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_5");
-    EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_1");
+    EXPECT_EQ(result[0].row[0].to_byte_string(), "Test_3");
+    EXPECT_EQ(result[1].row[0].to_byte_string(), "Test_4");
+    EXPECT_EQ(result[2].row[0].to_byte_string(), "Test_2");
+    EXPECT_EQ(result[3].row[0].to_byte_string(), "Test_5");
+    EXPECT_EQ(result[4].row[0].to_byte_string(), "Test_1");
 }
 
 TEST_CASE(select_with_limit)
@@ -586,7 +586,7 @@ TEST_CASE(select_with_limit)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            ByteString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10;");
@@ -602,7 +602,7 @@ TEST_CASE(select_with_limit_and_offset)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            ByteString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10 OFFSET 10;");
@@ -617,7 +617,7 @@ TEST_CASE(select_with_order_limit_and_offset)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            ByteString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY IntColumn LIMIT 10 OFFSET 10;");
@@ -642,7 +642,7 @@ TEST_CASE(select_with_limit_out_of_bounds)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            ByteString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 500;");
@@ -657,7 +657,7 @@ TEST_CASE(select_with_offset_out_of_bounds)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            ByteString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10 OFFSET 200;");
@@ -673,11 +673,11 @@ TEST_CASE(describe_table)
     auto result = execute(database, "DESCRIBE TABLE TestSchema.TestTable;");
     EXPECT_EQ(result.size(), 2u);
 
-    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "TEXTCOLUMN");
-    EXPECT_EQ(result[0].row[1].to_deprecated_string(), "text");
+    EXPECT_EQ(result[0].row[0].to_byte_string(), "TEXTCOLUMN");
+    EXPECT_EQ(result[0].row[1].to_byte_string(), "text");
 
-    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "INTCOLUMN");
-    EXPECT_EQ(result[1].row[1].to_deprecated_string(), "int");
+    EXPECT_EQ(result[1].row[0].to_byte_string(), "INTCOLUMN");
+    EXPECT_EQ(result[1].row[1].to_byte_string(), "int");
 }
 
 TEST_CASE(binary_operator_execution)
@@ -688,7 +688,7 @@ TEST_CASE(binary_operator_execution)
     create_table(database);
 
     for (auto count = 0; count < 10; ++count) {
-        auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+        auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
         EXPECT_EQ(result.size(), 1u);
     }
 
@@ -762,7 +762,7 @@ TEST_CASE(binary_operator_failure)
     create_table(database);
 
     for (auto count = 0; count < 10; ++count) {
-        auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+        auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
         EXPECT_EQ(result.size(), 1u);
     }
 
@@ -772,7 +772,7 @@ TEST_CASE(binary_operator_failure)
         auto error = result.release_error();
         EXPECT_EQ(error.error(), SQL::SQLErrorCode::NumericOperatorTypeMismatch);
 
-        auto message = DeprecatedString::formatted("NumericOperatorTypeMismatch: Cannot apply '{}' operator to non-numeric operands", op);
+        auto message = ByteString::formatted("NumericOperatorTypeMismatch: Cannot apply '{}' operator to non-numeric operands", op);
         EXPECT_EQ(error.error_string(), message);
     };
 
@@ -832,7 +832,7 @@ TEST_CASE(delete_single_row)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -876,7 +876,7 @@ TEST_CASE(delete_multiple_rows)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -916,7 +916,7 @@ TEST_CASE(delete_all_rows)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -950,7 +950,7 @@ TEST_CASE(update_single_row)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -995,7 +995,7 @@ TEST_CASE(update_multiple_rows)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -1036,7 +1036,7 @@ TEST_CASE(update_all_rows)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, ByteString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 

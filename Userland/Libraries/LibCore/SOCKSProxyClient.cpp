@@ -161,7 +161,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
     TRY(stream.write_value(header));
 
     TRY(target.visit(
-        [&](DeprecatedString const& hostname) -> ErrorOr<void> {
+        [&](ByteString const& hostname) -> ErrorOr<void> {
             u8 address_data[2];
             address_data[0] = to_underlying(AddressType::DomainName);
             address_data[1] = hostname.length();
@@ -298,7 +298,7 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(HostOrIPV4 co
         [&](u32 ipv4) {
             return Core::TCPSocket::connect({ IPv4Address(ipv4), static_cast<u16>(server_port) });
         },
-        [&](DeprecatedString const& hostname) {
+        [&](ByteString const& hostname) {
             return Core::TCPSocket::connect(hostname, static_cast<u16>(server_port));
         }));
 

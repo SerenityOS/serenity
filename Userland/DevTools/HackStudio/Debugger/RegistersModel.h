@@ -14,7 +14,7 @@
 namespace HackStudio {
 
 struct RegisterData {
-    DeprecatedString name;
+    ByteString name;
     FlatPtr value;
     bool changed { false };
 };

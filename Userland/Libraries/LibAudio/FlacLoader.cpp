@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
@@ -63,11 +63,11 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     BigEndianInputBitStream bit_input { MaybeOwned<Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
-#define FLAC_VERIFY(check, category, msg)                                                                                \
-    do {                                                                                                                 \
-        if (!(check)) {                                                                                                  \
-            return LoaderError { category, TRY(m_stream->tell()), DeprecatedString::formatted("FLAC header: {}", msg) }; \
-        }                                                                                                                \
+#define FLAC_VERIFY(check, category, msg)                                                                          \
+    do {                                                                                                           \
+        if (!(check)) {                                                                                            \
+            return LoaderError { category, TRY(m_stream->tell()), ByteString::formatted("FLAC header: {}", msg) }; \
+        }                                                                                                          \
     } while (0)
 
     // Magic number
@@ -305,7 +305,7 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
             dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
             auto position = target_seekpoint.byte_offset + m_data_start_location;
             if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
-                return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
+                return LoaderError { LoaderError::Category::IO, m_loaded_samples, ByteString::formatted("Invalid seek position {}", position) };
             m_loaded_samples = target_seekpoint.sample_index;
         }
     }
@@ -367,11 +367,11 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
 // 11.21. FRAME
 LoaderSamples FlacLoaderPlugin::next_frame()
 {
-#define FLAC_VERIFY(check, category, msg)                                                                                                         \
-    do {                                                                                                                                          \
-        if (!(check)) {                                                                                                                           \
-            return LoaderError { category, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("FLAC header: {}", msg) }; \
-        }                                                                                                                                         \
+#define FLAC_VERIFY(check, category, msg)                                                                                                   \
+    do {                                                                                                                                    \
+        if (!(check)) {                                                                                                                     \
+            return LoaderError { category, static_cast<size_t>(m_current_sample_or_frame), ByteString::formatted("FLAC header: {}", msg) }; \
+        }                                                                                                                                   \
     } while (0)
 
     auto frame_byte_index = TRY(m_stream->tell());
@@ -612,7 +612,7 @@ ErrorOr<u8, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_c
     case 7:
         return 32;
     default:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unsupported sample size {}", bit_depth_code) };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), ByteString::formatted("Unsupported sample size {}", bit_depth_code) };
     }
 }
 
@@ -900,7 +900,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
             decoded[i] += 4 * decoded[i - 1] - 6 * decoded[i - 2] + 4 * decoded[i - 3] - decoded[i - 4];
         break;
     default:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unrecognized predictor order {}", subframe.order) };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), ByteString::formatted("Unrecognized predictor order {}", subframe.order) };
     }
     return decoded;
 }

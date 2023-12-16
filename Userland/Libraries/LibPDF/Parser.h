@@ -33,7 +33,7 @@ public:
 
     void set_document(WeakPtr<Document> const&);
 
-    DeprecatedString parse_comment();
+    ByteString parse_comment();
 
     void move_by(size_t count) { m_reader.move_by(count); }
     void move_to(size_t offset) { m_reader.move_to(offset); }
@@ -50,8 +50,8 @@ public:
     PDFErrorOr<Value> parse_number();
     PDFErrorOr<NonnullRefPtr<NameObject>> parse_name();
     PDFErrorOr<NonnullRefPtr<StringObject>> parse_string();
-    PDFErrorOr<DeprecatedString> parse_literal_string();
-    PDFErrorOr<DeprecatedString> parse_hex_string();
+    PDFErrorOr<ByteString> parse_literal_string();
+    PDFErrorOr<ByteString> parse_hex_string();
     PDFErrorOr<NonnullRefPtr<ArrayObject>> parse_array();
     PDFErrorOr<HashMap<DeprecatedFlyString, Value>> parse_dict_contents_until(char const*);
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
@@ -73,7 +73,7 @@ public:
 
 protected:
     Error error(
-        DeprecatedString const& message
+        ByteString const& message
 #ifdef PDF_DEBUG
         ,
         SourceLocation loc = SourceLocation::current()

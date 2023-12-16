@@ -44,9 +44,9 @@ ErrorOr<void> SectionNode::reify_if_needed() const
     m_reified = true;
 
     auto own_path = TRY(path());
-    Core::DirIterator dir_iterator { own_path.to_deprecated_string(), Core::DirIterator::Flags::SkipDots };
-    Vector<DeprecatedString> directories;
-    HashTable<DeprecatedString> files;
+    Core::DirIterator dir_iterator { own_path.to_byte_string(), Core::DirIterator::Flags::SkipDots };
+    Vector<ByteString> directories;
+    HashTable<ByteString> files;
     while (dir_iterator.has_next()) {
         auto entry = dir_iterator.next();
         if (entry->type == Core::DirectoryEntry::Type::Directory)
@@ -64,7 +64,7 @@ ErrorOr<void> SectionNode::reify_if_needed() const
     for (auto const& directory : directories) {
         LexicalPath lexical_path(directory);
         RefPtr<PageNode> associated_page;
-        auto matching_page_name = DeprecatedString::formatted("{}.md", directory);
+        auto matching_page_name = ByteString::formatted("{}.md", directory);
         if (files.remove(matching_page_name))
             associated_page = TRY(try_make_ref_counted<PageNode>(*this, TRY(String::from_utf8(lexical_path.title()))));
 

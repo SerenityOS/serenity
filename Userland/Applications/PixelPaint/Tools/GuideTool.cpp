@@ -140,7 +140,7 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
                     return;
                 auto dialog = EditGuideDialog::construct(
                     editor()->window(),
-                    DeprecatedString::formatted("{}", m_context_menu_guide->offset()),
+                    ByteString::formatted("{}", m_context_menu_guide->offset()),
                     m_context_menu_guide->orientation());
                 if (dialog->exec() != GUI::Dialog::ExecResult::OK)
                     return;

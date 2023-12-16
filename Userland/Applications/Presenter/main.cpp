@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to WindowServer and WebContent.
     TRY(Core::System::pledge("stdio rpath unix sendfd recvfd"));
 
-    DeprecatedString file_to_load;
+    ByteString file_to_load;
     Core::ArgsParser argument_parser;
     argument_parser.add_positional_argument(file_to_load, "Presentation to load", "file", Core::ArgsParser::Required::No);
     argument_parser.parse(arguments);

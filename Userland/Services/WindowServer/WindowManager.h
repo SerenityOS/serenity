@@ -85,7 +85,7 @@ public:
     ConnectionFromClient const* dnd_client() const { return m_dnd_client.ptr(); }
     Core::MimeData const& dnd_mime_data() const { return *m_dnd_mime_data; }
 
-    void start_dnd_drag(ConnectionFromClient&, DeprecatedString const& text, Gfx::Bitmap const*, Core::MimeData const&);
+    void start_dnd_drag(ConnectionFromClient&, ByteString const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
 
     void set_accepts_drag(bool);
@@ -146,9 +146,9 @@ public:
     Gfx::Font const& font() const;
     Gfx::Font const& window_title_font() const;
 
-    bool set_screen_layout(ScreenLayout&&, bool, DeprecatedString&);
+    bool set_screen_layout(ScreenLayout&&, bool, ByteString&);
     ScreenLayout get_screen_layout() const;
-    bool save_screen_layout(DeprecatedString&);
+    bool save_screen_layout(ByteString&);
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
@@ -202,14 +202,14 @@ public:
         return nullptr;
     }
 
-    bool update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path);
+    bool update_theme(ByteString theme_path, ByteString theme_name, bool keep_desktop_background, Optional<ByteString> const& color_scheme_path);
     void invalidate_after_theme_or_font_change();
 
     bool set_theme_override(Core::AnonymousBuffer const& theme_override);
     Optional<Core::AnonymousBuffer> get_theme_override() const;
     void clear_theme_override();
     bool is_theme_overridden() { return m_theme_overridden; }
-    Optional<DeprecatedString> get_preferred_color_scheme() { return m_preferred_color_scheme; }
+    Optional<ByteString> get_preferred_color_scheme() { return m_preferred_color_scheme; }
 
     bool set_hovered_window(Window*);
     void deliver_mouse_event(Window&, MouseEvent const&);
@@ -321,7 +321,7 @@ public:
 
     MultiScaleBitmaps const* overlay_rect_shadow() const { return m_overlay_rect_shadow.ptr(); }
 
-    void apply_cursor_theme(DeprecatedString const& name);
+    void apply_cursor_theme(ByteString const& name);
 
     void set_cursor_highlight_radius(int radius);
     void set_cursor_highlight_color(Gfx::Color color);
@@ -449,7 +449,7 @@ private:
     bool m_mouse_buttons_switched { false };
     bool m_natural_scroll { false };
     bool m_theme_overridden { false };
-    Optional<DeprecatedString> m_preferred_color_scheme { OptionalNone() };
+    Optional<ByteString> m_preferred_color_scheme { OptionalNone() };
 
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;
@@ -488,7 +488,7 @@ private:
 
     OwnPtr<DndOverlay> m_dnd_overlay;
     WeakPtr<ConnectionFromClient> m_dnd_client;
-    DeprecatedString m_dnd_text;
+    ByteString m_dnd_text;
     bool m_dnd_accepts_drag { false };
 
     RefPtr<Core::MimeData const> m_dnd_mime_data;

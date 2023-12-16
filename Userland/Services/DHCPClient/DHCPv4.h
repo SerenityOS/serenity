@@ -151,7 +151,7 @@ struct ParsedDHCPv4Options {
         return values;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         StringBuilder builder;
         builder.append("DHCP Options ("sv);
@@ -163,7 +163,7 @@ struct ParsedDHCPv4Options {
                 builder.appendff(" {} ", ((u8 const*)opt.value.value)[i]);
             builder.append('\n');
         }
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
 
     struct DHCPOptionValue {

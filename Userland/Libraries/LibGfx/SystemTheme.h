@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -291,12 +291,12 @@ struct SystemTheme {
 
 Core::AnonymousBuffer& current_system_theme_buffer();
 void set_system_theme(Core::AnonymousBuffer);
-ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const&, Optional<DeprecatedString> const& color_scheme = OptionalNone());
-ErrorOr<Core::AnonymousBuffer> load_system_theme(DeprecatedString const& path, Optional<DeprecatedString> const& color_scheme = OptionalNone());
+ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const&, Optional<ByteString> const& color_scheme = OptionalNone());
+ErrorOr<Core::AnonymousBuffer> load_system_theme(ByteString const& path, Optional<ByteString> const& color_scheme = OptionalNone());
 
 struct SystemThemeMetaData {
-    DeprecatedString name;
-    DeprecatedString path;
+    ByteString name;
+    ByteString path;
 };
 
 ErrorOr<Vector<SystemThemeMetaData>> list_installed_system_themes();

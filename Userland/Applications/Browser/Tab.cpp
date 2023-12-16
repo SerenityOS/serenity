@@ -58,13 +58,13 @@ void Tab::start_download(const URL& url)
 {
     auto window = GUI::Window::construct(&this->window());
     window->resize(300, 170);
-    window->set_title(DeprecatedString::formatted("0% of {}", url.basename()));
+    window->set_title(ByteString::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
     (void)window->set_main_widget<DownloadWidget>(url);
     window->show();
 }
 
-void Tab::view_source(const URL& url, DeprecatedString const& source)
+void Tab::view_source(const URL& url, ByteString const& source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto editor = window->set_main_widget<GUI::TextEditor>();
@@ -74,7 +74,7 @@ void Tab::view_source(const URL& url, DeprecatedString const& source)
     editor->set_ruler_visible(true);
     editor->set_visualize_trailing_whitespace(false);
     window->resize(640, 480);
-    window->set_title(url.to_deprecated_string());
+    window->set_title(url.to_byte_string());
     window->set_icon(g_icon_bag.filetype_text);
     window->set_window_mode(GUI::WindowMode::Modeless);
     window->show();
@@ -132,7 +132,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_back_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_back_title_history()) {
             i++;
-            m_go_back_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
+            m_go_back_context_menu->add_action(GUI::Action::create(url.to_byte_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
         }
         m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left().moved_up(1));
     };
@@ -145,7 +145,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_forward_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_forward_title_history()) {
             i++;
-            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
+            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_byte_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
         }
         m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left().moved_up(1));
     };
@@ -220,7 +220,7 @@ Tab::Tab(BrowserWindow& window)
         update_status();
 
         m_location_box->set_icon(nullptr);
-        m_location_box->set_text(url.to_deprecated_string());
+        m_location_box->set_text(url.to_byte_string());
 
         // don't add to history if back or forward is pressed
         if (!m_is_history_navigation)
@@ -228,7 +228,7 @@ Tab::Tab(BrowserWindow& window)
         m_is_history_navigation = false;
 
         update_actions();
-        update_bookmark_button(url.to_deprecated_string());
+        update_bookmark_button(url.to_byte_string());
 
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->reset();
@@ -353,7 +353,7 @@ Tab::Tab(BrowserWindow& window)
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
     m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_byte_string());
     }));
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
@@ -397,7 +397,7 @@ Tab::Tab(BrowserWindow& window)
     }));
     m_audio_context_menu->add_separator();
     m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_byte_string());
     }));
     m_audio_context_menu->add_separator();
     m_audio_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
@@ -420,7 +420,7 @@ Tab::Tab(BrowserWindow& window)
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("Copy Video &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_byte_string());
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
@@ -490,7 +490,7 @@ Tab::Tab(BrowserWindow& window)
         return {};
     };
 
-    view().on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
+    view().on_get_cookie = [this](auto& url, auto source) -> ByteString {
         if (on_get_cookie)
             return on_get_cookie(url, source);
         return {};
@@ -609,7 +609,7 @@ Tab::Tab(BrowserWindow& window)
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     view().on_link_hover = [this](auto& url) {
-        update_status(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
+        update_status(String::from_byte_string(url.to_byte_string()).release_value_but_fixme_should_propagate_errors());
     };
 
     view().on_link_unhover = [this]() {
@@ -631,7 +631,7 @@ Tab::Tab(BrowserWindow& window)
     };
 
     view().on_insert_clipboard_entry = [](auto const& data, auto const&, auto const& mime_type) {
-        GUI::Clipboard::the().set_data(data.bytes(), mime_type.to_deprecated_string());
+        GUI::Clipboard::the().set_data(data.bytes(), mime_type.to_byte_string());
     };
 
     m_tab_context_menu = GUI::Menu::construct();
@@ -705,7 +705,7 @@ Tab::Tab(BrowserWindow& window)
 
         if (m_page_context_menu_search_text.has_value()) {
             auto action_text = WebView::format_search_query_for_display(g_search_engine, *m_page_context_menu_search_text);
-            search_selected_text_action->set_text(action_text.to_deprecated_string());
+            search_selected_text_action->set_text(action_text.to_byte_string());
             search_selected_text_action->set_visible(true);
         } else {
             search_selected_text_action->set_visible(false);
@@ -719,7 +719,7 @@ Tab::Tab(BrowserWindow& window)
 void Tab::select_dropdown_add_item(GUI::Menu& menu, Web::HTML::SelectItem const& item)
 {
     if (item.type == Web::HTML::SelectItem::Type::OptionGroup) {
-        auto subtitle = GUI::Action::create(MUST(DeprecatedString::from_utf8(item.label.value_or(""_string))), nullptr);
+        auto subtitle = GUI::Action::create(MUST(ByteString::from_utf8(item.label.value_or(""_string))), nullptr);
         subtitle->set_enabled(false);
         menu.add_action(subtitle);
 
@@ -728,7 +728,7 @@ void Tab::select_dropdown_add_item(GUI::Menu& menu, Web::HTML::SelectItem const&
         }
     }
     if (item.type == Web::HTML::SelectItem::Type::Option) {
-        auto action = GUI::Action::create(MUST(DeprecatedString::from_utf8(item.label.value_or(""_string))), [this, item](GUI::Action&) {
+        auto action = GUI::Action::create(MUST(ByteString::from_utf8(item.label.value_or(""_string))), [this, item](GUI::Action&) {
             m_select_dropdown_closed_by_action = true;
             view().select_dropdown_closed(item.value.value_or(""_string));
         });
@@ -804,7 +804,7 @@ void Tab::update_actions()
 
 ErrorOr<void> Tab::bookmark_current_url()
 {
-    auto url = this->url().to_deprecated_string();
+    auto url = this->url().to_byte_string();
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         TRY(BookmarksBarWidget::the().remove_bookmark(url));
     } else {
@@ -837,11 +837,11 @@ void Tab::did_become_active()
     };
 
     BookmarksBarWidget::the().on_bookmark_hover = [this](auto&, auto& url) {
-        m_statusbar->set_text(String::from_deprecated_string(url).release_value_but_fixme_should_propagate_errors());
+        m_statusbar->set_text(String::from_byte_string(url).release_value_but_fixme_should_propagate_errors());
     };
 
     BookmarksBarWidget::the().on_bookmark_change = [this]() {
-        update_bookmark_button(url().to_deprecated_string());
+        update_bookmark_button(url().to_byte_string());
     };
 
     BookmarksBarWidget::the().remove_from_parent();

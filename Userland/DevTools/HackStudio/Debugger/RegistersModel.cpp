@@ -118,7 +118,7 @@ GUI::Variant RegistersModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
         if (index.column() == Column::Register)
             return reg.name;
         if (index.column() == Column::Value)
-            return DeprecatedString::formatted("{:p}", reg.value);
+            return ByteString::formatted("{:p}", reg.value);
         return {};
     }
     return {};

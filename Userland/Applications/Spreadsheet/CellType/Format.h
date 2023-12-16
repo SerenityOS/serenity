@@ -10,6 +10,6 @@
 
 namespace Spreadsheet {
 
-DeprecatedString format_double(char const* format, double value);
+ByteString format_double(char const* format, double value);
 
 }

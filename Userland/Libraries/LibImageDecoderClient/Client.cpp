@@ -20,7 +20,7 @@ void Client::die()
         on_death();
 }
 
-Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional<DeprecatedString> mime_type)
+Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional<ByteString> mime_type)
 {
     if (encoded_data.is_empty())
         return {};

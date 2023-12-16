@@ -9,7 +9,7 @@
 #include <AK/ByteBuffer.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace Crypto::PK {
@@ -36,7 +36,7 @@ public:
     virtual void verify(ReadonlyBytes in, Bytes& out) = 0;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const = 0;
+    virtual ByteString class_name() const = 0;
 #endif
 
     virtual size_t output_size() const = 0;

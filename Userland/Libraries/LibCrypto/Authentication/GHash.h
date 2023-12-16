@@ -12,7 +12,7 @@
 #include <LibCrypto/Hash/HashFunction.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace Crypto::Authentication {
@@ -48,7 +48,7 @@ public:
     constexpr static size_t digest_size() { return TagType::Size; }
 
 #ifndef KERNEL
-    DeprecatedString class_name() const
+    ByteString class_name() const
     {
         return "GHash";
     }

@@ -17,7 +17,7 @@ class HTMLTitleElement final : public HTMLElement {
 public:
     virtual ~HTMLTitleElement() override;
 
-    DeprecatedString text();
+    ByteString text();
     void set_text(String const& value);
 
 private:

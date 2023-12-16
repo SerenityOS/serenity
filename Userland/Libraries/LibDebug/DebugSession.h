@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Demangle.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
@@ -27,8 +27,8 @@ namespace Debug {
 
 class DebugSession : public ProcessInspector {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {}, Function<void(float)> on_initialization_progress = {});
-    static OwnPtr<DebugSession> attach(pid_t pid, DeprecatedString source_root = {}, Function<void(float)> on_initialization_progress = {});
+    static OwnPtr<DebugSession> exec_and_attach(ByteString const& command, ByteString source_root = {}, Function<ErrorOr<void>()> setup_child = {}, Function<void(float)> on_initialization_progress = {});
+    static OwnPtr<DebugSession> attach(pid_t pid, ByteString source_root = {}, Function<void(float)> on_initialization_progress = {});
 
     virtual ~DebugSession() override;
 
@@ -56,20 +56,20 @@ public:
     };
 
     struct InsertBreakpointAtSymbolResult {
-        DeprecatedString library_name;
+        ByteString library_name;
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(DeprecatedString const& symbol_name);
+    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(ByteString const& symbol_name);
 
     struct InsertBreakpointAtSourcePositionResult {
-        DeprecatedString library_name;
-        DeprecatedString filename;
+        ByteString library_name;
+        ByteString filename;
         size_t line_number { 0 };
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(DeprecatedString const& filename, size_t line_number);
+    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(ByteString const& filename, size_t line_number);
 
     bool insert_breakpoint(FlatPtr address);
     bool disable_breakpoint(FlatPtr address);
@@ -132,7 +132,7 @@ public:
     };
 
 private:
-    explicit DebugSession(pid_t, DeprecatedString source_root, Function<void(float)> on_initialization_progress = {});
+    explicit DebugSession(pid_t, ByteString source_root, Function<void(float)> on_initialization_progress = {});
 
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
@@ -140,14 +140,14 @@ private:
     ErrorOr<void> update_loaded_libs();
 
     int m_debuggee_pid { -1 };
-    DeprecatedString m_source_root;
+    ByteString m_source_root;
     bool m_is_debuggee_dead { false };
 
     HashMap<FlatPtr, BreakPoint> m_breakpoints;
     HashMap<FlatPtr, WatchPoint> m_watchpoints;
 
     // Maps from library name to LoadedLibrary object
-    HashMap<DeprecatedString, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
+    HashMap<ByteString, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
 
     Function<void(float)> m_on_initialization_progress;
 };

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
 #include <LibCore/System.h>
@@ -14,12 +14,12 @@
 
 namespace SQL {
 
-ErrorOr<NonnullRefPtr<Heap>> Heap::create(DeprecatedString file_name)
+ErrorOr<NonnullRefPtr<Heap>> Heap::create(ByteString file_name)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) Heap(move(file_name)));
 }
 
-Heap::Heap(DeprecatedString file_name)
+Heap::Heap(ByteString file_name)
     : m_name(move(file_name))
 {
 }

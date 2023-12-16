@@ -17,9 +17,9 @@
 #include <LibGUI/TableView.h>
 #include <unistd.h>
 
-static Vector<DeprecatedString> get_device_paths()
+static Vector<ByteString> get_device_paths()
 {
-    auto device_paths = Vector<DeprecatedString>();
+    auto device_paths = Vector<ByteString>();
     // FIXME: Propagate errors.
     (void)Core::Directory::for_each_entry("/dev"sv, Core::DirIterator::Flags::SkipParentAndBaseDir, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
         auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
@@ -67,13 +67,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(partition_model->set_device_path(device_paths.first()));
 
     auto& device_combobox = *widget->find_descendant_of_type_named<GUI::ComboBox>("device_combobox");
-    device_combobox.set_model(GUI::ItemListModel<DeprecatedString>::create(device_paths));
+    device_combobox.set_model(GUI::ItemListModel<ByteString>::create(device_paths));
     device_combobox.set_only_allow_values_from_model(true);
     device_combobox.set_selected_index(0);
     device_combobox.on_change = [&](auto const& path, auto const&) {
         auto result = partition_model->set_device_path(path);
         if (result.is_error())
-            GUI::MessageBox::show_error(window, DeprecatedString::formatted("No partition table found for device {}", path));
+            GUI::MessageBox::show_error(window, ByteString::formatted("No partition table found for device {}", path));
     };
 
     auto& partition_table_view = *widget->find_descendant_of_type_named<GUI::TableView>("partition_table_view");

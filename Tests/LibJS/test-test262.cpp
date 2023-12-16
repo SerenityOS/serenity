@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
@@ -107,7 +107,7 @@ static StringView emoji_for_result(TestResult result)
 
 static constexpr StringView total_test_emoji = "🧪"sv;
 
-static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString> files, size_t offset, StringView command, char const* const arguments[])
+static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<ByteString> files, size_t offset, StringView command, char const* const arguments[])
 {
     HashMap<size_t, TestResult> results {};
     TRY(results.try_ensure_capacity(files.size()));
@@ -133,12 +133,12 @@ static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString
         }
 
         auto output_or_error = runner_process->read_all();
-        DeprecatedString output;
+        ByteString output;
 
         if (output_or_error.is_error())
             warnln("Got error: {} while reading runner output", output_or_error.error());
         else
-            output = DeprecatedString(output_or_error.release_value().standard_error.bytes(), Chomp);
+            output = ByteString(output_or_error.release_value().standard_error.bytes(), Chomp);
 
         auto status_or_error = runner_process->status();
         bool failed = false;
@@ -162,7 +162,7 @@ static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString
             auto result_object_or_error = parser.parse();
             if (!result_object_or_error.is_error() && result_object_or_error.value().is_object()) {
                 auto& result_object = result_object_or_error.value().as_object();
-                if (auto result_string = result_object.get_deprecated_string("result"sv); result_string.has_value()) {
+                if (auto result_string = result_object.get_byte_string("result"sv); result_string.has_value()) {
                     auto const& view = result_string.value();
                     // Timeout and assert fail already are the result of the stopping test
                     if (view == "timeout"sv || view == "assert_fail"sv) {
@@ -190,7 +190,7 @@ static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString
     return results;
 }
 
-void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<DeprecatedString> const& paths, StringView per_file_name, double time_taken_in_ms);
+void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<ByteString> const& paths, StringView per_file_name, double time_taken_in_ms);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -213,12 +213,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     // Normalize the path to ensure filenames are consistent
-    Vector<DeprecatedString> paths;
+    Vector<ByteString> paths;
 
     if (!FileSystem::is_directory(test_directory)) {
         paths.append(test_directory);
     } else {
-        Test::iterate_directory_recursively(LexicalPath::canonicalized_path(test_directory), [&](DeprecatedString const& file_path) {
+        Test::iterate_directory_recursively(LexicalPath::canonicalized_path(test_directory), [&](ByteString const& file_path) {
             if (file_path.contains("_FIXTURE"sv))
                 return;
             // FIXME: Add ignored file set
@@ -230,7 +230,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("Found {} tests", paths.size());
 
     auto parameters = pass_through_parameters.split_view(' ');
-    Vector<DeprecatedString> args;
+    Vector<ByteString> args;
     args.ensure_capacity(parameters.size() + 2);
     args.append(runner_command);
     if (!dont_disable_core_dump)
@@ -301,7 +301,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<DeprecatedString> const& paths, StringView per_file_name, double time_taken_in_ms)
+void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<ByteString> const& paths, StringView per_file_name, double time_taken_in_ms)
 {
 
     auto file_or_error = Core::File::open(per_file_name, Core::File::OpenMode::Write);
@@ -320,7 +320,7 @@ void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<Deprec
     complete_results.set("duration", time_taken_in_ms / 1000.);
     complete_results.set("results", result_object);
 
-    if (file->write_until_depleted(complete_results.to_deprecated_string().bytes()).is_error())
+    if (file->write_until_depleted(complete_results.to_byte_string().bytes()).is_error())
         warnln("Failed to write per-file");
     file->close();
 }

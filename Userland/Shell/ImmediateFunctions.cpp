@@ -15,7 +15,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
 {
     auto name = across ? "length_across" : "length";
     if (arguments.size() < 1 || arguments.size() > 2) {
-        raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected one or two arguments to `{}'", name), invoking_node.position());
+        raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Expected one or two arguments to `{}'", name), invoking_node.position());
         return nullptr;
     }
 
@@ -34,7 +34,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
 
         auto& mode_arg = arguments.first();
         if (!mode_arg->is_bareword()) {
-            raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected a bareword (either 'string' or 'list') in the two-argument form of the `{}' immediate", name), mode_arg->position());
+            raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Expected a bareword (either 'string' or 'list') in the two-argument form of the `{}' immediate", name), mode_arg->position());
             return nullptr;
         }
 
@@ -46,7 +46,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
         } else if (mode_name == "infer") {
             mode = Infer;
         } else {
-            raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected either 'string' or 'list' (and not {}) in the two-argument form of the `{}' immediate", mode_name, name), mode_arg->position());
+            raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Expected either 'string' or 'list' (and not {}) in the two-argument form of the `{}' immediate", mode_name, name), mode_arg->position());
             return nullptr;
         }
 
@@ -127,7 +127,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
 
                 if (is_inferred) {
                     raise_error(ShellError::EvaluatedSyntaxError,
-                        DeprecatedString::formatted("Could not infer expression type, please explicitly use `{0} string' or `{0} list'", name),
+                        ByteString::formatted("Could not infer expression type, please explicitly use `{0} string' or `{0} list'", name),
                         invoking_node.position());
                     return nullptr;
                 }
@@ -136,7 +136,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
                 raise_error(ShellError::EvaluatedSyntaxError,
                     source.is_empty()
                         ? "Invalid application of `length' to a list"
-                        : DeprecatedString::formatted("Invalid application of `length' to a list\nperhaps you meant `{1}length \"{0}\"{2}' or `{1}length_across {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
+                        : ByteString::formatted("Invalid application of `length' to a list\nperhaps you meant `{1}length \"{0}\"{2}' or `{1}length_across {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
                     expr_node->position());
                 return nullptr;
             }
@@ -160,7 +160,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
 
             auto source = formatter.format();
             raise_error(ShellError::EvaluatedSyntaxError,
-                DeprecatedString::formatted("Invalid application of `length_across' to a non-list\nperhaps you meant `{1}length {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
+                ByteString::formatted("Invalid application of `length_across' to a non-list\nperhaps you meant `{1}length {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
                 expr_node->position());
             return nullptr;
         }
@@ -226,13 +226,13 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_regex_replace(AST::ImmediateExpressi
         return nullptr;
     }
 
-    Regex<PosixExtendedParser> re { TRY(pattern->resolve_as_list(this)).first().to_deprecated_string() };
+    Regex<PosixExtendedParser> re { TRY(pattern->resolve_as_list(this)).first().to_byte_string() };
     auto result = re.replace(
         TRY(value->resolve_as_list(this))[0],
         TRY(replacement->resolve_as_list(this))[0],
         PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Unicode);
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), TRY(String::from_deprecated_string(result)), AST::StringLiteral::EnclosureType::None);
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), TRY(String::from_byte_string(result)), AST::StringLiteral::EnclosureType::None);
 }
 
 ErrorOr<RefPtr<AST::Node>> Shell::immediate_remove_suffix(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)
@@ -484,7 +484,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_assign_default(AST::ImmediateExpress
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
     auto value = TRY(TRY(const_cast<AST::Node&>(*arguments.last()).run(*this))->resolve_without_cast(*this));
-    set_local_variable(name.to_deprecated_string(), value);
+    set_local_variable(name.to_byte_string(), value);
 
     return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
 }
@@ -553,7 +553,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_assign_defined_default(AST::Immediat
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
     auto value = TRY(TRY(const_cast<AST::Node&>(*arguments.last()).run(*this))->resolve_without_cast(*this));
-    set_local_variable(name.to_deprecated_string(), value);
+    set_local_variable(name.to_byte_string(), value);
 
     return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
 }
@@ -1231,7 +1231,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
         case U'\r':
             break;
         default:
-            raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Unexpected character '{:c}' in math expression", code_point), arguments.first()->position());
+            raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Unexpected character '{:c}' in math expression", code_point), arguments.first()->position());
             return nullptr;
         }
     }
@@ -1268,7 +1268,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
                 }
 
                 if (resolution_attempts_remaining == 0)
-                    raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Too many indirections when resolving variable '{}'", name), arguments.first()->position());
+                    raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Too many indirections when resolving variable '{}'", name), arguments.first()->position());
 
                 return 0;
             },
@@ -1296,7 +1296,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
                         }));
                     }
 
-                    set_local_variable(name->to_deprecated_string(), make_ref_counted<AST::StringValue>(TRY(String::number(rhs))));
+                    set_local_variable(name->to_byte_string(), make_ref_counted<AST::StringValue>(TRY(String::number(rhs))));
                     return rhs;
                 }
 
@@ -1372,7 +1372,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
                 return TRY(interpret(node->false_value));
             },
             [&](NonnullOwnPtr<Arithmetic::ErrorNode> const& node) -> ErrorOr<i64> {
-                raise_error(ShellError::EvaluatedSyntaxError, node->error.to_deprecated_string(), arguments.first()->position());
+                raise_error(ShellError::EvaluatedSyntaxError, node->error.to_byte_string(), arguments.first()->position());
                 return 0;
             });
     };
@@ -1391,7 +1391,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::run_immediate_function(StringView str, AST::Im
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
-    raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Unknown immediate function {}", str), invoking_node.position());
+    raise_error(ShellError::EvaluatedSyntaxError, ByteString::formatted("Unknown immediate function {}", str), invoking_node.position());
     return nullptr;
 }
 

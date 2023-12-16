@@ -34,7 +34,7 @@ class OutOfProcessWebView final
 public:
     virtual ~OutOfProcessWebView() override;
 
-    DeprecatedString dump_layout_tree();
+    ByteString dump_layout_tree();
 
     OrderedHashMap<String, String> get_local_storage_entries();
     OrderedHashMap<String, String> get_session_storage_entries();
@@ -42,8 +42,8 @@ public:
     void set_content_filters(Vector<String>);
     void set_autoplay_allowed_on_all_websites();
     void set_autoplay_allowlist(Vector<String>);
-    void set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings);
-    void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
+    void set_proxy_mappings(Vector<ByteString> proxies, HashMap<ByteString, size_t> mappings);
+    void connect_to_webdriver(ByteString const& webdriver_ipc_path);
 
     void set_window_position(Gfx::IntPoint);
     void set_window_size(Gfx::IntSize);

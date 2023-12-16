@@ -829,7 +829,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     return {};
 }
 
-PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
+PDFErrorOr<void> Renderer::show_text(ByteString const& string)
 {
     if (!text_state().font)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");

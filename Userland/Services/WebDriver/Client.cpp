@@ -61,7 +61,7 @@ void Client::close_session(unsigned session_id)
 static void initialize_session_from_capabilities(WebContentConnection& web_content_connection, JsonObject& capabilities)
 {
     // 1. Let strategy be the result of getting property "pageLoadStrategy" from capabilities.
-    auto strategy = capabilities.get_deprecated_string("pageLoadStrategy"sv);
+    auto strategy = capabilities.get_byte_string("pageLoadStrategy"sv);
 
     // 2. If strategy is a string, set the current session’s page loading strategy to strategy. Otherwise, set the page loading strategy to normal and set a property of capabilities with name "pageLoadStrategy" and value "normal".
     if (strategy.has_value())
@@ -97,7 +97,7 @@ static void initialize_session_from_capabilities(WebContentConnection& web_conte
     }
 
     // 8. Apply changes to the user agent for any implementation-defined capabilities selected during the capabilities processing step.
-    auto behavior = capabilities.get_deprecated_string("unhandledPromptBehavior"sv);
+    auto behavior = capabilities.get_byte_string("unhandledPromptBehavior"sv);
     if (behavior.has_value())
         web_content_connection.async_set_unhandled_prompt_behavior(Web::WebDriver::unhandled_prompt_behavior_from_string(*behavior));
     else
@@ -139,7 +139,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     auto session = make_ref_counted<Session>(session_id, *this, move(options));
 
     if (auto start_result = session->start(m_callbacks); start_result.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, DeprecatedString::formatted("Failed to start session: {}", start_result.error()));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, ByteString::formatted("Failed to start session: {}", start_result.error()));
 
     auto& web_content_connection = session->web_content_connection();
 
@@ -160,7 +160,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     JsonObject body;
     // "sessionId"
     //     session id
-    body.set("sessionId", DeprecatedString::number(session_id));
+    body.set("sessionId", ByteString::number(session_id));
     // "capabilities"
     //     capabilities
     body.set("capabilities", move(capabilities));
@@ -323,7 +323,7 @@ Web::WebDriver::Response Client::switch_to_window(Web::WebDriver::Parameters par
     if (!handle.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'handle' present");
 
-    return session->switch_to_window(handle->to_deprecated_string());
+    return session->switch_to_window(handle->to_byte_string());
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles

@@ -22,7 +22,7 @@ namespace GUI {
 NonnullRefPtr<AboutDialog> AboutDialog::create(String const& name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
 {
     auto dialog = adopt_ref(*new AboutDialog(name, version, icon, parent_window));
-    dialog->set_title(DeprecatedString::formatted("About {}", name));
+    dialog->set_title(ByteString::formatted("About {}", name));
 
     auto widget = dialog->set_main_widget<Widget>();
     MUST(widget->load_from_gml(about_dialog_gml));

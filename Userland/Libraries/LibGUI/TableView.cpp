@@ -131,7 +131,7 @@ void TableView::paint_event(PaintEvent& event)
                     }
 
                     auto text_alignment = cell_index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-                    draw_item_text(painter, cell_index, is_selected_row, cell_rect, data.to_deprecated_string(), font_for_index(cell_index), text_alignment, Gfx::TextElision::Right);
+                    draw_item_text(painter, cell_index, is_selected_row, cell_rect, data.to_byte_string(), font_for_index(cell_index), text_alignment, Gfx::TextElision::Right);
                 }
             }
 
@@ -208,7 +208,7 @@ void TableView::keydown_event(KeyEvent& event)
                     m_editing_delegate->set_value(GUI::Variant {});
                 }
             } else if (is_backspace) {
-                m_editing_delegate->set_value(DeprecatedString::empty());
+                m_editing_delegate->set_value(ByteString::empty());
             } else {
                 m_editing_delegate->set_value(event.text(), ModelEditingDelegate::SelectionBehavior::DoNotSelect);
             }

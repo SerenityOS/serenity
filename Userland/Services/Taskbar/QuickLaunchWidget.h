@@ -25,10 +25,10 @@ public:
     virtual ~QuickLaunchEntry() = default;
     virtual ErrorOr<void> launch() const = 0;
     virtual GUI::Icon icon() const = 0;
-    virtual DeprecatedString name() const = 0;
-    virtual DeprecatedString file_name_to_watch() const = 0;
+    virtual ByteString name() const = 0;
+    virtual ByteString file_name_to_watch() const = 0;
 
-    virtual DeprecatedString path() = 0;
+    virtual ByteString path() = 0;
 
     bool is_hovered() const { return m_hovered; }
     void set_hovered(bool hovered) { m_hovered = hovered; }
@@ -50,10 +50,10 @@ public:
 
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override { return m_app_file->icon(); }
-    virtual DeprecatedString name() const override { return m_app_file->name(); }
-    virtual DeprecatedString file_name_to_watch() const override { return {}; }
+    virtual ByteString name() const override { return m_app_file->name(); }
+    virtual ByteString file_name_to_watch() const override { return {}; }
 
-    virtual DeprecatedString path() override { return m_app_file->filename(); }
+    virtual ByteString path() override { return m_app_file->filename(); }
 
 private:
     NonnullRefPtr<Desktop::AppFile> m_app_file;
@@ -61,37 +61,37 @@ private:
 
 class QuickLaunchEntryExecutable : public QuickLaunchEntry {
 public:
-    explicit QuickLaunchEntryExecutable(DeprecatedString path)
+    explicit QuickLaunchEntryExecutable(ByteString path)
         : m_path(move(path))
     {
     }
 
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override;
-    virtual DeprecatedString name() const override;
-    virtual DeprecatedString file_name_to_watch() const override { return m_path; }
+    virtual ByteString name() const override;
+    virtual ByteString file_name_to_watch() const override { return m_path; }
 
-    virtual DeprecatedString path() override { return m_path; }
+    virtual ByteString path() override { return m_path; }
 
 private:
-    DeprecatedString m_path;
+    ByteString m_path;
 };
 class QuickLaunchEntryFile : public QuickLaunchEntry {
 public:
-    explicit QuickLaunchEntryFile(DeprecatedString path)
+    explicit QuickLaunchEntryFile(ByteString path)
         : m_path(move(path))
     {
     }
 
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override;
-    virtual DeprecatedString name() const override { return m_path; }
-    virtual DeprecatedString file_name_to_watch() const override { return m_path; }
+    virtual ByteString name() const override { return m_path; }
+    virtual ByteString file_name_to_watch() const override { return m_path; }
 
-    virtual DeprecatedString path() override { return m_path; }
+    virtual ByteString path() override { return m_path; }
 
 private:
-    DeprecatedString m_path;
+    ByteString m_path;
 };
 
 class QuickLaunchWidget : public GUI::Frame
@@ -131,7 +131,7 @@ private:
     ErrorOr<void> create_context_menu();
 
     void load_entries(bool save = true);
-    ErrorOr<void> update_entry(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
+    ErrorOr<void> update_entry(ByteString const&, NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
     void add_entries(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save = true);
 
     template<typename Callback>
@@ -142,7 +142,7 @@ private:
     void repaint();
 
     void set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
-    void remove_entry(DeprecatedString const&, bool save = true);
+    void remove_entry(ByteString const&, bool save = true);
     void recalculate_order();
 
     bool m_dragging { false };
@@ -151,7 +151,7 @@ private:
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
-    DeprecatedString m_context_menu_app_name;
+    ByteString m_context_menu_app_name;
     RefPtr<Core::FileWatcher> m_watcher;
 
     Vector<NonnullOwnPtr<QuickLaunchEntry>> m_entries;

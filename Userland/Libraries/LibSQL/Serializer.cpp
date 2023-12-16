@@ -8,18 +8,18 @@
 
 namespace SQL {
 
-void Serializer::serialize(DeprecatedString const& text)
+void Serializer::serialize(ByteString const& text)
 {
     serialize<u32>(text.length());
     if (!text.is_empty())
         write((u8 const*)text.characters(), text.length());
 }
 
-void Serializer::deserialize_to(DeprecatedString& text)
+void Serializer::deserialize_to(ByteString& text)
 {
     auto length = deserialize<u32>();
     if (length > 0) {
-        text = DeprecatedString(reinterpret_cast<char const*>(read(length)), length);
+        text = ByteString(reinterpret_cast<char const*>(read(length)), length);
     } else {
         text = "";
     }

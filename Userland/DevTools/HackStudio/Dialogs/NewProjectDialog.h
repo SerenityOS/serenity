@@ -24,15 +24,15 @@ class NewProjectDialog : public GUI::Dialog {
 public:
     static ExecResult show(GUI::Window* parent_window);
 
-    Optional<DeprecatedString> created_project_path() const { return m_created_project_path; }
+    Optional<ByteString> created_project_path() const { return m_created_project_path; }
 
 private:
     NewProjectDialog(GUI::Window* parent);
     virtual ~NewProjectDialog() override = default;
 
     void update_dialog();
-    Optional<DeprecatedString> get_available_project_name();
-    Optional<DeprecatedString> get_project_full_path();
+    Optional<ByteString> get_available_project_name();
+    Optional<ByteString> get_project_full_path();
 
     void do_create_project();
 
@@ -53,7 +53,7 @@ private:
     RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::Button> m_browse_button;
 
-    Optional<DeprecatedString> m_created_project_path;
+    Optional<ByteString> m_created_project_path;
 };
 
 }

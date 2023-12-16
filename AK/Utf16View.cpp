@@ -81,9 +81,9 @@ u32 Utf16View::decode_surrogate_pair(u16 high_surrogate, u16 low_surrogate)
     return ((high_surrogate - high_surrogate_min) << 10) + (low_surrogate - low_surrogate_min) + first_supplementary_plane_code_point;
 }
 
-ErrorOr<DeprecatedString> Utf16View::to_deprecated_string(AllowInvalidCodeUnits allow_invalid_code_units) const
+ErrorOr<ByteString> Utf16View::to_byte_string(AllowInvalidCodeUnits allow_invalid_code_units) const
 {
-    return TRY(to_utf8(allow_invalid_code_units)).to_deprecated_string();
+    return TRY(to_utf8(allow_invalid_code_units)).to_byte_string();
 }
 
 ErrorOr<String> Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const

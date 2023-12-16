@@ -21,7 +21,7 @@
 
 namespace HTTP {
 
-static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, DeprecatedString const& content_encoding)
+static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, ByteString const& content_encoding)
 {
     dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
 
@@ -173,11 +173,11 @@ void Job::register_on_ready_to_read(Function<void()> callback)
     };
 }
 
-ErrorOr<DeprecatedString> Job::read_line(size_t size)
+ErrorOr<ByteString> Job::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     auto bytes_read = TRY(m_socket->read_until(buffer, "\r\n"sv));
-    return DeprecatedString::copy(bytes_read);
+    return ByteString::copy(bytes_read);
 }
 
 ErrorOr<ByteBuffer> Job::receive(size_t size)
@@ -203,7 +203,7 @@ void Job::on_socket_connected()
 
     if constexpr (JOB_DEBUG) {
         dbgln("Job: raw_request:");
-        dbgln("{}", DeprecatedString::copy(raw_request));
+        dbgln("{}", ByteString::copy(raw_request));
     }
 
     bool success = !m_socket->write_until_depleted(raw_request).is_error();
@@ -304,7 +304,7 @@ void Job::on_socket_connected()
                 }
                 if (on_headers_received) {
                     if (!m_set_cookie_headers.is_empty())
-                        m_headers.set("Set-Cookie", JsonArray { m_set_cookie_headers }.to_deprecated_string());
+                        m_headers.set("Set-Cookie", JsonArray { m_set_cookie_headers }.to_byte_string());
                     on_headers_received(m_headers, m_code > 0 ? m_code : Optional<u32> {});
                 }
                 m_state = State::InBody;
@@ -361,7 +361,7 @@ void Job::on_socket_connected()
                 builder.append(existing_value.value());
                 builder.append(',');
                 builder.append(value);
-                m_headers.set(name, builder.to_deprecated_string());
+                m_headers.set(name, builder.to_byte_string());
             } else {
                 m_headers.set(name, value);
             }
@@ -423,7 +423,7 @@ void Job::on_socket_connected()
                         break;
                     } else {
                         auto chunk = size_lines[0].split_view(';', SplitBehavior::KeepEmpty);
-                        DeprecatedString size_string = chunk[0];
+                        ByteString size_string = chunk[0];
                         char* endptr;
                         auto size = strtoul(size_string.characters(), &endptr, 16);
                         if (*endptr) {

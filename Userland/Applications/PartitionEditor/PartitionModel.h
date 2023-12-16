@@ -31,7 +31,7 @@ public:
     virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
 
-    ErrorOr<void> set_device_path(DeprecatedString const&);
+    ErrorOr<void> set_device_path(ByteString const&);
 
 private:
     PartitionModel() = default;

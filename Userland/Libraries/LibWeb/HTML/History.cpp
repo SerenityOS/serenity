@@ -172,7 +172,7 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
     if (url.has_value() && !url->is_empty()) {
 
         // 1. Parse url, relative to the relevant settings object of history.
-        auto parsed_url = relevant_settings_object(*this).parse_url(url->to_deprecated_string());
+        auto parsed_url = relevant_settings_object(*this).parse_url(url->to_byte_string());
 
         // 2. If that fails, then throw a "SecurityError" DOMException.
         if (!parsed_url.is_valid())

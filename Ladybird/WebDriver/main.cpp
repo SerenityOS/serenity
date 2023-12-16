@@ -30,7 +30,7 @@ static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char c
     return result;
 }
 
-static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
+static ErrorOr<pid_t> launch_browser(ByteString const& socket_path)
 {
     return launch_process("Ladybird"sv,
         Array {
@@ -40,9 +40,9 @@ static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
         });
 }
 
-static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
+static ErrorOr<pid_t> launch_headless_browser(ByteString const& socket_path)
 {
-    auto resources = DeprecatedString::formatted("{}/res", s_serenity_resource_root);
+    auto resources = ByteString::formatted("{}/res", s_serenity_resource_root);
     return launch_process("headless-browser"sv,
         Array {
             "--resources",
@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     platform_init();
 
-    auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
+    auto webdriver_socket_path = ByteString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
     TRY(Core::Directory::create(webdriver_socket_path, Core::Directory::CreateDirectories::Yes));
 
     Core::EventLoop loop;

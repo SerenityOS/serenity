@@ -32,27 +32,27 @@ private:
     ErrorOr<void> build_serenity_component();
     ErrorOr<void> run_serenity_component();
     ErrorOr<void> initialize_build_directory();
-    Optional<DeprecatedString> find_cmake_file_for(StringView file_path) const;
-    DeprecatedString generate_cmake_file_content() const;
+    Optional<ByteString> find_cmake_file_for(StringView file_path) const;
+    ByteString generate_cmake_file_content() const;
     ErrorOr<void> update_active_file(StringView active_file);
-    DeprecatedString build_directory() const;
+    ByteString build_directory() const;
 
     struct LibraryInfo {
-        DeprecatedString path;
-        Vector<DeprecatedString> dependencies {};
+        ByteString path;
+        Vector<ByteString> dependencies {};
     };
-    static HashMap<DeprecatedString, NonnullOwnPtr<LibraryInfo>> get_defined_libraries();
-    static void for_each_library_definition(Function<void(DeprecatedString, DeprecatedString)>);
-    static void for_each_library_dependencies(Function<void(DeprecatedString, Vector<StringView>)>);
-    static ErrorOr<DeprecatedString> component_name(StringView cmake_file_path);
+    static HashMap<ByteString, NonnullOwnPtr<LibraryInfo>> get_defined_libraries();
+    static void for_each_library_definition(Function<void(ByteString, ByteString)>);
+    static void for_each_library_dependencies(Function<void(ByteString, Vector<StringView>)>);
+    static ErrorOr<ByteString> component_name(StringView cmake_file_path);
     static ErrorOr<void> verify_cmake_is_installed();
     static ErrorOr<void> verify_make_is_installed();
 
-    DeprecatedString m_project_root;
+    ByteString m_project_root;
     Project const& m_project;
     NonnullRefPtr<TerminalWrapper> m_terminal;
     IsSerenityRepo m_is_serenity { IsSerenityRepo::No };
-    DeprecatedString m_serenity_component_cmake_file;
-    DeprecatedString m_serenity_component_name;
+    ByteString m_serenity_component_cmake_file;
+    ByteString m_serenity_component_name;
 };
 }

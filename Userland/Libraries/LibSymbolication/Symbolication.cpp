@@ -24,7 +24,7 @@ struct CachedELF {
     NonnullOwnPtr<ELF::Image> image;
 };
 
-static HashMap<DeprecatedString, OwnPtr<CachedELF>> s_cache;
+static HashMap<ByteString, OwnPtr<CachedELF>> s_cache;
 
 enum class KernelBaseState {
     Uninitialized,
@@ -50,7 +50,7 @@ Optional<FlatPtr> kernel_base()
             return {};
         }
 
-        auto kernel_base_str = DeprecatedString { file_content.value(), NoChomp };
+        auto kernel_base_str = ByteString { file_content.value(), NoChomp };
         using AddressType = u64;
         auto maybe_kernel_base = kernel_base_str.to_uint<AddressType>();
         if (!maybe_kernel_base.has_value()) {
@@ -65,9 +65,9 @@ Optional<FlatPtr> kernel_base()
     return s_kernel_base;
 }
 
-Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, IncludeSourcePosition include_source_positions)
+Optional<Symbol> symbolicate(ByteString const& path, FlatPtr address, IncludeSourcePosition include_source_positions)
 {
-    DeprecatedString full_path = path;
+    ByteString full_path = path;
     if (!path.starts_with('/')) {
         Array<StringView, 2> search_paths { "/usr/lib"sv, "/usr/local/lib"sv };
         bool found = false;
@@ -139,7 +139,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     struct RegionWithSymbols {
         FlatPtr base { 0 };
         size_t size { 0 };
-        DeprecatedString path;
+        ByteString path;
     };
 
     Vector<FlatPtr> stack;
@@ -154,7 +154,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     }
 
     {
-        auto stack_path = DeprecatedString::formatted("/proc/{}/stacks/{}", pid, tid);
+        auto stack_path = ByteString::formatted("/proc/{}/stacks/{}", pid, tid);
         auto file_or_error = Core::File::open(stack_path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", stack_path, file_or_error.error());
@@ -180,7 +180,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     }
 
     {
-        auto vm_path = DeprecatedString::formatted("/proc/{}/vm", pid);
+        auto vm_path = ByteString::formatted("/proc/{}/vm", pid);
         auto file_or_error = Core::File::open(vm_path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", vm_path, file_or_error.error());
@@ -201,11 +201,11 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
         for (auto& region_value : json.value().as_array().values()) {
             auto& region = region_value.as_object();
-            auto name = region.get_deprecated_string("name"sv).value_or({});
+            auto name = region.get_byte_string("name"sv).value_or({});
             auto address = region.get_addr("address"sv).value_or(0);
             auto size = region.get_addr("size"sv).value_or(0);
 
-            DeprecatedString path;
+            ByteString path;
             if (name == "/usr/lib/Loader.so") {
                 path = name;
             } else if (name.ends_with(": .text"sv) || name.ends_with(": .rodata"sv)) {

@@ -8,7 +8,7 @@
 
 #include <AK/BitCast.h>
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/NumericLimits.h>
@@ -65,7 +65,7 @@ ErrorOr<void> encode(Encoder& encoder, StringView const& value)
 }
 
 template<>
-ErrorOr<void> encode(Encoder& encoder, DeprecatedString const& value)
+ErrorOr<void> encode(Encoder& encoder, ByteString const& value)
 {
     return encoder.encode(value.view());
 }
@@ -99,7 +99,7 @@ ErrorOr<void> encode(Encoder& encoder, UnixDateTime const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, URL const& value)
 {
-    return encoder.encode(value.to_deprecated_string());
+    return encoder.encode(value.to_byte_string());
 }
 
 template<>

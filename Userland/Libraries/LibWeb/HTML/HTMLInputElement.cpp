@@ -519,7 +519,7 @@ String HTMLInputElement::placeholder() const
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-placeholder
-Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
+Optional<ByteString> HTMLInputElement::placeholder_value() const
 {
     if (!m_text_node || !m_text_node->data().is_empty())
         return {};
@@ -527,7 +527,7 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
         return {};
     if (!has_attribute(HTML::AttributeNames::placeholder))
         return {};
-    return placeholder().to_deprecated_string();
+    return placeholder().to_byte_string();
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()
@@ -966,7 +966,7 @@ void HTMLInputElement::legacy_pre_activation_behavior()
     // has its checkedness set to true, if any, and then set this element's
     // checkedness to true.
     if (type_state() == TypeAttributeState::RadioButton) {
-        DeprecatedString name = this->name();
+        ByteString name = this->name();
 
         document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
             if (element.checked() && is_in_same_radio_button_group(*this, element)) {

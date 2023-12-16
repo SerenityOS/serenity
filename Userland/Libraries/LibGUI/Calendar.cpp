@@ -636,7 +636,7 @@ void Calendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile, Gfx:
             text_rect = Gfx::IntRect(tile_rect);
         }
 
-        auto display_date = DeprecatedString::number(tile.day);
+        auto display_date = ByteString::number(tile.day);
         if (tile.is_selected && (width < 30 || height < 30))
             painter.draw_rect(tile_rect, palette().base_text());
 
@@ -659,7 +659,7 @@ void Calendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile, Gfx:
             set_font(*small_font);
         }
 
-        auto display_date = DeprecatedString::number(tile.day);
+        auto display_date = ByteString::number(tile.day);
         if (tile.is_selected)
             painter.draw_rect(tile_rect, palette().base_text());
 
@@ -820,7 +820,7 @@ void Calendar::doubleclick_event(GUI::MouseEvent& event)
     }
 }
 
-size_t Calendar::day_of_week_index(DeprecatedString const& day_name)
+size_t Calendar::day_of_week_index(ByteString const& day_name)
 {
     auto const& day_names = AK::long_day_names;
     return AK::find_index(day_names.begin(), day_names.end(), day_name);

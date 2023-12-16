@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         for (size_t i = path_parts.size() - 1; i > 0; --i) {
             auto current_path_parts = path_parts.span().slice(0, i);
-            LexicalPath current_path { DeprecatedString::join('/', current_path_parts) };
+            LexicalPath current_path { ByteString::join('/', current_path_parts) };
             if (!remove_directory(current_path.string()))
                 break;
         }

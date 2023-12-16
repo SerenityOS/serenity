@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(window);
+        Optional<ByteString> path = GUI::FilePicker::get_open_filepath(window);
         if (path.has_value()) {
             player->play_file_path(path.value());
         }

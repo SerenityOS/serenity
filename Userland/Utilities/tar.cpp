@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>
@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView archive_file;
     bool dereference;
     StringView directory;
-    Vector<DeprecatedString> paths;
+    Vector<ByteString> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');
@@ -88,16 +88,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto tar_stream = TRY(Archive::TarInputStream::construct(move(input_stream)));
 
-        HashMap<DeprecatedString, DeprecatedString> global_overrides;
-        HashMap<DeprecatedString, DeprecatedString> local_overrides;
+        HashMap<ByteString, ByteString> global_overrides;
+        HashMap<ByteString, ByteString> local_overrides;
 
-        auto get_override = [&](StringView key) -> Optional<DeprecatedString> {
-            Optional<DeprecatedString> maybe_local = local_overrides.get(key);
+        auto get_override = [&](StringView key) -> Optional<ByteString> {
+            Optional<ByteString> maybe_local = local_overrides.get(key);
 
             if (maybe_local.has_value())
                 return maybe_local;
 
-            Optional<DeprecatedString> maybe_global = global_overrides.get(key);
+            Optional<ByteString> maybe_global = global_overrides.get(key);
 
             if (maybe_global.has_value())
                 return maybe_global;
@@ -149,7 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     long_name.append(reinterpret_cast<char*>(slice.data()), slice.size());
                 }
 
-                local_overrides.set("path", long_name.to_deprecated_string());
+                local_overrides.set("path", long_name.to_byte_string());
                 TRY(tar_stream->advance());
                 continue;
             }
@@ -161,13 +161,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             LexicalPath path = LexicalPath(header.filename());
             if (!header.prefix().is_empty())
                 path = path.prepend(header.prefix());
-            DeprecatedString filename = get_override("path"sv).value_or(path.string());
+            ByteString filename = get_override("path"sv).value_or(path.string());
 
             if (list || verbose)
                 outln("{}", filename);
 
             if (extract) {
-                DeprecatedString absolute_path = TRY(FileSystem::absolute_path(filename)).to_deprecated_string();
+                ByteString absolute_path = TRY(FileSystem::absolute_path(filename)).to_byte_string();
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 
@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Archive::TarOutputStream tar_stream(move(output_stream));
 
-        auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
+        auto add_file = [&](ByteString path) -> ErrorOr<void> {
             auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
             if (file_or_error.is_error()) {
                 warnln("Failed to open {}: {}", path, file_or_error.error());
@@ -251,7 +251,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto file = file_or_error.release_value();
 
             auto statbuf = TRY(Core::System::lstat(path));
-            auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
+            auto canonicalized_path = TRY(String::from_byte_string(LexicalPath::canonicalized_path(path)));
             // FIXME: We should stream instead of reading the entire file in one go, but TarOutputStream does not have any interface to do so.
             auto file_content = TRY(file->read_until_eof());
             TRY(tar_stream.add_file(canonicalized_path, statbuf.st_mode, file_content));
@@ -261,10 +261,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        auto add_link = [&](DeprecatedString path) -> ErrorOr<void> {
+        auto add_link = [&](ByteString path) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
 
-            auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
+            auto canonicalized_path = TRY(String::from_byte_string(LexicalPath::canonicalized_path(path)));
             TRY(tar_stream.add_link(canonicalized_path, statbuf.st_mode, TRY(Core::System::readlink(path))));
             if (verbose)
                 outln("{}", canonicalized_path);
@@ -272,10 +272,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
+        auto add_directory = [&](ByteString path, auto handle_directory) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
 
-            auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
+            auto canonicalized_path = TRY(String::from_byte_string(LexicalPath::canonicalized_path(path)));
             TRY(tar_stream.add_directory(canonicalized_path, statbuf.st_mode));
             if (verbose)
                 outln("{}", canonicalized_path);

@@ -24,20 +24,20 @@ constexpr void swap_keys(u32* keys, size_t i, size_t j)
 }
 
 #ifndef KERNEL
-DeprecatedString AESCipherBlock::to_deprecated_string() const
+ByteString AESCipherBlock::to_byte_string() const
 {
     StringBuilder builder;
     for (auto value : m_data)
         builder.appendff("{:02x}", value);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString AESCipherKey::to_deprecated_string() const
+ByteString AESCipherKey::to_byte_string() const
 {
     StringBuilder builder;
     for (size_t i = 0; i < (rounds() + 1) * 4; ++i)
         builder.appendff("{:02x}", m_rd_keys[i]);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 #endif
 

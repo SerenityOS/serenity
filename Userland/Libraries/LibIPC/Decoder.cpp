@@ -31,13 +31,13 @@ ErrorOr<String> decode(Decoder& decoder)
 }
 
 template<>
-ErrorOr<DeprecatedString> decode(Decoder& decoder)
+ErrorOr<ByteString> decode(Decoder& decoder)
 {
     auto length = TRY(decoder.decode_size());
     if (length == NumericLimits<u32>::max())
-        return DeprecatedString {};
+        return ByteString {};
     if (length == 0)
-        return DeprecatedString::empty();
+        return ByteString::empty();
 
     char* text_buffer = nullptr;
     auto text_impl = StringImpl::create_uninitialized(length, text_buffer);
@@ -45,7 +45,7 @@ ErrorOr<DeprecatedString> decode(Decoder& decoder)
     Bytes bytes { text_buffer, length };
     TRY(decoder.decode_into(bytes));
 
-    return DeprecatedString { *text_impl };
+    return ByteString { *text_impl };
 }
 
 template<>
@@ -65,7 +65,7 @@ ErrorOr<ByteBuffer> decode(Decoder& decoder)
 template<>
 ErrorOr<JsonValue> decode(Decoder& decoder)
 {
-    auto json = TRY(decoder.decode<DeprecatedString>());
+    auto json = TRY(decoder.decode<ByteString>());
     return JsonValue::from_string(json);
 }
 
@@ -86,7 +86,7 @@ ErrorOr<UnixDateTime> decode(Decoder& decoder)
 template<>
 ErrorOr<URL> decode(Decoder& decoder)
 {
-    auto url = TRY(decoder.decode<DeprecatedString>());
+    auto url = TRY(decoder.decode<ByteString>());
     return URL { url };
 }
 

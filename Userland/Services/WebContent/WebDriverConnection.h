@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
@@ -31,7 +31,7 @@ class WebDriverConnection final
     C_OBJECT_ABSTRACT(WebDriverConnection)
 
 public:
-    static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path);
+    static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(Web::PageClient& page_client, ByteString const& webdriver_ipc_path);
     virtual ~WebDriverConnection() = default;
 
 private:
@@ -111,7 +111,7 @@ private:
     ErrorOr<JsonArray, Web::WebDriver::Error> find(StartNodeGetter&& start_node_getter, Web::WebDriver::LocationStrategy using_, StringView value);
 
     struct ScriptArguments {
-        DeprecatedString script;
+        ByteString script;
         JS::MarkedVector<JS::Value> arguments;
     };
     ErrorOr<ScriptArguments, Web::WebDriver::Error> extract_the_script_arguments_from_a_request(JsonValue const& payload);

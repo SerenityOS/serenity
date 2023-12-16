@@ -48,7 +48,7 @@ ErrorOr<Optional<String>> FilePicker::get_filepath(Badge<FileSystemAccessServer:
     ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, picker->window_id());
 
     if (picker->exec() == ExecResult::OK) {
-        auto file_path = TRY(picker->selected_file().map([](auto& v) { return String::from_deprecated_string(v); }));
+        auto file_path = TRY(picker->selected_file().map([](auto& v) { return String::from_byte_string(v); }));
         if (file_path.has_value() && file_path->is_empty())
             return Optional<String> {};
 
@@ -57,7 +57,7 @@ ErrorOr<Optional<String>> FilePicker::get_filepath(Badge<FileSystemAccessServer:
     return Optional<String> {};
 }
 
-Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position, Optional<Vector<FileTypeFilter>> allowed_file_types)
+Optional<ByteString> FilePicker::get_open_filepath(Window* parent_window, ByteString const& window_title, StringView path, bool folder, ScreenPosition screen_position, Optional<Vector<FileTypeFilter>> allowed_file_types)
 {
     auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position, move(allowed_file_types));
 
@@ -70,9 +70,9 @@ Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, 
     return {};
 }
 
-Optional<DeprecatedString> FilePicker::get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path, ScreenPosition screen_position)
+Optional<ByteString> FilePicker::get_save_filepath(Window* parent_window, ByteString const& title, ByteString const& extension, StringView path, ScreenPosition screen_position)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Save, DeprecatedString::formatted("{}.{}", title, extension), path, screen_position);
+    auto picker = FilePicker::construct(parent_window, Mode::Save, ByteString::formatted("{}.{}", title, extension), path, screen_position);
 
     if (picker->exec() == ExecResult::OK)
         return picker->selected_file();
@@ -138,11 +138,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
             StringBuilder extension_list;
             extension_list.join("; "sv, *filter.extensions);
-            m_allowed_file_types_names.append(DeprecatedString::formatted("{} ({})", filter.name, extension_list.to_deprecated_string()));
+            m_allowed_file_types_names.append(ByteString::formatted("{} ({})", filter.name, extension_list.to_byte_string()));
         }
 
-        file_types_filters_combo->set_model(*GUI::ItemListModel<DeprecatedString, Vector<DeprecatedString>>::create(m_allowed_file_types_names));
-        file_types_filters_combo->on_change = [this](DeprecatedString const&, GUI::ModelIndex const& index) {
+        file_types_filters_combo->set_model(*GUI::ItemListModel<ByteString, Vector<ByteString>>::create(m_allowed_file_types_names));
+        file_types_filters_combo->on_change = [this](ByteString const&, GUI::ModelIndex const& index) {
             m_model->set_allowed_file_extensions((*m_allowed_file_types)[index.row()].extensions);
         };
         file_types_filters_combo->set_selected_index(0);
@@ -160,7 +160,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
     auto open_parent_directory_action = Action::create(
         "Open Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
-            set_path(DeprecatedString::formatted("{}/..", m_model->root_path()));
+            set_path(ByteString::formatted("{}/..", m_model->root_path()));
         },
         this);
     toolbar.add_action(*open_parent_directory_action);
@@ -176,10 +176,10 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         "New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             String value;
             if (InputBox::show(this, value, "Enter a name:"sv, "New Directory"sv, GUI::InputType::NonemptyText) == InputBox::ExecResult::OK) {
-                auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));
+                auto new_dir_path = LexicalPath::canonicalized_path(ByteString::formatted("{}/{}", m_model->root_path(), value));
                 int rc = mkdir(new_dir_path.characters(), 0777);
                 if (rc < 0) {
-                    (void)MessageBox::try_show_error(this, DeprecatedString::formatted("Making new directory \"{}\" failed: {}", new_dir_path, Error::from_errno(errno)));
+                    (void)MessageBox::try_show_error(this, ByteString::formatted("Making new directory \"{}\" failed: {}", new_dir_path, Error::from_errno(errno)));
                 } else {
                     m_model->invalidate();
                 }
@@ -304,7 +304,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         m_view->view_as_columns_action().set_enabled(true);
     };
 
-    common_locations_tray.on_item_activation = [this](DeprecatedString const& path) {
+    common_locations_tray.on_item_activation = [this](ByteString const& path) {
         set_path(path);
     };
     for (auto& location : CommonLocationsProvider::common_locations()) {
@@ -336,7 +336,7 @@ void FilePicker::on_file_return()
     bool file_exists = !stat_or_error.is_error();
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
-        (void)MessageBox::try_show_error(this, DeprecatedString::formatted("Opening \"{}\" failed: {}", m_filename_textbox->text(), Error::from_errno(ENOENT)));
+        (void)MessageBox::try_show_error(this, ByteString::formatted("Opening \"{}\" failed: {}", m_filename_textbox->text(), Error::from_errno(ENOENT)));
         return;
     }
 
@@ -360,10 +360,10 @@ void FilePicker::on_file_return()
     done(ExecResult::OK);
 }
 
-void FilePicker::set_path(DeprecatedString const& path)
+void FilePicker::set_path(ByteString const& path)
 {
     if (access(path.characters(), R_OK | X_OK) == -1) {
-        (void)GUI::MessageBox::try_show_error(this, DeprecatedString::formatted("Opening \"{}\" failed: {}", path, Error::from_errno(errno)));
+        (void)GUI::MessageBox::try_show_error(this, ByteString::formatted("Opening \"{}\" failed: {}", path, Error::from_errno(errno)));
         auto& common_locations_tray = *find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
         for (auto& location_button : m_common_location_buttons)
             common_locations_tray.set_item_checked(location_button.tray_item_index, m_model->root_path() == location_button.path);

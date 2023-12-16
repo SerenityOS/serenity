@@ -11,7 +11,7 @@
 
 namespace Markdown {
 
-DeprecatedString Paragraph::render_to_html(bool tight) const
+ByteString Paragraph::render_to_html(bool tight) const
 {
     StringBuilder builder;
 
@@ -25,12 +25,12 @@ DeprecatedString Paragraph::render_to_html(bool tight) const
 
     builder.append('\n');
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<DeprecatedString> Paragraph::render_lines_for_terminal(size_t) const
+Vector<ByteString> Paragraph::render_lines_for_terminal(size_t) const
 {
-    return Vector<DeprecatedString> { DeprecatedString::formatted("  {}", m_text.render_for_terminal()), "" };
+    return Vector<ByteString> { ByteString::formatted("  {}", m_text.render_for_terminal()), "" };
 }
 
 RecursionDecision Paragraph::walk(Visitor& visitor) const

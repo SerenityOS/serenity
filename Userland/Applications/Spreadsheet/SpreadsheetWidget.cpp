@@ -99,7 +99,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
         VERIFY(sheet_ptr); // How did we get here without a sheet?
         auto& sheet = *sheet_ptr;
-        String new_name = String::from_deprecated_string(sheet.name()).release_value_but_fixme_should_propagate_errors();
+        String new_name = String::from_byte_string(sheet.name()).release_value_but_fixme_should_propagate_errors();
         if (GUI::InputBox::show(window(), new_name, {}, "Rename Sheet"sv, GUI::InputType::NonemptyText, "Name"sv) == GUI::Dialog::ExecResult::OK) {
             sheet.set_name(new_name);
             sheet.update();
@@ -166,7 +166,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        DeprecatedString name = "workbook";
+        ByteString name = "workbook";
         auto response = FileSystemAccessClient::Client::the().save_file(window(), name, "sheets");
         if (response.is_error())
             return;
@@ -336,7 +336,7 @@ void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
         m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
 }
 
-void SpreadsheetWidget::clipboard_content_did_change(DeprecatedString const& mime_type)
+void SpreadsheetWidget::clipboard_content_did_change(ByteString const& mime_type)
 {
     if (auto* sheet = current_worksheet_if_available())
         m_paste_action->set_enabled(!sheet->selected_cells().is_empty() && mime_type.starts_with("text/"sv));
@@ -345,7 +345,7 @@ void SpreadsheetWidget::clipboard_content_did_change(DeprecatedString const& mim
 void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 {
     for (auto& sheet : new_sheets) {
-        auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(String::from_deprecated_string(sheet->name()).release_value_but_fixme_should_propagate_errors(), sheet);
+        auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(String::from_byte_string(sheet->name()).release_value_but_fixme_should_propagate_errors(), sheet);
         new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
             undo_stack().push(make<CellsUndoCommand>(cell, previous_data));
             window()->set_modified(true);
@@ -372,7 +372,7 @@ void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                m_current_cell_label->set_text(String::from_deprecated_string(position.to_cell_identifier(sheet)).release_value_but_fixme_should_propagate_errors());
+                m_current_cell_label->set_text(String::from_byte_string(position.to_cell_identifier(sheet)).release_value_but_fixme_should_propagate_errors());
 
                 auto& cell = sheet.ensure(position);
                 m_cell_value_editor->on_change = nullptr;
@@ -467,7 +467,7 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     if (text.is_empty()) {
         m_inline_documentation_window->hide();
     } else {
-        m_inline_documentation_label->set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
+        m_inline_documentation_label->set_text(String::from_byte_string(text).release_value_but_fixme_should_propagate_errors());
         m_inline_documentation_window->show();
     }
 }
@@ -564,7 +564,7 @@ void SpreadsheetWidget::save(String const& filename, Core::File& file)
 {
     auto result = m_workbook->write_to_file(filename, file);
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot save file: {}", result.error()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Cannot save file: {}", result.error()));
         return;
     }
     undo_stack().set_current_unmodified();
@@ -666,7 +666,7 @@ void SpreadsheetWidget::update_window_title()
         builder.append(current_filename());
     builder.append("[*] - Spreadsheet"sv);
 
-    window()->set_title(builder.to_deprecated_string());
+    window()->set_title(builder.to_byte_string());
 }
 
 void SpreadsheetWidget::clipboard_action(bool is_cut)
@@ -689,17 +689,17 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
     auto cursor = current_selection_cursor();
     if (cursor) {
         Spreadsheet::Position position { (size_t)cursor->column(), (size_t)cursor->row() };
-        url_builder.append(position.to_url(worksheet).to_deprecated_string());
+        url_builder.append(position.to_url(worksheet).to_byte_string());
         url_builder.append('\n');
     }
 
     for (auto& cell : cells) {
         if (first && !cursor) {
-            url_builder.append(cell.to_url(worksheet).to_deprecated_string());
+            url_builder.append(cell.to_url(worksheet).to_byte_string());
             url_builder.append('\n');
         }
 
-        url_builder.append(cell.to_url(worksheet).to_deprecated_string());
+        url_builder.append(cell.to_url(worksheet).to_byte_string());
         url_builder.append('\n');
 
         auto cell_data = worksheet.at(cell);
@@ -709,9 +709,9 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
             text_builder.append(cell_data->data());
         first = false;
     }
-    HashMap<DeprecatedString, DeprecatedString> metadata;
-    metadata.set("text/x-spreadsheet-data", url_builder.to_deprecated_string());
-    dbgln(url_builder.to_deprecated_string());
+    HashMap<ByteString, ByteString> metadata;
+    metadata.set("text/x-spreadsheet-data", url_builder.to_byte_string());
+    dbgln(url_builder.to_byte_string());
 
     GUI::Clipboard::the().set_data(text_builder.string_view().bytes(), "text/plain", move(metadata));
 }

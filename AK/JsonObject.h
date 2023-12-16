@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
@@ -20,7 +20,7 @@ namespace AK {
 
 class JsonObject {
     template<typename Callback>
-    using CallbackErrorType = decltype(declval<Callback>()(declval<DeprecatedString const&>(), declval<JsonValue const&>()).release_error());
+    using CallbackErrorType = decltype(declval<Callback>()(declval<ByteString const&>(), declval<JsonValue const&>()).release_error());
 
 public:
     JsonObject();
@@ -78,7 +78,7 @@ public:
     Optional<bool> get_bool(StringView key) const;
 
 #if !defined(KERNEL)
-    Optional<DeprecatedString> get_deprecated_string(StringView key) const;
+    Optional<ByteString> get_byte_string(StringView key) const;
 #endif
 
     Optional<JsonObject const&> get_object(StringView key) const;
@@ -89,7 +89,7 @@ public:
     Optional<float> get_float_with_precision_loss(StringView key) const;
 #endif
 
-    void set(DeprecatedString const& key, JsonValue value);
+    void set(ByteString const& key, JsonValue value);
 
     template<typename Callback>
     void for_each_member(Callback callback) const
@@ -98,7 +98,7 @@ public:
             callback(member.key, member.value);
     }
 
-    template<FallibleFunction<DeprecatedString const&, JsonValue const&> Callback>
+    template<FallibleFunction<ByteString const&, JsonValue const&> Callback>
     ErrorOr<void, CallbackErrorType<Callback>> try_for_each_member(Callback&& callback) const
     {
         for (auto const& member : m_members)
@@ -114,10 +114,10 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
 
 private:
-    OrderedHashMap<DeprecatedString, JsonValue> m_members;
+    OrderedHashMap<ByteString, JsonValue> m_members;
 };
 
 template<typename Builder>
@@ -135,7 +135,7 @@ inline typename Builder::OutputType JsonObject::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 template<typename Builder>
@@ -186,7 +186,7 @@ inline typename Builder::OutputType JsonValue::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

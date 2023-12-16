@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <errno.h>
 #include <limits.h>
@@ -24,7 +24,7 @@ static constexpr size_t ITERATION_DEPTH = 17;
 static void check_result(char const* what, StringView expected, char const* actual)
 {
     if (expected != actual)
-        FAIL(DeprecatedString::formatted("Expected {} to be \"{}\" ({} characters)", what, actual, actual ? strlen(actual) : 0));
+        FAIL(ByteString::formatted("Expected {} to be \"{}\" ({} characters)", what, actual, actual ? strlen(actual) : 0));
 }
 
 TEST_CASE(overlong_realpath)
@@ -50,7 +50,7 @@ TEST_CASE(overlong_realpath)
     expected.append({ tmp_dir, strlen(tmp_dir) });
 
     // But first, demonstrate the functionality at a reasonable depth:
-    auto expected_str = expected.to_deprecated_string();
+    auto expected_str = expected.to_byte_string();
     check_result("getwd", expected_str, getwd(static_cast<char*>(calloc(1, PATH_MAX))));
     check_result("getcwd", expected_str, getcwd(nullptr, 0));
     check_result("realpath", expected_str, realpath(".", nullptr));
@@ -59,7 +59,7 @@ TEST_CASE(overlong_realpath)
         ret = mkdir(PATH_LOREM_250, S_IRWXU);
         if (ret < 0) {
             perror("mkdir iter");
-            FAIL(DeprecatedString::formatted("Unable to mkdir the overlong path fragment in iteration {}", i));
+            FAIL(ByteString::formatted("Unable to mkdir the overlong path fragment in iteration {}", i));
             return;
         }
         expected.append('/');
@@ -67,14 +67,14 @@ TEST_CASE(overlong_realpath)
         ret = chdir(PATH_LOREM_250);
         if (ret < 0) {
             perror("chdir iter");
-            FAIL(DeprecatedString::formatted("Unable to chdir to the overlong path fragment in iteration {}", i));
+            FAIL(ByteString::formatted("Unable to chdir to the overlong path fragment in iteration {}", i));
             return;
         }
     }
     outln("cwd should now be ridiculously large");
 
     // Evaluate
-    expected_str = expected.to_deprecated_string();
+    expected_str = expected.to_byte_string();
 
     check_result("getwd", {}, getwd(static_cast<char*>(calloc(1, PATH_MAX))));
     check_result("getcwd", expected_str, getcwd(nullptr, 0));

@@ -45,7 +45,7 @@ public:
 
     // NOTE: If the navigator compatibility mode is Gecko, then the user agent must also support the following partial interface:
     //       bool taint_enabled()
-    //       DeprecatedString oscpu()
+    //       ByteString oscpu()
 };
 
 }

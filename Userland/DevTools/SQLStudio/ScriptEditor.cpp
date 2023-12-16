@@ -21,7 +21,7 @@ ScriptEditor::ScriptEditor()
     set_ruler_visible(true);
 }
 
-void ScriptEditor::new_script_with_temp_name(DeprecatedString name)
+void ScriptEditor::new_script_with_temp_name(ByteString name)
 {
     set_name(name);
 }
@@ -37,7 +37,7 @@ ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
     return {};
 }
 
-static ErrorOr<void> save_text_to_file(StringView filename, DeprecatedString text)
+static ErrorOr<void> save_text_to_file(StringView filename, ByteString text)
 {
     auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Write));
 

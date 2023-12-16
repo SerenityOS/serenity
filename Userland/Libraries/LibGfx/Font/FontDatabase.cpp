@@ -26,15 +26,15 @@ FontDatabase& FontDatabase::the()
 }
 
 static RefPtr<Font> s_default_font;
-static DeprecatedString s_default_font_query;
+static ByteString s_default_font_query;
 
 static RefPtr<Font> s_window_title_font;
-static DeprecatedString s_window_title_font_query;
+static ByteString s_window_title_font_query;
 
 static RefPtr<Font> s_fixed_width_font;
-static DeprecatedString s_fixed_width_font_query;
+static ByteString s_fixed_width_font_query;
 
-void FontDatabase::set_default_font_query(DeprecatedString query)
+void FontDatabase::set_default_font_query(ByteString query)
 {
     if (s_default_font_query == query)
         return;
@@ -42,12 +42,12 @@ void FontDatabase::set_default_font_query(DeprecatedString query)
     s_default_font = nullptr;
 }
 
-DeprecatedString FontDatabase::default_font_query()
+ByteString FontDatabase::default_font_query()
 {
     return s_default_font_query;
 }
 
-void FontDatabase::set_window_title_font_query(DeprecatedString query)
+void FontDatabase::set_window_title_font_query(ByteString query)
 {
     if (s_window_title_font_query == query)
         return;
@@ -55,7 +55,7 @@ void FontDatabase::set_window_title_font_query(DeprecatedString query)
     s_window_title_font = nullptr;
 }
 
-DeprecatedString FontDatabase::window_title_font_query()
+ByteString FontDatabase::window_title_font_query()
 {
     return s_window_title_font_query;
 }
@@ -80,7 +80,7 @@ Font& FontDatabase::window_title_font()
     return *s_window_title_font;
 }
 
-void FontDatabase::set_fixed_width_font_query(DeprecatedString query)
+void FontDatabase::set_fixed_width_font_query(ByteString query)
 {
     if (s_fixed_width_font_query == query)
         return;
@@ -88,7 +88,7 @@ void FontDatabase::set_fixed_width_font_query(DeprecatedString query)
     s_fixed_width_font = nullptr;
 }
 
-DeprecatedString FontDatabase::fixed_width_font_query()
+ByteString FontDatabase::fixed_width_font_query()
 {
     return s_fixed_width_font_query;
 }
@@ -104,7 +104,7 @@ Font& FontDatabase::default_fixed_width_font()
 }
 
 struct FontDatabase::Private {
-    HashMap<DeprecatedString, NonnullRefPtr<Gfx::Font>, CaseInsensitiveStringTraits> full_name_to_font_map;
+    HashMap<ByteString, NonnullRefPtr<Gfx::Font>, CaseInsensitiveStringTraits> full_name_to_font_map;
     HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>, AK::ASCIICaseInsensitiveFlyStringTraits> typefaces;
 };
 
@@ -122,7 +122,7 @@ void FontDatabase::load_all_fonts_from_uri(StringView uri)
         if (path.has_extension(".font"sv)) {
             if (auto font_or_error = Gfx::BitmapFont::try_load_from_resource(resource); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
-                m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
+                m_private->full_name_to_font_map.set(font->qualified_name().to_byte_string(), *font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
             }

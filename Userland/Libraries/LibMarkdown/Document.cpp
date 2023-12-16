@@ -12,7 +12,7 @@
 
 namespace Markdown {
 
-DeprecatedString Document::render_to_html(StringView extra_head_contents) const
+ByteString Document::render_to_html(StringView extra_head_contents) const
 {
     StringBuilder builder;
     builder.append(R"~~~(<!DOCTYPE html>
@@ -35,10 +35,10 @@ DeprecatedString Document::render_to_html(StringView extra_head_contents) const
 </body>
 </html>)~~~"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString Document::render_to_inline_html() const
+ByteString Document::render_to_inline_html() const
 {
     return m_container->render_to_html();
 }

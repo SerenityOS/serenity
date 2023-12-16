@@ -130,7 +130,7 @@ void CalculatorWidget::add_digit_button(GUI::Button& button, int digit)
 
 String CalculatorWidget::get_entry()
 {
-    return String::from_deprecated_string(m_entry->text()).release_value_but_fixme_should_propagate_errors();
+    return String::from_byte_string(m_entry->text()).release_value_but_fixme_should_propagate_errors();
 }
 
 void CalculatorWidget::set_entry(Crypto::BigFraction value)

@@ -474,7 +474,7 @@
     [submenu addItem:[NSMenuItem separatorItem]];
 
     auto* spoof_user_agent_menu = [[NSMenu alloc] init];
-    auto add_user_agent = [spoof_user_agent_menu](DeprecatedString name) {
+    auto add_user_agent = [spoof_user_agent_menu](ByteString name) {
         [spoof_user_agent_menu addItem:[[NSMenuItem alloc] initWithTitle:Ladybird::string_to_ns_string(name)
                                                                   action:@selector(setUserAgentSpoof:)
                                                            keyEquivalent:@""]];

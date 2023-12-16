@@ -56,7 +56,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     m_ok_button->on_click = [this](auto) {
         auto result = check_password();
         if (result.is_error()) {
-            GUI::MessageBox::show_error(this, DeprecatedString::formatted("Failed to execute command: {}", result.error()));
+            GUI::MessageBox::show_error(this, ByteString::formatted("Failed to execute command: {}", result.error()));
         }
         close();
     };
@@ -72,7 +72,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
 
 ErrorOr<void> EscalatorWindow::check_password()
 {
-    DeprecatedString password = m_password_input->text();
+    ByteString password = m_password_input->text();
     if (password.is_empty()) {
         GUI::MessageBox::show_error(this, "Please enter a password."sv);
         return {};

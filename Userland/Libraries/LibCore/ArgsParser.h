@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
@@ -54,11 +54,11 @@ public:
         Function<ErrorOr<bool>(StringView)> accept_value;
         OptionHideMode hide_mode { OptionHideMode::None };
 
-        DeprecatedString name_for_display() const
+        ByteString name_for_display() const
         {
             if (long_name)
-                return DeprecatedString::formatted("--{}", long_name);
-            return DeprecatedString::formatted("-{:c}", short_name);
+                return ByteString::formatted("--{}", long_name);
+            return ByteString::formatted("-{:c}", short_name);
         }
     };
 
@@ -101,7 +101,7 @@ public:
             },
             .hide_mode = hide_mode });
     }
-    void add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(ByteString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     template<Integral I>
@@ -112,16 +112,16 @@ public:
     void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
     // Note: This option is being used when we expect the user to use the same option
     // multiple times (e.g. "program --option=example --option=anotherexample ...").
-    void add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(Vector<ByteString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
 
     void add_positional_argument(Arg&&);
-    void add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(ByteString& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(String& value, char const* help_string, char const* name, Required required = Required::Yes);
     template<Integral I>
     void add_positional_argument(I& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<DeprecatedString>& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(Vector<ByteString>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<String>& value, char const* help_string, char const* name, Required required = Required::Yes);
 

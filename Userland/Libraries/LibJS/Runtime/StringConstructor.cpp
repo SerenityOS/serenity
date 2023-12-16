@@ -167,13 +167,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     // 7. Let nextIndex be 0.
     // 8. Repeat,
     for (size_t i = 0; i < literal_count; ++i) {
-        auto next_key = DeprecatedString::number(i);
+        auto next_key = ByteString::number(i);
 
         // a. Let nextLiteralVal be ? Get(literals, ! ToString(𝔽(nextIndex))).
         auto next_literal_value = TRY(literals->get(next_key));
 
         // b. Let nextLiteral be ? ToString(nextLiteralVal).
-        auto next_literal = TRY(next_literal_value.to_deprecated_string(vm));
+        auto next_literal = TRY(next_literal_value.to_byte_string(vm));
 
         // c. Set R to the string-concatenation of R and nextLiteral.
         builder.append(next_literal);
@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
             auto next_substitution_value = vm.argument(i + 1);
 
             // ii. Let nextSub be ? ToString(nextSubVal).
-            auto next_substitution = TRY(next_substitution_value.to_deprecated_string(vm));
+            auto next_substitution = TRY(next_substitution_value.to_byte_string(vm));
 
             // iii. Set R to the string-concatenation of R and nextSub.
             builder.append(next_substitution);
@@ -196,7 +196,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 
         // f. Set nextIndex to nextIndex + 1.
     }
-    return PrimitiveString::create(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_byte_string());
 }
 
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
@@ -35,7 +35,7 @@ public:
         : public RefCounted<Node>
         , public Weakable<Node> {
     public:
-        Node(DeprecatedString text, Optional<Icon> icon, Node* parent_node = nullptr)
+        Node(ByteString text, Optional<Icon> icon, Node* parent_node = nullptr)
             : m_text(move(text))
             , m_icon(move(icon))
             , m_parent_node(parent_node)
@@ -45,7 +45,7 @@ public:
         virtual ~Node() = default;
 
         template<typename NodeType = Node, typename... Args>
-        NonnullRefPtr<NodeType> add_node(DeprecatedString text, Optional<Icon> icon, Args&&... args)
+        NonnullRefPtr<NodeType> add_node(ByteString text, Optional<Icon> icon, Args&&... args)
         requires(IsBaseOf<Node, NodeType>)
         {
             auto node = adopt_ref(*new NodeType(move(text), move(icon), this, forward<Args>(args)...));
@@ -53,7 +53,7 @@ public:
             return node;
         }
 
-        DeprecatedString const& text() const { return m_text; }
+        ByteString const& text() const { return m_text; }
         Optional<Icon> const& icon() const { return m_icon; }
 
         Node const* parent_node() const { return m_parent_node; }
@@ -63,7 +63,7 @@ public:
         Vector<NonnullRefPtr<Node>>& child_nodes() { return m_child_nodes; }
 
     private:
-        DeprecatedString m_text;
+        ByteString m_text;
         Optional<Icon> m_icon;
         WeakPtr<Node> m_parent_node;
         Vector<NonnullRefPtr<Node>> m_child_nodes;
@@ -73,7 +73,7 @@ public:
     Vector<NonnullRefPtr<Node>>& nodes() { return m_nodes; }
 
     template<typename NodeType = Node, typename... Args>
-    NonnullRefPtr<NodeType> add_node(DeprecatedString text, Optional<Icon> icon, Args&&... args)
+    NonnullRefPtr<NodeType> add_node(ByteString text, Optional<Icon> icon, Args&&... args)
     requires(IsBaseOf<Node, NodeType>)
     {
         auto node = adopt_ref(*new NodeType(move(text), move(icon), nullptr, forward<Args>(args)...));

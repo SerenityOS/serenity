@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -35,10 +35,10 @@ extern "C" {
 namespace Core {
 
 struct ArgvList {
-    DeprecatedString m_path;
+    ByteString m_path;
     Vector<char const*, 10> m_argv;
 
-    ArgvList(DeprecatedString path, size_t size)
+    ArgvList(ByteString path, size_t size)
         : m_path { path }
     {
         m_argv.ensure_capacity(size + 2);
@@ -103,12 +103,12 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
     return Process { pid };
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<ByteString> arguments, ByteString working_directory, KeepAsChild keep_as_child)
 {
     auto process = TRY(spawn({
         .path = path,
-        .arguments = Vector<DeprecatedString> { arguments },
-        .working_directory = working_directory.is_empty() ? Optional<DeprecatedString> {} : Optional<DeprecatedString> { working_directory },
+        .arguments = Vector<ByteString> { arguments },
+        .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
     }));
 
     if (keep_as_child == KeepAsChild::No)
@@ -120,9 +120,9 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> ar
     return process.pid();
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, ByteString working_directory, KeepAsChild keep_as_child)
 {
-    Vector<DeprecatedString> backing_strings;
+    Vector<ByteString> backing_strings;
     backing_strings.ensure_capacity(arguments.size());
     for (auto const& argument : arguments)
         backing_strings.append(argument);
@@ -130,7 +130,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> argument
     auto process = TRY(spawn({
         .path = path,
         .arguments = backing_strings,
-        .working_directory = working_directory.is_empty() ? Optional<DeprecatedString> {} : Optional<DeprecatedString> { working_directory },
+        .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
     }));
 
     if (keep_as_child == KeepAsChild::No)
@@ -140,9 +140,9 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> argument
     return process.pid();
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, ByteString working_directory, KeepAsChild keep_as_child)
 {
-    Vector<DeprecatedString> backing_strings;
+    Vector<ByteString> backing_strings;
     backing_strings.ensure_capacity(arguments.size());
     for (auto const& argument : arguments)
         backing_strings.append(argument);
@@ -150,7 +150,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> argumen
     auto process = TRY(spawn({
         .path = path,
         .arguments = backing_strings,
-        .working_directory = working_directory.is_empty() ? Optional<DeprecatedString> {} : Optional<DeprecatedString> { working_directory },
+        .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
     }));
 
     if (keep_as_child == KeepAsChild::No)

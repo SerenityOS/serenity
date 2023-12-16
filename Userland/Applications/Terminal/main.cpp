@@ -139,7 +139,7 @@ static ErrorOr<void> utmp_update(StringView tty, pid_t pid, bool create)
 
 static ErrorOr<void> run_command(StringView command, bool keep_open)
 {
-    auto shell = TRY(String::from_deprecated_string(TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell()));
+    auto shell = TRY(String::from_byte_string(TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell()));
     if (shell.is_empty())
         shell = "/bin/Shell"_string;
 

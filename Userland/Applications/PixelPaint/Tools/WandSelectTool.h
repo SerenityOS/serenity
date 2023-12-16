@@ -31,7 +31,7 @@ private:
 
     int m_threshold { 0 };
     RefPtr<GUI::Widget> m_properties_widget;
-    Vector<DeprecatedString> m_merge_mode_names {};
+    Vector<ByteString> m_merge_mode_names {};
     Selection::MergeMode m_merge_mode { Selection::MergeMode::Set };
 };
 

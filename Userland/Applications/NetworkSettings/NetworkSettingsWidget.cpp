@@ -6,7 +6,7 @@
  */
 
 #include "NetworkSettingsWidget.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -78,7 +78,7 @@ ErrorOr<void> NetworkSettingsWidget::setup()
     size_t index = 0;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto adapter_name = if_object.get_deprecated_string("name"sv).value();
+        auto adapter_name = if_object.get_byte_string("name"sv).value();
         if (adapter_name == "loop")
             return;
 
@@ -106,8 +106,8 @@ ErrorOr<void> NetworkSettingsWidget::setup()
         ::exit(1);
     }
 
-    m_adapters_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_adapter_names));
-    m_adapters_combobox->on_change = [this](DeprecatedString const& text, GUI::ModelIndex const&) {
+    m_adapters_combobox->set_model(GUI::ItemListModel<ByteString>::create(m_adapter_names));
+    m_adapters_combobox->on_change = [this](ByteString const& text, GUI::ModelIndex const&) {
         on_switch_adapter(text);
     };
     auto const& selected_adapter = selected_adapter_index;
@@ -117,7 +117,7 @@ ErrorOr<void> NetworkSettingsWidget::setup()
     return {};
 }
 
-void NetworkSettingsWidget::on_switch_adapter(DeprecatedString const& adapter)
+void NetworkSettingsWidget::on_switch_adapter(ByteString const& adapter)
 {
     auto& adapter_data = m_network_adapters.get(adapter).value();
     m_current_adapter_data = &adapter_data;
@@ -198,7 +198,7 @@ ErrorOr<Optional<JsonObject>> NetworkSettingsWidget::create_settings_object()
         adapter.set("Enabled", adapter_data.value.enabled);
         adapter.set("DHCP", adapter_data.value.dhcp);
         adapter.set("IPv4Address", adapter_data.value.ip_address);
-        adapter.set("IPv4Netmask", netmask.to_deprecated_string());
+        adapter.set("IPv4Netmask", netmask.to_byte_string());
         adapter.set("IPv4Gateway", adapter_data.value.default_gateway);
         json.set(adapter_data.key, move(adapter));
     }
@@ -206,7 +206,7 @@ ErrorOr<Optional<JsonObject>> NetworkSettingsWidget::create_settings_object()
     return json;
 }
 
-void NetworkSettingsWidget::switch_adapter(DeprecatedString const& adapter)
+void NetworkSettingsWidget::switch_adapter(ByteString const& adapter)
 {
     m_adapters_combobox->set_text(adapter, GUI::AllowCallback::No);
     on_switch_adapter(adapter);

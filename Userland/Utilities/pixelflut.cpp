@@ -50,7 +50,7 @@ ErrorOr<NonnullRefPtr<Client>> Client::create(StringView image_path, StringView 
     auto port = maybe_port.release_value();
     auto hostname = TRY(String::join(':', parts));
 
-    auto socket = TRY(Core::BufferedTCPSocket::create(TRY(Core::TCPSocket::connect(hostname.to_deprecated_string(), port))));
+    auto socket = TRY(Core::BufferedTCPSocket::create(TRY(Core::TCPSocket::connect(hostname.to_byte_string(), port))));
 
     // Ask the server for the canvas size.
     TRY(socket->write_until_depleted(get_command.bytes()));
@@ -113,7 +113,7 @@ ErrorOr<void> Client::send_current_pixel()
     auto color = m_image->get_pixel(m_current_point);
     if (color.alpha() == 0)
         return {};
-    auto hex = color.to_deprecated_string();
+    auto hex = color.to_byte_string();
     // Pixelflut requires hex colors without leading hash.
     auto hex_without_hash = hex.substring(1);
 

@@ -19,7 +19,7 @@ ErrorOr<String> application_directory()
 {
     auto current_executable_path = TRY(Core::System::current_executable_path());
     auto dirname = LexicalPath::dirname(current_executable_path);
-    return String::from_deprecated_string(dirname);
+    return String::from_byte_string(dirname);
 }
 
 ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name)

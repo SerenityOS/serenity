@@ -207,7 +207,7 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
                             auto values = TRY(JS::iterator_to_list(vm, TRY(JS::get_iterator_from_method(vm, result, *method))));
 
                             if (values.size() != type.results().size())
-                                return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Invalid number of return values for multi-value wasm return of {} objects", type.results().size()));
+                                return vm.throw_completion<JS::TypeError>(ByteString::formatted("Invalid number of return values for multi-value wasm return of {} objects", type.results().size()));
 
                             Vector<Wasm::Value> wasm_values;
                             TRY_OR_THROW_OOM(vm, wasm_values.try_ensure_capacity(values.size()));
@@ -320,7 +320,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
     auto module_result = Wasm::Module::parse(stream);
     if (module_result.is_error()) {
         // FIXME: Throw CompileError instead.
-        return vm.throw_completion<JS::TypeError>(Wasm::parse_error_to_deprecated_string(module_result.error()));
+        return vm.throw_completion<JS::TypeError>(Wasm::parse_error_to_byte_string(module_result.error()));
     }
 
     if (auto validation_result = s_abstract_machine.validate(module_result.value()); validation_result.is_error()) {
@@ -332,7 +332,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
     return s_compiled_modules.size() - 1;
 }
 
-JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress address, DeprecatedString const& name)
+JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress address, ByteString const& name)
 {
     auto& realm = *vm.current_realm();
     Optional<Wasm::FunctionType> type;

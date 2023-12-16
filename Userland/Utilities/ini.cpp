@@ -15,8 +15,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     StringView path;
-    DeprecatedString group;
-    DeprecatedString key;
+    ByteString group;
+    ByteString key;
     StringView value_to_write;
 
     Core::ArgsParser args_parser;

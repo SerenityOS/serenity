@@ -2384,10 +2384,10 @@ void Painter::blit_tiled(IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Int
     }
 }
 
-DeprecatedString parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_offset)
+ByteString parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_offset)
 {
     if (raw_text.is_empty())
-        return DeprecatedString::empty();
+        return ByteString::empty();
 
     StringBuilder builder;
 
@@ -2403,7 +2403,7 @@ DeprecatedString parse_ampersand_string(StringView raw_text, Optional<size_t>* u
         }
         builder.append(raw_text[i]);
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::Font const& font, Gfx::TextAlignment text_alignment, Gfx::Color color)

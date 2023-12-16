@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/SourceGenerator.h>
@@ -37,7 +37,7 @@ enum class SequenceStorageType {
 };
 
 struct CppType {
-    DeprecatedString name;
+    ByteString name;
     SequenceStorageType sequence_storage_type;
 };
 
@@ -53,14 +53,14 @@ public:
         Union,
     };
 
-    Type(DeprecatedString name, bool nullable)
+    Type(ByteString name, bool nullable)
         : m_kind(Kind::Plain)
         , m_name(move(name))
         , m_nullable(nullable)
     {
     }
 
-    Type(Kind kind, DeprecatedString name, bool nullable)
+    Type(Kind kind, ByteString name, bool nullable)
         : m_kind(kind)
         , m_name(move(name))
         , m_nullable(nullable)
@@ -81,7 +81,7 @@ public:
     UnionType const& as_union() const;
     UnionType& as_union();
 
-    DeprecatedString const& name() const { return m_name; }
+    ByteString const& name() const { return m_name; }
 
     bool is_nullable() const { return m_nullable; }
     void set_nullable(bool value) { m_nullable = value; }
@@ -140,24 +140,24 @@ public:
 
 private:
     Kind m_kind;
-    DeprecatedString m_name;
+    ByteString m_name;
     bool m_nullable { false };
 };
 
 struct Parameter {
     NonnullRefPtr<Type const> type;
-    DeprecatedString name;
+    ByteString name;
     bool optional { false };
-    Optional<DeprecatedString> optional_default_value;
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    Optional<ByteString> optional_default_value;
+    HashMap<ByteString, ByteString> extended_attributes;
     bool variadic { false };
 };
 
 struct Function {
     NonnullRefPtr<Type const> return_type;
-    DeprecatedString name;
+    ByteString name;
     Vector<Parameter> parameters;
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    HashMap<ByteString, ByteString> extended_attributes;
     size_t overload_index { 0 };
     bool is_overloaded { false };
 
@@ -165,54 +165,54 @@ struct Function {
 };
 
 struct Constructor {
-    DeprecatedString name;
+    ByteString name;
     Vector<Parameter> parameters;
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    HashMap<ByteString, ByteString> extended_attributes;
 
     size_t shortest_length() const { return get_function_shortest_length(*this); }
 };
 
 struct Constant {
     NonnullRefPtr<Type const> type;
-    DeprecatedString name;
-    DeprecatedString value;
+    ByteString name;
+    ByteString value;
 };
 
 struct Attribute {
     bool inherit { false };
     bool readonly { false };
     NonnullRefPtr<Type const> type;
-    DeprecatedString name;
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    ByteString name;
+    HashMap<ByteString, ByteString> extended_attributes;
 
     // Added for convenience after parsing
-    DeprecatedString getter_callback_name;
-    DeprecatedString setter_callback_name;
+    ByteString getter_callback_name;
+    ByteString setter_callback_name;
 };
 
 struct DictionaryMember {
     bool required { false };
     NonnullRefPtr<Type const> type;
-    DeprecatedString name;
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
-    Optional<DeprecatedString> default_value;
+    ByteString name;
+    HashMap<ByteString, ByteString> extended_attributes;
+    Optional<ByteString> default_value;
 };
 
 struct Dictionary {
-    DeprecatedString parent_name;
+    ByteString parent_name;
     Vector<DictionaryMember> members;
 };
 
 struct Typedef {
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    HashMap<ByteString, ByteString> extended_attributes;
     NonnullRefPtr<Type const> type;
 };
 
 struct Enumeration {
-    OrderedHashTable<DeprecatedString> values;
-    OrderedHashMap<DeprecatedString, DeprecatedString> translated_cpp_names;
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
-    DeprecatedString first_member;
+    OrderedHashTable<ByteString> values;
+    OrderedHashMap<ByteString, ByteString> translated_cpp_names;
+    HashMap<ByteString, ByteString> extended_attributes;
+    ByteString first_member;
     bool is_original_definition { true };
 };
 
@@ -224,7 +224,7 @@ struct CallbackFunction {
 
 class ParameterizedType : public Type {
 public:
-    ParameterizedType(DeprecatedString name, bool nullable, Vector<NonnullRefPtr<Type const>> parameters)
+    ParameterizedType(ByteString name, bool nullable, Vector<NonnullRefPtr<Type const>> parameters)
         : Type(Kind::Parameterized, move(name), nullable)
         , m_parameters(move(parameters))
     {
@@ -232,7 +232,7 @@ public:
 
     virtual ~ParameterizedType() override = default;
 
-    void generate_sequence_from_iterable(SourceGenerator& generator, DeprecatedString const& cpp_name, DeprecatedString const& iterable_cpp_name, DeprecatedString const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
+    void generate_sequence_from_iterable(SourceGenerator& generator, ByteString const& cpp_name, ByteString const& iterable_cpp_name, ByteString const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
 
     Vector<NonnullRefPtr<Type const>> const& parameters() const { return m_parameters; }
     Vector<NonnullRefPtr<Type const>>& parameters() { return m_parameters; }
@@ -256,14 +256,14 @@ class Interface {
 public:
     explicit Interface() = default;
 
-    DeprecatedString name;
-    DeprecatedString parent_name;
-    DeprecatedString namespaced_name;
+    ByteString name;
+    ByteString parent_name;
+    ByteString namespaced_name;
 
     bool is_namespace { false };
     bool is_mixin { false };
 
-    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    HashMap<ByteString, ByteString> extended_attributes;
 
     Vector<Attribute> attributes;
     Vector<Constant> constants;
@@ -271,7 +271,7 @@ public:
     Vector<Function> functions;
     Vector<Function> static_functions;
     bool has_stringifier { false };
-    Optional<DeprecatedString> stringifier_attribute;
+    Optional<ByteString> stringifier_attribute;
     bool has_unscopable_member { false };
 
     Optional<NonnullRefPtr<Type const>> value_iterator_type;
@@ -285,27 +285,27 @@ public:
 
     Optional<Function> named_property_deleter;
 
-    HashMap<DeprecatedString, Dictionary> dictionaries;
-    HashMap<DeprecatedString, Enumeration> enumerations;
-    HashMap<DeprecatedString, Typedef> typedefs;
-    HashMap<DeprecatedString, Interface*> mixins;
-    HashMap<DeprecatedString, CallbackFunction> callback_functions;
+    HashMap<ByteString, Dictionary> dictionaries;
+    HashMap<ByteString, Enumeration> enumerations;
+    HashMap<ByteString, Typedef> typedefs;
+    HashMap<ByteString, Interface*> mixins;
+    HashMap<ByteString, CallbackFunction> callback_functions;
 
     // Added for convenience after parsing
-    DeprecatedString fully_qualified_name;
-    DeprecatedString constructor_class;
-    DeprecatedString prototype_class;
-    DeprecatedString prototype_base_class;
-    DeprecatedString namespace_class;
-    DeprecatedString global_mixin_class;
-    HashMap<DeprecatedString, HashTable<DeprecatedString>> included_mixins;
+    ByteString fully_qualified_name;
+    ByteString constructor_class;
+    ByteString prototype_class;
+    ByteString prototype_base_class;
+    ByteString namespace_class;
+    ByteString global_mixin_class;
+    HashMap<ByteString, HashTable<ByteString>> included_mixins;
 
-    DeprecatedString module_own_path;
-    HashTable<DeprecatedString> required_imported_paths;
+    ByteString module_own_path;
+    HashTable<ByteString> required_imported_paths;
     Vector<Interface&> imported_modules;
 
-    HashMap<DeprecatedString, Vector<Function&>> overload_sets;
-    HashMap<DeprecatedString, Vector<Function&>> static_overload_sets;
+    HashMap<ByteString, Vector<Function&>> overload_sets;
+    HashMap<ByteString, Vector<Function&>> static_overload_sets;
 
     // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
     bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }
@@ -324,7 +324,7 @@ public:
 
 class UnionType : public Type {
 public:
-    UnionType(DeprecatedString name, bool nullable, Vector<NonnullRefPtr<Type const>> member_types)
+    UnionType(ByteString name, bool nullable, Vector<NonnullRefPtr<Type const>> member_types)
         : Type(Kind::Union, move(name), nullable)
         , m_member_types(move(member_types))
     {

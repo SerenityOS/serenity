@@ -42,7 +42,7 @@ public:
         No,
     };
 
-    static ErrorOr<NonnullRefPtr<SettingsWindow>> create(DeprecatedString title, ShowDefaultsButton = ShowDefaultsButton::No);
+    static ErrorOr<NonnullRefPtr<SettingsWindow>> create(ByteString title, ShowDefaultsButton = ShowDefaultsButton::No);
 
     virtual ~SettingsWindow() override = default;
 

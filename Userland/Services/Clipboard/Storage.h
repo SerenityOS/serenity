@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <LibCore/AnonymousBuffer.h>
@@ -20,8 +20,8 @@ public:
 
     bool has_data() const { return m_buffer.is_valid(); }
 
-    DeprecatedString const& mime_type() const { return m_mime_type; }
-    HashMap<DeprecatedString, DeprecatedString> const& metadata() const { return m_metadata; }
+    ByteString const& mime_type() const { return m_mime_type; }
+    HashMap<ByteString, ByteString> const& metadata() const { return m_metadata; }
 
     u8 const* data() const
     {
@@ -37,7 +37,7 @@ public:
         return 0;
     }
 
-    void set_data(Core::AnonymousBuffer, DeprecatedString const& mime_type, HashMap<DeprecatedString, DeprecatedString> const& metadata);
+    void set_data(Core::AnonymousBuffer, ByteString const& mime_type, HashMap<ByteString, ByteString> const& metadata);
 
     Function<void()> on_content_change;
 
@@ -46,10 +46,10 @@ public:
 private:
     Storage() = default;
 
-    DeprecatedString m_mime_type;
+    ByteString m_mime_type;
     Core::AnonymousBuffer m_buffer;
     size_t m_data_size { 0 };
-    HashMap<DeprecatedString, DeprecatedString> m_metadata;
+    HashMap<ByteString, ByteString> m_metadata;
 };
 
 }

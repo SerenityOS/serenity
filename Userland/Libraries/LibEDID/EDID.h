@@ -22,7 +22,7 @@
 #ifdef KERNEL
 #    include <Kernel/Library/KString.h>
 #else
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace EDID {
@@ -87,12 +87,12 @@ public:
 
 #ifndef KERNEL
     static ErrorOr<Parser> from_display_connector_device(int);
-    static ErrorOr<Parser> from_display_connector_device(DeprecatedString const&);
+    static ErrorOr<Parser> from_display_connector_device(ByteString const&);
 #endif
 
     StringView legacy_manufacturer_id() const;
 #ifndef KERNEL
-    DeprecatedString manufacturer_name() const;
+    ByteString manufacturer_name() const;
 #endif
 
     u16 product_code() const;
@@ -367,8 +367,8 @@ public:
     Optional<DetailedTiming> detailed_timing(size_t) const;
 
 #ifndef KERNEL
-    DeprecatedString display_product_name() const;
-    DeprecatedString display_product_serial_number() const;
+    ByteString display_product_name() const;
+    ByteString display_product_serial_number() const;
 #endif
 
     ErrorOr<IterationDecision> for_each_short_video_descriptor(Function<IterationDecision(unsigned, bool, VIC::Details const&)>) const;
@@ -455,7 +455,7 @@ private:
 #ifdef KERNEL
     OwnPtr<Kernel::KString> m_version;
 #else
-    DeprecatedString m_version;
+    ByteString m_version;
 #endif
     char m_legacy_manufacturer_id[4] {};
     bool m_legacy_manufacturer_id_valid { false };

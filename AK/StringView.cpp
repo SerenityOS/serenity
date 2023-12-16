@@ -13,8 +13,8 @@
 #include <AK/Vector.h>
 
 #ifndef KERNEL
+#    include <AK/ByteString.h>
 #    include <AK/DeprecatedFlyString.h>
-#    include <AK/DeprecatedString.h>
 #    include <AK/FlyString.h>
 #    include <AK/String.h>
 #endif
@@ -34,7 +34,7 @@ StringView::StringView(FlyString const& string)
 {
 }
 
-StringView::StringView(DeprecatedString const& string)
+StringView::StringView(ByteString const& string)
     : m_characters(string.characters())
     , m_length(string.length())
 {
@@ -176,17 +176,17 @@ bool StringView::equals_ignoring_ascii_case(StringView other) const
 }
 
 #ifndef KERNEL
-DeprecatedString StringView::to_lowercase_string() const
+ByteString StringView::to_lowercase_string() const
 {
     return StringImpl::create_lowercased(characters_without_null_termination(), length()).release_nonnull();
 }
 
-DeprecatedString StringView::to_uppercase_string() const
+ByteString StringView::to_uppercase_string() const
 {
     return StringImpl::create_uppercased(characters_without_null_termination(), length()).release_nonnull();
 }
 
-DeprecatedString StringView::to_titlecase_string() const
+ByteString StringView::to_titlecase_string() const
 {
     return StringUtils::to_titlecase(*this);
 }
@@ -257,14 +257,14 @@ Optional<float> StringView::to_float(TrimWhitespace trim_whitespace) const
     return StringUtils::convert_to_floating_point<float>(*this, trim_whitespace);
 }
 
-bool StringView::operator==(DeprecatedString const& string) const
+bool StringView::operator==(ByteString const& string) const
 {
     return *this == string.view();
 }
 
-DeprecatedString StringView::to_deprecated_string() const { return DeprecatedString { *this }; }
+ByteString StringView::to_byte_string() const { return ByteString { *this }; }
 
-DeprecatedString StringView::replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const
+ByteString StringView::replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const
 {
     return StringUtils::replace(*this, needle, replacement, replace_mode);
 }

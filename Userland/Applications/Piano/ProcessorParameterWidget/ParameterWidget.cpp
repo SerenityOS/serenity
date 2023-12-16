@@ -26,7 +26,7 @@ ProcessorParameterWidget::ProcessorParameterWidget(DSP::ProcessorParameter& raw_
     case DSP::ParameterType::Enum: {
         // FIXME: We shouldn't do that, but the only user is the synth right now.
         auto& parameter = static_cast<DSP::ProcessorEnumParameter<DSP::Synthesizers::Waveform>&>(raw_parameter);
-        auto enum_strings = Vector<DeprecatedString> { "Sine", "Triangle", "Square", "Saw", "Noise" };
+        auto enum_strings = Vector<ByteString> { "Sine", "Triangle", "Square", "Saw", "Noise" };
         m_parameter_modifier = add<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>>(parameter, move(enum_strings));
         break;
     }

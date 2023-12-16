@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Hex.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Utf8View.h>
@@ -63,7 +63,7 @@ public:
             auto& match = m_matches.at(index.row());
             switch (index.column()) {
             case Column::Offset:
-                return DeprecatedString::formatted("{:#08X}", match.offset);
+                return ByteString::formatted("{:#08X}", match.offset);
             case Column::Value: {
                 Utf8View utf8_view(match.value);
                 if (!utf8_view.validate())

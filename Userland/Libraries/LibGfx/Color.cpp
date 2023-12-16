@@ -6,7 +6,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/FloatingPointStringConversions.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
@@ -28,14 +28,14 @@ String Color::to_string_without_alpha() const
     return MUST(String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue()));
 }
 
-DeprecatedString Color::to_deprecated_string() const
+ByteString Color::to_byte_string() const
 {
-    return to_string().to_deprecated_string();
+    return to_string().to_byte_string();
 }
 
-DeprecatedString Color::to_deprecated_string_without_alpha() const
+ByteString Color::to_byte_string_without_alpha() const
 {
-    return to_string_without_alpha().to_deprecated_string();
+    return to_string_without_alpha().to_byte_string();
 }
 
 static Optional<Color> parse_rgb_color(StringView string)
@@ -373,5 +373,5 @@ ErrorOr<Gfx::Color> IPC::decode(Decoder& decoder)
 
 ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color value)
 {
-    return Formatter<StringView>::format(builder, value.to_deprecated_string());
+    return Formatter<StringView>::format(builder, value.to_byte_string());
 }

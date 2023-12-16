@@ -49,9 +49,9 @@ static const LexicalPath path_to_compiler_binary = [] {
 }();
 static const LexicalPath path_to_tests_directory { relative_path_to_test };
 
-Vector<DeprecatedString> build_command_line_arguments(LexicalPath const& test_source, TestDescription const& description)
+Vector<ByteString> build_command_line_arguments(LexicalPath const& test_source, TestDescription const& description)
 {
-    Vector<DeprecatedString> result;
+    Vector<ByteString> result;
 
     StringBuilder dump_ast_option;
     StringBuilder dump_cfg_option;
@@ -69,9 +69,9 @@ Vector<DeprecatedString> build_command_line_arguments(LexicalPath const& test_so
         }
     }
     if (!dump_ast_option.is_empty())
-        result.append(DeprecatedString::formatted("--dump-ast={}", dump_ast_option.string_view()));
+        result.append(ByteString::formatted("--dump-ast={}", dump_ast_option.string_view()));
     if (!dump_cfg_option.is_empty())
-        result.append(DeprecatedString::formatted("--dump-cfg={}", dump_cfg_option.string_view()));
+        result.append(ByteString::formatted("--dump-cfg={}", dump_cfg_option.string_view()));
 
     if (test_source.has_extension(".cpp"sv))
         result.append("-xc++"sv);
@@ -149,7 +149,7 @@ TEST_CASE(test_regression)
             dbgln("Running {}...", source);
 
             auto path_to_test = LexicalPath::join(path_to_tests_directory.string(), source);
-            auto path_to_expectation = LexicalPath::join(path_to_tests_directory.string(), DeprecatedString::formatted("{}.expectation", source));
+            auto path_to_expectation = LexicalPath::join(path_to_tests_directory.string(), ByteString::formatted("{}.expectation", source));
 
             auto process = MUST(Core::Process::spawn({
                 .path = path_to_compiler_binary.string(),

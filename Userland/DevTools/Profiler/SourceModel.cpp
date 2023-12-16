@@ -17,7 +17,7 @@ namespace Profiler {
 class SourceFile final {
 public:
     struct Line {
-        DeprecatedString content;
+        ByteString content;
         size_t num_samples { 0 };
     };
 
@@ -25,7 +25,7 @@ public:
 
     SourceFile(StringView filename)
     {
-        DeprecatedString source_file_name = filename.replace("../../"sv, source_root_path, ReplaceMode::FirstOnly);
+        ByteString source_file_name = filename.replace("../../"sv, source_root_path, ReplaceMode::FirstOnly);
 
         auto try_read_lines = [&]() -> ErrorOr<void> {
             auto unbuffered_file = TRY(Core::File::open(source_file_name, Core::File::OpenMode::Read));
@@ -70,7 +70,7 @@ SourceModel::SourceModel(Profile& profile, ProfileNode& node)
             return;
         base_address = maybe_kernel_base.release_value();
         if (g_kernel_debug_info == nullptr)
-            g_kernel_debug_info = make<Debug::DebugInfo>(g_kernel_debuginfo_object->elf, DeprecatedString::empty(), base_address);
+            g_kernel_debug_info = make<Debug::DebugInfo>(g_kernel_debuginfo_object->elf, ByteString::empty(), base_address);
         debug_info = g_kernel_debug_info.ptr();
     } else {
         auto const& process = node.process();
@@ -86,7 +86,7 @@ SourceModel::SourceModel(Profile& profile, ProfileNode& node)
     VERIFY(debug_info != nullptr);
 
     // Try to read all source files contributing to the selected function and aggregate the samples by line.
-    HashMap<DeprecatedString, SourceFile> source_files;
+    HashMap<ByteString, SourceFile> source_files;
     for (auto const& pair : node.events_per_address()) {
         auto position = debug_info->get_source_position(pair.key - base_address);
         if (position.has_value()) {

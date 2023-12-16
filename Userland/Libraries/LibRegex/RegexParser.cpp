@@ -8,9 +8,9 @@
 #include "RegexParser.h"
 #include "RegexDebug.h"
 #include <AK/AnyOf.h>
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
@@ -75,7 +75,7 @@ ALWAYS_INLINE Token Parser::consume(TokenType type, Error error)
     return consume();
 }
 
-ALWAYS_INLINE bool Parser::consume(DeprecatedString const& str)
+ALWAYS_INLINE bool Parser::consume(ByteString const& str)
 {
     size_t potentially_go_back { 1 };
     for (auto ch : str) {
@@ -615,7 +615,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             number_builder.append(consume().value());
         }
 
-        auto maybe_minimum = number_builder.to_deprecated_string().to_uint();
+        auto maybe_minimum = number_builder.to_byte_string().to_uint();
         if (!maybe_minimum.has_value())
             return set_error(Error::InvalidBraceContent);
 
@@ -644,7 +644,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             number_builder.append(consume().value());
         }
         if (!number_builder.is_empty()) {
-            auto value = number_builder.to_deprecated_string().to_uint();
+            auto value = number_builder.to_byte_string().to_uint();
             if (!value.has_value() || minimum > value.value() || *value > s_maximum_repetition_count)
                 return set_error(Error::InvalidBraceContent);
 
@@ -2560,7 +2560,7 @@ DeprecatedFlyString ECMA262Parser::read_capture_group_specifier(bool take_starti
         builder.append_code_point(code_point);
     }
 
-    DeprecatedFlyString name = builder.to_deprecated_string();
+    DeprecatedFlyString name = builder.to_byte_string();
     if (!hit_end || name.is_empty())
         set_error(Error::InvalidNameForCaptureGroup);
 

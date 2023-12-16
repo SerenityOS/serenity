@@ -6,7 +6,7 @@
 
 #include "Token.h"
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <stdlib.h>
 
 namespace SQL::AST {
@@ -40,7 +40,7 @@ TokenCategory Token::category(TokenType type)
 double Token::double_value() const
 {
     VERIFY(type() == TokenType::NumericLiteral);
-    DeprecatedString value(m_value);
+    ByteString value(m_value);
 
     if (value[0] == '0' && value.length() >= 2) {
         if (value[1] == 'x' || value[1] == 'X')

@@ -36,19 +36,19 @@ class UnregisteredWidget final : public GUI::Widget {
     C_OBJECT(UnregisteredWidget);
 
 private:
-    UnregisteredWidget(DeprecatedString const& class_name);
+    UnregisteredWidget(ByteString const& class_name);
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
-    DeprecatedString m_text;
+    ByteString m_text;
 };
 
-UnregisteredWidget::UnregisteredWidget(DeprecatedString const& class_name)
+UnregisteredWidget::UnregisteredWidget(ByteString const& class_name)
 {
     StringBuilder builder;
     builder.append(class_name);
     builder.append("\nnot registered"sv);
-    m_text = builder.to_deprecated_string();
+    m_text = builder.to_byte_string();
 }
 
 void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
@@ -114,7 +114,7 @@ MainWidget::MainWidget()
 
 void MainWidget::update_title()
 {
-    window()->set_title(DeprecatedString::formatted("{}[*] - GML Playground", m_file_path.is_empty() ? "Untitled"sv : m_file_path.view()));
+    window()->set_title(ByteString::formatted("{}[*] - GML Playground", m_file_path.is_empty() ? "Untitled"sv : m_file_path.view()));
 }
 
 void MainWidget::load_file(FileSystemAccessClient::File file)
@@ -126,7 +126,7 @@ void MainWidget::load_file(FileSystemAccessClient::File file)
     m_editor->set_text(buffer_or_error.release_value());
     m_editor->set_focus(true);
 
-    m_file_path = file.filename().to_deprecated_string();
+    m_file_path = file.filename().to_byte_string();
     update_title();
 
     GUI::Application::the()->set_most_recently_open_file(file.filename());
@@ -144,10 +144,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
         auto file = response.value().release_stream();
         if (auto result = m_editor->write_to_file(*file); result.is_error()) {
-            GUI::MessageBox::show(&window, DeprecatedString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(&window, ByteString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
-        m_file_path = response.value().filename().to_deprecated_string();
+        m_file_path = response.value().filename().to_byte_string();
         update_title();
 
         GUI::Application::the()->set_most_recently_open_file(response.value().filename());
@@ -164,7 +164,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
         auto file = response.value().release_stream();
         if (auto result = m_editor->write_to_file(*file); result.is_error()) {
-            GUI::MessageBox::show(&window, DeprecatedString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(&window, ByteString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         update_title();
@@ -225,7 +225,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         } else {
             GUI::MessageBox::show(
                 &window,
-                DeprecatedString::formatted("GML could not be formatted: {}", formatted_gml_or_error.error()),
+                ByteString::formatted("GML could not be formatted: {}", formatted_gml_or_error.error()),
                 "Error"sv,
                 GUI::MessageBox::Type::Error);
         }

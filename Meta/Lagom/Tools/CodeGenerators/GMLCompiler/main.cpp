@@ -68,16 +68,16 @@ static bool is_ui_dimension_property(StringView property)
 }
 
 // FIXME: Since normal string-based properties take either String or StringView (and the latter can be implicitly constructed from the former),
-//        we need to special-case DeprecatedString property setters while those still exist.
+//        we need to special-case ByteString property setters while those still exist.
 //        Please remove a setter from this list once it uses StringView or String.
-static bool takes_deprecated_string(StringView property)
+static bool takes_byte_string(StringView property)
 {
-    static HashTable<StringView> deprecated_string_properties;
-    if (deprecated_string_properties.is_empty()) {
-        deprecated_string_properties.set("icon_from_path"sv);
-        deprecated_string_properties.set("name"sv);
+    static HashTable<StringView> byte_string_properties;
+    if (byte_string_properties.is_empty()) {
+        byte_string_properties.set("icon_from_path"sv);
+        byte_string_properties.set("name"sv);
     }
-    return deprecated_string_properties.contains(property);
+    return byte_string_properties.contains(property);
 }
 
 static ErrorOr<String> include_path_for(StringView class_name, LexicalPath const& gml_file_name)
@@ -141,7 +141,7 @@ static char const footer[] = R"~~~(
 
 static ErrorOr<String> escape_string(JsonValue to_escape)
 {
-    auto string = TRY(String::from_deprecated_string(to_escape.as_string()));
+    auto string = TRY(String::from_byte_string(to_escape.as_string()));
 
     // All C++ simple escape sequences; see https://en.cppreference.com/w/cpp/language/escape
     // Other commonly-escaped characters are hard-to-type Unicode and therefore fine to include verbatim in UTF-8 coded strings.
@@ -194,7 +194,7 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
 {
     if (value.is_string()) {
         if (property_name.has_value()) {
-            if (takes_deprecated_string(*property_name))
+            if (takes_byte_string(*property_name))
                 return String::formatted(R"~~~("{}"sv)~~~", TRY(escape_string(value)));
 
             if (auto const enum_value = TRY(generate_enum_initializer_for(*property_name, value)); enum_value.has_value())
@@ -252,7 +252,7 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
 // All loading happens in a separate block.
 static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_object, SourceGenerator generator, String object_name, size_t indentation, UseObjectConstructor use_object_constructor)
 {
-    generator.set("object_name", object_name.to_deprecated_string());
+    generator.set("object_name", object_name.to_byte_string());
     generator.set("class_name", gml_object.name());
 
     auto append = [&]<size_t N>(auto& generator, char const(&text)[N]) -> ErrorOr<void> {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
@@ -22,9 +22,9 @@ namespace WebView {
 struct CookieStorageKey {
     bool operator==(CookieStorageKey const&) const = default;
 
-    DeprecatedString name;
-    DeprecatedString domain;
-    DeprecatedString path;
+    ByteString name;
+    ByteString domain;
+    ByteString path;
 };
 
 class CookieJar {
@@ -48,30 +48,30 @@ public:
     static ErrorOr<CookieJar> create(Database&);
     static CookieJar create();
 
-    DeprecatedString get_cookie(const URL& url, Web::Cookie::Source source);
+    ByteString get_cookie(const URL& url, Web::Cookie::Source source);
     void set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source);
     void update_cookie(Web::Cookie::Cookie);
     void dump_cookies();
     Vector<Web::Cookie::Cookie> get_all_cookies();
     Vector<Web::Cookie::Cookie> get_all_cookies(URL const& url);
-    Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, DeprecatedString const& name);
+    Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, ByteString const& name);
 
 private:
     explicit CookieJar(PersistedStorage);
     explicit CookieJar(TransientStorage);
 
-    static Optional<DeprecatedString> canonicalize_domain(const URL& url);
-    static bool domain_matches(DeprecatedString const& string, DeprecatedString const& domain_string);
-    static bool path_matches(DeprecatedString const& request_path, DeprecatedString const& cookie_path);
-    static DeprecatedString default_path(const URL& url);
+    static Optional<ByteString> canonicalize_domain(const URL& url);
+    static bool domain_matches(ByteString const& string, ByteString const& domain_string);
+    static bool path_matches(ByteString const& request_path, ByteString const& cookie_path);
+    static ByteString default_path(const URL& url);
 
     enum class MatchingCookiesSpecMode {
         RFC6265,
         WebDriver,
     };
 
-    void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, DeprecatedString canonicalized_domain, Web::Cookie::Source source);
-    Vector<Web::Cookie::Cookie> get_matching_cookies(const URL& url, DeprecatedString const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
+    void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, ByteString canonicalized_domain, Web::Cookie::Source source);
+    Vector<Web::Cookie::Cookie> get_matching_cookies(const URL& url, ByteString const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
 
     void insert_cookie_into_database(Web::Cookie::Cookie const& cookie);
     void update_cookie_in_database(Web::Cookie::Cookie const& cookie);

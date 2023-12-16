@@ -24,13 +24,13 @@ class Configuration;
 struct Interpreter;
 
 struct InstantiationError {
-    DeprecatedString error { "Unknown error" };
+    ByteString error { "Unknown error" };
 };
 struct LinkError {
     enum OtherErrors {
         InvalidImportedModule,
     };
-    Vector<DeprecatedString> missing_imports;
+    Vector<ByteString> missing_imports;
     Vector<OtherErrors> other_errors;
 };
 
@@ -192,7 +192,7 @@ private:
 };
 
 struct Trap {
-    DeprecatedString reason;
+    ByteString reason;
 };
 
 // A variant of Result that does not include external reasons for error (JS::Completion, for now).
@@ -270,7 +270,7 @@ using ExternValue = Variant<FunctionAddress, TableAddress, MemoryAddress, Global
 
 class ExportInstance {
 public:
-    explicit ExportInstance(DeprecatedString name, ExternValue value)
+    explicit ExportInstance(ByteString name, ExternValue value)
         : m_name(move(name))
         , m_value(move(value))
     {
@@ -280,7 +280,7 @@ public:
     auto& value() const { return m_value; }
 
 private:
-    DeprecatedString m_name;
+    ByteString m_name;
     ExternValue m_value;
 };
 
@@ -633,8 +633,8 @@ private:
 class Linker {
 public:
     struct Name {
-        DeprecatedString module;
-        DeprecatedString name;
+        ByteString module;
+        ByteString name;
         ImportSection::Import::ImportDesc type;
     };
 

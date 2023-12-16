@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 
 namespace DNS {
@@ -15,12 +15,12 @@ namespace DNS {
 class Name {
 public:
     Name() = default;
-    Name(DeprecatedString const&);
+    Name(ByteString const&);
 
     static ErrorOr<Name> parse(ReadonlyBytes data, size_t& offset, size_t recursion_level = 0);
 
     size_t serialized_size() const;
-    DeprecatedString const& as_string() const { return m_name; }
+    ByteString const& as_string() const { return m_name; }
     ErrorOr<void> write_to_stream(Stream&) const;
 
     void randomize_case();
@@ -34,7 +34,7 @@ public:
     };
 
 private:
-    DeprecatedString m_name;
+    ByteString m_name;
 };
 
 }

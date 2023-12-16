@@ -54,12 +54,12 @@ private:
     ErrorOr<FetchResponseData> parse_fetch_response();
     ErrorOr<Vector<Address>> parse_address_list();
     ErrorOr<Address> parse_address();
-    ErrorOr<HashMap<DeprecatedString, DeprecatedString>> parse_body_fields_params();
+    ErrorOr<HashMap<ByteString, ByteString>> parse_body_fields_params();
     ErrorOr<BodyStructure> parse_body_structure();
     ErrorOr<BodyStructure> parse_one_part_body();
     ErrorOr<BodyExtension> parse_body_extension();
-    ErrorOr<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> parse_disposition();
-    ErrorOr<Vector<DeprecatedString>> parse_langs();
+    ErrorOr<Tuple<ByteString, HashMap<ByteString, ByteString>>> parse_disposition();
+    ErrorOr<Vector<ByteString>> parse_langs();
     ErrorOr<Envelope> parse_envelope();
 
     template<typename T>

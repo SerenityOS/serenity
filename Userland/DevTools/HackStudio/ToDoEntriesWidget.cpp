@@ -63,9 +63,9 @@ public:
             case Column::Text:
                 return match.content;
             case Column::Line:
-                return DeprecatedString::formatted("{}", match.line + 1);
+                return ByteString::formatted("{}", match.line + 1);
             case Column::Column:
-                return DeprecatedString::formatted("{}", match.column);
+                return ByteString::formatted("{}", match.column);
             }
         }
         return {};

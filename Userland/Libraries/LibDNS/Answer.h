@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Name.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -36,7 +36,7 @@ enum class RecordClass : u16 {
 class Answer {
 public:
     Answer() = default;
-    Answer(Name const& name, RecordType type, RecordClass class_code, u32 ttl, DeprecatedString const& record_data, bool mdns_cache_flush);
+    Answer(Name const& name, RecordType type, RecordClass class_code, u32 ttl, ByteString const& record_data, bool mdns_cache_flush);
 
     Name const& name() const { return m_name; }
     RecordType type() const { return m_type; }
@@ -44,7 +44,7 @@ public:
     u16 raw_class_code() const { return (u16)m_class_code | (m_mdns_cache_flush ? MDNS_CACHE_FLUSH : 0); }
     u32 ttl() const { return m_ttl; }
     time_t received_time() const { return m_received_time; }
-    DeprecatedString const& record_data() const { return m_record_data; }
+    ByteString const& record_data() const { return m_record_data; }
     bool mdns_cache_flush() const { return m_mdns_cache_flush; }
 
     bool has_expired() const;
@@ -58,7 +58,7 @@ private:
     RecordClass m_class_code { 0 };
     u32 m_ttl { 0 };
     time_t m_received_time { 0 };
-    DeprecatedString m_record_data;
+    ByteString m_record_data;
     bool m_mdns_cache_flush { false };
 };
 

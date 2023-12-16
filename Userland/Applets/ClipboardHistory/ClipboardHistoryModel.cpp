@@ -39,7 +39,7 @@ ErrorOr<String> ClipboardHistoryModel::column_name(int column) const
     }
 }
 
-static StringView bpp_for_format_resilient(DeprecatedString format)
+static StringView bpp_for_format_resilient(ByteString format)
 {
     unsigned format_uint = format.to_uint().value_or(static_cast<unsigned>(Gfx::BitmapFormat::Invalid));
     // Cannot use Gfx::Bitmap::bpp_for_format here, as we have to accept invalid enum values.
@@ -64,7 +64,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     switch (index.column()) {
     case Column::Data:
         if (data_and_type.mime_type.starts_with("text/"sv))
-            return DeprecatedString::copy(data_and_type.data);
+            return ByteString::copy(data_and_type.data);
         if (data_and_type.mime_type == "image/x-serenityos") {
             StringBuilder builder;
             builder.append('[');
@@ -75,7 +75,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
             builder.append(bpp_for_format_resilient(data_and_type.metadata.get("format").value_or("0")));
             builder.append(']');
             builder.append(" bitmap"sv);
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         }
         if (data_and_type.mime_type.starts_with("glyph/"sv)) {
             StringBuilder builder;
@@ -90,7 +90,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
                 builder.append_code_point(start);
                 builder.appendff(") [{}x{}]", width, height);
             }
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         }
         return "<...>";
     case Column::Type:
@@ -98,13 +98,13 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     case Column::Size:
         return AK::human_readable_size(data_and_type.data.size());
     case Column::Time:
-        return time.to_deprecated_string();
+        return time.to_byte_string();
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-void ClipboardHistoryModel::clipboard_content_did_change(DeprecatedString const&)
+void ClipboardHistoryModel::clipboard_content_did_change(ByteString const&)
 {
     auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
     if (!(data_and_type.data.is_empty() && data_and_type.mime_type.is_empty() && data_and_type.metadata.is_empty()))
@@ -184,7 +184,7 @@ ErrorOr<JsonObject> ClipboardHistoryModel::ClipboardItem::to_json() const
     return object;
 }
 
-ErrorOr<void> ClipboardHistoryModel::read_from_file(DeprecatedString const& path)
+ErrorOr<void> ClipboardHistoryModel::read_from_file(ByteString const& path)
 {
     m_path = path;
 
@@ -219,7 +219,7 @@ ErrorOr<void> ClipboardHistoryModel::write_to_file(bool rewrite_all)
     auto const write_element = [](Core::File& file, ClipboardItem const& item) -> ErrorOr<void> {
         if (!item.data_and_type.mime_type.starts_with("text/"sv))
             return {};
-        TRY(file.write_until_depleted(TRY(item.to_json()).to_deprecated_string().bytes()));
+        TRY(file.write_until_depleted(TRY(item.to_json()).to_byte_string().bytes()));
         TRY(file.write_until_depleted("\n"sv.bytes()));
         return {};
     };

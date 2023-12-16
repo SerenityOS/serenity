@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/URL.h>
@@ -27,7 +27,7 @@ public:
     HttpProtocol();
     ~HttpProtocol() override = default;
 
-    virtual OwnPtr<Request> start_request(ConnectionFromClient&, DeprecatedString const& method, const URL&, HashMap<DeprecatedString, DeprecatedString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
+    virtual OwnPtr<Request> start_request(ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
 };
 
 }

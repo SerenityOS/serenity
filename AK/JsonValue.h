@@ -10,7 +10,7 @@
 #    error "JsonValue does not propagate allocation failures, so it is not safe to use in the kernel."
 #endif
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
@@ -52,7 +52,7 @@ public:
 
     JsonValue(double);
     JsonValue(char const*);
-    JsonValue(DeprecatedString const&);
+    JsonValue(ByteString const&);
     JsonValue(StringView);
 
     template<typename T>
@@ -78,14 +78,14 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    DeprecatedString as_string_or(DeprecatedString const& alternative) const
+    ByteString as_string_or(ByteString const& alternative) const
     {
         if (is_string())
             return as_string();
         return alternative;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         if (is_string())
             return as_string();
@@ -148,7 +148,7 @@ public:
         return m_value.as_bool;
     }
 
-    DeprecatedString as_string() const
+    ByteString as_string() const
     {
         VERIFY(is_string());
         return *m_value.as_string;
@@ -290,7 +290,7 @@ template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JsonValue const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, value.to_byte_string());
     }
 };
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto buffer = TRY(file->read_until_eof());
     dbgln("Read size {}", buffer.size());
 
-    auto input = DeprecatedString::copy(buffer);
+    auto input = ByteString::copy(buffer);
     auto document = Markdown::Document::parse(input);
 
     if (!document) {

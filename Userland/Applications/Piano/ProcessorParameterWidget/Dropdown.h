@@ -20,12 +20,12 @@ class ProcessorParameterDropdown : public GUI::ComboBox {
     C_OBJECT(ProcessorParameterDropdown);
 
 public:
-    ProcessorParameterDropdown(DSP::ProcessorEnumParameter<EnumT>& parameter, Vector<DeprecatedString> modes)
+    ProcessorParameterDropdown(DSP::ProcessorEnumParameter<EnumT>& parameter, Vector<ByteString> modes)
         : ComboBox()
         , m_parameter(parameter)
         , m_modes(move(modes))
     {
-        auto model = GUI::ItemListModel<EnumT, Vector<DeprecatedString>>::create(m_modes);
+        auto model = GUI::ItemListModel<EnumT, Vector<ByteString>>::create(m_modes);
         set_model(model);
         set_only_allow_values_from_model(true);
         set_model_column(0);
@@ -55,5 +55,5 @@ public:
 
 private:
     DSP::ProcessorEnumParameter<EnumT>& m_parameter;
-    Vector<DeprecatedString> m_modes;
+    Vector<ByteString> m_modes;
 };

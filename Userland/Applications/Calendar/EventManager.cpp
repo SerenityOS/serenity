@@ -41,7 +41,7 @@ ErrorOr<void> EventManager::save(FileSystemAccessClient::File& file)
     set_dirty(false);
 
     auto stream = file.release_stream();
-    TRY(stream->write_some(m_events.to_deprecated_string().bytes()));
+    TRY(stream->write_some(m_events.to_byte_string().bytes()));
     stream->close();
 
     return {};

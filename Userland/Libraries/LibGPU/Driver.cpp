@@ -27,7 +27,7 @@ static HashMap<StringView, char const*> const s_driver_path_map
 };
 // clang-format on
 
-static HashMap<DeprecatedString, WeakPtr<Driver>> s_loaded_drivers;
+static HashMap<ByteString, WeakPtr<Driver>> s_loaded_drivers;
 
 ErrorOr<NonnullRefPtr<Driver>> Driver::try_create(StringView driver_name)
 {

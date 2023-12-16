@@ -51,7 +51,7 @@ void MouseCursorModel::invalidate()
 
     m_cursors.clear();
     // FIXME: Propagate errors.
-    (void)Core::Directory::for_each_entry(DeprecatedString::formatted("/res/cursor-themes/{}", m_theme_name), Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
+    (void)Core::Directory::for_each_entry(ByteString::formatted("/res/cursor-themes/{}", m_theme_name), Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
         auto path = LexicalPath::join(directory.path().string(), entry.name);
         if (path.has_extension(".ini"sv))
             return IterationDecision::Continue;
@@ -89,7 +89,7 @@ void ThemeModel::invalidate()
 
     // FIXME: Propagate errors.
     (void)Core::Directory::for_each_entry("/res/cursor-themes"sv, Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
-        if (access(DeprecatedString::formatted("/res/cursor-themes/{}/Config.ini", entry.name).characters(), R_OK) == 0)
+        if (access(ByteString::formatted("/res/cursor-themes/{}/Config.ini", entry.name).characters(), R_OK) == 0)
             m_themes.append(entry.name);
         return IterationDecision::Continue;
     });
@@ -127,7 +127,7 @@ ErrorOr<void> ThemeWidget::setup()
     m_mouse_cursor_model->change_theme(theme_name);
 
     m_theme_name_box = find_descendant_of_type_named<GUI::ComboBox>("theme_name_box");
-    m_theme_name_box->on_change = [this](DeprecatedString const& value, GUI::ModelIndex const&) {
+    m_theme_name_box->on_change = [this](ByteString const& value, GUI::ModelIndex const&) {
         m_mouse_cursor_model->change_theme(value);
         set_modified(true);
     };

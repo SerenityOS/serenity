@@ -40,7 +40,7 @@ struct OutlineItem final : public RefCounted<OutlineItem>
     , public Weakable<OutlineItem> {
     WeakPtr<OutlineItem> parent;
     Vector<NonnullRefPtr<OutlineItem>> children;
-    DeprecatedString title; // Already converted to UTF-8.
+    ByteString title; // Already converted to UTF-8.
     i32 count { 0 };
     Destination dest;
     Gfx::Color color { Color::NamedColor::Black }; // 'C' in the PDF spec
@@ -49,7 +49,7 @@ struct OutlineItem final : public RefCounted<OutlineItem>
 
     OutlineItem() = default;
 
-    DeprecatedString to_deprecated_string(int indent) const;
+    ByteString to_byte_string(int indent) const;
 };
 
 struct OutlineDict final : public RefCounted<OutlineDict> {
@@ -69,30 +69,30 @@ public:
 
     // These all return strings that are already converted to UTF-8.
 
-    PDFErrorOr<Optional<DeprecatedString>> title() const;
-    PDFErrorOr<Optional<DeprecatedString>> author() const;
-    PDFErrorOr<Optional<DeprecatedString>> subject() const;
-    PDFErrorOr<Optional<DeprecatedString>> keywords() const;
+    PDFErrorOr<Optional<ByteString>> title() const;
+    PDFErrorOr<Optional<ByteString>> author() const;
+    PDFErrorOr<Optional<ByteString>> subject() const;
+    PDFErrorOr<Optional<ByteString>> keywords() const;
 
     // Name of the program that created the original, non-PDF file.
-    PDFErrorOr<Optional<DeprecatedString>> creator() const;
+    PDFErrorOr<Optional<ByteString>> creator() const;
 
     // Name of the program that converted the file to PDF.
-    PDFErrorOr<Optional<DeprecatedString>> producer() const;
+    PDFErrorOr<Optional<ByteString>> producer() const;
 
     // FIXME: Provide some helper for parsing the date strings returned by these two methods.
-    PDFErrorOr<Optional<DeprecatedString>> creation_date() const;
-    PDFErrorOr<Optional<DeprecatedString>> modification_date() const;
+    PDFErrorOr<Optional<ByteString>> creation_date() const;
+    PDFErrorOr<Optional<ByteString>> modification_date() const;
 
 private:
-    PDFErrorOr<Optional<DeprecatedString>> get(DeprecatedFlyString const& name) const
+    PDFErrorOr<Optional<ByteString>> get(DeprecatedFlyString const& name) const
     {
         if (!m_info_dict->contains(name))
             return OptionalNone {};
         return TRY(m_info_dict->get_string(m_document, name))->string();
     }
 
-    PDFErrorOr<Optional<DeprecatedString>> get_text(DeprecatedFlyString const& name) const;
+    PDFErrorOr<Optional<ByteString>> get_text(DeprecatedFlyString const& name) const;
 
     WeakPtr<Document> m_document;
     NonnullRefPtr<DictObject> m_info_dict;
@@ -103,7 +103,7 @@ class Document final
     , public Weakable<Document> {
 public:
     // Converts a text string (PDF 1.7 spec, 3.8.1. "String Types") to UTF-8.
-    static DeprecatedString text_string_to_utf8(DeprecatedString const&);
+    static ByteString text_string_to_utf8(ByteString const&);
 
     static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 
@@ -254,7 +254,7 @@ template<>
 struct Formatter<PDF::OutlineItem> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, PDF::OutlineItem const& item)
     {
-        return builder.put_string(item.to_deprecated_string(0));
+        return builder.put_string(item.to_byte_string(0));
     }
 };
 
@@ -265,11 +265,11 @@ struct Formatter<PDF::OutlineDict> : Formatter<FormatString> {
         StringBuilder child_builder;
         child_builder.append('[');
         for (auto& child : dict.children)
-            child_builder.appendff("{}\n", child->to_deprecated_string(2));
+            child_builder.appendff("{}\n", child->to_byte_string(2));
         child_builder.append("  ]"sv);
 
         return Formatter<FormatString>::format(builder,
-            "OutlineDict {{\n  count={}\n  children={}\n}}"sv, dict.count, child_builder.to_deprecated_string());
+            "OutlineDict {{\n  count={}\n  children={}\n}}"sv, dict.count, child_builder.to_byte_string());
     }
 };
 

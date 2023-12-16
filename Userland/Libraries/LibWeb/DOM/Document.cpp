@@ -291,7 +291,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
 
         // 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
         if (referrer.has<AK::URL>()) {
-            document->m_referrer = MUST(String::from_deprecated_string(referrer.get<AK::URL>().serialize()));
+            document->m_referrer = MUST(String::from_byte_string(referrer.get<AK::URL>().serialize()));
         }
     }
 
@@ -804,7 +804,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
     }
 
     if (browsing_context() == &page().top_level_browsing_context())
-        page().client().page_did_change_title(title.to_deprecated_string());
+        page().client().page_did_change_title(title.to_byte_string());
 
     return {};
 }
@@ -1206,7 +1206,7 @@ void Document::set_hovered_node(Node* node)
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
 {
-    auto deprecated_name = name.to_deprecated_string();
+    auto deprecated_name = name.to_byte_string();
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [deprecated_name](Element const& element) {
         return element.name() == deprecated_name;
     });
@@ -1349,7 +1349,7 @@ HTML::EnvironmentSettingsObject& Document::relevant_settings_object() const
 // https://dom.spec.whatwg.org/#dom-document-createelement
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& a_local_name, Variant<String, ElementCreationOptions> const& options)
 {
-    auto local_name = a_local_name.to_deprecated_string();
+    auto local_name = a_local_name.to_byte_string();
 
     // 1. If localName does not match the Name production, then throw an "InvalidCharacterError" DOMException.
     if (!is_valid_name(a_local_name))
@@ -1427,7 +1427,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_pr
     // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
 
     // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
-    return heap().allocate<ProcessingInstruction>(realm(), *this, data.to_deprecated_string(), target.to_deprecated_string());
+    return heap().allocate<ProcessingInstruction>(realm(), *this, data.to_byte_string(), target.to_byte_string());
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()
@@ -1974,7 +1974,7 @@ void Document::completely_finish_loading()
 
 String Document::cookie(Cookie::Source source)
 {
-    return MUST(String::from_deprecated_string(page().client().page_did_request_cookie(m_url, source)));
+    return MUST(String::from_byte_string(page().client().page_did_request_cookie(m_url, source)));
 }
 
 void Document::set_cookie(StringView cookie_string, Cookie::Source source)
@@ -3021,7 +3021,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String co
 
     // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
     // 3. Return a new attribute whose local name is localName and node document is this.
-    auto deprecated_local_name = local_name.to_deprecated_string();
+    auto deprecated_local_name = local_name.to_byte_string();
     return Attr::create(*this, MUST(FlyString::from_deprecated_fly_string(is_html_document() ? deprecated_local_name.to_lowercase() : deprecated_local_name)));
 }
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
@@ -190,12 +190,12 @@ int execvpe(char const* filename, char* const argv[], char* const envp[])
     ScopedValueRollback errno_rollback(errno);
 
     // TODO: Make this use the PATH search implementation from LibFileSystem.
-    DeprecatedString path = getenv("PATH");
+    ByteString path = getenv("PATH");
     if (path.is_empty())
         path = DEFAULT_PATH;
     auto parts = path.split(':');
     for (auto& part : parts) {
-        auto candidate = DeprecatedString::formatted("{}/{}", part, filename);
+        auto candidate = ByteString::formatted("{}/{}", part, filename);
         int rc = execve(candidate.characters(), argv, envp);
         if (rc < 0 && errno != ENOENT) {
             errno_rollback.set_override_rollback_value(errno);
@@ -881,13 +881,13 @@ void sync()
     syscall(SC_sync);
 }
 
-static Optional<DeprecatedString> getlogin_buffer {};
+static Optional<ByteString> getlogin_buffer {};
 
 char* getlogin()
 {
     if (!getlogin_buffer.has_value()) {
         if (auto* passwd = getpwuid(getuid())) {
-            getlogin_buffer = DeprecatedString(passwd->pw_name);
+            getlogin_buffer = ByteString(passwd->pw_name);
         }
         endpwent();
     }

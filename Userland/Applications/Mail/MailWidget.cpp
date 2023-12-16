@@ -47,7 +47,7 @@ MailWidget::MailWidget()
         if (!Desktop::Launcher::open(url)) {
             GUI::MessageBox::show(
                 window(),
-                DeprecatedString::formatted("The link to '{}' could not be opened.", url),
+                ByteString::formatted("The link to '{}' could not be opened.", url),
                 "Failed to open link"sv,
                 GUI::MessageBox::Type::Error);
         }
@@ -59,7 +59,7 @@ MailWidget::MailWidget()
 
     m_web_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
-            m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
+            m_statusbar->set_text(String::from_byte_string(url.to_byte_string()).release_value_but_fixme_should_propagate_errors());
         else
             m_statusbar->set_text({});
     };
@@ -72,7 +72,7 @@ MailWidget::MailWidget()
     m_link_context_menu_default_action = link_default_action;
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("&Copy URL", [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_byte_string());
     }));
 
     m_web_view->on_link_context_menu_request = [this](auto& url, auto screen_position) {
@@ -86,7 +86,7 @@ MailWidget::MailWidget()
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
     m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_byte_string());
     }));
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(GUI::Action::create("&Open Image in Browser", [this](auto&) {
@@ -131,7 +131,7 @@ ErrorOr<bool> MailWidget::connect_and_login()
     m_statusbar->set_text(String::formatted("Connecting to {}:{}...", server, port).release_value_but_fixme_should_propagate_errors());
     auto maybe_imap_client = tls ? IMAP::Client::connect_tls(server, port) : IMAP::Client::connect_plaintext(server, port);
     if (maybe_imap_client.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to connect to '{}:{}' over {}: {}", server, port, tls ? "TLS" : "Plaintext", maybe_imap_client.error()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to connect to '{}:{}' over {}: {}", server, port, tls ? "TLS" : "Plaintext", maybe_imap_client.error()));
         return false;
     }
     m_imap_client = maybe_imap_client.release_value();
@@ -144,7 +144,7 @@ ErrorOr<bool> MailWidget::connect_and_login()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to login. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to login. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to login. The server says: '{}'", response.response_text()));
         m_statusbar->set_text("Failed to log in"_string);
         return false;
     }
@@ -154,7 +154,7 @@ ErrorOr<bool> MailWidget::connect_and_login()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve mailboxes. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve mailboxes. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to retrieve mailboxes. The server says: '{}'", response.response_text()));
         return false;
     }
 
@@ -270,7 +270,7 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to select mailbox. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to select mailbox. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to select mailbox. The server says: '{}'", response.response_text()));
         return;
     }
 
@@ -301,7 +301,7 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve subject/from for e-mails. The server says: '{}'", response.response_text());
         m_statusbar->set_text(String::formatted("[{}]: Failed to fetch messages :^(", mailbox.name).release_value_but_fixme_should_propagate_errors());
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve e-mails. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to retrieve e-mails. The server says: '{}'", response.response_text()));
         return;
     }
 
@@ -316,8 +316,8 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 
         auto seen = !response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
 
-        DeprecatedString date = internal_date.to_deprecated_string();
-        DeprecatedString subject = envelope.subject.is_empty() ? "(No subject)" : envelope.subject;
+        ByteString date = internal_date.to_byte_string();
+        ByteString subject = envelope.subject.is_empty() ? "(No subject)" : envelope.subject;
         if (subject.contains("=?"sv) && subject.contains("?="sv)) {
             subject = MUST(IMAP::decode_rfc2047_encoded_words(subject)).span();
         }
@@ -347,7 +347,7 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
                 }
             }
         }
-        DeprecatedString from = sender_builder.to_deprecated_string();
+        ByteString from = sender_builder.to_byte_string();
 
         InboxEntry inbox_entry { sequence_number, date, from, subject, seen };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
@@ -385,12 +385,12 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
 
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve the body structure of the selected e-mail. The server says: '{}'", fetch_response.response_text());
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
         return;
     }
 
     Vector<u32> selected_alternative_position;
-    DeprecatedString selected_alternative_encoding;
+    ByteString selected_alternative_encoding;
 
     auto& response_data = fetch_response.data().fetch_data().last().get<IMAP::FetchResponseData>();
 
@@ -449,7 +449,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
 
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve the body of the selected e-mail. The server says: '{}'", fetch_response.response_text());
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
         return;
     }
 
@@ -474,7 +474,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     }
 
     auto& body_data = fetch_response_data.body_data();
-    auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, DeprecatedString>& data) {
+    auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, ByteString>& data) {
         const auto data_item = data.get<0>();
         return data_item.section.has_value() && data_item.section->type == IMAP::FetchCommand::DataItem::SectionType::Parts;
     });
@@ -482,7 +482,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
 
     auto& encoded_data = body_text_part_iterator->get<1>();
 
-    DeprecatedString decoded_data;
+    ByteString decoded_data;
 
     // FIXME: String uses char internally, so 8bit shouldn't be stored in it.
     //        However, it works for now.
@@ -496,7 +496,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
         decoded_data = IMAP::decode_quoted_printable(encoded_data).release_value_but_fixme_should_propagate_errors().span();
     } else {
         dbgln("Mail: Unimplemented decoder for encoding: {}", selected_alternative_encoding);
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("The e-mail encoding '{}' is currently unsupported.", selected_alternative_encoding), "Unsupported"sv, GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(window(), ByteString::formatted("The e-mail encoding '{}' is currently unsupported.", selected_alternative_encoding), "Unsupported"sv, GUI::MessageBox::Type::Information);
         return;
     }
 

@@ -97,7 +97,7 @@ public:
     {
         auto& textbox = static_cast<TextBox&>(*widget());
         if (value.is_valid())
-            textbox.set_text(value.to_deprecated_string());
+            textbox.set_text(value.to_byte_string());
         else
             textbox.clear();
         if (selection_behavior == SelectionBehavior::SelectAll)

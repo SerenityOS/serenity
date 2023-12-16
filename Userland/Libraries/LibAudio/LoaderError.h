@@ -28,7 +28,7 @@ struct LoaderError {
     Category category { Category::Unknown };
     // Binary index: where in the file the error occurred.
     size_t index { 0 };
-    DeprecatedFlyString description { DeprecatedString::empty() };
+    DeprecatedFlyString description { ByteString::empty() };
 
     constexpr LoaderError() = default;
     LoaderError(Category category, size_t index, DeprecatedFlyString description)
@@ -54,7 +54,7 @@ struct LoaderError {
     {
         if (error.is_errno()) {
             auto code = error.code();
-            description = DeprecatedString::formatted("{} ({})", strerror(code), code);
+            description = ByteString::formatted("{} ({})", strerror(code), code);
             if (code == EBADF || code == EBUSY || code == EEXIST || code == EIO || code == EISDIR || code == ENOENT || code == ENOMEM || code == EPIPE)
                 category = Category::IO;
         } else {

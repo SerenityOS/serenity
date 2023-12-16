@@ -10,7 +10,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/BitCast.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
@@ -374,7 +374,7 @@ public:
     u64 encoded() const { return m_value.encoded; }
 
     ThrowCompletionOr<String> to_string(VM&) const;
-    ThrowCompletionOr<DeprecatedString> to_deprecated_string(VM&) const;
+    ThrowCompletionOr<ByteString> to_byte_string(VM&) const;
     ThrowCompletionOr<Utf16String> to_utf16_string(VM&) const;
     ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> to_primitive_string(VM&);
     ThrowCompletionOr<Value> to_primitive(VM&, PreferredType preferred_type = PreferredType::Default) const;
@@ -575,7 +575,7 @@ enum class NumberToStringMode {
     WithoutExponent,
 };
 [[nodiscard]] String number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
-[[nodiscard]] DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
+[[nodiscard]] ByteString number_to_byte_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 double string_to_number(StringView);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }

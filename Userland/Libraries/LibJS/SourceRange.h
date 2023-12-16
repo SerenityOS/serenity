@@ -22,7 +22,7 @@ struct SourceRange {
     Position start;
     Position end;
 
-    DeprecatedString filename() const;
+    ByteString filename() const;
 };
 
 struct UnrealizedSourceRange {

@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Checked.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
@@ -39,7 +39,7 @@ class Value {
 
 public:
     explicit Value(SQLType sql_type = SQLType::Null);
-    explicit Value(DeprecatedString);
+    explicit Value(ByteString);
     explicit Value(double);
     Value(Value const&);
     Value(Value&&);
@@ -74,7 +74,7 @@ public:
         return *m_value;
     }
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
     [[nodiscard]] Optional<double> to_double() const;
     [[nodiscard]] Optional<bool> to_bool() const;
     [[nodiscard]] Optional<Vector<Value>> to_vector() const;
@@ -86,7 +86,7 @@ public:
             return {};
 
         return m_value->visit(
-            [](DeprecatedString const& value) -> Optional<T> {
+            [](ByteString const& value) -> Optional<T> {
                 if constexpr (IsSigned<T>)
                     return value.to_int<T>();
                 else
@@ -107,7 +107,7 @@ public:
     }
 
     Value& operator=(Value);
-    Value& operator=(DeprecatedString);
+    Value& operator=(ByteString);
     Value& operator=(double);
 
     Value& operator=(Integer auto value)
@@ -171,7 +171,7 @@ private:
         Vector<Value> values;
     };
 
-    using ValueType = Variant<DeprecatedString, i64, u64, double, bool, TupleValue>;
+    using ValueType = Variant<ByteString, i64, u64, double, bool, TupleValue>;
 
     static ResultOr<NonnullRefPtr<TupleDescriptor>> infer_tuple_descriptor(Vector<Value> const& values);
     Value(NonnullRefPtr<TupleDescriptor> descriptor, Vector<Value> values);
@@ -186,7 +186,7 @@ template<>
 struct AK::Formatter<SQL::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, SQL::Value const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, value.to_byte_string());
     }
 };
 

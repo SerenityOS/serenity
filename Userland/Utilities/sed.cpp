@@ -711,7 +711,7 @@ private:
     OwnPtr<Core::File> m_output;
     OwnPtr<FileSystem::TempFile> m_output_temp_file;
     size_t m_line_number { 0 };
-    DeprecatedString m_current_line;
+    ByteString m_current_line;
     constexpr static size_t MAX_SUPPORTED_LINE_SIZE = 4096;
     Array<u8, MAX_SUPPORTED_LINE_SIZE> m_buffer;
 };
@@ -759,7 +759,7 @@ static void print_unambiguous(StringView pattern_space)
         else if (AK::is_ascii_printable(c))
             folded_append(c, 1);
         else
-            folded_append(DeprecatedString::formatted("\\{:3o}", (unsigned char)c), 4);
+            folded_append(ByteString::formatted("\\{:3o}", (unsigned char)c), 4);
     }
     outln("{}$", unambiguous_output.string_view());
 }

@@ -21,7 +21,7 @@ static ErrorOr<bool> is_dynamically_linked_executable(StringView filename)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    DeprecatedString promises;
+    ByteString promises;
     Vector<StringView> command;
     bool add_promises_for_dynamic_linker;
 
@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto constexpr loader_promises = "stdio rpath prot_exec"sv;
         MUST(Core::System::setenv("_LOADER_PLEDGE_PROMISES"sv, loader_promises, true));
         MUST(Core::System::setenv("_LOADER_MAIN_PROGRAM_PLEDGE_PROMISES"sv, promises, true));
-        promises = DeprecatedString::formatted("{} {}", promises, loader_promises);
+        promises = ByteString::formatted("{} {}", promises, loader_promises);
     }
 
     TRY(Core::System::pledge(StringView(), promises));

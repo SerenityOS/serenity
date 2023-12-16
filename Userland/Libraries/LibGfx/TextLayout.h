@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
@@ -49,7 +49,7 @@ public:
     {
     }
 
-    Vector<DeprecatedString, 32> lines(TextElision elision, TextWrapping wrapping) const
+    Vector<ByteString, 32> lines(TextElision elision, TextWrapping wrapping) const
     {
         return wrap_lines(elision, wrapping);
     }
@@ -57,8 +57,8 @@ public:
     FloatRect bounding_rect(TextWrapping) const;
 
 private:
-    Vector<DeprecatedString, 32> wrap_lines(TextElision, TextWrapping) const;
-    DeprecatedString elide_text_from_right(Utf8View) const;
+    Vector<ByteString, 32> wrap_lines(TextElision, TextWrapping) const;
+    ByteString elide_text_from_right(Utf8View) const;
 
     Font const& m_font;
     FontPixelMetrics m_font_metrics;

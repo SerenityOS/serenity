@@ -22,33 +22,33 @@ endpoint WebContentClient
     did_change_selection() =|
     did_request_cursor_change(i32 cursor_type) =|
     did_layout(Gfx::IntSize content_size) =|
-    did_change_title(DeprecatedString title) =|
+    did_change_title(ByteString title) =|
     did_request_scroll(i32 x_delta, i32 y_delta) =|
     did_request_scroll_to(Gfx::IntPoint scroll_position) =|
     did_request_scroll_into_view(Gfx::IntRect rect) =|
-    did_enter_tooltip_area(Gfx::IntPoint content_position, DeprecatedString title) =|
+    did_enter_tooltip_area(Gfx::IntPoint content_position, ByteString title) =|
     did_leave_tooltip_area() =|
     did_hover_link(URL url) =|
     did_unhover_link() =|
-    did_click_link(URL url, DeprecatedString target, unsigned modifiers) =|
-    did_middle_click_link(URL url, DeprecatedString target, unsigned modifiers) =|
+    did_click_link(URL url, ByteString target, unsigned modifiers) =|
+    did_middle_click_link(URL url, ByteString target, unsigned modifiers) =|
     did_request_context_menu(Gfx::IntPoint content_position) =|
-    did_request_link_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers) =|
-    did_request_image_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
-    did_request_media_context_menu(Gfx::IntPoint content_position, DeprecatedString target, unsigned modifiers, Web::Page::MediaContextMenu menu) =|
+    did_request_link_context_menu(Gfx::IntPoint content_position, URL url, ByteString target, unsigned modifiers) =|
+    did_request_image_context_menu(Gfx::IntPoint content_position, URL url, ByteString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
+    did_request_media_context_menu(Gfx::IntPoint content_position, ByteString target, unsigned modifiers, Web::Page::MediaContextMenu menu) =|
     did_request_alert(String message) =|
     did_request_confirm(String message) =|
     did_request_prompt(String message, String default_) =|
     did_request_set_prompt_text(String message) =|
     did_request_accept_dialog() =|
     did_request_dismiss_dialog() =|
-    did_get_source(URL url, DeprecatedString source) =|
-    did_get_dom_tree(DeprecatedString dom_tree) =|
-    did_get_accessibility_tree(DeprecatedString accessibility_tree) =|
+    did_get_source(URL url, ByteString source) =|
+    did_get_dom_tree(ByteString dom_tree) =|
+    did_get_accessibility_tree(ByteString accessibility_tree) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
-    did_request_named_cookie(URL url, DeprecatedString name) => (Optional<Web::Cookie::Cookie> cookie)
-    did_request_cookie(URL url, u8 source) => (DeprecatedString cookie)
+    did_request_named_cookie(URL url, ByteString name) => (Optional<Web::Cookie::Cookie> cookie)
+    did_request_cookie(URL url, u8 source) => (ByteString cookie)
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
     did_update_cookie(Web::Cookie::Cookie cookie) =|
     did_update_resource_count(i32 count_waiting) =|
@@ -61,7 +61,7 @@ endpoint WebContentClient
     did_request_maximize_window() => (Gfx::IntRect window_rect)
     did_request_minimize_window() => (Gfx::IntRect window_rect)
     did_request_fullscreen_window() => (Gfx::IntRect window_rect)
-    did_request_file(DeprecatedString path, i32 request_id) =|
+    did_request_file(ByteString path, i32 request_id) =|
     did_request_color_picker(Color current_color) =|
     did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) =|
     did_finish_handling_input_event(bool event_was_accepted) =|
@@ -69,7 +69,7 @@ endpoint WebContentClient
     did_insert_clipboard_entry(String data, String presentation_style, String mime_type) =|
 
     did_output_js_console_message(i32 message_index) =|
-    did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages) =|
+    did_get_js_console_messages(i32 start_index, Vector<ByteString> message_types, Vector<ByteString> messages) =|
 
     did_finish_text_test() =|
 

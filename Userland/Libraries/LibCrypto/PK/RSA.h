@@ -162,7 +162,7 @@ public:
     virtual void verify(ReadonlyBytes in, Bytes& out) override;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const override
+    virtual ByteString class_name() const override
     {
         return "RSA";
     }
@@ -214,7 +214,7 @@ public:
     virtual void verify(ReadonlyBytes, Bytes&) override;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const override
+    virtual ByteString class_name() const override
     {
         return "RSA_PKCS1-EME";
     }

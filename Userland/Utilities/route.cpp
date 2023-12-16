@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
@@ -51,10 +51,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        DeprecatedString title;
+        ByteString title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        DeprecatedString buffer;
+        ByteString buffer;
     };
 
     Vector<Column> columns;
@@ -101,16 +101,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get_deprecated_string("destination"sv).value_or({}) < b.as_object().get_deprecated_string("destination"sv).value_or({});
+            return a.as_object().get_byte_string("destination"sv).value_or({}) < b.as_object().get_byte_string("destination"sv).value_or({});
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto destination = if_object.get_deprecated_string("destination"sv).value_or({});
-            auto gateway = if_object.get_deprecated_string("gateway"sv).value_or({});
-            auto genmask = if_object.get_deprecated_string("genmask"sv).value_or({});
-            auto interface = if_object.get_deprecated_string("interface"sv).value_or({});
+            auto destination = if_object.get_byte_string("destination"sv).value_or({});
+            auto gateway = if_object.get_byte_string("gateway"sv).value_or({});
+            auto genmask = if_object.get_byte_string("genmask"sv).value_or({});
+            auto interface = if_object.get_byte_string("interface"sv).value_or({});
             auto flags = if_object.get_u32("flags"sv).value_or(0);
 
             StringBuilder flags_builder;

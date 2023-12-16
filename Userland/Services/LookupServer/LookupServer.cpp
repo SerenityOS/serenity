@@ -7,8 +7,8 @@
 #include "LookupServer.h"
 #include "ConnectionFromClient.h"
 #include <AK/BufferedStream.h>
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Random.h>
 #include <AK/StdLibExtras.h>
@@ -89,7 +89,7 @@ void LookupServer::load_etc_hosts()
 ErrorOr<HashMap<Name, Vector<Answer>, Name::Traits>> LookupServer::try_load_etc_hosts()
 {
     HashMap<Name, Vector<Answer>, Name::Traits> map;
-    auto add_answer = [&map](Name const& name, RecordType record_type, DeprecatedString data) -> ErrorOr<void> {
+    auto add_answer = [&map](Name const& name, RecordType record_type, ByteString data) -> ErrorOr<void> {
         // FIXME: Since try_ensure does not return a reference to the contained value, we have to
         // retrieve it separately. This is a try_ensure bug that should be fixed.
         TRY(map.try_ensure(name, []() { return Vector<Answer> {}; }));
@@ -132,18 +132,18 @@ ErrorOr<HashMap<Name, Vector<Answer>, Name::Traits>> LookupServer::try_load_etc_
         auto raw_addr = maybe_address->to_in_addr_t();
 
         Name name { fields[1] };
-        TRY(add_answer(name, RecordType::A, DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) }));
+        TRY(add_answer(name, RecordType::A, ByteString { (char const*)&raw_addr, sizeof(raw_addr) }));
 
         StringBuilder builder;
-        TRY(builder.try_append(maybe_address->to_deprecated_string_reversed()));
+        TRY(builder.try_append(maybe_address->to_byte_string_reversed()));
         TRY(builder.try_append(".in-addr.arpa"sv));
-        TRY(add_answer(builder.to_deprecated_string(), RecordType::PTR, name.as_string()));
+        TRY(add_answer(builder.to_byte_string(), RecordType::PTR, name.as_string()));
     }
 
     return map;
 }
 
-static DeprecatedString get_hostname()
+static ByteString get_hostname()
 {
     char buffer[_POSIX_HOST_NAME_MAX];
     VERIFY(gethostname(buffer, sizeof(buffer)) == 0);
@@ -182,7 +182,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
     if (record_type == RecordType::A && get_hostname() == name) {
         IPv4Address address = { 127, 0, 0, 1 };
         auto raw_address = address.to_in_addr_t();
-        Answer answer { name, RecordType::A, RecordClass::IN, s_static_ttl, DeprecatedString { (char const*)&raw_address, sizeof(raw_address) }, false };
+        Answer answer { name, RecordType::A, RecordClass::IN, s_static_ttl, ByteString { (char const*)&raw_address, sizeof(raw_address) }, false };
         answers.append(move(answer));
         return answers;
     }
@@ -245,7 +245,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
     return answers;
 }
 
-ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString const& nameserver, bool& did_get_response, RecordType record_type, ShouldRandomizeCase should_randomize_case)
+ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, ByteString const& nameserver, bool& did_get_response, RecordType record_type, ShouldRandomizeCase should_randomize_case)
 {
     Packet request;
     request.set_is_query();

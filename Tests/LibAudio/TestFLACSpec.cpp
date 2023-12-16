@@ -17,21 +17,21 @@ struct DiscoverFLACTestsHack {
             auto path = LexicalPath::join(directory.path().string(), entry.name);
             if (path.extension() == "flac"sv) {
                 Test::add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(
-                    DeprecatedString::formatted("flac_spec_test_{}", path.basename()),
+                    ByteString::formatted("flac_spec_test_{}", path.basename()),
                     [path = move(path)]() {
                         auto file = Core::File::open(path.string(), Core::File::OpenMode::Read);
                         if (file.is_error()) {
-                            FAIL(DeprecatedString::formatted("{}", file.error()));
+                            FAIL(ByteString::formatted("{}", file.error()));
                             return;
                         }
                         auto buffered_file = Core::InputBufferedFile::create(file.release_value());
                         if (buffered_file.is_error()) {
-                            FAIL(DeprecatedString::formatted("{}", buffered_file.error()));
+                            FAIL(ByteString::formatted("{}", buffered_file.error()));
                             return;
                         }
                         auto result = Audio::FlacLoaderPlugin::create(buffered_file.release_value());
                         if (result.is_error()) {
-                            FAIL(DeprecatedString::formatted("{}", result.error()));
+                            FAIL(ByteString::formatted("{}", result.error()));
                             return;
                         }
 
@@ -40,7 +40,7 @@ struct DiscoverFLACTestsHack {
                         while (true) {
                             auto maybe_samples = loader->load_chunks(2 * MiB);
                             if (maybe_samples.is_error()) {
-                                FAIL(DeprecatedString::formatted("{}", maybe_samples.error()));
+                                FAIL(ByteString::formatted("{}", maybe_samples.error()));
                                 return;
                             }
                             maybe_samples.value().remove_all_matching([](auto& chunk) { return chunk.is_empty(); });

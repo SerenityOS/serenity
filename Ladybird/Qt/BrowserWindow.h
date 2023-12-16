@@ -102,7 +102,7 @@ private:
 
     Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
 
-    void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
+    void debug_request(ByteString const& request, ByteString const& argument = "");
 
     void set_current_tab(Tab* tab);
     void update_displayed_zoom_level();

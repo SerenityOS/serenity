@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool recursion_allowed = false;
     bool verbose = false;
     Vector<StringView> sources;
-    DeprecatedString destination;
+    ByteString destination;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(link, "Link files instead of copying", "link", 'l');
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto& source : sources) {
         auto destination_path = destination_is_existing_dir
-            ? DeprecatedString::formatted("{}/{}", destination, LexicalPath::basename(source))
+            ? ByteString::formatted("{}/{}", destination, LexicalPath::basename(source))
             : destination;
 
         auto result = FileSystem::copy_file_or_directory(

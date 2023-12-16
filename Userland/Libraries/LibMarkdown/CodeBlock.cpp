@@ -14,7 +14,7 @@
 
 namespace Markdown {
 
-DeprecatedString CodeBlock::render_to_html(bool) const
+ByteString CodeBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -51,12 +51,12 @@ DeprecatedString CodeBlock::render_to_html(bool) const
 
     builder.append("</pre>\n"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
+Vector<ByteString> CodeBlock::render_lines_for_terminal(size_t) const
 {
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
 
     // Do not indent too much if we are in the synopsis
     auto indentation = "    "sv;
@@ -67,7 +67,7 @@ Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
     }
 
     for (auto const& line : m_code.split('\n', SplitBehavior::KeepEmpty))
-        lines.append(DeprecatedString::formatted("{}{}", indentation, line));
+        lines.append(ByteString::formatted("{}{}", indentation, line));
 
     return lines;
 }
@@ -173,7 +173,7 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
         builder.append('\n');
     }
 
-    return make<CodeBlock>(language, style, builder.to_deprecated_string(), current_section);
+    return make<CodeBlock>(language, style, builder.to_byte_string(), current_section);
 }
 
 OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
@@ -196,6 +196,6 @@ OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
         builder.append('\n');
     }
 
-    return make<CodeBlock>("", "", builder.to_deprecated_string(), nullptr);
+    return make<CodeBlock>("", "", builder.to_byte_string(), nullptr);
 }
 }

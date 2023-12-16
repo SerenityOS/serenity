@@ -94,7 +94,7 @@ ErrorOr<void> Parser::parse_response_done()
     }
 
     TRY(consume("\r\n"sv));
-    m_response.m_response_text = response_data.to_deprecated_string();
+    m_response.m_response_text = response_data.to_byte_string();
     return {};
 }
 
@@ -174,7 +174,7 @@ ErrorOr<void> Parser::parse_untagged()
         m_response.data().add_lsub_item(move(item));
     } else if (consume_if("FLAGS"sv)) {
         TRY(consume(" "sv));
-        auto flags = TRY(parse_list(+[](StringView x) { return DeprecatedString(x); }));
+        auto flags = TRY(parse_list(+[](StringView x) { return ByteString(x); }));
         m_response.data().set_flags(move(flags));
         TRY(consume("\r\n"sv));
     } else if (consume_if("OK"sv)) {
@@ -197,7 +197,7 @@ ErrorOr<void> Parser::parse_untagged()
                 m_response.data().set_unseen(n);
             } else if (actual_type == "PERMANENTFLAGS"sv) {
                 TRY(consume(" "sv));
-                auto flags = TRY(parse_list(+[](StringView x) { return DeprecatedString(x); }));
+                auto flags = TRY(parse_list(+[](StringView x) { return ByteString(x); }));
                 m_response.data().set_permanent_flags(move(flags));
             } else if (actual_type == "HIGHESTMODSEQ"sv) {
                 TRY(consume(" "sv));
@@ -222,7 +222,7 @@ ErrorOr<void> Parser::parse_untagged()
     } else if (consume_if("BYE"sv)) {
         auto message = consume_until_end_of_line();
         TRY(consume("\r\n"sv));
-        m_response.data().set_bye(message.is_empty() ? Optional<DeprecatedString>() : Optional<DeprecatedString>(message));
+        m_response.data().set_bye(message.is_empty() ? Optional<ByteString>() : Optional<ByteString>(message));
     } else if (consume_if("STATUS"sv)) {
         TRY(consume(" "sv));
         auto mailbox = TRY(parse_astring());
@@ -314,7 +314,7 @@ ErrorOr<FetchResponseData> Parser::parse_fetch_response()
         }
         case FetchCommand::DataItemType::Flags: {
             TRY(consume(" "sv));
-            auto flags = TRY(parse_list(+[](StringView x) { return DeprecatedString(x); }));
+            auto flags = TRY(parse_list(+[](StringView x) { return ByteString(x); }));
             fetch_response.set_flags(move(flags));
             break;
         }
@@ -398,7 +398,7 @@ ErrorOr<BodyStructure> Parser::parse_body_structure()
 
         if (!consume_if(")"sv)) {
             TRY(consume(" "sv));
-            data.params = consume_if("NIL"sv) ? HashMap<DeprecatedString, DeprecatedString> {} : TRY(parse_body_fields_params());
+            data.params = consume_if("NIL"sv) ? HashMap<ByteString, ByteString> {} : TRY(parse_body_fields_params());
             if (!consume_if(")"sv)) {
                 TRY(consume(" "sv));
                 if (!consume_if("NIL"sv)) {
@@ -413,7 +413,7 @@ ErrorOr<BodyStructure> Parser::parse_body_structure()
 
                     if (!consume_if(")"sv)) {
                         TRY(consume(" "sv));
-                        data.location = consume_if("NIL"sv) ? DeprecatedString {} : DeprecatedString(TRY(parse_string()));
+                        data.location = consume_if("NIL"sv) ? ByteString {} : ByteString(TRY(parse_string()));
 
                         if (!consume_if(")"sv)) {
                             TRY(consume(" "sv));
@@ -519,9 +519,9 @@ ErrorOr<BodyStructure> Parser::parse_one_part_body()
     return BodyStructure(move(data));
 }
 
-ErrorOr<Vector<DeprecatedString>> Parser::parse_langs()
+ErrorOr<Vector<ByteString>> Parser::parse_langs()
 {
-    AK::Vector<DeprecatedString> langs;
+    AK::Vector<ByteString> langs;
     if (!consume_if("("sv)) {
         langs.append(TRY(parse_string()));
     } else {
@@ -533,14 +533,14 @@ ErrorOr<Vector<DeprecatedString>> Parser::parse_langs()
     return langs;
 }
 
-ErrorOr<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> Parser::parse_disposition()
+ErrorOr<Tuple<ByteString, HashMap<ByteString, ByteString>>> Parser::parse_disposition()
 {
     TRY(consume("("sv));
     auto disposition_type = TRY(parse_string());
     TRY(consume(" "sv));
     auto disposition_vals = TRY(parse_body_fields_params());
     TRY(consume(")"sv));
-    return Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> { move(disposition_type), move(disposition_vals) };
+    return Tuple<ByteString, HashMap<ByteString, ByteString>> { move(disposition_type), move(disposition_vals) };
 }
 
 ErrorOr<StringView> Parser::parse_literal_string()
@@ -574,12 +574,12 @@ ErrorOr<ListItem> Parser::parse_list_item()
     TRY(consume("\" "sv));
     auto mailbox = TRY(parse_astring());
     TRY(consume("\r\n"sv));
-    return ListItem { flags, DeprecatedString(reference), DeprecatedString(mailbox) };
+    return ListItem { flags, ByteString(reference), ByteString(mailbox) };
 }
 
 ErrorOr<void> Parser::parse_capability_response()
 {
-    auto capability = AK::Vector<DeprecatedString>();
+    auto capability = AK::Vector<ByteString>();
     while (!consume_if("\r\n"sv)) {
         TRY(consume(" "sv));
         capability.append(TRY(parse_atom()));
@@ -709,7 +709,7 @@ ErrorOr<FetchCommand::DataItem> Parser::parse_fetch_data_item()
         auto section_type = consume_while([](u8 x) { return x != ']' && x != ' '; });
         if (section_type.equals_ignoring_ascii_case("HEADER.FIELDS"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFields;
-            data_item.section->headers = Vector<DeprecatedString>();
+            data_item.section->headers = Vector<ByteString>();
             TRY(consume(" "sv));
             auto headers = TRY(parse_list(+[](StringView x) { return x; }));
             for (auto& header : headers) {
@@ -718,7 +718,7 @@ ErrorOr<FetchCommand::DataItem> Parser::parse_fetch_data_item()
             TRY(consume("]"sv));
         } else if (section_type.equals_ignoring_ascii_case("HEADER.FIELDS.NOT"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFieldsNot;
-            data_item.section->headers = Vector<DeprecatedString>();
+            data_item.section->headers = Vector<ByteString>();
             TRY(consume(" ("sv));
             auto headers = TRY(parse_list(+[](StringView x) { return x; }));
             for (auto& header : headers) {
@@ -825,12 +825,12 @@ ErrorOr<StringView> Parser::parse_astring()
     return parse_atom();
 }
 
-ErrorOr<HashMap<DeprecatedString, DeprecatedString>> Parser::parse_body_fields_params()
+ErrorOr<HashMap<ByteString, ByteString>> Parser::parse_body_fields_params()
 {
     if (consume_if("NIL"sv))
-        return HashMap<DeprecatedString, DeprecatedString> {};
+        return HashMap<ByteString, ByteString> {};
 
-    HashMap<DeprecatedString, DeprecatedString> fields;
+    HashMap<ByteString, ByteString> fields;
     TRY(consume("("sv));
     while (!consume_if(")"sv)) {
         auto key = TRY(parse_string());
@@ -846,7 +846,7 @@ ErrorOr<HashMap<DeprecatedString, DeprecatedString>> Parser::parse_body_fields_p
 ErrorOr<BodyExtension> Parser::parse_body_extension()
 {
     if (consume_if("NIL"sv))
-        return BodyExtension { Optional<DeprecatedString> {} };
+        return BodyExtension { Optional<ByteString> {} };
 
     if (consume_if("("sv)) {
         Vector<OwnPtr<BodyExtension>> extensions;

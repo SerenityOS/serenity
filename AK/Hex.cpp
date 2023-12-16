@@ -45,14 +45,14 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> encode_hex(const ReadonlyBytes input)
     return Kernel::KString::try_create(output.string_view());
 }
 #else
-DeprecatedString encode_hex(const ReadonlyBytes input)
+ByteString encode_hex(const ReadonlyBytes input)
 {
     StringBuilder output(input.size() * 2);
 
     for (auto ch : input)
         output.appendff("{:02x}", ch);
 
-    return output.to_deprecated_string();
+    return output.to_byte_string();
 }
 #endif
 

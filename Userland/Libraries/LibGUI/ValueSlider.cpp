@@ -32,7 +32,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     m_textbox->set_font_size(8);
 
     m_textbox->on_change = [&]() {
-        DeprecatedString value = m_textbox->text();
+        ByteString value = m_textbox->text();
         if (value.ends_with(m_suffix, AK::CaseSensitivity::CaseInsensitive))
             value = value.substring_view(0, value.length() - m_suffix.bytes_as_string_view().length());
         auto integer_value = value.to_int();
@@ -68,9 +68,9 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     };
 }
 
-DeprecatedString ValueSlider::formatted_value() const
+ByteString ValueSlider::formatted_value() const
 {
-    return DeprecatedString::formatted("{:2}{}", value(), m_suffix);
+    return ByteString::formatted("{:2}{}", value(), m_suffix);
 }
 
 void ValueSlider::paint_event(PaintEvent& event)

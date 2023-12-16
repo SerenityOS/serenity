@@ -5,7 +5,7 @@
  */
 
 #include "Format.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/StringBuilder.h>
 
@@ -37,13 +37,13 @@ struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentL
     }
 };
 
-DeprecatedString format_double(char const* format, double value)
+ByteString format_double(char const* format, double value)
 {
     StringBuilder builder;
     auto putch = [&](auto, auto ch) { builder.append(ch); };
     printf_internal<decltype(putch), PrintfImpl, double, SingleEntryListNext>(putch, nullptr, format, value);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

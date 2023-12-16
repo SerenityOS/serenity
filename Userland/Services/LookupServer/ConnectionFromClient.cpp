@@ -26,7 +26,7 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(DeprecatedString const& name)
+Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(ByteString const& name)
 {
     auto maybe_answers = LookupServer::the().lookup(name, RecordType::A);
     if (maybe_answers.is_error()) {
@@ -35,19 +35,19 @@ Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(Dep
     }
 
     auto answers = maybe_answers.release_value();
-    Vector<DeprecatedString> addresses;
+    Vector<ByteString> addresses;
     for (auto& answer : answers) {
         addresses.append(answer.record_data());
     }
     return { 0, move(addresses) };
 }
 
-Messages::LookupServer::LookupAddressResponse ConnectionFromClient::lookup_address(DeprecatedString const& address)
+Messages::LookupServer::LookupAddressResponse ConnectionFromClient::lookup_address(ByteString const& address)
 {
     if (address.length() != 4)
-        return { 1, DeprecatedString() };
+        return { 1, ByteString() };
     IPv4Address ip_address { (u8 const*)address.characters() };
-    auto name = DeprecatedString::formatted("{}.{}.{}.{}.in-addr.arpa",
+    auto name = ByteString::formatted("{}.{}.{}.{}.in-addr.arpa",
         ip_address[3],
         ip_address[2],
         ip_address[1],
@@ -56,12 +56,12 @@ Messages::LookupServer::LookupAddressResponse ConnectionFromClient::lookup_addre
     auto maybe_answers = LookupServer::the().lookup(name, RecordType::PTR);
     if (maybe_answers.is_error()) {
         dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
-        return { 1, DeprecatedString() };
+        return { 1, ByteString() };
     }
 
     auto answers = maybe_answers.release_value();
     if (answers.is_empty())
-        return { 1, DeprecatedString() };
+        return { 1, ByteString() };
     return { 0, answers[0].record_data() };
 }
 }

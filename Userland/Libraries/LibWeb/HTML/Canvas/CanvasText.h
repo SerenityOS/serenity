@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Optional.h>
 #include <LibWeb/HTML/TextMetrics.h>
 

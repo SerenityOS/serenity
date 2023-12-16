@@ -5,7 +5,7 @@
  */
 
 #include "ShutdownDialog.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -17,7 +17,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 
 struct Option {
-    DeprecatedString title;
+    ByteString title;
     ShutdownDialog::Command command;
     bool enabled;
     bool default_action;
@@ -74,7 +74,7 @@ ShutdownDialog::ShutdownDialog()
         auto action = options[i];
         auto& radio = right_container.add<GUI::RadioButton>();
         radio.set_enabled(action.enabled);
-        radio.set_text(String::from_deprecated_string(action.title).release_value_but_fixme_should_propagate_errors());
+        radio.set_text(String::from_byte_string(action.title).release_value_but_fixme_should_propagate_errors());
 
         radio.on_checked = [this, i](auto) {
             m_selected_option = i;

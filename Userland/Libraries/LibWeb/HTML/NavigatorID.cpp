@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibWeb/HTML/NavigatorID.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibGL/GL/gl.h>
@@ -31,7 +31,7 @@ static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height
 
 static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView test_name)
 {
-    auto reference_filename = DeprecatedString::formatted("{}.qoi", test_name);
+    auto reference_filename = ByteString::formatted("{}.qoi", test_name);
 
     if constexpr (SAVE_OUTPUT) {
         auto target_path = LexicalPath("/home/anon").append(reference_filename);
@@ -40,7 +40,7 @@ static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView
         MUST(qoi_output_stream->write_until_depleted(qoi_buffer));
     }
 
-    auto reference_image_path = DeprecatedString::formatted(REFERENCE_IMAGE_DIR "/{}", reference_filename);
+    auto reference_image_path = ByteString::formatted(REFERENCE_IMAGE_DIR "/{}", reference_filename);
     auto reference_bitmap = MUST(Gfx::Bitmap::load_from_file(reference_image_path));
     EXPECT_EQ(reference_bitmap->visually_equals(bitmap), true);
 }

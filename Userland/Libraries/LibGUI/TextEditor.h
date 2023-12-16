@@ -57,7 +57,7 @@ public:
 
     virtual void set_document(TextDocument&);
 
-    DeprecatedString const& placeholder() const { return m_placeholder; }
+    ByteString const& placeholder() const { return m_placeholder; }
     void set_placeholder(StringView placeholder) { m_placeholder = placeholder; }
 
     TextDocumentLine& current_line() { return line(m_cursor.line()); }
@@ -142,7 +142,7 @@ public:
     ErrorOr<void> write_to_file(StringView path);
     ErrorOr<void> write_to_file(Core::File&);
     bool has_selection() const { return m_selection.is_valid(); }
-    DeprecatedString selected_text() const;
+    ByteString selected_text() const;
     size_t number_of_words() const;
     size_t number_of_selected_words() const;
     void set_selection(TextRange const&);
@@ -150,7 +150,7 @@ public:
     bool can_undo() const { return document().can_undo(); }
     bool can_redo() const { return document().can_redo(); }
 
-    DeprecatedString text() const;
+    ByteString text() const;
 
     void clear();
 
@@ -245,7 +245,7 @@ public:
         Backward,
     };
     TextRange find_text(StringView needle, SearchDirection, GUI::TextDocument::SearchShouldWrap, bool use_regex, bool match_case);
-    void highlight_all_occurances_of(DeprecatedString const selected_text);
+    void highlight_all_occurances_of(ByteString const selected_text);
     void reset_search_results();
     Optional<size_t> search_result_index() const { return m_search_result_index; }
     Vector<TextRange> const& search_results() const { return m_search_results; }
@@ -312,12 +312,12 @@ private:
     virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() final { return document().folding_regions(); }
     virtual Vector<GUI::TextDocumentFoldingRegion> const& folding_regions() const final { return document().folding_regions(); }
     virtual void highlighter_did_request_update() final { update(); }
-    virtual DeprecatedString highlighter_did_request_text() const final { return text(); }
+    virtual ByteString highlighter_did_request_text() const final { return text(); }
     virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }
     virtual GUI::TextPosition highlighter_did_request_cursor() const final { return m_cursor; }
 
     // ^Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(DeprecatedString const& mime_type) override;
+    virtual void clipboard_content_did_change(ByteString const& mime_type) override;
 
     // ^GUI::AbstractScrollableWidget
     virtual void automatic_scrolling_timer_did_fire() override;
@@ -441,7 +441,7 @@ private:
 
     RefPtr<TextDocument> m_document;
 
-    DeprecatedString m_placeholder { "" };
+    ByteString m_placeholder { "" };
 
     template<typename Callback>
     void for_each_visual_line(size_t line_index, Callback) const;

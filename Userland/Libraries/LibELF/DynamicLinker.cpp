@@ -36,12 +36,12 @@
 
 namespace ELF {
 
-static HashMap<DeprecatedString, NonnullRefPtr<ELF::DynamicLoader>> s_loaders;
-static DeprecatedString s_main_program_path;
+static HashMap<ByteString, NonnullRefPtr<ELF::DynamicLoader>> s_loaders;
+static ByteString s_main_program_path;
 
 // Dependencies have to always be added after the object that depends on them in `s_global_objects`.
 // This is needed for calling the destructors in the correct order.
-static OrderedHashMap<DeprecatedString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
+static OrderedHashMap<ByteString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
 
 using EntryPointFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
@@ -57,13 +57,13 @@ static size_t s_allocated_tls_block_size = 0;
 static char** s_envp = nullptr;
 static LibCExitFunction s_libc_exit = nullptr;
 static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
-static DeprecatedString s_cwd;
+static ByteString s_cwd;
 
 static bool s_allowed_to_check_environment_variables { false };
 static bool s_do_breakpoint_trap_before_entry { false };
 static StringView s_ld_library_path;
 static StringView s_main_program_pledge_promises;
-static DeprecatedString s_loader_pledge_promises;
+static ByteString s_loader_pledge_promises;
 
 static Result<void, DlErrorMessage> __dlclose(void* handle);
 static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags);
@@ -90,7 +90,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
     return weak_result;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(DeprecatedString const& filepath, int fd)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteString const& filepath, int fd)
 {
     VERIFY(filepath.starts_with('/'));
 
@@ -110,7 +110,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(Deprecat
     return loader;
 }
 
-Optional<DeprecatedString> DynamicLinker::resolve_library(DeprecatedString const& name, DynamicObject const& parent_object)
+Optional<ByteString> DynamicLinker::resolve_library(ByteString const& name, DynamicObject const& parent_object)
 {
     // Absolute and relative (to the current working directory) paths are already considered resolved.
     // However, ensure that the returned path is absolute and canonical, so pass it through LexicalPath.
@@ -135,7 +135,7 @@ Optional<DeprecatedString> DynamicLinker::resolve_library(DeprecatedString const
 
     for (auto const& search_path : search_paths) {
         LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filepath()), ReplaceMode::FirstOnly));
-        DeprecatedString library_name = library_path.append(name).string();
+        ByteString library_name = library_path.append(name).string();
 
         if (access(library_name.characters(), F_OK) == 0) {
             if (!library_name.starts_with('/')) {
@@ -152,24 +152,24 @@ Optional<DeprecatedString> DynamicLinker::resolve_library(DeprecatedString const
     return {};
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(DeprecatedString const& path)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteString const& path)
 {
     VERIFY(path.starts_with('/'));
 
     int fd = open(path.characters(), O_RDONLY);
     if (fd < 0)
-        return DlErrorMessage { DeprecatedString::formatted("Could not open shared library '{}': {}", path, strerror(errno)) };
+        return DlErrorMessage { ByteString::formatted("Could not open shared library '{}': {}", path, strerror(errno)) };
 
     return map_library(path, fd);
 }
 
-static Vector<DeprecatedString> get_dependencies(DeprecatedString const& path)
+static Vector<ByteString> get_dependencies(ByteString const& path)
 {
     VERIFY(path.starts_with('/'));
 
     auto name = LexicalPath::basename(path);
     auto lib = s_loaders.get(path).value();
-    Vector<DeprecatedString> dependencies;
+    Vector<ByteString> dependencies;
 
     lib->for_each_needed_library([&dependencies, &name](auto needed_name) {
         if (name == needed_name)
@@ -179,7 +179,7 @@ static Vector<DeprecatedString> get_dependencies(DeprecatedString const& path)
     return dependencies;
 }
 
-static Result<void, DlErrorMessage> map_dependencies(DeprecatedString const& path)
+static Result<void, DlErrorMessage> map_dependencies(ByteString const& path)
 {
     VERIFY(path.starts_with('/'));
 
@@ -193,7 +193,7 @@ static Result<void, DlErrorMessage> map_dependencies(DeprecatedString const& pat
         auto dependency_path = DynamicLinker::resolve_library(needed_name, parent_object);
 
         if (!dependency_path.has_value())
-            return DlErrorMessage { DeprecatedString::formatted("Could not find required shared library: {}", needed_name) };
+            return DlErrorMessage { ByteString::formatted("Could not find required shared library: {}", needed_name) };
 
         if (!s_loaders.contains(dependency_path.value()) && !s_global_objects.contains(dependency_path.value())) {
             auto loader = TRY(map_library(dependency_path.value()));
@@ -321,7 +321,7 @@ static void initialize_libc(DynamicObject& libc)
 }
 
 template<typename Callback>
-static void for_each_unfinished_dependency_of(DeprecatedString const& path, HashTable<DeprecatedString>& seen_names, Callback callback)
+static void for_each_unfinished_dependency_of(ByteString const& path, HashTable<ByteString>& seen_names, Callback callback)
 {
     VERIFY(path.starts_with('/'));
 
@@ -356,11 +356,11 @@ static void for_each_unfinished_dependency_of(DeprecatedString const& path, Hash
     callback(*s_loaders.get(path).value());
 }
 
-static Vector<NonnullRefPtr<DynamicLoader>> collect_loaders_for_library(DeprecatedString const& path)
+static Vector<NonnullRefPtr<DynamicLoader>> collect_loaders_for_library(ByteString const& path)
 {
     VERIFY(path.starts_with('/'));
 
-    HashTable<DeprecatedString> seen_names;
+    HashTable<ByteString> seen_names;
     Vector<NonnullRefPtr<DynamicLoader>> loaders;
     for_each_unfinished_dependency_of(path, seen_names, [&](auto& loader) {
         loaders.append(loader);
@@ -375,7 +375,7 @@ static void drop_loader_promise(StringView promise_to_drop)
 
     s_loader_pledge_promises = s_loader_pledge_promises.replace(promise_to_drop, ""sv, ReplaceMode::All);
 
-    auto extended_promises = DeprecatedString::formatted("{} {}", s_main_program_pledge_promises, s_loader_pledge_promises);
+    auto extended_promises = ByteString::formatted("{} {}", s_main_program_pledge_promises, s_loader_pledge_promises);
     Syscall::SC_pledge_params params {
         { extended_promises.characters(), extended_promises.length() },
         { nullptr, 0 },
@@ -387,7 +387,7 @@ static void drop_loader_promise(StringView promise_to_drop)
     }
 }
 
-static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& path, int flags)
+static Result<void, DlErrorMessage> link_main_library(ByteString const& path, int flags)
 {
     VERIFY(path.starts_with('/'));
 
@@ -400,7 +400,7 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
     for (auto& loader : loaders) {
         bool success = loader->link(flags);
         if (!success) {
-            return DlErrorMessage { DeprecatedString::formatted("Failed to link library {}", loader->filepath()) };
+            return DlErrorMessage { ByteString::formatted("Failed to link library {}", loader->filepath()) };
         }
     }
 
@@ -503,7 +503,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
     auto library_path = (filename ? DynamicLinker::resolve_library(filename, parent_object) : s_main_program_path);
 
     if (!library_path.has_value())
-        return DlErrorMessage { DeprecatedString::formatted("Could not find required shared library: {}", filename) };
+        return DlErrorMessage { ByteString::formatted("Could not find required shared library: {}", filename) };
 
     auto existing_elf_object = s_global_objects.get(library_path.value());
     if (existing_elf_object.has_value()) {
@@ -552,7 +552,7 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
     }
 
     if (!symbol.has_value())
-        return DlErrorMessage { DeprecatedString::formatted("Symbol {} not found", symbol_name_view) };
+        return DlErrorMessage { ByteString::formatted("Symbol {} not found", symbol_name_view) };
 
     if (symbol.value().type == STT_GNU_IFUNC)
         return (void*)reinterpret_cast<DynamicObject::IfuncResolver>(symbol.value().address.as_ptr())();
@@ -656,7 +656,7 @@ static void read_environment_variables()
     }
 }
 
-void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int main_program_fd, bool is_secure, int argc, char** argv, char** envp)
+void ELF::DynamicLinker::linker_main(ByteString&& main_program_path, int main_program_fd, bool is_secure, int argc, char** argv, char** envp)
 {
     VERIFY(main_program_path.starts_with('/'));
 

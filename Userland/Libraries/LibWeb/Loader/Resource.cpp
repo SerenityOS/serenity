@@ -54,7 +54,7 @@ void Resource::for_each_client(Function<void(ResourceClient&)> callback)
     }
 }
 
-static Optional<DeprecatedString> encoding_from_content_type(DeprecatedString const& content_type)
+static Optional<ByteString> encoding_from_content_type(ByteString const& content_type)
 {
     auto offset = content_type.find("charset="sv);
     if (offset.has_value()) {
@@ -69,7 +69,7 @@ static Optional<DeprecatedString> encoding_from_content_type(DeprecatedString co
     return {};
 }
 
-static DeprecatedString mime_type_from_content_type(DeprecatedString const& content_type)
+static ByteString mime_type_from_content_type(ByteString const& content_type)
 {
     auto offset = content_type.find(';');
     if (offset.has_value())
@@ -83,7 +83,7 @@ static bool is_valid_encoding(StringView encoding)
     return TextCodec::decoder_for(encoding).has_value();
 }
 
-void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code)
+void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code)
 {
     VERIFY(m_state == State::Pending);
     // FIXME: Handle OOM failure.
@@ -125,7 +125,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<Depre
     });
 }
 
-void Resource::did_fail(Badge<ResourceLoader>, DeprecatedString const& error, Optional<u32> status_code)
+void Resource::did_fail(Badge<ResourceLoader>, ByteString const& error, Optional<u32> status_code)
 {
     m_error = error;
     m_status_code = move(status_code);

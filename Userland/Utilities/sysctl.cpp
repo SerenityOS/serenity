@@ -12,9 +12,9 @@
 
 static bool s_set_variable = false;
 
-static Optional<DeprecatedString> get_variable(StringView name)
+static Optional<ByteString> get_variable(StringView name)
 {
-    auto path = DeprecatedString::formatted("/sys/kernel/conf/{}", name);
+    auto path = ByteString::formatted("/sys/kernel/conf/{}", name);
     auto file = Core::File::open(path, Core::File::OpenMode::Read);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());
@@ -25,7 +25,7 @@ static Optional<DeprecatedString> get_variable(StringView name)
         warnln("Failed to read {}: {}", path, buffer.error());
         return {};
     }
-    return DeprecatedString { (char const*)buffer.value().data(), buffer.value().size(), Chomp };
+    return ByteString { (char const*)buffer.value().data(), buffer.value().size(), Chomp };
 }
 
 static bool read_variable(StringView name)
@@ -42,7 +42,7 @@ static bool write_variable(StringView name, StringView value)
     auto old_value = get_variable(name);
     if (!old_value.has_value())
         return false;
-    auto path = DeprecatedString::formatted("/sys/kernel/conf/{}", name);
+    auto path = ByteString::formatted("/sys/kernel/conf/{}", name);
     auto file = Core::File::open(path, Core::File::OpenMode::Write);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());

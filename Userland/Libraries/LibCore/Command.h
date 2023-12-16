@@ -25,8 +25,8 @@ struct CommandResult {
     ByteBuffer error;
 };
 
-ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<DeprecatedString> const& arguments, Optional<LexicalPath> chdir);
-ErrorOr<CommandResult> command(DeprecatedString const& command_string, Optional<LexicalPath> chdir);
+ErrorOr<CommandResult> command(ByteString const& program, Vector<ByteString> const& arguments, Optional<LexicalPath> chdir);
+ErrorOr<CommandResult> command(ByteString const& command_string, Optional<LexicalPath> chdir);
 
 class Command {
 public:
@@ -41,7 +41,7 @@ public:
 
     ErrorOr<void> write(StringView input);
 
-    ErrorOr<void> write_lines(Span<DeprecatedString> lines);
+    ErrorOr<void> write_lines(Span<ByteString> lines);
 
     ErrorOr<ProcessOutputs> read_all();
 

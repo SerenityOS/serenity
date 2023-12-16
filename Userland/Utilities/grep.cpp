@@ -6,7 +6,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
@@ -46,7 +46,7 @@ void fail(StringView format, Ts... args)
 constexpr StringView ere_special_characters = ".^$*+?()[{\\|"sv;
 constexpr StringView basic_special_characters = ".^$*[\\"sv;
 
-static DeprecatedString escape_characters(StringView string, StringView characters)
+static ByteString escape_characters(StringView string, StringView characters)
 {
     StringBuilder builder;
     for (auto ch : string) {
@@ -55,12 +55,12 @@ static DeprecatedString escape_characters(StringView string, StringView characte
 
         builder.append(ch);
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-static DeprecatedString& hostname()
+static ByteString& hostname()
 {
-    static DeprecatedString s_hostname;
+    static ByteString s_hostname;
     if (s_hostname.is_empty()) {
         auto result = Core::System::gethostname();
         if (result.is_error())
@@ -88,7 +88,7 @@ static void append_formatted_path(StringBuilder& builder, StringView path, Optio
         auto full_path_or_error = FileSystem::real_path(path);
         if (!full_path_or_error.is_error()) {
             auto fullpath = full_path_or_error.release_value();
-            auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string(), {}, hostname());
+            auto url = URL::create_with_file_scheme(fullpath.to_byte_string(), {}, hostname());
             if (has_flag(print_type, PrintType::LineNumbers) && line_number.has_value())
                 url.set_query(MUST(String::formatted("line_number={}", *line_number)));
             builder.appendff("\033]8;;{}\033\\", url.serialize());
@@ -117,14 +117,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    DeprecatedString program_name = AK::LexicalPath::basename(args.strings[0]);
+    ByteString program_name = AK::LexicalPath::basename(args.strings[0]);
 
-    Vector<DeprecatedString> files;
+    Vector<ByteString> files;
 
     bool recursive = (program_name == "rgrep"sv);
     bool use_ere = (program_name == "egrep"sv);
     bool fixed_strings = (program_name == "fgrep"sv);
-    Vector<DeprecatedString> patterns;
+    Vector<ByteString> patterns;
     StringView pattern_file;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
@@ -219,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             // should be ignored.
             if (next_pattern.is_empty() && buffered_file->is_eof())
                 break;
-            patterns.append(next_pattern.to_deprecated_string());
+            patterns.append(next_pattern.to_byte_string());
         }
     }
 
@@ -280,7 +280,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                         auto pre_match_length = match.global_offset - last_printed_char_pos;
                         out(colored_output ? "{}\x1B[32m{}\x1B[0m"sv : "{}{}"sv,
                             pre_match_length > 0 ? StringView(&str[last_printed_char_pos], pre_match_length) : ""sv,
-                            match.view.to_deprecated_string());
+                            match.view.to_byte_string());
                         last_printed_char_pos = match.global_offset + match.view.length();
                     }
                     auto remaining_length = str.length() - last_printed_char_pos;
@@ -328,7 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return {};
         };
 
-        auto add_directory = [&handle_file, &exit_status, user_has_specified_files, suppress_errors](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
+        auto add_directory = [&handle_file, &exit_status, user_has_specified_files, suppress_errors](ByteString base, Optional<ByteString> recursive, auto handle_directory) -> void {
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();

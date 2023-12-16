@@ -12,9 +12,9 @@
 
 struct InboxEntry {
     u32 sequence_number;
-    DeprecatedString date;
-    DeprecatedString from;
-    DeprecatedString subject;
+    ByteString date;
+    ByteString from;
+    ByteString subject;
     bool seen;
 };
 

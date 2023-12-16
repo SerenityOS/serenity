@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
     auto clipboard_config = TRY(Core::ConfigFile::open_for_app("ClipboardHistory"));
 
-    auto const default_path = DeprecatedString::formatted("{}/{}", Core::StandardPaths::data_directory(), "Clipboard/ClipboardHistory.json"sv);
+    auto const default_path = ByteString::formatted("{}/{}", Core::StandardPaths::data_directory(), "Clipboard/ClipboardHistory.json"sv);
     auto const clipboard_file_path = clipboard_config->read_entry("Clipboard", "ClipboardFilePath", default_path);
     auto const parent_path = LexicalPath(clipboard_file_path);
     TRY(Core::Directory::create(parent_path.dirname(), Core::Directory::CreateDirectories::Yes));

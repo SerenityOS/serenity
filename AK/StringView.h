@@ -50,7 +50,7 @@ public:
 #ifndef KERNEL
     StringView(String const&);
     StringView(FlyString const&);
-    StringView(DeprecatedString const&);
+    StringView(ByteString const&);
     StringView(DeprecatedFlyString const&);
 #endif
 
@@ -58,11 +58,11 @@ public:
 #ifndef KERNEL
     explicit StringView(String&&) = delete;
     explicit StringView(FlyString&&) = delete;
-    explicit StringView(DeprecatedString&&) = delete;
+    explicit StringView(ByteString&&) = delete;
     explicit StringView(DeprecatedFlyString&&) = delete;
 #endif
 
-    template<OneOf<String, FlyString, DeprecatedString, DeprecatedFlyString, ByteBuffer> StringType>
+    template<OneOf<String, FlyString, ByteString, DeprecatedFlyString, ByteBuffer> StringType>
     StringView& operator=(StringType&&) = delete;
 
     [[nodiscard]] constexpr bool is_null() const
@@ -110,9 +110,9 @@ public:
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
 #ifndef KERNEL
-    [[nodiscard]] DeprecatedString to_lowercase_string() const;
-    [[nodiscard]] DeprecatedString to_uppercase_string() const;
-    [[nodiscard]] DeprecatedString to_titlecase_string() const;
+    [[nodiscard]] ByteString to_lowercase_string() const;
+    [[nodiscard]] ByteString to_uppercase_string() const;
+    [[nodiscard]] ByteString to_titlecase_string() const;
 #endif
 
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const
@@ -272,7 +272,7 @@ public:
     }
 
 #ifndef KERNEL
-    bool operator==(DeprecatedString const&) const;
+    bool operator==(ByteString const&) const;
 #endif
 
     [[nodiscard]] constexpr int compare(StringView other) const
@@ -314,7 +314,7 @@ public:
     constexpr bool operator>=(StringView other) const { return compare(other) >= 0; }
 
 #ifndef KERNEL
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ByteString to_byte_string() const;
 #endif
 
     [[nodiscard]] bool is_whitespace() const
@@ -323,7 +323,7 @@ public:
     }
 
 #ifndef KERNEL
-    [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode) const;
+    [[nodiscard]] ByteString replace(StringView needle, StringView replacement, ReplaceMode) const;
 #endif
     [[nodiscard]] size_t count(StringView needle) const
     {
@@ -354,7 +354,7 @@ public:
     }
 
 private:
-    friend class DeprecatedString;
+    friend class ByteString;
     char const* m_characters { nullptr };
     size_t m_length { 0 };
 };

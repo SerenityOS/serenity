@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibTest/TestCase.h>
 #include <errno.h>
 #include <unistd.h>
@@ -18,7 +18,7 @@ TEST_CASE(test_nonexistent_pledge)
 
 TEST_CASE(test_pledge_argument_validation)
 {
-    auto const long_argument = DeprecatedString::repeated('a', 2048);
+    auto const long_argument = ByteString::repeated('a', 2048);
 
     auto res = pledge(long_argument.characters(), "stdio");
     EXPECT_EQ(res, -1);

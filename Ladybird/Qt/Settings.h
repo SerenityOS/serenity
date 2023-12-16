@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/OwnPtr.h>
 #include <LibWebView/SearchEngine.h>
 #include <QPoint>

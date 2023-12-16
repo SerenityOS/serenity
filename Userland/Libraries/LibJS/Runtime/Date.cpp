@@ -719,7 +719,7 @@ double parse_time_zone_offset_string(StringView offset_string)
         auto parsed_fraction = *parse_result->time_zone_utc_offset_fraction;
 
         // b. Let fraction be the string-concatenation of CodePointsToString(parsedFraction) and "000000000".
-        auto fraction = DeprecatedString::formatted("{}000000000", parsed_fraction);
+        auto fraction = ByteString::formatted("{}000000000", parsed_fraction);
 
         // c. Let nanosecondsString be the substring of fraction from 1 to 10.
         auto nanoseconds_string = fraction.substring_view(1, 9);

@@ -152,7 +152,7 @@ public:
         return m_current_basic_block->is_terminated();
     }
 
-    StringTableIndex intern_string(DeprecatedString string)
+    StringTableIndex intern_string(ByteString string)
     {
         return m_string_table->insert(move(string));
     }

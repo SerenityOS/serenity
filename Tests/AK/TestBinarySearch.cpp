@@ -51,20 +51,20 @@ TEST_CASE(array_doubles)
 
 TEST_CASE(vector_strings)
 {
-    Vector<DeprecatedString> strings;
+    Vector<ByteString> strings;
     strings.append("bat");
     strings.append("cat");
     strings.append("dog");
 
-    auto string_compare = [](DeprecatedString const& a, DeprecatedString const& b) -> int {
+    auto string_compare = [](ByteString const& a, ByteString const& b) -> int {
         return strcmp(a.characters(), b.characters());
     };
-    auto test1 = *binary_search(strings, DeprecatedString("bat"), nullptr, string_compare);
-    auto test2 = *binary_search(strings, DeprecatedString("cat"), nullptr, string_compare);
-    auto test3 = *binary_search(strings, DeprecatedString("dog"), nullptr, string_compare);
-    EXPECT_EQ(test1, DeprecatedString("bat"));
-    EXPECT_EQ(test2, DeprecatedString("cat"));
-    EXPECT_EQ(test3, DeprecatedString("dog"));
+    auto test1 = *binary_search(strings, ByteString("bat"), nullptr, string_compare);
+    auto test2 = *binary_search(strings, ByteString("cat"), nullptr, string_compare);
+    auto test3 = *binary_search(strings, ByteString("dog"), nullptr, string_compare);
+    EXPECT_EQ(test1, ByteString("bat"));
+    EXPECT_EQ(test2, ByteString("cat"));
+    EXPECT_EQ(test3, ByteString("dog"));
 }
 
 TEST_CASE(single_element)

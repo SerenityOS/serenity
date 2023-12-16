@@ -27,22 +27,22 @@
 
 namespace Taskbar {
 
-static DeprecatedString sanitize_name(DeprecatedString const& name)
+static ByteString sanitize_name(ByteString const& name)
 {
     return name.replace(" "sv, ""sv).replace("="sv, ""sv);
 }
 
-static DeprecatedString entry_to_config_string(size_t index, NonnullOwnPtr<QuickLaunchEntry> const& entry)
+static ByteString entry_to_config_string(size_t index, NonnullOwnPtr<QuickLaunchEntry> const& entry)
 {
-    return DeprecatedString::formatted("{}:{}", index, entry->path());
+    return ByteString::formatted("{}:{}", index, entry->path());
 }
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
 {
     if (path.ends_with(".af"sv)) {
-        auto af_path = path.to_deprecated_string();
+        auto af_path = path.to_byte_string();
         if (!path.starts_with('/'))
-            af_path = DeprecatedString::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, path);
+            af_path = ByteString::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, path);
 
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
     }
@@ -91,7 +91,7 @@ GUI::Icon QuickLaunchEntryExecutable::icon() const
     return GUI::FileIconProvider::icon_for_executable(m_path);
 }
 
-DeprecatedString QuickLaunchEntryExecutable::name() const
+ByteString QuickLaunchEntryExecutable::name() const
 {
     return LexicalPath { m_path }.basename();
 }
@@ -128,11 +128,11 @@ ErrorOr<bool> QuickLaunchWidget::add_from_pid(pid_t pid_to_add)
         if (pid != pid_to_add)
             continue;
 
-        auto executable = process_object.get_deprecated_string("executable"sv);
+        auto executable = process_object.get_byte_string("executable"sv);
         if (!executable.has_value())
             break;
 
-        auto maybe_name = process_object.get_deprecated_string("name"sv);
+        auto maybe_name = process_object.get_byte_string("name"sv);
         if (!maybe_name.has_value())
             break;
 
@@ -184,7 +184,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             if (entry) {
                 auto result = update_entry(entry->name(), entry.release_nonnull());
                 if (result.is_error())
-                    GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to add quick launch entry: {}", result.release_error()));
+                    GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to add quick launch entry: {}", result.release_error()));
             }
         }
     }
@@ -212,7 +212,7 @@ void QuickLaunchWidget::mousemove_event(GUI::MouseEvent& event)
             m_dragging = true;
 
         if (entry->is_hovered())
-            GUI::Application::the()->show_tooltip(String::from_deprecated_string(entry->name()).release_value_but_fixme_should_propagate_errors(), this);
+            GUI::Application::the()->show_tooltip(String::from_byte_string(entry->name()).release_value_but_fixme_should_propagate_errors(), this);
     });
 
     if (m_dragging)
@@ -228,7 +228,7 @@ void QuickLaunchWidget::mouseup_event(GUI::MouseEvent& event)
             auto result = entry->launch();
             if (result.is_error()) {
                 // FIXME: This message box is displayed in a weird position
-                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open quick launch entry: {}", result.release_error()));
+                GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to open quick launch entry: {}", result.release_error()));
             }
         }
 
@@ -330,7 +330,7 @@ void QuickLaunchWidget::load_entries(bool save)
 {
     struct ConfigEntry {
         int index;
-        DeprecatedString path;
+        ByteString path;
     };
 
     Vector<ConfigEntry> config_entries;
@@ -386,7 +386,7 @@ void QuickLaunchWidget::add_entries(Vector<NonnullOwnPtr<QuickLaunchEntry>> entr
     repaint();
 }
 
-ErrorOr<void> QuickLaunchWidget::update_entry(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
+ErrorOr<void> QuickLaunchWidget::update_entry(ByteString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
 {
     auto file_name_to_watch = entry->file_name_to_watch();
     if (!file_name_to_watch.is_empty()) {
@@ -446,7 +446,7 @@ void QuickLaunchWidget::set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry> entr
     m_entries.append(move(entry));
 }
 
-void QuickLaunchWidget::remove_entry(DeprecatedString const& name, bool save)
+void QuickLaunchWidget::remove_entry(ByteString const& name, bool save)
 {
     for (size_t i = 0; i < m_entries.size(); i++) {
         if (m_entries[i]->name() != name)

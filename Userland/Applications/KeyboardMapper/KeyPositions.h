@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 
 struct KeyPosition {
     u32 scancode;
@@ -16,7 +16,7 @@ struct KeyPosition {
     int height;
     bool enabled;
     int map_index;
-    DeprecatedString name;
+    ByteString name;
 };
 
 #define KEY_COUNT 63

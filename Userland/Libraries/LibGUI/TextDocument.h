@@ -84,8 +84,8 @@ public:
 
     virtual void update_views(Badge<TextDocumentLine>) override;
 
-    DeprecatedString text() const;
-    DeprecatedString text_in_range(TextRange const&) const;
+    ByteString text() const;
+    ByteString text_in_range(TextRange const&) const;
 
     Vector<TextRange> find_all(StringView needle, bool regmatch = false, bool match_case = true);
 
@@ -147,7 +147,7 @@ private:
     size_t m_regex_result_match_capture_group_index { 0 };
 
     bool m_regex_needs_update { true };
-    DeprecatedString m_regex_needle;
+    ByteString m_regex_needle;
 };
 
 class TextDocumentUndoCommand : public Command {
@@ -173,33 +173,33 @@ protected:
 
 class InsertTextCommand : public TextDocumentUndoCommand {
 public:
-    InsertTextCommand(TextDocument&, DeprecatedString const&, TextPosition const&);
+    InsertTextCommand(TextDocument&, ByteString const&, TextPosition const&);
     virtual ~InsertTextCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) override;
     virtual void undo() override;
     virtual void redo() override;
     virtual bool merge_with(GUI::Command const&) override;
-    virtual DeprecatedString action_text() const override;
-    DeprecatedString const& text() const { return m_text; }
+    virtual ByteString action_text() const override;
+    ByteString const& text() const { return m_text; }
     TextRange const& range() const { return m_range; }
 
 private:
-    DeprecatedString m_text;
+    ByteString m_text;
     TextRange m_range;
 };
 
 class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
-    RemoveTextCommand(TextDocument&, DeprecatedString const&, TextRange const&, TextPosition const&);
+    RemoveTextCommand(TextDocument&, ByteString const&, TextRange const&, TextPosition const&);
     virtual ~RemoveTextCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
     TextRange const& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
-    virtual DeprecatedString action_text() const override;
+    virtual ByteString action_text() const override;
 
 private:
-    DeprecatedString m_text;
+    ByteString m_text;
     TextRange m_range;
     TextPosition m_original_cursor_position;
 };
@@ -211,35 +211,35 @@ public:
         Below,
     };
 
-    InsertLineCommand(TextDocument&, TextPosition, DeprecatedString&&, InsertPosition);
+    InsertLineCommand(TextDocument&, TextPosition, ByteString&&, InsertPosition);
     virtual ~InsertLineCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
-    virtual DeprecatedString action_text() const override;
+    virtual ByteString action_text() const override;
 
 private:
     size_t compute_line_number() const;
 
     TextPosition m_cursor;
-    DeprecatedString m_text;
+    ByteString m_text;
     InsertPosition m_pos;
 };
 
 class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:
-    ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& new_text, DeprecatedString const& action_text);
+    ReplaceAllTextCommand(GUI::TextDocument& document, ByteString const& new_text, ByteString const& action_text);
     virtual ~ReplaceAllTextCommand() = default;
     void redo() override;
     void undo() override;
     bool merge_with(GUI::Command const&) override;
-    DeprecatedString action_text() const override;
-    DeprecatedString const& text() const { return m_new_text; }
+    ByteString action_text() const override;
+    ByteString const& text() const { return m_new_text; }
 
 private:
-    DeprecatedString m_original_text;
-    DeprecatedString m_new_text;
-    DeprecatedString m_action_text;
+    ByteString m_original_text;
+    ByteString m_new_text;
+    ByteString m_action_text;
 };
 
 class IndentSelection : public TextDocumentUndoCommand {

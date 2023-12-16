@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -76,11 +76,11 @@ template<>
 struct Formatter<JS::PropertyAttributes> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::PropertyAttributes const& property_attributes)
     {
-        Vector<DeprecatedString> parts;
-        parts.append(DeprecatedString::formatted("[[Writable]]: {}", property_attributes.is_writable()));
-        parts.append(DeprecatedString::formatted("[[Enumerable]]: {}", property_attributes.is_enumerable()));
-        parts.append(DeprecatedString::formatted("[[Configurable]]: {}", property_attributes.is_configurable()));
-        return Formatter<StringView>::format(builder, DeprecatedString::formatted("PropertyAttributes {{ {} }}", DeprecatedString::join(", "sv, parts)));
+        Vector<ByteString> parts;
+        parts.append(ByteString::formatted("[[Writable]]: {}", property_attributes.is_writable()));
+        parts.append(ByteString::formatted("[[Enumerable]]: {}", property_attributes.is_enumerable()));
+        parts.append(ByteString::formatted("[[Configurable]]: {}", property_attributes.is_configurable()));
+        return Formatter<StringView>::format(builder, ByteString::formatted("PropertyAttributes {{ {} }}", ByteString::join(", "sv, parts)));
     }
 };
 

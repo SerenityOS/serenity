@@ -583,12 +583,12 @@ public:
         return *m_state;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
-        return DeprecatedString::formatted("[{:#02X}] {}", (int)opcode_id(), name(opcode_id()));
+        return ByteString::formatted("[{:#02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
 
-    virtual DeprecatedString arguments_string() const = 0;
+    virtual ByteString arguments_string() const = 0;
 
     ALWAYS_INLINE ByteCode const& bytecode() const { return *m_bytecode; }
 
@@ -602,7 +602,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Exit; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    DeprecatedString arguments_string() const override { return DeprecatedString::empty(); }
+    ByteString arguments_string() const override { return ByteString::empty(); }
 };
 
 class OpCode_FailForks final : public OpCode {
@@ -610,7 +610,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::FailForks; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    DeprecatedString arguments_string() const override { return DeprecatedString::empty(); }
+    ByteString arguments_string() const override { return ByteString::empty(); }
 };
 
 class OpCode_Save final : public OpCode {
@@ -618,7 +618,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Save; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    DeprecatedString arguments_string() const override { return DeprecatedString::empty(); }
+    ByteString arguments_string() const override { return ByteString::empty(); }
 };
 
 class OpCode_Restore final : public OpCode {
@@ -626,7 +626,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Restore; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    DeprecatedString arguments_string() const override { return DeprecatedString::empty(); }
+    ByteString arguments_string() const override { return ByteString::empty(); }
 };
 
 class OpCode_GoBack final : public OpCode {
@@ -635,7 +635,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::GoBack; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
-    DeprecatedString arguments_string() const override { return DeprecatedString::formatted("count={}", count()); }
+    ByteString arguments_string() const override { return ByteString::formatted("count={}", count()); }
 };
 
 class OpCode_Jump final : public OpCode {
@@ -644,9 +644,9 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Jump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
-        return DeprecatedString::formatted("offset={} [&{}]", offset(), state().instruction_position + size() + offset());
+        return ByteString::formatted("offset={} [&{}]", offset(), state().instruction_position + size() + offset());
     }
 };
 
@@ -656,9 +656,9 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkJump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
-        return DeprecatedString::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
+        return ByteString::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
 };
 
@@ -674,9 +674,9 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkStay; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
-        return DeprecatedString::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
+        return ByteString::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
 };
 
@@ -691,7 +691,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBegin; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    DeprecatedString arguments_string() const override { return DeprecatedString::empty(); }
+    ByteString arguments_string() const override { return ByteString::empty(); }
 };
 
 class OpCode_CheckEnd final : public OpCode {
@@ -699,7 +699,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckEnd; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    DeprecatedString arguments_string() const override { return DeprecatedString::empty(); }
+    ByteString arguments_string() const override { return ByteString::empty(); }
 };
 
 class OpCode_CheckBoundary final : public OpCode {
@@ -709,7 +709,7 @@ public:
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
     ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
-    DeprecatedString arguments_string() const override { return DeprecatedString::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
+    ByteString arguments_string() const override { return ByteString::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
 };
 
 class OpCode_ClearCaptureGroup final : public OpCode {
@@ -718,7 +718,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    DeprecatedString arguments_string() const override { return DeprecatedString::formatted("id={}", id()); }
+    ByteString arguments_string() const override { return ByteString::formatted("id={}", id()); }
 };
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
@@ -727,7 +727,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    DeprecatedString arguments_string() const override { return DeprecatedString::formatted("id={}", id()); }
+    ByteString arguments_string() const override { return ByteString::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightCaptureGroup final : public OpCode {
@@ -736,7 +736,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    DeprecatedString arguments_string() const override { return DeprecatedString::formatted("id={}", id()); }
+    ByteString arguments_string() const override { return ByteString::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightNamedCaptureGroup final : public OpCode {
@@ -747,9 +747,9 @@ public:
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
     ALWAYS_INLINE size_t length() const { return argument(1); }
     ALWAYS_INLINE size_t id() const { return argument(2); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
-        return DeprecatedString::formatted("name={}, length={}", name(), length());
+        return ByteString::formatted("name={}, length={}", name(), length());
     }
 };
 
@@ -760,8 +760,8 @@ public:
     ALWAYS_INLINE size_t size() const override { return arguments_size() + 3; }
     ALWAYS_INLINE size_t arguments_count() const { return argument(0); }
     ALWAYS_INLINE size_t arguments_size() const { return argument(1); }
-    DeprecatedString arguments_string() const override;
-    Vector<DeprecatedString> variable_arguments_to_deprecated_string(Optional<MatchInput const&> input = {}) const;
+    ByteString arguments_string() const override;
+    Vector<ByteString> variable_arguments_to_byte_string(Optional<MatchInput const&> input = {}) const;
     Vector<CompareTypeAndValuePair> flat_compares() const;
     static bool matches_character_class(CharClass, u32, bool insensitive);
 
@@ -784,10 +784,10 @@ public:
     ALWAYS_INLINE size_t offset() const { return argument(0); }
     ALWAYS_INLINE u64 count() const { return argument(1); }
     ALWAYS_INLINE size_t id() const { return argument(2); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
         auto reps = id() < state().repetition_marks.size() ? state().repetition_marks.at(id()) : 0;
-        return DeprecatedString::formatted("offset={} count={} id={} rep={}, sp: {}", offset(), count() + 1, id(), reps + 1, state().string_position);
+        return ByteString::formatted("offset={} count={} id={} rep={}, sp: {}", offset(), count() + 1, id(), reps + 1, state().string_position);
     }
 };
 
@@ -797,10 +797,10 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ResetRepeat; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
         auto reps = id() < state().repetition_marks.size() ? state().repetition_marks.at(id()) : 0;
-        return DeprecatedString::formatted("id={} rep={}", id(), reps + 1);
+        return ByteString::formatted("id={} rep={}", id(), reps + 1);
     }
 };
 
@@ -810,7 +810,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Checkpoint; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    DeprecatedString arguments_string() const override { return DeprecatedString::formatted("id={}", id()); }
+    ByteString arguments_string() const override { return ByteString::formatted("id={}", id()); }
 };
 
 class OpCode_JumpNonEmpty final : public OpCode {
@@ -821,9 +821,9 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     ALWAYS_INLINE ssize_t checkpoint() const { return argument(1); }
     ALWAYS_INLINE OpCodeId form() const { return (OpCodeId)argument(2); }
-    DeprecatedString arguments_string() const override
+    ByteString arguments_string() const override
     {
-        return DeprecatedString::formatted("{} offset={} [&{}], cp={}",
+        return ByteString::formatted("{} offset={} [&{}], cp={}",
             opcode_id_name(form()),
             offset(), state().instruction_position + size() + offset(),
             checkpoint());

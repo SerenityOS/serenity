@@ -377,7 +377,7 @@ ErrorOr<void> initialize_main_thread_vm()
 
             // 2. Let url be the result of resolving a module specifier given moduleScript and specifier.
             auto url = TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
-                return HTML::resolve_module_specifier(*module_script, specifier_string.to_deprecated_string());
+                return HTML::resolve_module_specifier(*module_script, specifier_string.to_byte_string());
             }));
 
             // 3. Return the serialization of url.
@@ -399,7 +399,7 @@ ErrorOr<void> initialize_main_thread_vm()
     // FIXME: Implement 8.1.5.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
 
     // 8.1.6.5.2 HostGetSupportedImportAttributes(), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetsupportedimportassertions
-    s_main_thread_vm->host_get_supported_import_attributes = []() -> Vector<DeprecatedString> {
+    s_main_thread_vm->host_get_supported_import_attributes = []() -> Vector<ByteString> {
         // 1. Return « "type" ».
         return { "type"sv };
     };
@@ -487,7 +487,7 @@ ErrorOr<void> initialize_main_thread_vm()
             auto completion = [&]() -> JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>> {
                 // 2. If moduleScript is null, then set completion to Completion Record { [[Type]]: throw, [[Value]]: a new TypeError, [[Target]]: empty }.
                 if (!module_script) {
-                    return JS::throw_completion(JS::TypeError::create(realm, DeprecatedString::formatted("Loading imported module '{}' failed.", module_request.module_specifier)));
+                    return JS::throw_completion(JS::TypeError::create(realm, ByteString::formatted("Loading imported module '{}' failed.", module_request.module_specifier)));
                 }
                 // 3. Otherwise, if moduleScript's parse error is not null, then:
                 else if (!module_script->parse_error().is_null()) {

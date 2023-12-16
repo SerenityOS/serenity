@@ -12,13 +12,13 @@
 
 constexpr StringView TESTS_ROOT_DIR = "/home/anon/Tests/cpp-tests/preprocessor"sv;
 
-static DeprecatedString read_all(DeprecatedString const& path)
+static ByteString read_all(ByteString const& path)
 {
     auto file = MUST(Core::File::open(path, Core::File::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     MUST(file->read_until_filled(content.bytes()));
-    return DeprecatedString { content.bytes() };
+    return ByteString { content.bytes() };
 }
 
 TEST_CASE(test_regression)
@@ -31,7 +31,7 @@ TEST_CASE(test_regression)
         outln("Checking {}...", path.basename());
         auto file_path = path.string();
 
-        auto ast_file_path = DeprecatedString::formatted("{}.txt", file_path.substring(0, file_path.length() - sizeof(".cpp") + 1));
+        auto ast_file_path = ByteString::formatted("{}.txt", file_path.substring(0, file_path.length() - sizeof(".cpp") + 1));
 
         auto source = read_all(file_path);
         auto target = read_all(ast_file_path);
@@ -44,7 +44,7 @@ TEST_CASE(test_regression)
 
         EXPECT_EQ(tokens.size(), target_lines.size());
         for (size_t i = 0; i < tokens.size(); ++i) {
-            EXPECT_EQ(tokens[i].to_deprecated_string(), target_lines[i]);
+            EXPECT_EQ(tokens[i].to_byte_string(), target_lines[i]);
         }
         return IterationDecision::Continue;
     }));

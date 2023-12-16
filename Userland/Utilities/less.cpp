@@ -53,7 +53,7 @@ static void teardown_tty()
         out("\e[?1047l\e[u");
 }
 
-static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width)
+static Vector<StringView> wrap_line(ByteString const& string, size_t width)
 {
     auto const result = Line::Editor::actual_rendered_string_metrics(string, {}, width);
 
@@ -286,7 +286,7 @@ public:
         if (line[size - 1] == '\n')
             --size;
 
-        m_lines.append(DeprecatedString(line, size));
+        m_lines.append(ByteString(line, size));
         return true;
     }
 
@@ -464,7 +464,7 @@ private:
     }
 
     // FIXME: Don't save scrollback when emulating more.
-    Vector<DeprecatedString> m_lines;
+    Vector<ByteString> m_lines;
 
     size_t m_line { 0 };
     size_t m_subline { 0 };
@@ -479,22 +479,22 @@ private:
     size_t m_width { 0 };
     size_t m_height { 0 };
 
-    DeprecatedString m_filename;
-    DeprecatedString m_prompt;
+    ByteString m_filename;
+    ByteString m_prompt;
 
     bool m_show_line_numbers { false };
 };
 
 /// Return the next key sequence, or nothing if a signal is received while waiting
 /// to read the next sequence.
-static Optional<DeprecatedString> get_key_sequence()
+static Optional<ByteString> get_key_sequence()
 {
     // We need a buffer to handle ansi sequences.
     char buff[8];
 
     ssize_t n = read(STDOUT_FILENO, buff, sizeof(buff));
     if (n > 0) {
-        return DeprecatedString(buff, n);
+        return ByteString(buff, n);
     } else {
         return {};
     }
@@ -523,8 +523,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath tty sigaction"));
 
     // FIXME: Make these into StringViews once we stop using fopen below.
-    DeprecatedString filename = "-";
-    DeprecatedString prompt = "?f%f :.(line %l)?e (END):.";
+    ByteString filename = "-";
+    ByteString prompt = "?f%f :.(line %l)?e (END):.";
     bool dont_switch_buffer = false;
     bool quit_at_eof = false;
     bool quit_if_one_screen = false;
@@ -545,7 +545,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     FILE* file;
-    if (DeprecatedString("-") == filename) {
+    if (ByteString("-") == filename) {
         file = stdin;
     } else if ((file = fopen(filename.characters(), "r")) == nullptr) {
         perror("fopen");
@@ -604,7 +604,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pager.init();
 
     StringBuilder modifier_buffer = StringBuilder(10);
-    for (Optional<DeprecatedString> sequence_value;; sequence_value = get_key_sequence()) {
+    for (Optional<ByteString> sequence_value;; sequence_value = get_key_sequence()) {
         if (g_resized) {
             g_resized = false;
             pager.resize();
@@ -624,28 +624,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else if (sequence == "j" || sequence == "\e[B" || sequence == "\n") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.down_n(modifier_buffer.to_deprecated_string().to_uint().value_or(1));
+                        pager.down_n(modifier_buffer.to_byte_string().to_uint().value_or(1));
                     else
                         pager.down();
                 }
             } else if (sequence == "k" || sequence == "\e[A") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.up_n(modifier_buffer.to_deprecated_string().to_uint().value_or(1));
+                        pager.up_n(modifier_buffer.to_byte_string().to_uint().value_or(1));
                     else
                         pager.up();
                 }
             } else if (sequence == "g") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.go_to_line(modifier_buffer.to_deprecated_string().to_uint().value());
+                        pager.go_to_line(modifier_buffer.to_byte_string().to_uint().value());
                     else
                         pager.top();
                 }
             } else if (sequence == "G") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.go_to_line(modifier_buffer.to_deprecated_string().to_uint().value());
+                        pager.go_to_line(modifier_buffer.to_byte_string().to_uint().value());
                     else
                         pager.bottom();
                 }

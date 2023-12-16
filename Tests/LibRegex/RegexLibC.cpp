@@ -13,7 +13,7 @@
 
 TEST_CASE(catch_all)
 {
-    DeprecatedString pattern = "^.*$";
+    ByteString pattern = "^.*$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -24,7 +24,7 @@ TEST_CASE(catch_all)
 
 TEST_CASE(simple_start)
 {
-    DeprecatedString pattern = "^hello friends";
+    ByteString pattern = "^hello friends";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -37,7 +37,7 @@ TEST_CASE(simple_start)
 
 TEST_CASE(simple_end)
 {
-    DeprecatedString pattern = ".*hello\\.\\.\\. there$";
+    ByteString pattern = ".*hello\\.\\.\\. there$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -51,7 +51,7 @@ TEST_CASE(simple_end)
 
 TEST_CASE(simple_period)
 {
-    DeprecatedString pattern = "hello.";
+    ByteString pattern = "hello.";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -65,7 +65,7 @@ TEST_CASE(simple_period)
 
 TEST_CASE(simple_period_end)
 {
-    DeprecatedString pattern = "hello.$";
+    ByteString pattern = "hello.$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB), REG_NOERR);
@@ -79,7 +79,7 @@ TEST_CASE(simple_period_end)
 
 TEST_CASE(simple_escaped)
 {
-    DeprecatedString pattern = "hello\\.";
+    ByteString pattern = "hello\\.";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -91,7 +91,7 @@ TEST_CASE(simple_escaped)
 
 TEST_CASE(simple_period2_end)
 {
-    DeprecatedString pattern = ".*hi... there$";
+    ByteString pattern = ".*hi... there$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -106,7 +106,7 @@ TEST_CASE(simple_period2_end)
 
 TEST_CASE(simple_plus)
 {
-    DeprecatedString pattern = "a+";
+    ByteString pattern = "a+";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB), REG_NOERR);
@@ -120,7 +120,7 @@ TEST_CASE(simple_plus)
 
 TEST_CASE(simple_questionmark)
 {
-    DeprecatedString pattern = "da?d";
+    ByteString pattern = "da?d";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -137,7 +137,7 @@ TEST_CASE(simple_questionmark)
 
 TEST_CASE(simple_questionmark_matchall)
 {
-    DeprecatedString pattern = "da?d";
+    ByteString pattern = "da?d";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -170,12 +170,12 @@ TEST_CASE(simple_questionmark_matchall)
 
 TEST_CASE(character_class)
 {
-    DeprecatedString pattern = "[[:alpha:]]";
+    ByteString pattern = "[[:alpha:]]";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
 
-    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOMATCH);
     EXPECT_EQ(matches[0].rm_cnt, 0);
@@ -189,12 +189,12 @@ TEST_CASE(character_class)
 
 TEST_CASE(character_class2)
 {
-    DeprecatedString pattern = "[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]";
+    ByteString pattern = "[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]";
     regex_t regex;
     static constexpr int num_matches { 9 };
     regmatch_t matches[num_matches];
 
-    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    ByteString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NEWLINE), REG_NOERR);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOERR);
 
@@ -204,7 +204,7 @@ TEST_CASE(character_class2)
         fprintf(stderr, "Matches[%i].rm_so: %li, .rm_eo: %li .rm_cnt: %li: ", i, matches[i].rm_so, matches[i].rm_eo, matches[i].rm_cnt);
         fprintf(stderr, "haystack length: %lu\n", haystack.length());
         if (matches[i].rm_so != -1)
-            fprintf(stderr, "%s\n", haystack.substring_view(matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so).to_deprecated_string().characters());
+            fprintf(stderr, "%s\n", haystack.substring_view(matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so).to_byte_string().characters());
     }
 #endif
 
@@ -235,7 +235,7 @@ TEST_CASE(character_class2)
 
 TEST_CASE(escaped_char_questionmark)
 {
-    DeprecatedString pattern = "This\\.?And\\.?That";
+    ByteString pattern = "This\\.?And\\.?That";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -249,7 +249,7 @@ TEST_CASE(escaped_char_questionmark)
 
 TEST_CASE(char_qualifier_asterisk)
 {
-    DeprecatedString pattern = "regex*";
+    ByteString pattern = "regex*";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -263,7 +263,7 @@ TEST_CASE(char_qualifier_asterisk)
 
 TEST_CASE(char_utf8)
 {
-    DeprecatedString pattern = "😀";
+    ByteString pattern = "😀";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -277,7 +277,7 @@ TEST_CASE(char_utf8)
 
 TEST_CASE(parens)
 {
-    DeprecatedString pattern = "test(hello)test";
+    ByteString pattern = "test(hello)test";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -297,7 +297,7 @@ TEST_CASE(parens)
 
 TEST_CASE(parser_error_parens)
 {
-    DeprecatedString pattern = "test()test";
+    ByteString pattern = "test()test";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -310,7 +310,7 @@ TEST_CASE(parser_error_parens)
 
 TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 {
-    DeprecatedString pattern;
+    ByteString pattern;
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -325,7 +325,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         // First in ere
         b.clear();
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -334,7 +334,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append("a|"sv);
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -343,7 +343,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('^');
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -352,7 +352,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('$');
         b.append(ch);
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -362,7 +362,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.append('(');
         b.append(ch);
         b.append(')');
-        pattern = b.to_deprecated_string();
+        pattern = b.to_byte_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -371,7 +371,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 
 TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
 {
-    DeprecatedString pattern;
+    ByteString pattern;
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -403,7 +403,7 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
 
 TEST_CASE(parens_qualifier_questionmark)
 {
-    DeprecatedString pattern = "test(hello)?test";
+    ByteString pattern = "test(hello)?test";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -433,7 +433,7 @@ TEST_CASE(parens_qualifier_questionmark)
 
 TEST_CASE(parens_qualifier_asterisk)
 {
-    DeprecatedString pattern = "test(hello)*test";
+    ByteString pattern = "test(hello)*test";
     regex_t regex;
     static constexpr int num_matches { 6 };
     regmatch_t matches[num_matches];
@@ -479,7 +479,7 @@ TEST_CASE(parens_qualifier_asterisk)
 
 TEST_CASE(parens_qualifier_asterisk_2)
 {
-    DeprecatedString pattern = "test(.*)test";
+    ByteString pattern = "test(.*)test";
     regex_t regex;
     static constexpr int num_matches { 6 };
     regmatch_t matches[num_matches];
@@ -523,7 +523,7 @@ TEST_CASE(parens_qualifier_asterisk_2)
 
 TEST_CASE(mulit_parens_qualifier_too_less_result_values)
 {
-    DeprecatedString pattern = "test(a)?(b)?(c)?test";
+    ByteString pattern = "test(a)?(b)?(c)?test";
     regex_t regex;
     static constexpr int num_matches { 4 };
     regmatch_t matches[num_matches];
@@ -587,7 +587,7 @@ TEST_CASE(mulit_parens_qualifier_too_less_result_values)
 
 TEST_CASE(multi_parens_qualifier_questionmark)
 {
-    DeprecatedString pattern = "test(a)?(b)?(c)?test";
+    ByteString pattern = "test(a)?(b)?(c)?test";
     regex_t regex;
     static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
@@ -651,7 +651,7 @@ TEST_CASE(multi_parens_qualifier_questionmark)
 
 TEST_CASE(simple_alternative)
 {
-    DeprecatedString pattern = "test|hello|friends";
+    ByteString pattern = "test|hello|friends";
     regex_t regex;
     static constexpr int num_matches { 1 };
     regmatch_t matches[num_matches];
@@ -678,7 +678,7 @@ TEST_CASE(simple_alternative)
 
 TEST_CASE(alternative_match_groups)
 {
-    DeprecatedString pattern = "test(a)?(b)?|hello ?(dear|my)? friends";
+    ByteString pattern = "test(a)?(b)?|hello ?(dear|my)? friends";
     regex_t regex;
     static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
@@ -784,7 +784,7 @@ TEST_CASE(alternative_match_groups)
 
 TEST_CASE(parens_qualifier_exact)
 {
-    DeprecatedString pattern = "(hello){3}";
+    ByteString pattern = "(hello){3}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -831,7 +831,7 @@ TEST_CASE(parens_qualifier_exact)
 
 TEST_CASE(parens_qualifier_minimum)
 {
-    DeprecatedString pattern = "(hello){3,}";
+    ByteString pattern = "(hello){3,}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -889,7 +889,7 @@ TEST_CASE(parens_qualifier_minimum)
 
 TEST_CASE(parens_qualifier_maximum)
 {
-    DeprecatedString pattern = "(hello){2,3}";
+    ByteString pattern = "(hello){2,3}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -946,7 +946,7 @@ TEST_CASE(parens_qualifier_maximum)
 
 TEST_CASE(char_qualifier_min_max)
 {
-    DeprecatedString pattern = "c{3,30}";
+    ByteString pattern = "c{3,30}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -966,7 +966,7 @@ TEST_CASE(char_qualifier_min_max)
 
 TEST_CASE(simple_bracket_chars)
 {
-    DeprecatedString pattern = "[abc]";
+    ByteString pattern = "[abc]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -980,7 +980,7 @@ TEST_CASE(simple_bracket_chars)
 
 TEST_CASE(simple_bracket_chars_inverse)
 {
-    DeprecatedString pattern = "[^abc]";
+    ByteString pattern = "[^abc]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -994,7 +994,7 @@ TEST_CASE(simple_bracket_chars_inverse)
 
 TEST_CASE(simple_bracket_chars_range)
 {
-    DeprecatedString pattern = "[a-d]";
+    ByteString pattern = "[a-d]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1008,7 +1008,7 @@ TEST_CASE(simple_bracket_chars_range)
 
 TEST_CASE(simple_bracket_chars_range_inverse)
 {
-    DeprecatedString pattern = "[^a-df-z]";
+    ByteString pattern = "[^a-df-z]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1024,7 +1024,7 @@ TEST_CASE(simple_bracket_chars_range_inverse)
 
 TEST_CASE(bracket_character_class_uuid)
 {
-    DeprecatedString pattern = "^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{12})$";
+    ByteString pattern = "^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{12})$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1036,7 +1036,7 @@ TEST_CASE(bracket_character_class_uuid)
 
 TEST_CASE(simple_bracket_character_class_inverse)
 {
-    DeprecatedString pattern = "[^[:digit:]]";
+    ByteString pattern = "[^[:digit:]]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1050,7 +1050,7 @@ TEST_CASE(simple_bracket_character_class_inverse)
 
 TEST_CASE(email_address)
 {
-    DeprecatedString pattern = "^[A-Z0-9a-z._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$";
+    ByteString pattern = "^[A-Z0-9a-z._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1062,7 +1062,7 @@ TEST_CASE(email_address)
 
 TEST_CASE(error_message)
 {
-    DeprecatedString pattern = "^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$";
+    ByteString pattern = "^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EBRACK);
@@ -1070,7 +1070,7 @@ TEST_CASE(error_message)
     char buf[1024];
     size_t buflen = 1024;
     auto len = regerror(0, &regex, buf, buflen);
-    DeprecatedString expected = "Error during parsing of regular expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n             ^---- [ ] imbalance.";
+    ByteString expected = "Error during parsing of regular expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n             ^---- [ ] imbalance.";
     for (size_t i = 0; i < len; ++i) {
         EXPECT_EQ(buf[i], expected[i]);
     }
@@ -1080,7 +1080,7 @@ TEST_CASE(error_message)
 
 TEST_CASE(simple_ignorecase)
 {
-    DeprecatedString pattern = "^hello friends";
+    ByteString pattern = "^hello friends";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
@@ -1098,8 +1098,8 @@ TEST_CASE(simple_ignorecase)
 
 TEST_CASE(simple_notbol_noteol)
 {
-    DeprecatedString pattern = "^hello friends$";
-    DeprecatedString pattern2 = "hello friends";
+    ByteString pattern = "^hello friends$";
+    ByteString pattern2 = "hello friends";
     regex_t regex, regex2;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);

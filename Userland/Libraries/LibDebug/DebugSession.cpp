@@ -17,7 +17,7 @@
 
 namespace Debug {
 
-DebugSession::DebugSession(pid_t pid, DeprecatedString source_root, Function<void(float)> on_initialization_progress)
+DebugSession::DebugSession(pid_t pid, ByteString source_root, Function<void(float)> on_initialization_progress)
     : m_debuggee_pid(pid)
     , m_source_root(source_root)
     , m_on_initialization_progress(move(on_initialization_progress))
@@ -53,8 +53,8 @@ void DebugSession::for_each_loaded_library(Function<IterationDecision(LoadedLibr
     }
 }
 
-OwnPtr<DebugSession> DebugSession::exec_and_attach(DeprecatedString const& command,
-    DeprecatedString source_root,
+OwnPtr<DebugSession> DebugSession::exec_and_attach(ByteString const& command,
+    ByteString source_root,
     Function<ErrorOr<void>()> setup_child,
     Function<void(float)> on_initialization_progress)
 {
@@ -134,7 +134,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(DeprecatedString const& comma
     return debug_session;
 }
 
-OwnPtr<DebugSession> DebugSession::attach(pid_t pid, DeprecatedString source_root, Function<void(float)> on_initialization_progress)
+OwnPtr<DebugSession> DebugSession::attach(pid_t pid, ByteString source_root, Function<void(float)> on_initialization_progress)
 {
     if (ptrace(PT_ATTACH, pid, 0, 0) < 0) {
         perror("PT_ATTACH");
@@ -415,7 +415,7 @@ void DebugSession::detach()
     continue_debuggee();
 }
 
-Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(DeprecatedString const& symbol_name)
+Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(ByteString const& symbol_name)
 {
     Optional<InsertBreakpointAtSymbolResult> result;
     for_each_loaded_library([this, symbol_name, &result](auto& lib) {
@@ -438,7 +438,7 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
     return result;
 }
 
-Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(DeprecatedString const& filename, size_t line_number)
+Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(ByteString const& filename, size_t line_number)
 {
     auto address_and_source_position = get_address_from_source_position(filename, line_number);
     if (!address_and_source_position.has_value())
@@ -466,17 +466,17 @@ ErrorOr<void> DebugSession::update_loaded_libs()
     auto const& vm_entries = json.as_array();
     Regex<PosixExtended> segment_name_re("(.+): ");
 
-    auto get_path_to_object = [&segment_name_re](DeprecatedString const& vm_name) -> Optional<DeprecatedString> {
+    auto get_path_to_object = [&segment_name_re](ByteString const& vm_name) -> Optional<ByteString> {
         if (vm_name == "/usr/lib/Loader.so")
             return vm_name;
         RegexResult result;
         auto rc = segment_name_re.search(vm_name, result);
         if (!rc)
             return {};
-        auto lib_name = result.capture_group_matches.at(0).at(0).view.string_view().to_deprecated_string();
+        auto lib_name = result.capture_group_matches.at(0).at(0).view.string_view().to_byte_string();
         if (lib_name.starts_with('/'))
             return lib_name;
-        return DeprecatedString::formatted("/usr/lib/{}", lib_name);
+        return ByteString::formatted("/usr/lib/{}", lib_name);
     };
 
     ScopeGuard progress_guard([this]() {
@@ -492,13 +492,13 @@ ErrorOr<void> DebugSession::update_loaded_libs()
             m_on_initialization_progress(vm_entry_index / static_cast<float>(vm_entries.size()));
 
         // TODO: check that region is executable
-        auto vm_name = entry.as_object().get_deprecated_string("name"sv).value();
+        auto vm_name = entry.as_object().get_byte_string("name"sv).value();
 
         auto object_path = get_path_to_object(vm_name);
         if (!object_path.has_value())
             return IterationDecision::Continue;
 
-        DeprecatedString lib_name = object_path.value();
+        ByteString lib_name = object_path.value();
         if (FileSystem::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 

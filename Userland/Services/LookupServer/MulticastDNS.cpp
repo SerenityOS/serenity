@@ -6,7 +6,7 @@
  */
 
 #include "MulticastDNS.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
@@ -28,7 +28,7 @@ MulticastDNS::MulticastDNS(Core::EventReceiver* parent)
     if (gethostname(buffer, sizeof(buffer)) < 0) {
         perror("gethostname");
     } else {
-        m_hostname = DeprecatedString::formatted("{}.local", buffer);
+        m_hostname = ByteString::formatted("{}.local", buffer);
     }
 
     u8 zero = 0;
@@ -92,7 +92,7 @@ void MulticastDNS::announce()
             RecordType::A,
             RecordClass::IN,
             120,
-            DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) },
+            ByteString { (char const*)&raw_addr, sizeof(raw_addr) },
             true,
         };
         response.add_answer(answer);
@@ -133,7 +133,7 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
 
     json_or_error.value().as_array().for_each([&addresses](auto& value) {
         auto if_object = value.as_object();
-        auto address = if_object.get_deprecated_string("ipv4_address"sv).value_or({});
+        auto address = if_object.get_byte_string("ipv4_address"sv).value_or({});
         auto ipv4_address = IPv4Address::from_string(address);
         // Skip unconfigured interfaces.
         if (!ipv4_address.has_value())

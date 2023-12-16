@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibSQL/BTree.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Heap.h>
@@ -15,7 +15,7 @@
 
 namespace SQL {
 
-ErrorOr<NonnullRefPtr<Database>> Database::create(DeprecatedString name)
+ErrorOr<NonnullRefPtr<Database>> Database::create(ByteString name)
 {
     auto heap = TRY(Heap::create(move(name)));
     return adopt_nonnull_ref_or_enomem(new (nothrow) Database(move(heap)));
@@ -96,14 +96,14 @@ ResultOr<void> Database::add_schema(SchemaDef const& schema)
     return {};
 }
 
-Key Database::get_schema_key(DeprecatedString const& schema_name)
+Key Database::get_schema_key(ByteString const& schema_name)
 {
     auto key = SchemaDef::make_key();
     key["schema_name"] = schema_name;
     return key;
 }
 
-ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(DeprecatedString const& schema)
+ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(ByteString const& schema)
 {
     VERIFY(is_open());
 
@@ -139,14 +139,14 @@ ResultOr<void> Database::add_table(TableDef& table)
     return {};
 }
 
-Key Database::get_table_key(DeprecatedString const& schema_name, DeprecatedString const& table_name)
+Key Database::get_table_key(ByteString const& schema_name, ByteString const& table_name)
 {
     auto key = TableDef::make_key(get_schema_key(schema_name));
     key["table_name"] = table_name;
     return key;
 }
 
-ResultOr<NonnullRefPtr<TableDef>> Database::get_table(DeprecatedString const& schema, DeprecatedString const& name)
+ResultOr<NonnullRefPtr<TableDef>> Database::get_table(ByteString const& schema, ByteString const& name)
 {
     VERIFY(is_open());
 
@@ -160,7 +160,7 @@ ResultOr<NonnullRefPtr<TableDef>> Database::get_table(DeprecatedString const& sc
 
     auto table_iterator = m_tables->find(key);
     if (table_iterator.is_end() || (*table_iterator != key))
-        return Result { SQLCommand::Unknown, SQLErrorCode::TableDoesNotExist, DeprecatedString::formatted("{}.{}", schema_name, name) };
+        return Result { SQLCommand::Unknown, SQLErrorCode::TableDoesNotExist, ByteString::formatted("{}.{}", schema_name, name) };
 
     auto schema_def = TRY(get_schema(schema));
     auto table_def = TRY(TableDef::create(schema_def, name));

@@ -12,10 +12,10 @@
 
 namespace SQL::AST {
 
-static DeprecatedString result_column_name(ResultColumn const& column, size_t column_index)
+static ByteString result_column_name(ResultColumn const& column, size_t column_index)
 {
     auto fallback_column_name = [column_index]() {
-        return DeprecatedString::formatted("Column{}", column_index);
+        return ByteString::formatted("Column{}", column_index);
     };
 
     if (auto const& alias = column.column_alias(); !alias.is_empty())
@@ -40,7 +40,7 @@ static DeprecatedString result_column_name(ResultColumn const& column, size_t co
 ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
 {
     Vector<NonnullRefPtr<ResultColumn const>> columns;
-    Vector<DeprecatedString> column_names;
+    Vector<ByteString> column_names;
 
     auto const& result_column_list = this->result_column_list();
     VERIFY(!result_column_list.is_empty());

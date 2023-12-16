@@ -37,11 +37,11 @@ class HackStudioWidget : public GUI::Widget {
     C_OBJECT_ABSTRACT(HackStudioWidget)
 
 public:
-    static ErrorOr<NonnullRefPtr<HackStudioWidget>> create(DeprecatedString path_to_project);
+    static ErrorOr<NonnullRefPtr<HackStudioWidget>> create(ByteString path_to_project);
     virtual ~HackStudioWidget() override;
 
-    bool open_file(DeprecatedString const& filename, size_t line = 0, size_t column = 0);
-    void close_file_in_all_editors(DeprecatedString const& filename);
+    bool open_file(ByteString const& filename, size_t line = 0, size_t column = 0);
+    void close_file_in_all_editors(ByteString const& filename);
 
     void update_actions();
     Project& project();
@@ -55,7 +55,7 @@ public:
     GUI::TabWidget& current_editor_tab_widget();
     GUI::TabWidget const& current_editor_tab_widget() const;
 
-    DeprecatedString const& active_file() const { return m_current_editor_wrapper->filename(); }
+    ByteString const& active_file() const { return m_current_editor_wrapper->filename(); }
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
     Locator& locator()
@@ -68,7 +68,7 @@ public:
         No,
         Yes
     };
-    ContinueDecision warn_unsaved_changes(DeprecatedString const& prompt);
+    ContinueDecision warn_unsaved_changes(ByteString const& prompt);
 
     enum class Mode {
         Code,
@@ -80,7 +80,7 @@ public:
     void for_each_open_file(Function<void(ProjectFile const&)>);
     bool semantic_syntax_highlighting_is_enabled() const;
 
-    static Vector<DeprecatedString> read_recent_projects();
+    static Vector<ByteString> read_recent_projects();
 
     void update_current_editor_title();
     void update_window_title();
@@ -88,11 +88,11 @@ public:
 private:
     static constexpr size_t recent_projects_history_size = 15;
 
-    static DeprecatedString get_full_path_of_serenity_source(DeprecatedString const& file);
-    DeprecatedString get_absolute_path(DeprecatedString const&) const;
-    Vector<DeprecatedString> selected_file_paths() const;
+    static ByteString get_full_path_of_serenity_source(ByteString const& file);
+    ByteString get_absolute_path(ByteString const&) const;
+    Vector<ByteString> selected_file_paths() const;
 
-    void open_project(DeprecatedString const& root_path);
+    void open_project(ByteString const& root_path);
 
     enum class EditMode {
         Text,
@@ -102,7 +102,7 @@ private:
     void set_edit_mode(EditMode);
 
     ErrorOr<NonnullRefPtr<GUI::Menu>> create_project_tree_view_context_menu();
-    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_file_action(DeprecatedString const& label, DeprecatedString const& icon, DeprecatedString const& extension);
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_file_action(ByteString const& label, ByteString const& icon, ByteString const& extension);
     ErrorOr<NonnullRefPtr<GUI::Action>> create_new_directory_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
@@ -133,15 +133,15 @@ private:
 
     void add_new_editor_tab_widget(GUI::Widget& parent);
     void add_new_editor(GUI::TabWidget& parent);
-    RefPtr<EditorWrapper> get_editor_of_file(DeprecatedString const& filename);
-    DeprecatedString get_project_executable_path() const;
+    RefPtr<EditorWrapper> get_editor_of_file(ByteString const& filename);
+    ByteString get_project_executable_path() const;
 
     void on_action_tab_change();
     void reveal_action_tab(GUI::Widget&);
     void initialize_debugger();
     void update_statusbar();
 
-    void handle_external_file_deletion(DeprecatedString const& filepath);
+    void handle_external_file_deletion(ByteString const& filepath);
     void stop_debugger_if_running();
     void close_current_project();
 
@@ -167,11 +167,11 @@ private:
     void update_tree_view();
     void update_toolbar_actions();
     void on_cursor_change();
-    void file_renamed(DeprecatedString const& old_name, DeprecatedString const& new_name);
+    void file_renamed(ByteString const& old_name, ByteString const& new_name);
     bool save_file_changes();
 
     struct ProjectLocation {
-        DeprecatedString filename;
+        ByteString filename;
         size_t line { 0 };
         size_t column { 0 };
     };
@@ -184,9 +184,9 @@ private:
     Vector<NonnullRefPtr<GUI::TabWidget>> m_all_editor_tab_widgets;
     RefPtr<GUI::TabWidget> m_current_editor_tab_widget;
 
-    HashMap<DeprecatedString, NonnullRefPtr<ProjectFile>> m_open_files;
+    HashMap<ByteString, NonnullRefPtr<ProjectFile>> m_open_files;
     RefPtr<Core::FileWatcher> m_file_watcher;
-    Vector<DeprecatedString> m_open_files_vector; // NOTE: This contains the keys from m_open_files and m_file_watchers
+    Vector<ByteString> m_open_files_vector; // NOTE: This contains the keys from m_open_files and m_file_watchers
 
     OwnPtr<Project> m_project;
 

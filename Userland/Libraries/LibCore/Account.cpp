@@ -27,7 +27,7 @@
 
 namespace Core {
 
-static DeprecatedString get_salt()
+static ByteString get_salt()
 {
     char random_data[12];
     fill_with_random({ random_data, sizeof(random_data) });
@@ -39,7 +39,7 @@ static DeprecatedString get_salt()
     auto salt_string = MUST(encode_base64({ random_data, sizeof(random_data) }));
     builder.append(salt_string);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 static Vector<gid_t> get_extra_gids(passwd const& pwd)
@@ -191,25 +191,25 @@ void Account::set_password(SecretString const& password)
 
 void Account::set_password_enabled(bool enabled)
 {
-    auto flattened_password_hash = m_password_hash.value_or(DeprecatedString::empty());
+    auto flattened_password_hash = m_password_hash.value_or(ByteString::empty());
     if (enabled && !flattened_password_hash.is_empty() && flattened_password_hash[0] == '!') {
         m_password_hash = flattened_password_hash.substring(1, flattened_password_hash.length() - 1);
     } else if (!enabled && (flattened_password_hash.is_empty() || flattened_password_hash[0] != '!')) {
         StringBuilder builder;
         builder.append('!');
         builder.append(flattened_password_hash);
-        m_password_hash = builder.to_deprecated_string();
+        m_password_hash = builder.to_byte_string();
     }
 }
 
 void Account::delete_password()
 {
-    m_password_hash = DeprecatedString::empty();
+    m_password_hash = ByteString::empty();
 }
 
 Account::Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids)
     : m_username(pwd.pw_name)
-    , m_password_hash(spwd.sp_pwdp ? Optional<DeprecatedString>(spwd.sp_pwdp) : OptionalNone {})
+    , m_password_hash(spwd.sp_pwdp ? Optional<ByteString>(spwd.sp_pwdp) : OptionalNone {})
     , m_uid(pwd.pw_uid)
     , m_gid(pwd.pw_gid)
     , m_gecos(pwd.pw_gecos)
@@ -219,7 +219,7 @@ Account::Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids)
 {
 }
 
-ErrorOr<DeprecatedString> Account::generate_passwd_file() const
+ErrorOr<ByteString> Account::generate_passwd_file() const
 {
     StringBuilder builder;
     char buffer[1024] = { 0 };
@@ -250,10 +250,10 @@ ErrorOr<DeprecatedString> Account::generate_passwd_file() const
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-ErrorOr<DeprecatedString> Account::generate_group_file() const
+ErrorOr<ByteString> Account::generate_group_file() const
 {
     StringBuilder builder;
     char buffer[1024] = { 0 };
@@ -283,14 +283,14 @@ ErrorOr<DeprecatedString> Account::generate_group_file() const
         if (should_be_present && !already_present)
             members.append(m_username.characters());
 
-        builder.appendff("{}:{}:{}:{}\n", group->gr_name, group->gr_passwd, group->gr_gid, DeprecatedString::join(","sv, members));
+        builder.appendff("{}:{}:{}:{}\n", group->gr_name, group->gr_passwd, group->gr_gid, ByteString::join(","sv, members));
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 #ifndef AK_OS_BSD_GENERIC
-ErrorOr<DeprecatedString> Account::generate_shadow_file() const
+ErrorOr<ByteString> Account::generate_shadow_file() const
 {
     StringBuilder builder;
 
@@ -302,25 +302,25 @@ ErrorOr<DeprecatedString> Account::generate_shadow_file() const
         if (p->sp_namp == m_username) {
             if (m_deleted)
                 continue;
-            builder.appendff("{}:{}", m_username, m_password_hash.value_or(DeprecatedString::empty()));
+            builder.appendff("{}:{}", m_username, m_password_hash.value_or(ByteString::empty()));
         } else
             builder.appendff("{}:{}", p->sp_namp, p->sp_pwdp);
 
         builder.appendff(":{}:{}:{}:{}:{}:{}:{}\n",
-            (p->sp_lstchg == -1) ? "" : DeprecatedString::formatted("{}", p->sp_lstchg),
-            (p->sp_min == -1) ? "" : DeprecatedString::formatted("{}", p->sp_min),
-            (p->sp_max == -1) ? "" : DeprecatedString::formatted("{}", p->sp_max),
-            (p->sp_warn == -1) ? "" : DeprecatedString::formatted("{}", p->sp_warn),
-            (p->sp_inact == -1) ? "" : DeprecatedString::formatted("{}", p->sp_inact),
-            (p->sp_expire == -1) ? "" : DeprecatedString::formatted("{}", p->sp_expire),
-            (p->sp_flag == 0) ? "" : DeprecatedString::formatted("{}", p->sp_flag));
+            (p->sp_lstchg == -1) ? "" : ByteString::formatted("{}", p->sp_lstchg),
+            (p->sp_min == -1) ? "" : ByteString::formatted("{}", p->sp_min),
+            (p->sp_max == -1) ? "" : ByteString::formatted("{}", p->sp_max),
+            (p->sp_warn == -1) ? "" : ByteString::formatted("{}", p->sp_warn),
+            (p->sp_inact == -1) ? "" : ByteString::formatted("{}", p->sp_inact),
+            (p->sp_expire == -1) ? "" : ByteString::formatted("{}", p->sp_expire),
+            (p->sp_flag == 0) ? "" : ByteString::formatted("{}", p->sp_flag));
     }
     endspent();
 
     if (errno)
         return Error::from_errno(errno);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 #endif
 

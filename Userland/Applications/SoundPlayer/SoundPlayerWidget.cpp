@@ -11,7 +11,7 @@
 #include "M3UParser.h"
 #include "PlaybackManager.h"
 #include "SampleWidget.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/SIMD.h>
@@ -250,17 +250,17 @@ void SoundPlayerWidget::time_elapsed(int seconds)
 void SoundPlayerWidget::file_name_changed(StringView name)
 {
     m_visualization->start_new_file(name);
-    DeprecatedString title = name;
+    ByteString title = name;
     if (playback_manager().loader()) {
         auto const& metadata = playback_manager().loader()->metadata();
         if (auto artists_or_error = metadata.all_artists(" / "_string);
             !artists_or_error.is_error() && artists_or_error.value().has_value() && metadata.title.has_value()) {
-            title = DeprecatedString::formatted("{} – {}", metadata.title.value(), artists_or_error.release_value().release_value());
+            title = ByteString::formatted("{} – {}", metadata.title.value(), artists_or_error.release_value().release_value());
         } else if (metadata.title.has_value()) {
-            title = metadata.title.value().to_deprecated_string();
+            title = metadata.title.value().to_byte_string();
         }
     }
-    m_window.set_title(DeprecatedString::formatted("{} — Sound Player", title));
+    m_window.set_title(ByteString::formatted("{} — Sound Player", title));
 }
 
 void SoundPlayerWidget::total_samples_changed(int total_samples)
@@ -286,7 +286,7 @@ void SoundPlayerWidget::volume_changed(double volume)
 void SoundPlayerWidget::playlist_loaded(StringView path, bool loaded)
 {
     if (!loaded) {
-        GUI::MessageBox::show(&m_window, DeprecatedString::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(&m_window, ByteString::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist"sv, GUI::MessageBox::Type::Error);
         return;
     }
     set_playlist_visible(true);
@@ -295,6 +295,6 @@ void SoundPlayerWidget::playlist_loaded(StringView path, bool loaded)
 
 void SoundPlayerWidget::audio_load_error(StringView path, StringView error_string)
 {
-    GUI::MessageBox::show(&m_window, DeprecatedString::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error"sv : error_string),
+    GUI::MessageBox::show(&m_window, ByteString::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error"sv : error_string),
         "Filetype error"sv, GUI::MessageBox::Type::Error);
 }

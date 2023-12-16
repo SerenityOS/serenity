@@ -170,7 +170,7 @@ void ScreenNumberOverlay::pick_font()
     auto screen_number_content_rect_size = calculate_content_rect_for_screen(Screen::main()).size();
     auto& font_database = Gfx::FontDatabase::the();
     auto& default_font = WindowManager::the().font();
-    DeprecatedString best_font_name;
+    ByteString best_font_name;
     int best_font_size = -1;
     font_database.for_each_font([&](Gfx::Font const& font) {
         // TODO: instead of picking *any* font we should probably compare font.name()
@@ -183,7 +183,7 @@ void ScreenNumberOverlay::pick_font()
                     return;
                 }
             }
-            best_font_name = font.qualified_name().to_deprecated_string();
+            best_font_name = font.qualified_name().to_byte_string();
             best_font_size = size;
         }
     });
@@ -212,7 +212,7 @@ Gfx::Font const& ScreenNumberOverlay::font()
 
 void ScreenNumberOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
-    painter.draw_text(Gfx::IntRect { {}, rect().size() }, DeprecatedString::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(Gfx::IntRect { {}, rect().size() }, ByteString::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
 }
 
 Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& screen)
@@ -319,9 +319,9 @@ void WindowGeometryOverlay::window_rect_changed()
             if (!window->size_increment().is_empty()) {
                 int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
                 int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
-                m_label = DeprecatedString::formatted("{} ({}x{})", geometry_rect, width_steps, height_steps);
+                m_label = ByteString::formatted("{} ({}x{})", geometry_rect, width_steps, height_steps);
             } else {
-                m_label = geometry_rect.to_deprecated_string();
+                m_label = geometry_rect.to_byte_string();
             }
             m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().pixel_size_rounded_up() + 10 };
 
@@ -341,7 +341,7 @@ void WindowGeometryOverlay::render_overlay_bitmap(Gfx::Painter& painter)
     painter.draw_text(Gfx::IntRect { {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::TextAlignment::Center, Color::White);
 }
 
-DndOverlay::DndOverlay(DeprecatedString const& text, Gfx::Bitmap const* bitmap)
+DndOverlay::DndOverlay(ByteString const& text, Gfx::Bitmap const* bitmap)
     : m_bitmap(bitmap)
     , m_text(text)
 {

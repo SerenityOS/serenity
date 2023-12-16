@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     for (auto i = 0; i < argc; ++i)
         arguments.append({ argv[i], strlen(argv[i]) });
 
-    DeprecatedString target;
+    ByteString target;
     int max_file_size = 1024 * 1024;
     int count = 1024;
 

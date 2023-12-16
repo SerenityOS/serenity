@@ -16,13 +16,13 @@ class CreateNewImageDialog final : public GUI::Dialog {
 
 public:
     Gfx::IntSize image_size() const { return m_image_size; }
-    DeprecatedString const& image_name() const { return m_image_name; }
+    ByteString const& image_name() const { return m_image_name; }
     Gfx::Color background_color() const { return m_background_color; }
 
 private:
     CreateNewImageDialog(GUI::Window* parent_window);
 
-    DeprecatedString m_image_name;
+    ByteString m_image_name;
     Gfx::IntSize m_image_size;
     Gfx::Color m_background_color {};
 

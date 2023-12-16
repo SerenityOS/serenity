@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Span.h>
@@ -64,7 +64,7 @@ public:
     PDFErrorOr<T> try_read()
     {
         if (sizeof(T) + m_offset > m_bytes.size()) {
-            auto message = DeprecatedString::formatted("Cannot read {} bytes at offset {} of ReadonlyBytes of size {}", sizeof(T), m_offset, m_bytes.size());
+            auto message = ByteString::formatted("Cannot read {} bytes at offset {} of ReadonlyBytes of size {}", sizeof(T), m_offset, m_bytes.size());
             return Error { Error::Type::Parse, message };
         }
         return read<T>();
@@ -92,7 +92,7 @@ public:
 
     bool matches(char const* chars) const
     {
-        DeprecatedString string(chars);
+        ByteString string(chars);
         if (remaining() < string.length())
             return false;
 
@@ -163,7 +163,7 @@ public:
 
         for (auto i = from; i <= to; i++) {
             char value = static_cast<char>(bytes().at(i));
-            auto line = DeprecatedString::formatted("  {}: '{}' (value={:3d}) ", i, value, static_cast<u8>(value));
+            auto line = ByteString::formatted("  {}: '{}' (value={:3d}) ", i, value, static_cast<u8>(value));
             if (i == offset()) {
                 dbgln("{} <<< current location, forwards={}", line, m_forwards);
             } else {

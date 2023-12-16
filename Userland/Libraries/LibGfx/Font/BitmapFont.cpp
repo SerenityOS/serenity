@@ -248,7 +248,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_uri(StringView uri)
     return try_load_from_resource(TRY(Core::Resource::load_from_uri(uri)));
 }
 
-ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
+ErrorOr<void> BitmapFont::write_to_file(ByteString const& path)
 {
     auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     TRY(write_to_file(move(stream)));

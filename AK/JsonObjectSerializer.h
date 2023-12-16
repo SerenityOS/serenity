@@ -63,7 +63,7 @@ public:
     }
 
 #ifndef KERNEL
-    ErrorOr<void> add(StringView key, DeprecatedString const& value)
+    ErrorOr<void> add(StringView key, ByteString const& value)
     {
         TRY(begin_item(key));
         if constexpr (IsLegacyBuilder<Builder>) {

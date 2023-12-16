@@ -674,7 +674,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
     request->set_use_url_credentials(true);
     request->set_redirect_mode(Fetch::Infrastructure::Request::RedirectMode::Manual);
-    auto replaces_client_id = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(active_document.relevant_settings_object().id));
+    auto replaces_client_id = TRY_OR_THROW_OOM(vm, String::from_byte_string(active_document.relevant_settings_object().id));
     request->set_replaces_client_id(replaces_client_id);
     request->set_mode(Fetch::Infrastructure::Request::Mode::Navigate);
     request->set_referrer(entry->document_state->request_referrer());

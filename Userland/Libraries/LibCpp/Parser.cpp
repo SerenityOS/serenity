@@ -11,18 +11,18 @@
 #include <AK/ScopeLogger.h>
 #include <LibCpp/Lexer.h>
 
-#define LOG_SCOPE() ScopeLogger<CPP_DEBUG> logger(DeprecatedString::formatted("'{}' - {} ({})", peek().text(), peek().type_as_deprecated_string(), m_state.token_index))
+#define LOG_SCOPE() ScopeLogger<CPP_DEBUG> logger(ByteString::formatted("'{}' - {} ({})", peek().text(), peek().type_as_byte_string(), m_state.token_index))
 
 namespace Cpp {
 
-Parser::Parser(Vector<Token> tokens, DeprecatedString const& filename)
+Parser::Parser(Vector<Token> tokens, ByteString const& filename)
     : m_filename(filename)
     , m_tokens(move(tokens))
 {
     if constexpr (CPP_DEBUG) {
         dbgln("Tokens:");
         for (size_t i = 0; i < m_tokens.size(); ++i) {
-            dbgln("{}- {}", i, m_tokens[i].to_deprecated_string());
+            dbgln("{}- {}", i, m_tokens[i].to_byte_string());
         }
     }
 }
@@ -598,7 +598,7 @@ NonnullRefPtr<Expression const> Parser::parse_secondary_expression(ASTNode const
         return func;
     }
     default: {
-        error(DeprecatedString::formatted("unexpected operator for expression. operator: {}", peek().to_deprecated_string()));
+        error(ByteString::formatted("unexpected operator for expression. operator: {}", peek().to_byte_string()));
         auto token = consume();
         return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
     }
@@ -845,7 +845,7 @@ Token Parser::consume(Token::Type type)
 {
     auto token = consume();
     if (token.type() != type)
-        error(DeprecatedString::formatted("expected {} at {}:{}, found: {}", Token::type_to_string(type), token.start().line, token.start().column, Token::type_to_string(token.type())));
+        error(ByteString::formatted("expected {} at {}:{}, found: {}", Token::type_to_string(type), token.start().line, token.start().column, Token::type_to_string(token.type())));
     return token;
 }
 
@@ -894,18 +894,18 @@ StringView Parser::text_of_token(Cpp::Token const& token) const
     return token.text();
 }
 
-DeprecatedString Parser::text_of_node(ASTNode const& node) const
+ByteString Parser::text_of_node(ASTNode const& node) const
 {
     return text_in_range(node.start(), node.end());
 }
 
-DeprecatedString Parser::text_in_range(Position start, Position end) const
+ByteString Parser::text_in_range(Position start, Position end) const
 {
     StringBuilder builder;
     for (auto token : tokens_in_range(start, end)) {
         builder.append(token.text());
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 Vector<Token> Parser::tokens_in_range(Position start, Position end) const
@@ -931,11 +931,11 @@ void Parser::error(StringView message)
 
     if (message.is_null() || message.is_empty())
         message = "<empty>"sv;
-    DeprecatedString formatted_message;
+    ByteString formatted_message;
     if (m_state.token_index >= m_tokens.size()) {
-        formatted_message = DeprecatedString::formatted("C++ Parsed error on EOF.{}", message);
+        formatted_message = ByteString::formatted("C++ Parsed error on EOF.{}", message);
     } else {
-        formatted_message = DeprecatedString::formatted("C++ Parser error: {}. token: {} ({}:{})",
+        formatted_message = ByteString::formatted("C++ Parser error: {}. token: {} ({}:{})",
             message,
             m_state.token_index < m_tokens.size() ? text_of_token(m_tokens[m_state.token_index]) : "EOF"sv,
             m_tokens[m_state.token_index].start().line,
@@ -1033,7 +1033,7 @@ Optional<size_t> Parser::index_of_token_at(Position pos) const
 void Parser::print_tokens() const
 {
     for (auto& token : m_tokens) {
-        outln("{}", token.to_deprecated_string());
+        outln("{}", token.to_byte_string());
     }
 }
 
@@ -1131,21 +1131,21 @@ NonnullRefPtr<EnumDeclaration const> Parser::parse_enum_declaration(ASTNode cons
     return enum_decl;
 }
 
-Token Parser::consume_keyword(DeprecatedString const& keyword)
+Token Parser::consume_keyword(ByteString const& keyword)
 {
     auto token = consume();
     if (token.type() != Token::Type::Keyword) {
-        error(DeprecatedString::formatted("unexpected token: {}, expected Keyword", token.to_deprecated_string()));
+        error(ByteString::formatted("unexpected token: {}, expected Keyword", token.to_byte_string()));
         return token;
     }
     if (text_of_token(token) != keyword) {
-        error(DeprecatedString::formatted("unexpected keyword: {}, expected {}", text_of_token(token), keyword));
+        error(ByteString::formatted("unexpected keyword: {}, expected {}", text_of_token(token), keyword));
         return token;
     }
     return token;
 }
 
-bool Parser::match_keyword(DeprecatedString const& keyword)
+bool Parser::match_keyword(ByteString const& keyword)
 {
     auto token = peek();
     if (token.type() != Token::Type::Keyword) {
@@ -1257,7 +1257,7 @@ NonnullRefPtr<Type const> Parser::parse_type(ASTNode const& parent)
 
     if (!match_name()) {
         named_type->set_end(position());
-        error(DeprecatedString::formatted("expected name instead of: {}", peek().text()));
+        error(ByteString::formatted("expected name instead of: {}", peek().text()));
         return named_type;
     }
     named_type->set_name(parse_name(*named_type));

@@ -90,7 +90,7 @@ static ThrowCompletionOr<TypedArrayBase*> validate_typed_array_from_this(VM& vm)
     return typed_array;
 }
 
-static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, DeprecatedString const& name)
+static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, ByteString const& name)
 {
     if (vm.argument_count() < 1)
         return vm.throw_completion<TypeError>(ErrorType::TypedArrayPrototypeOneArg, name);
@@ -100,7 +100,7 @@ static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, DeprecatedS
     return &callback.as_function();
 }
 
-static ThrowCompletionOr<void> for_each_item(VM& vm, DeprecatedString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item(VM& vm, ByteString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
@@ -122,7 +122,7 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, DeprecatedString const& nam
     return {};
 }
 
-static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, DeprecatedString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, ByteString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
@@ -803,9 +803,9 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 
     // 4. If separator is undefined, let sep be ",".
     // 5. Else, let sep be ? ToString(separator).
-    DeprecatedString separator = ",";
+    ByteString separator = ",";
     if (!vm.argument(0).is_undefined())
-        separator = TRY(vm.argument(0).to_deprecated_string(vm));
+        separator = TRY(vm.argument(0).to_byte_string(vm));
 
     // 6. Let R be the empty String.
     StringBuilder builder;
@@ -823,7 +823,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
         // c. If element is undefined, let next be the empty String; otherwise, let next be ! ToString(element).
         if (element.is_undefined())
             continue;
-        auto next = MUST(element.to_deprecated_string(vm));
+        auto next = MUST(element.to_byte_string(vm));
 
         // d. Set R to the string-concatenation of R and next.
         builder.append(next);
@@ -832,7 +832,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     }
 
     // 9. Return R.
-    return PrimitiveString::create(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_byte_string());
 }
 
 // 23.2.3.19 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
@@ -1643,7 +1643,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
         if (!next_element.is_nullish()) {
             // i. Let S be ? ToString(? Invoke(nextElement, "toLocaleString", « locales, options »)).
             auto locale_string_value = TRY(next_element.invoke(vm, vm.names.toLocaleString, locales, options));
-            auto locale_string = TRY(locale_string_value.to_deprecated_string(vm));
+            auto locale_string = TRY(locale_string_value.to_byte_string(vm));
 
             // ii. Set R to the string-concatenation of R and S.
             builder.append(locale_string);
@@ -1653,7 +1653,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     }
 
     // 7. Return R.
-    return PrimitiveString::create(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_byte_string());
 }
 
 // 23.2.3.32 %TypedArray%.prototype.toReversed ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed

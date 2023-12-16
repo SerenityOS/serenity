@@ -24,14 +24,14 @@ static ByteBuffer operator""_b(char const* string, size_t length)
 }
 
 ErrorOr<Vector<Certificate>> load_certificates();
-DeprecatedString locate_ca_certs_file();
+ByteString locate_ca_certs_file();
 
-DeprecatedString locate_ca_certs_file()
+ByteString locate_ca_certs_file()
 {
     if (FileSystem::exists(ca_certs_file)) {
         return ca_certs_file;
     }
-    auto on_target_path = DeprecatedString("/etc/cacert.pem");
+    auto on_target_path = ByteString("/etc/cacert.pem");
     if (FileSystem::exists(on_target_path)) {
         return on_target_path;
     }

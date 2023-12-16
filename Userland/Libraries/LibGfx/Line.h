@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <LibGfx/Forward.h>
@@ -166,7 +166,7 @@ public:
         return Line<U>(*this);
     }
 
-    DeprecatedString to_deprecated_string() const;
+    ByteString to_byte_string() const;
 
 private:
     Point<T> m_a;
@@ -174,15 +174,15 @@ private:
 };
 
 template<>
-inline DeprecatedString IntLine::to_deprecated_string() const
+inline ByteString IntLine::to_byte_string() const
 {
-    return DeprecatedString::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
+    return ByteString::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }
 
 template<>
-inline DeprecatedString FloatLine::to_deprecated_string() const
+inline ByteString FloatLine::to_byte_string() const
 {
-    return DeprecatedString::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
+    return ByteString::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }
 
 }

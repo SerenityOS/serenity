@@ -19,13 +19,13 @@ public:
     virtual ~Breadcrumbbar() override = default;
 
     void clear_segments();
-    void append_segment(DeprecatedString text, Gfx::Bitmap const* icon = nullptr, DeprecatedString data = {}, String tooltip = {});
+    void append_segment(ByteString text, Gfx::Bitmap const* icon = nullptr, ByteString data = {}, String tooltip = {});
     void remove_end_segments(size_t segment_index);
     void relayout();
 
     size_t segment_count() const { return m_segments.size(); }
-    DeprecatedString segment_data(size_t index) const { return m_segments[index].data; }
-    Optional<size_t> find_segment_with_data(DeprecatedString const& data);
+    ByteString segment_data(size_t index) const { return m_segments[index].data; }
+    Optional<size_t> find_segment_with_data(ByteString const& data);
 
     void set_selected_segment(Optional<size_t> index);
     Optional<size_t> selected_segment() const { return m_selected_segment; }
@@ -48,8 +48,8 @@ private:
 
     struct Segment {
         RefPtr<const Gfx::Bitmap> icon;
-        DeprecatedString text;
-        DeprecatedString data;
+        ByteString text;
+        ByteString data;
         int width { 0 };
         int shrunken_width { 0 };
         WeakPtr<GUI::Button> button;

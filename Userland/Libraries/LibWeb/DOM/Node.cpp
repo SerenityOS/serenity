@@ -819,7 +819,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         element.for_each_attribute([&](auto& name, auto& value) {
             // 1. Let copyAttribute be a clone of attribute.
             // 2. Append copyAttribute to copy.
-            MUST(element_copy->set_attribute(name, MUST(String::from_deprecated_string(value))));
+            MUST(element_copy->set_attribute(name, MUST(String::from_byte_string(value))));
         });
         copy = move(element_copy);
 
@@ -872,7 +872,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto processing_instruction = verify_cast<ProcessingInstruction>(this);
 
         // Set copy’s target and data to those of node.
-        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data().to_deprecated_string(), processing_instruction->target());
+        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data().to_byte_string(), processing_instruction->target());
         copy = processing_instruction_copy;
     }
     // Otherwise, Do nothing.
@@ -1783,8 +1783,8 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
         //   process its IDREFs in the order they occur:
         auto aria_labelled_by = element->aria_labelled_by();
         auto aria_described_by = element->aria_described_by();
-        if ((target == NameOrDescription::Name && aria_labelled_by.has_value() && Node::first_valid_id(aria_labelled_by->to_deprecated_string(), document).has_value())
-            || (target == NameOrDescription::Description && aria_described_by.has_value() && Node::first_valid_id(aria_described_by->to_deprecated_string(), document).has_value())) {
+        if ((target == NameOrDescription::Name && aria_labelled_by.has_value() && Node::first_valid_id(aria_labelled_by->to_byte_string(), document).has_value())
+            || (target == NameOrDescription::Description && aria_described_by.has_value() && Node::first_valid_id(aria_described_by->to_byte_string(), document).has_value())) {
 
             // i. Set the accumulated text to the empty string.
             total_accumulated_text.clear();

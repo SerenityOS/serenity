@@ -17,7 +17,7 @@ WebIDL::ExceptionOr<String> WorkerLocation::href() const
 {
     auto& vm = realm().vm();
     // The href getter steps are to return this's WorkerGlobalScope object's url, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_global_scope->url().serialize()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_global_scope->url().serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-origin
@@ -25,7 +25,7 @@ WebIDL::ExceptionOr<String> WorkerLocation::origin() const
 {
     auto& vm = realm().vm();
     // The origin getter steps are to return the serialization of this's WorkerGlobalScope object's url's origin.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_global_scope->url().serialize_origin()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_global_scope->url().serialize_origin()));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-protocol
@@ -95,7 +95,7 @@ WebIDL::ExceptionOr<String> WorkerLocation::pathname() const
 {
     auto& vm = realm().vm();
     // The pathname getter steps are to return the result of URL path serializing this's WorkerGlobalScope object's url.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_global_scope->url().serialize_path()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_global_scope->url().serialize_path()));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-search

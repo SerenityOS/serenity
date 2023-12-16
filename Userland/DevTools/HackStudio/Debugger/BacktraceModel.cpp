@@ -46,7 +46,7 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(Debug::Proces
         // We need to go back to the 'call' instruction to get accurate source position information.
         if (frame_index > 0)
             --current_instruction;
-        DeprecatedString name = lib->debug_info->elf().symbolicate(current_instruction - lib->base_address);
+        ByteString name = lib->debug_info->elf().symbolicate(current_instruction - lib->base_address);
         if (name.is_empty()) {
             dbgln("BacktraceModel: couldn't find containing function for address: {:p} (library={})", current_instruction, lib->name);
             name = "<missing>";

@@ -71,7 +71,7 @@ ErrorOr<void> FileTransferOperation::complete_transfer(SpiceAgent& agent)
     // Open the file manager for the user :^)
     // FIXME: This currently opens a new window for each successful file transfer...
     //        Is there a way/can we make a way for it to highlight a new file in an already-open window?
-    Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_metadata.name.to_deprecated_string()));
+    Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_metadata.name.to_byte_string()));
 
     return {};
 }

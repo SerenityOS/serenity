@@ -89,7 +89,7 @@ ThrowCompletionOr<void> copy_name_and_length(VM& vm, FunctionObject& function, F
         target_name = PrimitiveString::create(vm, String {});
 
     // 8. Perform SetFunctionName(F, targetName, prefix).
-    function.set_function_name({ target_name.as_string().deprecated_string() }, move(prefix));
+    function.set_function_name({ target_name.as_string().byte_string() }, move(prefix));
 
     return {};
 }
@@ -214,7 +214,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
 }
 
 // 3.1.4 ShadowRealmImportValue ( specifierString: a String, exportNameString: a String, callerRealm: a Realm Record, evalRealm: a Realm Record, evalContext: an execution context, ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
-ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, DeprecatedString specifier_string, DeprecatedString export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
+ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, ByteString specifier_string, ByteString export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
 {
     // FIXME: evalRealm isn't being used anywhere in this AO (spec issue)
     (void)eval_realm;

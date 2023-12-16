@@ -35,8 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto json_object = json.as_object();
 
     auto config_file = TRY(Core::ConfigFile::open_for_system("Network", Core::ConfigFile::AllowWriting::Yes));
-    json_object.for_each_member([&](DeprecatedString const& adapter_name, JsonValue const& adapter_data) {
-        adapter_data.as_object().for_each_member([&](const DeprecatedString& key, const JsonValue& value) {
+    json_object.for_each_member([&](ByteString const& adapter_name, JsonValue const& adapter_data) {
+        adapter_data.as_object().for_each_member([&](const ByteString& key, const JsonValue& value) {
             switch (value.type()) {
             case JsonValue::Type::String:
                 config_file->write_entry(adapter_name, key, value.as_string());

@@ -501,7 +501,7 @@ struct Formatter<unsigned char[Size]> : Formatter<StringView> {
     }
 };
 template<>
-struct Formatter<DeprecatedString> : Formatter<StringView> {
+struct Formatter<ByteString> : Formatter<StringView> {
 };
 template<>
 struct Formatter<DeprecatedFlyString> : Formatter<StringView> {

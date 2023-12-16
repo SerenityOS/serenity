@@ -54,7 +54,7 @@ CharacterMapWidget::CharacterMapWidget()
                 continue;
             builder.append_code_point(code_point);
         }
-        GUI::Clipboard::the().set_plain_text(builder.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(builder.to_byte_string());
     });
     m_copy_selection_action->set_status_tip("Copy the highlighted characters to the clipboard"_string);
 
@@ -139,7 +139,7 @@ CharacterMapWidget::CharacterMapWidget()
     for (auto& block : unicode_blocks)
         m_unicode_block_list.append(block.display_name);
 
-    m_unicode_block_model = GUI::ItemListModel<DeprecatedString>::create(m_unicode_block_list);
+    m_unicode_block_model = GUI::ItemListModel<ByteString>::create(m_unicode_block_list);
     m_unicode_block_listview->set_model(*m_unicode_block_model);
     m_unicode_block_listview->set_activates_on_selection(true);
     m_unicode_block_listview->horizontal_scrollbar().set_visible(false);

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -65,11 +65,11 @@ size_t TextDocumentLine::leading_spaces() const
     return count;
 }
 
-DeprecatedString TextDocumentLine::to_utf8() const
+ByteString TextDocumentLine::to_utf8() const
 {
     StringBuilder builder;
     builder.append(view());
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 TextDocumentLine::TextDocumentLine(Document& document)

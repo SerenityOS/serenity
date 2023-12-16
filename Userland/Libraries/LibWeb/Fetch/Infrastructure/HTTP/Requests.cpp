@@ -196,7 +196,7 @@ ErrorOr<String> Request::serialize_origin() const
         return "null"_string;
 
     // 2. Return request’s origin, serialized.
-    return String::from_deprecated_string(m_origin.get<HTML::Origin>().serialize());
+    return String::from_byte_string(m_origin.get<HTML::Origin>().serialize());
 }
 
 // https://fetch.spec.whatwg.org/#byte-serializing-a-request-origin

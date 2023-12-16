@@ -28,9 +28,9 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)>);
 
 class ParsedInitialArguments {
 public:
-    ParsedInitialArguments(Vector<DeprecatedString>&, StringView placeholder);
+    ParsedInitialArguments(Vector<ByteString>&, StringView placeholder);
 
-    void for_each_joined_argument(StringView, Function<void(DeprecatedString const&)>) const;
+    void for_each_joined_argument(StringView, Function<void(ByteString const&)>) const;
 
     size_t size() const { return m_all_parts.size(); }
 
@@ -44,10 +44,10 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 
     StringView placeholder;
     bool split_with_nulls = false;
-    DeprecatedString specified_delimiter = "\n"sv;
-    Vector<DeprecatedString> arguments;
+    ByteString specified_delimiter = "\n"sv;
+    Vector<ByteString> arguments;
     bool verbose = false;
-    DeprecatedString file_to_read = "-"sv;
+    ByteString file_to_read = "-"sv;
     int max_lines_for_one_command = 0;
     int max_bytes_for_one_command = ARG_MAX;
 
@@ -121,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
         if (items_used_for_this_command == 0) {
             child_argv.ensure_capacity(initial_arguments.size());
 
-            initial_arguments.for_each_joined_argument(item, [&](const DeprecatedString& string) {
+            initial_arguments.for_each_joined_argument(item, [&](const ByteString& string) {
                 total_command_length += string.length();
                 child_argv.append(strdup(string.characters()));
             });
@@ -198,7 +198,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     if (verbose) {
         StringBuilder builder;
         builder.join(' ', child_argv);
-        warnln("xargs: {}", builder.to_deprecated_string());
+        warnln("xargs: {}", builder.to_byte_string());
     }
 
     auto pid = fork();
@@ -236,7 +236,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     return true;
 }
 
-ParsedInitialArguments::ParsedInitialArguments(Vector<DeprecatedString>& arguments, StringView placeholder)
+ParsedInitialArguments::ParsedInitialArguments(Vector<ByteString>& arguments, StringView placeholder)
 {
     m_all_parts.ensure_capacity(arguments.size());
     bool some_argument_has_placeholder = false;
@@ -260,12 +260,12 @@ ParsedInitialArguments::ParsedInitialArguments(Vector<DeprecatedString>& argumen
     }
 }
 
-void ParsedInitialArguments::for_each_joined_argument(StringView separator, Function<void(DeprecatedString const&)> callback) const
+void ParsedInitialArguments::for_each_joined_argument(StringView separator, Function<void(ByteString const&)> callback) const
 {
     StringBuilder builder;
     for (auto& parts : m_all_parts) {
         builder.clear();
         builder.join(separator, parts);
-        callback(builder.to_deprecated_string());
+        callback(builder.to_byte_string());
     }
 }

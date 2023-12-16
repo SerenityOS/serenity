@@ -13,7 +13,7 @@
 
 namespace Markdown {
 
-DeprecatedString List::render_to_html(bool) const
+ByteString List::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -35,12 +35,12 @@ DeprecatedString List::render_to_html(bool) const
 
     builder.appendff("</{}>\n", tag);
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<DeprecatedString> List::render_lines_for_terminal(size_t view_width) const
+Vector<ByteString> List::render_lines_for_terminal(size_t view_width) const
 {
-    Vector<DeprecatedString> lines;
+    Vector<ByteString> lines;
 
     int i = 0;
     for (auto& item : m_items) {
@@ -57,13 +57,13 @@ Vector<DeprecatedString> List::render_lines_for_terminal(size_t view_width) cons
 
         builder.append(first_line);
 
-        lines.append(builder.to_deprecated_string());
+        lines.append(builder.to_byte_string());
 
         for (auto& line : item_lines) {
             builder.clear();
-            builder.append(DeprecatedString::repeated(' ', item_indentation));
+            builder.append(ByteString::repeated(' ', item_indentation));
             builder.append(line);
-            lines.append(builder.to_deprecated_string());
+            lines.append(builder.to_byte_string());
         }
     }
 

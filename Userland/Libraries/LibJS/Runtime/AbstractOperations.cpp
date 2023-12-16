@@ -579,7 +579,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         .in_class_field_initializer = in_class_field_initializer,
     };
 
-    Parser parser { Lexer { code_string.deprecated_string() }, Program::Type::Script, move(initial_state) };
+    Parser parser { Lexer { code_string.byte_string() }, Program::Type::Script, move(initial_state) };
     auto program = parser.parse_program(strict_caller == CallerMode::Strict);
 
     //     b. If script is a List of errors, throw a SyntaxError exception.
@@ -1289,7 +1289,7 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
                 TRY_OR_THROW_OOM(vm, result.try_append(curr));
             } else {
                 auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
-                auto group_name = TRY_OR_THROW_OOM(vm, group_name_view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes));
+                auto group_name = TRY_OR_THROW_OOM(vm, group_name_view.to_byte_string(Utf16View::AllowInvalidCodeUnits::Yes));
 
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
@@ -1505,7 +1505,7 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
 
     // 8. Let specifierString be Completion(ToString(specifier)).
     // 9. IfAbruptRejectPromise(specifierString, promiseCapability).
-    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier.to_deprecated_string(vm));
+    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier.to_byte_string(vm));
 
     // 10. Let attributes be a new empty List.
     Vector<ImportAttribute> attributes;
@@ -1569,7 +1569,7 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
                 }
 
                 // 4. Append the ImportAttribute Record { [[Key]]: key, [[Value]]: value } to attributes.
-                attributes.empend(key.as_string().deprecated_string(), value.as_string().deprecated_string());
+                attributes.empend(key.as_string().byte_string(), value.as_string().byte_string());
             }
         }
 

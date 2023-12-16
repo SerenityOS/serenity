@@ -12,10 +12,10 @@
 class SettingsDialog : public GUI::Dialog {
     C_OBJECT(SettingsDialog)
 public:
-    DeprecatedString const& player_name() const { return m_player_name; }
+    ByteString const& player_name() const { return m_player_name; }
 
 private:
-    SettingsDialog(GUI::Window* parent, DeprecatedString player_name);
+    SettingsDialog(GUI::Window* parent, ByteString player_name);
 
-    DeprecatedString m_player_name { "Gunnar" };
+    ByteString m_player_name { "Gunnar" };
 };

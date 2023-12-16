@@ -14,7 +14,7 @@ namespace AK {
 
 char s_single_dot = '.';
 
-LexicalPath::LexicalPath(DeprecatedString path)
+LexicalPath::LexicalPath(ByteString path)
     : m_string(canonicalized_path(move(path)))
 {
     if (m_string.is_empty()) {
@@ -58,9 +58,9 @@ LexicalPath::LexicalPath(DeprecatedString path)
     }
 }
 
-Vector<DeprecatedString> LexicalPath::parts() const
+Vector<ByteString> LexicalPath::parts() const
 {
-    Vector<DeprecatedString> vector;
+    Vector<ByteString> vector;
     vector.ensure_capacity(m_parts.size());
     for (auto& part : m_parts)
         vector.unchecked_append(part);
@@ -88,7 +88,7 @@ bool LexicalPath::is_child_of(LexicalPath const& possible_parent) const
     return common_parts_with_parent == possible_parent.parts_view().span();
 }
 
-DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
+ByteString LexicalPath::canonicalized_path(ByteString path)
 {
     // NOTE: We never allow an empty m_string, if it's empty, we just set it to '.'.
     if (path.is_empty())
@@ -101,7 +101,7 @@ DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
     auto is_absolute = path[0] == '/';
     auto parts = path.split_view('/');
     size_t approximate_canonical_length = 0;
-    Vector<DeprecatedString> canonical_parts;
+    Vector<ByteString> canonical_parts;
 
     for (auto& part : parts) {
         if (part == ".")
@@ -131,10 +131,10 @@ DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
     if (is_absolute)
         builder.append('/');
     builder.join('/', canonical_parts);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString LexicalPath::absolute_path(DeprecatedString dir_path, DeprecatedString target)
+ByteString LexicalPath::absolute_path(ByteString dir_path, ByteString target)
 {
     if (LexicalPath(target).is_absolute()) {
         return LexicalPath::canonicalized_path(target);
@@ -142,10 +142,10 @@ DeprecatedString LexicalPath::absolute_path(DeprecatedString dir_path, Deprecate
     return LexicalPath::canonicalized_path(join(dir_path, target).string());
 }
 
-DeprecatedString LexicalPath::relative_path(StringView a_path, StringView a_prefix)
+ByteString LexicalPath::relative_path(StringView a_path, StringView a_prefix)
 {
     if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
-        // FIXME: This should probably VERIFY or return an Optional<DeprecatedString>.
+        // FIXME: This should probably VERIFY or return an Optional<ByteString>.
         return ""sv;
     }
 
@@ -186,7 +186,7 @@ DeprecatedString LexicalPath::relative_path(StringView a_path, StringView a_pref
             builder.append('/');
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 LexicalPath LexicalPath::append(StringView value) const

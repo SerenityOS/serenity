@@ -32,7 +32,7 @@ Duration FileEventNode::total_duration() const
     return m_open.duration + m_close.duration + m_readv.duration + m_read.duration + m_pread.duration;
 }
 
-FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& searched_path)
+FileEventNode& FileEventNode::find_or_create_node(ByteString const& searched_path)
 {
     // TODO: Optimize this function.
     if (searched_path == ""sv || searched_path == "/"sv) {
@@ -45,7 +45,7 @@ FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& search
 
     StringBuilder sb;
     sb.join('/', parts);
-    auto new_s = sb.to_deprecated_string();
+    auto new_s = sb.to_byte_string();
 
     for (auto& child : m_children) {
         if (child->m_path == current) {
@@ -70,7 +70,7 @@ FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& search
     }
 }
 
-FileEventNode& FileEventNode::create_recursively(DeprecatedString new_path)
+FileEventNode& FileEventNode::create_recursively(ByteString new_path)
 {
     auto const lex_path = LexicalPath(new_path);
     auto parts = lex_path.parts();
@@ -86,7 +86,7 @@ FileEventNode& FileEventNode::create_recursively(DeprecatedString new_path)
         StringBuilder sb;
         sb.join('/', parts);
 
-        return new_node->create_recursively(sb.to_deprecated_string());
+        return new_node->create_recursively(sb.to_byte_string());
     }
 }
 

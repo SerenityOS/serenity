@@ -50,17 +50,17 @@ class Object : public Core::EventReceiver {
 public:
     virtual ~Object() override;
 
-    bool set_property(DeprecatedString const& name, JsonValue const& value);
-    JsonValue property(DeprecatedString const& name) const;
-    HashMap<DeprecatedString, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }
+    bool set_property(ByteString const& name, JsonValue const& value);
+    JsonValue property(ByteString const& name) const;
+    HashMap<ByteString, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }
 
 protected:
     explicit Object(Core::EventReceiver* parent = nullptr);
 
-    void register_property(DeprecatedString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
+    void register_property(ByteString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
 
 private:
-    HashMap<DeprecatedString, NonnullOwnPtr<Property>> m_properties;
+    HashMap<ByteString, NonnullOwnPtr<Property>> m_properties;
 };
 
 }
@@ -84,13 +84,13 @@ private:
         });
 
 // FIXME: Port JsonValue to the new String class.
-#define REGISTER_STRING_PROPERTY(property_name, getter, setter)                                                                           \
-    register_property(                                                                                                                    \
-        property_name,                                                                                                                    \
-        [this]() { return this->getter().to_deprecated_string(); },                                                                       \
-        [this](auto& value) {                                                                                                             \
-            this->setter(String::from_deprecated_string(value.to_deprecated_string()).release_value_but_fixme_should_propagate_errors()); \
-            return true;                                                                                                                  \
+#define REGISTER_STRING_PROPERTY(property_name, getter, setter)                                                               \
+    register_property(                                                                                                        \
+        property_name,                                                                                                        \
+        [this]() { return this->getter().to_byte_string(); },                                                                 \
+        [this](auto& value) {                                                                                                 \
+            this->setter(String::from_byte_string(value.to_byte_string()).release_value_but_fixme_should_propagate_errors()); \
+            return true;                                                                                                      \
         });
 
 #define REGISTER_DEPRECATED_STRING_PROPERTY(property_name, getter, setter) \
@@ -98,7 +98,7 @@ private:
         property_name,                                                     \
         [this] { return this->getter(); },                                 \
         [this](auto& value) {                                              \
-            this->setter(value.to_deprecated_string());                    \
+            this->setter(value.to_byte_string());                          \
             return true;                                                   \
         });
 
@@ -113,7 +113,7 @@ private:
         property_name,                                             \
         {},                                                        \
         [this](auto& value) {                                      \
-            this->setter(value.to_deprecated_string());            \
+            this->setter(value.to_byte_string());                  \
             return true;                                           \
         });
 
@@ -187,7 +187,7 @@ private:
         [this]() -> JsonValue {                                              \
             struct {                                                         \
                 EnumType enum_value;                                         \
-                DeprecatedString string_value;                               \
+                ByteString string_value;                                     \
             } options[] = { __VA_ARGS__ };                                   \
             auto enum_value = getter();                                      \
             for (size_t i = 0; i < array_size(options); ++i) {               \
@@ -200,7 +200,7 @@ private:
         [this](auto& value) {                                                \
             struct {                                                         \
                 EnumType enum_value;                                         \
-                DeprecatedString string_value;                               \
+                ByteString string_value;                                     \
             } options[] = { __VA_ARGS__ };                                   \
             if (!value.is_string())                                          \
                 return false;                                                \

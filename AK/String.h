@@ -67,7 +67,7 @@ public:
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
     template<typename T>
-    requires(IsOneOf<RemoveCVReference<T>, DeprecatedString, DeprecatedFlyString, FlyString, String>)
+    requires(IsOneOf<RemoveCVReference<T>, ByteString, DeprecatedFlyString, FlyString, String>)
     static ErrorOr<String> from_utf8(T&&) = delete;
 
     // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
@@ -221,11 +221,11 @@ public:
     void did_create_fly_string(Badge<FlyString>) const;
 
     // FIXME: Remove these once all code has been ported to String
-    [[nodiscard]] DeprecatedString to_deprecated_string() const;
-    static ErrorOr<String> from_deprecated_string(DeprecatedString const&);
+    [[nodiscard]] ByteString to_byte_string() const;
+    static ErrorOr<String> from_byte_string(ByteString const&);
     template<typename T>
     requires(IsSame<RemoveCVReference<T>, StringView>)
-    static ErrorOr<String> from_deprecated_string(T&&) = delete;
+    static ErrorOr<String> from_byte_string(T&&) = delete;
 
 private:
     // NOTE: If the least significant bit of the pointer is set, this is a short string.

@@ -11,7 +11,7 @@
 #include <LibCrypto/Cipher/Mode/Mode.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/ByteString.h>
 #endif
 
 namespace Crypto::Cipher {
@@ -104,12 +104,12 @@ public:
     }
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const override
+    virtual ByteString class_name() const override
     {
         StringBuilder builder;
         builder.append(this->cipher().class_name());
         builder.append("_CTR"sv);
-        return builder.to_deprecated_string();
+        return builder.to_byte_string();
     }
 #endif
 

@@ -9,7 +9,7 @@
 
 #include <AK/BinarySearch.h>
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -42,7 +42,7 @@ struct KeyBinding {
         InternalFunction,
         Insertion,
     } kind { Kind::InternalFunction };
-    DeprecatedString binding;
+    ByteString binding;
 };
 
 struct Configuration {
@@ -67,7 +67,7 @@ struct Configuration {
     };
 
     struct DefaultTextEditor {
-        DeprecatedString command;
+        ByteString command;
     };
 
     Configuration()
@@ -97,7 +97,7 @@ struct Configuration {
     SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };
     OperationMode operation_mode { OperationMode::Unset };
     Vector<KeyBinding> keybindings;
-    DeprecatedString m_default_text_editor {};
+    ByteString m_default_text_editor {};
     bool enable_bracketed_paste { false };
 };
 
@@ -144,15 +144,15 @@ public:
 
     ~Editor();
 
-    Result<DeprecatedString, Error> get_line(DeprecatedString const& prompt);
+    Result<ByteString, Error> get_line(ByteString const& prompt);
 
     void initialize();
 
     void refetch_default_termios();
 
-    void add_to_history(DeprecatedString const& line);
-    bool load_history(DeprecatedString const& path);
-    bool save_history(DeprecatedString const& path);
+    void add_to_history(ByteString const& line);
+    bool load_history(ByteString const& path);
+    bool save_history(ByteString const& path);
     auto const& history() const { return m_history; }
     bool is_history_dirty() const { return m_history_dirty; }
 
@@ -194,11 +194,11 @@ public:
     }
     Vector<u32, 1024> const& buffer() const { return m_buffer; }
     u32 buffer_at(size_t pos) const { return m_buffer.at(pos); }
-    DeprecatedString line() const { return line(m_buffer.size()); }
-    DeprecatedString line(size_t up_to_index) const;
+    ByteString line() const { return line(m_buffer.size()); }
+    ByteString line(size_t up_to_index) const;
 
     // Only makes sense inside a character_input callback or on_* callback.
-    void set_prompt(DeprecatedString const& prompt)
+    void set_prompt(ByteString const& prompt)
     {
         if (m_cached_prompt_valid)
             m_old_prompt_metrics = m_cached_prompt_metrics;
@@ -208,7 +208,7 @@ public:
     }
 
     void clear_line();
-    void insert(DeprecatedString const&);
+    void insert(ByteString const&);
     void insert(StringView);
     void insert(Utf32View const&);
     void insert(const u32);
@@ -315,7 +315,7 @@ private:
         m_prompt_lines_at_suggestion_initiation = 0;
         m_refresh_needed = true;
         m_input_error.clear();
-        m_returned_line = DeprecatedString::empty();
+        m_returned_line = ByteString::empty();
         m_chars_touched_in_the_middle = 0;
         m_drawn_end_of_line_offset = 0;
         m_drawn_spans = {};
@@ -417,7 +417,7 @@ private:
     ByteBuffer m_pending_chars;
     Vector<char, 512> m_incomplete_data;
     Optional<Error> m_input_error;
-    DeprecatedString m_returned_line;
+    ByteString m_returned_line;
 
     size_t m_cursor { 0 };
     size_t m_drawn_cursor { 0 };
@@ -444,7 +444,7 @@ private:
     OwnPtr<SuggestionDisplay> m_suggestion_display;
     Vector<u32, 32> m_remembered_suggestion_static_data;
 
-    DeprecatedString m_new_prompt;
+    ByteString m_new_prompt;
 
     SuggestionManager m_suggestion_manager;
 
@@ -468,7 +468,7 @@ private:
 
     // FIXME: This should be something more take_first()-friendly.
     struct HistoryEntry {
-        DeprecatedString entry;
+        ByteString entry;
         time_t timestamp;
     };
     Vector<HistoryEntry> m_history;

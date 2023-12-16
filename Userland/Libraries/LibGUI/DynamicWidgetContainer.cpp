@@ -144,7 +144,7 @@ void DynamicWidgetContainer::restore_view_state()
 
             order_or_error.value().as_array().for_each([&](auto& section_label) {
                 for (auto& container : containers) {
-                    if (container.section_label() == section_label.to_deprecated_string())
+                    if (container.section_label() == section_label.to_byte_string())
                         new_child_order.append(container);
                 }
             });
@@ -227,7 +227,7 @@ ErrorOr<void> DynamicWidgetContainer::detach_widgets()
 {
     if (!m_detached_widgets_window.has_value()) {
         auto detached_window = TRY(GUI::Window::try_create());
-        detached_window->set_title(section_label().to_deprecated_string());
+        detached_window->set_title(section_label().to_byte_string());
         detached_window->set_window_type(WindowType::Normal);
         if (has_detached_size())
             detached_window->resize(detached_size());

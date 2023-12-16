@@ -32,5 +32,5 @@ private:
 
     RefPtr<Core::Timer> m_clock_preview_update_timer;
 
-    DeprecatedString m_time_format;
+    ByteString m_time_format;
 };

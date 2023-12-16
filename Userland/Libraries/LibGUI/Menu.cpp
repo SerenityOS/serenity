@@ -204,7 +204,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         break;
     case MenuItem::Type::Action: {
         auto& action = *item.action();
-        auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_deprecated_string() : DeprecatedString();
+        auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_byte_string() : ByteString();
         bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
         bool is_default = (m_current_default_action.ptr() == &action);
         auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
@@ -215,7 +215,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         auto& submenu = *item.submenu();
         submenu.realize_if_needed(m_current_default_action.strong_ref());
         auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, submenu.menu_id(), submenu.name().to_deprecated_string(), true, true, false, false, false, "", icon, false);
+        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, submenu.menu_id(), submenu.name().to_byte_string(), true, true, false, false, false, "", icon, false);
         break;
     }
     case MenuItem::Type::Invalid:

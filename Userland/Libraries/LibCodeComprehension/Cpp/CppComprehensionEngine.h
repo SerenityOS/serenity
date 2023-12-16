@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
@@ -25,12 +25,12 @@ class CppComprehensionEngine : public CodeComprehensionEngine {
 public:
     CppComprehensionEngine(FileDB const& filedb);
 
-    virtual Vector<CodeComprehension::AutocompleteResultEntry> get_suggestions(DeprecatedString const& file, GUI::TextPosition const& autocomplete_position) override;
-    virtual void on_edit(DeprecatedString const& file) override;
-    virtual void file_opened([[maybe_unused]] DeprecatedString const& file) override;
-    virtual Optional<CodeComprehension::ProjectLocation> find_declaration_of(DeprecatedString const& filename, GUI::TextPosition const& identifier_position) override;
-    virtual Optional<FunctionParamsHint> get_function_params_hint(DeprecatedString const&, GUI::TextPosition const&) override;
-    virtual Vector<CodeComprehension::TokenInfo> get_tokens_info(DeprecatedString const& filename) override;
+    virtual Vector<CodeComprehension::AutocompleteResultEntry> get_suggestions(ByteString const& file, GUI::TextPosition const& autocomplete_position) override;
+    virtual void on_edit(ByteString const& file) override;
+    virtual void file_opened([[maybe_unused]] ByteString const& file) override;
+    virtual Optional<CodeComprehension::ProjectLocation> find_declaration_of(ByteString const& filename, GUI::TextPosition const& identifier_position) override;
+    virtual Optional<FunctionParamsHint> get_function_params_hint(ByteString const&, GUI::TextPosition const&) override;
+    virtual Vector<CodeComprehension::TokenInfo> get_tokens_info(ByteString const& filename) override;
 
 private:
     struct SymbolName {
@@ -39,8 +39,8 @@ private:
 
         static SymbolName create(StringView, Vector<StringView>&&);
         static SymbolName create(StringView);
-        DeprecatedString scope_as_string() const;
-        DeprecatedString to_deprecated_string() const;
+        ByteString scope_as_string() const;
+        ByteString to_byte_string() const;
 
         bool operator==(SymbolName const&) const = default;
     };
@@ -63,8 +63,8 @@ private:
     friend Traits<SymbolName>;
 
     struct DocumentData {
-        DeprecatedString const& filename() const { return m_filename; }
-        DeprecatedString const& text() const { return m_text; }
+        ByteString const& filename() const { return m_filename; }
+        ByteString const& text() const { return m_text; }
         Preprocessor const& preprocessor() const
         {
             VERIFY(m_preprocessor);
@@ -86,20 +86,20 @@ private:
             return *m_parser;
         }
 
-        DeprecatedString m_filename;
-        DeprecatedString m_text;
+        ByteString m_filename;
+        ByteString m_text;
         OwnPtr<Preprocessor> m_preprocessor;
         OwnPtr<Parser> m_parser;
 
         HashMap<SymbolName, Symbol> m_symbols;
-        HashTable<DeprecatedString> m_available_headers;
+        HashTable<ByteString> m_available_headers;
     };
 
-    Vector<CodeComprehension::AutocompleteResultEntry> autocomplete_property(DocumentData const&, MemberExpression const&, const DeprecatedString partial_text) const;
-    Vector<AutocompleteResultEntry> autocomplete_name(DocumentData const&, ASTNode const&, DeprecatedString const& partial_text) const;
-    DeprecatedString type_of(DocumentData const&, Expression const&) const;
-    DeprecatedString type_of_property(DocumentData const&, Identifier const&) const;
-    DeprecatedString type_of_variable(Identifier const&) const;
+    Vector<CodeComprehension::AutocompleteResultEntry> autocomplete_property(DocumentData const&, MemberExpression const&, const ByteString partial_text) const;
+    Vector<AutocompleteResultEntry> autocomplete_name(DocumentData const&, ASTNode const&, ByteString const& partial_text) const;
+    ByteString type_of(DocumentData const&, Expression const&) const;
+    ByteString type_of_property(DocumentData const&, Identifier const&) const;
+    ByteString type_of_variable(Identifier const&) const;
     bool is_property(ASTNode const&) const;
     RefPtr<Cpp::Declaration const> find_declaration_of(DocumentData const&, ASTNode const&) const;
     RefPtr<Cpp::Declaration const> find_declaration_of(DocumentData const&, SymbolName const&) const;
@@ -110,16 +110,16 @@ private:
         Yes
     };
 
-    Vector<Symbol> properties_of_type(DocumentData const& document, DeprecatedString const& type) const;
+    Vector<Symbol> properties_of_type(DocumentData const& document, ByteString const& type) const;
     Vector<Symbol> get_child_symbols(ASTNode const&) const;
     Vector<Symbol> get_child_symbols(ASTNode const&, Vector<StringView> const& scope, Symbol::IsLocal) const;
 
-    DocumentData const* get_document_data(DeprecatedString const& file) const;
-    DocumentData const* get_or_create_document_data(DeprecatedString const& file);
-    void set_document_data(DeprecatedString const& file, OwnPtr<DocumentData>&& data);
+    DocumentData const* get_document_data(ByteString const& file) const;
+    DocumentData const* get_or_create_document_data(ByteString const& file);
+    void set_document_data(ByteString const& file, OwnPtr<DocumentData>&& data);
 
-    OwnPtr<DocumentData> create_document_data_for(DeprecatedString const& file);
-    DeprecatedString document_path_from_include_path(StringView include_path) const;
+    OwnPtr<DocumentData> create_document_data_for(ByteString const& file);
+    ByteString document_path_from_include_path(StringView include_path) const;
     void update_declared_symbols(DocumentData&);
     void update_todo_entries(DocumentData&);
     CodeComprehension::DeclarationType type_of_declaration(Cpp::Declaration const&);
@@ -129,7 +129,7 @@ private:
     Optional<CodeComprehension::ProjectLocation> find_preprocessor_definition(DocumentData const&, const GUI::TextPosition&);
     Optional<Cpp::Preprocessor::Substitution> find_preprocessor_substitution(DocumentData const&, Cpp::Position const&);
 
-    OwnPtr<DocumentData> create_document_data(DeprecatedString text, DeprecatedString const& filename);
+    OwnPtr<DocumentData> create_document_data(ByteString text, ByteString const& filename);
     Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_property(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
     Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_name(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
     Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_include(DocumentData const&, Token include_path_token, Cpp::Position const& cursor_position) const;
@@ -145,12 +145,12 @@ private:
     CodeComprehension::TokenInfo::SemanticType get_token_semantic_type(DocumentData const&, Token const&);
     CodeComprehension::TokenInfo::SemanticType get_semantic_type_for_identifier(DocumentData const&, Position);
 
-    HashMap<DeprecatedString, OwnPtr<DocumentData>> m_documents;
+    HashMap<ByteString, OwnPtr<DocumentData>> m_documents;
 
     // A document's path will be in this set if we're currently processing it.
     // A document is added to this set when we start processing it (e.g because it was #included) and removed when we're done.
     // We use this to prevent circular #includes from looping indefinitely.
-    HashTable<DeprecatedString> m_unfinished_documents;
+    HashTable<ByteString> m_unfinished_documents;
 };
 
 template<typename Func>

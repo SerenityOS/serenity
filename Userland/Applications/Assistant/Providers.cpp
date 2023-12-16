@@ -70,7 +70,7 @@ AppProvider::AppProvider()
     });
 }
 
-void AppProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void AppProvider::query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (query.starts_with('=') || query.starts_with('$'))
         return;
@@ -80,7 +80,7 @@ void AppProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
     for (auto const& app_file : m_app_file_cache) {
         auto query_and_arguments = query.split_limit(' ', 2);
         auto app_name = query_and_arguments.is_empty() ? query : query_and_arguments[0];
-        auto arguments = query_and_arguments.size() < 2 ? DeprecatedString::empty() : query_and_arguments[1];
+        auto arguments = query_and_arguments.size() < 2 ? ByteString::empty() : query_and_arguments[1];
         auto score = 0;
         if (app_name.equals_ignoring_ascii_case(app_file->name()))
             score = NumericLimits<int>::max();
@@ -98,7 +98,7 @@ void AppProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
     on_complete(move(results));
 }
 
-void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void CalculatorProvider::query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (!query.starts_with('='))
         return;
@@ -116,11 +116,11 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vect
         return;
 
     auto result = completion.release_value();
-    DeprecatedString calculation;
+    ByteString calculation;
     if (!result.is_number()) {
         calculation = "0";
     } else {
-        calculation = result.to_string_without_side_effects().to_deprecated_string();
+        calculation = result.to_string_without_side_effects().to_byte_string();
     }
 
     Vector<NonnullRefPtr<Result>> results;
@@ -138,7 +138,7 @@ FileProvider::FileProvider()
     build_filesystem_cache();
 }
 
-void FileProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void FileProvider::query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     build_filesystem_cache();
 
@@ -147,7 +147,7 @@ void FileProvider::query(DeprecatedString const& query, Function<void(Vector<Non
 
     m_fuzzy_match_work = Threading::BackgroundAction<Optional<Vector<NonnullRefPtr<Result>>>>::construct(
         [this, query](auto& task) -> Optional<Vector<NonnullRefPtr<Result>>> {
-            BinaryHeap<int, DeprecatedString, MAX_SEARCH_RESULTS> sorted_results;
+            BinaryHeap<int, ByteString, MAX_SEARCH_RESULTS> sorted_results;
 
             for (auto& path : m_full_path_cache) {
                 if (task.is_canceled())
@@ -204,7 +204,7 @@ void FileProvider::build_filesystem_cache()
 
     (void)Threading::BackgroundAction<int>::construct(
         [this, strong_ref = NonnullRefPtr(*this)](auto&) {
-            DeprecatedString slash = "/";
+            ByteString slash = "/";
             auto timer = Core::ElapsedTimer::start_new();
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
@@ -241,7 +241,7 @@ void FileProvider::build_filesystem_cache()
         });
 }
 
-void TerminalProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void TerminalProvider::query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (!query.starts_with('$'))
         return;
@@ -253,7 +253,7 @@ void TerminalProvider::query(DeprecatedString const& query, Function<void(Vector
     on_complete(move(results));
 }
 
-void URLProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void URLProvider::query(ByteString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (query.is_empty() || query.starts_with('=') || query.starts_with('$'))
         return;
@@ -263,7 +263,7 @@ void URLProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
     if (url.scheme().is_empty())
         url.set_scheme("http"_string);
     if (url.host().has<Empty>() || url.host() == String {})
-        url.set_host(String::from_deprecated_string(query).release_value_but_fixme_should_propagate_errors());
+        url.set_host(String::from_byte_string(query).release_value_but_fixme_should_propagate_errors());
     if (url.path_segment_count() == 0)
         url.set_paths({ "" });
 

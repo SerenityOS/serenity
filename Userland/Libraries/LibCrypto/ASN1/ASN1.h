@@ -71,9 +71,9 @@ struct Tag {
     Type type;
 };
 
-DeprecatedString kind_name(Kind);
-DeprecatedString class_name(Class);
-DeprecatedString type_name(Type);
+ByteString kind_name(Kind);
+ByteString class_name(Class);
+ByteString type_name(Type);
 
 Optional<Core::DateTime> parse_utc_time(StringView);
 Optional<Core::DateTime> parse_generalized_time(StringView);

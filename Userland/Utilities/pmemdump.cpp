@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringUtils.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static bool try_set_offset_and_length_parameters(DeprecatedString const& arg_offset, DeprecatedString const& arg_length, u64& offset, u64& length)
+static bool try_set_offset_and_length_parameters(ByteString const& arg_offset, ByteString const& arg_length, u64& offset, u64& length)
 {
     // TODO: Add support for hex values
     auto possible_offset = arg_offset.to_uint<u64>();

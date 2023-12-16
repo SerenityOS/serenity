@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
@@ -89,8 +89,8 @@ public:
 
     void make_window_manager(unsigned event_mask);
 
-    DeprecatedString title() const;
-    void set_title(DeprecatedString);
+    ByteString title() const;
+    void set_title(ByteString);
 
     enum class CloseRequestDecision {
         StayOpen,
@@ -302,7 +302,7 @@ private:
     Gfx::IntRect m_rect_when_windowless;
     Gfx::IntSize m_minimum_size_when_windowless { 0, 0 };
     Gfx::IntRect m_floating_rect;
-    DeprecatedString m_title_when_windowless;
+    ByteString m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;

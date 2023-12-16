@@ -270,7 +270,7 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
     if constexpr (WEBDRIVER_DEBUG) {
         dbgln("Got HTTP request: {} {}", m_request->method_name(), m_request->resource());
         if (!body.is_null())
-            dbgln("Body: {}", body.to_deprecated_string());
+            dbgln("Body: {}", body.to_byte_string());
     }
 
     auto [handler, parameters] = TRY(match_route(*m_request));
@@ -345,7 +345,7 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
 
 void Client::log_response(unsigned code)
 {
-    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_deprecated_string(), code, m_request->method_name(), m_request->resource());
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_byte_string(), code, m_request->method_name(), m_request->resource());
 }
 
 }

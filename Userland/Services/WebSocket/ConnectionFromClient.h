@@ -26,17 +26,17 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual Messages::WebSocketServer::ConnectResponse connect(URL const&, DeprecatedString const&, Vector<DeprecatedString> const&, Vector<DeprecatedString> const&, HashMap<DeprecatedString, DeprecatedString> const&) override;
+    virtual Messages::WebSocketServer::ConnectResponse connect(URL const&, ByteString const&, Vector<ByteString> const&, Vector<ByteString> const&, HashMap<ByteString, ByteString> const&) override;
     virtual Messages::WebSocketServer::ReadyStateResponse ready_state(i32) override;
     virtual Messages::WebSocketServer::SubprotocolInUseResponse subprotocol_in_use(i32) override;
     virtual void send(i32, bool, ByteBuffer const&) override;
-    virtual void close(i32, u16, DeprecatedString const&) override;
-    virtual Messages::WebSocketServer::SetCertificateResponse set_certificate(i32, DeprecatedString const&, DeprecatedString const&) override;
+    virtual void close(i32, u16, ByteString const&) override;
+    virtual Messages::WebSocketServer::SetCertificateResponse set_certificate(i32, ByteString const&, ByteString const&) override;
 
     void did_connect(i32);
     void did_receive_message(i32, Message);
     void did_error(i32, i32 message);
-    void did_close(i32, u16 code, DeprecatedString reason, bool was_clean);
+    void did_close(i32, u16 code, ByteString reason, bool was_clean);
     void did_request_certificates(i32);
 
     i32 m_connection_ids { 0 };

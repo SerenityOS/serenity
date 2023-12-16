@@ -20,13 +20,13 @@ class Client final
     IPC_CLIENT_CONNECTION(Client, "/tmp/session/%sid/portal/config"sv)
 
 public:
-    void pledge_domains(Vector<DeprecatedString> const&);
-    void monitor_domain(DeprecatedString const&);
+    void pledge_domains(Vector<ByteString> const&);
+    void monitor_domain(ByteString const&);
 
-    Vector<DeprecatedString> list_groups(StringView domain);
-    Vector<DeprecatedString> list_keys(StringView domain, StringView group);
+    Vector<ByteString> list_groups(StringView domain);
+    Vector<ByteString> list_keys(StringView domain, StringView group);
 
-    DeprecatedString read_string(StringView domain, StringView group, StringView key, StringView fallback);
+    ByteString read_string(StringView domain, StringView group, StringView key, StringView fallback);
     i32 read_i32(StringView domain, StringView group, StringView key, i32 fallback);
     u32 read_u32(StringView domain, StringView group, StringView key, u32 fallback);
     bool read_bool(StringView domain, StringView group, StringView key, bool fallback);
@@ -47,26 +47,26 @@ private:
     {
     }
 
-    void notify_changed_string_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
-    void notify_changed_i32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value) override;
-    void notify_changed_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value) override;
-    void notify_changed_bool_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
-    void notify_removed_key(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key) override;
-    void notify_removed_group(DeprecatedString const& domain, DeprecatedString const& group) override;
-    void notify_added_group(DeprecatedString const& domain, DeprecatedString const& group) override;
+    void notify_changed_string_value(ByteString const& domain, ByteString const& group, ByteString const& key, ByteString const& value) override;
+    void notify_changed_i32_value(ByteString const& domain, ByteString const& group, ByteString const& key, i32 value) override;
+    void notify_changed_u32_value(ByteString const& domain, ByteString const& group, ByteString const& key, u32 value) override;
+    void notify_changed_bool_value(ByteString const& domain, ByteString const& group, ByteString const& key, bool value) override;
+    void notify_removed_key(ByteString const& domain, ByteString const& group, ByteString const& key) override;
+    void notify_removed_group(ByteString const& domain, ByteString const& group) override;
+    void notify_added_group(ByteString const& domain, ByteString const& group) override;
 };
 
-inline Vector<DeprecatedString> list_groups(StringView domain)
+inline Vector<ByteString> list_groups(StringView domain)
 {
     return Client::the().list_groups(domain);
 }
 
-inline Vector<DeprecatedString> list_keys(StringView domain, StringView group)
+inline Vector<ByteString> list_keys(StringView domain, StringView group)
 {
     return Client::the().list_keys(domain, group);
 }
 
-inline DeprecatedString read_string(StringView domain, StringView group, StringView key, StringView fallback = {})
+inline ByteString read_string(StringView domain, StringView group, StringView key, StringView fallback = {})
 {
     return Client::the().read_string(domain, group, key, fallback);
 }
@@ -121,17 +121,17 @@ inline void add_group(StringView domain, StringView group)
     Client::the().add_group(domain, group);
 }
 
-inline void pledge_domains(Vector<DeprecatedString> const& domains)
+inline void pledge_domains(Vector<ByteString> const& domains)
 {
     Client::the().pledge_domains(domains);
 }
 
-inline void pledge_domain(DeprecatedString const& domain)
+inline void pledge_domain(ByteString const& domain)
 {
     Client::the().pledge_domains({ domain });
 }
 
-inline void monitor_domain(DeprecatedString const& domain)
+inline void monitor_domain(ByteString const& domain)
 {
     Client::the().monitor_domain(domain);
 }

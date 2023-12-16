@@ -16,7 +16,7 @@ namespace PixelPaint {
 
 class FilterNode final : public GUI::TreeViewModel::Node {
 public:
-    FilterNode(DeprecatedString text, Optional<GUI::Icon> icon, Node* parent_node, NonnullRefPtr<Filter> filter)
+    FilterNode(ByteString text, Optional<GUI::Icon> icon, Node* parent_node, NonnullRefPtr<Filter> filter)
         : Node(move(text), move(icon), parent_node)
         , m_filter(move(filter))
     {

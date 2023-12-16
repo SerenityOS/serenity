@@ -27,7 +27,7 @@
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)is_redirect;
 - (void)onLoadFinish:(URL const&)url;
 
-- (void)onTitleChange:(DeprecatedString const&)title;
+- (void)onTitleChange:(ByteString const&)title;
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap;
 
 - (void)onNavigateBack;
@@ -58,7 +58,7 @@
 - (void)resetZoom;
 - (float)zoomLevel;
 
-- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument;
+- (void)debugRequest:(ByteString const&)request argument:(ByteString const&)argument;
 
 - (void)viewSource;
 

@@ -121,7 +121,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
             Config::write_string("PixelPaint"sv, "NewImage"sv, "Name"sv, m_image_name);
             Config::write_i32("PixelPaint"sv, "NewImage"sv, "Width"sv, m_image_size.width());
             Config::write_i32("PixelPaint"sv, "NewImage"sv, "Height"sv, m_image_size.height());
-            Config::write_string("PixelPaint"sv, "NewImage"sv, "Background"sv, m_background_color.to_deprecated_string());
+            Config::write_string("PixelPaint"sv, "NewImage"sv, "Background"sv, m_background_color.to_byte_string());
         }
 
         done(ExecResult::OK);

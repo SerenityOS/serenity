@@ -71,7 +71,7 @@ private:
     {
         using RawContainerType = RemoveCV<Container>;
 
-        if constexpr (IsSame<StringView, RawContainerType> || IsSame<DeprecatedString, RawContainerType>)
+        if constexpr (IsSame<StringView, RawContainerType> || IsSame<ByteString, RawContainerType>)
             return { container, container.length() };
         else
             return { container, container.size() };

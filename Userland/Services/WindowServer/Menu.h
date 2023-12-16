@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/EventReceiver.h>
 #include <LibGfx/Font/Font.h>

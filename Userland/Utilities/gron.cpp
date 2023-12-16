@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 static bool use_color = false;
-static void print(StringView name, JsonValue const&, Vector<DeprecatedString>& trail);
+static void print(StringView name, JsonValue const&, Vector<ByteString>& trail);
 
 static StringView color_name = ""sv;
 static StringView color_index = ""sv;
@@ -71,12 +71,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         color_off = "\033[0m"sv;
     }
 
-    Vector<DeprecatedString> trail;
+    Vector<ByteString> trail;
     print("json"sv, json, trail);
     return 0;
 }
 
-static void print(StringView name, JsonValue const& value, Vector<DeprecatedString>& trail)
+static void print(StringView name, JsonValue const& value, Vector<ByteString>& trail)
 {
     for (size_t i = 0; i < trail.size(); ++i)
         out("{}", trail[i]);
@@ -85,16 +85,16 @@ static void print(StringView name, JsonValue const& value, Vector<DeprecatedStri
 
     if (value.is_object()) {
         outln("{}{{}}{};", color_brace, color_off);
-        trail.append(DeprecatedString::formatted("{}{}{}.", color_name, name, color_off));
+        trail.append(ByteString::formatted("{}{}{}.", color_name, name, color_off));
         value.as_object().for_each_member([&](auto& on, auto& ov) { print(on, ov, trail); });
         trail.take_last();
         return;
     }
     if (value.is_array()) {
         outln("{}[]{};", color_brace, color_off);
-        trail.append(DeprecatedString::formatted("{}{}{}", color_name, name, color_off));
+        trail.append(ByteString::formatted("{}{}{}", color_name, name, color_off));
         for (size_t i = 0; i < value.as_array().size(); ++i) {
-            auto element_name = DeprecatedString::formatted("{}{}[{}{}{}{}{}]{}", color_off, color_brace, color_off, color_index, i, color_off, color_brace, color_off);
+            auto element_name = ByteString::formatted("{}{}[{}{}{}{}{}]{}", color_off, color_brace, color_off, color_index, i, color_off, color_brace, color_off);
             print(element_name, value.as_array()[i], trail);
         }
         trail.take_last();

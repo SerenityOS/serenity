@@ -7,7 +7,7 @@
  */
 
 #include "TerminalWidget.h"
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
@@ -982,7 +982,7 @@ int TerminalWidget::scroll_length() const
     return m_scrollbar->step();
 }
 
-DeprecatedString TerminalWidget::selected_text() const
+ByteString TerminalWidget::selected_text() const
 {
     StringBuilder builder;
 
@@ -1008,7 +1008,7 @@ DeprecatedString TerminalWidget::selected_text() const
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 int TerminalWidget::first_selection_column_on_row(int row) const
@@ -1133,7 +1133,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
             if (!af->is_valid())
                 continue;
-            auto action = GUI::Action::create(DeprecatedString::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
+            auto action = GUI::Action::create(ByteString::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
                 Desktop::Launcher::open(m_context_menu_href, handler);
             });
 
@@ -1181,7 +1181,7 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
             if (url.scheme() == "file")
                 send_non_user_input(url.serialize_path().bytes());
             else
-                send_non_user_input(url.to_deprecated_string().bytes());
+                send_non_user_input(url.to_byte_string().bytes());
 
             first = false;
         }
@@ -1360,7 +1360,7 @@ Optional<VT::CursorShape> TerminalWidget::parse_cursor_shape(StringView cursor_s
     return {};
 }
 
-DeprecatedString TerminalWidget::stringify_cursor_shape(VT::CursorShape cursor_shape)
+ByteString TerminalWidget::stringify_cursor_shape(VT::CursorShape cursor_shape)
 {
     switch (cursor_shape) {
     case VT::CursorShape::Block:

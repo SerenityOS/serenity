@@ -46,8 +46,8 @@ public:
     struct Node {
         ~Node() = default;
 
-        DeprecatedString name;
-        DeprecatedString symlink_target;
+        ByteString name;
+        ByteString symlink_target;
         size_t size { 0 };
         mode_t mode { 0 };
         uid_t uid { 0 };
@@ -72,7 +72,7 @@ public:
 
         bool can_delete_or_move() const;
 
-        DeprecatedString full_path() const;
+        ByteString full_path() const;
 
     private:
         friend class FileSystemModel;
@@ -97,21 +97,21 @@ public:
         ModelIndex index(int column) const;
         void traverse_if_needed();
         void reify_if_needed();
-        bool fetch_data(DeprecatedString const& full_path, bool is_root);
+        bool fetch_data(ByteString const& full_path, bool is_root);
 
-        OwnPtr<Node> create_child(DeprecatedString const& child_name);
+        OwnPtr<Node> create_child(ByteString const& child_name);
     };
 
-    static NonnullRefPtr<FileSystemModel> create(Optional<DeprecatedString> root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static NonnullRefPtr<FileSystemModel> create(Optional<ByteString> root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
         return adopt_ref(*new FileSystemModel(root_path, mode));
     }
     virtual ~FileSystemModel() override = default;
 
-    DeprecatedString root_path() const { return m_root_path.value_or(""); }
-    void set_root_path(Optional<DeprecatedString>);
-    DeprecatedString full_path(ModelIndex const&) const;
-    ModelIndex index(DeprecatedString path, int column) const;
+    ByteString root_path() const { return m_root_path.value_or(""); }
+    void set_root_path(Optional<ByteString>);
+    ByteString full_path(ModelIndex const&) const;
+    ModelIndex index(ByteString path, int column) const;
 
     void update_node_on_selection(ModelIndex const&, bool const);
     ModelIndex m_previously_selected_index {};
@@ -122,7 +122,7 @@ public:
     Function<void()> on_complete;
     Function<void(int error, char const* error_string)> on_directory_change_error;
     Function<void(int error, char const* error_string)> on_rename_error;
-    Function<void(DeprecatedString const& old_name, DeprecatedString const& new_name)> on_rename_successful;
+    Function<void(ByteString const& old_name, ByteString const& new_name)> on_rename_successful;
     Function<void()> on_root_path_removed;
 
     virtual int tree_column() const override { return Column::Name; }
@@ -141,34 +141,34 @@ public:
     virtual Vector<ModelIndex> matches(StringView, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) override;
     virtual void invalidate() override;
 
-    static DeprecatedString timestamp_string(time_t timestamp)
+    static ByteString timestamp_string(time_t timestamp)
     {
-        return Core::DateTime::from_timestamp(timestamp).to_deprecated_string();
+        return Core::DateTime::from_timestamp(timestamp).to_byte_string();
     }
 
     bool should_show_dotfiles() const { return m_should_show_dotfiles; }
     void set_should_show_dotfiles(bool);
 
-    Optional<Vector<DeprecatedString>> allowed_file_extensions() const { return m_allowed_file_extensions; }
-    void set_allowed_file_extensions(Optional<Vector<DeprecatedString>> const& allowed_file_extensions);
+    Optional<Vector<ByteString>> allowed_file_extensions() const { return m_allowed_file_extensions; }
+    void set_allowed_file_extensions(Optional<Vector<ByteString>> const& allowed_file_extensions);
 
 private:
-    FileSystemModel(Optional<DeprecatedString> root_path, Mode);
+    FileSystemModel(Optional<ByteString> root_path, Mode);
 
-    DeprecatedString name_for_uid(uid_t) const;
-    DeprecatedString name_for_gid(gid_t) const;
+    ByteString name_for_uid(uid_t) const;
+    ByteString name_for_gid(gid_t) const;
 
-    Optional<Node const&> node_for_path(DeprecatedString const&) const;
+    Optional<Node const&> node_for_path(ByteString const&) const;
 
-    HashMap<uid_t, DeprecatedString> m_user_names;
-    HashMap<gid_t, DeprecatedString> m_group_names;
+    HashMap<uid_t, ByteString> m_user_names;
+    HashMap<gid_t, ByteString> m_group_names;
 
     bool fetch_thumbnail_for(Node const& node);
     GUI::Icon icon_for(Node const& node) const;
 
     void handle_file_event(Core::FileWatcherEvent const& event);
 
-    Optional<DeprecatedString> m_root_path;
+    Optional<ByteString> m_root_path;
     Mode m_mode { Invalid };
     OwnPtr<Node> m_root { nullptr };
 
@@ -177,7 +177,7 @@ private:
 
     Core::ElapsedTimer m_ui_update_timer;
 
-    Optional<Vector<DeprecatedString>> m_allowed_file_extensions;
+    Optional<Vector<ByteString>> m_allowed_file_extensions;
 
     bool m_should_show_dotfiles { false };
 

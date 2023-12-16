@@ -28,22 +28,22 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual void request_file_read_only_approved(i32, DeprecatedString const&) override;
-    virtual void request_file(i32, i32, i32, DeprecatedString const&, Core::File::OpenMode) override;
-    virtual void prompt_open_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode, Optional<Vector<GUI::FileTypeFilter>> const&) override;
-    virtual void prompt_save_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode) override;
+    virtual void request_file_read_only_approved(i32, ByteString const&) override;
+    virtual void request_file(i32, i32, i32, ByteString const&, Core::File::OpenMode) override;
+    virtual void prompt_open_file(i32, i32, i32, ByteString const&, ByteString const&, Core::File::OpenMode, Optional<Vector<GUI::FileTypeFilter>> const&) override;
+    virtual void prompt_save_file(i32, i32, i32, ByteString const&, ByteString const&, ByteString const&, Core::File::OpenMode) override;
 
-    void prompt_helper(i32, Optional<DeprecatedString> const&, Core::File::OpenMode);
+    void prompt_helper(i32, Optional<ByteString> const&, Core::File::OpenMode);
 
     enum class ShouldPrompt {
         No,
         Yes
     };
-    void request_file_handler(i32, i32, i32, DeprecatedString const&, Core::File::OpenMode, ShouldPrompt);
+    void request_file_handler(i32, i32, i32, ByteString const&, Core::File::OpenMode, ShouldPrompt);
 
     virtual Messages::FileSystemAccessServer::ExposeWindowServerClientIdResponse expose_window_server_client_id() override;
 
-    HashMap<DeprecatedString, Core::File::OpenMode> m_approved_files;
+    HashMap<ByteString, Core::File::OpenMode> m_approved_files;
 };
 
 }

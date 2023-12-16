@@ -11,13 +11,13 @@
 #include <LibGUI/Window.h>
 #include <errno_codes.h>
 
-Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
+Presentation::Presentation(Gfx::IntSize normative_size, HashMap<ByteString, ByteString> metadata)
     : m_normative_size(normative_size)
     , m_metadata(move(metadata))
 {
 }
 
-NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
+NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<ByteString, ByteString> metadata)
 {
     return NonnullOwnPtr<Presentation>(NonnullOwnPtr<Presentation>::Adopt, *new Presentation(normative_size, move(metadata)));
 }
@@ -128,12 +128,12 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     return presentation;
 }
 
-HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObject const& metadata_object)
+HashMap<ByteString, ByteString> Presentation::parse_metadata(JsonObject const& metadata_object)
 {
-    HashMap<DeprecatedString, DeprecatedString> metadata;
+    HashMap<ByteString, ByteString> metadata;
 
     metadata_object.for_each_member([&](auto const& key, auto const& value) {
-        metadata.set(key, value.to_deprecated_string());
+        metadata.set(key, value.to_byte_string());
     });
 
     return metadata;
@@ -142,7 +142,7 @@ HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObj
 ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& metadata_object)
 {
     auto const& maybe_width = metadata_object.get("width"sv);
-    auto const& maybe_aspect = metadata_object.get_deprecated_string("aspect"sv);
+    auto const& maybe_aspect = metadata_object.get_byte_string("aspect"sv);
 
     if (!maybe_width.has_value() || !maybe_width->is_number() || !maybe_aspect.has_value())
         return Error::from_string_view("Width or aspect in incorrect format"sv);
@@ -164,14 +164,14 @@ ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& me
     };
 }
 
-ErrorOr<DeprecatedString> Presentation::render()
+ErrorOr<ByteString> Presentation::render()
 {
     HTMLElement main_element;
     main_element.tag_name = "main"sv;
     for (size_t i = 0; i < m_slides.size(); ++i) {
         HTMLElement slide_div;
         slide_div.tag_name = "div"sv;
-        TRY(slide_div.attributes.try_set("id"sv, DeprecatedString::formatted("slide{}", i)));
+        TRY(slide_div.attributes.try_set("id"sv, ByteString::formatted("slide{}", i)));
         TRY(slide_div.attributes.try_set("class"sv, "slide hidden"sv));
         auto& slide = m_slides[i];
         TRY(slide_div.children.try_append(TRY(slide.render(*this))));
@@ -214,5 +214,5 @@ ErrorOr<DeprecatedString> Presentation::render()
 )"sv));
     TRY(main_element.serialize(builder));
     TRY(builder.try_append("</body></html>"sv));
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }

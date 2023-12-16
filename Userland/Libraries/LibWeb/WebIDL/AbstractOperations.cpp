@@ -147,7 +147,7 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String
     // 10. If ! IsCallable(O) is false, then:
     if (!object->is_function()) {
         // 1. Let getResult be Get(O, opName).
-        auto get_result = object->get(operation_name.to_deprecated_string());
+        auto get_result = object->get(operation_name.to_byte_string());
 
         // 2. If getResult is an abrupt completion, set completion to getResult and jump to the step labeled return.
         if (get_result.is_throw_completion()) {
@@ -318,7 +318,7 @@ JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(Variant<Bindings
     // 1. If P is not a supported property name of O, then return false.
     // NOTE: This is in it's own variable to enforce the type.
     Vector<String> supported_property_names = variant.visit([](auto* o) { return o->supported_property_names(); });
-    auto property_key_string = MUST(String::from_deprecated_string(property_key.to_string()));
+    auto property_key_string = MUST(String::from_byte_string(property_key.to_string()));
     if (!supported_property_names.contains_slow(property_key_string))
         return false;
 

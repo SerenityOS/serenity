@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
@@ -69,7 +69,7 @@ public:
 
     void set_end_offset(Badge<Parser>, u32 end_offset) { m_end_offset = end_offset; }
 
-    DeprecatedString class_name() const;
+    ByteString class_name() const;
 
     template<typename T>
     bool fast_is() const = delete;
@@ -692,7 +692,7 @@ class FunctionNode {
 public:
     StringView name() const { return m_name ? m_name->string().view() : ""sv; }
     RefPtr<Identifier const> name_identifier() const { return m_name; }
-    DeprecatedString const& source_text() const { return m_source_text; }
+    ByteString const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
     Vector<FunctionParameter> const& parameters() const { return m_parameters; }
     i32 function_length() const { return m_function_length; }
@@ -704,7 +704,7 @@ public:
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names)
+    FunctionNode(RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names)
         : m_name(move(name))
         , m_source_text(move(source_text))
         , m_body(move(body))
@@ -721,12 +721,12 @@ protected:
             VERIFY(!m_might_need_arguments_object);
     }
 
-    void dump(int indent, DeprecatedString const& class_name) const;
+    void dump(int indent, ByteString const& class_name) const;
 
     RefPtr<Identifier const> m_name { nullptr };
 
 private:
-    DeprecatedString m_source_text;
+    ByteString m_source_text;
     NonnullRefPtr<Statement const> m_body;
     Vector<FunctionParameter> const m_parameters;
     i32 const m_function_length;
@@ -745,7 +745,7 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
+    FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
         : Declaration(move(source_range))
         , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names))
     {
@@ -770,7 +770,7 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
         : Expression(move(source_range))
         , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names))
     {
@@ -1188,7 +1188,7 @@ private:
 
 class BigIntLiteral final : public Expression {
 public:
-    explicit BigIntLiteral(SourceRange source_range, DeprecatedString value)
+    explicit BigIntLiteral(SourceRange source_range, ByteString value)
         : Expression(move(source_range))
         , m_value(move(value))
     {
@@ -1198,12 +1198,12 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
-    DeprecatedString m_value;
+    ByteString m_value;
 };
 
 class StringLiteral final : public Expression {
 public:
-    explicit StringLiteral(SourceRange source_range, DeprecatedString value)
+    explicit StringLiteral(SourceRange source_range, ByteString value)
         : Expression(move(source_range))
         , m_value(move(value))
     {
@@ -1217,7 +1217,7 @@ public:
 private:
     virtual bool is_string_literal() const override { return true; }
 
-    DeprecatedString m_value;
+    ByteString m_value;
 };
 
 class NullLiteral final : public PrimitiveLiteral {
@@ -1235,7 +1235,7 @@ public:
 
 class RegExpLiteral final : public Expression {
 public:
-    RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, DeprecatedString parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, DeprecatedString pattern, DeprecatedString flags)
+    RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, ByteString parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, ByteString pattern, ByteString flags)
         : Expression(move(source_range))
         , m_parsed_regex(move(parsed_regex))
         , m_parsed_pattern(move(parsed_pattern))
@@ -1249,17 +1249,17 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     regex::Parser::Result const& parsed_regex() const { return m_parsed_regex; }
-    DeprecatedString const& parsed_pattern() const { return m_parsed_pattern; }
+    ByteString const& parsed_pattern() const { return m_parsed_pattern; }
     regex::RegexOptions<ECMAScriptFlags> const& parsed_flags() const { return m_parsed_flags; }
-    DeprecatedString const& pattern() const { return m_pattern; }
-    DeprecatedString const& flags() const { return m_flags; }
+    ByteString const& pattern() const { return m_pattern; }
+    ByteString const& flags() const { return m_flags; }
 
 private:
     regex::Parser::Result m_parsed_regex;
-    DeprecatedString m_parsed_pattern;
+    ByteString m_parsed_pattern;
     regex::RegexOptions<ECMAScriptFlags> m_parsed_flags;
-    DeprecatedString m_pattern;
-    DeprecatedString m_flags;
+    ByteString m_pattern;
+    ByteString m_flags;
 };
 
 class PrivateIdentifier final : public Expression {
@@ -1398,7 +1398,7 @@ public:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
+    ClassExpression(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
         : Expression(move(source_range))
         , m_name(move(name))
         , m_source_text(move(source_text))
@@ -1410,7 +1410,7 @@ public:
 
     StringView name() const { return m_name ? m_name->string().view() : ""sv; }
 
-    DeprecatedString const& source_text() const { return m_source_text; }
+    ByteString const& source_text() const { return m_source_text; }
     RefPtr<FunctionExpression const> constructor() const { return m_constructor; }
 
     virtual void dump(int indent) const override;
@@ -1428,7 +1428,7 @@ private:
     friend ClassDeclaration;
 
     RefPtr<Identifier const> m_name;
-    DeprecatedString m_source_text;
+    ByteString m_source_text;
     RefPtr<FunctionExpression const> m_constructor;
     RefPtr<Expression const> m_super_class;
     Vector<NonnullRefPtr<ClassElement const>> m_elements;
@@ -1551,7 +1551,7 @@ protected:
 
     virtual bool is_call_expression() const override { return true; }
 
-    Optional<DeprecatedString> expression_string() const;
+    Optional<ByteString> expression_string() const;
 
     NonnullRefPtr<Expression const> m_callee;
 };
@@ -1900,7 +1900,7 @@ public:
     Expression const& object() const { return *m_object; }
     Expression const& property() const { return *m_property; }
 
-    DeprecatedString to_string_approximation() const;
+    ByteString to_string_approximation() const;
 
     bool ends_in_private_name() const;
 

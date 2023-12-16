@@ -113,7 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             if (should_escape) {
-                DeprecatedString escaped_string;
+                ByteString escaped_string;
                 Optional<char> trivia {};
                 bool starting_trivia_already_provided = false;
                 auto escape_mode = Shell::Shell::EscapeMode::Bareword;
@@ -227,7 +227,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!skip_rc_files) {
         auto run_rc_file = [&](auto& name) {
-            DeprecatedString file_path = name;
+            ByteString file_path = name;
             if (file_path.starts_with('~'))
                 file_path = shell->expand_tilde(file_path);
             if (FileSystem::exists(file_path)) {

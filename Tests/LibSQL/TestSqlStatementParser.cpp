@@ -8,7 +8,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
 #include <AK/StringView.h>
@@ -19,7 +19,7 @@
 
 namespace {
 
-using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Statement>, DeprecatedString>;
+using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Statement>, ByteString>;
 
 ParseResult parse(StringView sql)
 {
@@ -27,7 +27,7 @@ ParseResult parse(StringView sql)
     auto statement = parser.next_statement();
 
     if (parser.has_errors()) {
-        return parser.errors()[0].to_deprecated_string();
+        return parser.errors()[0].to_byte_string();
     }
 
     return statement;
@@ -393,7 +393,7 @@ TEST_CASE(update)
     EXPECT(parse("UPDATE OR table_name SET column_name=4;"sv).is_error());
     EXPECT(parse("UPDATE OR foo table_name SET column_name=4;"sv).is_error());
 
-    auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<DeprecatedString>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
+    auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<ByteString>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
         auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::Update>(*statement));
 
@@ -437,7 +437,7 @@ TEST_CASE(update)
         }
     };
 
-    Vector<Vector<DeprecatedString>> update_columns { { "COLUMN_NAME" } };
+    Vector<Vector<ByteString>> update_columns { { "COLUMN_NAME" } };
     validate("UPDATE OR ABORT table_name SET column_name=1;"sv, SQL::AST::ConflictResolution::Abort, {}, "TABLE_NAME"sv, {}, update_columns, false, false, {});
     validate("UPDATE OR FAIL table_name SET column_name=1;"sv, SQL::AST::ConflictResolution::Fail, {}, "TABLE_NAME"sv, {}, update_columns, false, false, {});
     validate("UPDATE OR IGNORE table_name SET column_name=1;"sv, SQL::AST::ConflictResolution::Ignore, {}, "TABLE_NAME"sv, {}, update_columns, false, false, {});
@@ -578,7 +578,7 @@ TEST_CASE(select)
     };
 
     struct Ordering {
-        DeprecatedString collation_name;
+        ByteString collation_name;
         SQL::Order order;
         SQL::Nulls nulls;
     };
@@ -752,16 +752,16 @@ TEST_CASE(common_table_expression)
 
 TEST_CASE(nested_subquery_limit)
 {
-    auto subquery = DeprecatedString::formatted("{:(^{}}table_name{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
-    EXPECT(!parse(DeprecatedString::formatted("SELECT * FROM {};"sv, subquery)).is_error());
-    EXPECT(parse(DeprecatedString::formatted("SELECT * FROM ({});"sv, subquery)).is_error());
+    auto subquery = ByteString::formatted("{:(^{}}table_name{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
+    EXPECT(!parse(ByteString::formatted("SELECT * FROM {};"sv, subquery)).is_error());
+    EXPECT(parse(ByteString::formatted("SELECT * FROM ({});"sv, subquery)).is_error());
 }
 
 TEST_CASE(bound_parameter_limit)
 {
-    auto subquery = DeprecatedString::repeated("?, "sv, SQL::AST::Limits::maximum_bound_parameters);
-    EXPECT(!parse(DeprecatedString::formatted("INSERT INTO table_name VALUES ({}42);"sv, subquery)).is_error());
-    EXPECT(parse(DeprecatedString::formatted("INSERT INTO table_name VALUES ({}?);"sv, subquery)).is_error());
+    auto subquery = ByteString::repeated("?, "sv, SQL::AST::Limits::maximum_bound_parameters);
+    EXPECT(!parse(ByteString::formatted("INSERT INTO table_name VALUES ({}42);"sv, subquery)).is_error());
+    EXPECT(parse(ByteString::formatted("INSERT INTO table_name VALUES ({}?);"sv, subquery)).is_error());
 }
 
 TEST_CASE(describe_table)

@@ -65,7 +65,7 @@ GUI::Variant PartitionModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
     return {};
 }
 
-ErrorOr<void> PartitionModel::set_device_path(DeprecatedString const& path)
+ErrorOr<void> PartitionModel::set_device_path(ByteString const& path)
 {
     auto strong_file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto weak_file = TRY(Core::File::adopt_fd(strong_file->fd(), Core::File::OpenMode::Read, Core::File::ShouldCloseFileDescriptor::No));

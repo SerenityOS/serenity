@@ -19,7 +19,7 @@ public:
     static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> create();
 
     virtual void apply_settings() override;
-    void switch_adapter(DeprecatedString const& adapter);
+    void switch_adapter(ByteString const& adapter);
 
 protected:
     static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> try_create();
@@ -31,18 +31,18 @@ private:
     struct NetworkAdapterData {
         bool enabled = false;
         bool dhcp = false;
-        DeprecatedString ip_address;
+        ByteString ip_address;
         int cidr = 0;
-        DeprecatedString default_gateway;
+        ByteString default_gateway;
     };
 
-    void on_switch_adapter(DeprecatedString const& adapter);
+    void on_switch_adapter(ByteString const& adapter);
     void on_switch_enabled_or_dhcp();
     ErrorOr<void> apply_settings_impl();
     ErrorOr<Optional<JsonObject>> create_settings_object();
 
-    HashMap<DeprecatedString, NetworkAdapterData> m_network_adapters;
-    Vector<DeprecatedString> m_adapter_names;
+    HashMap<ByteString, NetworkAdapterData> m_network_adapters;
+    Vector<ByteString> m_adapter_names;
     NetworkAdapterData* m_current_adapter_data = nullptr;
 
     RefPtr<GUI::CheckBox> m_enabled_checkbox;

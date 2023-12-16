@@ -35,7 +35,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories();
+static ErrorOr<Vector<ByteString>> discover_apps_and_categories();
 static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -76,10 +76,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 }
 
 struct AppMetadata {
-    DeprecatedString executable;
-    DeprecatedString name;
-    DeprecatedString category;
-    DeprecatedString working_directory;
+    ByteString executable;
+    ByteString name;
+    ByteString category;
+    ByteString working_directory;
     GUI::Icon icon;
     bool run_in_terminal;
     bool requires_root;
@@ -92,9 +92,9 @@ Vector<Gfx::SystemThemeMetaData> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 GUI::ActionGroup g_themes_group;
 
-ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
+ErrorOr<Vector<ByteString>> discover_apps_and_categories()
 {
-    HashTable<DeprecatedString> seen_app_categories;
+    HashTable<ByteString> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
         if (af->exclude_from_system_menu())
             return;
@@ -105,7 +105,7 @@ ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
     });
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
 
-    Vector<DeprecatedString> sorted_app_categories;
+    Vector<ByteString> sorted_app_categories;
     TRY(sorted_app_categories.try_ensure_capacity(seen_app_categories.size()));
     for (auto const& category : seen_app_categories)
         sorted_app_categories.unchecked_append(category);
@@ -116,7 +116,7 @@ ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
 
 ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 {
-    Vector<DeprecatedString> const sorted_app_categories = TRY(discover_apps_and_categories());
+    Vector<ByteString> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"_string); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("&About SerenityOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
@@ -127,13 +127,13 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 
     // First we construct all the necessary app category submenus.
     auto category_icons = TRY(Core::ConfigFile::open("/res/icons/SystemMenu.ini"));
-    HashMap<DeprecatedString, NonnullRefPtr<GUI::Menu>> app_category_menus;
+    HashMap<ByteString, NonnullRefPtr<GUI::Menu>> app_category_menus;
 
-    Function<void(DeprecatedString const&)> create_category_menu;
-    create_category_menu = [&](DeprecatedString const& category) {
+    Function<void(ByteString const&)> create_category_menu;
+    create_category_menu = [&](ByteString const& category) {
         if (app_category_menus.contains(category))
             return;
-        DeprecatedString parent_category, child_category = category;
+        ByteString parent_category, child_category = category;
         for (ssize_t i = category.length() - 1; i >= 0; i--) {
             if (category[i] == '/') {
                 parent_category = category.substring(0, i);
@@ -151,7 +151,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
                 VERIFY(parent_menu);
             }
         }
-        auto category_menu = parent_menu->add_submenu(String::from_deprecated_string(child_category).release_value_but_fixme_should_propagate_errors());
+        auto category_menu = parent_menu->add_submenu(String::from_byte_string(child_category).release_value_but_fixme_should_propagate_errors());
         auto category_icon_path = category_icons->read_entry("16x16", category);
         if (!category_icon_path.is_empty()) {
             auto icon_or_error = Gfx::Bitmap::load_from_file(category_icon_path);
@@ -181,7 +181,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             StringView executable;
             Vector<char const*, 2> arguments;
             // FIXME: These single quotes won't be enough for executables with single quotes in their name.
-            auto pls_with_executable = DeprecatedString::formatted("/bin/pls '{}'", app.executable);
+            auto pls_with_executable = ByteString::formatted("/bin/pls '{}'", app.executable);
             if (app.run_in_terminal && !app.requires_root) {
                 executable = "/bin/Terminal"sv;
                 arguments = { "-e", app.executable.characters() };

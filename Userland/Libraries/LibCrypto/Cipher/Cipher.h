@@ -112,7 +112,7 @@ public:
     virtual void decrypt_block(BlockType const& in, BlockType& out) = 0;
 
 #ifndef KERNEL
-    virtual DeprecatedString class_name() const = 0;
+    virtual ByteString class_name() const = 0;
 #endif
 
 protected:

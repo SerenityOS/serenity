@@ -11,14 +11,14 @@
 
 namespace PDF {
 
-DeprecatedString OutlineItem::to_deprecated_string(int indent) const
+ByteString OutlineItem::to_byte_string(int indent) const
 {
-    auto indent_str = DeprecatedString::repeated("  "sv, indent + 1);
+    auto indent_str = ByteString::repeated("  "sv, indent + 1);
 
     StringBuilder child_builder;
     child_builder.append('[');
     for (auto& child : children)
-        child_builder.appendff("{}\n", child->to_deprecated_string(indent + 1));
+        child_builder.appendff("{}\n", child->to_byte_string(indent + 1));
     child_builder.appendff("{}]", indent_str);
 
     StringBuilder builder;
@@ -29,62 +29,62 @@ DeprecatedString OutlineItem::to_deprecated_string(int indent) const
     builder.appendff("{}color={}\n", indent_str, color);
     builder.appendff("{}italic={}\n", indent_str, italic);
     builder.appendff("{}bold={}\n", indent_str, bold);
-    builder.appendff("{}children={}\n", indent_str, child_builder.to_deprecated_string());
-    builder.appendff("{}}}", DeprecatedString::repeated("  "sv, indent));
+    builder.appendff("{}children={}\n", indent_str, child_builder.to_byte_string());
+    builder.appendff("{}}}", ByteString::repeated("  "sv, indent));
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::title() const
+PDFErrorOr<Optional<ByteString>> InfoDict::title() const
 {
     return get_text(CommonNames::Title);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::author() const
+PDFErrorOr<Optional<ByteString>> InfoDict::author() const
 {
     return get_text(CommonNames::Author);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::subject() const
+PDFErrorOr<Optional<ByteString>> InfoDict::subject() const
 {
     return get_text(CommonNames::Subject);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::keywords() const
+PDFErrorOr<Optional<ByteString>> InfoDict::keywords() const
 {
     return get_text(CommonNames::Keywords);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::creator() const
+PDFErrorOr<Optional<ByteString>> InfoDict::creator() const
 {
     return get_text(CommonNames::Creator);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::producer() const
+PDFErrorOr<Optional<ByteString>> InfoDict::producer() const
 {
     return get_text(CommonNames::Producer);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::creation_date() const
+PDFErrorOr<Optional<ByteString>> InfoDict::creation_date() const
 {
     return get(CommonNames::CreationDate);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::modification_date() const
+PDFErrorOr<Optional<ByteString>> InfoDict::modification_date() const
 {
     return get(CommonNames::ModDate);
 }
 
-PDFErrorOr<Optional<DeprecatedString>> InfoDict::get_text(DeprecatedFlyString const& name) const
+PDFErrorOr<Optional<ByteString>> InfoDict::get_text(DeprecatedFlyString const& name) const
 {
     return TRY(get(name)).map(Document::text_string_to_utf8);
 }
 
-DeprecatedString Document::text_string_to_utf8(DeprecatedString const& text_string)
+ByteString Document::text_string_to_utf8(ByteString const& text_string)
 {
     if (text_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
         // The string is encoded in UTF16-BE
-        return TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        return TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_byte_string();
     }
 
     if (text_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
@@ -92,7 +92,7 @@ DeprecatedString Document::text_string_to_utf8(DeprecatedString const& text_stri
         return text_string.substring(3);
     }
 
-    return TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_byte_string();
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
@@ -197,7 +197,7 @@ static PDFErrorOr<void> dump_tree(Document& document, size_t index, HashTable<in
 
     auto const& value = TRY(document.get_or_load_value(index));
     outln("{} 0 obj", index);
-    outln("{}", value.to_deprecated_string(0));
+    outln("{}", value.to_byte_string(0));
     outln("endobj");
 
     Vector<int> referenced_indices;
@@ -392,7 +392,7 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPt
             return find_in_name_tree(sibling, name);
         }
     }
-    return Error { Error::Type::MalformedPDF, DeprecatedString::formatted("Didn't find node in name tree containing name {}", name) };
+    return Error { Error::Type::MalformedPDF, ByteString::formatted("Didn't find node in name tree containing name {}", name) };
 }
 
 PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, DeprecatedFlyString name)
@@ -405,7 +405,7 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPt
             return key_value_array->get_object_at(this, 2 * i + 1);
         }
     }
-    return Error { Error::Type::MalformedPDF, DeprecatedString::formatted("Didn't find expected name {} in key/value array", name) };
+    return Error { Error::Type::MalformedPDF, ByteString::formatted("Didn't find expected name {} in key/value array", name) };
 }
 
 PDFErrorOr<void> Document::build_outline()

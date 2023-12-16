@@ -226,7 +226,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // 15. If creator is non-null, then:
     if (creator) {
         // 1. Set document's referrer to the serialization of creator's URL.
-        document->set_referrer(MUST(String::from_deprecated_string(creator->url().serialize())));
+        document->set_referrer(MUST(String::from_byte_string(creator->url().serialize())));
 
         // FIXME: 2. Set document's policy container to a clone of creator's policy container.
 
@@ -412,7 +412,7 @@ void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> positi
     reset_cursor_blink_cycle();
 }
 
-static DeprecatedString visible_text_in_range(DOM::Range const& range)
+static ByteString visible_text_in_range(DOM::Range const& range)
 {
     // NOTE: This is an adaption of Range stringification, but we skip over DOM nodes that don't have a corresponding layout node.
     StringBuilder builder;
@@ -420,7 +420,7 @@ static DeprecatedString visible_text_in_range(DOM::Range const& range)
     if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
         if (!range.start_container()->layout_node())
             return ""sv;
-        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset())).to_deprecated_string();
+        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset())).to_byte_string();
     }
 
     if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
@@ -434,10 +434,10 @@ static DeprecatedString visible_text_in_range(DOM::Range const& range)
     if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
         builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().bytes_as_string_view().substring_view(0, range.end_offset()));
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString BrowsingContext::selected_text() const
+ByteString BrowsingContext::selected_text() const
 {
     auto* document = active_document();
     if (!document)

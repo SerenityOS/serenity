@@ -14,13 +14,13 @@
 #include <stdlib.h>
 
 struct FileSystem {
-    DeprecatedString fs;
+    ByteString fs;
     size_t total_block_count { 0 };
     size_t free_block_count { 0 };
     size_t total_inode_count { 0 };
     size_t free_inode_count { 0 };
     size_t block_size { 0 };
-    DeprecatedString mount_point;
+    ByteString mount_point;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto const& json = json_result.as_array();
     json.for_each([&](auto& value) {
         auto& fs_object = value.as_object();
-        auto fs = fs_object.get_deprecated_string("class_name"sv).value_or({});
+        auto fs = fs_object.get_byte_string("class_name"sv).value_or({});
         auto total_block_count = fs_object.get_u64("total_block_count"sv).value_or(0);
         auto free_block_count = fs_object.get_u64("free_block_count"sv).value_or(0);
         auto used_block_count = total_block_count - free_block_count;
@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto free_inode_count = fs_object.get_u64("free_inode_count"sv).value_or(0);
         auto used_inode_count = total_inode_count - free_inode_count;
         auto block_size = fs_object.get_u64("block_size"sv).value_or(0);
-        auto mount_point = fs_object.get_deprecated_string("mount_point"sv).value_or({});
+        auto mount_point = fs_object.get_byte_string("mount_point"sv).value_or({});
 
         auto used_percentage = 100;
         if (total_block_count != 0)

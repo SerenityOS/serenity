@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Timer.h>
@@ -57,7 +57,7 @@ public:
 
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
-    DeprecatedString selected_text() const;
+    ByteString selected_text() const;
     VT::Range normalized_selection() const { return m_selection.normalized(); }
     void set_selection(const VT::Range& selection);
     VT::Position buffer_position_at(Gfx::IntPoint) const;
@@ -103,7 +103,7 @@ public:
     virtual void set_cursor_shape(CursorShape) override;
 
     static Optional<VT::CursorShape> parse_cursor_shape(StringView);
-    static DeprecatedString stringify_cursor_shape(VT::CursorShape);
+    static ByteString stringify_cursor_shape(VT::CursorShape);
 
 private:
     TerminalWidget(int ptm_fd, bool automatic_size_policy);
@@ -136,7 +136,7 @@ private:
     virtual void emit(u8 const*, size_t) override;
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(DeprecatedString const&) override { update_paste_action(); }
+    virtual void clipboard_content_did_change(ByteString const&) override { update_paste_action(); }
 
     void send_non_user_input(ReadonlyBytes);
 
@@ -167,21 +167,21 @@ private:
 
     VT::Range m_selection;
 
-    DeprecatedString m_hovered_href;
-    Optional<DeprecatedString> m_hovered_href_id;
+    ByteString m_hovered_href;
+    Optional<ByteString> m_hovered_href_id;
 
-    DeprecatedString m_active_href;
-    Optional<DeprecatedString> m_active_href_id;
+    ByteString m_active_href;
+    Optional<ByteString> m_active_href_id;
 
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
-    DeprecatedString m_context_menu_href;
+    ByteString m_context_menu_href;
 
     Gfx::Color m_colors[256];
     Gfx::Color m_default_foreground_color;
     Gfx::Color m_default_background_color;
     bool m_show_bold_text_as_bright { true };
 
-    DeprecatedString m_color_scheme_name;
+    ByteString m_color_scheme_name;
 
     BellMode m_bell_mode { BellMode::Visible };
     bool m_alt_key_held { false };

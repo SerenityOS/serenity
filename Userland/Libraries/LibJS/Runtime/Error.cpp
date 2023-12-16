@@ -85,7 +85,7 @@ void Error::populate_stack()
         if (element.source_range.has_value())
             range = element.source_range.value();
         TracebackFrame frame {
-            .function_name = context->function_name ? context->function_name->deprecated_string() : "",
+            .function_name = context->function_name ? context->function_name->byte_string() : "",
             .source_range_storage = range,
         };
 

@@ -67,7 +67,7 @@ struct CryptFilter {
     int length_in_bits { 0 };
 };
 
-static PDFErrorOr<CryptFilter> parse_v4_or_newer_crypt(Document* document, NonnullRefPtr<DictObject> encryption_dict, DeprecatedString filter)
+static PDFErrorOr<CryptFilter> parse_v4_or_newer_crypt(Document* document, NonnullRefPtr<DictObject> encryption_dict, ByteString filter)
 {
     // See 3.5 Encryption, Table 3.18 "Entries common to all encryption dictionaries" for StmF and StrF,
     // and 3.5.4 Crypt Filters in the 1.7 spec, in particular Table 3.22 "Entries common to all crypt filter dictionaries".
@@ -139,11 +139,11 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
 
     if (v >= 4) {
         // "Default value: Identity"
-        DeprecatedString stream_filter = "Identity";
+        ByteString stream_filter = "Identity";
         if (encryption_dict->contains(CommonNames::StmF))
             stream_filter = TRY(encryption_dict->get_name(document, CommonNames::StmF))->name();
 
-        DeprecatedString string_filter = "Identity";
+        ByteString string_filter = "Identity";
         if (encryption_dict->contains(CommonNames::StrF))
             string_filter = TRY(encryption_dict->get_name(document, CommonNames::StrF))->name();
 
@@ -166,7 +166,7 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
     if (encryption_dict->contains(CommonNames::EncryptMetadata))
         encryption_dict->get_value(CommonNames::EncryptMetadata).get<bool>();
 
-    DeprecatedString oe, ue, perms;
+    ByteString oe, ue, perms;
     if (v >= 5) {
         oe = TRY(encryption_dict->get_string(document, CommonNames::OE))->string();
         ue = TRY(encryption_dict->get_string(document, CommonNames::UE))->string();
@@ -193,7 +193,7 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
     return adopt_ref(*new StandardSecurityHandler(document, revision, o, oe, u, ue, perms, p, encrypt_metadata, length, method));
 }
 
-StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& oe_entry, DeprecatedString const& u_entry, DeprecatedString const& ue_entry, DeprecatedString const& perms_entry, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method)
+StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, ByteString const& o_entry, ByteString const& oe_entry, ByteString const& u_entry, ByteString const& ue_entry, ByteString const& perms_entry, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method)
     : m_document(document)
     , m_revision(revision)
     , m_o_entry(o_entry)
@@ -686,7 +686,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         auto string = object->cast<StringObject>();
         bytes = string->string().bytes();
         assign = [&object](ByteBuffer buffer) {
-            object->cast<StringObject>()->set_string(DeprecatedString(buffer.bytes()));
+            object->cast<StringObject>()->set_string(ByteString(buffer.bytes()));
         };
     } else {
         VERIFY_NOT_REACHED();

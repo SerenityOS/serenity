@@ -63,8 +63,8 @@ public:
     TypeAttributeState type_state() const { return m_type; }
     WebIDL::ExceptionOr<void> set_type(String const&);
 
-    DeprecatedString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
-    DeprecatedString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
+    ByteString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
+    ByteString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
     virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);
@@ -72,7 +72,7 @@ public:
     void commit_pending_changes();
 
     String placeholder() const;
-    Optional<DeprecatedString> placeholder_value() const;
+    Optional<ByteString> placeholder_value() const;
 
     bool checked() const { return m_checked; }
     enum class ChangeSource {

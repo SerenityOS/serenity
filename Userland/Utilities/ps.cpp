@@ -85,7 +85,7 @@ static ErrorOr<String> column_to_string(ColumnId column_id, Core::ProcessStatist
 {
     switch (column_id) {
     case ColumnId::UserId:
-        return String::from_deprecated_string(process.username);
+        return String::from_byte_string(process.username);
     case ColumnId::ProcessId:
         return String::number(process.pid);
     case ColumnId::ParentProcessId:
@@ -95,11 +95,11 @@ static ErrorOr<String> column_to_string(ColumnId column_id, Core::ProcessStatist
     case ColumnId::SessionId:
         return String::number(process.sid);
     case ColumnId::TTY:
-        return process.tty == "" ? "n/a"_string : String::from_deprecated_string(process.tty);
+        return process.tty == "" ? "n/a"_string : String::from_byte_string(process.tty);
     case ColumnId::State:
         return process.threads.is_empty()
             ? "Zombie"_string
-            : String::from_deprecated_string(process.threads.first().state);
+            : String::from_byte_string(process.threads.first().state);
     case ColumnId::StartTime: {
         auto now = Core::DateTime::now();
         auto today_start = Core::DateTime::now();
@@ -110,7 +110,7 @@ static ErrorOr<String> column_to_string(ColumnId column_id, Core::ProcessStatist
         return process_creation_time.to_string("%b%d"sv);
     }
     case ColumnId::Command:
-        return String::from_deprecated_string(process.name);
+        return String::from_byte_string(process.name);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -230,7 +230,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<Column> columns;
     Vector<pid_t> pid_list;
     Vector<pid_t> parent_pid_list;
-    Vector<DeprecatedString> tty_list;
+    Vector<ByteString> tty_list;
     Vector<uid_t> uid_list;
 
     Core::ArgsParser args_parser;
@@ -267,14 +267,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
-    args_parser.add_option(make_list_option(tty_list, "Show processes associated with the given terminal. (Comma- or space-separated list.) The short TTY name or the full device path may be used.", "tty", 't', "tty-list", [&](StringView tty_string) -> Optional<DeprecatedString> {
+    args_parser.add_option(make_list_option(tty_list, "Show processes associated with the given terminal. (Comma- or space-separated list.) The short TTY name or the full device path may be used.", "tty", 't', "tty-list", [&](StringView tty_string) -> Optional<ByteString> {
         provided_filtering_option = true;
         auto tty_pseudo_name_or_error = parse_tty_pseudo_name(tty_string);
         if (tty_pseudo_name_or_error.is_error()) {
             warnln("Could not parse '{}' as a TTY", tty_string);
             return {};
         }
-        return tty_pseudo_name_or_error.release_value().to_deprecated_string();
+        return tty_pseudo_name_or_error.release_value().to_byte_string();
     }));
     args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
         provided_filtering_option = true;

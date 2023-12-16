@@ -63,7 +63,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
         String path;
         if (!m_wallpaper_view->selection().is_empty()) {
             auto index = m_wallpaper_view->selection().first();
-            auto path_or_error = String::from_deprecated_string(static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->full_path(index));
+            auto path_or_error = String::from_byte_string(static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->full_path(index));
             if (path_or_error.is_error()) {
                 GUI::MessageBox::show_error(window(), "Unable to load wallpaper"sv);
                 return;
@@ -78,7 +78,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     m_context_menu = GUI::Menu::construct();
     auto const file_manager_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv));
     m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", file_manager_icon, [this](GUI::Action const&) {
-        LexicalPath path { m_monitor_widget->wallpaper().value().to_deprecated_string() };
+        LexicalPath path { m_monitor_widget->wallpaper().value().to_byte_string() };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
     m_context_menu->add_action(*m_show_in_file_manager_action);
@@ -88,7 +88,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
         [this](auto&) {
             auto wallpaper = m_monitor_widget->wallpaper();
             if (wallpaper.has_value())
-                GUI::Clipboard::the().set_data(URL::create_with_file_scheme(wallpaper.value().to_deprecated_string()).to_deprecated_string().bytes(), "text/uri-list");
+                GUI::Clipboard::the().set_data(URL::create_with_file_scheme(wallpaper.value().to_byte_string()).to_byte_string().bytes(), "text/uri-list");
         },
         this);
     m_context_menu->add_action(*m_copy_action);
@@ -144,14 +144,14 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
 {
     auto ws_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
 
-    auto selected_wallpaper = TRY(String::from_deprecated_string(Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv)));
+    auto selected_wallpaper = TRY(String::from_byte_string(Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv)));
     if (!selected_wallpaper.is_empty()) {
-        auto index = static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->index(selected_wallpaper.to_deprecated_string(), m_wallpaper_view->model_column());
+        auto index = static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->index(selected_wallpaper.to_byte_string(), m_wallpaper_view->model_column());
         m_wallpaper_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
         m_monitor_widget->set_wallpaper(selected_wallpaper);
     }
 
-    auto mode = TRY(String::from_deprecated_string(ws_config->read_entry("Background", "Mode", "Center")));
+    auto mode = TRY(String::from_byte_string(ws_config->read_entry("Background", "Mode", "Center")));
     if (!m_modes.contains_slow(mode)) {
         warnln("Invalid background mode '{}' in WindowServer config, falling back to 'Center'", mode);
         mode = "Center"_string;

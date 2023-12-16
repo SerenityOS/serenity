@@ -15,8 +15,8 @@ namespace PDF {
 class CIDFontType;
 
 struct CIDSystemInfo {
-    DeprecatedString registry;
-    DeprecatedString ordering;
+    ByteString registry;
+    ByteString ordering;
     u8 supplement;
 };
 
@@ -26,7 +26,7 @@ public:
     ~Type0Font();
 
     void set_font_size(float font_size) override;
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Renderer const&) override;
+    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) override;
 
     DeprecatedFlyString base_font_name() const { return m_base_font_name; }
 

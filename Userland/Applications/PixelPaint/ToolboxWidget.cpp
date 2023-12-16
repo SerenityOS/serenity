@@ -52,7 +52,7 @@ ToolboxWidget::ToolboxWidget()
 void ToolboxWidget::setup_tools()
 {
     auto add_tool = [&](StringView icon_name, GUI::Shortcut const& shortcut, NonnullOwnPtr<Tool> tool, bool is_default_tool = false) {
-        auto action = GUI::Action::create_checkable(tool->tool_name(), shortcut, Gfx::Bitmap::load_from_file(DeprecatedString::formatted("/res/icons/pixelpaint/{}.png", icon_name)).release_value_but_fixme_should_propagate_errors(),
+        auto action = GUI::Action::create_checkable(tool->tool_name(), shortcut, Gfx::Bitmap::load_from_file(ByteString::formatted("/res/icons/pixelpaint/{}.png", icon_name)).release_value_but_fixme_should_propagate_errors(),
             [this, tool = tool.ptr()](auto& action) {
                 if (action.is_checked()) {
                     on_tool_selection(tool);

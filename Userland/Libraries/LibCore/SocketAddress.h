@@ -38,7 +38,7 @@ public:
     {
     }
 
-    static SocketAddress local(DeprecatedString const& address)
+    static SocketAddress local(ByteString const& address)
     {
         SocketAddress addr;
         addr.m_type = Type::Local;
@@ -51,11 +51,11 @@ public:
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     u16 port() const { return m_port; }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
         switch (m_type) {
         case Type::IPv4:
-            return DeprecatedString::formatted("{}:{}", m_ipv4_address, m_port);
+            return ByteString::formatted("{}:{}", m_ipv4_address, m_port);
         case Type::Local:
             return m_local_address;
         default:
@@ -91,16 +91,16 @@ private:
     Type m_type { Type::Invalid };
     IPv4Address m_ipv4_address;
     u16 m_port { 0 };
-    DeprecatedString m_local_address;
+    ByteString m_local_address;
 };
 
 }
 
 template<>
-struct AK::Formatter<Core::SocketAddress> : Formatter<DeprecatedString> {
+struct AK::Formatter<Core::SocketAddress> : Formatter<ByteString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::SocketAddress const& value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
+        return Formatter<ByteString>::format(builder, value.to_byte_string());
     }
 };
 

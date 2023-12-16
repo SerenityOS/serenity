@@ -167,7 +167,7 @@ PDFErrorOr<Vector<float>> PS1FontProgram::parse_number_array(Reader& reader, siz
     return array;
 }
 
-PDFErrorOr<DeprecatedString> PS1FontProgram::parse_word(Reader& reader)
+PDFErrorOr<ByteString> PS1FontProgram::parse_word(Reader& reader)
 {
     reader.consume_whitespace();
 
@@ -186,7 +186,7 @@ PDFErrorOr<DeprecatedString> PS1FontProgram::parse_word(Reader& reader)
 PDFErrorOr<float> PS1FontProgram::parse_float(Reader& reader)
 {
     auto word = TRY(parse_word(reader));
-    return strtof(DeprecatedString(word).characters(), nullptr);
+    return strtof(ByteString(word).characters(), nullptr);
 }
 
 PDFErrorOr<int> PS1FontProgram::parse_int(Reader& reader)
@@ -216,7 +216,7 @@ PDFErrorOr<ByteBuffer> PS1FontProgram::decrypt(ReadonlyBytes const& encrypted, u
     return decrypted;
 }
 
-bool PS1FontProgram::seek_name(Reader& reader, DeprecatedString const& name)
+bool PS1FontProgram::seek_name(Reader& reader, ByteString const& name)
 {
     auto start = reader.offset();
 

@@ -107,13 +107,13 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             continue;
 
         // 5. Let name be the value of the field element's name attribute.
-        auto name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(control->name()));
+        auto name = TRY_OR_THROW_OOM(vm, String::from_byte_string(control->name()));
 
         // 6. If the field element is a select element, then for each option element in the select element's list of options whose selectedness is true and that is not disabled, create an entry with name and the value of the option element, and append it to entry list.
         if (auto* select_element = dynamic_cast<HTML::HTMLSelectElement*>(control.ptr())) {
             for (auto const& option_element : select_element->list_of_options()) {
                 if (option_element->selected() && !option_element->disabled()) {
-                    auto option_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(option_element->name()));
+                    auto option_name = TRY_OR_THROW_OOM(vm, String::from_byte_string(option_element->name()));
                     auto option_value = option_element->value();
                     TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(option_name), .value = move(option_value) }));
                 }
@@ -127,7 +127,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
                 value = "on"_string;
 
             // 2. Create an entry with name and value, and append it to entry list.
-            auto checkbox_or_radio_element_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(checkbox_or_radio_element->name()));
+            auto checkbox_or_radio_element_name = TRY_OR_THROW_OOM(vm, String::from_byte_string(checkbox_or_radio_element->name()));
             TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(value) }));
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:

@@ -7,8 +7,8 @@
 #include "GeneratorUtil.h"
 #include <AK/AllOf.h>
 #include <AK/Array.h>
+#include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/HashMap.h>
@@ -28,8 +28,8 @@ struct SpecialCasing {
     Vector<u32> lowercase_mapping;
     Vector<u32> uppercase_mapping;
     Vector<u32> titlecase_mapping;
-    DeprecatedString locale;
-    DeprecatedString condition;
+    ByteString locale;
+    ByteString condition;
 };
 
 // https://www.unicode.org/reports/tr44/#CaseFolding.txt
@@ -42,13 +42,13 @@ struct CaseFolding {
 // https://www.unicode.org/reports/tr44/#Character_Decomposition_Mappings
 struct CodePointDecomposition {
     // `tag` is a string since it's used for codegen as an enum value.
-    DeprecatedString tag { "Canonical"sv };
+    ByteString tag { "Canonical"sv };
     size_t decomposition_index { 0 };
     size_t decomposition_size { 0 };
 };
 
 // https://www.unicode.org/reports/tr44/#PropList.txt
-using PropList = HashMap<DeprecatedString, Vector<Unicode::CodePointRange>>;
+using PropList = HashMap<ByteString, Vector<Unicode::CodePointRange>>;
 
 // https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
 enum class QuickCheck {
@@ -63,7 +63,7 @@ struct Normalization {
     QuickCheck quick_check { QuickCheck::Yes };
 };
 
-using NormalizationProps = HashMap<DeprecatedString, Vector<Normalization>>;
+using NormalizationProps = HashMap<ByteString, Vector<Normalization>>;
 
 struct CodePointName {
     Unicode::CodePointRange code_point_range;
@@ -92,16 +92,16 @@ struct CasingTable {
 // https://www.unicode.org/reports/tr44/#UnicodeData.txt
 struct CodePointData {
     u32 code_point { 0 };
-    DeprecatedString name;
+    ByteString name;
     Optional<size_t> abbreviation;
-    DeprecatedString bidi_class;
+    ByteString bidi_class;
     Optional<CodePointDecomposition> decomposition_mapping;
     Optional<i8> numeric_value_decimal;
     Optional<i8> numeric_value_digit;
     Optional<i8> numeric_value_numeric;
     bool bidi_mirrored { false };
-    DeprecatedString unicode_1_name;
-    DeprecatedString iso_comment;
+    ByteString unicode_1_name;
+    ByteString iso_comment;
     CasingTable casing;
 };
 
@@ -127,7 +127,7 @@ struct CodePointTables {
 
 struct CodePointBidiClass {
     Unicode::CodePointRange code_point_range;
-    DeprecatedString bidi_class;
+    ByteString bidi_class;
 };
 
 struct UnicodeData {
@@ -135,12 +135,12 @@ struct UnicodeData {
 
     u32 code_points_with_decomposition_mapping { 0 };
     Vector<u32> decomposition_mappings;
-    Vector<DeprecatedString> compatibility_tags;
+    Vector<ByteString> compatibility_tags;
 
     Vector<SpecialCasing> special_casing;
     u32 largest_special_casing_mapping_size { 0 };
-    Vector<DeprecatedString> conditions;
-    Vector<DeprecatedString> locales;
+    Vector<ByteString> conditions;
+    Vector<ByteString> locales;
 
     Vector<CaseFolding> case_folding;
     u32 largest_case_folding_mapping_size { 0 };
@@ -190,11 +190,11 @@ struct UnicodeData {
     CodePointTables<PropertyTable> word_break_tables;
     CodePointTables<PropertyTable> sentence_break_tables;
 
-    HashTable<DeprecatedString> bidirectional_classes;
+    HashTable<ByteString> bidirectional_classes;
     Vector<CodePointBidiClass> code_point_bidirectional_classes;
 };
 
-static DeprecatedString sanitize_entry(DeprecatedString const& entry)
+static ByteString sanitize_entry(ByteString const& entry)
 {
     auto sanitized = entry.replace("-"sv, "_"sv, ReplaceMode::All);
     sanitized = sanitized.replace(" "sv, "_"sv, ReplaceMode::All);
@@ -209,7 +209,7 @@ static DeprecatedString sanitize_entry(DeprecatedString const& entry)
         next_is_upper = ch == '_';
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 static ErrorOr<void> parse_special_casing(Core::InputBufferedFile& file, UnicodeData& unicode_data)
@@ -248,7 +248,7 @@ static ErrorOr<void> parse_special_casing(Core::InputBufferedFile& file, Unicode
             }
 
             if (!casing.locale.is_empty()) {
-                casing.locale = DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
+                casing.locale = ByteString::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
 
                 if (!unicode_data.locales.contains_slow(casing.locale))
                     unicode_data.locales.append(casing.locale);
@@ -380,7 +380,7 @@ static ErrorOr<void> parse_prop_list(Core::InputBufferedFile& file, PropList& pr
 
 static ErrorOr<void> parse_alias_list(Core::InputBufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
 {
-    DeprecatedString current_property;
+    ByteString current_property;
     Array<u8, 1024> buffer;
 
     auto append_alias = [&](auto alias, auto property) {
@@ -455,7 +455,7 @@ static ErrorOr<void> parse_name_aliases(Core::InputBufferedFile& file, UnicodeDa
     return {};
 }
 
-static ErrorOr<void> parse_value_alias_list(Core::InputBufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
+static ErrorOr<void> parse_value_alias_list(Core::InputBufferedFile& file, StringView desired_category, Vector<ByteString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
     TRY(file.seek(0, SeekMode::SetPosition));
     Array<u8, 1024> buffer;
@@ -518,7 +518,7 @@ static ErrorOr<void> parse_normalization_props(Core::InputBufferedFile& file, Un
         VERIFY((segments.size() == 2) || (segments.size() == 3));
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
-        auto property = segments[1].trim_whitespace().to_deprecated_string();
+        auto property = segments[1].trim_whitespace().to_byte_string();
 
         Vector<u32> value;
         QuickCheck quick_check = QuickCheck::Yes;
@@ -620,7 +620,7 @@ static Optional<CodePointDecomposition> parse_decomposition_mapping(StringView s
     if (parts.first().starts_with('<')) {
         auto const tag = parts.take_first().trim("<>"sv);
 
-        mapping.tag = DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(tag[0]), tag.substring_view(1));
+        mapping.tag = ByteString::formatted("{:c}{}", to_ascii_uppercase(tag[0]), tag.substring_view(1));
 
         if (!unicode_data.compatibility_tags.contains_slow(mapping.tag))
             unicode_data.compatibility_tags.append(mapping.tag);
@@ -755,15 +755,15 @@ static ErrorOr<void> generate_unicode_data_header(Core::InputBufferedFile& file,
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("special_casing_mapping_size", DeprecatedString::number(unicode_data.largest_special_casing_mapping_size));
-    generator.set("case_folding_mapping_size", DeprecatedString::number(unicode_data.largest_case_folding_mapping_size));
+    generator.set("special_casing_mapping_size", ByteString::number(unicode_data.largest_special_casing_mapping_size));
+    generator.set("case_folding_mapping_size", ByteString::number(unicode_data.largest_case_folding_mapping_size));
 
     auto generate_enum = [&](StringView name, StringView default_, auto values, Vector<Alias> aliases = {}) {
         quick_sort(values);
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
         generator.set("name", name);
-        generator.set("underlying", DeprecatedString::formatted("{}UnderlyingType", name));
+        generator.set("underlying", ByteString::formatted("{}UnderlyingType", name));
         generator.set("type", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
 
         generator.append(R"~~~(
@@ -872,8 +872,8 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFil
     SourceGenerator generator { builder };
 
     generator.set("string_index_type"sv, unicode_data.unique_strings.type_that_fits());
-    generator.set("special_casing_size", DeprecatedString::number(unicode_data.special_casing.size()));
-    generator.set("case_folding_size", DeprecatedString::number(unicode_data.case_folding.size()));
+    generator.set("special_casing_size", ByteString::number(unicode_data.special_casing.size()));
+    generator.set("case_folding_size", ByteString::number(unicode_data.case_folding.size()));
 
     generator.set("CODE_POINT_TABLES_LSB_COUNT", TRY(String::number(CODE_POINT_TABLES_LSB_COUNT)));
     generator.set("CODE_POINT_TABLES_LSB_MASK", TRY(String::formatted("{:#x}", CODE_POINT_TABLES_LSB_MASK)));
@@ -884,7 +884,7 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFil
 #include <AK/CharacterTypes.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringView.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/UnicodeData.h>
@@ -905,17 +905,17 @@ namespace Unicode {
         generator.append(", {");
         for (auto const& item : list) {
             generator.append(first ? " "sv : ", "sv);
-            generator.append(DeprecatedString::formatted(format, item));
+            generator.append(ByteString::formatted(format, item));
             first = false;
         }
-        generator.append(DeprecatedString::formatted(" }}, {}", list.size()));
+        generator.append(ByteString::formatted(" }}, {}", list.size()));
     };
 
     generator.append(R"~~~(
 static constexpr Array<SpecialCasing, @special_casing_size@> s_special_case { {)~~~");
 
     for (auto const& casing : unicode_data.special_casing) {
-        generator.set("code_point", DeprecatedString::formatted("{:#x}", casing.code_point));
+        generator.set("code_point", ByteString::formatted("{:#x}", casing.code_point));
         generator.append(R"~~~(
     { @code_point@)~~~");
 
@@ -939,7 +939,7 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_case { {)
 static constexpr Array<CaseFolding, @case_folding_size@> s_case_folding { {)~~~");
 
     for (auto const& folding : unicode_data.case_folding) {
-        generator.set("code_point", DeprecatedString::formatted("{:#x}", folding.code_point));
+        generator.set("code_point", ByteString::formatted("{:#x}", folding.code_point));
         generator.set("status", folding.status);
         generator.append(R"~~~(
     { @code_point@, CaseFoldingStatus::@status@)~~~");
@@ -1015,15 +1015,15 @@ struct CodePointBidiClassComparator : public CodePointRangeComparator {
 
 )~~~");
 
-    generator.set("decomposition_mappings_size", DeprecatedString::number(unicode_data.decomposition_mappings.size()));
+    generator.set("decomposition_mappings_size", ByteString::number(unicode_data.decomposition_mappings.size()));
     generator.append("\nstatic constexpr Array<u32, @decomposition_mappings_size@> s_decomposition_mappings_data { ");
-    generator.append(DeprecatedString::join(", "sv, unicode_data.decomposition_mappings, "{:#x}"sv));
+    generator.append(ByteString::join(", "sv, unicode_data.decomposition_mappings, "{:#x}"sv));
     generator.append(" };\n");
 
     auto append_code_point_mappings = [&](StringView name, StringView mapping_type, u32 size, auto mapping_getter) {
         generator.set("name", name);
         generator.set("mapping_type", mapping_type);
-        generator.set("size", DeprecatedString::number(size));
+        generator.set("size", ByteString::number(size));
 
         generator.append(R"~~~(
 static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
@@ -1046,16 +1046,16 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             if (mappings_in_current_row++ > 0)
                 generator.append(" ");
 
-            generator.set("code_point", DeprecatedString::formatted("{:#x}", data.code_point));
+            generator.set("code_point", ByteString::formatted("{:#x}", data.code_point));
             generator.append("{ @code_point@");
 
             if constexpr (IsSame<decltype(mapping), Optional<u32>> || IsSame<decltype(mapping), Optional<size_t>>) {
-                generator.set("mapping", DeprecatedString::formatted("{:#x}", *mapping));
+                generator.set("mapping", ByteString::formatted("{:#x}", *mapping));
                 generator.append(", @mapping@ },");
             } else if constexpr (IsSame<decltype(mapping), Optional<CodePointDecomposition>>) {
                 generator.set("tag", mapping->tag);
-                generator.set("start", DeprecatedString::number(mapping->decomposition_index));
-                generator.set("size", DeprecatedString::number(mapping->decomposition_size));
+                generator.set("start", ByteString::number(mapping->decomposition_index));
+                generator.set("size", ByteString::number(mapping->decomposition_size));
                 generator.append(", CompatibilityFormattingTag::@tag@, @start@, @size@ },");
             } else {
                 append_list_and_size(mapping, "&s_@name@[{}]"sv);
@@ -1195,7 +1195,7 @@ static constexpr Array<@type@, @size@> @name@ { {
 
         generator.set("type", type);
         generator.set("name", name);
-        generator.set("size", DeprecatedString::number(display_names.size()));
+        generator.set("size", ByteString::number(display_names.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {
@@ -1204,9 +1204,9 @@ static constexpr Array<@type@, @size@> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.set("first", DeprecatedString::formatted("{:#x}", display_name.code_point_range.first));
-            generator.set("last", DeprecatedString::formatted("{:#x}", display_name.code_point_range.last));
-            generator.set("name", DeprecatedString::number(display_name.name));
+            generator.set("first", ByteString::formatted("{:#x}", display_name.code_point_range.first));
+            generator.set("last", ByteString::formatted("{:#x}", display_name.code_point_range.last));
+            generator.set("name", ByteString::number(display_name.name));
             generator.append("{ { @first@, @last@ }, @name@ }");
 
             if (values_in_current_row == max_values_per_row) {
@@ -1226,7 +1226,7 @@ static constexpr Array<@type@, @size@> @name@ { {
         constexpr size_t max_bidi_classes_per_row = 20;
         size_t bidi_classes_in_current_row = 0;
 
-        generator.set("size"sv, DeprecatedString::number(unicode_data.code_point_bidirectional_classes.size()));
+        generator.set("size"sv, ByteString::number(unicode_data.code_point_bidirectional_classes.size()));
         generator.append(R"~~~(
 static constexpr Array<BidiClassData, @size@> s_bidirectional_classes { {
 )~~~");
@@ -1234,8 +1234,8 @@ static constexpr Array<BidiClassData, @size@> s_bidirectional_classes { {
             if (bidi_classes_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.set("first", DeprecatedString::formatted("{:#x}", data.code_point_range.first));
-            generator.set("last", DeprecatedString::formatted("{:#x}", data.code_point_range.last));
+            generator.set("first", ByteString::formatted("{:#x}", data.code_point_range.first));
+            generator.set("last", ByteString::formatted("{:#x}", data.code_point_range.last));
             generator.set("bidi_class", data.bidi_class);
             generator.append("{ { @first@, @last@ }, BidirectionalClass::@bidi_class@ }");
 
@@ -1274,13 +1274,13 @@ ReadonlySpan<BlockName> block_display_names()
     return display_names.span();
 }
 
-Optional<DeprecatedString> code_point_display_name(u32 code_point)
+Optional<ByteString> code_point_display_name(u32 code_point)
 {
     if (auto const* entry = binary_search(s_code_point_display_names, code_point, nullptr, CodePointNameComparator {})) {
         auto display_name = decode_string(entry->display_name);
 
         if (display_name.ends_with("{:X}"sv))
-            return DeprecatedString::formatted(display_name, code_point);
+            return ByteString::formatted(display_name, code_point);
 
         return display_name;
     }
@@ -1409,7 +1409,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
         ValueFromStringOptions options {};
 
         for (auto const& prop : prop_list) {
-            if constexpr (IsSame<RemoveCVReference<decltype(prop)>, DeprecatedString>) {
+            if constexpr (IsSame<RemoveCVReference<decltype(prop)>, ByteString>) {
                 hashes.set(CaseInsensitiveASCIIStringViewTraits::hash(prop), prop);
                 options.sensitivity = CaseSensitivity::CaseInsensitive;
             } else {

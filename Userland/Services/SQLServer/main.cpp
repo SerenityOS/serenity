@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio accept unix rpath wpath cpath"));
 
-    auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
+    auto database_path = ByteString::formatted("{}/sql", Core::StandardPaths::data_directory());
     TRY(Core::Directory::create(database_path, Core::Directory::CreateDirectories::Yes));
 
     TRY(Core::System::unveil(database_path, "rwc"sv));

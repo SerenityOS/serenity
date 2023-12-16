@@ -9,8 +9,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/ByteString.h>
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -65,7 +65,7 @@ public:
 
     [[nodiscard]] static UnsignedBigInteger from_base(u16 N, StringView str);
     [[nodiscard]] ErrorOr<String> to_base(u16 N) const;
-    [[nodiscard]] DeprecatedString to_base_deprecated(u16 N) const;
+    [[nodiscard]] ByteString to_base_deprecated(u16 N) const;
 
     [[nodiscard]] u64 to_u64() const;
 

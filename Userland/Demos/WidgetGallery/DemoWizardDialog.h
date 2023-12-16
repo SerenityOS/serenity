@@ -17,7 +17,7 @@ class DemoWizardDialog : public GUI::WizardDialog {
     C_OBJECT(DemoWizardDialog);
 
 public:
-    DeprecatedString page_1_location() { return m_page_1_location_text_box->get_text(); }
+    ByteString page_1_location() { return m_page_1_location_text_box->get_text(); }
 
 private:
     DemoWizardDialog(GUI::Window* parent_window);

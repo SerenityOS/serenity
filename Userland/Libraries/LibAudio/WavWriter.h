@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>

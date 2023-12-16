@@ -5,8 +5,8 @@
  */
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
+#include <AK/ByteString.h>
 #include <AK/DateConstants.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
@@ -36,7 +36,7 @@ struct TimeZoneOffset {
     i64 offset { 0 };
     Optional<DateTime> until;
 
-    Optional<DeprecatedString> dst_rule;
+    Optional<ByteString> dst_rule;
     Optional<i32> dst_rule_index;
     i64 dst_offset { 0 };
 
@@ -56,17 +56,17 @@ struct DaylightSavingsOffset {
 struct TimeZoneData {
     UniqueStringStorage unique_strings;
 
-    HashMap<DeprecatedString, Vector<TimeZoneOffset>> time_zones;
-    Vector<DeprecatedString> time_zone_names;
+    HashMap<ByteString, Vector<TimeZoneOffset>> time_zones;
+    Vector<ByteString> time_zone_names;
     Vector<Alias> time_zone_aliases;
 
-    HashMap<DeprecatedString, Vector<DaylightSavingsOffset>> dst_offsets;
-    Vector<DeprecatedString> dst_offset_names;
+    HashMap<ByteString, Vector<DaylightSavingsOffset>> dst_offsets;
+    Vector<ByteString> dst_offset_names;
 
-    HashMap<DeprecatedString, TimeZone::Location> time_zone_coordinates;
+    HashMap<ByteString, TimeZone::Location> time_zone_coordinates;
 
-    HashMap<DeprecatedString, Vector<size_t>> time_zone_regions;
-    Vector<DeprecatedString> time_zone_region_names;
+    HashMap<ByteString, Vector<size_t>> time_zone_regions;
+    Vector<ByteString> time_zone_region_names;
 
     Vector<TimeZone::TimeZoneIdentifier> time_zones_and_links;
 };
@@ -112,10 +112,10 @@ struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DaylightSavingsOffset const& dst_offset)
     {
         auto format_time = [&](auto year) {
-            return DeprecatedString::formatted("AK::UnixDateTime::from_unix_time_parts({}, 1, 1, 0, 0, 0, 0)", year);
+            return ByteString::formatted("AK::UnixDateTime::from_unix_time_parts({}, 1, 1, 0, 0, 0, 0)", year);
         };
 
-        static DeprecatedString max_year_as_time("max_year_as_time"sv);
+        static ByteString max_year_as_time("max_year_as_time"sv);
 
         return Formatter<FormatString>::format(builder,
             "{{ {}, {}, {}, {}, {} }}"sv,
@@ -439,7 +439,7 @@ static void set_dst_rule_indices(TimeZoneData& time_zone_data)
     }
 }
 
-static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
+static ByteString format_identifier(StringView owner, ByteString identifier)
 {
     constexpr auto gmt_time_zones = Array { "Etc/GMT"sv, "GMT"sv };
 
@@ -448,9 +448,9 @@ static DeprecatedString format_identifier(StringView owner, DeprecatedString ide
             auto offset = identifier.substring_view(gmt_time_zone.length());
 
             if (offset.starts_with('+'))
-                identifier = DeprecatedString::formatted("{}_Ahead_{}", gmt_time_zone, offset.substring_view(1));
+                identifier = ByteString::formatted("{}_Ahead_{}", gmt_time_zone, offset.substring_view(1));
             else if (offset.starts_with('-'))
-                identifier = DeprecatedString::formatted("{}_Behind_{}", gmt_time_zone, offset.substring_view(1));
+                identifier = ByteString::formatted("{}_Behind_{}", gmt_time_zone, offset.substring_view(1));
         }
     }
 
@@ -458,9 +458,9 @@ static DeprecatedString format_identifier(StringView owner, DeprecatedString ide
     identifier = identifier.replace("/"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
-        return DeprecatedString::formatted("{}_{}", owner[0], identifier);
+        return ByteString::formatted("{}_{}", owner[0], identifier);
     if (is_ascii_lower_alpha(identifier[0]))
-        return DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+        return ByteString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
     return identifier;
 }
 
@@ -568,14 +568,14 @@ struct DaylightSavingsOffset {
     auto append_offsets = [&](auto const& name, auto type, auto const& offsets) {
         generator.set("name", name);
         generator.set("type", type);
-        generator.set("size", DeprecatedString::number(offsets.size()));
+        generator.set("size", ByteString::number(offsets.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {
 )~~~");
 
         for (auto const& offset : offsets)
-            generator.append(DeprecatedString::formatted("    {},\n", offset));
+            generator.append(ByteString::formatted("    {},\n", offset));
 
         generator.append("} };\n");
     };
@@ -597,7 +597,7 @@ static constexpr Array<@type@, @size@> @name@ { {
             auto const& time_zones = time_zone_data.time_zone_regions.find(value)->value;
 
             generator.set("name", name);
-            generator.set("size", DeprecatedString::number(time_zones.size()));
+            generator.set("size", ByteString::number(time_zones.size()));
 
             generator.append(R"~~~(
 static constexpr Array<@string_index_type@, @size@> @name@ { {)~~~");
@@ -605,14 +605,14 @@ static constexpr Array<@string_index_type@, @size@> @name@ { {)~~~");
             bool first = true;
             for (auto const& time_zone : time_zones) {
                 generator.append(first ? " "sv : ", "sv);
-                generator.append(DeprecatedString::number(time_zone));
+                generator.append(ByteString::number(time_zone));
                 first = false;
             }
 
             generator.append(" } };");
         });
 
-    generator.set("size", DeprecatedString::number(time_zone_data.time_zone_names.size()));
+    generator.set("size", ByteString::number(time_zone_data.time_zone_names.size()));
     generator.append(R"~~~(
 static constexpr Array<Location, @size@> s_time_zone_locations { {
 )~~~");
@@ -620,12 +620,12 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
     for (auto const& time_zone : time_zone_data.time_zone_names) {
         auto location = time_zone_data.time_zone_coordinates.get(time_zone).value_or({});
 
-        generator.append(DeprecatedString::formatted("    {},\n", location));
+        generator.append(ByteString::formatted("    {},\n", location));
     }
     generator.append("} };\n");
 
     auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) -> ErrorOr<void> {
-        HashValueMap<DeprecatedString> hashes;
+        HashValueMap<ByteString> hashes;
         TRY(hashes.try_ensure_capacity(values.size()));
 
         auto hash = [](auto const& value) {
@@ -750,10 +750,10 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, 
     auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
     Array<NamedOffset, 2> named_offsets;
 
-    auto format_name = [](auto format, auto offset) -> DeprecatedString {
+    auto format_name = [](auto format, auto offset) -> ByteString {
         if (offset == 0)
             return decode_string(format).replace("{}"sv, ""sv, ReplaceMode::FirstOnly);
-        return DeprecatedString::formatted(decode_string(format), decode_string(offset));
+        return ByteString::formatted(decode_string(format), decode_string(offset));
     };
 
     auto set_named_offset = [&](auto& named_offset, auto dst_offset, auto in_dst, auto format, auto offset) {

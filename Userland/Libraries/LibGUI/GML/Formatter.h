@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <LibGUI/GML/AST.h>
 #include <LibGUI/GML/Parser.h>
 
 namespace GUI::GML {
 
-inline ErrorOr<DeprecatedString> format_gml(StringView string)
+inline ErrorOr<ByteString> format_gml(StringView string)
 {
-    return TRY(parse_gml(string))->to_deprecated_string();
+    return TRY(parse_gml(string))->to_byte_string();
 }
 
 }

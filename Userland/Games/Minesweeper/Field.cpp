@@ -120,7 +120,7 @@ ErrorOr<NonnullRefPtr<Field>> Field::create(GUI::Label& flag_label, GUI::Label& 
     field->m_good_face_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/minesweeper/face-good.png"sv));
     field->m_bad_face_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/minesweeper/face-bad.png"sv));
     for (int i = 0; i < 8; ++i)
-        field->m_number_bitmap[i] = TRY(Gfx::Bitmap::load_from_file(DeprecatedString::formatted("/res/graphics/minesweeper/{}.png", i + 1)));
+        field->m_number_bitmap[i] = TRY(Gfx::Bitmap::load_from_file(ByteString::formatted("/res/graphics/minesweeper/{}.png", i + 1)));
     field->initialize();
     return field;
 }
@@ -138,7 +138,7 @@ void Field::initialize()
     m_timer = Core::Timer::create_repeating(
         1000, [this] {
             ++m_time_elapsed;
-            m_time_label.set_text(String::from_deprecated_string(human_readable_digital_time(m_time_elapsed)).release_value_but_fixme_should_propagate_errors());
+            m_time_label.set_text(String::from_byte_string(human_readable_digital_time(m_time_elapsed)).release_value_but_fixme_should_propagate_errors());
         },
         this)
                   .release_value_but_fixme_should_propagate_errors();

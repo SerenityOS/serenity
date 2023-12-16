@@ -86,7 +86,7 @@ void ConnectionFromClient::set_window_handle(String const& handle)
     page().page().top_level_browsing_context().set_window_handle(handle);
 }
 
-void ConnectionFromClient::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
+void ConnectionFromClient::connect_to_webdriver(ByteString const& webdriver_ipc_path)
 {
     // FIXME: Propagate this error back to the browser.
     if (auto result = page().connect_to_webdriver(webdriver_ipc_path); result.is_error())
@@ -100,7 +100,7 @@ void ConnectionFromClient::update_system_theme(Core::AnonymousBuffer const& them
     page().set_palette_impl(*impl);
 }
 
-void ConnectionFromClient::update_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
+void ConnectionFromClient::update_system_fonts(ByteString const& default_font_query, ByteString const& fixed_width_font_query, ByteString const& window_title_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
@@ -117,11 +117,11 @@ void ConnectionFromClient::load_url(const URL& url)
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
 #if defined(AK_OS_SERENITY)
-    DeprecatedString process_name;
+    ByteString process_name;
     if (url.host().has<Empty>() || url.host() == String {})
         process_name = "WebContent";
     else
-        process_name = DeprecatedString::formatted("WebContent: {}", url.serialized_host().release_value_but_fixme_should_propagate_errors());
+        process_name = ByteString::formatted("WebContent: {}", url.serialized_host().release_value_but_fixme_should_propagate_errors());
 
     pthread_setname_np(pthread_self(), process_name.characters());
 #endif
@@ -129,7 +129,7 @@ void ConnectionFromClient::load_url(const URL& url)
     page().page().load(url);
 }
 
-void ConnectionFromClient::load_html(DeprecatedString const& html)
+void ConnectionFromClient::load_html(ByteString const& html)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}", html);
     page().page().load_html(html);
@@ -364,7 +364,7 @@ void ConnectionFromClient::report_finished_handling_input_event(bool event_was_h
     async_did_finish_handling_input_event(event_was_handled);
 }
 
-void ConnectionFromClient::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
+void ConnectionFromClient::debug_request(ByteString const& request, ByteString const& argument)
 {
     if (request == "dump-session-history") {
         auto const& traversable = page().page().top_level_traversable();
@@ -452,7 +452,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     }
 
     if (request == "spoof-user-agent") {
-        Web::ResourceLoader::the().set_user_agent(MUST(String::from_deprecated_string(argument)));
+        Web::ResourceLoader::the().set_user_agent(MUST(String::from_byte_string(argument)));
         return;
     }
 
@@ -496,14 +496,14 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
 void ConnectionFromClient::get_source()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_source(doc->url(), doc->source().to_deprecated_string());
+        async_did_get_source(doc->url(), doc->source().to_byte_string());
     }
 }
 
 void ConnectionFromClient::inspect_dom_tree()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_dom_tree(doc->dump_dom_tree_as_json().to_deprecated_string());
+        async_did_get_dom_tree(doc->dump_dom_tree_as_json().to_byte_string());
     }
 }
 
@@ -531,19 +531,19 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         if (!element.computed_css_values())
             return { false, "", "", "", "", "" };
 
-        auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> DeprecatedString {
+        auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> ByteString {
             StringBuilder builder;
 
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             properties.for_each_property([&](auto property_id, auto& value) {
-                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string().to_deprecated_string()));
+                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string().to_byte_string()));
             });
             MUST(serializer.finish());
 
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         };
 
-        auto serialize_custom_properties_json = [](Web::DOM::Element const& element, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) -> DeprecatedString {
+        auto serialize_custom_properties_json = [](Web::DOM::Element const& element, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) -> ByteString {
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             HashTable<FlyString> seen_properties;
@@ -562,9 +562,9 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             MUST(serializer.finish());
 
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         };
-        auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> DeprecatedString {
+        auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> ByteString {
             if (!layout_node || !layout_node->is_box()) {
                 return "{}";
             }
@@ -593,10 +593,10 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             }
 
             MUST(serializer.finish());
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         };
 
-        auto serialize_aria_properties_state_json = [](Web::DOM::Element const& element) -> DeprecatedString {
+        auto serialize_aria_properties_state_json = [](Web::DOM::Element const& element) -> ByteString {
             auto role_name = element.role_or_default();
             if (!role_name.has_value()) {
                 return "";
@@ -608,7 +608,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             MUST(role->serialize_as_json(serializer));
             MUST(serializer.finish());
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         };
 
         if (pseudo_element.has_value()) {
@@ -620,18 +620,18 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
             auto pseudo_element_style = MUST(page().page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element));
-            DeprecatedString computed_values = serialize_json(pseudo_element_style);
-            DeprecatedString resolved_values = "{}";
-            DeprecatedString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
-            DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
+            ByteString computed_values = serialize_json(pseudo_element_style);
+            ByteString resolved_values = "{}";
+            ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
+            ByteString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
             return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json, "" };
         }
 
-        DeprecatedString computed_values = serialize_json(*element.computed_css_values());
-        DeprecatedString resolved_values_json = serialize_json(element.resolved_css_values());
-        DeprecatedString custom_properties_json = serialize_custom_properties_json(element, {});
-        DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
-        DeprecatedString aria_properties_state_json = serialize_aria_properties_state_json(element);
+        ByteString computed_values = serialize_json(*element.computed_css_values());
+        ByteString resolved_values_json = serialize_json(element.resolved_css_values());
+        ByteString custom_properties_json = serialize_custom_properties_json(element, {});
+        ByteString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
+        ByteString aria_properties_state_json = serialize_aria_properties_state_json(element);
         return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json, aria_properties_state_json };
     }
 
@@ -668,7 +668,7 @@ Messages::WebContentServer::SetDomNodeTagResponse ConnectionFromClient::set_dom_
     auto new_element = Web::DOM::create_element(element.document(), name, element.namespace_uri(), element.prefix(), element.is_value()).release_value_but_fixme_should_propagate_errors();
 
     element.for_each_attribute([&](auto const& attribute) {
-        new_element->set_attribute_value(attribute.local_name(), attribute.value().to_deprecated_string(), attribute.prefix(), attribute.namespace_uri());
+        new_element->set_attribute_value(attribute.local_name(), attribute.value().to_byte_string(), attribute.prefix(), attribute.namespace_uri());
     });
 
     while (auto* child_node = element.first_child()) {
@@ -799,13 +799,13 @@ void ConnectionFromClient::destroy_js_console(Badge<PageClient>, Web::DOM::Docum
     m_console_clients.remove(&document);
 }
 
-void ConnectionFromClient::js_console_input(DeprecatedString const& js_source)
+void ConnectionFromClient::js_console_input(ByteString const& js_source)
 {
     if (m_top_level_document_console_client)
         m_top_level_document_console_client->handle_input(js_source);
 }
 
-void ConnectionFromClient::run_javascript(DeprecatedString const& js_source)
+void ConnectionFromClient::run_javascript(ByteString const& js_source)
 {
     auto* active_document = page().page().top_level_browsing_context().active_document();
 
@@ -870,7 +870,7 @@ Messages::WebContentServer::TakeDomNodeScreenshotResponse ConnectionFromClient::
 Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_graph()
 {
     auto gc_graph_json = Web::Bindings::main_thread_vm().heap().dump_graph();
-    return MUST(String::from_deprecated_string(gc_graph_json.to_deprecated_string()));
+    return MUST(String::from_byte_string(gc_graph_json.to_byte_string()));
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
@@ -888,39 +888,39 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
 {
     auto* document = page().page().top_level_browsing_context().active_document();
     if (!document)
-        return DeprecatedString { "(no DOM tree)" };
+        return ByteString { "(no DOM tree)" };
     document->update_layout();
     auto* layout_root = document->layout_node();
     if (!layout_root)
-        return DeprecatedString { "(no layout tree)" };
+        return ByteString { "(no layout tree)" };
     StringBuilder builder;
     Web::dump_tree(builder, *layout_root);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_paint_tree()
 {
     auto* document = page().page().top_level_browsing_context().active_document();
     if (!document)
-        return DeprecatedString { "(no DOM tree)" };
+        return ByteString { "(no DOM tree)" };
     document->update_layout();
     auto* layout_root = document->layout_node();
     if (!layout_root)
-        return DeprecatedString { "(no layout tree)" };
+        return ByteString { "(no layout tree)" };
     if (!layout_root->paintable())
-        return DeprecatedString { "(no paint tree)" };
+        return ByteString { "(no paint tree)" };
     StringBuilder builder;
     Web::dump_tree(builder, *layout_root->paintable());
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text()
 {
     auto* document = page().page().top_level_browsing_context().active_document();
     if (!document)
-        return DeprecatedString { "(no DOM tree)" };
+        return ByteString { "(no DOM tree)" };
     if (!document->body())
-        return DeprecatedString { "(no body)" };
+        return ByteString { "(no body)" };
     return document->body()->inner_text();
 }
 
@@ -941,12 +941,12 @@ void ConnectionFromClient::set_autoplay_allowlist(Vector<String> const& allowlis
     autoplay_allowlist.enable_for_origins(allowlist).release_value_but_fixme_should_propagate_errors();
 }
 
-void ConnectionFromClient::set_proxy_mappings(Vector<DeprecatedString> const& proxies, HashMap<DeprecatedString, size_t> const& mappings)
+void ConnectionFromClient::set_proxy_mappings(Vector<ByteString> const& proxies, HashMap<ByteString, size_t> const& mappings)
 {
     auto keys = mappings.keys();
     quick_sort(keys, [&](auto& a, auto& b) { return a.length() < b.length(); });
 
-    OrderedHashMap<DeprecatedString, size_t> sorted_mappings;
+    OrderedHashMap<ByteString, size_t> sorted_mappings;
     for (auto& key : keys) {
         auto value = *mappings.get(key);
         if (value >= proxies.size())
@@ -1082,7 +1082,7 @@ void ConnectionFromClient::set_user_style(String const& source)
 void ConnectionFromClient::inspect_accessibility_tree()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json().to_deprecated_string());
+        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json().to_byte_string());
     }
 }
 

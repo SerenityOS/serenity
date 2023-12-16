@@ -45,7 +45,7 @@ public:
     virtual void prefetch_dns(AK::URL const& url) override;
     virtual void preconnect(AK::URL const& url) override;
 
-    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(DeprecatedString const& method, URL const&, HashMap<DeprecatedString, DeprecatedString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) override;
+    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) override;
 
 private:
     RefPtr<Protocol::RequestClient> m_protocol_client;

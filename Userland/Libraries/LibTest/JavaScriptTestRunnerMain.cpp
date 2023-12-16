@@ -20,12 +20,12 @@ namespace JS {
 
 RefPtr<::JS::VM> g_vm;
 bool g_collect_on_every_allocation = false;
-DeprecatedString g_currently_running_test;
-HashMap<DeprecatedString, FunctionWithLength> s_exposed_global_functions;
+ByteString g_currently_running_test;
+HashMap<ByteString, FunctionWithLength> s_exposed_global_functions;
 Function<void()> g_main_hook;
-HashMap<bool*, Tuple<DeprecatedString, DeprecatedString, char>> g_extra_args;
-IntermediateRunFileResult (*g_run_file)(DeprecatedString const&, JS::Realm&, JS::ExecutionContext&) = nullptr;
-DeprecatedString g_test_root;
+HashMap<bool*, Tuple<ByteString, ByteString, char>> g_extra_args;
+IntermediateRunFileResult (*g_run_file)(ByteString const&, JS::Realm&, JS::ExecutionContext&) = nullptr;
+ByteString g_test_root;
 int g_test_argc;
 char** g_test_argv;
 
@@ -93,8 +93,8 @@ int main(int argc, char** argv)
     bool print_json = false;
     bool per_file = false;
     StringView specified_test_root;
-    DeprecatedString common_path;
-    DeprecatedString test_glob;
+    ByteString common_path;
+    ByteString test_glob;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
@@ -128,27 +128,27 @@ int main(int argc, char** argv)
     if (per_file)
         print_json = true;
 
-    test_glob = DeprecatedString::formatted("*{}*", test_glob);
+    test_glob = ByteString::formatted("*{}*", test_glob);
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
         AK::set_debug_enabled(false);
     }
 
-    DeprecatedString test_root;
+    ByteString test_root;
 
     if (!specified_test_root.is_empty()) {
-        test_root = DeprecatedString { specified_test_root };
+        test_root = ByteString { specified_test_root };
     } else {
 #ifdef AK_OS_SERENITY
-        test_root = LexicalPath::join("/home/anon/Tests"sv, DeprecatedString::formatted("{}-tests", program_name.split_view('-').last())).string();
+        test_root = LexicalPath::join("/home/anon/Tests"sv, ByteString::formatted("{}-tests", program_name.split_view('-').last())).string();
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
         if (!serenity_source_dir) {
             warnln("No test root given, {} requires the SERENITY_SOURCE_DIR environment variable to be set", g_program_name);
             return 1;
         }
-        test_root = DeprecatedString::formatted("{}/{}", serenity_source_dir, g_test_root_fragment);
-        common_path = DeprecatedString::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
+        test_root = ByteString::formatted("{}/{}", serenity_source_dir, g_test_root_fragment);
+        common_path = ByteString::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
 #endif
     }
     if (!FileSystem::is_directory(test_root)) {
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
             warnln("No test root given, {} requires the SERENITY_SOURCE_DIR environment variable to be set", g_program_name);
             return 1;
         }
-        common_path = DeprecatedString::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
+        common_path = ByteString::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
 #endif
     }
 
@@ -174,14 +174,14 @@ int main(int argc, char** argv)
         warnln("Failed to resolve test root: {}", test_root_or_error.error());
         return 1;
     }
-    test_root = test_root_or_error.release_value().to_deprecated_string();
+    test_root = test_root_or_error.release_value().to_byte_string();
 
     auto common_path_or_error = FileSystem::real_path(common_path);
     if (common_path_or_error.is_error()) {
         warnln("Failed to resolve common path: {}", common_path_or_error.error());
         return 1;
     }
-    common_path = common_path_or_error.release_value().to_deprecated_string();
+    common_path = common_path_or_error.release_value().to_byte_string();
 
     if (chdir(test_root.characters()) < 0) {
         auto saved_errno = errno;

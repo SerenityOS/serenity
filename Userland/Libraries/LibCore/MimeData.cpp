@@ -27,7 +27,7 @@ ErrorOr<void> MimeData::set_urls(Vector<URL> const& urls)
 {
     StringBuilder builder;
     for (auto& url : urls) {
-        TRY(builder.try_append(url.to_deprecated_string()));
+        TRY(builder.try_append(url.to_byte_string()));
         TRY(builder.try_append('\n'));
     }
     set_data("text/uri-list"_string, TRY(builder.to_byte_buffer()));
@@ -35,12 +35,12 @@ ErrorOr<void> MimeData::set_urls(Vector<URL> const& urls)
     return {};
 }
 
-DeprecatedString MimeData::text() const
+ByteString MimeData::text() const
 {
-    return DeprecatedString::copy(m_data.get("text/plain"sv).value_or({}));
+    return ByteString::copy(m_data.get("text/plain"sv).value_or({}));
 }
 
-void MimeData::set_text(DeprecatedString const& text)
+void MimeData::set_text(ByteString const& text)
 {
     set_data("text/plain"_string, text.to_byte_buffer());
 }

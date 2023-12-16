@@ -31,16 +31,16 @@ JsonValue JsonPath::resolve(JsonValue const& top_root) const
     return root;
 }
 
-DeprecatedString JsonPath::to_deprecated_string() const
+ByteString JsonPath::to_byte_string() const
 {
     StringBuilder builder;
     builder.append("{ ."sv);
     for (auto const& el : *this) {
         builder.append("sv > "sv);
-        builder.append(el.to_deprecated_string());
+        builder.append(el.to_byte_string());
     }
     builder.append("sv }"sv);
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 }

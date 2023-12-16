@@ -18,7 +18,7 @@ public:
     explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, CSS::ListStylePosition, size_t index, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ListItemMarkerBox() override;
 
-    Optional<DeprecatedString> const& text() const { return m_text; }
+    Optional<ByteString> const& text() const { return m_text; }
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
@@ -33,7 +33,7 @@ private:
     CSS::ListStylePosition m_list_style_position { CSS::ListStylePosition::Outside };
     size_t m_index;
 
-    Optional<DeprecatedString> m_text {};
+    Optional<ByteString> m_text {};
 };
 
 template<>

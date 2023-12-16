@@ -28,21 +28,21 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     out("      "sv);
     for (size_t i = 0; i < cpu_count; ++i) {
-        out("{:>10}", DeprecatedString::formatted("CPU{}", i));
+        out("{:>10}", ByteString::formatted("CPU{}", i));
     }
     outln("");
 
     json.as_array().for_each([cpu_count](JsonValue const& value) {
         auto& handler = value.as_object();
-        auto purpose = handler.get_deprecated_string("purpose"sv).value_or({});
+        auto purpose = handler.get_byte_string("purpose"sv).value_or({});
         auto interrupt = handler.get_u8("interrupt_line"sv).value();
-        auto controller = handler.get_deprecated_string("controller"sv).value_or({});
+        auto controller = handler.get_byte_string("controller"sv).value_or({});
         auto call_counts = handler.get_array("per_cpu_call_counts"sv).value();
 
         out("{:>4}: ", interrupt);
 
         for (size_t i = 0; i < cpu_count; ++i)
-            out("{:>10}", call_counts[i].to_deprecated_string());
+            out("{:>10}", call_counts[i].to_byte_string());
 
         outln("  {:10}  {:30}", controller, purpose);
     });

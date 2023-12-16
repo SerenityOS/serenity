@@ -148,7 +148,7 @@ WebIDL::ExceptionOr<String> URL::href() const
     auto& vm = realm().vm();
 
     // The href getter steps and the toJSON() method steps are to return the serialization of this’s URL.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_url.serialize()));
 }
 
 // https://url.spec.whatwg.org/#dom-url-tojson
@@ -157,7 +157,7 @@ WebIDL::ExceptionOr<String> URL::to_json() const
     auto& vm = realm().vm();
 
     // The href getter steps and the toJSON() method steps are to return the serialization of this’s URL.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_url.serialize()));
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-href②
@@ -193,7 +193,7 @@ WebIDL::ExceptionOr<String> URL::origin() const
     auto& vm = realm().vm();
 
     // The origin getter steps are to return the serialization of this’s URL’s origin. [HTML]
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize_origin()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_url.serialize_origin()));
 }
 
 // https://url.spec.whatwg.org/#dom-url-protocol
@@ -355,7 +355,7 @@ WebIDL::ExceptionOr<String> URL::pathname() const
     auto& vm = realm().vm();
 
     // The pathname getter steps are to return the result of URL path serializing this’s URL.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize_path(AK::URL::ApplyPercentDecoding::No)));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_url.serialize_path(AK::URL::ApplyPercentDecoding::No)));
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-pathname%E2%91%A0
@@ -517,14 +517,14 @@ HTML::Origin url_origin(AK::URL const& url)
     // -> "wss"
     if (url.scheme().is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) {
         // Return the tuple origin (url’s scheme, url’s host, url’s port, null).
-        return HTML::Origin(url.scheme().to_deprecated_string(), url.host(), url.port().value_or(0));
+        return HTML::Origin(url.scheme().to_byte_string(), url.host(), url.port().value_or(0));
     }
 
     // -> "file"
     if (url.scheme() == "file"sv) {
         // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
         // Note: We must return an origin with the `file://' protocol for `file://' iframes to work from `file://' pages.
-        return HTML::Origin(url.scheme().to_deprecated_string(), String {}, 0);
+        return HTML::Origin(url.scheme().to_byte_string(), String {}, 0);
     }
 
     // -> Otherwise

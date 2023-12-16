@@ -13,9 +13,9 @@
 namespace SQL {
 
 struct TupleElementDescriptor {
-    DeprecatedString schema { "" };
-    DeprecatedString table { "" };
-    DeprecatedString name { "" };
+    ByteString schema { "" };
+    ByteString table { "" };
+    ByteString name { "" };
     SQLType type { SQLType::Text };
     Order order { Order::Ascending };
 
@@ -29,7 +29,7 @@ struct TupleElementDescriptor {
     }
     void deserialize(Serializer& serializer)
     {
-        name = serializer.deserialize<DeprecatedString>();
+        name = serializer.deserialize<ByteString>();
         type = (SQLType)serializer.deserialize<u8>();
         order = (Order)serializer.deserialize<u8>();
     }
@@ -39,9 +39,9 @@ struct TupleElementDescriptor {
         return sizeof(u32) + name.length() + 2 * sizeof(u8);
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
-        return DeprecatedString::formatted("  name: {} type: {} order: {}", name, SQLType_name(type), Order_name(order));
+        return ByteString::formatted("  name: {} type: {} order: {}", name, SQLType_name(type), Order_name(order));
     }
 };
 
@@ -90,12 +90,12 @@ public:
         return len;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ByteString to_byte_string() const
     {
-        Vector<DeprecatedString> elements;
+        Vector<ByteString> elements;
         for (auto& element : *this)
-            elements.append(element.to_deprecated_string());
-        return DeprecatedString::formatted("[\n{}\n]", DeprecatedString::join('\n', elements));
+            elements.append(element.to_byte_string());
+        return ByteString::formatted("[\n{}\n]", ByteString::join('\n', elements));
     }
 
     using Vector<TupleElementDescriptor>::operator==;

@@ -81,7 +81,7 @@ ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> c
             StringBuilder builder;
             while (auto c = TRY(m_stream.read_value<char>()))
                 TRY(builder.try_append(c));
-            auto path = builder.to_deprecated_string();
+            auto path = builder.to_byte_string();
             if (path.length() == 0)
                 break;
             dbgln_if(DWARF_DEBUG, "path: {}", path);

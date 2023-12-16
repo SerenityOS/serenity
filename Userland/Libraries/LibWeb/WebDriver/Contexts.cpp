@@ -25,7 +25,7 @@ JsonObject window_proxy_reference_object(HTML::WindowProxy const& window)
 
     // identifier
     //    Associated window handle of the window’s browsing context.
-    object.set(identifier, window.associated_browsing_context()->window_handle().to_deprecated_string());
+    object.set(identifier, window.associated_browsing_context()->window_handle().to_byte_string());
 
     return object;
 }

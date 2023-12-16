@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
@@ -27,7 +27,7 @@ struct FileWatcherEvent {
         ChildDeleted = 1 << 4,
     };
     Type type { Type::Invalid };
-    DeprecatedString event_path;
+    ByteString event_path;
 };
 
 AK_ENUM_BITWISE_OPERATORS(FileWatcherEvent::Type);
@@ -44,9 +44,9 @@ class FileWatcherBase {
 public:
     virtual ~FileWatcherBase() = default;
 
-    ErrorOr<bool> add_watch(DeprecatedString path, FileWatcherEvent::Type event_mask);
-    ErrorOr<bool> remove_watch(DeprecatedString path);
-    bool is_watching(DeprecatedString const& path) const { return m_path_to_wd.find(path) != m_path_to_wd.end(); }
+    ErrorOr<bool> add_watch(ByteString path, FileWatcherEvent::Type event_mask);
+    ErrorOr<bool> remove_watch(ByteString path);
+    bool is_watching(ByteString const& path) const { return m_path_to_wd.find(path) != m_path_to_wd.end(); }
 
 protected:
     FileWatcherBase(int watcher_fd)
@@ -55,8 +55,8 @@ protected:
     }
 
     int m_watcher_fd { -1 };
-    HashMap<DeprecatedString, unsigned> m_path_to_wd;
-    HashMap<unsigned, DeprecatedString> m_wd_to_path;
+    HashMap<ByteString, unsigned> m_path_to_wd;
+    HashMap<unsigned, ByteString> m_wd_to_path;
 };
 
 class BlockingFileWatcher final : public FileWatcherBase {

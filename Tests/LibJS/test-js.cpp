@@ -22,7 +22,7 @@ TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)
 
 TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
-    auto source = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto source = TRY(vm.argument(0).to_byte_string(vm));
     auto parser = JS::Parser(JS::Lexer(source));
     (void)parser.parse_program();
     return JS::Value(!parser.has_errors());
@@ -65,14 +65,14 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
         return execution_context->lexical_environment != nullptr;
     });
     if (!outer_environment.has_value())
-        return vm.throw_completion<JS::ReferenceError>(JS::ErrorType::UnknownIdentifier, variable_name.deprecated_string());
+        return vm.throw_completion<JS::ReferenceError>(JS::ErrorType::UnknownIdentifier, variable_name.byte_string());
 
-    auto reference = TRY(vm.resolve_binding(variable_name.deprecated_string(), outer_environment.value()->lexical_environment));
+    auto reference = TRY(vm.resolve_binding(variable_name.byte_string(), outer_environment.value()->lexical_environment));
 
     auto value = TRY(reference.get_value(vm));
 
     if (!can_be_held_weakly(value))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, DeprecatedString::formatted("Variable with name {}", variable_name.deprecated_string()));
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, ByteString::formatted("Variable with name {}", variable_name.byte_string()));
 
     vm.heap().uproot_cell(&value.as_cell());
     TRY(reference.delete_(vm));
@@ -111,7 +111,7 @@ TESTJS_GLOBAL_FUNCTION(set_time_zone, setTimeZone)
     return current_time_zone;
 }
 
-TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Realm& realm, JS::ExecutionContext&)
+TESTJS_RUN_FILE_FUNCTION(ByteString const& test_file, JS::Realm& realm, JS::ExecutionContext&)
 {
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;
@@ -146,8 +146,8 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Realm& realm, JS
         parse_succeeded = !Test::JS::parse_script(test_file, realm).is_error();
 
     bool test_passed = true;
-    DeprecatedString message;
-    DeprecatedString expectation_string;
+    ByteString message;
+    ByteString expectation_string;
 
     switch (expectation) {
     case Early:

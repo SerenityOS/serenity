@@ -46,7 +46,7 @@ static void insert_into_table(SQL::Database& db, int count)
         StringBuilder builder;
         builder.appendff("Test{}", ix);
 
-        row["TextColumn"] = builder.to_deprecated_string();
+        row["TextColumn"] = builder.to_byte_string();
         row["IntColumn"] = ix;
         TRY_OR_FAIL(db.insert(row));
     }
@@ -62,7 +62,7 @@ static void verify_table_contents(SQL::Database& db, int expected_count)
     for (auto& row : rows) {
         StringBuilder builder;
         builder.appendff("Test{}", row["IntColumn"].to_int<i32>().value());
-        EXPECT_EQ(row["TextColumn"].to_deprecated_string(), builder.to_deprecated_string());
+        EXPECT_EQ(row["TextColumn"].to_byte_string(), builder.to_byte_string());
         count++;
         sum += row["IntColumn"].to_int<i32>().value();
     }

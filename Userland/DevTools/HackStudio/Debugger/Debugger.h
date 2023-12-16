@@ -26,7 +26,7 @@ public:
     };
 
     static void initialize(
-        DeprecatedString source_root,
+        ByteString source_root,
         Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback,
@@ -34,11 +34,11 @@ public:
 
     static bool is_initialized();
 
-    void on_breakpoint_change(DeprecatedString const& file, size_t line, BreakpointChange change_type);
-    bool set_execution_position(DeprecatedString const& file, size_t line);
+    void on_breakpoint_change(ByteString const& file, size_t line, BreakpointChange change_type);
+    bool set_execution_position(ByteString const& file, size_t line);
 
-    void set_executable_path(DeprecatedString const& path) { m_executable_path = path; }
-    void set_source_root(DeprecatedString const& source_root) { m_source_root = source_root; }
+    void set_executable_path(ByteString const& path) { m_executable_path = path; }
+    void set_source_root(ByteString const& source_root) { m_source_root = source_root; }
     void set_pid_to_attach(pid_t pid) { m_pid_to_attach = pid; }
 
     Debug::DebugSession* session() { return m_debug_session.ptr(); }
@@ -94,13 +94,13 @@ private:
     };
 
     explicit Debugger(
-        DeprecatedString source_root,
+        ByteString source_root,
         Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback,
         Function<void(float)> on_initialization_progress);
 
-    Debug::DebugInfo::SourcePosition create_source_position(DeprecatedString const& file, size_t line);
+    Debug::DebugInfo::SourcePosition create_source_position(ByteString const& file, size_t line);
 
     void start();
     int debugger_loop(Debug::DebugSession::DesiredInitialDebugeeState);
@@ -118,7 +118,7 @@ private:
     CreateDebugSessionResult create_debug_session();
 
     OwnPtr<Debug::DebugSession> m_debug_session;
-    DeprecatedString m_source_root;
+    ByteString m_source_root;
     DebuggingState m_state;
 
     pthread_mutex_t m_ui_action_mutex {};
@@ -127,7 +127,7 @@ private:
 
     Vector<Debug::DebugInfo::SourcePosition> m_breakpoints;
 
-    DeprecatedString m_executable_path;
+    ByteString m_executable_path;
     Optional<pid_t> m_pid_to_attach;
 
     Function<HasControlPassedToUser(PtraceRegisters const&)> m_on_stopped_callback;

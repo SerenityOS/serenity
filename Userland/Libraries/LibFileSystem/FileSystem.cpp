@@ -26,7 +26,7 @@ namespace FileSystem {
 ErrorOr<String> current_working_directory()
 {
     auto cwd = TRY(Core::System::getcwd());
-    return TRY(String::from_deprecated_string({ cwd }));
+    return TRY(String::from_byte_string({ cwd }));
 }
 
 ErrorOr<String> absolute_path(StringView path)
@@ -35,12 +35,12 @@ ErrorOr<String> absolute_path(StringView path)
         return TRY(real_path(path));
 
     if (path.starts_with("/"sv))
-        return TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
+        return TRY(String::from_byte_string(LexicalPath::canonicalized_path(path)));
 
     auto working_directory = TRY(current_working_directory());
     auto full_path = LexicalPath::join(working_directory, path).string();
 
-    return TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(full_path)));
+    return TRY(String::from_byte_string(LexicalPath::canonicalized_path(full_path)));
 }
 
 ErrorOr<String> real_path(StringView path)
@@ -48,7 +48,7 @@ ErrorOr<String> real_path(StringView path)
     if (path.is_null())
         return Error::from_errno(ENOENT);
 
-    DeprecatedString dep_path = path;
+    ByteString dep_path = path;
     char* real_path = realpath(dep_path.characters(), nullptr);
     ScopeGuard free_path = [real_path]() { free(real_path); };
 
@@ -182,11 +182,11 @@ static ErrorOr<String> get_duplicate_file_name(StringView path)
     LexicalPath lexical_path(path);
     auto parent_path = LexicalPath::canonicalized_path(lexical_path.dirname());
     auto basename = lexical_path.basename();
-    auto current_name = TRY(String::from_deprecated_string(LexicalPath::join(parent_path, basename).string()));
+    auto current_name = TRY(String::from_byte_string(LexicalPath::join(parent_path, basename).string()));
 
     while (exists(current_name)) {
         ++duplicate_count;
-        current_name = TRY(String::from_deprecated_string(LexicalPath::join(parent_path, TRY(String::formatted("{} ({})", basename, duplicate_count))).string()));
+        current_name = TRY(String::from_byte_string(LexicalPath::join(parent_path, TRY(String::formatted("{} ({})", basename, duplicate_count))).string()));
     }
 
     return current_name;
@@ -260,7 +260,7 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
         return di.error();
 
     while (di.has_next()) {
-        auto filename = TRY(String::from_deprecated_string(di.next_path()));
+        auto filename = TRY(String::from_byte_string(di.next_path()));
         TRY(copy_file_or_directory(
             TRY(String::formatted("{}/{}", destination_path, filename)),
             TRY(String::formatted("{}/{}", source_path, filename)),
@@ -388,7 +388,7 @@ bool can_delete_or_move(StringView path)
 
 ErrorOr<String> read_link(StringView link_path)
 {
-    return TRY(String::from_deprecated_string(TRY(Core::System::readlink(link_path))));
+    return TRY(String::from_byte_string(TRY(Core::System::readlink(link_path))));
 }
 
 ErrorOr<void> link_file(StringView destination_path, StringView source_path)

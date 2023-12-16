@@ -44,14 +44,14 @@ class FileDB : public CodeComprehension::FileDB {
 public:
     FileDB() = default;
 
-    void add(DeprecatedString filename, DeprecatedString content)
+    void add(ByteString filename, ByteString content)
     {
         m_map.set(filename, content);
     }
 
-    virtual Optional<DeprecatedString> get_or_read_from_filesystem(StringView filename) const override
+    virtual Optional<ByteString> get_or_read_from_filesystem(StringView filename) const override
     {
-        DeprecatedString target_filename = filename;
+        ByteString target_filename = filename;
         if (project_root().has_value() && filename.starts_with(*project_root())) {
             target_filename = LexicalPath::relative_path(filename, *project_root());
         }
@@ -59,7 +59,7 @@ public:
     }
 
 private:
-    HashMap<DeprecatedString, DeprecatedString> m_map;
+    HashMap<ByteString, ByteString> m_map;
 };
 
 static void test_complete_local_args();
@@ -86,10 +86,10 @@ int run_tests()
     return 0;
 }
 
-static void add_file(FileDB& filedb, DeprecatedString const& name)
+static void add_file(FileDB& filedb, ByteString const& name)
 {
     auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
-    filedb.add(name, DeprecatedString::copy(MUST(file->read_until_eof())));
+    filedb.add(name, ByteString::copy(MUST(file->read_until_eof())));
 }
 
 void test_complete_local_args()
@@ -246,19 +246,19 @@ void test_parameters_hint()
     auto result = engine.get_function_params_hint("parameters_hint1.cpp", { 4, 9 });
     if (!result.has_value())
         FAIL("failed to get parameters hint (1)");
-    if (result->params != Vector<DeprecatedString> { "int x", "char y" } || result->current_index != 0)
+    if (result->params != Vector<ByteString> { "int x", "char y" } || result->current_index != 0)
         FAIL("bad result (1)");
 
     result = engine.get_function_params_hint("parameters_hint1.cpp", { 5, 15 });
     if (!result.has_value())
         FAIL("failed to get parameters hint (2)");
-    if (result->params != Vector<DeprecatedString> { "int x", "char y" } || result->current_index != 1)
+    if (result->params != Vector<ByteString> { "int x", "char y" } || result->current_index != 1)
         FAIL("bad result (2)");
 
     result = engine.get_function_params_hint("parameters_hint1.cpp", { 6, 8 });
     if (!result.has_value())
         FAIL("failed to get parameters hint (3)");
-    if (result->params != Vector<DeprecatedString> { "int x", "char y" } || result->current_index != 0)
+    if (result->params != Vector<ByteString> { "int x", "char y" } || result->current_index != 0)
         FAIL("bad result (3)");
 
     PASS;

@@ -47,7 +47,7 @@
 #include <string.h>
 #include <unistd.h>
 
-ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(DeprecatedString const& path, bool disable_rename, Window* parent)
+ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(ByteString const& path, bool disable_rename, Window* parent)
 {
     auto window = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PropertiesWindow(path, parent)));
     window->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv)));
@@ -55,7 +55,7 @@ ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(Deprecated
     return window;
 }
 
-PropertiesWindow::PropertiesWindow(DeprecatedString const& path, Window* parent_window)
+PropertiesWindow::PropertiesWindow(ByteString const& path, Window* parent_window)
     : Window(parent_window)
 {
     auto lexical_path = LexicalPath(path);
@@ -134,15 +134,15 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
     };
 
     auto* location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("location");
-    location->set_text(TRY(String::from_deprecated_string(m_path)));
+    location->set_text(TRY(String::from_byte_string(m_path)));
     location->on_click = [this] {
         Desktop::Launcher::open(URL::create_with_file_scheme(m_parent_path, m_name));
     };
 
     auto st = TRY(Core::System::lstat(m_path));
 
-    DeprecatedString owner_name;
-    DeprecatedString group_name;
+    ByteString owner_name;
+    ByteString group_name;
 
     if (auto* pw = getpwuid(st.st_uid)) {
         owner_name = pw->pw_name;
@@ -171,7 +171,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
             auto* link_location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("link_location");
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {
-                auto link_directory = LexicalPath(link_destination.to_deprecated_string());
+                auto link_directory = LexicalPath(link_destination.to_byte_string());
                 Desktop::Launcher::open(URL::create_with_file_scheme(link_directory.dirname(), link_directory.basename()));
             };
         }
@@ -183,7 +183,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
     m_size_label = general_tab.find_descendant_of_type_named<GUI::Label>("size");
     m_size_label->set_text(S_ISDIR(st.st_mode)
             ? "Calculating..."_string
-            : TRY(String::from_deprecated_string(human_readable_size_long(st.st_size, UseThousandsSeparator::Yes))));
+            : TRY(String::from_byte_string(human_readable_size_long(st.st_size, UseThousandsSeparator::Yes))));
 
     auto* owner = general_tab.find_descendant_of_type_named<GUI::Label>("owner");
     owner->set_text(String::formatted("{} ({})", owner_name, st.st_uid).release_value_but_fixme_should_propagate_errors());
@@ -192,10 +192,10 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
     group->set_text(String::formatted("{} ({})", group_name, st.st_gid).release_value_but_fixme_should_propagate_errors());
 
     auto* created_at = general_tab.find_descendant_of_type_named<GUI::Label>("created_at");
-    created_at->set_text(String::from_deprecated_string(GUI::FileSystemModel::timestamp_string(st.st_ctime)).release_value_but_fixme_should_propagate_errors());
+    created_at->set_text(String::from_byte_string(GUI::FileSystemModel::timestamp_string(st.st_ctime)).release_value_but_fixme_should_propagate_errors());
 
     auto* last_modified = general_tab.find_descendant_of_type_named<GUI::Label>("last_modified");
-    last_modified->set_text(String::from_deprecated_string(GUI::FileSystemModel::timestamp_string(st.st_mtime)).release_value_but_fixme_should_propagate_errors());
+    last_modified->set_text(String::from_byte_string(GUI::FileSystemModel::timestamp_string(st.st_mtime)).release_value_but_fixme_should_propagate_errors());
 
     auto* owner_read = general_tab.find_descendant_of_type_named<GUI::CheckBox>("owner_read");
     auto* owner_write = general_tab.find_descendant_of_type_named<GUI::CheckBox>("owner_write");
@@ -263,7 +263,7 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     tab.find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
     tab.find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_string);
     tab.find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
-    tab.find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_deprecated_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_byte_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
 
     return {};
 }
@@ -280,9 +280,9 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     auto& tab = tab_widget.add_tab<GUI::Widget>("Audio"_string);
     TRY(tab.load_from_gml(properties_window_audio_tab_gml));
 
-    tab.find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_deprecated_string(loader->format_name())));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_byte_string(loader->format_name())));
     auto duration_seconds = loader->total_samples() / loader->sample_rate();
-    tab.find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(TRY(String::from_deprecated_string(human_readable_digital_time(duration_seconds))));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(TRY(String::from_byte_string(human_readable_digital_time(duration_seconds))));
     tab.find_descendant_of_type_named<GUI::Label>("audio_sample_rate")->set_text(TRY(String::formatted("{} Hz", loader->sample_rate())));
     tab.find_descendant_of_type_named<GUI::Label>("audio_format")->set_text(TRY(String::formatted("{}-bit", loader->bits_per_sample())));
 
@@ -487,12 +487,12 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
     if (maybe_info_dict.is_error()) {
         warnln("Failed to read InfoDict from '{}': {}", m_path, maybe_info_dict.error().message());
     } else if (maybe_info_dict.value().has_value()) {
-        auto get_info_string = [](PDF::PDFErrorOr<Optional<DeprecatedString>> input) -> ErrorOr<String> {
+        auto get_info_string = [](PDF::PDFErrorOr<Optional<ByteString>> input) -> ErrorOr<String> {
             if (input.is_error())
                 return String {};
             if (!input.value().has_value())
                 return String {};
-            return String::from_deprecated_string(input.value().value());
+            return String::from_byte_string(input.value().value());
         };
 
         auto info_dict = maybe_info_dict.release_value().release_value();
@@ -512,7 +512,7 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
 void PropertiesWindow::update()
 {
     m_icon->set_bitmap(GUI::FileIconProvider::icon_for_path(make_full_path(m_name), m_mode).bitmap_for_size(32));
-    set_title(DeprecatedString::formatted("{} - Properties", m_name));
+    set_title(ByteString::formatted("{} - Properties", m_name));
 }
 
 void PropertiesWindow::permission_changed(mode_t mask, bool set)
@@ -527,24 +527,24 @@ void PropertiesWindow::permission_changed(mode_t mask, bool set)
     m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
 }
 
-DeprecatedString PropertiesWindow::make_full_path(DeprecatedString const& name)
+ByteString PropertiesWindow::make_full_path(ByteString const& name)
 {
-    return DeprecatedString::formatted("{}/{}", m_parent_path, name);
+    return ByteString::formatted("{}/{}", m_parent_path, name);
 }
 
 bool PropertiesWindow::apply_changes()
 {
     if (m_name_dirty) {
-        DeprecatedString new_name = m_name_box->text();
-        DeprecatedString new_file = make_full_path(new_name).characters();
+        ByteString new_name = m_name_box->text();
+        ByteString new_file = make_full_path(new_name).characters();
 
         if (FileSystem::exists(new_file)) {
-            GUI::MessageBox::show(this, DeprecatedString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, ByteString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
         if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GUI::MessageBox::show(this, DeprecatedString::formatted("Could not rename file: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, ByteString::formatted("Could not rename file: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -555,7 +555,7 @@ bool PropertiesWindow::apply_changes()
 
     if (m_permissions_dirty) {
         if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GUI::MessageBox::show(this, DeprecatedString::formatted("Could not update permissions: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, ByteString::formatted("Could not update permissions: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -606,7 +606,7 @@ void PropertiesWindow::close()
         m_directory_statistics_calculator->stop();
 }
 
-PropertiesWindow::DirectoryStatisticsCalculator::DirectoryStatisticsCalculator(DeprecatedString path)
+PropertiesWindow::DirectoryStatisticsCalculator::DirectoryStatisticsCalculator(ByteString path)
 {
     m_work_queue.enqueue(path);
 }

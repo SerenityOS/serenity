@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 
 class History final {
 public:
     void push(StringView history_item);
-    DeprecatedString current();
+    ByteString current();
 
     void go_back();
     void go_forward();
@@ -23,6 +23,6 @@ public:
     void clear();
 
 private:
-    Vector<DeprecatedString> m_items;
+    Vector<ByteString> m_items;
     int m_current_history_item { -1 };
 };

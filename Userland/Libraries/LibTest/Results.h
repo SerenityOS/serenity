@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Vector.h>
 
 namespace Test {
@@ -23,15 +23,15 @@ enum class Result {
 };
 
 struct Case {
-    DeprecatedString name;
+    ByteString name;
     Result result;
-    DeprecatedString details;
+    ByteString details;
     u64 duration_us;
 };
 
 struct Suite {
-    DeprecatedString path;
-    DeprecatedString name;
+    ByteString path;
+    ByteString name;
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
     Result most_severe_test_result { Result::Pass };

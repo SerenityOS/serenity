@@ -9,7 +9,7 @@
 #include "ProgressWindow.h"
 #include "Tree.h"
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/NumberFormat.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
@@ -97,7 +97,7 @@ void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, TreeNode const& node
             text_rect.take_from_top(font().presentation_size() + 1);
             painter.draw_text(text_rect, human_readable_size(node.area()), font(), Gfx::TextAlignment::TopLeft, Color::Black);
         } else {
-            painter.draw_text(text_rect, DeprecatedString::formatted("{} - {}", node.name(), human_readable_size(node.area())), font(), Gfx::TextAlignment::TopLeft, Color::Black);
+            painter.draw_text(text_rect, ByteString::formatted("{} - {}", node.name(), human_readable_size(node.area())), font(), Gfx::TextAlignment::TopLeft, Color::Black);
         }
         painter.clear_clip_rect();
     }
@@ -261,13 +261,13 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-Vector<DeprecatedString> TreeMapWidget::path_to_position(Gfx::IntPoint position)
+Vector<ByteString> TreeMapWidget::path_to_position(Gfx::IntPoint position)
 {
     TreeNode const* node = path_node(m_viewpoint);
     if (!node) {
         return {};
     }
-    Vector<DeprecatedString> path;
+    Vector<ByteString> path;
     lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeNode const& node, int, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
         if (is_remainder == IsRemainder::No && rect.contains(position)) {
             path.append(node.name());
@@ -381,8 +381,8 @@ static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
     TRY(json.as_array().try_for_each([&output](JsonValue const& value) -> ErrorOr<void> {
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
-        mount_info.mount_point = filesystem_object.get_deprecated_string("mount_point"sv).value_or({});
-        mount_info.source = filesystem_object.get_deprecated_string("source"sv).value_or("none");
+        mount_info.mount_point = filesystem_object.get_byte_string("mount_point"sv).value_or({});
+        mount_info.source = filesystem_object.get_byte_string("source"sv).value_or("none");
         TRY(output.try_append(mount_info));
         return {};
     }));
@@ -420,7 +420,7 @@ ErrorOr<void> TreeMapWidget::analyze(GUI::Statusbar& statusbar)
             builder.append({ error, strlen(error) });
             builder.append(" ("sv);
             int value = errors.get(key).value();
-            builder.append(DeprecatedString::number(value));
+            builder.append(ByteString::number(value));
             if (value == 1) {
                 builder.append(" time"sv);
             } else {

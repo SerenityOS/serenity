@@ -6,8 +6,8 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/Try.h>
@@ -82,7 +82,7 @@ template<typename T>
 struct Formatter<Gfx::Endpoint<T>> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::Endpoint<T> const& value)
     {
-        return Formatter<StringView>::format(builder, DeprecatedString::formatted("({}, {}, {})", value.x, value.y, value.z));
+        return Formatter<StringView>::format(builder, ByteString::formatted("({}, {}, {})", value.x, value.y, value.z));
     }
 };
 

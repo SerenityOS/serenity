@@ -125,7 +125,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 
 void PresenterWidget::update_web_view()
 {
-    m_web_view->run_javascript(DeprecatedString::formatted("goto({}, {})", m_current_presentation->current_slide_number(), m_current_presentation->current_frame_in_slide_number()));
+    m_web_view->run_javascript(ByteString::formatted("goto({}, {})", m_current_presentation->current_slide_number(), m_current_presentation->current_frame_in_slide_number()));
 }
 
 void PresenterWidget::update_slides_actions()
@@ -147,10 +147,10 @@ void PresenterWidget::set_file(StringView file_name)
 {
     auto presentation = Presentation::load_from_file(file_name);
     if (presentation.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("The presentation \"{}\" could not be loaded.\n{}", file_name, presentation.error()));
+        GUI::MessageBox::show_error(window(), ByteString::formatted("The presentation \"{}\" could not be loaded.\n{}", file_name, presentation.error()));
     } else {
         m_current_presentation = presentation.release_value();
-        window()->set_title(DeprecatedString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
+        window()->set_title(ByteString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
         set_min_size(m_current_presentation->normative_size());
         m_web_view->load_html(MUST(m_current_presentation->render()));
         update_slides_actions();

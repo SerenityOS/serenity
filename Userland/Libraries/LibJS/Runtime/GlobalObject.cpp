@@ -387,7 +387,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 }
 
 // 19.2.6.5 Encode ( string, extraUnescaped ), https://tc39.es/ecma262/#sec-encode
-static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const& string, StringView unescaped_set)
+static ThrowCompletionOr<ByteString> encode(VM& vm, ByteString const& string, StringView unescaped_set)
 {
     auto utf16_string = Utf16String::create(string);
 
@@ -441,12 +441,12 @@ static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const
             VERIFY(nwritten > 0);
         }
     }
-    return encoded_builder.to_deprecated_string();
+    return encoded_builder.to_byte_string();
 }
 
 // 19.2.6.6 Decode ( string, preserveEscapeSet ), https://tc39.es/ecma262/#sec-decode
 // FIXME: Add spec comments to this implementation. It deviates a lot, so that's a bit tricky.
-static ThrowCompletionOr<DeprecatedString> decode(VM& vm, DeprecatedString const& string, StringView reserved_set)
+static ThrowCompletionOr<ByteString> decode(VM& vm, ByteString const& string, StringView reserved_set)
 {
     StringBuilder decoded_builder;
     auto code_point_start_offset = 0u;
@@ -500,14 +500,14 @@ static ThrowCompletionOr<DeprecatedString> decode(VM& vm, DeprecatedString const
     }
     if (expected_continuation_bytes > 0)
         return vm.throw_completion<URIError>(ErrorType::URIMalformed);
-    return decoded_builder.to_deprecated_string();
+    return decoded_builder.to_byte_string();
 }
 
 // 19.2.6.1 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
     // 1. Let uriString be ? ToString(encodedURI).
-    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto uri_string = TRY(vm.argument(0).to_byte_string(vm));
 
     // 2. Let preserveEscapeSet be ";/?:@&=+$,#".
     // 3. Return ? Decode(uriString, preserveEscapeSet).
@@ -521,7 +521,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
     auto encoded_uri_component = vm.argument(0);
 
     // 1. Let componentString be ? ToString(encodedURIComponent).
-    auto uri_string = TRY(encoded_uri_component.to_deprecated_string(vm));
+    auto uri_string = TRY(encoded_uri_component.to_byte_string(vm));
 
     // 2. Let preserveEscapeSet be the empty String.
     // 3. Return ? Decode(componentString, preserveEscapeSet).
@@ -535,7 +535,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
     auto uri = vm.argument(0);
 
     // 1. Let uriString be ? ToString(uri).
-    auto uri_string = TRY(uri.to_deprecated_string(vm));
+    auto uri_string = TRY(uri.to_byte_string(vm));
 
     // 2. Let extraUnescaped be ";/?:@&=+$,#".
     // 3. Return ? Encode(uriString, extraUnescaped).
@@ -549,7 +549,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
     auto uri_component = vm.argument(0);
 
     // 1. Let componentString be ? ToString(uriComponent).
-    auto uri_string = TRY(uri_component.to_deprecated_string(vm));
+    auto uri_string = TRY(uri_component.to_byte_string(vm));
 
     // 2. Let extraUnescaped be the empty String.
     // 3. Return ? Encode(componentString, extraUnescaped).
@@ -561,7 +561,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
     // 1. Set string to ? ToString(string).
-    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto string = TRY(vm.argument(0).to_byte_string(vm));
 
     // 3. Let R be the empty String.
     StringBuilder escaped;
@@ -601,14 +601,14 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
     }
 
     // 7. Return R.
-    return PrimitiveString::create(vm, escaped.to_deprecated_string());
+    return PrimitiveString::create(vm, escaped.to_byte_string());
 }
 
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
 {
     // 1. Set string to ? ToString(string).
-    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto string = TRY(vm.argument(0).to_byte_string(vm));
 
     // 2. Let length be the length of string.
     ssize_t length = string.length();
@@ -658,7 +658,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
     }
 
     // 6. Return R.
-    return PrimitiveString::create(vm, unescaped.to_deprecated_string());
+    return PrimitiveString::create(vm, unescaped.to_byte_string());
 }
 
 }

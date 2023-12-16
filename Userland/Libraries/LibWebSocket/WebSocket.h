@@ -32,7 +32,7 @@ public:
 
     ReadyState ready_state();
 
-    DeprecatedString subprotocol_in_use();
+    ByteString subprotocol_in_use();
 
     // Call this to start the WebSocket connection.
     void start();
@@ -41,10 +41,10 @@ public:
     void send(Message const&);
 
     // This can only be used if the `ready_state` is `ReadyState::Open`
-    void close(u16 code = 1005, DeprecatedString const& reason = {});
+    void close(u16 code = 1005, ByteString const& reason = {});
 
     Function<void()> on_open;
-    Function<void(u16 code, DeprecatedString reason, bool was_clean)> on_close;
+    Function<void(u16 code, ByteString reason, bool was_clean)> on_close;
     Function<void(Message message)> on_message;
 
     enum class Error {
@@ -77,7 +77,7 @@ private:
     void send_frame(OpCode, ReadonlyBytes, bool is_final);
 
     void notify_open();
-    void notify_close(u16 code, DeprecatedString reason, bool was_clean);
+    void notify_close(u16 code, ByteString reason, bool was_clean);
     void notify_error(Error);
     void notify_message(Message);
 
@@ -97,16 +97,16 @@ private:
 
     InternalState m_state { InternalState::NotStarted };
 
-    DeprecatedString m_subprotocol_in_use { DeprecatedString::empty() };
+    ByteString m_subprotocol_in_use { ByteString::empty() };
 
-    DeprecatedString m_websocket_key;
+    ByteString m_websocket_key;
     bool m_has_read_server_handshake_first_line { false };
     bool m_has_read_server_handshake_upgrade { false };
     bool m_has_read_server_handshake_connection { false };
     bool m_has_read_server_handshake_accept { false };
 
     u16 m_last_close_code { 1005 };
-    DeprecatedString m_last_close_message;
+    ByteString m_last_close_message;
 
     ConnectionInfo m_connection;
     RefPtr<WebSocketImpl> m_impl;

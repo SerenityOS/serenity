@@ -16,7 +16,7 @@ struct TabSettings {
     BOOL scripting_enabled { YES };
     BOOL block_popups { YES };
     BOOL same_origin_policy_enabled { NO };
-    DeprecatedString user_agent_name { "Disabled"sv };
+    ByteString user_agent_name { "Disabled"sv };
 };
 
 @interface TabController : NSWindowController <NSWindowDelegate>
@@ -27,14 +27,14 @@ struct TabSettings {
 - (void)loadHTML:(StringView)html url:(URL const&)url;
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect;
-- (void)onTitleChange:(DeprecatedString const&)title;
+- (void)onTitleChange:(ByteString const&)title;
 
 - (void)navigateBack:(id)sender;
 - (void)navigateForward:(id)sender;
 - (void)reload:(id)sender;
 - (void)clearHistory;
 
-- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument;
+- (void)debugRequest:(ByteString const&)request argument:(ByteString const&)argument;
 
 - (void)focusLocationToolbarItem;
 

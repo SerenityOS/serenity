@@ -54,7 +54,7 @@ enum class IsHistoryNavigation {
 
 @interface TabController () <NSToolbarDelegate, NSSearchFieldDelegate>
 {
-    DeprecatedString m_title;
+    ByteString m_title;
 
     WebView::History m_history;
     IsHistoryNavigation m_is_history_navigation;
@@ -133,7 +133,7 @@ enum class IsHistoryNavigation {
     [self updateNavigationButtonStates];
 }
 
-- (void)onTitleChange:(DeprecatedString const&)title
+- (void)onTitleChange:(ByteString const&)title
 {
     m_title = title;
     m_history.update_title(m_title);
@@ -201,7 +201,7 @@ enum class IsHistoryNavigation {
     [self updateNavigationButtonStates];
 }
 
-- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument
+- (void)debugRequest:(ByteString const&)request argument:(ByteString const&)argument
 {
     if (request == "dump-history") {
         m_history.dump();
@@ -390,8 +390,8 @@ enum class IsHistoryNavigation {
 
 - (void)setUserAgentSpoof:(NSMenuItem*)sender
 {
-    DeprecatedString const user_agent_name = [[sender title] UTF8String];
-    DeprecatedString user_agent = "";
+    ByteString const user_agent_name = [[sender title] UTF8String];
+    ByteString user_agent = "";
     if (user_agent_name == "Disabled"sv) {
         user_agent = Web::default_user_agent;
     } else {

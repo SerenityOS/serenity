@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -22,16 +22,16 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static Vector<DeprecatedString> found_libraries;
+static Vector<ByteString> found_libraries;
 
 static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView interpreter_path, size_t recursive_iteration_max, size_t recursive_iteration, ELF::DynamicObject& object)
 {
     if (recursive_iteration > recursive_iteration_max)
         return ELOOP;
 
-    Vector<DeprecatedString> libraries;
+    Vector<ByteString> libraries;
     object.for_each_needed_library([&libraries](StringView entry) {
-        libraries.append(DeprecatedString::formatted("{}", entry));
+        libraries.append(ByteString::formatted("{}", entry));
     });
     for (auto& library_name : libraries) {
         auto possible_library_path = ELF::DynamicLinker::resolve_library(library_name, object);
@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath map_fixed"));
 
-    DeprecatedString path {};
+    ByteString path {};
     Optional<size_t> recursive_iteration_max;
     bool force_without_valid_interpreter = false;
 

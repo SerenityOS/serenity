@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 
 namespace XML {
 
 // FIXME: Maybe extend this to something more sophisticated?
-using Name = DeprecatedString;
+using Name = ByteString;
 
 }

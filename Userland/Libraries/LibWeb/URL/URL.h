@@ -58,9 +58,9 @@ public:
 
     Optional<String> const& fragment() const { return m_url.fragment(); }
 
-    DeprecatedString path_segment_at_index(size_t index) const { return m_url.path_segment_at_index(index); }
+    ByteString path_segment_at_index(size_t index) const { return m_url.path_segment_at_index(index); }
 
-    void set_paths(Vector<DeprecatedString> const& paths) { return m_url.set_paths(paths); }
+    void set_paths(Vector<ByteString> const& paths) { return m_url.set_paths(paths); }
 
     // FIXME: Reimplement this to meet the definition in https://url.spec.whatwg.org/#url-opaque-path once we modernize URL to meet the spec.
     bool cannot_be_a_base_url() const { return m_url.cannot_be_a_base_url(); }

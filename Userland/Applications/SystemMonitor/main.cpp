@@ -75,7 +75,7 @@ public:
         auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
 
         auto data = index.data();
-        DeprecatedString text;
+        ByteString text;
         if (data.is_string())
             text = data.as_string();
         Gfx::StylePainter::paint_progressbar(painter, rect, palette, 0, 100, percentage, text);
@@ -133,7 +133,7 @@ public:
                     size_builder.append(' ');
                     size_builder.append(human_readable_size(object.get_u64("total_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0)));
                     size_builder.append(' ');
-                    return size_builder.to_deprecated_string();
+                    return size_builder.to_byte_string();
                 },
                 [](JsonObject const& object) {
                     return object.get_u64("total_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0);
@@ -194,8 +194,8 @@ public:
                 check(MS_AXALLOWED, "axallowed"sv);
                 check(MS_NOREGULAR, "noregular"sv);
                 if (builder.string_view().is_empty())
-                    return DeprecatedString("defaults");
-                return builder.to_deprecated_string();
+                    return ByteString("defaults");
+                return builder.to_byte_string();
             });
             df_fields.empend("free_block_count", "Free blocks"_string, Gfx::TextAlignment::CenterRight);
             df_fields.empend("total_block_count", "Total blocks"_string, Gfx::TextAlignment::CenterRight);
@@ -342,11 +342,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return pid_index.data().to_i32();
     };
 
-    auto selected_name = [&](ProcessModel::Column column) -> DeprecatedString {
+    auto selected_name = [&](ProcessModel::Column column) -> ByteString {
         if (process_table_view.selection().is_empty())
             return {};
         auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column, process_table_view.selection().first().parent());
-        return pid_index.data().to_deprecated_string();
+        return pid_index.data().to_byte_string();
     };
 
     auto kill_action = GUI::Action::create(
@@ -354,7 +354,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
-            auto rc = GUI::MessageBox::show(window, DeprecatedString::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            auto rc = GUI::MessageBox::show(window, ByteString::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGKILL);
         },
@@ -365,7 +365,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
-            auto rc = GUI::MessageBox::show(window, DeprecatedString::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            auto rc = GUI::MessageBox::show(window, ByteString::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGSTOP);
         },
@@ -385,7 +385,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
-            auto pid_string = DeprecatedString::number(pid);
+            auto pid_string = ByteString::number(pid);
             GUI::Process::spawn_or_show_error(window, "/bin/Profiler"sv, Array { "--pid", pid_string.characters() });
         },
         &process_table_view);
@@ -395,7 +395,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
-            auto pid_string = DeprecatedString::number(pid);
+            auto pid_string = ByteString::number(pid);
             GUI::Process::spawn_or_show_error(window, "/bin/HackStudio"sv, Array { "--pid", pid_string.characters() });
         },
         &process_table_view);
@@ -452,7 +452,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     frequency_action_group.set_exclusive(true);
 
     auto make_frequency_action = [&](int seconds) -> ErrorOr<void> {
-        auto action = GUI::Action::create_checkable(DeprecatedString::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
+        auto action = GUI::Action::create_checkable(ByteString::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
             Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
             refresh_timer.restart(seconds * 1000);
         });
@@ -526,7 +526,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 {
     auto window = GUI::Window::construct();
     window->resize(480, 360);
-    window->set_title(DeprecatedString::formatted("PID {} - System Monitor", pid));
+    window->set_title(ByteString::formatted("PID {} - System Monitor", pid));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-system-monitor"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -548,7 +548,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
         main_widget->find_descendant_of_type_named<GUI::ImageWidget>("process_icon")->set_bitmap(icon_data.as_icon().bitmap_for_size(32));
     }
 
-    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(TRY(String::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_deprecated_string(), pid)));
+    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(TRY(String::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_byte_string(), pid)));
 
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessStateWidget>("process_state")->set_pid(pid);
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessFileDescriptorMapWidget>("open_files")->set_pid(pid);
@@ -587,13 +587,13 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
             cpu_graph.set_value_format(0, {
                                               .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
                                               .text_formatter = [](u64 value) {
-                                                  return DeprecatedString::formatted("Total: {}%", value);
+                                                  return ByteString::formatted("Total: {}%", value);
                                               },
                                           });
             cpu_graph.set_value_format(1, {
                                               .graph_color_role = ColorRole::SyntaxPreprocessorValue,
                                               .text_formatter = [](u64 value) {
-                                                  return DeprecatedString::formatted("Kernel: {}%", value);
+                                                  return ByteString::formatted("Kernel: {}%", value);
                                               },
                                           });
             cpu_graphs.append(cpu_graph);
@@ -613,19 +613,19 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
     memory_graph.set_value_format(0, {
                                          .graph_color_role = ColorRole::SyntaxComment,
                                          .text_formatter = [](u64 bytes) {
-                                             return DeprecatedString::formatted("Committed: {}", human_readable_size(bytes));
+                                             return ByteString::formatted("Committed: {}", human_readable_size(bytes));
                                          },
                                      });
     memory_graph.set_value_format(1, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
                                          .text_formatter = [](u64 bytes) {
-                                             return DeprecatedString::formatted("Allocated: {}", human_readable_size(bytes));
+                                             return ByteString::formatted("Allocated: {}", human_readable_size(bytes));
                                          },
                                      });
     memory_graph.set_value_format(2, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorValue,
                                          .text_formatter = [](u64 bytes) {
-                                             return DeprecatedString::formatted("Kernel heap: {}", human_readable_size(bytes));
+                                             return ByteString::formatted("Kernel heap: {}", human_readable_size(bytes));
                                          },
                                      });
     return {};

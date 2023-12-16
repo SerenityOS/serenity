@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashTable.h>
 #include <AK/Optional.h>
 #include <AK/Singleton.h>
@@ -36,7 +36,7 @@ void DeprecatedFlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
     fly_impls().remove(&impl);
 }
 
-DeprecatedFlyString::DeprecatedFlyString(DeprecatedString const& string)
+DeprecatedFlyString::DeprecatedFlyString(ByteString const& string)
 {
     if (string.impl()->is_fly()) {
         m_impl = string.impl();
@@ -61,7 +61,7 @@ DeprecatedFlyString::DeprecatedFlyString(StringView string)
         return string == *candidate;
     });
     if (it == fly_impls().end()) {
-        auto new_string = string.to_deprecated_string();
+        auto new_string = string.to_byte_string();
         fly_impls().set(new_string.impl());
         new_string.impl()->set_fly({}, true);
         m_impl = new_string.impl();
@@ -122,10 +122,10 @@ bool DeprecatedFlyString::ends_with(StringView str, CaseSensitivity case_sensiti
 
 DeprecatedFlyString DeprecatedFlyString::to_lowercase() const
 {
-    return DeprecatedString(*m_impl).to_lowercase();
+    return ByteString(*m_impl).to_lowercase();
 }
 
-bool DeprecatedFlyString::operator==(DeprecatedString const& other) const
+bool DeprecatedFlyString::operator==(ByteString const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }

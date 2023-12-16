@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         // NOTE: once we remove name(), the fallback here can simply be an empty string.
         auto const& native_function = static_cast<NativeFunction&>(function);
         auto const name = native_function.initial_name().value_or(native_function.name());
-        return PrimitiveString::create(vm, DeprecatedString::formatted("function {}() {{ [native code] }}", name));
+        return PrimitiveString::create(vm, ByteString::formatted("function {}() {{ [native code] }}", name));
     }
 
     // 4. If Type(func) is Object and IsCallable(func) is true, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction.

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
 
@@ -16,10 +16,10 @@ namespace Profiler {
 static constexpr int const number_of_percent_digits = 2;
 static constexpr int const percent_digits_rounding = AK::pow(10, number_of_percent_digits);
 
-DeprecatedString format_percentage(auto value, auto total)
+ByteString format_percentage(auto value, auto total)
 {
     auto percentage_full_precision = round_to<u64>(value * 100.f / total * percent_digits_rounding);
-    return DeprecatedString::formatted(
+    return ByteString::formatted(
         "{}.{:02}",
         percentage_full_precision / percent_digits_rounding,
         percentage_full_precision % percent_digits_rounding);

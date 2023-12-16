@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
 #include <LibCore/MimeData.h>

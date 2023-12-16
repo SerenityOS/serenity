@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibIPC/Decoder.h>
@@ -36,15 +36,15 @@ template<typename T>
 }
 
 template<>
-DeprecatedString IntPoint::to_deprecated_string() const
+ByteString IntPoint::to_byte_string() const
 {
-    return DeprecatedString::formatted("[{},{}]", x(), y());
+    return ByteString::formatted("[{},{}]", x(), y());
 }
 
 template<>
-DeprecatedString FloatPoint::to_deprecated_string() const
+ByteString FloatPoint::to_byte_string() const
 {
-    return DeprecatedString::formatted("[{},{}]", x(), y());
+    return ByteString::formatted("[{},{}]", x(), y());
 }
 
 }

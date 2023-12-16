@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/SecretString.h>
@@ -40,8 +40,8 @@ public:
     bool authenticate(SecretString const& password) const;
     ErrorOr<void> login() const;
 
-    DeprecatedString username() const { return m_username; }
-    DeprecatedString password_hash() const { return m_password_hash.value_or(DeprecatedString::empty()); }
+    ByteString username() const { return m_username; }
+    ByteString password_hash() const { return m_password_hash.value_or(ByteString::empty()); }
 
     // Setters only affect in-memory copy of password.
     // You must call sync to apply changes.
@@ -62,9 +62,9 @@ public:
 
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
-    DeprecatedString const& gecos() const { return m_gecos; }
-    DeprecatedString const& home_directory() const { return m_home_directory; }
-    DeprecatedString const& shell() const { return m_shell; }
+    ByteString const& gecos() const { return m_gecos; }
+    ByteString const& home_directory() const { return m_home_directory; }
+    ByteString const& shell() const { return m_shell; }
     Vector<gid_t> const& extra_gids() const { return m_extra_gids; }
 
     ErrorOr<void> sync();
@@ -74,20 +74,20 @@ private:
 
     Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids);
 
-    ErrorOr<DeprecatedString> generate_passwd_file() const;
-    ErrorOr<DeprecatedString> generate_group_file() const;
+    ErrorOr<ByteString> generate_passwd_file() const;
+    ErrorOr<ByteString> generate_group_file() const;
 #ifndef AK_OS_BSD_GENERIC
-    ErrorOr<DeprecatedString> generate_shadow_file() const;
+    ErrorOr<ByteString> generate_shadow_file() const;
 #endif
 
-    DeprecatedString m_username;
+    ByteString m_username;
 
-    Optional<DeprecatedString> m_password_hash;
+    Optional<ByteString> m_password_hash;
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
-    DeprecatedString m_gecos;
-    DeprecatedString m_home_directory;
-    DeprecatedString m_shell;
+    ByteString m_gecos;
+    ByteString m_home_directory;
+    ByteString m_shell;
     Vector<gid_t> m_extra_gids;
     bool m_deleted { false };
 };

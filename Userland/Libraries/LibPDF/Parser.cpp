@@ -36,7 +36,7 @@ void Parser::set_document(WeakPtr<Document> const& document)
     m_document = document;
 }
 
-DeprecatedString Parser::parse_comment()
+ByteString Parser::parse_comment()
 {
     StringBuilder comment;
     while (true) {
@@ -52,7 +52,7 @@ DeprecatedString Parser::parse_comment()
         m_reader.consume_eol();
         m_reader.consume_whitespace();
     }
-    return comment.to_deprecated_string();
+    return comment.to_byte_string();
 }
 
 PDFErrorOr<Value> Parser::parse_value(CanBeIndirectValue can_be_indirect_value)
@@ -198,7 +198,7 @@ PDFErrorOr<Value> Parser::parse_number()
 
     m_reader.consume_whitespace();
 
-    auto string = DeprecatedString(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
+    auto string = ByteString(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
     if (is_float)
         return Value(strtof(string.characters(), nullptr));
 
@@ -238,14 +238,14 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
 
     m_reader.consume_whitespace();
 
-    return make_object<NameObject>(builder.to_deprecated_string());
+    return make_object<NameObject>(builder.to_byte_string());
 }
 
 PDFErrorOr<NonnullRefPtr<StringObject>> Parser::parse_string()
 {
     ScopeGuard guard([&] { m_reader.consume_whitespace(); });
 
-    DeprecatedString string;
+    ByteString string;
     bool is_binary_string;
 
     if (m_reader.matches('(')) {
@@ -264,7 +264,7 @@ PDFErrorOr<NonnullRefPtr<StringObject>> Parser::parse_string()
     return string_object;
 }
 
-PDFErrorOr<DeprecatedString> Parser::parse_literal_string()
+PDFErrorOr<ByteString> Parser::parse_literal_string()
 {
     VERIFY(m_reader.consume('('));
     StringBuilder builder;
@@ -342,10 +342,10 @@ PDFErrorOr<DeprecatedString> Parser::parse_literal_string()
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-PDFErrorOr<DeprecatedString> Parser::parse_hex_string()
+PDFErrorOr<ByteString> Parser::parse_hex_string()
 {
     VERIFY(m_reader.consume('<'));
 
@@ -354,7 +354,7 @@ PDFErrorOr<DeprecatedString> Parser::parse_hex_string()
     while (true) {
         if (m_reader.matches('>')) {
             m_reader.consume();
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         } else {
             int hex_value = 0;
 
@@ -367,7 +367,7 @@ PDFErrorOr<DeprecatedString> Parser::parse_hex_string()
                     m_reader.consume();
                     hex_value *= 16;
                     builder.append(static_cast<char>(hex_value));
-                    return builder.to_deprecated_string();
+                    return builder.to_byte_string();
                 }
 
                 if (!isxdigit(ch))
@@ -602,7 +602,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
 }
 
 Error Parser::error(
-    DeprecatedString const& message
+    ByteString const& message
 #ifdef PDF_DEBUG
     ,
     SourceLocation loc

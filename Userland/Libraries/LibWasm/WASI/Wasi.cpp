@@ -519,7 +519,7 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
         [&](PreopenedDirectoryDescriptor descriptor) {
             auto& entry = preopened_directories()[descriptor.value()];
             dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-                DeprecatedString path = entry.host_path.string();
+                ByteString path = entry.host_path.string();
                 return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = dir_fd;
@@ -537,7 +537,7 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
         options |= AT_SYMLINK_NOFOLLOW;
 
     auto slice = TRY(slice_typed_memory(configuration, path, path_len));
-    auto null_terminated_string = DeprecatedString::copy(slice);
+    auto null_terminated_string = ByteString::copy(slice);
 
     struct stat stat_buf;
     if (fstatat(dir_fd, null_terminated_string.characters(), &stat_buf, options) < 0)
@@ -582,7 +582,7 @@ ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& 
         [&](PreopenedDirectoryDescriptor descriptor) {
             auto& entry = preopened_directories()[descriptor.value()];
             dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-                DeprecatedString path = entry.host_path.string();
+                ByteString path = entry.host_path.string();
                 return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = dir_fd;
@@ -596,7 +596,7 @@ ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& 
         return errno_value_from_errno(errno);
 
     auto slice = TRY(slice_typed_memory(configuration, path, path_len));
-    auto null_terminated_string = DeprecatedString::copy(slice);
+    auto null_terminated_string = ByteString::copy(slice);
 
     if (mkdirat(dir_fd, null_terminated_string.characters(), 0755) < 0)
         return errno_value_from_errno(errno);
@@ -613,7 +613,7 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
         [&](PreopenedDirectoryDescriptor descriptor) {
             auto& entry = preopened_directories()[descriptor.value()];
             dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-                DeprecatedString path = entry.host_path.string();
+                ByteString path = entry.host_path.string();
                 return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = dir_fd;
@@ -649,7 +649,7 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
         open_flags |= O_NOFOLLOW;
 
     auto path_data = TRY(slice_typed_memory(configuration, path, path_len));
-    auto path_string = DeprecatedString::copy(path_data);
+    auto path_string = ByteString::copy(path_data);
 
     dbgln_if(WASI_FINE_GRAINED_DEBUG, "path_open: dir_fd={}, path={}, open_flags={}", dir_fd, path_string, open_flags);
 
@@ -705,7 +705,7 @@ ErrorOr<Result<FileStat>> Implementation::impl$fd_filestat_get(Configuration&, F
         [&](PreopenedDirectoryDescriptor descriptor) {
             auto& entry = preopened_directories()[descriptor.value()];
             resolved_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-                DeprecatedString path = entry.host_path.string();
+                ByteString path = entry.host_path.string();
                 return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = resolved_fd;
@@ -937,7 +937,7 @@ struct InvocationOf<impl> {
                 auto result = args.apply_as_args([&](auto&&... impl_args) { return (self.*impl)(configuration, impl_args...); });
                 dbgln_if(WASI_DEBUG, "WASI: {}({}) = {}", function_name, arguments, result);
                 if (result.is_error())
-                    return Wasm::Trap { DeprecatedString::formatted("Invalid call to {}() = {}", function_name, result.error()) };
+                    return Wasm::Trap { ByteString::formatted("Invalid call to {}() = {}", function_name, result.error()) };
 
                 auto value = result.release_value();
                 if (value.is_error())

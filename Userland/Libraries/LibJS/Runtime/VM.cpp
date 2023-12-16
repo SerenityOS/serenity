@@ -106,7 +106,7 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     };
 
     host_get_supported_import_attributes = [&] {
-        return Vector<DeprecatedString> { "type" };
+        return Vector<ByteString> { "type" };
     };
 
     // 19.2.1.2 HostEnsureCanCompileStrings ( callerRealm, calleeRealm ), https://tc39.es/ecma262/#sec-hostensurecancompilestrings
@@ -746,7 +746,7 @@ ScriptOrModule VM::get_active_script_or_module() const
     return m_execution_context_stack[0]->script_or_module;
 }
 
-VM::StoredModule* VM::get_stored_module(ImportedModuleReferrer const&, DeprecatedString const& filename, DeprecatedString const&)
+VM::StoredModule* VM::get_stored_module(ImportedModuleReferrer const&, ByteString const& filename, ByteString const&)
 {
     // Note the spec says:
     // If this operation is called multiple times with the same (referrer, specifier) pair and it performs
@@ -803,7 +803,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(CyclicModule& module)
     return {};
 }
 
-static DeprecatedString resolve_module_filename(StringView filename, StringView module_type)
+static ByteString resolve_module_filename(StringView filename, StringView module_type)
 {
     auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
     if (module_type == "json"sv)
@@ -811,14 +811,14 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
     if (!FileSystem::exists(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo.ext"
-            auto resolved_filepath = DeprecatedString::formatted("{}.{}", filename, extension);
+            auto resolved_filepath = ByteString::formatted("{}.{}", filename, extension);
             if (FileSystem::exists(resolved_filepath))
                 return resolved_filepath;
         }
     } else if (FileSystem::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
-            auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
+            auto resolved_filepath = LexicalPath::join(filename, ByteString::formatted("index.{}", extension)).string();
             if (FileSystem::exists(resolved_filepath))
                 return resolved_filepath;
         }
@@ -853,7 +853,7 @@ void VM::load_imported_module(ImportedModuleReferrer referrer, ModuleRequest con
         return;
     }
 
-    DeprecatedString module_type;
+    ByteString module_type;
     for (auto& attribute : module_request.attributes) {
         if (attribute.key == "type"sv) {
             module_type = attribute.value;
@@ -890,15 +890,15 @@ void VM::load_imported_module(ImportedModuleReferrer referrer, ModuleRequest con
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolved filename: '{}'", filename);
 
 #if JS_MODULE_DEBUG
-    DeprecatedString referencing_module_string = referrer.visit(
-        [&](Empty) -> DeprecatedString {
+    ByteString referencing_module_string = referrer.visit(
+        [&](Empty) -> ByteString {
             return ".";
         },
         [&](auto& script_or_module) {
             if constexpr (IsSame<Script*, decltype(script_or_module)>) {
-                return DeprecatedString::formatted("Script @ {}", script_or_module.ptr());
+                return ByteString::formatted("Script @ {}", script_or_module.ptr());
             }
-            return DeprecatedString::formatted("Module @ {}", script_or_module.ptr());
+            return ByteString::formatted("Module @ {}", script_or_module.ptr());
         });
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] load_imported_module({}, {})", referencing_module_string, filename);
@@ -949,14 +949,14 @@ void VM::load_imported_module(ImportedModuleReferrer referrer, ModuleRequest con
 
         if (module_or_errors.is_error()) {
             VERIFY(module_or_errors.error().size() > 0);
-            return throw_completion<SyntaxError>(module_or_errors.error().first().to_deprecated_string());
+            return throw_completion<SyntaxError>(module_or_errors.error().first().to_byte_string());
         }
 
         auto module = module_or_errors.release_value();
         m_loaded_modules.empend(
             referrer,
             module->filename(),
-            DeprecatedString {}, // Null type
+            ByteString {}, // Null type
             make_handle<Module>(*module),
             true);
 

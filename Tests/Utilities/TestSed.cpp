@@ -20,7 +20,7 @@ static void run_sed(Vector<char const*>&& arguments, StringView standard_input, 
     auto [stdout, stderr] = MUST(sed->read_all());
     auto status = MUST(sed->status());
     if (status != Core::Command::ProcessResult::DoneWithZeroExitCode) {
-        FAIL(DeprecatedString::formatted("sed didn't exit cleanly: status: {}, stdout:{}, stderr: {}", static_cast<int>(status), StringView { stdout.bytes() }, StringView { stderr.bytes() }));
+        FAIL(ByteString::formatted("sed didn't exit cleanly: status: {}, stdout:{}, stderr: {}", static_cast<int>(status), StringView { stdout.bytes() }, StringView { stderr.bytes() }));
     }
     EXPECT_EQ(StringView { expected_stdout.bytes() }, StringView { stdout.bytes() });
 }

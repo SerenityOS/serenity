@@ -145,7 +145,7 @@ public:
     ErrorOr<u64> read_u64();
     ErrorOr<double> read_float();
 
-    ErrorOr<DeprecatedString> read_string();
+    ErrorOr<ByteString> read_string();
 
     ErrorOr<void> read_unknown_element();
 

@@ -67,7 +67,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
 
     for (auto const& category : s_emoji_groups) {
         auto name = Unicode::emoji_group_to_string(category.group);
-        DeprecatedString tooltip = name;
+        ByteString tooltip = name;
 
         auto set_filter_action = Action::create_checkable(
             category.representative_emoji,
@@ -126,7 +126,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             builder.append_code_point(*code_point);
             code_points.append(*code_point);
         });
-        auto text = builder.to_deprecated_string();
+        auto text = builder.to_byte_string();
 
         auto emoji = Unicode::find_emoji_for_code_points(code_points);
         if (!emoji.has_value()) {
@@ -135,7 +135,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             emoji->display_order = NumericLimits<u32>::max();
         }
 
-        auto button = Button::construct(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
+        auto button = Button::construct(String::from_byte_string(text).release_value_but_fixme_should_propagate_errors());
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
         button->on_click = [this, text](auto) mutable {

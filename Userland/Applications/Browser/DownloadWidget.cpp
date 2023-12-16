@@ -35,7 +35,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         builder.append(Core::StandardPaths::downloads_directory());
         builder.append('/');
         builder.append(m_url.basename());
-        m_destination_path = builder.to_deprecated_string();
+        m_destination_path = builder.to_byte_string();
     }
 
     auto close_on_finish = Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, Browser::default_close_download_widget_on_finish);
@@ -50,7 +50,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     {
         auto file_or_error = Core::File::open(m_destination_path, Core::File::OpenMode::Write);
         if (file_or_error.is_error()) {
-            GUI::MessageBox::show(window(), DeprecatedString::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), ByteString::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
             window()->close();
             return;
         }
@@ -86,7 +86,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_progress_label->set_fixed_height(16);
     m_progress_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
 
-    auto destination_label_path = LexicalPath(m_destination_path).dirname().to_deprecated_string();
+    auto destination_label_path = LexicalPath(m_destination_path).dirname().to_byte_string();
 
     auto& destination_label = add<GUI::Label>(String::formatted("To: {}", destination_label_path).release_value_but_fixme_should_propagate_errors());
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -145,7 +145,7 @@ void DownloadWidget::did_progress(Optional<u64> total_size, u64 downloaded_size)
         }
         builder.append(" of "sv);
         builder.append(m_url.basename());
-        window()->set_title(builder.to_deprecated_string());
+        window()->set_title(builder.to_byte_string());
     }
 }
 
@@ -164,7 +164,7 @@ void DownloadWidget::did_finish(bool success)
     m_cancel_button->update();
 
     if (!success) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Download failed for some reason"), "Download failed"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), ByteString::formatted("Download failed for some reason"), "Download failed"sv, GUI::MessageBox::Type::Error);
         window()->close();
         return;
     }

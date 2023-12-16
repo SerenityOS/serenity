@@ -162,7 +162,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
 
     // 13. If action is the empty string, let action be the URL of the form document.
     if (action.is_empty())
-        action = form_document->url_string().to_deprecated_string();
+        action = form_document->url_string().to_byte_string();
 
     // 14. Parse a URL given action, relative to the submitter element's node document. If this fails, return.
     // 15. Let parsed action be the resulting URL record.
@@ -302,7 +302,7 @@ void HTMLFormElement::remove_associated_element(Badge<FormAssociatedElement>, HT
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fs-action
-DeprecatedString HTMLFormElement::action_from_form_element(JS::NonnullGCPtr<HTMLElement> element) const
+ByteString HTMLFormElement::action_from_form_element(JS::NonnullGCPtr<HTMLElement> element) const
 {
     // The action of an element is the value of the element's formaction attribute, if the element is a submit button
     // and has such an attribute, or the value of its form owner's action attribute, if it has one, or else the empty
@@ -314,7 +314,7 @@ DeprecatedString HTMLFormElement::action_from_form_element(JS::NonnullGCPtr<HTML
     if (this->has_attribute(AttributeNames::action))
         return deprecated_attribute(AttributeNames::action);
 
-    return DeprecatedString::empty();
+    return ByteString::empty();
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-submission-attributes:attr-fs-method-2

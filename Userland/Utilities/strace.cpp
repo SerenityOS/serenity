@@ -34,13 +34,13 @@
 #define HANDLE(VALUE) \
     case VALUE:       \
         return #VALUE##sv;
-#define VALUES_TO_NAMES(FUNC_NAME)               \
-    static DeprecatedString FUNC_NAME(int value) \
-    {                                            \
+#define VALUES_TO_NAMES(FUNC_NAME)         \
+    static ByteString FUNC_NAME(int value) \
+    {                                      \
         switch (value) {
-#define END_VALUES_TO_NAMES()                        \
-    }                                                \
-    return DeprecatedString::formatted("{}", value); \
+#define END_VALUES_TO_NAMES()                  \
+    }                                          \
+    return ByteString::formatted("{}", value); \
     }
 
 VALUES_TO_NAMES(errno_name)
@@ -613,7 +613,7 @@ struct Formatter<struct sockaddr> : StandardFormatter {
             builder.appendff(
                 ", sin_port={}, sin_addr={}",
                 address_in->sin_port,
-                IPv4Address(address_in->sin_addr.s_addr).to_deprecated_string());
+                IPv4Address(address_in->sin_addr.s_addr).to_byte_string());
         } else if (address.sa_family == AF_UNIX) {
             auto* address_un = (const struct sockaddr_un*)&address;
             builder.appendff(

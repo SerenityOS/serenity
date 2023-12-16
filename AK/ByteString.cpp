@@ -5,8 +5,8 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
@@ -16,17 +16,17 @@
 
 namespace AK {
 
-bool DeprecatedString::operator==(DeprecatedFlyString const& fly_string) const
+bool ByteString::operator==(DeprecatedFlyString const& fly_string) const
 {
     return m_impl == fly_string.impl() || view() == fly_string.view();
 }
 
-bool DeprecatedString::operator==(DeprecatedString const& other) const
+bool ByteString::operator==(ByteString const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }
 
-bool DeprecatedString::operator==(StringView other) const
+bool ByteString::operator==(StringView other) const
 {
     if (other.is_null())
         return is_empty();
@@ -34,17 +34,17 @@ bool DeprecatedString::operator==(StringView other) const
     return view() == other;
 }
 
-bool DeprecatedString::operator<(DeprecatedString const& other) const
+bool ByteString::operator<(ByteString const& other) const
 {
     return view() < other.view();
 }
 
-bool DeprecatedString::operator>(DeprecatedString const& other) const
+bool ByteString::operator>(ByteString const& other) const
 {
     return view() > other.view();
 }
 
-bool DeprecatedString::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
+bool ByteString::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
 {
     // We must fit at least the NUL-terminator.
     VERIFY(buffer_size > 0);
@@ -56,55 +56,55 @@ bool DeprecatedString::copy_characters_to_buffer(char* buffer, size_t buffer_siz
     return characters_to_copy == length();
 }
 
-DeprecatedString DeprecatedString::isolated_copy() const
+ByteString ByteString::isolated_copy() const
 {
     if (m_impl->length() == 0)
         return empty();
     char* buffer;
     auto impl = StringImpl::create_uninitialized(length(), buffer);
     memcpy(buffer, m_impl->characters(), m_impl->length());
-    return DeprecatedString(move(*impl));
+    return ByteString(move(*impl));
 }
 
-DeprecatedString DeprecatedString::substring(size_t start, size_t length) const
+ByteString ByteString::substring(size_t start, size_t length) const
 {
     if (!length)
-        return DeprecatedString::empty();
+        return ByteString::empty();
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
     return { characters() + start, length };
 }
 
-DeprecatedString DeprecatedString::substring(size_t start) const
+ByteString ByteString::substring(size_t start) const
 {
     VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 
-StringView DeprecatedString::substring_view(size_t start, size_t length) const
+StringView ByteString::substring_view(size_t start, size_t length) const
 {
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
     return { characters() + start, length };
 }
 
-StringView DeprecatedString::substring_view(size_t start) const
+StringView ByteString::substring_view(size_t start) const
 {
     VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 
-Vector<DeprecatedString> DeprecatedString::split(char separator, SplitBehavior split_behavior) const
+Vector<ByteString> ByteString::split(char separator, SplitBehavior split_behavior) const
 {
     return split_limit(separator, 0, split_behavior);
 }
 
-Vector<DeprecatedString> DeprecatedString::split_limit(char separator, size_t limit, SplitBehavior split_behavior) const
+Vector<ByteString> ByteString::split_limit(char separator, size_t limit, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
 
-    Vector<DeprecatedString> v;
+    Vector<ByteString> v;
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
@@ -123,7 +123,7 @@ Vector<DeprecatedString> DeprecatedString::split_limit(char separator, size_t li
     return v;
 }
 
-Vector<StringView> DeprecatedString::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const
+Vector<StringView> ByteString::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
@@ -147,78 +147,78 @@ Vector<StringView> DeprecatedString::split_view(Function<bool(char)> separator, 
     return v;
 }
 
-Vector<StringView> DeprecatedString::split_view(char const separator, SplitBehavior split_behavior) const
+Vector<StringView> ByteString::split_view(char const separator, SplitBehavior split_behavior) const
 {
     return split_view([separator](char ch) { return ch == separator; }, split_behavior);
 }
 
-ByteBuffer DeprecatedString::to_byte_buffer() const
+ByteBuffer ByteString::to_byte_buffer() const
 {
     // FIXME: Handle OOM failure.
     return ByteBuffer::copy(bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
 template<typename T>
-Optional<T> DeprecatedString::to_int(TrimWhitespace trim_whitespace) const
+Optional<T> ByteString::to_int(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_int<T>(view(), trim_whitespace);
 }
 
-template Optional<i8> DeprecatedString::to_int(TrimWhitespace) const;
-template Optional<i16> DeprecatedString::to_int(TrimWhitespace) const;
-template Optional<i32> DeprecatedString::to_int(TrimWhitespace) const;
-template Optional<long> DeprecatedString::to_int(TrimWhitespace) const;
-template Optional<long long> DeprecatedString::to_int(TrimWhitespace) const;
+template Optional<i8> ByteString::to_int(TrimWhitespace) const;
+template Optional<i16> ByteString::to_int(TrimWhitespace) const;
+template Optional<i32> ByteString::to_int(TrimWhitespace) const;
+template Optional<long> ByteString::to_int(TrimWhitespace) const;
+template Optional<long long> ByteString::to_int(TrimWhitespace) const;
 
 template<typename T>
-Optional<T> DeprecatedString::to_uint(TrimWhitespace trim_whitespace) const
+Optional<T> ByteString::to_uint(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
 }
 
-template Optional<u8> DeprecatedString::to_uint(TrimWhitespace) const;
-template Optional<u16> DeprecatedString::to_uint(TrimWhitespace) const;
-template Optional<u32> DeprecatedString::to_uint(TrimWhitespace) const;
-template Optional<unsigned long> DeprecatedString::to_uint(TrimWhitespace) const;
-template Optional<unsigned long long> DeprecatedString::to_uint(TrimWhitespace) const;
+template Optional<u8> ByteString::to_uint(TrimWhitespace) const;
+template Optional<u16> ByteString::to_uint(TrimWhitespace) const;
+template Optional<u32> ByteString::to_uint(TrimWhitespace) const;
+template Optional<unsigned long> ByteString::to_uint(TrimWhitespace) const;
+template Optional<unsigned long long> ByteString::to_uint(TrimWhitespace) const;
 
 #ifndef KERNEL
-Optional<double> DeprecatedString::to_double(TrimWhitespace trim_whitespace) const
+Optional<double> ByteString::to_double(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_floating_point<double>(*this, trim_whitespace);
 }
 
-Optional<float> DeprecatedString::to_float(TrimWhitespace trim_whitespace) const
+Optional<float> ByteString::to_float(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_floating_point<float>(*this, trim_whitespace);
 }
 #endif
 
-bool DeprecatedString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
+bool ByteString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);
 }
 
-bool DeprecatedString::starts_with(char ch) const
+bool ByteString::starts_with(char ch) const
 {
     if (is_empty())
         return false;
     return characters()[0] == ch;
 }
 
-bool DeprecatedString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
+bool ByteString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
 
-bool DeprecatedString::ends_with(char ch) const
+bool ByteString::ends_with(char ch) const
 {
     if (is_empty())
         return false;
     return characters()[length() - 1] == ch;
 }
 
-DeprecatedString DeprecatedString::repeated(char ch, size_t count)
+ByteString ByteString::repeated(char ch, size_t count)
 {
     if (!count)
         return empty();
@@ -228,7 +228,7 @@ DeprecatedString DeprecatedString::repeated(char ch, size_t count)
     return *impl;
 }
 
-DeprecatedString DeprecatedString::repeated(StringView string, size_t count)
+ByteString ByteString::repeated(StringView string, size_t count)
 {
     if (!count || string.is_empty())
         return empty();
@@ -239,7 +239,7 @@ DeprecatedString DeprecatedString::repeated(StringView string, size_t count)
     return *impl;
 }
 
-DeprecatedString DeprecatedString::bijective_base_from(size_t value, unsigned base, StringView map)
+ByteString ByteString::bijective_base_from(size_t value, unsigned base, StringView map)
 {
     value++;
     if (map.is_null())
@@ -265,13 +265,13 @@ DeprecatedString DeprecatedString::bijective_base_from(size_t value, unsigned ba
     for (size_t j = 0; j < i / 2; ++j)
         swap(buffer[j], buffer[i - j - 1]);
 
-    return DeprecatedString { ReadonlyBytes(buffer.data(), i) };
+    return ByteString { ReadonlyBytes(buffer.data(), i) };
 }
 
-DeprecatedString DeprecatedString::roman_number_from(size_t value)
+ByteString ByteString::roman_number_from(size_t value)
 {
     if (value > 3999)
-        return DeprecatedString::number(value);
+        return ByteString::number(value);
 
     StringBuilder builder;
 
@@ -318,44 +318,44 @@ DeprecatedString DeprecatedString::roman_number_from(size_t value)
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-bool DeprecatedString::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+bool ByteString::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
 }
 
-bool DeprecatedString::matches(StringView mask, CaseSensitivity case_sensitivity) const
+bool ByteString::matches(StringView mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
 
-bool DeprecatedString::contains(StringView needle, CaseSensitivity case_sensitivity) const
+bool ByteString::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
-bool DeprecatedString::contains(char needle, CaseSensitivity case_sensitivity) const
+bool ByteString::contains(char needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, StringView(&needle, 1), case_sensitivity);
 }
 
-bool DeprecatedString::equals_ignoring_ascii_case(StringView other) const
+bool ByteString::equals_ignoring_ascii_case(StringView other) const
 {
     return StringUtils::equals_ignoring_ascii_case(view(), other);
 }
 
-DeprecatedString DeprecatedString::reverse() const
+ByteString ByteString::reverse() const
 {
     StringBuilder reversed_string(length());
     for (size_t i = length(); i-- > 0;) {
         reversed_string.append(characters()[i]);
     }
-    return reversed_string.to_deprecated_string();
+    return reversed_string.to_byte_string();
 }
 
-DeprecatedString escape_html_entities(StringView html)
+ByteString escape_html_entities(StringView html)
 {
     StringBuilder builder;
     for (size_t i = 0; i < html.length(); ++i) {
@@ -370,40 +370,40 @@ DeprecatedString escape_html_entities(StringView html)
         else
             builder.append(html[i]);
     }
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-DeprecatedString::DeprecatedString(DeprecatedFlyString const& string)
+ByteString::ByteString(DeprecatedFlyString const& string)
     : m_impl(*(string.impl() ?: &StringImpl::the_empty_stringimpl()))
 {
 }
 
-DeprecatedString DeprecatedString::to_lowercase() const
+ByteString ByteString::to_lowercase() const
 {
     return m_impl->to_lowercase();
 }
 
-DeprecatedString DeprecatedString::to_uppercase() const
+ByteString ByteString::to_uppercase() const
 {
     return m_impl->to_uppercase();
 }
 
-DeprecatedString DeprecatedString::to_snakecase() const
+ByteString ByteString::to_snakecase() const
 {
     return StringUtils::to_snakecase(*this);
 }
 
-DeprecatedString DeprecatedString::to_titlecase() const
+ByteString ByteString::to_titlecase() const
 {
     return StringUtils::to_titlecase(*this);
 }
 
-DeprecatedString DeprecatedString::invert_case() const
+ByteString ByteString::invert_case() const
 {
     return StringUtils::invert_case(*this);
 }
 
-bool DeprecatedString::operator==(char const* cstring) const
+bool ByteString::operator==(char const* cstring) const
 {
     if (!cstring)
         return is_empty();
@@ -411,28 +411,28 @@ bool DeprecatedString::operator==(char const* cstring) const
     return view() == cstring;
 }
 
-DeprecatedString DeprecatedString::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
+ByteString ByteString::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
     MUST(vformat(builder, fmtstr, params));
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
-Vector<size_t> DeprecatedString::find_all(StringView needle) const
+Vector<size_t> ByteString::find_all(StringView needle) const
 {
     return StringUtils::find_all(*this, needle);
 }
 
-DeprecatedStringCodePointIterator DeprecatedString::code_points() const
+DeprecatedStringCodePointIterator ByteString::code_points() const
 {
     return DeprecatedStringCodePointIterator(*this);
 }
 
-ErrorOr<DeprecatedString> DeprecatedString::from_utf8(ReadonlyBytes bytes)
+ErrorOr<ByteString> ByteString::from_utf8(ReadonlyBytes bytes)
 {
     if (!Utf8View(bytes).validate())
-        return Error::from_string_literal("DeprecatedString::from_utf8: Input was not valid UTF-8");
-    return DeprecatedString { *StringImpl::create(bytes) };
+        return Error::from_string_literal("ByteString::from_utf8: Input was not valid UTF-8");
+    return ByteString { *StringImpl::create(bytes) };
 }
 
 }

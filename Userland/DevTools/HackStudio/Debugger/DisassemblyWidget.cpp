@@ -49,7 +49,7 @@ void DisassemblyWidget::update_state(Debug::DebugSession const& debug_session, P
             return;
         auto containing_function = lib->debug_info->get_containing_function(regs.ip() - lib->base_address);
         if (containing_function.has_value())
-            m_function_name_label->set_text(String::from_deprecated_string(containing_function.value().name).release_value_but_fixme_should_propagate_errors());
+            m_function_name_label->set_text(String::from_byte_string(containing_function.value().name).release_value_but_fixme_should_propagate_errors());
         else
             m_function_name_label->set_text("<missing>"_string);
         show_disassembly();
@@ -73,7 +73,7 @@ void DisassemblyWidget::show_disassembly()
     m_unavailable_disassembly_widget->set_visible(false);
 }
 
-void DisassemblyWidget::hide_disassembly(DeprecatedString const& reason)
+void DisassemblyWidget::hide_disassembly(ByteString const& reason)
 {
     m_top_container->set_visible(false);
     m_disassembly_view->set_visible(false);

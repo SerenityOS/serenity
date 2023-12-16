@@ -131,7 +131,7 @@ private:
     virtual Vector<TextDocumentFoldingRegion>& folding_regions() override { return m_folding_regions; }
     virtual Vector<TextDocumentFoldingRegion> const& folding_regions() const override { return m_folding_regions; }
 
-    virtual DeprecatedString highlighter_did_request_text() const override { return m_text; }
+    virtual ByteString highlighter_did_request_text() const override { return m_text; }
     virtual void highlighter_did_request_update() override { }
     virtual Document& highlighter_did_request_document() override { return m_document; }
     virtual TextPosition highlighter_did_request_cursor() const override { return {}; }

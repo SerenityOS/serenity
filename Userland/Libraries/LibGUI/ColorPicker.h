@@ -29,7 +29,7 @@ public:
     Function<void(Color)> on_color_changed;
 
 private:
-    explicit ColorPicker(Color, Window* parent_window = nullptr, DeprecatedString title = "Color Picker");
+    explicit ColorPicker(Color, Window* parent_window = nullptr, ByteString title = "Color Picker");
 
     void build_ui();
     void build_ui_custom(Widget& root_container);

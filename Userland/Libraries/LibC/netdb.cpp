@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Net/IPv4.h>
 #include <arpa/inet.h>
@@ -54,8 +54,8 @@ struct ServiceFileLine {
 
 static ErrorOr<Optional<ServiceFileLine>> parse_service_file_line(char const* line, ssize_t read);
 static servent __getserv_buffer;
-static DeprecatedString __getserv_name_buffer;
-static DeprecatedString __getserv_protocol_buffer;
+static ByteString __getserv_name_buffer;
+static ByteString __getserv_protocol_buffer;
 static int __getserv_port_buffer;
 static Vector<ByteBuffer> __getserv_alias_list_buffer;
 static Vector<char*> __getserv_alias_list;
@@ -68,7 +68,7 @@ static char const* protocols_path = "/etc/protocols";
 
 static bool fill_getproto_buffers(char const* line, ssize_t read);
 static protoent __getproto_buffer;
-static DeprecatedString __getproto_name_buffer;
+static ByteString __getproto_name_buffer;
 static Vector<ByteBuffer> __getproto_alias_list_buffer;
 static Vector<char*> __getproto_alias_list;
 static int __getproto_protocol_buffer;
@@ -96,7 +96,7 @@ static int connect_to_lookup_server()
     return fd;
 }
 
-static DeprecatedString gethostbyname_name_buffer;
+static ByteString gethostbyname_name_buffer;
 
 hostent* gethostbyname(char const* name)
 {
@@ -226,7 +226,7 @@ int gethostbyname_r(char const* __restrict name, struct hostent* __restrict ret,
     auto ipv4_address = IPv4Address::from_string({ name, strlen(name) });
 
     if (ipv4_address.has_value()) {
-        return populate_ret(ipv4_address.value().to_deprecated_string().characters(), ipv4_address.value().to_in_addr_t());
+        return populate_ret(ipv4_address.value().to_byte_string().characters(), ipv4_address.value().to_in_addr_t());
     }
 
     int fd = connect_to_lookup_server();
@@ -318,7 +318,7 @@ int gethostbyname_r(char const* __restrict name, struct hostent* __restrict ret,
     return populate_ret(name, address);
 }
 
-static DeprecatedString gethostbyaddr_name_buffer;
+static ByteString gethostbyaddr_name_buffer;
 
 hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
 {
@@ -474,9 +474,9 @@ struct servent* getservent()
 
     servent* service_entry = nullptr;
 
-    __getserv_name_buffer = service_file_line.value().name.to_deprecated_string();
+    __getserv_name_buffer = service_file_line.value().name.to_byte_string();
     __getserv_port_buffer = service_file_line.value().port;
-    __getserv_protocol_buffer = service_file_line.value().protocol.to_deprecated_string();
+    __getserv_protocol_buffer = service_file_line.value().protocol.to_byte_string();
     __getserv_alias_list_buffer = service_file_line.value().aliases;
 
     __getserv_buffer.s_name = const_cast<char*>(__getserv_name_buffer.characters());
@@ -583,9 +583,9 @@ static ErrorOr<Optional<ServiceFileLine>> parse_service_file_line(char const* li
     if (split_line.size() < 2)
         return Error::from_string_view("malformed service file"sv);
 
-    auto name = TRY(String::from_deprecated_string(split_line[0]));
+    auto name = TRY(String::from_byte_string(split_line[0]));
 
-    auto port_protocol = TRY(String::from_deprecated_string(split_line[1]));
+    auto port_protocol = TRY(String::from_byte_string(split_line[1]));
     auto port_protocol_split = TRY(port_protocol.split('/'));
 
     if (port_protocol_split.size() < 2)
@@ -756,7 +756,7 @@ void endprotoent()
 
 static bool fill_getproto_buffers(char const* line, ssize_t read)
 {
-    DeprecatedString string_line = DeprecatedString(line, read);
+    ByteString string_line = ByteString(line, read);
     auto split_line = string_line.replace(" "sv, "\t"sv, ReplaceMode::All).split('\t');
 
     // This indicates an incorrect file format. Protocols file entries should

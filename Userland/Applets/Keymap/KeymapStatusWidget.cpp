@@ -63,10 +63,10 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
     return {};
 }
 
-void KeymapStatusWidget::set_current_keymap(DeprecatedString const& keymap)
+void KeymapStatusWidget::set_current_keymap(ByteString const& keymap)
 {
     m_current_keymap = keymap;
-    set_tooltip(MUST(String::from_deprecated_string(keymap)));
+    set_tooltip(MUST(String::from_byte_string(keymap)));
     update();
 }
 

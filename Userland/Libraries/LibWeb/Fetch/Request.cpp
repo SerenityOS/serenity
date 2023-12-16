@@ -514,7 +514,7 @@ WebIDL::ExceptionOr<String> Request::url() const
     auto& vm = this->vm();
 
     // The url getter steps are to return this’s request’s URL, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_request->url().serialize()));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_request->url().serialize()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-headers
@@ -550,7 +550,7 @@ WebIDL::ExceptionOr<String> Request::referrer() const
         },
         [&](AK::URL const& url) -> WebIDL::ExceptionOr<String> {
             // 3. Return this’s request’s referrer, serialized.
-            return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.serialize()));
+            return TRY_OR_THROW_OOM(vm, String::from_byte_string(url.serialize()));
         });
 }
 

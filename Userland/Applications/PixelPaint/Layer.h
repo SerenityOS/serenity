@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
@@ -31,8 +31,8 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Layer>> create_with_size(Image&, Gfx::IntSize, DeprecatedString name);
-    static ErrorOr<NonnullRefPtr<Layer>> create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
+    static ErrorOr<NonnullRefPtr<Layer>> create_with_size(Image&, Gfx::IntSize, ByteString name);
+    static ErrorOr<NonnullRefPtr<Layer>> create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, ByteString name);
     static ErrorOr<NonnullRefPtr<Layer>> create_snapshot(Image&, Layer const&);
 
     ~Layer() = default;
@@ -68,8 +68,8 @@ public:
     Gfx::IntRect relative_rect() const { return { location(), size() }; }
     Gfx::IntRect rect() const { return { {}, size() }; }
 
-    DeprecatedString const& name() const { return m_name; }
-    void set_name(DeprecatedString);
+    ByteString const& name() const { return m_name; }
+    void set_name(ByteString);
 
     enum class NotifyClients {
         Yes,
@@ -116,7 +116,7 @@ public:
 
     Gfx::Bitmap& currently_edited_bitmap();
 
-    ErrorOr<NonnullRefPtr<Layer>> duplicate(DeprecatedString name);
+    ErrorOr<NonnullRefPtr<Layer>> duplicate(ByteString name);
 
     ALWAYS_INLINE Color modify_pixel_with_editing_mask(int x, int y, Color const& target_color, Color const& current_color)
     {
@@ -134,11 +134,11 @@ public:
     void on_second_paint(ImageEditor&);
 
 private:
-    Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
+    Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, ByteString name);
 
     Image& m_image;
 
-    DeprecatedString m_name;
+    ByteString m_name;
     Gfx::IntPoint m_location;
     NonnullRefPtr<Gfx::Bitmap> m_content_bitmap;
     RefPtr<Gfx::Bitmap> m_scratch_edited_bitmap { nullptr };

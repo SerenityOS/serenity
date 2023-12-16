@@ -60,7 +60,7 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
         if (!insn.has_value())
             break;
         FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
-        auto disassembly = insn.value().to_deprecated_string(address_in_profiled_program, &symbol_provider);
+        auto disassembly = insn.value().to_byte_string(address_in_profiled_program, &symbol_provider);
         StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
         m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program });
 
@@ -93,12 +93,12 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)
-            return DeprecatedString::formatted("{:p}", insn.address);
+            return ByteString::formatted("{:p}", insn.address);
         if (index.column() == Column::InstructionBytes) {
             StringBuilder builder;
             for (auto ch : insn.bytes)
                 builder.appendff("{:02x} ", static_cast<unsigned char>(ch));
-            return builder.to_deprecated_string();
+            return builder.to_byte_string();
         }
         if (index.column() == Column::Disassembly)
             return insn.disassembly;

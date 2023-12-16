@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibIPC/Decoder.h>
@@ -15,8 +15,8 @@
 namespace GUI {
 
 struct FileTypeFilter {
-    DeprecatedString name;
-    Optional<Vector<DeprecatedString>> extensions;
+    ByteString name;
+    Optional<Vector<ByteString>> extensions;
 
     static FileTypeFilter all_files()
     {
@@ -25,7 +25,7 @@ struct FileTypeFilter {
 
     static FileTypeFilter image_files()
     {
-        return FileTypeFilter { "Image Files", Vector<DeprecatedString> { "png", "gif", "bmp", "dip", "pbm", "pgm", "ppm", "ico", "iff", "jpeg", "jpg", "jxl", "dds", "qoi", "tif", "tiff", "webp", "tvg" } };
+        return FileTypeFilter { "Image Files", Vector<ByteString> { "png", "gif", "bmp", "dip", "pbm", "pgm", "ppm", "ico", "iff", "jpeg", "jpg", "jxl", "dds", "qoi", "tif", "tiff", "webp", "tvg" } };
     }
 };
 
@@ -44,8 +44,8 @@ inline ErrorOr<void> encode(Encoder& encoder, GUI::FileTypeFilter const& respons
 template<>
 inline ErrorOr<GUI::FileTypeFilter> decode(Decoder& decoder)
 {
-    auto name = TRY(decoder.decode<DeprecatedString>());
-    auto extensions = TRY(decoder.decode<Optional<Vector<AK::DeprecatedString>>>());
+    auto name = TRY(decoder.decode<ByteString>());
+    auto extensions = TRY(decoder.decode<Optional<Vector<AK::ByteString>>>());
 
     return GUI::FileTypeFilter { move(name), move(extensions) };
 }

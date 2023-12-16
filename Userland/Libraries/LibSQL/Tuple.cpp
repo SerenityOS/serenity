@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/ByteString.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
@@ -84,14 +84,14 @@ Optional<size_t> Tuple::index_of(StringView name) const
     return {};
 }
 
-Value const& Tuple::operator[](DeprecatedString const& name) const
+Value const& Tuple::operator[](ByteString const& name) const
 {
     auto index = index_of(name);
     VERIFY(index.has_value());
     return (*this)[index.value()];
 }
 
-Value& Tuple::operator[](DeprecatedString const& name)
+Value& Tuple::operator[](ByteString const& name)
 {
     auto index = index_of(name);
     VERIFY(index.has_value());
@@ -132,17 +132,17 @@ size_t Tuple::length() const
     return len;
 }
 
-DeprecatedString Tuple::to_deprecated_string() const
+ByteString Tuple::to_byte_string() const
 {
     StringBuilder builder;
     for (auto& part : m_data) {
         if (!builder.is_empty())
             builder.append('|');
-        builder.append(part.to_deprecated_string());
+        builder.append(part.to_byte_string());
     }
     if (block_index() != 0)
         builder.appendff(":{}", block_index());
-    return builder.to_deprecated_string();
+    return builder.to_byte_string();
 }
 
 void Tuple::copy_from(Tuple const& other)

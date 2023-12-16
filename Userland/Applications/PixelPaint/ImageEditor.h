@@ -44,14 +44,14 @@ public:
     void set_active_tool(Tool*);
     void update_tool_cursor();
 
-    void did_complete_action(DeprecatedString action_text);
+    void did_complete_action(ByteString action_text);
     bool undo();
     bool redo();
 
     auto& undo_stack() { return m_undo_stack; }
 
-    DeprecatedString const& path() const { return m_path; }
-    void set_path(DeprecatedString);
+    ByteString const& path() const { return m_path; }
+    void set_path(ByteString);
 
     String const& title() const { return m_title; }
     void set_title(String);
@@ -122,13 +122,13 @@ public:
     void set_status_info_to_color_at_mouse_position(Gfx::IntPoint position, bool sample_all_layers);
     void set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers);
 
-    void set_modified(DeprecatedString action_text);
+    void set_modified(ByteString action_text);
     void set_unmodified();
     void update_modified();
-    Function<void(DeprecatedString)> on_appended_status_info_change;
-    DeprecatedString appended_status_info() { return m_appended_status_info; }
-    void set_appended_status_info(DeprecatedString);
-    DeprecatedString generate_unique_layer_name(DeprecatedString const& original_layer_name);
+    Function<void(ByteString)> on_appended_status_info_change;
+    ByteString appended_status_info() { return m_appended_status_info; }
+    void set_appended_status_info(ByteString);
+    ByteString generate_unique_layer_name(ByteString const& original_layer_name);
 
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
@@ -170,7 +170,7 @@ private:
     RefPtr<Layer> m_active_layer;
     GUI::UndoStack m_undo_stack;
 
-    DeprecatedString m_path;
+    ByteString m_path;
     String m_title;
 
     Vector<NonnullRefPtr<Guide>> m_guides;
@@ -202,7 +202,7 @@ private:
     void draw_marching_ants_pixel(Gfx::Painter&, int x, int y) const;
 
     Core::EventLoop& m_gui_event_loop;
-    DeprecatedString m_appended_status_info;
+    ByteString m_appended_status_info;
 };
 
 }
