@@ -25,7 +25,7 @@
 #include <wchar.h>
 
 // LibC initialization routines
-char** environ = nullptr;
+[[gnu::weak]] char** environ = nullptr; // Populated by DynamicLinker in shared executables.
 bool __environ_is_malloced = false;
 bool __stdio_is_initialized = false;
 void* __auxiliary_vector = nullptr;
@@ -43,7 +43,7 @@ void* __auxiliary_vector = nullptr;
 }
 
 extern "C" void (*__call_fini_functions)();
-void (*__call_fini_functions)() = nullptr;
+[[gnu::weak]] void (*__call_fini_functions)() = nullptr; // Populated by DynamicLinker in shared executables.
 
 void exit(int status)
 {

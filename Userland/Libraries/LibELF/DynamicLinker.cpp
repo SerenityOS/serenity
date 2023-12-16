@@ -13,6 +13,7 @@
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <AK/Random.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
 #include <Kernel/API/VirtualMemoryAnnotations.h>
@@ -64,11 +65,32 @@ static StringView s_ld_library_path;
 static StringView s_main_program_pledge_promises;
 static ByteString s_loader_pledge_promises;
 
-static Result<void, DlErrorMessage> __dlclose(void* handle);
-static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags);
-static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_name);
-static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info);
-static void __call_fini_functions();
+class MagicWeakSymbol : public RefCounted<MagicWeakSymbol> {
+    AK_MAKE_NONCOPYABLE(MagicWeakSymbol);
+    AK_MAKE_NONMOVABLE(MagicWeakSymbol);
+
+public:
+    template<typename T>
+    MagicWeakSymbol(unsigned int type, T value)
+    {
+        m_storage = reinterpret_cast<uintptr_t>(value);
+        m_lookup_result.size = 8;
+        m_lookup_result.type = type;
+        m_lookup_result.address = VirtualAddress { &m_storage };
+        m_lookup_result.bind = STB_GLOBAL;
+    }
+
+    auto lookup_result() const
+    {
+        return m_lookup_result;
+    }
+
+private:
+    DynamicObject::SymbolLookupResult m_lookup_result;
+    uintptr_t m_storage;
+};
+
+static HashMap<StringView, NonnullRefPtr<MagicWeakSymbol>> s_magic_weak_symbols;
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
@@ -86,6 +108,10 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
             weak_result = res;
         // We don't want to allow local symbols to be pulled in to other modules
     }
+
+    if (auto magic_lookup = s_magic_weak_symbols.get(name); magic_lookup.has_value())
+        weak_result = (*magic_lookup)->lookup_result();
+
     return weak_result;
 }
 
@@ -257,60 +283,6 @@ static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
     return 0;
 }
 
-static void initialize_libruntime(DynamicObject& libruntime)
-{
-    // Some libraries use malloc() and getenv() in global constructors, so we have to initialize
-    // LibRuntime just after it is loaded. This is done by `__libc_init`, which marked as a
-    // constructor with a high priority. However, we still need to "manually" provide `environ` and
-    // `__stack_chk_guard` for it.
-    // FIXME: Instead of this, we can make the following symbols undefined and use more conventional
-    //        methods of linking them.
-    auto res = libruntime.lookup_symbol("environ"sv);
-    VERIFY(res.has_value());
-    *((char***)res.value().address.as_ptr()) = s_envp;
-
-    // __stack_chk_guard should be initialized before anything significant (read: global
-    // constructors) is running. This is not done in __libc_init, as we definitely have to return
-    // from that, and it might affect Loader as well.
-    res = libruntime.lookup_symbol("__stack_chk_guard"sv);
-    VERIFY(res.has_value());
-    void* stack_guard = res.value().address.as_ptr();
-    arc4random_buf(stack_guard, sizeof(uintptr_t));
-
-    res = libruntime.lookup_symbol("__call_fini_functions"sv);
-    VERIFY(res.has_value());
-    *((CallFiniFunctionsFunction*)res.value().address.as_ptr()) = __call_fini_functions;
-
-#ifdef AK_ARCH_64_BIT
-    // For 64-bit platforms we include an additional hardening: zero the first byte of the stack guard to avoid
-    // leaking or overwriting the stack guard with C-style string functions.
-    ((char*)stack_guard)[0] = 0;
-#endif
-}
-
-static void initialize_libc(DynamicObject& libc)
-{
-    auto res = libc.lookup_symbol("__dl_iterate_phdr"sv);
-    VERIFY(res.has_value());
-    *((DlIteratePhdrFunction*)res.value().address.as_ptr()) = __dl_iterate_phdr;
-
-    res = libc.lookup_symbol("__dlclose"sv);
-    VERIFY(res.has_value());
-    *((DlCloseFunction*)res.value().address.as_ptr()) = __dlclose;
-
-    res = libc.lookup_symbol("__dlopen"sv);
-    VERIFY(res.has_value());
-    *((DlOpenFunction*)res.value().address.as_ptr()) = __dlopen;
-
-    res = libc.lookup_symbol("__dlsym"sv);
-    VERIFY(res.has_value());
-    *((DlSymFunction*)res.value().address.as_ptr()) = __dlsym;
-
-    res = libc.lookup_symbol("__dladdr"sv);
-    VERIFY(res.has_value());
-    *((DlAddrFunction*)res.value().address.as_ptr()) = __dladdr;
-}
-
 template<typename Callback>
 static void for_each_unfinished_dependency_of(ByteString const& path, HashTable<ByteString>& seen_names, Callback callback)
 {
@@ -398,12 +370,6 @@ static Result<void, DlErrorMessage> link_main_library(ByteString const& path, in
     for (auto& loader : loaders) {
         auto result = loader->load_stage_3(flags);
         VERIFY(!result.is_error());
-        auto& object = result.value();
-
-        if (loader->filepath().ends_with("/libruntime.so"sv))
-            initialize_libruntime(*object);
-        if (loader->filepath().ends_with("/libc.so"sv))
-            initialize_libc(*object);
 
         if (loader->filepath().ends_with("/libsystem.so"sv)) {
             VERIFY(!loader->text_segments().is_empty());
@@ -653,6 +619,23 @@ void ELF::DynamicLinker::linker_main(ByteString&& main_program_path, int main_pr
     VERIFY(main_program_path.starts_with('/'));
 
     s_envp = envp;
+
+    uintptr_t stack_guard = get_random<uintptr_t>();
+
+#ifdef AK_ARCH_64_BIT
+    // For 64-bit platforms we include an additional hardening: zero the first byte of the stack guard to avoid
+    // leaking or overwriting the stack guard with C-style string functions.
+    stack_guard &= ~0xffULL;
+#endif
+
+    s_magic_weak_symbols.set("environ"sv, make_ref_counted<MagicWeakSymbol>(STT_OBJECT, s_envp));
+    s_magic_weak_symbols.set("__stack_chk_guard"sv, make_ref_counted<MagicWeakSymbol>(STT_OBJECT, stack_guard));
+    s_magic_weak_symbols.set("__call_fini_functions"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __call_fini_functions));
+    s_magic_weak_symbols.set("__dl_iterate_phdr"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dl_iterate_phdr));
+    s_magic_weak_symbols.set("__dlclose"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlclose));
+    s_magic_weak_symbols.set("__dlopen"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlopen));
+    s_magic_weak_symbols.set("__dlsym"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlsym));
+    s_magic_weak_symbols.set("__dladdr"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dladdr));
 
     char* raw_current_directory = getcwd(nullptr, 0);
     s_cwd = raw_current_directory;
