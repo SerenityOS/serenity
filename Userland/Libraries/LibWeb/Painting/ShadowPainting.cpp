@@ -564,7 +564,7 @@ void paint_box_shadow(PaintContext& context,
             .offset_y = offset_y,
             .blur_radius = blur_radius,
             .spread_distance = spread_distance,
-            .device_content_rect = context.recording_painter().state().translation.map(device_content_rect.to_type<int>()).to_type<DevicePixels>(),
+            .device_content_rect = device_content_rect,
         };
 
         if (box_shadow_data.placement == ShadowPlacement::Inner) {

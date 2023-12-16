@@ -498,6 +498,7 @@ public:
         m_state_stack.append(State());
     }
 
+private:
     struct State {
         Gfx::AffineTransform translation;
         Optional<Gfx::IntRect> clip_rect;
@@ -505,7 +506,6 @@ public:
     State& state() { return m_state_stack.last(); }
     State const& state() const { return m_state_stack.last(); }
 
-private:
     void push_command(PaintingCommand command)
     {
         m_painting_commands.append(command);

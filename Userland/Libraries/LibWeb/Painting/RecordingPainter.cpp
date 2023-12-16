@@ -29,13 +29,13 @@ void RecordingPainter::sample_under_corners(u32 id, CornerRadii corner_radii, Gf
     push_command(SampleUnderCorners {
         id,
         corner_radii,
-        border_rect,
+        border_rect = state().translation.map(border_rect),
         corner_clip });
 }
 
 void RecordingPainter::blit_corner_clipping(u32 id, Gfx::IntRect border_rect)
 {
-    push_command(BlitCornerClipping { id, border_rect });
+    push_command(BlitCornerClipping { id, border_rect = state().translation.map(border_rect) });
 }
 
 void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
@@ -323,6 +323,7 @@ void RecordingPainter::apply_backdrop_filter(Gfx::IntRect const& backdrop_region
 
 void RecordingPainter::paint_outer_box_shadow_params(PaintOuterBoxShadowParams params)
 {
+    params.device_content_rect = state().translation.map(params.device_content_rect.to_type<int>()).to_type<DevicePixels>();
     push_command(PaintOuterBoxShadow {
         .outer_box_shadow_params = params,
     });
