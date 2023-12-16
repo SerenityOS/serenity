@@ -852,7 +852,10 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
         return Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>());
     }
 
-    dbgln("FIXME: Failed to get bounding client rect for element ({})", debug_description());
+    if (paintable) {
+        dbgln("FIXME: Failed to get bounding client rect for element ({})", debug_description());
+    }
+
     return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
 }
 
