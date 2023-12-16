@@ -169,7 +169,7 @@ ErrorOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_valu
 
 ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::thread));
 
     if (signal < 0 || signal >= NSIG)
