@@ -534,8 +534,12 @@ def setup_audio_hardware(config: Configuration):
 
 
 def has_virgl() -> bool:
-    ldconfig_result = run(["ldconfig", "-p"], capture_output=True, encoding="utf-8").stdout.lower()
-    return "virglrenderer" in ldconfig_result
+    try:
+        ldconfig_result = run(["ldconfig", "-p"], capture_output=True, encoding="utf-8").stdout.lower()
+        return "virglrenderer" in ldconfig_result
+    except FileNotFoundError:
+        print("Warning: ldconfig not found in PATH, assuming virgl support to not be present.")
+        return False
 
 
 def setup_screens(config: Configuration):
