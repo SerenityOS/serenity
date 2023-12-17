@@ -9,7 +9,7 @@ import re
 from enum import Enum
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import List, Type
 
 
 class EnumWithExportName(Enum):
@@ -132,7 +132,7 @@ LICENSE = R"""/*
  */"""
 
 
-def export_enum_to_cpp(e: Type[EnumWithExportName], special_name: Optional[str] = None) -> str:
+def export_enum_to_cpp(e: Type[EnumWithExportName]) -> str:
     output = f'enum class {e.export_name()} {{\n'
 
     for entry in e:
