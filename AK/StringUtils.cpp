@@ -521,32 +521,53 @@ ByteString invert_case(StringView str)
     return builder.to_byte_string();
 }
 
-ByteString replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)
+// Finishes the replacing algorithm once it is known that ita least one
+// replacemnet is going to be done. Otherwise the caller may want to follow a
+// different route to construct its output.
+static StringBuilder replace_into_builder(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode, size_t first_replacement_position)
+{
+    StringBuilder replaced_string;
+
+    replaced_string.append(str.substring_view(0, first_replacement_position));
+    replaced_string.append(replacement);
+
+    StringView remaining = str.substring_view(first_replacement_position + needle.length());
+
+    switch (replace_mode) {
+    case ReplaceMode::All:
+        while (!remaining.is_empty()) {
+            auto maybe_pos = remaining.find(needle);
+            if (!maybe_pos.has_value())
+                break;
+            replaced_string.append(remaining.substring_view(0, *maybe_pos));
+            replaced_string.append(replacement);
+            remaining = remaining.substring_view(*maybe_pos + needle.length());
+        }
+        break;
+    case ReplaceMode::FirstOnly:
+        // We already made the first replacement.
+        break;
+    }
+
+    // The remaining bits either don't contain the needle or are ignored due to
+    // `replace_mode` being `ReplaceMode::FirstOnly`.
+    replaced_string.append(remaining);
+
+    return replaced_string;
+}
+
+ByteString replace(StringView str, StringView needle, StringView replacement,
+    ReplaceMode replace_mode)
 {
     if (str.is_empty())
         return str;
 
-    Vector<size_t> positions;
-    if (replace_mode == ReplaceMode::All) {
-        positions = str.find_all(needle);
-        if (!positions.size())
-            return str;
-    } else {
-        auto pos = str.find(needle);
-        if (!pos.has_value())
-            return str;
-        positions.append(pos.value());
-    }
+    auto maybe_first = str.find(needle);
+    if (!maybe_first.has_value())
+        return str;
 
-    StringBuilder replaced_string;
-    size_t last_position = 0;
-    for (auto& position : positions) {
-        replaced_string.append(str.substring_view(last_position, position - last_position));
-        replaced_string.append(replacement);
-        last_position = position + needle.length();
-    }
-    replaced_string.append(str.substring_view(last_position, str.length() - last_position));
-    return replaced_string.to_byte_string();
+    auto resulting_builder = replace_into_builder(str, needle, replacement, replace_mode, *maybe_first);
+    return resulting_builder.to_byte_string();
 }
 
 ErrorOr<String> replace(String const& haystack, StringView needle, StringView replacement, ReplaceMode replace_mode)
@@ -554,28 +575,14 @@ ErrorOr<String> replace(String const& haystack, StringView needle, StringView re
     if (haystack.is_empty())
         return haystack;
 
-    // FIXME: Propagate Vector allocation failures (or do this without putting positions in a vector)
-    Vector<size_t> positions;
-    if (replace_mode == ReplaceMode::All) {
-        positions = haystack.bytes_as_string_view().find_all(needle);
-        if (!positions.size())
-            return haystack;
-    } else {
-        auto pos = haystack.bytes_as_string_view().find(needle);
-        if (!pos.has_value())
-            return haystack;
-        positions.append(pos.value());
-    }
+    auto const source_bytes = haystack.bytes_as_string_view();
 
-    StringBuilder replaced_string;
-    size_t last_position = 0;
-    for (auto& position : positions) {
-        replaced_string.append(haystack.bytes_as_string_view().substring_view(last_position, position - last_position));
-        replaced_string.append(replacement);
-        last_position = position + needle.length();
-    }
-    replaced_string.append(haystack.bytes_as_string_view().substring_view(last_position, haystack.bytes_as_string_view().length() - last_position));
-    return replaced_string.to_string();
+    auto maybe_first = source_bytes.find(needle);
+    if (!maybe_first.has_value())
+        return haystack;
+
+    auto resulting_builder = replace_into_builder(source_bytes, needle, replacement, replace_mode, *maybe_first);
+    return resulting_builder.to_string();
 }
 #endif
 
