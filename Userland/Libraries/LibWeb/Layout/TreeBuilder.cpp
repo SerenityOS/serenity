@@ -313,32 +313,10 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
-
-        // Special path for elements that use pseudo element as style selector.
-        if (element.use_pseudo_element().has_value()) {
-            // Get base psuedo element selector style properties
-            auto& parent_element = verify_cast<HTML::HTMLElement>(*element.root().parent_or_shadow_host());
-            style = TRY(style_computer.compute_style(parent_element, *element.use_pseudo_element()));
-
-            // Merge back inline styles
-            auto const* inline_style = element.inline_style();
-            if (inline_style) {
-                auto const& computed_style = element.computed_css_values();
-                for (size_t i = 0; i < inline_style->length(); i++) {
-                    auto property_id = inline_style->property_id_by_index(i);
-                    if (auto property = computed_style->maybe_null_property(property_id); property)
-                        style->set_property(property_id, *property);
-                }
-            }
-            display = style->display();
-        }
-        // Common path: this is a regular DOM element. Style should be present already, thanks to Document::update_style().
-        else {
-            element.clear_pseudo_element_nodes({});
-            VERIFY(!element.needs_style_update());
-            style = element.computed_css_values();
-            display = style->display();
-        }
+        element.clear_pseudo_element_nodes({});
+        VERIFY(!element.needs_style_update());
+        style = element.computed_css_values();
+        display = style->display();
         if (display.is_none())
             return {};
         layout_node = element.create_layout_node(*style);

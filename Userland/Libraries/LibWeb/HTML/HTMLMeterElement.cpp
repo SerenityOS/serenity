@@ -55,7 +55,6 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_value(double value)
 {
     TRY(set_attribute(HTML::AttributeNames::value, MUST(String::number(value))));
     update_meter_value_element();
-    document().invalidate_layout();
     return {};
 }
 
@@ -74,7 +73,6 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_min(double value)
 {
     TRY(set_attribute(HTML::AttributeNames::min, MUST(String::number(value))));
     update_meter_value_element();
-    document().invalidate_layout();
     return {};
 }
 
@@ -96,7 +94,6 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_max(double value)
 {
     TRY(set_attribute(HTML::AttributeNames::max, MUST(String::number(value))));
     update_meter_value_element();
-    document().invalidate_layout();
     return {};
 }
 
@@ -120,7 +117,6 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_low(double value)
 {
     TRY(set_attribute(HTML::AttributeNames::low, MUST(String::number(value))));
     update_meter_value_element();
-    document().invalidate_layout();
     return {};
 }
 
@@ -144,7 +140,6 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_high(double value)
 {
     TRY(set_attribute(HTML::AttributeNames::high, MUST(String::number(value))));
     update_meter_value_element();
-    document().invalidate_layout();
     return {};
 }
 
@@ -168,7 +163,6 @@ WebIDL::ExceptionOr<void> HTMLMeterElement::set_optimum(double value)
 {
     TRY(set_attribute(HTML::AttributeNames::optimum, MUST(String::number(value))));
     update_meter_value_element();
-    document().invalidate_layout();
     return {};
 }
 

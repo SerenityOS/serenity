@@ -82,11 +82,6 @@ String ResolvedCSSStyleDeclaration::item(size_t index) const
     return MUST(String::from_utf8(string_from_property_id(property_id)));
 }
 
-CSS::PropertyID ResolvedCSSStyleDeclaration::property_id_by_index(size_t index) const
-{
-    return static_cast<PropertyID>(index + to_underlying(first_longhand_property_id));
-}
-
 static NonnullRefPtr<StyleValue const> style_value_for_background_property(Layout::NodeWithStyle const& layout_node, Function<NonnullRefPtr<StyleValue const>(BackgroundLayerData const&)> callback, Function<NonnullRefPtr<StyleValue const>()> default_value)
 {
     auto const& background_layers = layout_node.background_layers();
