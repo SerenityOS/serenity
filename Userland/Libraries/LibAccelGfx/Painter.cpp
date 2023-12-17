@@ -168,6 +168,23 @@ void main() {
 }
 )";
 
+static void set_blending_mode(Painter::BlendingMode blending_mode)
+{
+    switch (blending_mode) {
+    case Painter::BlendingMode::AlphaAdd:
+        GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha, GL::BlendFactor::One, GL::BlendFactor::One);
+        break;
+    case Painter::BlendingMode::AlphaOverride:
+        GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha, GL::BlendFactor::One, GL::BlendFactor::Zero);
+        break;
+    case Painter::BlendingMode::AlphaPreserve:
+        GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha, GL::BlendFactor::Zero, GL::BlendFactor::One);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 HashMap<u32, GL::Texture> s_immutable_bitmap_texture_cache;
 
 NonnullOwnPtr<Painter> Painter::create(Context& context, NonnullRefPtr<Canvas> canvas)
@@ -249,12 +266,12 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
     GL::delete_vertex_array(vao);
 }
 
-void Painter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius)
+void Painter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius, BlendingMode blending_mode)
 {
-    fill_rect_with_rounded_corners(rect.to_type<float>(), color, top_left_radius, top_right_radius, bottom_left_radius, bottom_right_radius);
+    fill_rect_with_rounded_corners(rect.to_type<float>(), color, top_left_radius, top_right_radius, bottom_left_radius, bottom_right_radius, blending_mode);
 }
 
-void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius)
+void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius, BlendingMode blending_mode)
 {
     bind_target_canvas();
 
@@ -291,7 +308,8 @@ void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color c
     auto bottom_right_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uBottomRightRadius");
     GL::set_uniform(bottom_right_corner_radius_uniform, bottom_right_radius.horizontal_radius, bottom_right_radius.vertical_radius);
 
-    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha, GL::BlendFactor::One, GL::BlendFactor::One);
+    set_blending_mode(blending_mode);
+
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 
     GL::delete_buffer(vbo);
@@ -627,7 +645,13 @@ void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, 
     blit_scaled_texture(dst_rect, texture, { { 0, 0 }, canvas.size() }, Painter::ScalingMode::NearestNeighbor, opacity, move(affine_transform));
 }
 
-void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode, float opacity, Optional<Gfx::AffineTransform> affine_transform)
+void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, Gfx::FloatRect const& src_rect, float opacity, Optional<Gfx::AffineTransform> affine_transform, BlendingMode blending_mode)
+{
+    auto texture = GL::Texture(canvas.framebuffer().texture);
+    blit_scaled_texture(dst_rect, texture, src_rect, Painter::ScalingMode::NearestNeighbor, opacity, move(affine_transform), blending_mode);
+}
+
+void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode, float opacity, Optional<Gfx::AffineTransform> affine_transform, BlendingMode blending_mode)
 {
     bind_target_canvas();
 
@@ -689,7 +713,7 @@ void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture co
     auto scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
     GL::set_texture_scale_mode(scaling_mode_gl);
 
-    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha, GL::BlendFactor::One, GL::BlendFactor::One);
+    set_blending_mode(blending_mode);
 
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 

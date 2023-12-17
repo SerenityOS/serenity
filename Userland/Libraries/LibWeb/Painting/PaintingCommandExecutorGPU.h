@@ -71,10 +71,25 @@ private:
         int stacking_context_depth { 0 };
     };
 
+    struct BorderRadiusCornerClipper {
+        RefPtr<AccelGfx::Canvas> corners_sample_canvas;
+
+        Gfx::FloatRect page_top_left_rect;
+        Gfx::FloatRect page_top_right_rect;
+        Gfx::FloatRect page_bottom_right_rect;
+        Gfx::FloatRect page_bottom_left_rect;
+
+        Gfx::FloatRect sample_canvas_top_left_rect;
+        Gfx::FloatRect sample_canvas_top_right_rect;
+        Gfx::FloatRect sample_canvas_bottom_right_rect;
+        Gfx::FloatRect sample_canvas_bottom_left_rect;
+    };
+
     [[nodiscard]] AccelGfx::Painter const& painter() const { return *m_stacking_contexts.last().painter; }
     [[nodiscard]] AccelGfx::Painter& painter() { return *m_stacking_contexts.last().painter; }
 
     Vector<StackingContext> m_stacking_contexts;
+    Vector<OwnPtr<BorderRadiusCornerClipper>> m_corner_clippers;
 };
 
 }

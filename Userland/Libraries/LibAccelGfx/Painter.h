@@ -34,6 +34,8 @@ public:
     Painter(Context&, NonnullRefPtr<Canvas>);
     ~Painter();
 
+    Canvas const& canvas() { return *m_target_canvas; }
+
     void clear(Gfx::Color);
 
     void save();
@@ -51,6 +53,12 @@ public:
     enum class ScalingMode {
         NearestNeighbor,
         Bilinear,
+    };
+
+    enum class BlendingMode {
+        AlphaAdd,
+        AlphaOverride,
+        AlphaPreserve,
     };
 
     void draw_line(Gfx::IntPoint a, Gfx::IntPoint b, float thickness, Gfx::Color color);
@@ -76,11 +84,12 @@ public:
         float horizontal_radius;
         float vertical_radius;
     };
-    void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius);
-    void fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius);
+    void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius, BlendingMode = BlendingMode::AlphaAdd);
+    void fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius, BlendingMode = BlendingMode::AlphaAdd);
 
     void blit_canvas(Gfx::IntRect const& dst_rect, Canvas const&, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
     void blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
+    void blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, Gfx::FloatRect const& src_rect, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {}, BlendingMode = BlendingMode::AlphaAdd);
 
     enum class BlurDirection {
         Horizontal,
@@ -101,7 +110,7 @@ private:
     [[nodiscard]] State& state() { return m_state_stack.last(); }
     [[nodiscard]] State const& state() const { return m_state_stack.last(); }
 
-    void blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, ScalingMode, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
+    void blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, ScalingMode, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {}, BlendingMode = BlendingMode::AlphaAdd);
     void blit_blurred_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, int radius, BlurDirection direction, ScalingMode = ScalingMode::NearestNeighbor);
     void bind_target_canvas();
 

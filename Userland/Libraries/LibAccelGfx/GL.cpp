@@ -30,6 +30,8 @@ static GLenum to_gl_enum(BlendFactor factor)
         return GL_SRC_ALPHA;
     case BlendFactor::One:
         return GL_ONE;
+    case BlendFactor::Zero:
+        return GL_ZERO;
     case BlendFactor::OneMinusSrcAlpha:
         return GL_ONE_MINUS_SRC_ALPHA;
     }
