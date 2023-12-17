@@ -87,13 +87,38 @@ private:
         return NumericLimits<u8>::max() * value / ((1 << bits) - 1);
     }
 
+    u8 samples_for_photometric_interpretation() const
+    {
+        switch (*m_metadata.photometric_interpretation()) {
+        case PhotometricInterpretation::WhiteIsZero:
+        case PhotometricInterpretation::BlackIsZero:
+            return 1;
+        case PhotometricInterpretation::RGB:
+            return 3;
+        default:
+            TODO();
+        }
+    }
+
     ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
     {
         auto bits_per_sample = *m_metadata.bits_per_sample();
+
+        // Section 7: Additional Baseline TIFF Requirements
+        // Some TIFF files may have more components per pixel than you think. A Baseline TIFF reader must skip over
+        // them gracefully, using the values of the SamplesPerPixel and BitsPerSample fields.
+        auto discard_unknown_channels = [&]() -> ErrorOr<void> {
+            auto const unknown_channels = *m_metadata.samples_per_pixel() - samples_for_photometric_interpretation();
+            for (u8 i = bits_per_sample.size() - unknown_channels; i < bits_per_sample.size(); ++i)
+                TRY(read_component(stream, bits_per_sample[i]));
+            return {};
+        };
+
         if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGB) {
             auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
             auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
             auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
+            TRY(discard_unknown_channels());
             return Color(first_component, second_component, third_component);
         }
 
@@ -104,6 +129,7 @@ private:
             if (m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero)
                 luminosity = ~luminosity;
 
+            TRY(discard_unknown_channels());
             return Color(luminosity, luminosity, luminosity);
         }
 
