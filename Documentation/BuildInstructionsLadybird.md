@@ -21,7 +21,7 @@ sudo apt install qt6-wayland
 On Arch Linux/Manjaro:
 
 ```
-sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland qt6-multimedia ccache
+sudo pacman -S --needed base-devel cmake libgl llvm ninja qt6-base qt6-tools qt6-wayland qt6-multimedia ccache
 ```
 
 On Fedora or derivatives:
