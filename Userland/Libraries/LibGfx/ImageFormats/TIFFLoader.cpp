@@ -88,12 +88,22 @@ private:
 
     u8 number_of_unknown_channel() const
     {
+        u8 number_alpha_channel = 0;
+        if (m_metadata.extra_samples().has_value()) {
+            for (auto const& value : m_metadata.extra_samples().value()) {
+                if (value != ExtraSample::Unspecified) {
+                    number_alpha_channel = 1;
+                    break;
+                }
+            }
+        }
+
         switch (*m_metadata.photometric_interpretation()) {
         case PhotometricInterpretation::WhiteIsZero:
         case PhotometricInterpretation::BlackIsZero:
             return *m_metadata.samples_per_pixel() - 1;
         case PhotometricInterpretation::RGB:
-            return *m_metadata.samples_per_pixel() - 3;
+            return *m_metadata.samples_per_pixel() - 3 - number_alpha_channel;
         default:
             TODO();
         }
@@ -113,12 +123,24 @@ private:
             return {};
         };
 
+        auto read_alpha = [&]() -> ErrorOr<u8> {
+            if (m_metadata.extra_samples().has_value()) {
+                auto const extra_sample = m_metadata.extra_samples().value();
+                if (extra_sample.size() > 0 && extra_sample[extra_sample.size() - 1] == ExtraSample::AssociatedAlpha) {
+                    return TRY(read_component(stream, bits_per_sample[3 + extra_sample.size() - 1]));
+                }
+            }
+            return NumericLimits<u8>::max();
+        };
+
         if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGB) {
             auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
             auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
             auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
             TRY(discard_unknown_channels());
-            return Color(first_component, second_component, third_component);
+
+            auto const alpha = TRY(read_alpha());
+            return Color(first_component, second_component, third_component, alpha);
         }
 
         if (*m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero
