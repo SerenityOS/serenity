@@ -100,6 +100,18 @@ private:
         }
     }
 
+    Optional<u8> alpha_channel_index() const
+    {
+        if (m_metadata.extra_samples().has_value()) {
+            auto const extra_samples = m_metadata.extra_samples().value();
+            for (u8 i = 0; i < extra_samples.size(); ++i) {
+                if (extra_samples[i] == ExtraSample::UnassociatedAlpha)
+                    return i + samples_for_photometric_interpretation();
+            }
+        }
+        return OptionalNone {};
+    }
+
     ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
     {
         auto bits_per_sample = *m_metadata.bits_per_sample();
@@ -107,19 +119,32 @@ private:
         // Section 7: Additional Baseline TIFF Requirements
         // Some TIFF files may have more components per pixel than you think. A Baseline TIFF reader must skip over
         // them gracefully, using the values of the SamplesPerPixel and BitsPerSample fields.
-        auto discard_unknown_channels = [&]() -> ErrorOr<void> {
-            auto const unknown_channels = *m_metadata.samples_per_pixel() - samples_for_photometric_interpretation();
-            for (u8 i = bits_per_sample.size() - unknown_channels; i < bits_per_sample.size(); ++i)
-                TRY(read_component(stream, bits_per_sample[i]));
-            return {};
+        auto manage_extra_channels = [&]() -> ErrorOr<u8> {
+            // Both unknown and alpha channels are considered as extra channels, so let's iterate over
+            // them, conserve the alpha value (if any) and discard everything else.
+
+            auto const number_base_channels = samples_for_photometric_interpretation();
+            auto const alpha_index = alpha_channel_index();
+
+            Optional<u8> alpha {};
+
+            for (u8 i = number_base_channels; i < bits_per_sample.size(); ++i) {
+                if (alpha_index == i)
+                    alpha = TRY(read_component(stream, bits_per_sample[i]));
+                else
+                    TRY(read_component(stream, bits_per_sample[i]));
+            }
+
+            return alpha.value_or(NumericLimits<u8>::max());
         };
 
         if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGB) {
             auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
             auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
             auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
-            TRY(discard_unknown_channels());
-            return Color(first_component, second_component, third_component);
+
+            auto const alpha = TRY(manage_extra_channels());
+            return Color(first_component, second_component, third_component, alpha);
         }
 
         if (*m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero
@@ -129,8 +154,8 @@ private:
             if (m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero)
                 luminosity = ~luminosity;
 
-            TRY(discard_unknown_channels());
-            return Color(luminosity, luminosity, luminosity);
+            auto const alpha = TRY(manage_extra_channels());
+            return Color(luminosity, luminosity, luminosity, alpha);
         }
 
         return Error::from_string_literal("Unsupported value for PhotometricInterpretation");
