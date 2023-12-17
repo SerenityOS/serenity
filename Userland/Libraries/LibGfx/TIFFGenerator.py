@@ -61,6 +61,12 @@ class PhotometricInterpretation(EnumWithExportName):
     CIELab = 8
 
 
+class ExtraSample(EnumWithExportName):
+    Unspecified = 0
+    AssociatedAlpha = 1
+    UnassociatedAlpha = 2
+
+
 tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum']
 
 Tag = namedtuple(
@@ -81,6 +87,7 @@ known_tags: List[Tag] = [
     Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip"),
     Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts"),
     Tag('317', [TIFFType.UnsignedShort], [1], Predictor.NoPrediction, "Predictor", Predictor),
+    Tag('338', [TIFFType.UnsignedShort], [], None, "ExtraSamples", ExtraSample),
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
 
