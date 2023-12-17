@@ -407,6 +407,26 @@ TEST_CASE(find)
     EXPECT_EQ(AK::StringUtils::find(test_string, "78"sv).has_value(), false);
 }
 
+TEST_CASE(replace_all_overlapping)
+{
+    // Replace only should take into account non-overlapping instances of the
+    // needle, since it is looking to replace them.
+
+    // These samples were grabbed from ADKaster's sample code in
+    // https://github.com/SerenityOS/jakt/issues/1159. This is the equivalent
+    // C++ code that triggered the same bug from Jakt's code generator.
+
+    auto const replace_like_in_jakt = [](StringView source) -> ByteString {
+        ByteString replaced = AK::StringUtils::replace(source, "\\\""sv, "\""sv, ReplaceMode::All);
+        replaced = AK::StringUtils::replace(replaced.view(), "\\\\"sv, "\\"sv, ReplaceMode::All);
+        return replaced;
+    };
+
+    EXPECT_EQ(replace_like_in_jakt("\\\\\\\\\\\\\\\\"sv), "\\\\\\\\"sv);
+    EXPECT_EQ(replace_like_in_jakt(" auto str4 = \"\\\";"sv), " auto str4 = \"\";"sv);
+    EXPECT_EQ(replace_like_in_jakt(" auto str5 = \"\\\\\";"sv), " auto str5 = \"\\\";"sv);
+}
+
 TEST_CASE(to_snakecase)
 {
     EXPECT_EQ(AK::StringUtils::to_snakecase("foobar"sv), "foobar");
