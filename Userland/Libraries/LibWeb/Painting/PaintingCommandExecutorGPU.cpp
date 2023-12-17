@@ -5,6 +5,7 @@
  */
 
 #include <LibAccelGfx/GlyphAtlas.h>
+#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
 
 namespace Web::Painting {
@@ -290,15 +291,77 @@ CommandResult PaintingCommandExecutorGPU::draw_triangle_wave(Gfx::IntPoint const
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::sample_under_corners(u32, CornerRadii const&, Gfx::IntRect const&, CornerClip)
+CommandResult PaintingCommandExecutorGPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip)
 {
-    // FIXME
+    m_corner_clippers.resize(id + 1);
+    m_corner_clippers[id] = make<BorderRadiusCornerClipper>();
+    auto& corner_clipper = *m_corner_clippers[id];
+
+    auto const& top_left = corner_radii.top_left;
+    auto const& top_right = corner_radii.top_right;
+    auto const& bottom_right = corner_radii.bottom_right;
+    auto const& bottom_left = corner_radii.bottom_left;
+
+    auto sampling_config = calculate_border_radius_sampling_config(corner_radii, border_rect);
+    auto const& page_locations = sampling_config.page_locations;
+    auto const& bitmap_locations = sampling_config.bitmap_locations;
+
+    auto top_left_corner_size = Gfx::IntSize { top_left.horizontal_radius, top_left.vertical_radius };
+    auto top_right_corner_size = Gfx::IntSize { top_right.horizontal_radius, top_right.vertical_radius };
+    auto bottom_right_corner_size = Gfx::IntSize { bottom_right.horizontal_radius, bottom_right.vertical_radius };
+    auto bottom_left_corner_size = Gfx::IntSize { bottom_left.horizontal_radius, bottom_left.vertical_radius };
+
+    corner_clipper.page_top_left_rect = { page_locations.top_left, top_left_corner_size };
+    corner_clipper.page_top_right_rect = { page_locations.top_right, top_right_corner_size };
+    corner_clipper.page_bottom_right_rect = { page_locations.bottom_right, bottom_right_corner_size };
+    corner_clipper.page_bottom_left_rect = { page_locations.bottom_left, bottom_left_corner_size };
+
+    corner_clipper.sample_canvas_top_left_rect = { bitmap_locations.top_left, top_left_corner_size };
+    corner_clipper.sample_canvas_top_right_rect = { bitmap_locations.top_right, top_right_corner_size };
+    corner_clipper.sample_canvas_bottom_right_rect = { bitmap_locations.bottom_right, bottom_right_corner_size };
+    corner_clipper.sample_canvas_bottom_left_rect = { bitmap_locations.bottom_left, bottom_left_corner_size };
+
+    corner_clipper.corners_sample_canvas = AccelGfx::Canvas::create(sampling_config.corners_bitmap_size);
+    auto corner_painter = AccelGfx::Painter::create(m_context, *corner_clipper.corners_sample_canvas);
+    corner_painter->clear(Color::White);
+
+    corner_painter->fill_rect_with_rounded_corners(
+        Gfx::IntRect { { 0, 0 }, sampling_config.corners_bitmap_size },
+        Color::Transparent,
+        { static_cast<float>(top_left.horizontal_radius), static_cast<float>(top_left.vertical_radius) },
+        { static_cast<float>(top_right.horizontal_radius), static_cast<float>(top_right.vertical_radius) },
+        { static_cast<float>(bottom_right.horizontal_radius), static_cast<float>(bottom_right.vertical_radius) },
+        { static_cast<float>(bottom_left.horizontal_radius), static_cast<float>(bottom_left.vertical_radius) },
+        AccelGfx::Painter::BlendingMode::AlphaOverride);
+
+    auto const& target_canvas = painter().canvas();
+    if (!corner_clipper.sample_canvas_top_left_rect.is_empty())
+        corner_painter->blit_canvas(corner_clipper.sample_canvas_top_left_rect, target_canvas, painter().transform().map(corner_clipper.page_top_left_rect), 1.0f, {}, AccelGfx::Painter::BlendingMode::AlphaPreserve);
+    if (!corner_clipper.sample_canvas_top_right_rect.is_empty())
+        corner_painter->blit_canvas(corner_clipper.sample_canvas_top_right_rect, target_canvas, painter().transform().map(corner_clipper.page_top_right_rect), 1.0f, {}, AccelGfx::Painter::BlendingMode::AlphaPreserve);
+    if (!corner_clipper.sample_canvas_bottom_right_rect.is_empty())
+        corner_painter->blit_canvas(corner_clipper.sample_canvas_bottom_right_rect, target_canvas, painter().transform().map(corner_clipper.page_bottom_right_rect), 1.0f, {}, AccelGfx::Painter::BlendingMode::AlphaPreserve);
+    if (!corner_clipper.sample_canvas_bottom_left_rect.is_empty())
+        corner_painter->blit_canvas(corner_clipper.sample_canvas_bottom_left_rect, target_canvas, painter().transform().map(corner_clipper.page_bottom_left_rect), 1.0f, {}, AccelGfx::Painter::BlendingMode::AlphaPreserve);
+
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(u32)
+CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(u32 id)
 {
-    // FIXME
+    auto const& corner_clipper = *m_corner_clippers[id];
+    auto const& corner_sample_canvas = *corner_clipper.corners_sample_canvas;
+    if (!corner_clipper.sample_canvas_top_left_rect.is_empty())
+        painter().blit_canvas(corner_clipper.page_top_left_rect, corner_sample_canvas, corner_clipper.sample_canvas_top_left_rect);
+    if (!corner_clipper.sample_canvas_top_right_rect.is_empty())
+        painter().blit_canvas(corner_clipper.page_top_right_rect, corner_sample_canvas, corner_clipper.sample_canvas_top_right_rect);
+    if (!corner_clipper.sample_canvas_bottom_right_rect.is_empty())
+        painter().blit_canvas(corner_clipper.page_bottom_right_rect, corner_sample_canvas, corner_clipper.sample_canvas_bottom_right_rect);
+    if (!corner_clipper.sample_canvas_bottom_left_rect.is_empty())
+        painter().blit_canvas(corner_clipper.page_bottom_left_rect, corner_sample_canvas, corner_clipper.sample_canvas_bottom_left_rect);
+
+    m_corner_clippers[id].clear();
+
     return CommandResult::Continue;
 }
 

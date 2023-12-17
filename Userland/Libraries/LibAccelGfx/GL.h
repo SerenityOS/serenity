@@ -61,6 +61,7 @@ struct Framebuffer {
 void set_viewport(Gfx::IntRect);
 
 enum class BlendFactor {
+    Zero,
     One,
     OneMinusSrcAlpha,
     SrcAlpha,
