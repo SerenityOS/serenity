@@ -2136,6 +2136,20 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
 {
     build_rule_cache_if_needed();
 
+    // Special path for elements that use pseudo element as style selector
+    if (element.use_pseudo_element().has_value()) {
+        auto& parent_element = verify_cast<HTML::HTMLElement>(*element.root().parent_or_shadow_host());
+        auto style = TRY(compute_style(parent_element, *element.use_pseudo_element()));
+
+        // Merge back inline styles
+        if (element.has_attribute(HTML::AttributeNames::style)) {
+            auto* inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), *element.get_attribute(HTML::AttributeNames::style), element);
+            for (auto const& property : inline_style->properties())
+                style->set_property(property.property_id, property.value);
+        }
+        return style;
+    }
+
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
     bool did_match_any_pseudo_element_rules = false;

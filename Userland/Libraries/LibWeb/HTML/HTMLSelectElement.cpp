@@ -213,7 +213,6 @@ WebIDL::ExceptionOr<void> HTMLSelectElement::set_value(String const& value)
     for (auto const& option_element : list_of_options())
         option_element->set_selected(option_element->value() == value);
     update_inner_text_element();
-    document().invalidate_layout();
 
     // When the user agent is to send select update notifications, queue an element task on the user interaction task source given the select element to run these steps:
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
@@ -323,7 +322,6 @@ void HTMLSelectElement::form_associated_element_was_inserted()
             if (options.size() > 0) {
                 options.at(0)->set_selected(true);
                 update_inner_text_element();
-                document().invalidate_layout();
             }
         }
     });
