@@ -83,7 +83,7 @@ private:
 
         if (bits > 8)
             return value >> (bits - 8);
-        return value << (8 - bits);
+        return NumericLimits<u8>::max() * value / ((1 << bits) - 1);
     }
 
     ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
