@@ -90,14 +90,15 @@ private:
     ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
     {
         auto bits_per_sample = *m_metadata.bits_per_sample();
-        if (m_metadata.samples_per_pixel().value_or(3) == 3) {
+        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGB) {
             auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
             auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
             auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
             return Color(first_component, second_component, third_component);
         }
 
-        if (*m_metadata.samples_per_pixel() == 1) {
+        if (*m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero
+            || *m_metadata.photometric_interpretation() == PhotometricInterpretation::BlackIsZero) {
             auto luminosity = TRY(read_component(stream, bits_per_sample[0]));
 
             if (m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero)
@@ -106,7 +107,7 @@ private:
             return Color(luminosity, luminosity, luminosity);
         }
 
-        return Error::from_string_literal("Unsupported number of sample per pixel");
+        return Error::from_string_literal("Unsupported value for PhotometricInterpretation");
     }
 
     template<CallableAs<ErrorOr<ReadonlyBytes>, u32> StripDecoder>
