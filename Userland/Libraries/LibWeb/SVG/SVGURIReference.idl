@@ -1,0 +1,3 @@
+interface mixin SVGURIReference {
+  // FIXME: [SameObject] readonly attribute SVGAnimatedString href;
+};

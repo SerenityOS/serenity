@@ -458,6 +458,7 @@ set(SOURCES
     Layout/SVGGraphicsBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/SVGTextBox.cpp
+    Layout/SVGTextPathBox.cpp
     Layout/TableFormattingContext.cpp
     Layout/TableGrid.cpp
     Layout/TableWrapper.cpp
@@ -584,6 +585,7 @@ set(SOURCES
     SVG/SVGSymbolElement.cpp
     SVG/SVGTextContentElement.cpp
     SVG/SVGTextElement.cpp
+    SVG/SVGTextPathElement.cpp
     SVG/SVGTextPositioningElement.cpp
     SVG/SVGTitleElement.cpp
     SVG/SVGTSpanElement.cpp

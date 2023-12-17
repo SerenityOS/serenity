@@ -9,11 +9,14 @@
 
 #include <AK/Debug.h>
 #include <LibGfx/BoundingBox.h>
+#include <LibGfx/Font/ScaledFont.h>
+#include <LibGfx/TextLayout.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Layout/SVGTextBox.h>
+#include <LibWeb/Layout/SVGTextPathBox.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
 #include <LibWeb/SVG/SVGMaskElement.h>
@@ -253,6 +256,18 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
 
                 path.move_to(text_offset);
                 path.text(text_utf8, font);
+            } else if (is<SVGTextPathBox>(descendant)) {
+                auto& text_path_element = static_cast<SVG::SVGTextPathElement&>(dom_node);
+                auto path_or_shape = text_path_element.path_or_shape();
+                if (!path_or_shape)
+                    return IterationDecision::Continue;
+
+                auto& font = graphics_box.first_available_font();
+                auto text_contents = text_path_element.text_contents();
+                Utf8View text_utf8 { text_contents };
+
+                auto shape_path = const_cast<SVG::SVGGeometryElement&>(*path_or_shape).get_path();
+                path = shape_path.place_text_along(text_utf8, font);
             }
 
             auto path_bounding_box = to_css_pixels_transform.map(path.bounding_box()).to_type<CSSPixels>();

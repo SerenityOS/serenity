@@ -105,6 +105,7 @@
 #include <LibWeb/SVG/SVGSymbolElement.h>
 #include <LibWeb/SVG/SVGTSpanElement.h>
 #include <LibWeb/SVG/SVGTextElement.h>
+#include <LibWeb/SVG/SVGTextPathElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -468,6 +469,8 @@ static JS::GCPtr<SVG::SVGElement> create_svg_element(JS::Realm& realm, Document&
         return realm.heap().allocate<SVG::SVGSymbolElement>(realm, document, move(qualified_name));
     if (local_name == SVG::TagNames::text)
         return realm.heap().allocate<SVG::SVGTextElement>(realm, document, move(qualified_name));
+    if (local_name == SVG::TagNames::textPath)
+        return realm.heap().allocate<SVG::SVGTextPathElement>(realm, document, move(qualified_name));
     if (local_name == SVG::TagNames::title)
         return realm.heap().allocate<SVG::SVGTitleElement>(realm, document, move(qualified_name));
     if (local_name == SVG::TagNames::tspan)
