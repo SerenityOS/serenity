@@ -45,8 +45,8 @@ void GlyphAtlas::update(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_
         glyphs_sorted_by_height.append(atlas_key);
     }
     quick_sort(glyphs_sorted_by_height, [&](auto const& a, auto const& b) {
-        auto const& bitmap_a = *glyph_bitmaps.get(a);
-        auto const& bitmap_b = *glyph_bitmaps.get(b);
+        auto const* bitmap_a = *glyph_bitmaps.get(a);
+        auto const* bitmap_b = *glyph_bitmaps.get(b);
         return bitmap_a->height() > bitmap_b->height();
     });
 
@@ -56,7 +56,7 @@ void GlyphAtlas::update(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_
     int const texture_width = 512;
     int const padding = 1;
     for (auto const& glyphs_texture_key : glyphs_sorted_by_height) {
-        auto const& bitmap = *glyph_bitmaps.get(glyphs_texture_key);
+        auto const* bitmap = *glyph_bitmaps.get(glyphs_texture_key);
         if (current_x + bitmap->width() > texture_width) {
             current_x = 0;
             current_y += row_height + padding;
