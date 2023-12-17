@@ -16,6 +16,21 @@ enum class CornerClip {
     Inside
 };
 
+struct BorderRadiusSamplingConfig {
+    CornerRadii corner_radii;
+    struct CornerLocations {
+        Gfx::IntPoint top_left;
+        Gfx::IntPoint top_right;
+        Gfx::IntPoint bottom_right;
+        Gfx::IntPoint bottom_left;
+    };
+    CornerLocations page_locations;
+    CornerLocations bitmap_locations;
+    Gfx::IntSize corners_bitmap_size;
+};
+
+BorderRadiusSamplingConfig calculate_border_radius_sampling_config(CornerRadii const& corner_radii, Gfx::IntRect const& border_rect);
+
 class BorderRadiusCornerClipper : public RefCounted<BorderRadiusCornerClipper> {
 public:
     static ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> create(CornerRadii const&, DevicePixelRect const& border_rect, CornerClip corner_clip = CornerClip::Outside);
@@ -23,22 +38,12 @@ public:
     void sample_under_corners(Gfx::Painter& page_painter);
     void blit_corner_clipping(Gfx::Painter& page_painter);
 
-    struct CornerData {
-        CornerRadii corner_radii;
-        struct CornerLocations {
-            DevicePixelPoint top_left;
-            DevicePixelPoint top_right;
-            DevicePixelPoint bottom_right;
-            DevicePixelPoint bottom_left;
-        };
-        CornerLocations page_locations;
-        CornerLocations bitmap_locations;
-    } m_data;
+    BorderRadiusSamplingConfig m_data;
 
     DevicePixelRect border_rect() const { return m_border_rect; }
 
-    BorderRadiusCornerClipper(CornerData corner_data, NonnullRefPtr<Gfx::Bitmap> corner_bitmap, CornerClip corner_clip, DevicePixelRect const& border_rect)
-        : m_data(move(corner_data))
+    BorderRadiusCornerClipper(BorderRadiusSamplingConfig corner_data, NonnullRefPtr<Gfx::Bitmap> corner_bitmap, CornerClip corner_clip, DevicePixelRect const& border_rect)
+        : m_data(corner_data)
         , m_corner_bitmap(corner_bitmap)
         , m_corner_clip(corner_clip)
         , m_border_rect(border_rect)

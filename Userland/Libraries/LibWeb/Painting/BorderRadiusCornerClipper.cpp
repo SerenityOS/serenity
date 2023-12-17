@@ -11,16 +11,14 @@
 
 namespace Web::Painting {
 
-ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::create(CornerRadii const& corner_radii, DevicePixelRect const& border_rect, CornerClip corner_clip)
+BorderRadiusSamplingConfig calculate_border_radius_sampling_config(CornerRadii const& corner_radii, Gfx::IntRect const& border_rect)
 {
-    VERIFY(corner_radii.has_any_radius());
-
     auto top_left = corner_radii.top_left;
     auto top_right = corner_radii.top_right;
     auto bottom_right = corner_radii.bottom_right;
     auto bottom_left = corner_radii.bottom_left;
 
-    DevicePixelSize corners_bitmap_size {
+    Gfx::IntSize corners_bitmap_size {
         max(
             max(
                 top_left.horizontal_radius + top_right.horizontal_radius,
@@ -37,14 +35,21 @@ ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::cre
                 top_right.vertical_radius + bottom_right.vertical_radius))
     };
 
-    RefPtr<Gfx::Bitmap> corner_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size.to_type<int>()));
-
-    CornerData corner_data {
+    BorderRadiusSamplingConfig corner_data {
         .corner_radii = corner_radii,
         .page_locations = { .top_left = border_rect.top_left(), .top_right = border_rect.top_right().translated(-top_right.horizontal_radius, 0), .bottom_right = border_rect.bottom_right().translated(-bottom_right.horizontal_radius, -bottom_right.vertical_radius), .bottom_left = border_rect.bottom_left().translated(0, -bottom_left.vertical_radius) },
         .bitmap_locations = { .top_left = { 0, 0 }, .top_right = { corners_bitmap_size.width() - top_right.horizontal_radius, 0 }, .bottom_right = { corners_bitmap_size.width() - bottom_right.horizontal_radius, corners_bitmap_size.height() - bottom_right.vertical_radius }, .bottom_left = { 0, corners_bitmap_size.height() - bottom_left.vertical_radius } },
+        .corners_bitmap_size = corners_bitmap_size,
     };
 
+    return corner_data;
+}
+
+ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::create(CornerRadii const& corner_radii, DevicePixelRect const& border_rect, CornerClip corner_clip)
+{
+    VERIFY(corner_radii.has_any_radius());
+    auto corner_data = calculate_border_radius_sampling_config(corner_radii, border_rect.to_type<int>());
+    RefPtr<Gfx::Bitmap> corner_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, corner_data.corners_bitmap_size));
     return try_make_ref_counted<BorderRadiusCornerClipper>(corner_data, corner_bitmap.release_nonnull(), corner_clip, border_rect);
 }
 
@@ -77,13 +82,13 @@ void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
 
     // Copy the pixels under the corner mask (using the alpha of the mask):
     if (m_data.corner_radii.top_left)
-        copy_page_masked(m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left.to_type<int>()), m_data.page_locations.top_left.to_type<int>());
+        copy_page_masked(m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left), m_data.page_locations.top_left);
     if (m_data.corner_radii.top_right)
-        copy_page_masked(m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right.to_type<int>()), m_data.page_locations.top_right.to_type<int>());
+        copy_page_masked(m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right), m_data.page_locations.top_right);
     if (m_data.corner_radii.bottom_right)
-        copy_page_masked(m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right.to_type<int>()), m_data.page_locations.bottom_right.to_type<int>());
+        copy_page_masked(m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right), m_data.page_locations.bottom_right);
     if (m_data.corner_radii.bottom_left)
-        copy_page_masked(m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left.to_type<int>()), m_data.page_locations.bottom_left.to_type<int>());
+        copy_page_masked(m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left), m_data.page_locations.bottom_left);
 
     m_has_sampled = true;
 }
@@ -94,13 +99,13 @@ void BorderRadiusCornerClipper::blit_corner_clipping(Gfx::Painter& painter)
 
     // Restore the corners:
     if (m_data.corner_radii.top_left)
-        painter.blit(m_data.page_locations.top_left.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left.to_type<int>()));
+        painter.blit(m_data.page_locations.top_left, *m_corner_bitmap, m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left));
     if (m_data.corner_radii.top_right)
-        painter.blit(m_data.page_locations.top_right.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right.to_type<int>()));
+        painter.blit(m_data.page_locations.top_right, *m_corner_bitmap, m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right));
     if (m_data.corner_radii.bottom_right)
-        painter.blit(m_data.page_locations.bottom_right.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right.to_type<int>()));
+        painter.blit(m_data.page_locations.bottom_right, *m_corner_bitmap, m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right));
     if (m_data.corner_radii.bottom_left)
-        painter.blit(m_data.page_locations.bottom_left.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left.to_type<int>()));
+        painter.blit(m_data.page_locations.bottom_left, *m_corner_bitmap, m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left));
 }
 
 ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
