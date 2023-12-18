@@ -25,7 +25,6 @@ endpoint WebContentClient
     did_change_title(ByteString title) =|
     did_request_scroll(i32 x_delta, i32 y_delta) =|
     did_request_scroll_to(Gfx::IntPoint scroll_position) =|
-    did_request_scroll_into_view(Gfx::IntRect rect) =|
     did_enter_tooltip_area(Gfx::IntPoint content_position, ByteString title) =|
     did_leave_tooltip_area() =|
     did_hover_link(URL url) =|
