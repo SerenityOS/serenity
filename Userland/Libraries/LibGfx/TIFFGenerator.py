@@ -123,6 +123,7 @@ known_tags: List[Tag] = [
     Tag('296', [TIFFType.UnsignedShort], [], ResolutionUnit.Inch, "ResolutionUnit", ResolutionUnit),
     Tag('339', [TIFFType.UnsignedShort], [], SampleFormat.Unsigned, "SampleFormat", SampleFormat),
     Tag('317', [TIFFType.UnsignedShort], [1], Predictor.NoPrediction, "Predictor", Predictor),
+    Tag('320', [TIFFType.UnsignedShort], [], None, "ColorMap"),
     Tag('338', [TIFFType.UnsignedShort], [], None, "ExtraSamples", ExtraSample),
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
