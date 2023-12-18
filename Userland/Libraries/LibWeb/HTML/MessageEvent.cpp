@@ -59,7 +59,7 @@ JS::NonnullGCPtr<JS::Object> MessageEvent::ports() const
     if (!m_ports_array) {
         Vector<JS::Value> port_vector;
         for (auto const& port : m_ports) {
-            port_vector.append(JS::Value(port.ptr()));
+            port_vector.append(port);
         }
         m_ports_array = JS::Array::create_from(realm(), port_vector);
         MUST(m_ports_array->set_integrity_level(IntegrityLevel::Frozen));

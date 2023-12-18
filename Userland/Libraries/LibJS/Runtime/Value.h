@@ -287,6 +287,12 @@ public:
     {
     }
 
+    template<typename T>
+    Value(Handle<T> const& ptr)
+        : Value(ptr.ptr())
+    {
+    }
+
     double as_double() const
     {
         VERIFY(is_number());

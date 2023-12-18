@@ -942,7 +942,7 @@ WebIDL::ExceptionOr<SerializedTransferRecord> structured_serialize_with_transfer
         // FIXME: 2. If transferable has an [[ArrayBufferData]] internal slot and IsSharedArrayBuffer(transferable) is true, then throw a "DataCloneError" DOMException.
 
         // 3. If memory[transferable] exists, then throw a "DataCloneError" DOMException.
-        auto transferable_value = JS::Value(transferable.ptr());
+        auto transferable_value = JS::Value(transferable);
         if (memory.contains(transferable_value)) {
             return WebIDL::DataCloneError::create(*vm.current_realm(), "Cannot transfer value twice"_fly_string);
         }
