@@ -213,11 +213,6 @@ static bool build_audio_document(DOM::Document& document)
 bool parse_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding)
 {
     auto& mime_type = document.content_type();
-    if (mime_type == "text/html") {
-        auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
-        parser->run(document.url());
-        return true;
-    }
     if (mime_type.ends_with_bytes("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
         return build_xml_document(document, data, move(content_encoding));
     if (mime_type.starts_with_bytes("image/"sv))
@@ -257,6 +252,55 @@ static bool is_supported_document_mime_type(StringView mime_type)
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#navigate-html
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_html_document(HTML::NavigationParams& navigation_params)
+{
+    // To load an HTML document, given navigation params navigationParams:
+
+    // 1. Let document be the result of creating and initializing a Document object given "html", "text/html", and navigationParams.
+    auto document = TRY(DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params));
+
+    // 2. If document's URL is about:blank, then populate with html/head/body given document.
+    // FIXME: The additional check for a non-empty body fixes issues with loading javascript urls in iframes, which
+    //        default to an "about:blank" url. Is this a spec bug?
+    if (document->url_string() == "about:blank"_string
+        && navigation_params.response->body()->length().value_or(0) == 0) {
+        TRY(document->populate_with_html_head_and_body());
+        // Nothing else is added to the document, so mark it as loaded.
+        HTML::HTMLParser::the_end(document);
+    }
+
+    // 3. Otherwise, create an HTML parser and associate it with the document.
+    //    Each task that the networking task source places on the task queue while fetching runs must then fill the
+    //    parser's input byte stream with the fetched bytes and cause the HTML parser to perform the appropriate
+    //    processing of the input stream.
+    //    The first task that the networking task source places on the task queue while fetching runs must process link
+    //    headers given document, navigationParams's response, and "media", after the task has been processed by the
+    //    HTML parser.
+    //    Before any script execution occurs, the user agent must wait for scripts may run for the newly-created
+    //    document to be true for document.
+    //    When no more bytes are available, the user agent must queue a global task on the networking task source given
+    //    document's relevant global object to have the parser to process the implied EOF character, which eventually
+    //    causes a load event to be fired.
+    else {
+        // FIXME: Parse as we receive the document data, instead of waiting for the whole document to be fetched first.
+        auto process_body = [document, url = navigation_params.response->url().value()](ByteBuffer data) {
+            auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
+            parser->run(url);
+        };
+
+        auto process_body_error = [](auto) {
+            dbgln("FIXME: Load html page with an error if read of body failed.");
+        };
+
+        auto& realm = document->realm();
+        TRY(navigation_params.response->body()->fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }));
+    }
+
+    // 4. Return document.
+    return document;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 {
@@ -277,7 +321,8 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 
     // -> an HTML MIME type
     if (type.is_html()) {
-        // FIXME: Return the result of loading an HTML document, given navigationParams.
+        // Return the result of loading an HTML document, given navigationParams.
+        return load_html_document(navigation_params).release_value_but_fixme_should_propagate_errors();
     }
 
     // -> an XML MIME type that is not an explicitly supported XML MIME type
