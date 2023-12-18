@@ -25,7 +25,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TransformStream>> TransformStream::construc
     auto stream = realm.heap().allocate<TransformStream>(realm, realm);
 
     // 1. If transformer is missing, set it to null.
-    auto transformer = transformer_object.has_value() ? JS::Value { transformer_object.value().ptr() } : JS::js_null();
+    auto transformer = transformer_object.has_value() ? JS::Value { transformer_object.value() } : JS::js_null();
 
     // 2. Let transformerDict be transformer, converted to an IDL value of type Transformer.
     auto transformer_dict = TRY(Transformer::from_value(vm, transformer));

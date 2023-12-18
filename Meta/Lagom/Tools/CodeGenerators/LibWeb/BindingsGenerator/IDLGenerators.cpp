@@ -1707,7 +1707,7 @@ static void generate_wrap_statement(SourceGenerator& generator, ByteString const
 )~~~");
     } else if (type.name() == "ArrayBufferView" || type.name() == "BufferSource") {
         scoped_generator.append(R"~~~(
-    @result_expression@ JS::Value(const_cast<JS::Object*>(@value@->raw_object().ptr()));
+    @result_expression@ JS::Value(@value@->raw_object());
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         auto& union_type = verify_cast<IDL::UnionType>(type);

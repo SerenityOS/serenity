@@ -133,7 +133,7 @@ namespace Web {
 
 inline JS::Completion throw_completion(JS::NonnullGCPtr<WebIDL::DOMException> exception)
 {
-    return JS::throw_completion(JS::Value(static_cast<JS::Object*>(exception.ptr())));
+    return JS::throw_completion(JS::Value(exception));
 }
 
 }
