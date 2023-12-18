@@ -210,11 +210,9 @@ static bool build_audio_document(DOM::Document& document)
     return true;
 }
 
-bool parse_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding)
+bool parse_document(DOM::Document& document, ByteBuffer const& data, [[maybe_unused]] Optional<String> content_encoding)
 {
     auto& mime_type = document.content_type();
-    if (mime_type.ends_with_bytes("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
-        return build_xml_document(document, data, move(content_encoding));
     if (mime_type.starts_with_bytes("image/"sv))
         return build_image_document(document, data);
     if (mime_type.starts_with_bytes("video/"sv))
@@ -301,6 +299,84 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_html_document(H
     return document;
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-xml
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HTML::NavigationParams& navigation_params, MimeSniff::MimeType type)
+{
+    // When faced with displaying an XML file inline, provided navigation params navigationParams and a string type, user agents
+    // must follow the requirements defined in XML and Namespaces in XML, XML Media Types, DOM, and other relevant specifications
+    // to create and initialize a Document object document, given "xml", type, and navigationParams, and return that Document.
+    // They must also create a corresponding XML parser. [XML] [XMLNS] [RFC7303] [DOM]
+    //
+    // Note: At the time of writing, the XML specification community had not actually yet specified how XML and the DOM interact.
+    //
+    // The first task that the networking task source places on the task queue while fetching runs must process link headers
+    // given document, navigationParams's response, and "media", after the task has been processed by the XML parser.
+    //
+    // The actual HTTP headers and other metadata, not the headers as mutated or implied by the algorithms given in this
+    // specification, are the ones that must be used when determining the character encoding according to the rules given in the
+    // above specifications. Once the character encoding is established, the document's character encoding must be set to that
+    // character encoding.
+    //
+    // Before any script execution occurs, the user agent must wait for scripts may run for the newly-created document to be
+    // true for the newly-created Document.
+    //
+    // Once parsing is complete, the user agent must set document's during-loading navigation ID for WebDriver BiDi to null.
+    //
+    // Note: For HTML documents this is reset when parsing is complete, after firing the load event.
+    //
+    // Error messages from the parse process (e.g., XML namespace well-formedness errors) may be reported inline by mutating
+    // the Document.
+
+    // FIXME: Actually follow the spec! This is just the ad-hoc code we had before, modified somewhat.
+
+    auto document = TRY(DOM::Document::create_and_initialize(DOM::Document::Type::XML, "application/xhtml+xml"_string, navigation_params));
+
+    Optional<String> content_encoding;
+    if (auto maybe_encoding = type.parameters().get("charset"sv); maybe_encoding.has_value())
+        content_encoding = maybe_encoding.value();
+
+    auto process_body = [document, url = navigation_params.response->url().value(), content_encoding = move(content_encoding)](ByteBuffer data) {
+        Optional<TextCodec::Decoder&> decoder;
+        // The actual HTTP headers and other metadata, not the headers as mutated or implied by the algorithms given in this specification,
+        // are the ones that must be used when determining the character encoding according to the rules given in the above specifications.
+        if (content_encoding.has_value())
+            decoder = TextCodec::decoder_for(*content_encoding);
+        if (!decoder.has_value()) {
+            auto encoding = HTML::run_encoding_sniffing_algorithm(document, data);
+            decoder = TextCodec::decoder_for(encoding);
+        }
+        VERIFY(decoder.has_value());
+        // Well-formed XML documents contain only properly encoded characters
+        if (!decoder->validate(data)) {
+            // FIXME: Insert error message into the document.
+            dbgln("XML Document contains improperly-encoded characters");
+            return;
+        }
+        auto source = decoder->to_utf8(data);
+        if (source.is_error()) {
+            // FIXME: Insert error message into the document.
+            dbgln("Failed to decode XML document: {}", source.error());
+            return;
+        }
+        XML::Parser parser(source.value(), { .resolve_external_resource = resolve_xml_resource });
+        XMLDocumentBuilder builder { document };
+        auto result = parser.parse_with_listener(builder);
+        if (result.is_error()) {
+            // FIXME: Insert error message into the document.
+            dbgln("Failed to parse XML document: {}", result.error());
+        }
+    };
+
+    auto process_body_error = [](auto) {
+        dbgln("FIXME: Load html page with an error if read of body failed.");
+    };
+
+    auto& realm = document->realm();
+    TRY(navigation_params.response->body()->fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }));
+
+    return document;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 {
@@ -328,7 +404,8 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
     // -> an XML MIME type that is not an explicitly supported XML MIME type
     //    FIXME: that is not an explicitly supported XML MIME type
     if (type.is_xml()) {
-        // FIXME: Return the result of loading an XML document given navigationParams and type.
+        // Return the result of loading an XML document given navigationParams and type.
+        return load_xml_document(navigation_params, type).release_value_but_fixme_should_propagate_errors();
     }
 
     // -> a JavaScript MIME type
