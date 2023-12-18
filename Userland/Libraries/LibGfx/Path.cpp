@@ -184,6 +184,69 @@ void Path::text(Utf8View text, Font const& font)
         IncludeLeftBearing::Yes);
 }
 
+Path Path::place_text_along(Utf8View text, Font const& font) const
+{
+    if (!is<ScaledFont>(font)) {
+        // FIXME: This API only accepts Gfx::Font for ease of use.
+        dbgln("Cannot path-ify bitmap fonts!");
+        return {};
+    }
+
+    auto& lines = split_lines();
+    auto next_point_for_offset = [&, line_index = 0U, distance_along_path = 0.0f, last_line_length = 0.0f](float offset) mutable -> Optional<FloatPoint> {
+        while (line_index < lines.size() && offset > distance_along_path) {
+            last_line_length = lines[line_index++].length();
+            distance_along_path += last_line_length;
+        }
+        if (offset > distance_along_path)
+            return {};
+        if (last_line_length > 1) {
+            // If the last line segment was fairly long, compute the point in the line.
+            float p = (last_line_length + offset - distance_along_path) / last_line_length;
+            auto current_line = lines[line_index - 1];
+            return current_line.a() + (current_line.b() - current_line.a()).scaled(p);
+        }
+        if (line_index >= lines.size())
+            return {};
+        return lines[line_index].a();
+    };
+
+    auto font_list = Gfx::FontCascadeList::create();
+    font_list->add(font);
+    auto& scaled_font = static_cast<Gfx::ScaledFont const&>(font);
+
+    Gfx::Path result_path;
+    Gfx::for_each_glyph_position(
+        {}, text, font_list, [&](Gfx::DrawGlyphOrEmoji glyph_or_emoji) {
+            auto* glyph = glyph_or_emoji.get_pointer<Gfx::DrawGlyph>();
+            if (!glyph)
+                return;
+            auto offset = glyph->position.x();
+            auto width = font.glyph_width(glyph->code_point);
+            auto start = next_point_for_offset(offset);
+            if (!start.has_value())
+                return;
+            auto end = next_point_for_offset(offset + width);
+            if (!end.has_value())
+                return;
+            // Find the angle between the start and end points on the path.
+            auto delta = *end - *start;
+            auto angle = AK::atan2(delta.y(), delta.x());
+            Gfx::Path glyph_path;
+            // Rotate the glyph then move it to start point.
+            auto glyph_id = scaled_font.glyph_id_for_code_point(glyph->code_point);
+            scaled_font.append_glyph_path_to(glyph_path, glyph_id);
+            auto transform = Gfx::AffineTransform {}
+                                 .translate(*start)
+                                 .multiply(Gfx::AffineTransform {}.rotate_radians(angle))
+                                 .multiply(Gfx::AffineTransform {}.translate({ 0, -scaled_font.pixel_metrics().ascent }));
+            glyph_path = glyph_path.copy_transformed(transform);
+            result_path.append_path(glyph_path);
+        },
+        Gfx::IncludeLeftBearing::Yes);
+    return result_path;
+}
+
 FloatPoint Path::last_point()
 {
     FloatPoint last_point { 0, 0 };
@@ -400,7 +463,6 @@ void Path::ensure_subpath(FloatPoint point)
         m_need_new_subpath = false;
     }
 }
-
 template<typename T>
 struct RoundTrip {
     RoundTrip(ReadonlySpan<T> span)
