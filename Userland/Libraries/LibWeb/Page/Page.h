@@ -255,7 +255,6 @@ public:
     virtual void page_did_layout() { }
     virtual void page_did_request_scroll(i32, i32) { }
     virtual void page_did_request_scroll_to(CSSPixelPoint) { }
-    virtual void page_did_request_scroll_into_view(CSSPixelRect const&) { }
     virtual void page_did_request_alert(String const&) { }
     virtual void page_did_request_confirm(String const&) { }
     virtual void page_did_request_prompt(String const&, String const&) { }

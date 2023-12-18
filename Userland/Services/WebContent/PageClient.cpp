@@ -285,15 +285,6 @@ void PageClient::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
     client().async_did_request_scroll_to(device_scroll_position.to_type<int>());
 }
 
-void PageClient::page_did_request_scroll_into_view(Web::CSSPixelRect const& rect)
-{
-    auto device_pixel_rect = page().enclosing_device_rect(rect);
-    client().async_did_request_scroll_into_view({ device_pixel_rect.x().value(),
-        device_pixel_rect.y().value(),
-        device_pixel_rect.width().value(),
-        device_pixel_rect.height().value() });
-}
-
 void PageClient::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, ByteString const& title)
 {
     client().async_did_enter_tooltip_area({ content_position.x().to_int(), content_position.y().to_int() }, title);

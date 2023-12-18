@@ -125,13 +125,6 @@ void WebContentClient::did_request_scroll_to(Gfx::IntPoint scroll_position)
         m_view.on_scroll_to_point(scroll_position);
 }
 
-void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
-{
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidRequestScrollIntoView! rect={}", rect);
-    if (m_view.on_scroll_into_view)
-        m_view.on_scroll_into_view(rect);
-}
-
 void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint content_position, ByteString const& title)
 {
     if (m_view.on_enter_tooltip_area)
