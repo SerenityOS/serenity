@@ -61,6 +61,35 @@ class PhotometricInterpretation(EnumWithExportName):
     CIELab = 8
 
 
+class Orientation(EnumWithExportName):
+    Default = 1
+    FlipHorizontally = 2
+    Rotate180 = 3
+    FlipVertically = 4
+    Rotate90ClockwiseThenFlipHorizontally = 5
+    Rotate90Clockwise = 6
+    FlipHorizontallyThenRotate90Clockwise = 7
+    Rotate90CounterClockwise = 8
+
+
+class PlanarConfiguration(EnumWithExportName):
+    Chunky = 1
+    Planar = 2
+
+
+class ResolutionUnit(EnumWithExportName):
+    NoAbsolute = 1
+    Inch = 2
+    Centimeter = 3
+
+
+class SampleFormat(EnumWithExportName):
+    Unsigned = 1
+    Signed = 2
+    Float = 3
+    Undefined = 4
+
+
 tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum']
 
 Tag = namedtuple(
@@ -77,9 +106,16 @@ known_tags: List[Tag] = [
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression),
     Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation", PhotometricInterpretation),
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets"),
+    Tag('274', [TIFFType.UnsignedShort], [1], Orientation.Default, "Orientation", Orientation),
     Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel"),
     Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip"),
     Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts"),
+    Tag('282', [TIFFType.UnsignedRational], [], None, "XResolution"),
+    Tag('283', [TIFFType.UnsignedRational], [], None, "YResolution"),
+    Tag('284', [TIFFType.UnsignedShort], [], PlanarConfiguration.Chunky, "PlanarConfiguration", PlanarConfiguration),
+    Tag('285', [TIFFType.ASCII], [], None, "PageName"),
+    Tag('296', [TIFFType.UnsignedShort], [], ResolutionUnit.Inch, "ResolutionUnit", ResolutionUnit),
+    Tag('339', [TIFFType.UnsignedShort], [], SampleFormat.Unsigned, "SampleFormat", SampleFormat),
     Tag('317', [TIFFType.UnsignedShort], [1], Predictor.NoPrediction, "Predictor", Predictor),
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
@@ -162,6 +198,8 @@ def tiff_type_to_cpp(t: TIFFType, without_promotion: bool = False) -> str:
         return 'u16'
     if t == TIFFType.UnsignedLong:
         return 'u32'
+    if t == TIFFType.UnsignedRational:
+        return 'TIFF::Rational<u32>'
     raise RuntimeError(f'Type "{t}" not recognized, please update tiff_type_to_read_only_cpp()')
 
 
