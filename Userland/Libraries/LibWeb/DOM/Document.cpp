@@ -352,6 +352,30 @@ void Document::initialize(JS::Realm& realm)
     m_list_of_available_images = heap().allocate<HTML::ListOfAvailableImages>(realm);
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#populate-with-html/head/body
+WebIDL::ExceptionOr<void> Document::populate_with_html_head_and_body()
+{
+    // 1. Let html be the result of creating an element given document, html, and the HTML namespace.
+    auto html = TRY(DOM::create_element(*this, HTML::TagNames::html, Namespace::HTML));
+
+    // 2. Let head be the result of creating an element given document, head, and the HTML namespace.
+    auto head = TRY(DOM::create_element(*this, HTML::TagNames::head, Namespace::HTML));
+
+    // 3. Let body be the result of creating an element given document, body, and the HTML namespace.
+    auto body = TRY(DOM::create_element(*this, HTML::TagNames::body, Namespace::HTML));
+
+    // 4. Append html to document.
+    TRY(append_child(html));
+
+    // 5. Append head to html.
+    TRY(html->append_child(head));
+
+    // 6. Append body to html.
+    TRY(html->append_child(body));
+
+    return {};
+}
+
 void Document::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

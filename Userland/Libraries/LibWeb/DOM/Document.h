@@ -96,6 +96,8 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
+    WebIDL::ExceptionOr<void> populate_with_html_head_and_body();
+
     JS::GCPtr<Selection::Selection> get_selection() const;
 
     String cookie(Cookie::Source = Cookie::Source::NonHttp);
