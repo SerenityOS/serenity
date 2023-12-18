@@ -92,6 +92,7 @@ private:
         switch (*m_metadata.photometric_interpretation()) {
         case PhotometricInterpretation::WhiteIsZero:
         case PhotometricInterpretation::BlackIsZero:
+        case PhotometricInterpretation::RGBPalette:
             return 1;
         case PhotometricInterpretation::RGB:
             return 3;
@@ -145,6 +146,29 @@ private:
 
             auto const alpha = TRY(manage_extra_channels());
             return Color(first_component, second_component, third_component, alpha);
+        }
+
+        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGBPalette) {
+            auto const index = TRY(stream.read_bits<u16>(bits_per_sample[0]));
+            auto const alpha = TRY(manage_extra_channels());
+
+            // SamplesPerPixel == 1 is a requirement for RGBPalette
+            // From description of PhotometricInterpretation in Section 8: Baseline Field Reference Guide
+            // "In a TIFF ColorMap, all the Red values come first, followed by the Green values,
+            //  then the Blue values."
+            auto const size = 1 << (*m_metadata.bits_per_sample())[0];
+            auto const red_offset = 0 * size;
+            auto const green_offset = 1 * size;
+            auto const blue_offset = 2 * size;
+
+            auto const color_map = *m_metadata.color_map();
+
+            // FIXME: ColorMap's values are always 16-bits, stop truncating them when we support 16 bits bitmaps
+            return Color(
+                color_map[red_offset + index] >> 8,
+                color_map[green_offset + index] >> 8,
+                color_map[blue_offset + index] >> 8,
+                alpha);
         }
 
         if (*m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero
