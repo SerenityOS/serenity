@@ -109,7 +109,22 @@ public:
     }
 
 private:
-    HeadlessWebContentView() = default;
+    HeadlessWebContentView()
+    {
+        on_scroll_to_point = [this](auto position) {
+            auto new_viewport_rect = m_viewport_rect;
+            new_viewport_rect.set_location(position);
+            client().async_set_viewport_rect(new_viewport_rect.to_type<Web::DevicePixels>());
+        };
+
+        on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
+            auto position = m_viewport_rect.location();
+            position.set_x(position.x() + x_delta);
+            position.set_y(position.y() + y_delta);
+            if (on_scroll_to_point)
+                on_scroll_to_point(position);
+        };
+    }
 
     void update_zoom() override { }
     void create_client() override { }
