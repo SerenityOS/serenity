@@ -202,6 +202,8 @@ public:
 
     Path stroke_to_fill(float thickness) const;
 
+    Path place_text_along(Utf8View text, Font const&) const;
+
 private:
     void approximate_elliptical_arc_with_cubic_beziers(FloatPoint center, FloatSize radii, float x_axis_rotation, float theta, float theta_delta);
 
