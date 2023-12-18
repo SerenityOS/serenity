@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -259,21 +260,90 @@ static bool is_supported_document_mime_type(StringView mime_type)
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 {
+    // To load a document given navigation params navigationParams, source snapshot params sourceSnapshotParams,
+    // and origin initiatorOrigin, perform the following steps. They return a Document or null.
+
+    // 1. Let type be the computed type of navigationParams's response.
     auto extracted_mime_type = navigation_params.response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
     if (!extracted_mime_type.has_value())
         return nullptr;
+    auto type = extracted_mime_type.release_value();
 
-    auto mime_type = extracted_mime_type.release_value();
-    if (!is_supported_document_mime_type(mime_type.essence()))
+    VERIFY(navigation_params.response->body());
+
+    // 2. If the user agent has been configured to process resources of the given type using some mechanism other than
+    //    rendering the content in a navigable, then skip this step.
+    //    Otherwise, if the type is one of the following types:
+
+    // -> an HTML MIME type
+    if (type.is_html()) {
+        // FIXME: Return the result of loading an HTML document, given navigationParams.
+    }
+
+    // -> an XML MIME type that is not an explicitly supported XML MIME type
+    //    FIXME: that is not an explicitly supported XML MIME type
+    if (type.is_xml()) {
+        // FIXME: Return the result of loading an XML document given navigationParams and type.
+    }
+
+    // -> a JavaScript MIME type
+    // -> a JSON MIME type that is not an explicitly supported JSON MIME type
+    // -> "text/css"
+    // -> "text/plain"
+    // -> "text/vtt"
+    if (type.is_javascript()
+        || type.is_json()
+        || type.essence() == "text/css"_string
+        || type.essence() == "text/plain"_string
+        || type.essence() == "text/vtt"_string) {
+        // FIXME: Return the result of loading a text document given navigationParams and type.
+    }
+
+    // -> "multipart/x-mixed-replace"
+    if (type.essence() == "multipart/x-mixed-replace"_string) {
+        // FIXME: Return the result of loading a multipart/x-mixed-replace document, given navigationParams,
+        //        sourceSnapshotParams, and initiatorOrigin.
+    }
+
+    // -> A supported image, video, or audio type
+    if (type.is_image()
+        || type.is_audio_or_video()) {
+        // FIXME: Return the result of loading a media document given navigationParams and type.
+    }
+
+    // -> "application/pdf"
+    // -> "text/pdf"
+    if (type.essence() == "application/pdf"_string
+        || type.essence() == "text/pdf"_string) {
+        // FIXME: If the user agent's PDF viewer supported is true, return the result of creating a document for inline
+        //        content that doesn't have a DOM given navigationParams's navigable.
+    }
+
+    // Otherwise, proceed onward.
+
+    // FIXME: 3. If, given type, the new resource is to be handled by displaying some sort of inline content, e.g., a
+    //        native rendering of the content or an error message because the specified type is not supported, then
+    //        return the result of creating a document for inline content that doesn't have a DOM given navigationParams's
+    //        navigable, navigationParams's id, and navigationParams's navigation timing type.
+
+    // FIXME: 4. Otherwise, the document's type is such that the resource will not affect navigationParams's navigable,
+    //        e.g., because the resource is to be handed to an external application or because it is an unknown type
+    //        that will be processed as a download. Hand-off to external software given navigationParams's response,
+    //        navigationParams's navigable, navigationParams's final sandboxing flag set, sourceSnapshotParams's has
+    //        transient activation, and initiatorOrigin.
+
+    // FIXME: Start of old, ad-hoc code
+
+    if (!is_supported_document_mime_type(type.essence()))
         return nullptr;
 
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
-    document->set_content_type(mime_type.essence());
+    document->set_content_type(type.essence());
 
     auto& realm = document->realm();
 
     if (navigation_params.response->body()) {
-        Optional<String> content_encoding = mime_type.parameters().get("charset"sv);
+        Optional<String> content_encoding = type.parameters().get("charset"sv);
         auto process_body = [document, url = navigation_params.response->url().value(), encoding = move(content_encoding)](ByteBuffer bytes) {
             if (parse_document(*document, bytes, move(encoding)))
                 return;
@@ -297,6 +367,11 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
     }
 
     return document;
+
+    // FIXME: End of old, ad-hoc code
+
+    // 5. Return null.
+    return nullptr;
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-ua-inline
