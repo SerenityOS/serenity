@@ -591,9 +591,12 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 m_reader.consume_whitespace();
 
                 auto stream_bytes = m_reader.bytes().slice(stream_start, stream_end - stream_start);
-                // FIXME: Do more with inline images than just skipping them.
-                (void)map;
-                (void)stream_bytes;
+
+                Vector<Value> inline_image_args;
+                auto map_object = make_object<DictObject>(move(map));
+                inline_image_args.append(make_object<StreamObject>(move(map_object), MUST(ByteBuffer::copy(stream_bytes))));
+                operators.append(Operator(OperatorType::InlineImageEnd, move(inline_image_args)));
+                continue;
             }
 
             operators.append(Operator(operator_type, move(operator_args)));

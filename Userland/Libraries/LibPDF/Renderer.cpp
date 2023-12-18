@@ -688,8 +688,19 @@ RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 }
 
 RENDERER_TODO(shade)
-RENDERER_TODO(inline_image_begin)
-RENDERER_TODO(inline_image_begin_data)
+
+RENDERER_HANDLER(inline_image_begin)
+{
+    // The parser only calls the inline_image_end handler for inline images.
+    VERIFY_NOT_REACHED();
+}
+
+RENDERER_HANDLER(inline_image_begin_data)
+{
+    // The parser only calls the inline_image_end handler for inline images.
+    VERIFY_NOT_REACHED();
+}
+
 RENDERER_TODO(inline_image_end)
 RENDERER_HANDLER(paint_xobject)
 {
