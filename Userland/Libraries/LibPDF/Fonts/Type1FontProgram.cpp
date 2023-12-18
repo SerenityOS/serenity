@@ -54,7 +54,7 @@ enum ExtendedCommand {
     Flex1,
 };
 
-RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
+RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(ByteString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
     constexpr auto base_color = Color::White;
     auto path = build_char(char_name, width, subpixel_offset);
@@ -71,7 +71,7 @@ RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(DeprecatedFlyString const&
     return bitmap;
 }
 
-Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
+Gfx::Path Type1FontProgram::build_char(ByteString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
     auto maybe_glyph = m_glyph_map.get(char_name);
     if (!maybe_glyph.has_value())
@@ -89,7 +89,7 @@ Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, flo
     return glyph.path().copy_transformed(transform);
 }
 
-Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& char_name, float width) const
+Gfx::FloatPoint Type1FontProgram::glyph_translation(ByteString const& char_name, float width) const
 {
     auto maybe_glyph = m_glyph_map.get(char_name);
     if (!maybe_glyph.has_value())

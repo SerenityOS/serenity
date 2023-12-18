@@ -8,10 +8,10 @@
 
 namespace PDF {
 
-#define ENUMERATE(name) DeprecatedFlyString CommonNames::name = #name;
+#define ENUMERATE(name) ByteString CommonNames::name = #name;
 ENUMERATE_COMMON_NAMES(ENUMERATE)
 #undef ENUMERATE
 
-DeprecatedFlyString CommonNames::IdentityH = "Identity-H";
+ByteString CommonNames::IdentityH = "Identity-H";
 
 }

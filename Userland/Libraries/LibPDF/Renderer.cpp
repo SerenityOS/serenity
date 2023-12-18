@@ -883,7 +883,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
     auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
 
-    auto is_filter = [&](DeprecatedFlyString const& name) -> PDFErrorOr<bool> {
+    auto is_filter = [&](ByteString const& name) -> PDFErrorOr<bool> {
         if (!image_dict->contains(CommonNames::Filter))
             return false;
         auto filter_object = TRY(image_dict->get_object(m_document, CommonNames::Filter));

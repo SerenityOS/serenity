@@ -116,9 +116,9 @@ static PDF::Value make_array(Vector<float> floats)
     return PDF::Value { adopt_ref(*new PDF::ArrayObject(move(values))) };
 }
 
-static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_function(int type, ReadonlyBytes data, Vector<float> domain, Vector<float> range, Function<void(HashMap<DeprecatedFlyString, PDF::Value>&)> extra_keys = nullptr)
+static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_function(int type, ReadonlyBytes data, Vector<float> domain, Vector<float> range, Function<void(HashMap<ByteString, PDF::Value>&)> extra_keys = nullptr)
 {
-    HashMap<DeprecatedFlyString, PDF::Value> map;
+    HashMap<ByteString, PDF::Value> map;
     map.set(PDF::CommonNames::FunctionType, PDF::Value { type });
     map.set(PDF::CommonNames::Domain, make_array(move(domain)));
     map.set(PDF::CommonNames::Range, make_array(move(range)));

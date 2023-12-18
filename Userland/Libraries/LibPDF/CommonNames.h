@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/ByteString.h>
 
 #define ENUMERATE_COMMON_NAMES(X) \
     X(A)                          \
@@ -192,11 +192,11 @@ namespace PDF {
 
 class CommonNames {
 public:
-#define ENUMERATE(name) static DeprecatedFlyString name;
+#define ENUMERATE(name) static ByteString name;
     ENUMERATE_COMMON_NAMES(ENUMERATE)
 #undef ENUMERATE
 
-    static DeprecatedFlyString IdentityH;
+    static ByteString IdentityH;
 };
 
 }

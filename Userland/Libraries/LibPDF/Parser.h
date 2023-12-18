@@ -53,7 +53,7 @@ public:
     PDFErrorOr<ByteString> parse_literal_string();
     PDFErrorOr<ByteString> parse_hex_string();
     PDFErrorOr<NonnullRefPtr<ArrayObject>> parse_array();
-    PDFErrorOr<HashMap<DeprecatedFlyString, Value>> parse_dict_contents_until(char const*);
+    PDFErrorOr<HashMap<ByteString, Value>> parse_dict_contents_until(char const*);
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
     PDFErrorOr<Vector<Operator>> parse_operators();

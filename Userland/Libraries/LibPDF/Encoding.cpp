@@ -72,7 +72,7 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
     return encoding;
 }
 
-void Encoding::set(CharCodeType char_code, DeprecatedFlyString const& glyph_name)
+void Encoding::set(CharCodeType char_code, ByteString const& glyph_name)
 {
     m_descriptors.set(char_code, glyph_name);
     m_name_mapping.set(glyph_name, char_code);
@@ -172,7 +172,7 @@ u16 Encoding::get_char_code(ByteString const& name) const
     return 0;
 }
 
-DeprecatedFlyString Encoding::get_name(u8 char_code) const
+ByteString Encoding::get_name(u8 char_code) const
 {
     auto name_iterator = m_descriptors.find(char_code);
     if (name_iterator != m_descriptors.end())

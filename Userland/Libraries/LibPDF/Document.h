@@ -85,14 +85,14 @@ public:
     PDFErrorOr<Optional<ByteString>> modification_date() const;
 
 private:
-    PDFErrorOr<Optional<ByteString>> get(DeprecatedFlyString const& name) const
+    PDFErrorOr<Optional<ByteString>> get(ByteString const& name) const
     {
         if (!m_info_dict->contains(name))
             return OptionalNone {};
         return TRY(m_info_dict->get_string(m_document, name))->string();
     }
 
-    PDFErrorOr<Optional<ByteString>> get_text(DeprecatedFlyString const& name) const;
+    PDFErrorOr<Optional<ByteString>> get_text(ByteString const& name) const;
 
     WeakPtr<Document> m_document;
     NonnullRefPtr<DictObject> m_info_dict;
@@ -154,7 +154,7 @@ public:
 
     PDFErrorOr<Optional<InfoDict>> info_dict();
 
-    PDFErrorOr<Vector<DeprecatedFlyString>> read_filters(NonnullRefPtr<DictObject>);
+    PDFErrorOr<Vector<ByteString>> read_filters(NonnullRefPtr<DictObject>);
 
 private:
     explicit Document(NonnullRefPtr<DocumentParser> const& parser);
@@ -176,12 +176,12 @@ private:
     PDFErrorOr<Destination> create_destination_from_dictionary_entry(NonnullRefPtr<Object> const& entry, HashMap<u32, u32> const& page_number_by_index_ref);
     PDFErrorOr<Destination> create_destination_from_object(NonnullRefPtr<Object> const& dest_obj, HashMap<u32, u32> const& page_number_by_index_ref);
 
-    PDFErrorOr<Optional<NonnullRefPtr<Object>>> get_inheritable_object(DeprecatedFlyString const& name, NonnullRefPtr<DictObject>);
-    PDFErrorOr<Optional<Value>> get_inheritable_value(DeprecatedFlyString const& name, NonnullRefPtr<DictObject>);
+    PDFErrorOr<Optional<NonnullRefPtr<Object>>> get_inheritable_object(ByteString const& name, NonnullRefPtr<DictObject>);
+    PDFErrorOr<Optional<Value>> get_inheritable_value(ByteString const& name, NonnullRefPtr<DictObject>);
 
-    PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree(NonnullRefPtr<DictObject> root, DeprecatedFlyString name);
-    PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, DeprecatedFlyString name);
-    PDFErrorOr<NonnullRefPtr<Object>> find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, DeprecatedFlyString name);
+    PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree(NonnullRefPtr<DictObject> root, ByteString name);
+    PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, ByteString name);
+    PDFErrorOr<NonnullRefPtr<Object>> find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, ByteString name);
 
     NonnullRefPtr<DocumentParser> m_parser;
     Version m_version;

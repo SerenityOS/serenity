@@ -20,8 +20,8 @@ class Encoding;
 class Type1FontProgram : public RefCounted<Type1FontProgram> {
 
 public:
-    RefPtr<Gfx::Bitmap> rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
-    Gfx::FloatPoint glyph_translation(DeprecatedFlyString const& char_name, float width) const;
+    RefPtr<Gfx::Bitmap> rasterize_glyph(ByteString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    Gfx::FloatPoint glyph_translation(ByteString const& char_name, float width) const;
     RefPtr<Encoding> encoding() const { return m_encoding; }
 
 protected:
@@ -33,8 +33,8 @@ protected:
         {
         }
 
-        DeprecatedFlyString base_character;
-        DeprecatedFlyString accent_character;
+        ByteString base_character;
+        ByteString accent_character;
         Gfx::FloatPoint accent_origin;
     };
 
@@ -103,7 +103,7 @@ protected:
         m_font_matrix = move(font_matrix);
     }
 
-    PDFErrorOr<void> add_glyph(DeprecatedFlyString name, Glyph&& glyph)
+    PDFErrorOr<void> add_glyph(ByteString name, Glyph&& glyph)
     {
         TRY(m_glyph_map.try_set(move(name), move(glyph)));
         return {};
@@ -112,11 +112,11 @@ protected:
     void consolidate_glyphs();
 
 private:
-    HashMap<DeprecatedFlyString, Glyph> m_glyph_map;
+    HashMap<ByteString, Glyph> m_glyph_map;
     Gfx::AffineTransform m_font_matrix;
     RefPtr<Encoding> m_encoding;
 
-    Gfx::Path build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    Gfx::Path build_char(ByteString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
     Gfx::AffineTransform glyph_transform_to_device_space(Glyph const& glyph, float width) const;
 };
 

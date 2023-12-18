@@ -18,13 +18,13 @@ public:
     void set_font_size(float font_size) override;
     PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8, Renderer const&) override;
 
-    DeprecatedFlyString base_font_name() const { return m_base_font_name; }
+    ByteString base_font_name() const { return m_base_font_name; }
 
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
 
 private:
-    DeprecatedFlyString m_base_font_name;
+    ByteString m_base_font_name;
     RefPtr<Gfx::Font> m_font;
 };
 

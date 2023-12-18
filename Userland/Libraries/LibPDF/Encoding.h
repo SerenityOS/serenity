@@ -641,12 +641,12 @@ public:
     HashMap<ByteString, CharCodeType> const& name_mapping() const { return m_name_mapping; }
 
     u16 get_char_code(ByteString const&) const;
-    DeprecatedFlyString get_name(u8 char_code) const;
+    ByteString get_name(u8 char_code) const;
 
-    void set(CharCodeType char_code, DeprecatedFlyString const& glyph_name);
+    void set(CharCodeType char_code, ByteString const& glyph_name);
 
 protected:
-    HashMap<CharCodeType, DeprecatedFlyString> m_descriptors;
+    HashMap<CharCodeType, ByteString> m_descriptors;
     HashMap<ByteString, CharCodeType> m_name_mapping;
 
     bool m_windows { false };

@@ -404,10 +404,10 @@ PDFErrorOr<NonnullRefPtr<ArrayObject>> Parser::parse_array()
     return make_object<ArrayObject>(values);
 }
 
-PDFErrorOr<HashMap<DeprecatedFlyString, Value>> Parser::parse_dict_contents_until(char const* end)
+PDFErrorOr<HashMap<ByteString, Value>> Parser::parse_dict_contents_until(char const* end)
 {
     m_reader.consume_whitespace();
-    HashMap<DeprecatedFlyString, Value> map;
+    HashMap<ByteString, Value> map;
 
     while (!m_reader.done()) {
         parse_comment();
@@ -426,7 +426,7 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
     if (!m_reader.consume('<') || !m_reader.consume('<'))
         return error("Expected dict to start with \"<<\"");
 
-    HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until(">>"));
+    HashMap<ByteString, Value> map = TRY(parse_dict_contents_until(">>"));
 
     if (!m_reader.consume('>') || !m_reader.consume('>'))
         return error("Expected dict to end with \">>\"");
@@ -475,7 +475,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
         m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
 
     if (dict->contains(CommonNames::Filter) && m_enable_filters) {
-        Vector<DeprecatedFlyString> filters = TRY(m_document->read_filters(dict));
+        Vector<ByteString> filters = TRY(m_document->read_filters(dict));
 
         // Every filter may get its own parameter dictionary
         Vector<RefPtr<DictObject>> decode_parms_vector;
@@ -550,7 +550,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 if (!operator_args.is_empty())
                     return error("operator args not empty on start of inline image");
 
-                HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until("ID"));
+                HashMap<ByteString, Value> map = TRY(parse_dict_contents_until("ID"));
                 m_reader.consume(2); // "ID"
 
                 // "Unless the image uses ASCIIHexDecode or ASCII85Decode as one of its filters,

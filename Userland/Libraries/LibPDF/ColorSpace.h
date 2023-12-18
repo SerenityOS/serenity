@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ICC/Profile.h>
@@ -34,15 +34,15 @@ class Renderer;
 
 class ColorSpaceFamily {
 public:
-    ColorSpaceFamily(DeprecatedFlyString name, bool may_be_specified_directly)
+    ColorSpaceFamily(ByteString name, bool may_be_specified_directly)
         : m_name(move(name))
         , m_may_be_specified_directly(may_be_specified_directly)
     {
     }
 
-    DeprecatedFlyString name() const { return m_name; }
+    ByteString name() const { return m_name; }
     bool may_be_specified_directly() const { return m_may_be_specified_directly; }
-    static PDFErrorOr<ColorSpaceFamily> get(DeprecatedFlyString const&);
+    static PDFErrorOr<ColorSpaceFamily> get(ByteString const&);
 
 #define ENUMERATE(name, may_be_specified_directly) static ColorSpaceFamily name;
     ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
@@ -54,14 +54,14 @@ public:
     }
 
 private:
-    DeprecatedFlyString m_name;
+    ByteString m_name;
     bool m_may_be_specified_directly;
 };
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<Object>, Renderer&);
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&, Renderer&);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(ByteString const&, Renderer&);
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>, Renderer&);
 
     virtual ~ColorSpace() = default;

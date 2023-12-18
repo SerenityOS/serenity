@@ -20,7 +20,7 @@ protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
 
 private:
-    HashMap<DeprecatedFlyString, NonnullRefPtr<StreamObject>> m_char_procs;
+    HashMap<ByteString, NonnullRefPtr<StreamObject>> m_char_procs;
     Gfx::AffineTransform m_font_matrix;
     Optional<NonnullRefPtr<DictObject>> m_resources;
 };
