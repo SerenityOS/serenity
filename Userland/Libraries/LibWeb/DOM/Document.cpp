@@ -252,16 +252,22 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
 
     // FIXME: 9. Let loadTimingInfo be a new document load timing info with its navigation start time set to navigationParams's response's timing info's start time.
 
-    // 8. Let document be a new Document,
-    //    whose type is type,
-    //    content type is contentType,
-    //    origin is navigationParams's origin,
-    //    policy container is navigationParams's policy container,
-    //    FIXME: permissions policy is permissionsPolicy,
-    //    active sandboxing flag set is navigationParams's final sandboxing flag set,
-    //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
-    //    FIXME: load timing info is loadTimingInfo,
-    //    and navigation id is navigationParams's id.
+    // 10. Let document be a new Document, with
+    //     type: type
+    //     content type: contentType
+    //     origin: navigationParams's origin
+    //     browsing context: browsingContext
+    //     policy container: navigationParams's policy container
+    //     FIXME: permissions policy: permissionsPolicy
+    //     active sandboxing flag set: navigationParams's final sandboxing flag set
+    //     FIXME: cross-origin opener policy: navigationParams's cross-origin opener policy
+    //     FIXME: load timing info: loadTimingInfo
+    //     FIXME: was created via cross-origin redirects: navigationParams's response's has cross-origin redirects
+    //     during-loading navigation ID for WebDriver BiDi: navigationParams's id
+    //     URL: creationURL
+    //     current document readiness: "loading"
+    //     about base URL: navigationParams's about base URL
+    //     FIXME: allow declarative shadow roots: true
     auto document = HTML::HTMLDocument::create(window->realm());
     document->m_type = type;
     document->m_content_type = move(content_type);
@@ -269,8 +275,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     document->set_browsing_context(browsing_context);
     document->m_policy_container = navigation_params.policy_container;
     document->m_active_sandboxing_flag_set = navigation_params.final_sandboxing_flag_set;
-    document->set_url(*creation_url);
     document->m_navigation_id = navigation_params.id;
+    document->set_url(*creation_url);
     document->m_readiness = HTML::DocumentReadyState::Loading;
     document->m_about_base_url = navigation_params.about_base_url;
 
