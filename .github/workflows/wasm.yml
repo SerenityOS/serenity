@@ -106,7 +106,7 @@ jobs:
 
       - name: Upload artifact package
         if: github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: serenity-js-wasm
           path: libjs-wasm.tar.gz

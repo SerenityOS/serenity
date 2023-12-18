@@ -101,7 +101,7 @@ jobs:
           cpack
 
       - name: Upload js package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: serenity-js-${{ matrix.package_type }}
           path: Build/serenity-js*.tar.gz
