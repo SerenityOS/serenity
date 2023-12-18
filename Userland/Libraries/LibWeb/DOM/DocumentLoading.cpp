@@ -21,7 +21,6 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Namespace.h>
-#include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web {
@@ -80,38 +79,6 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
     return true;
 }
 
-static bool build_image_document(DOM::Document& document, ByteBuffer const& data)
-{
-    auto image = Platform::ImageCodecPlugin::the().decode_image(data);
-    if (!image.has_value() || image->frames.is_empty())
-        return false;
-    auto const& frame = image->frames[0];
-    auto const& bitmap = frame.bitmap;
-    if (!bitmap)
-        return false;
-
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(document.append_child(html_element));
-
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(head_element));
-    auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(head_element->append_child(title_element));
-
-    auto basename = LexicalPath::basename(document.url().serialize_path());
-    auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, MUST(String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
-    MUST(title_element->append_child(*title_text));
-
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(body_element));
-
-    auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(image_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
-    MUST(body_element->append_child(image_element));
-
-    return true;
-}
-
 static bool build_gemini_document(DOM::Document& document, ByteBuffer const& data)
 {
     StringView gemini_data { data };
@@ -148,55 +115,9 @@ bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optiona
     return !result.is_error() && !builder.has_error();
 }
 
-static bool build_video_document(DOM::Document& document)
-{
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(document.append_child(html_element));
-
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(head_element));
-
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(body_element));
-
-    auto video_element = DOM::create_element(document, HTML::TagNames::video, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(video_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
-    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
-    MUST(video_element->set_attribute(HTML::AttributeNames::controls, String {}));
-    MUST(body_element->append_child(video_element));
-
-    return true;
-}
-
-static bool build_audio_document(DOM::Document& document)
-{
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(document.append_child(html_element));
-
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(head_element));
-
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(body_element));
-
-    auto video_element = DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(video_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
-    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
-    MUST(video_element->set_attribute(HTML::AttributeNames::controls, String {}));
-    MUST(body_element->append_child(video_element));
-
-    return true;
-}
-
 bool parse_document(DOM::Document& document, ByteBuffer const& data, [[maybe_unused]] Optional<String> content_encoding)
 {
     auto& mime_type = document.content_type();
-    if (mime_type.starts_with_bytes("image/"sv))
-        return build_image_document(document, data);
-    if (mime_type.starts_with_bytes("video/"sv))
-        return build_video_document(document);
-    if (mime_type.starts_with_bytes("audio/"sv))
-        return build_audio_document(document);
     if (mime_type == "text/markdown")
         return build_markdown_document(document, data);
     if (mime_type == "text/gemini")
@@ -417,6 +338,92 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_text_document(H
     return document;
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#navigate-media
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_media_document(HTML::NavigationParams& navigation_params, MimeSniff::MimeType type)
+{
+    // To load a media document, given navigationParams and a string type:
+
+    // 1. Let document be the result of creating and initializing a Document object given "html", type, and navigationParams.
+    auto document = TRY(DOM::Document::create_and_initialize(DOM::Document::Type::XML, type.essence(), navigation_params));
+
+    // 2. Set document's mode to "no-quirks".
+    document->set_quirks_mode(DOM::QuirksMode::No);
+
+    // 3. Populate with html/head/body given document.
+    TRY(document->populate_with_html_head_and_body());
+
+    // 4. Append an element host element for the media, as described below, to the body element.
+    // 5. Set the appropriate attribute of the element host element, as described below, to the address of the image,
+    //    video, or audio resource.
+    // 6. User agents may add content to the head element of document, or attributes to host element, e.g., to link
+    //    to a style sheet, to provide a script, to give the document a title, or to make the media autoplay.
+    auto insert_title = [](auto& document, auto title) -> WebIDL::ExceptionOr<void> {
+        auto title_element = TRY(DOM::create_element(document, HTML::TagNames::title, Namespace::HTML));
+        TRY(document->head()->append_child(title_element));
+
+        auto title_text = document->heap().template allocate<DOM::Text>(document->realm(), document, title);
+        TRY(title_element->append_child(*title_text));
+        return {};
+    };
+
+    auto url_string = document->url_string();
+    if (type.is_image()) {
+        auto img_element = TRY(DOM::create_element(document, HTML::TagNames::img, Namespace::HTML));
+        TRY(img_element->set_attribute(HTML::AttributeNames::src, url_string));
+        TRY(document->body()->append_child(img_element));
+        TRY(insert_title(document, MUST(String::from_byte_string(LexicalPath::basename(url_string.to_byte_string())))));
+
+    } else if (type.type() == "video"sv) {
+        auto video_element = TRY(DOM::create_element(document, HTML::TagNames::video, Namespace::HTML));
+        TRY(video_element->set_attribute(HTML::AttributeNames::src, url_string));
+        TRY(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
+        TRY(video_element->set_attribute(HTML::AttributeNames::controls, String {}));
+        TRY(document->body()->append_child(video_element));
+        TRY(insert_title(document, MUST(String::from_byte_string(LexicalPath::basename(url_string.to_byte_string())))));
+
+    } else if (type.type() == "audio"sv) {
+        auto audio_element = TRY(DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML));
+        TRY(audio_element->set_attribute(HTML::AttributeNames::src, url_string));
+        TRY(audio_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
+        TRY(audio_element->set_attribute(HTML::AttributeNames::controls, String {}));
+        TRY(document->body()->append_child(audio_element));
+        TRY(insert_title(document, MUST(String::from_byte_string(LexicalPath::basename(url_string.to_byte_string())))));
+
+    } else {
+        // FIXME: According to https://mimesniff.spec.whatwg.org/#audio-or-video-mime-type we might have to deal with
+        //        "application/ogg" and figure out whether it's audio or video.
+        VERIFY_NOT_REACHED();
+    }
+
+    // FIXME: 7. Process link headers given document, navigationParams's response, and "media".
+
+    // 8. Act as if the user agent had stopped parsing document.
+    // FIXME: We should not need to force the media file to load before saying that parsing has completed!
+    //        However, if we don't, then we get stuck in HTMLParser::the_end() waiting for the media file to load, which
+    //        never happens.
+    auto& realm = document->realm();
+    TRY(navigation_params.response->body()->fully_read(
+        realm,
+        [document](auto) { HTML::HTMLParser::the_end(document); },
+        [](auto) {},
+        JS::NonnullGCPtr { realm.global_object() }));
+
+    // 9. Return document.
+    return document;
+
+    // The element host element to create for the media is the element given in the table below in the second cell of
+    // the row whose first cell describes the media. The appropriate attribute to set is the one given by the third cell
+    // in that same row.
+    // Type of media | Element for the media | Appropriate attribute
+    // -------------------------------------------------------------
+    // Image         | img                   | src
+    // Video         | video                 | src
+    // Audio         | audio                 | src
+
+    // Before any script execution occurs, the user agent must wait for scripts may run for the newly-created document to
+    // be true for the Document.
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 {
@@ -471,7 +478,8 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
     // -> A supported image, video, or audio type
     if (type.is_image()
         || type.is_audio_or_video()) {
-        // FIXME: Return the result of loading a media document given navigationParams and type.
+        // Return the result of loading a media document given navigationParams and type.
+        return load_media_document(navigation_params, type).release_value_but_fixme_should_propagate_errors();
     }
 
     // -> "application/pdf"
