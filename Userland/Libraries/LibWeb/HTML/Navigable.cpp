@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/POSTResource.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
@@ -1106,7 +1107,11 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             //    The inline content should indicate to the user the sort of error that occurred.
             // FIXME: Add error message to generated error page
             auto error_html = load_error_page(entry->url).release_value_but_fixme_should_propagate_errors();
-            entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, error_html));
+            entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
+                auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
+                document.set_url(AK::URL("about:error"));
+                parser->run();
+            }));
 
             // 2. Set entry's document state's document's salvageable to false.
             entry->document_state->document()->set_salvageable(false);
