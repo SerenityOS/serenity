@@ -150,9 +150,14 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.elr_el1 = regs.elr_el1;
     child_regs.sp_el0 = regs.sp_el0;
 #elif ARCH(RISCV64)
-    (void)child_regs;
-    (void)regs;
-    TODO_RISCV64();
+    for (size_t i = 0; i < array_size(child_regs.x); ++i)
+        child_regs.x[i] = regs.x[i];
+    child_regs.x[9] = 0; // fork() returns 0 in the child :^)
+    child_regs.sstatus = regs.sstatus;
+    child_regs.pc = regs.sepc;
+    child_regs.x[1] = regs.user_sp;
+    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:p} with stack {:p}, kstack {:p}",
+        child_regs.pc, child_regs.sp(), child_regs.kernel_sp);
 #else
 #    error Unknown architecture
 #endif
