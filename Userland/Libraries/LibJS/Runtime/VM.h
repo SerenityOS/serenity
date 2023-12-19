@@ -114,8 +114,16 @@ public:
     // https://tc39.es/ecma262/#running-execution-context
     // At any point in time, there is at most one execution context per agent that is actually executing code.
     // This is known as the agent's running execution context.
-    ExecutionContext& running_execution_context() { return *m_execution_context_stack.last(); }
-    ExecutionContext const& running_execution_context() const { return *m_execution_context_stack.last(); }
+    ExecutionContext& running_execution_context()
+    {
+        VERIFY(!m_execution_context_stack.is_empty());
+        return *m_execution_context_stack.last();
+    }
+    ExecutionContext const& running_execution_context() const
+    {
+        VERIFY(!m_execution_context_stack.is_empty());
+        return *m_execution_context_stack.last();
+    }
 
     // https://tc39.es/ecma262/#execution-context-stack
     // The execution context stack is used to track execution contexts.
@@ -156,7 +164,6 @@ public:
 
     Value this_value() const
     {
-        VERIFY(!m_execution_context_stack.is_empty());
         return running_execution_context().this_value;
     }
 
