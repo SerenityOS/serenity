@@ -56,6 +56,8 @@ public:
     void run();
     void run(const AK::URL&);
 
+    static void the_end(JS::NonnullGCPtr<DOM::Document>, JS::GCPtr<HTMLParser> = nullptr);
+
     DOM::Document& document();
 
     static Vector<JS::Handle<DOM::Node>> parse_html_fragment(DOM::Element& context_element, StringView);
@@ -114,8 +116,6 @@ private:
     void handle_in_frameset(HTMLToken&);
     void handle_after_frameset(HTMLToken&);
     void handle_after_after_frameset(HTMLToken&);
-
-    void the_end();
 
     void stop_parsing() { m_stop_parsing = true; }
 
