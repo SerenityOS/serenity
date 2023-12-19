@@ -54,6 +54,8 @@
 
 constexpr int DEFAULT_TIMEOUT_MS = 30000; // 30sec
 
+static StringView s_current_test_path;
+
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
     static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No)
@@ -79,6 +81,14 @@ public:
 
         if (!web_driver_ipc_path.is_empty())
             view->client().async_connect_to_webdriver(web_driver_ipc_path);
+
+        view->m_client_state.client->on_web_content_process_crash = [] {
+            warnln("\033[31;1mWebContent Crashed!!\033[0m");
+            if (!s_current_test_path.is_empty()) {
+                warnln("    Last started test: {}", s_current_test_path);
+            }
+            VERIFY_NOT_REACHED();
+        };
 
         return view;
     }
@@ -314,6 +324,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
 
 static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, bool dump_failed_ref_tests)
 {
+    s_current_test_path = input_path;
     switch (mode) {
     case TestMode::Text:
     case TestMode::Layout:
