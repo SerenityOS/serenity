@@ -149,7 +149,8 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
     if (cache_level == CacheLevel::ResolveOnly) {
         return Core::deferred_invoke([host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string()] {
             dbgln("EnsureConnection: DNS-preload for {}", host);
-            (void)gethostbyname(host.characters());
+            struct addrinfo* results;
+            (void)getaddrinfo(host.characters(), nullptr, nullptr, &results);
         });
     }
 
