@@ -156,6 +156,8 @@ public:
 
     PDFErrorOr<Vector<DeprecatedFlyString>> read_filters(NonnullRefPtr<DictObject>);
 
+    PDFErrorOr<void> unfilter_stream(NonnullRefPtr<StreamObject> stream) { return m_parser->unfilter_stream(move(stream)); }
+
 private:
     explicit Document(NonnullRefPtr<DocumentParser> const& parser);
 

@@ -701,7 +701,148 @@ RENDERER_HANDLER(inline_image_begin_data)
     VERIFY_NOT_REACHED();
 }
 
-RENDERER_TODO(inline_image_end)
+static PDFErrorOr<Value> expand_inline_image_value(Value const& value, HashMap<DeprecatedFlyString, DeprecatedFlyString> const& value_expansions)
+{
+    if (!value.has<NonnullRefPtr<Object>>())
+        return value;
+
+    auto const& object = value.get<NonnullRefPtr<Object>>();
+    if (object->is<NameObject>()) {
+        auto const& name = object->cast<NameObject>()->name();
+        auto expanded_name = value_expansions.get(name);
+        if (!expanded_name.has_value())
+            return value;
+        return Value { make_object<NameObject>(expanded_name.value()) };
+    }
+
+    // For the Filters array.
+    if (object->is<ArrayObject>()) {
+        auto const& array = object->cast<ArrayObject>()->elements();
+        Vector<Value> expanded_array;
+        for (auto const& element : array) {
+            auto expanded_element = TRY(expand_inline_image_value(element, value_expansions));
+            expanded_array.append(expanded_element);
+        }
+        return Value { make_object<ArrayObject>(move(expanded_array)) };
+    }
+
+    // For the DecodeParms dict. It might be fine to just `return value` here, I'm not sure if there can really be abbreviations in here.
+    if (object->is<DictObject>()) {
+        auto const& dict = object->cast<DictObject>()->map();
+        HashMap<DeprecatedFlyString, Value> expanded_dict;
+        for (auto const& [key, value] : dict) {
+            auto expanded_value = TRY(expand_inline_image_value(value, value_expansions));
+            expanded_dict.set(key, expanded_value);
+        }
+        return Value { make_object<DictObject>(move(expanded_dict)) };
+    }
+    VERIFY_NOT_REACHED();
+}
+
+static PDFErrorOr<Value> expand_inline_image_colorspace(Value color_space_value, NonnullRefPtr<DictObject> resources, RefPtr<Document> document)
+{
+    // PDF 1.7 spec, 4.8.6 Inline Images:
+    // "Beginning with PDF 1.2, the value of the ColorSpace entry may also be the name
+    //  of a color space in the ColorSpace subdictionary of the current resource dictionary."
+
+    // But PDF 1.7 spec, 4.5.2 Color Space Families:
+    // "Outside a content stream, certain objects, such as image XObjects,
+    //  specify a color space as an explicit parameter, often associated with
+    //  the key ColorSpace. In this case, the color space array or name is
+    //  always defined directly as a PDF object, not by an entry in the
+    //  ColorSpace resource subdictionary."
+
+    // This converts a named color space of an inline image to an explicit color space object,
+    // so that the regular image drawing code tolerates it.
+
+    if (!color_space_value.has<NonnullRefPtr<Object>>())
+        return color_space_value;
+
+    auto const& object = color_space_value.get<NonnullRefPtr<Object>>();
+    if (!object->is<NameObject>())
+        return color_space_value;
+
+    auto const& name = object->cast<NameObject>()->name();
+    if (name == "DeviceGray" || name == "DeviceRGB" || name == "DeviceCMYK")
+        return color_space_value;
+
+    auto color_space_resource_dict = TRY(resources->get_dict(document, CommonNames::ColorSpace));
+    return color_space_resource_dict->get_object(document, name);
+}
+
+static PDFErrorOr<NonnullRefPtr<StreamObject>> expand_inline_image_abbreviations(NonnullRefPtr<StreamObject> inline_stream, NonnullRefPtr<DictObject> resources, RefPtr<Document> document)
+{
+    // TABLE 4.43 Entries in an inline image object
+    static HashMap<DeprecatedFlyString, DeprecatedFlyString> key_expansions {
+        { "BPC", "BitsPerComponent" },
+        { "CS", "ColorSpace" },
+        { "D", "Decode" },
+        { "DP", "DecodeParms" },
+        { "F", "Filter" },
+        { "H", "Height" },
+        { "IM", "ImageMask" },
+        { "I", "Interpolate" },
+        { "Intent", "Intent" }, // "No abbreviation"
+        { "L", "Length" },      // PDF 2.0; would make more sense to read in Parser.
+        { "W", "Width" },
+    };
+
+    // TABLE 4.44 Additional abbreviations in an inline image object
+    // "Also note that JBIG2Decode and JPXDecode are not listed in Table 4.44
+    //  because those filters can be applied only to image XObjects."
+    static HashMap<DeprecatedFlyString, DeprecatedFlyString> value_expansions {
+        { "G", "DeviceGray" },
+        { "RGB", "DeviceRGB" },
+        { "CMYK", "DeviceCMYK" },
+        { "I", "Indexed" },
+        { "AHx", "ASCIIHexDecode" },
+        { "A85", "ASCII85Decode" },
+        { "LZW", "LZWDecode" },
+        { "Fl", "FlateDecode" },
+        { "RL", "RunLengthDecode" },
+        { "CCF", "CCITTFaxDecode" },
+        { "DCT", "DCTDecode" },
+    };
+
+    // The values in key_expansions, that is the final expansions, are the valid keys in an inline image dict.
+    HashTable<DeprecatedFlyString> valid_keys;
+    for (auto const& [key, value] : key_expansions)
+        valid_keys.set(value);
+
+    HashMap<DeprecatedFlyString, Value> expanded_dict;
+    for (auto const& [key, value] : inline_stream->dict()->map()) {
+        DeprecatedFlyString expanded_key = key_expansions.get(key).value_or(key);
+
+        // "Entries other than those listed are ignored"
+        if (!valid_keys.contains(expanded_key)) {
+            dbgln("PDF: Ignoring invalid inline image key '{}'", expanded_key);
+            continue;
+        }
+
+        Value expanded_value = TRY(expand_inline_image_value(value, value_expansions));
+        if (expanded_key == "ColorSpace")
+            expanded_value = TRY(expand_inline_image_colorspace(expanded_value, resources, document));
+
+        expanded_dict.set(expanded_key, expanded_value);
+    }
+
+    auto map_object = make_object<DictObject>(move(expanded_dict));
+    return make_object<StreamObject>(move(map_object), MUST(ByteBuffer::copy(inline_stream->bytes())));
+}
+
+RENDERER_HANDLER(inline_image_end)
+{
+    VERIFY(args.size() == 1);
+    auto inline_stream = args[0].get<NonnullRefPtr<Object>>()->cast<StreamObject>();
+
+    auto resources = extra_resources.value_or(m_page.resources);
+    auto expanded_inline_stream = TRY(expand_inline_image_abbreviations(inline_stream, resources, m_document));
+    TRY(m_document->unfilter_stream(expanded_inline_stream));
+
+    TRY(show_image(expanded_inline_stream));
+    return {};
+}
+
 RENDERER_HANDLER(paint_xobject)
 {
     VERIFY(args.size() > 0);
