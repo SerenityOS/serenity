@@ -578,9 +578,8 @@ public:
         // 2. If memory[serialized] exists, then return memory[serialized].
         if (tag == ValueTag::ObjectReference) {
             auto index = m_serialized[m_position++];
-            // FIXME: For transferred items, find a way to avoid putting placeholders in the serialized data
             if (index == NumericLimits<u32>::max()) {
-                return JS::js_null();
+                return JS::Object::create(*m_vm.current_realm(), nullptr);
             }
             return m_memory[index];
         }
