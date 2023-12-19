@@ -293,12 +293,6 @@ RENDERER_HANDLER(path_append_rect)
 
 void Renderer::begin_path_paint()
 {
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        VERIFY(!m_original_paint_style);
-        m_original_paint_style = state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>();
-        auto translation = Gfx::AffineTransform().translate(m_current_path.bounding_box().x(), m_current_path.bounding_box().y());
-        state().paint_style = { MUST(Gfx::OffsetPaintStyle::create(state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), translation)) };
-    }
     auto bounding_box = state().clipping_paths.current.bounding_box();
     m_painter.clear_clip_rect();
     if (m_rendering_preferences.show_clipping_paths) {
@@ -312,11 +306,6 @@ void Renderer::end_path_paint()
     m_current_path.clear();
     m_painter.clear_clip_rect();
     state().clipping_paths.current = state().clipping_paths.next;
-
-    if (m_original_paint_style) {
-        state().paint_style = m_original_paint_style.release_nonnull();
-        m_original_paint_style = nullptr;
-    }
 }
 
 RENDERER_HANDLER(path_stroke)
