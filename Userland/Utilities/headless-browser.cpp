@@ -112,9 +112,8 @@ private:
     HeadlessWebContentView()
     {
         on_scroll_to_point = [this](auto position) {
-            auto new_viewport_rect = m_viewport_rect;
-            new_viewport_rect.set_location(position);
-            client().async_set_viewport_rect(new_viewport_rect.to_type<Web::DevicePixels>());
+            m_viewport_rect.set_location(position);
+            client().async_set_viewport_rect(m_viewport_rect.to_type<Web::DevicePixels>());
         };
 
         on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
