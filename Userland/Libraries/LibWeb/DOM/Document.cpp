@@ -1842,8 +1842,10 @@ void Document::scroll_to_the_fragment()
         // FIXME: 5. Run the ancestor hidden-until-found revealing algorithm on target.
 
         // 6. Scroll target into view, with behavior set to "auto", block set to "start", and inline set to "nearest". [CSSOMVIEW]
-        // FIXME: Do this properly!
-        (void)target->scroll_into_view();
+        ScrollIntoViewOptions scroll_options;
+        scroll_options.block = Bindings::ScrollLogicalPosition::Start;
+        scroll_options.inline_ = Bindings::ScrollLogicalPosition::Nearest;
+        (void)target->scroll_into_view(scroll_options);
 
         // 7. Run the focusing steps for target, with the Document's viewport as the fallback target.
         // FIXME: Pass the Document's viewport somehow.
