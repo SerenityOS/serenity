@@ -173,8 +173,6 @@ private:
     Gfx::AffineTransform mutable m_text_rendering_matrix;
 
     HashMap<FontCacheKey, NonnullRefPtr<PDFFont>> m_font_cache;
-    // Used to offset the PaintStyle's origin when rendering a pattern.
-    RefPtr<Gfx::PaintStyle> m_original_paint_style;
 };
 
 }
