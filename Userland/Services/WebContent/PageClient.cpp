@@ -281,6 +281,13 @@ void PageClient::page_did_request_scroll(i32 x_delta, i32 y_delta)
 
 void PageClient::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
 {
+    // NOTE: The viewport scroll position is updated preemptively, so that subsequent
+    //       viewport offset calculation could use new offset even before actual
+    //       scroll on browser side happens.
+    auto viewport = page().top_level_traversable()->viewport_rect();
+    viewport.set_location(scroll_position);
+    page().top_level_traversable()->set_viewport_rect(viewport);
+
     auto device_scroll_position = page().css_to_device_point(scroll_position);
     client().async_did_request_scroll_to(device_scroll_position.to_type<int>());
 }
