@@ -94,20 +94,6 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_docume
     });
 }
 
-static bool build_gemini_document(DOM::Document& document, ByteBuffer const& data)
-{
-    StringView gemini_data { data };
-    auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
-    ByteString html_data = gemini_document->render_to_html();
-
-    dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
-    dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
-
-    auto parser = HTML::HTMLParser::create(document, html_data, "utf-8");
-    parser->run(document.url());
-    return true;
-}
-
 bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding)
 {
     Optional<TextCodec::Decoder&> decoder;
@@ -128,36 +114,6 @@ bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optiona
     XMLDocumentBuilder builder { document };
     auto result = parser.parse_with_listener(builder);
     return !result.is_error() && !builder.has_error();
-}
-
-bool parse_document(DOM::Document& document, ByteBuffer const& data, [[maybe_unused]] Optional<String> content_encoding)
-{
-    auto& mime_type = document.content_type();
-    if (mime_type == "text/gemini")
-        return build_gemini_document(document, data);
-
-    return false;
-}
-
-static bool is_supported_document_mime_type(StringView mime_type)
-{
-    if (mime_type == "text/html")
-        return true;
-    if (mime_type.ends_with("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
-        return true;
-    if (mime_type.starts_with("image/"sv))
-        return true;
-    if (mime_type.starts_with("video/"sv))
-        return true;
-    if (mime_type.starts_with("audio/"sv))
-        return true;
-    if (mime_type == "text/plain" || mime_type == "application/json")
-        return true;
-    if (mime_type == "text/markdown")
-        return true;
-    if (mime_type == "text/gemini")
-        return true;
-    return false;
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#navigate-html
@@ -517,44 +473,6 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
     //        that will be processed as a download. Hand-off to external software given navigationParams's response,
     //        navigationParams's navigable, navigationParams's final sandboxing flag set, sourceSnapshotParams's has
     //        transient activation, and initiatorOrigin.
-
-    // FIXME: Start of old, ad-hoc code
-
-    if (!is_supported_document_mime_type(type.essence()))
-        return nullptr;
-
-    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
-    document->set_content_type(type.essence());
-
-    auto& realm = document->realm();
-
-    if (navigation_params.response->body()) {
-        Optional<String> content_encoding = type.parameters().get("charset"sv);
-        auto process_body = [document, url = navigation_params.response->url().value(), encoding = move(content_encoding)](ByteBuffer bytes) {
-            if (parse_document(*document, bytes, move(encoding)))
-                return;
-            document->remove_all_children(true);
-            auto error_html = load_error_page(url).release_value_but_fixme_should_propagate_errors();
-            auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
-            document->set_url(AK::URL("about:error"));
-            parser->run();
-        };
-
-        auto process_body_error = [](auto) {
-            dbgln("FIXME: Load html page with an error if read of body failed.");
-        };
-
-        navigation_params.response->body()->fully_read(
-                                              realm,
-                                              move(process_body),
-                                              move(process_body_error),
-                                              JS::NonnullGCPtr { realm.global_object() })
-            .release_value_but_fixme_should_propagate_errors();
-    }
-
-    return document;
-
-    // FIXME: End of old, ad-hoc code
 
     // 5. Return null.
     return nullptr;
