@@ -148,8 +148,7 @@ CSSPixelRect PaintableBox::compute_absolute_paint_rect() const
         if (computed_values().overflow_y() == CSS::Overflow::Visible)
             rect.unite_vertically(scrollable_overflow_rect);
     }
-    auto resolved_box_shadow_data = resolve_box_shadow_data();
-    for (auto const& shadow : resolved_box_shadow_data) {
+    for (auto const& shadow : box_shadow_data()) {
         if (shadow.placement == ShadowPlacement::Inner)
             continue;
         auto inflate = shadow.spread_distance + shadow.blur_radius;
@@ -355,30 +354,9 @@ void PaintableBox::paint_background(PaintContext& context) const
     Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
 }
 
-Vector<ShadowData> PaintableBox::resolve_box_shadow_data() const
-{
-    auto box_shadow_data = computed_values().box_shadow();
-    if (box_shadow_data.is_empty())
-        return {};
-
-    Vector<ShadowData> resolved_box_shadow_data;
-    resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
-    for (auto const& layer : box_shadow_data) {
-        resolved_box_shadow_data.empend(
-            layer.color,
-            layer.offset_x.to_px(layout_box()),
-            layer.offset_y.to_px(layout_box()),
-            layer.blur_radius.to_px(layout_box()),
-            layer.spread_distance.to_px(layout_box()),
-            layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
-    }
-
-    return resolved_box_shadow_data;
-}
-
 void PaintableBox::paint_box_shadow(PaintContext& context) const
 {
-    auto resolved_box_shadow_data = resolve_box_shadow_data();
+    auto const& resolved_box_shadow_data = box_shadow_data();
     if (resolved_box_shadow_data.is_empty())
         return;
     auto borders_data = BordersData {

@@ -191,6 +191,9 @@ public:
     BorderRadiiData const& border_radii_data() const { return m_border_radii_data; }
     void set_border_radii_data(BorderRadiiData const& border_radii_data) { m_border_radii_data = border_radii_data; }
 
+    void set_box_shadow_data(Vector<ShadowData> box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
+    Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
+
     PaintableBox const* nearest_scrollable_ancestor() const;
 
 protected:
@@ -205,8 +208,6 @@ protected:
 
     virtual CSSPixelRect compute_absolute_rect() const;
     virtual CSSPixelRect compute_absolute_paint_rect() const;
-
-    Vector<ShadowData> resolve_box_shadow_data() const;
 
 private:
     [[nodiscard]] virtual bool is_paintable_box() const final { return true; }
@@ -230,6 +231,7 @@ private:
     Optional<TableCellCoordinates> m_table_cell_coordinates;
 
     BorderRadiiData m_border_radii_data;
+    Vector<ShadowData> m_box_shadow_data;
 };
 
 class PaintableWithLines : public PaintableBox {
