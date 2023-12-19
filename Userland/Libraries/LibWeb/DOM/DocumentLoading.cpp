@@ -25,12 +25,8 @@
 
 namespace Web {
 
-static bool build_markdown_document(DOM::Document& document, ByteBuffer const& data)
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_document(HTML::NavigationParams& navigation_params)
 {
-    auto markdown_document = Markdown::Document::parse(data);
-    if (!markdown_document)
-        return false;
-
     auto extra_head_contents = R"~~~(
 <style>
     .zoomable {
@@ -74,9 +70,28 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 </script>
 )~~~"sv;
 
-    auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8");
-    parser->run(document.url());
-    return true;
+    return create_document_for_inline_content(navigation_params.navigable.ptr(), navigation_params.id, [&](DOM::Document& document) {
+        auto& realm = document.realm();
+        auto process_body = [&document, url = navigation_params.response->url().value(), extra_head_contents](ByteBuffer data) {
+            auto markdown_document = Markdown::Document::parse(data);
+            if (!markdown_document)
+                return;
+
+            auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8");
+            parser->run(document.url());
+        };
+
+        auto process_body_error = [](auto) {
+            dbgln("FIXME: Load html page with an error if read of body failed.");
+        };
+
+        navigation_params.response->body()->fully_read(
+                                              realm,
+                                              move(process_body),
+                                              move(process_body_error),
+                                              JS::NonnullGCPtr { realm.global_object() })
+            .release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 static bool build_gemini_document(DOM::Document& document, ByteBuffer const& data)
@@ -118,8 +133,6 @@ bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optiona
 bool parse_document(DOM::Document& document, ByteBuffer const& data, [[maybe_unused]] Optional<String> content_encoding)
 {
     auto& mime_type = document.content_type();
-    if (mime_type == "text/markdown")
-        return build_markdown_document(document, data);
     if (mime_type == "text/gemini")
         return build_gemini_document(document, data);
 
@@ -492,10 +505,12 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 
     // Otherwise, proceed onward.
 
-    // FIXME: 3. If, given type, the new resource is to be handled by displaying some sort of inline content, e.g., a
-    //        native rendering of the content or an error message because the specified type is not supported, then
-    //        return the result of creating a document for inline content that doesn't have a DOM given navigationParams's
-    //        navigable, navigationParams's id, and navigationParams's navigation timing type.
+    // 3. If, given type, the new resource is to be handled by displaying some sort of inline content, e.g., a
+    //    native rendering of the content or an error message because the specified type is not supported, then
+    //    return the result of creating a document for inline content that doesn't have a DOM given navigationParams's
+    //    navigable, navigationParams's id, and navigationParams's navigation timing type.
+    if (type.essence() == "text/markdown"sv)
+        return load_markdown_document(navigation_params).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: 4. Otherwise, the document's type is such that the resource will not affect navigationParams's navigable,
     //        e.g., because the resource is to be handed to an external application or because it is an unknown type
