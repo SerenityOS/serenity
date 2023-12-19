@@ -1019,7 +1019,7 @@ static bool is_interface_exposed_on_target_realm(u8 name, JS::Realm& realm)
     return false;
 }
 
-static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_transferred_value(TransferType name, JS::Realm& target_realm, TransferDataHolder const& transfer_data_holder)
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_transferred_value(TransferType name, JS::Realm& target_realm, TransferDataHolder& transfer_data_holder)
 {
     switch (name) {
     case TransferType::MessagePort: {
@@ -1032,7 +1032,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_tr
 }
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserializewithtransfer
-WebIDL::ExceptionOr<DeserializedTransferRecord> structured_deserialize_with_transfer(JS::VM& vm, SerializedTransferRecord const& serialize_with_transfer_result)
+WebIDL::ExceptionOr<DeserializedTransferRecord> structured_deserialize_with_transfer(JS::VM& vm, SerializedTransferRecord& serialize_with_transfer_result)
 {
     auto& target_realm = *vm.current_realm();
 
@@ -1068,7 +1068,7 @@ WebIDL::ExceptionOr<DeserializedTransferRecord> structured_deserialize_with_tran
         // 4. Otherwise:
         else {
             // 1. Let interfaceName be transferDataHolder.[[Type]].
-            u8 const interface_name = transfer_data_holder.data[0];
+            u8 const interface_name = transfer_data_holder.data.take_first();
 
             // 2. If the interface identified by interfaceName is not exposed in targetRealm, then throw a "DataCloneError" DOMException.
             if (!is_interface_exposed_on_target_realm(interface_name, target_realm))

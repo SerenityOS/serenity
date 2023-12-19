@@ -8,6 +8,7 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
+#include <LibCore/Socket.h>
 #include <LibWeb/Bindings/Transferable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
@@ -38,7 +39,10 @@ public:
     void entangle_with(MessagePort&);
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-postmessage
-    void post_message(JS::Value);
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, Vector<JS::Handle<JS::Object>> const& transfer);
+
+    // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-postmessage-options
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, StructuredSerializeOptions const& options);
 
     void start();
 
@@ -53,7 +57,7 @@ public:
 
     // ^Transferable
     virtual WebIDL::ExceptionOr<void> transfer_steps(HTML::TransferDataHolder&) override;
-    virtual WebIDL::ExceptionOr<void> transfer_receiving_steps(HTML::TransferDataHolder const&) override;
+    virtual WebIDL::ExceptionOr<void> transfer_receiving_steps(HTML::TransferDataHolder&) override;
     virtual HTML::TransferType primary_interface() const override { return HTML::TransferType::MessagePort; }
 
 private:
@@ -62,14 +66,18 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    bool is_entangled() const { return m_remote_port; }
+    bool is_entangled() const { return static_cast<bool>(m_socket); }
     void disentangle();
+
+    WebIDL::ExceptionOr<void> message_port_post_message_steps(JS::GCPtr<MessagePort> target_port, JS::Value message, StructuredSerializeOptions const& options);
 
     // The HTML spec implies(!) that this is MessagePort.[[RemotePort]]
     JS::GCPtr<MessagePort> m_remote_port;
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#has-been-shipped
     bool m_has_been_shipped { false };
+
+    OwnPtr<Core::LocalSocket> m_socket;
 };
 
 }
