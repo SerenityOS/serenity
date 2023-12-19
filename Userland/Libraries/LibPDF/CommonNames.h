@@ -138,10 +138,8 @@
     X(Outlines)                   \
     X(P)                          \
     X(Pages)                      \
-    X(PaintType)                  \
     X(Parent)                     \
     X(Pattern)                    \
-    X(PatternType)                \
     X(Perms)                      \
     X(Predictor)                  \
     X(Prev)                       \
