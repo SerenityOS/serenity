@@ -221,14 +221,21 @@ void HTMLParser::run(const AK::URL& url)
     m_document->set_url(url);
     m_document->set_source(MUST(String::from_byte_string(m_tokenizer.source())));
     run();
-    the_end();
+    the_end(*m_document, this);
     m_document->detach_parser({});
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#the-end
-void HTMLParser::the_end()
+void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTMLParser> parser)
 {
     // Once the user agent stops parsing the document, the user agent must run the following steps:
+
+    // NOTE: This is a static method because the spec sometimes wants us to "act as if the user agent had stopped
+    //       parsing document" which means running these steps without an HTML Parser. That makes it awkward to call,
+    //       but it's preferable to duplicating so much code.
+
+    if (parser)
+        VERIFY(document == parser->m_document);
 
     // The entirety of "the end" should be a no-op for HTML fragment parsers, because:
     // - the temporary document is not accessible, making the DOMContentLoaded event and "ready for post load tasks" do
@@ -249,39 +256,42 @@ void HTMLParser::the_end()
     // We can avoid these issues and also avoid doing unnecessary work by simply skipping "the end" for HTML fragment
     // parsers.
     // See the message of the commit that added this for more details.
-    if (m_parsing_fragment)
+    if (parser && parser->m_parsing_fragment)
         return;
 
     // FIXME: 1. If the active speculative HTML parser is not null, then stop the speculative HTML parser and return.
 
     // 2. Set the insertion point to undefined.
-    m_tokenizer.undefine_insertion_point();
+    if (parser)
+        parser->m_tokenizer.undefine_insertion_point();
 
     // 3. Update the current document readiness to "interactive".
-    m_document->update_readiness(HTML::DocumentReadyState::Interactive);
+    document->update_readiness(HTML::DocumentReadyState::Interactive);
 
     // 4. Pop all the nodes off the stack of open elements.
-    while (!m_stack_of_open_elements.is_empty())
-        (void)m_stack_of_open_elements.pop();
+    if (parser) {
+        while (!parser->m_stack_of_open_elements.is_empty())
+            (void)parser->m_stack_of_open_elements.pop();
+    }
 
     // 5. While the list of scripts that will execute when the document has finished parsing is not empty:
-    while (!m_document->scripts_to_execute_when_parsing_has_finished().is_empty()) {
+    while (!document->scripts_to_execute_when_parsing_has_finished().is_empty()) {
         // 1. Spin the event loop until the first script in the list of scripts that will execute when the document has finished parsing
         //    has its "ready to be parser-executed" flag set and the parser's Document has no style sheet that is blocking scripts.
         main_thread_event_loop().spin_until([&] {
-            return m_document->scripts_to_execute_when_parsing_has_finished().first()->is_ready_to_be_parser_executed()
-                && !m_document->has_a_style_sheet_that_is_blocking_scripts();
+            return document->scripts_to_execute_when_parsing_has_finished().first()->is_ready_to_be_parser_executed()
+                && !document->has_a_style_sheet_that_is_blocking_scripts();
         });
 
         // 2. Execute the first script in the list of scripts that will execute when the document has finished parsing.
-        m_document->scripts_to_execute_when_parsing_has_finished().first()->execute_script();
+        document->scripts_to_execute_when_parsing_has_finished().first()->execute_script();
 
         // 3. Remove the first script element from the list of scripts that will execute when the document has finished parsing (i.e. shift out the first entry in the list).
-        (void)m_document->scripts_to_execute_when_parsing_has_finished().take_first();
+        (void)document->scripts_to_execute_when_parsing_has_finished().take_first();
     }
 
     // 6. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
-    queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document] {
+    queue_global_task(HTML::Task::Source::DOMManipulation, *document, [document = document] {
         // 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
         document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
@@ -300,16 +310,16 @@ void HTMLParser::the_end()
 
     // 7. Spin the event loop until the set of scripts that will execute as soon as possible and the list of scripts that will execute in order as soon as possible are empty.
     main_thread_event_loop().spin_until([&] {
-        return m_document->scripts_to_execute_as_soon_as_possible().is_empty();
+        return document->scripts_to_execute_as_soon_as_possible().is_empty();
     });
 
     // 8. Spin the event loop until there is nothing that delays the load event in the Document.
     main_thread_event_loop().spin_until([&] {
-        return !m_document->anything_is_delaying_the_load_event();
+        return !document->anything_is_delaying_the_load_event();
     });
 
     // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
-    queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document] {
+    queue_global_task(HTML::Task::Source::DOMManipulation, *document, [document = document] {
         // 1. Update the current document readiness to "complete".
         document->update_readiness(HTML::DocumentReadyState::Complete);
 
@@ -353,7 +363,7 @@ void HTMLParser::the_end()
     // FIXME: 10. If the Document's print when loaded flag is set, then run the printing steps.
 
     // 11. The Document is now ready for post-load tasks.
-    m_document->set_ready_for_post_load_tasks(true);
+    document->set_ready_for_post_load_tasks(true);
 }
 
 void HTMLParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)
