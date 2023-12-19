@@ -435,6 +435,46 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
     return make_object<DictObject>(move(map));
 }
 
+PDFErrorOr<void> Parser::unfilter_stream(NonnullRefPtr<StreamObject> stream_object)
+{
+    auto const& dict = stream_object->dict();
+    if (!dict->contains(CommonNames::Filter))
+        return {};
+
+    Vector<DeprecatedFlyString> filters = TRY(m_document->read_filters(dict));
+
+    // Every filter may get its own parameter dictionary
+    Vector<RefPtr<DictObject>> decode_parms_vector;
+    RefPtr<Object> decode_parms_object;
+    if (dict->contains(CommonNames::DecodeParms)) {
+        decode_parms_object = TRY(dict->get_object(m_document, CommonNames::DecodeParms));
+        if (decode_parms_object->is<ArrayObject>()) {
+            auto decode_parms_array = decode_parms_object->cast<ArrayObject>();
+            for (size_t i = 0; i < decode_parms_array->size(); ++i) {
+                RefPtr<DictObject> decode_parms;
+                auto entry = decode_parms_array->at(i);
+                if (entry.has<NonnullRefPtr<Object>>())
+                    decode_parms = entry.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+                decode_parms_vector.append(decode_parms);
+            }
+        } else {
+            decode_parms_vector.append(decode_parms_object->cast<DictObject>());
+        }
+    }
+
+    VERIFY(decode_parms_vector.is_empty() || decode_parms_vector.size() == filters.size());
+
+    for (size_t i = 0; i < filters.size(); ++i) {
+        RefPtr<DictObject> decode_parms;
+        if (!decode_parms_vector.is_empty())
+            decode_parms = decode_parms_vector.at(i);
+
+        stream_object->buffer() = TRY(Filter::decode(stream_object->bytes(), filters.at(i), decode_parms));
+    }
+
+    return {};
+}
+
 PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
 {
     if (!m_reader.matches("stream"))
@@ -474,38 +514,8 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     if (m_document->security_handler() && m_enable_encryption)
         m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
 
-    if (dict->contains(CommonNames::Filter) && m_enable_filters) {
-        Vector<DeprecatedFlyString> filters = TRY(m_document->read_filters(dict));
-
-        // Every filter may get its own parameter dictionary
-        Vector<RefPtr<DictObject>> decode_parms_vector;
-        RefPtr<Object> decode_parms_object;
-        if (dict->contains(CommonNames::DecodeParms)) {
-            decode_parms_object = TRY(dict->get_object(m_document, CommonNames::DecodeParms));
-            if (decode_parms_object->is<ArrayObject>()) {
-                auto decode_parms_array = decode_parms_object->cast<ArrayObject>();
-                for (size_t i = 0; i < decode_parms_array->size(); ++i) {
-                    RefPtr<DictObject> decode_parms;
-                    auto entry = decode_parms_array->at(i);
-                    if (entry.has<NonnullRefPtr<Object>>())
-                        decode_parms = entry.get<NonnullRefPtr<Object>>()->cast<DictObject>();
-                    decode_parms_vector.append(decode_parms);
-                }
-            } else {
-                decode_parms_vector.append(decode_parms_object->cast<DictObject>());
-            }
-        }
-
-        VERIFY(decode_parms_vector.is_empty() || decode_parms_vector.size() == filters.size());
-
-        for (size_t i = 0; i < filters.size(); ++i) {
-            RefPtr<DictObject> decode_parms;
-            if (!decode_parms_vector.is_empty())
-                decode_parms = decode_parms_vector.at(i);
-
-            stream_object->buffer() = TRY(Filter::decode(stream_object->bytes(), filters.at(i), decode_parms));
-        }
-    }
+    if (m_enable_filters)
+        TRY(unfilter_stream(stream_object));
 
     return stream_object;
 }
