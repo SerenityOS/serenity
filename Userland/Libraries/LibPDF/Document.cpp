@@ -235,7 +235,7 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     if (maybe_resources_object.has_value())
         resources = maybe_resources_object.value()->cast<DictObject>();
     else
-        resources = adopt_ref(*new DictObject({}));
+        resources = make_object<DictObject>(HashMap<DeprecatedFlyString, Value> {});
 
     RefPtr<Object> contents;
     if (raw_page_object->contains(CommonNames::Contents))

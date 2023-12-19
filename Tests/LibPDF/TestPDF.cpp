@@ -113,7 +113,7 @@ static PDF::Value make_array(Vector<float> floats)
     Vector<PDF::Value> values;
     for (auto f : floats)
         values.append(PDF::Value { f });
-    return PDF::Value { adopt_ref(*new PDF::ArrayObject(move(values))) };
+    return PDF::Value { make_object<PDF::ArrayObject>(move(values)) };
 }
 
 static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_function(int type, ReadonlyBytes data, Vector<float> domain, Vector<float> range, Function<void(HashMap<DeprecatedFlyString, PDF::Value>&)> extra_keys = nullptr)
@@ -124,8 +124,8 @@ static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_function(int type, Rea
     map.set(PDF::CommonNames::Range, make_array(move(range)));
     if (extra_keys)
         extra_keys(map);
-    auto dict = adopt_ref(*new PDF::DictObject(move(map)));
-    auto stream = adopt_ref(*new PDF::StreamObject(dict, MUST(ByteBuffer::copy(data))));
+    auto dict = make_object<PDF::DictObject>(move(map));
+    auto stream = make_object<PDF::StreamObject>(dict, MUST(ByteBuffer::copy(data)));
 
     // document isn't used for anything, but UBSan complains about a (harmless) method call on a null object without it.
     auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
