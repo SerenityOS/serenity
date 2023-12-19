@@ -55,6 +55,7 @@ public:
     PDFErrorOr<NonnullRefPtr<ArrayObject>> parse_array();
     PDFErrorOr<HashMap<DeprecatedFlyString, Value>> parse_dict_contents_until(char const*);
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
+    PDFErrorOr<void> unfilter_stream(NonnullRefPtr<StreamObject>);
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
     PDFErrorOr<Vector<Operator>> parse_operators();
 
