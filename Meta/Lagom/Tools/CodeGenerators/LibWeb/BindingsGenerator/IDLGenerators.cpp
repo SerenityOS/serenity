@@ -1205,6 +1205,17 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
+        // Note: This covers steps 6-8 for when Buffersource is in a union with a type other than "object".
+        //       Since in that case, the return type would be Handle<BufferSource>, and not Handle<Object>.
+        if (any_of(types, [](auto const& type) { return type->name() == "BufferSource"; }) && !includes_object) {
+            union_generator.append(R"~~~(
+            if (is<JS::ArrayBuffer>(@js_name@@js_suffix@_object) || is<JS::DataView>(@js_name@@js_suffix@_object) || is<JS::TypedArrayBase>(@js_name@@js_suffix@_object)) {
+                JS::NonnullGCPtr<WebIDL::BufferSource> source_object = vm.heap().allocate<WebIDL::BufferSource>(realm, @js_name@@js_suffix@_object);
+                return JS::make_handle(source_object);
+            }
+)~~~");
+        }
+
         // 6. If Type(V) is Object and V has an [[ArrayBufferData]] internal slot, then
         //    1. If types includes ArrayBuffer, then return the result of converting V to ArrayBuffer.
         //    2. If types includes object, then return the IDL value that is a reference to the object V.
