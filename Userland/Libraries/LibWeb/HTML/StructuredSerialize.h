@@ -54,3 +54,19 @@ WebIDL::ExceptionOr<SerializedTransferRecord> structured_serialize_with_transfer
 WebIDL::ExceptionOr<DeserializedTransferRecord> structured_deserialize_with_transfer(JS::VM& vm, SerializedTransferRecord&);
 
 }
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder&, ::Web::HTML::SerializedTransferRecord const&);
+
+template<>
+ErrorOr<void> encode(Encoder&, ::Web::HTML::TransferDataHolder const&);
+
+template<>
+ErrorOr<::Web::HTML::SerializedTransferRecord> decode(Decoder&);
+
+template<>
+ErrorOr<::Web::HTML::TransferDataHolder> decode(Decoder&);
+
+}

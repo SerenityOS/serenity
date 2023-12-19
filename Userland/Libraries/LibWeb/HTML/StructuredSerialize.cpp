@@ -10,6 +10,8 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Array.h>
@@ -1126,6 +1128,42 @@ WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationR
 
     Deserializer deserializer(vm, target_realm, serialized.span(), *memory);
     return deserializer.deserialize();
+}
+
+}
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, ::Web::HTML::TransferDataHolder const& data_holder)
+{
+    TRY(encoder.encode(data_holder.data));
+    TRY(encoder.encode(data_holder.fds));
+    return {};
+}
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, ::Web::HTML::SerializedTransferRecord const& record)
+{
+    TRY(encoder.encode(record.serialized));
+    TRY(encoder.encode(record.transfer_data_holders));
+    return {};
+}
+
+template<>
+ErrorOr<::Web::HTML::TransferDataHolder> decode(Decoder& decoder)
+{
+    auto data = TRY(decoder.decode<Vector<u8>>());
+    auto fds = TRY(decoder.decode<Vector<IPC::File>>());
+    return ::Web::HTML::TransferDataHolder { move(data), move(fds) };
+}
+
+template<>
+ErrorOr<::Web::HTML::SerializedTransferRecord> decode(Decoder& decoder)
+{
+    auto serialized = TRY(decoder.decode<Vector<u32>>());
+    auto transfer_data_holders = TRY(decoder.decode<Vector<::Web::HTML::TransferDataHolder>>());
+    return ::Web::HTML::SerializedTransferRecord { move(serialized), move(transfer_data_holders) };
 }
 
 }

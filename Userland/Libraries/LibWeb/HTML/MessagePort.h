@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -70,6 +71,10 @@ private:
     void disentangle();
 
     WebIDL::ExceptionOr<void> message_port_post_message_steps(JS::GCPtr<MessagePort> target_port, JS::Value message, StructuredSerializeOptions const& options);
+    void post_message_task_steps(SerializedTransferRecord&);
+    void post_port_message(SerializedTransferRecord);
+    ErrorOr<void> send_message_on_socket(SerializedTransferRecord const&);
+    void read_from_socket();
 
     // The HTML spec implies(!) that this is MessagePort.[[RemotePort]]
     JS::GCPtr<MessagePort> m_remote_port;
@@ -78,6 +83,14 @@ private:
     bool m_has_been_shipped { false };
 
     OwnPtr<Core::LocalSocket> m_socket;
+    OwnPtr<Core::LocalSocket> m_fd_passing_socket;
+
+    enum class SocketState : u8 {
+        Header,
+        Data,
+        Error,
+    } m_socket_state { SocketState::Header };
+    size_t m_socket_incoming_message_size { 0 };
 };
 
 }
