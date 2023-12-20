@@ -7,9 +7,11 @@
 #include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <LibCore/MappedFile.h>
+#include <LibGfx/Bitmap.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Function.h>
+#include <LibPDF/Renderer.h>
 #include <LibTest/Macros.h>
 #include <LibTest/TestCase.h>
 
@@ -266,4 +268,35 @@ TEST_CASE(postscript)
     check_evaluate("{ pop }"sv, { 8.0f, 1.0f, 0.5f }, { 8.0f, 1.0f });
     check_evaluate("{ 3 1 roll }"sv, { 0.5f, 1.0f, 2.0f }, { 2.0f, 0.5f, 1.0f });
     check_evaluate("{ 3 -1 roll }"sv, { 0.5f, 1.0f, 2.0f }, { 1.0f, 2.0f, 0.5f });
+}
+
+TEST_CASE(render)
+{
+    auto file = MUST(Core::MappedFile::map("colorspaces.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 1U);
+
+    auto page = MUST(document->get_page(0));
+    auto page_size = Gfx::IntSize { 310, 370 };
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
+    MUST(PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {}));
+
+    // DeviceGray
+    EXPECT_EQ(bitmap->get_pixel(270, 370 - 20), Gfx::Color::NamedColor::Black);
+
+    // MyCalRGB
+    EXPECT_EQ(bitmap->get_pixel(270, 370 - 80), Gfx::Color::NamedColor::Black);
+
+    // DeviceRGB
+    EXPECT_EQ(bitmap->get_pixel(270, 370 - 140), Gfx::Color::NamedColor::Black);
+
+    // DeviceCMYK (note: black one box further left)
+    EXPECT_EQ(bitmap->get_pixel(220, 370 - 200), Gfx::Color::NamedColor::Black);
+
+    // MyLab
+    EXPECT_EQ(bitmap->get_pixel(270, 370 - 260), Gfx::Color::NamedColor::Black);
+
+    // MyCalGray
+    EXPECT_EQ(bitmap->get_pixel(270, 370 - 320), Gfx::Color::NamedColor::Black);
 }
