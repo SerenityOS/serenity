@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select showcase</title>
+    <style>
+        .custom {
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            appearance: none;
+            padding: 8px 16px;
+            background-color: #088;
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
     <p>Basic select:</p>
@@ -31,6 +41,17 @@
             <option value="six">Six</option>
         </select>
         Value: <span id="b-value">?</span>
+    </p>
+
+    <p>Basic select with custom styling:</p>
+    <p>
+        <select class="custom">
+            <option value="one">One</option>
+            <option value="two">Two</option>
+            <option value="three">Three</option>
+            <option value="four">Four</option>
+            <option value="five">Five</option>
+        </select>
     </p>
 
     <p>Basic select with option groups and separators:</p>

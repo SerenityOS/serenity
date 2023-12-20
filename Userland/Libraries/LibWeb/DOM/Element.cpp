@@ -573,6 +573,7 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
         return invalidation;
 
     m_computed_css_values = move(new_computed_css_values);
+    computed_css_values_changed();
 
     if (!invalidation.rebuild_layout_tree && layout_node()) {
         // If we're keeping the layout tree, we can just apply the new style to the existing layout tree.
@@ -2043,6 +2044,7 @@ size_t Element::attribute_list_size() const
 void Element::set_computed_css_values(RefPtr<CSS::StyleProperties> style)
 {
     m_computed_css_values = move(style);
+    computed_css_values_changed();
 }
 
 auto Element::pseudo_element_custom_properties() const -> PseudoElementCustomProperties&

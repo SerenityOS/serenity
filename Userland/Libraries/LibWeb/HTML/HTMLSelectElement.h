@@ -89,12 +89,15 @@ private:
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 
+    virtual void computed_css_values_changed() override;
+
     void create_shadow_tree_if_needed();
     void update_inner_text_element();
 
     JS::GCPtr<HTMLOptionsCollection> m_options;
     bool m_is_open { false };
     JS::GCPtr<DOM::Element> m_inner_text_element;
+    JS::GCPtr<DOM::Element> m_chevron_icon_element;
 };
 
 }
