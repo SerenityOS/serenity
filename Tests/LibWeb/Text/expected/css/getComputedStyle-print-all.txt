@@ -1,3 +1,4 @@
+-webkit-appearance: auto
 accent-color: auto
 align-content: stretch
 align-items: normal

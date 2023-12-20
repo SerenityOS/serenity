@@ -395,6 +395,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return PropertyID::Left;
         case PropertyID::InsetInlineEnd:
             return PropertyID::Right;
+        case PropertyID::WebkitAppearance:
+            return PropertyID::Appearance;
         default:
             return {};
         }
