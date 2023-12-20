@@ -386,6 +386,8 @@ protected:
     virtual void children_changed() override;
     virtual i32 default_tab_index_value() const;
 
+    virtual void computed_css_values_changed() { }
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual bool id_reference_exists(String const&) const override;

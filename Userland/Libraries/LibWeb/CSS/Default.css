@@ -62,10 +62,6 @@ button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=res
     background-color: #e5e0d7;
 }
 
-select {
-    padding-right: 2px;
-}
-
 option {
     display: none;
 }

@@ -45,6 +45,7 @@ void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_options);
     visitor.visit(m_inner_text_element);
+    visitor.visit(m_chevron_icon_element);
 }
 
 JS::GCPtr<Layout::Node> HTMLSelectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -332,6 +333,19 @@ void HTMLSelectElement::form_associated_element_was_removed(DOM::Node*)
     set_shadow_root(nullptr);
 }
 
+void HTMLSelectElement::computed_css_values_changed()
+{
+    // Hide chevron icon when appearance is none
+    if (m_chevron_icon_element) {
+        auto appearance = computed_css_values()->appearance();
+        if (appearance.has_value() && *appearance == CSS::Appearance::None) {
+            MUST(m_chevron_icon_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "none"_string));
+        } else {
+            MUST(m_chevron_icon_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "block"_string));
+        }
+    }
+}
+
 void HTMLSelectElement::create_shadow_tree_if_needed()
 {
     if (shadow_root_internal())
@@ -355,14 +369,14 @@ void HTMLSelectElement::create_shadow_tree_if_needed()
     MUST(border->append_child(*m_inner_text_element));
 
     // FIXME: Find better way to add chevron icon
-    auto chevron_icon_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(chevron_icon_element->set_attribute(HTML::AttributeNames::style, R"~~~(
+    m_chevron_icon_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(m_chevron_icon_element->set_attribute(HTML::AttributeNames::style, R"~~~(
         width: 16px;
         height: 16px;
         margin-left: 4px;
     )~~~"_string));
-    MUST(chevron_icon_element->set_inner_html("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z\" /></svg>"sv));
-    MUST(border->append_child(*chevron_icon_element));
+    MUST(m_chevron_icon_element->set_inner_html("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z\" /></svg>"sv));
+    MUST(border->append_child(*m_chevron_icon_element));
 
     update_inner_text_element();
 }
@@ -377,5 +391,4 @@ void HTMLSelectElement::update_inner_text_element()
         }
     }
 }
-
 }
