@@ -55,6 +55,8 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 arguments.append("--use-lagom-networking"sv);
             if (web_content_options.enable_gpu_painting == Ladybird::EnableGPUPainting::Yes)
                 arguments.append("--use-gpu-painting"sv);
+            if (web_content_options.wait_for_debugger == Ladybird::WaitForDebugger::Yes)
+                arguments.append("--wait-for-debugger"sv);
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
             if (!result.is_error())
