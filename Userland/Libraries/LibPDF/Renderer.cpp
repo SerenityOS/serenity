@@ -890,6 +890,8 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
         if (filter_object->is<NameObject>())
             return filter_object->cast<NameObject>()->name() == name;
         auto filters = filter_object->cast<ArrayObject>();
+        if (filters->elements().is_empty())
+            return false;
         auto last_filter_index = filters->elements().size() - 1;
         return MUST(filters->get_name_at(m_document, last_filter_index))->name() == name;
     };
