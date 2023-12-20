@@ -3578,6 +3578,11 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     // 6. If documentIsNew is true, then:
     if (document_is_new) {
         // FIXME: 1. Try to scroll to the fragment for document.
+        // FIXME: According to the spec we should only scroll here if document has no parser or parsing has stopped.
+        //        It should be ok to remove this after we implement navigation events and scrolling will happen in
+        //        "process scroll behavior".
+        scroll_to_the_fragment();
+
         // FIXME: 2. At this point scripts may run for the newly-created document document.
     }
 
