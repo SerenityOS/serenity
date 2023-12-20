@@ -26,18 +26,19 @@ struct WorkerAgent : JS::Cell {
     JS_CELL(Agent, JS::Cell);
     JS_DECLARE_ALLOCATOR(WorkerAgent);
 
-    WorkerAgent(AK::URL url, WorkerOptions const& options);
+    WorkerAgent(AK::URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port);
 
     RefPtr<Web::HTML::WebWorkerClient> m_worker_ipc;
 
-    Core::BufferedLocalSocket& socket() const { return *m_socket; }
-
 private:
+    virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
+
     WorkerOptions m_worker_options;
     AK::URL m_url;
 
-    // FIXME: associate with MessagePorts
-    OwnPtr<Core::BufferedLocalSocket> m_socket;
+    JS::GCPtr<MessagePort> m_message_port;
+    JS::GCPtr<MessagePort> m_outside_port;
 };
 
 }

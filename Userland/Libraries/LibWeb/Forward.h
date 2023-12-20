@@ -446,6 +446,7 @@ class Timer;
 class TimeRanges;
 class ToggleEvent;
 class TrackEvent;
+struct TransferDataHolder;
 class TraversableNavigable;
 class VideoTrack;
 class VideoTrackList;

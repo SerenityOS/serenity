@@ -11,7 +11,6 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Worker.h>
-#include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
@@ -19,7 +18,7 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(Worker);
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
-Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Document& document)
+Worker::Worker(String const& script_url, WorkerOptions const& options, DOM::Document& document)
     : DOM::EventTarget(document.realm())
     , m_script_url(script_url)
     , m_options(options)
@@ -42,7 +41,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& script_url, WorkerOptions const options, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& script_url, WorkerOptions const& options, DOM::Document& document)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
@@ -79,6 +78,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
 
     // 8. Associate the outside port with worker
     worker->m_outside_port = outside_port;
+    worker->m_outside_port->set_worker_event_target(worker);
 
     // 9. Run this step in parallel:
     //    1. Run a worker given worker, worker URL, outside settings, outside port, and options.
@@ -89,7 +89,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#run-a-worker
-void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort&, WorkerOptions const& options)
+void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> port, WorkerOptions const& options)
 {
     // 1. Let is shared be true if worker is a SharedWorker object, and false otherwise.
     // FIXME: SharedWorker support
@@ -110,55 +110,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     // and is shared. Run the rest of these steps in that agent.
 
     // Note: This spawns a new process to act as the 'agent' for the worker.
-    m_agent = heap().allocate_without_realm<WorkerAgent>(url, options);
-
-    auto& socket = m_agent->socket();
-    // FIXME: Hide this logic in MessagePort
-    socket.set_notifications_enabled(true);
-    socket.on_ready_to_read = [this] {
-        auto& socket = this->m_agent->socket();
-        auto& vm = this->vm();
-        auto& realm = this->realm();
-
-        auto num_bytes_ready = MUST(socket.pending_bytes());
-        switch (m_outside_port_state) {
-        case PortState::Header: {
-            if (num_bytes_ready < 8)
-                break;
-            auto const magic = MUST(socket.read_value<u32>());
-            if (magic != 0xDEADBEEF) {
-                m_outside_port_state = PortState::Error;
-                break;
-            }
-            m_outside_port_incoming_message_size = MUST(socket.read_value<u32>());
-            num_bytes_ready -= 8;
-            m_outside_port_state = PortState::Data;
-        }
-            [[fallthrough]];
-        case PortState::Data: {
-            if (num_bytes_ready < m_outside_port_incoming_message_size)
-                break;
-            SerializationRecord rec; // FIXME: Keep in class scope
-            rec.resize(m_outside_port_incoming_message_size / sizeof(u32));
-
-            MUST(socket.read_until_filled(to_bytes(rec.span())));
-
-            TemporaryExecutionContext cxt(relevant_settings_object(*this));
-            VERIFY(&realm == vm.current_realm());
-            MessageEventInit event_init {};
-            event_init.data = MUST(structured_deserialize(vm, rec, realm, {}));
-            // FIXME: Fill in the rest of the info from MessagePort
-
-            this->dispatch_event(MessageEvent::create(realm, EventNames::message, event_init));
-
-            m_outside_port_state = PortState::Header;
-            break;
-        }
-        case PortState::Error:
-            VERIFY_NOT_REACHED();
-            break;
-        }
-    };
+    m_agent = heap().allocate<WorkerAgent>(outside_settings.realm(), url, options, port);
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate
@@ -170,29 +122,15 @@ WebIDL::ExceptionOr<void> Worker::terminate()
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
-WebIDL::ExceptionOr<void> Worker::post_message(JS::Value message, JS::Value)
+WebIDL::ExceptionOr<void> Worker::post_message(JS::Value message, StructuredSerializeOptions const& options)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Post Message: {}", message.to_string_without_side_effects());
 
-    // FIXME: 1. Let targetPort be the port with which this is entangled, if any; otherwise let it be null.
-    // FIXME: 2. Let options be «[ "transfer" → transfer ]».
-    // FIXME: 3. Run the message port post message steps providing this, targetPort, message and options.
+    // The postMessage(message, transfer) and postMessage(message, options) methods on Worker objects act as if,
+    // when invoked, they immediately invoked the respective postMessage(message, transfer) and
+    // postMessage(message, options) on the port, with the same arguments, and returned the same return value.
 
-    auto& realm = this->realm();
-    auto& vm = this->vm();
-
-    // FIXME: Use the with-transfer variant, which should(?) prepend the magic + size at the front
-    auto data = TRY(structured_serialize(vm, message));
-
-    Array<u32, 2> header = { 0xDEADBEEF, static_cast<u32>(data.size() * sizeof(u32)) };
-
-    if (auto const err = m_agent->socket().write_until_depleted(to_readonly_bytes(header.span())); err.is_error())
-        return WebIDL::DataCloneError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{}", err.error())));
-
-    if (auto const err = m_agent->socket().write_until_depleted(to_readonly_bytes(data.span())); err.is_error())
-        return WebIDL::DataCloneError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{}", err.error())));
-
-    return {};
+    return m_outside_port->post_message(message, options);
 }
 
 #undef __ENUMERATE

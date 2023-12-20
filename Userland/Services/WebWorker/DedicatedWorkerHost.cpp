@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibIPC/File.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
@@ -17,35 +18,30 @@
 
 namespace WebWorker {
 
-DedicatedWorkerHost::DedicatedWorkerHost(Web::Page& page, AK::URL url, String type, int outside_port)
-    : m_page(page)
-    , m_url(move(url))
+DedicatedWorkerHost::DedicatedWorkerHost(AK::URL url, String type)
+    : m_url(move(url))
     , m_type(move(type))
-    , m_outside_port(outside_port)
 {
 }
 
-DedicatedWorkerHost::~DedicatedWorkerHost()
-{
-    ::close(m_outside_port);
-}
+DedicatedWorkerHost::~DedicatedWorkerHost() = default;
 
 // https://html.spec.whatwg.org/multipage/workers.html#run-a-worker
 // FIXME: Extract out into a helper for both shared and dedicated workers
-void DedicatedWorkerHost::run()
+void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::TransferDataHolder message_port_data)
 {
     bool const is_shared = false;
 
     // 7. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
     auto realm_execution_context = Web::Bindings::create_a_new_javascript_realm(
         Web::Bindings::main_thread_vm(),
-        [this](JS::Realm& realm) -> JS::Object* {
+        [page](JS::Realm& realm) -> JS::Object* {
             //      7a. For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
             //      7b. Otherwise, create a new DedicatedWorkerGlobalScope object.
             // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
             if (is_shared)
                 TODO();
-            return Web::Bindings::main_thread_vm().heap().allocate_without_realm<Web::HTML::WorkerGlobalScope>(realm, m_page);
+            return Web::Bindings::main_thread_vm().heap().allocate_without_realm<Web::HTML::WorkerGlobalScope>(realm, page);
         },
         nullptr);
 
@@ -55,7 +51,7 @@ void DedicatedWorkerHost::run()
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(m_page, move(realm_execution_context));
+    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(page, move(realm_execution_context));
 
     auto& console_object = *inner_settings->realm().intrinsics().console_object();
     m_console = adopt_ref(*new Web::HTML::WorkerDebugConsoleClient(console_object.console()));
@@ -132,7 +128,7 @@ void DedicatedWorkerHost::run()
     };
     auto perform_fetch = Web::HTML::create_perform_the_fetch_hook(inner_settings->heap(), move(perform_fetch_function));
 
-    auto on_complete_function = [inner_settings, worker_global_scope, outside_port = m_outside_port, url = m_url](JS::GCPtr<Web::HTML::Script> script) {
+    auto on_complete_function = [inner_settings, worker_global_scope, message_port_data = move(message_port_data), url = m_url](JS::GCPtr<Web::HTML::Script> script) mutable {
         auto& realm = inner_settings->realm();
         // 1. If script is null or if script's error to rethrow is non-null, then:
         if (!script || !script->error_to_rethrow().is_null()) {
@@ -148,11 +144,14 @@ void DedicatedWorkerHost::run()
         // FIXME: 2. Associate worker with worker global scope.
         // What does this even mean?
 
-        // FIXME: 3. Let inside port be a new MessagePort object in inside settings's Realm.
-        // FIXME: 4. Associate inside port with worker global scope.
-        // FIXME: 5. Entangle outside port and inside port.
-        // This is a hack, move to a real MessagePort object per above FIXMEs.
-        worker_global_scope->set_outside_port(MUST(Core::BufferedLocalSocket::create(MUST(Core::LocalSocket::adopt_fd(outside_port)))));
+        // 3. Let inside port be a new MessagePort object in inside settings's Realm.
+        auto inside_port = Web::HTML::MessagePort::create(realm);
+
+        // 4. Associate inside port with worker global scope.
+        worker_global_scope->set_internal_port(inside_port);
+
+        // 5. Entangle outside port and inside port.
+        MUST(inside_port->transfer_receiving_steps(message_port_data));
 
         // 6. Create a new WorkerLocation object and associate it with worker global scope.
         worker_global_scope->set_location(realm.heap().allocate<Web::HTML::WorkerLocation>(realm, *worker_global_scope));
@@ -178,7 +177,10 @@ void DedicatedWorkerHost::run()
 
         // FIXME: 11. Enable outside port's port message queue.
 
-        // FIXME: 12. If is shared is false, enable the port message queue of the worker's implicit port.
+        // 12. If is shared is false, enable the port message queue of the worker's implicit port.
+        if (!is_shared) {
+            inside_port->start();
+        }
 
         // FIXME: 13. If is shared is true, then queue a global task on DOM manipulation task source given worker
         //     global scope to fire an event named connect at worker global scope, using MessageEvent,

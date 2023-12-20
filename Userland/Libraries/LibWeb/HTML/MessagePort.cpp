@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/MessagePort.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/HTML/WorkerGlobalScope.h>
 
 namespace Web::HTML {
 
@@ -51,6 +52,11 @@ void MessagePort::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_remote_port);
+}
+
+void MessagePort::set_worker_event_target(JS::NonnullGCPtr<DOM::EventTarget> target)
+{
+    m_worker_event_target = target;
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports:transfer-steps
@@ -107,6 +113,10 @@ WebIDL::ExceptionOr<void> MessagePort::transfer_receiving_steps(HTML::TransferDa
         VERIFY(fd_tag == IPC_FILE_TAG);
         fd = data_holder.fds.take_first();
         m_fd_passing_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd(), Core::LocalSocket::PreventSIGPIPE::Yes));
+
+        m_socket->on_ready_to_read = [strong_this = JS::make_handle(this)]() {
+            strong_this->read_from_socket();
+        };
     } else if (fd_tag != 0) {
         dbgln("Unexpected byte {:x} in MessagePort transfer data", fd_tag);
         VERIFY_NOT_REACHED();
@@ -348,6 +358,16 @@ void MessagePort::post_message_task_steps(SerializedTransferRecord& serialize_wi
     // NOTE: This can be different from targetPort, if targetPort itself was transferred and thus all its tasks moved along with it.
     auto* final_target_port = this;
 
+    // IMPLEMENTATION DEFINED:
+    // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
+    //      Worker objects act as if they had an implicit MessagePort associated with them.
+    //      All messages received by that port must immediately be retargeted at the Worker object.
+    // We therefore set a special event target for those implicit ports on the Worker and the WorkerGlobalScope objects
+    EventTarget* message_event_target = final_target_port;
+    if (m_worker_event_target != nullptr) {
+        message_event_target = m_worker_event_target;
+    }
+
     // 2. Let targetRealm be finalTargetPort's relevant realm.
     auto& target_realm = relevant_realm(*final_target_port);
     auto& target_vm = target_realm.vm();
@@ -359,7 +379,7 @@ void MessagePort::post_message_task_steps(SerializedTransferRecord& serialize_wi
         // If this throws an exception, catch it, fire an event named messageerror at finalTargetPort, using MessageEvent, and then return.
         auto exception = deserialize_record_or_error.release_error();
         MessageEventInit event_init {};
-        final_target_port->dispatch_event(MessageEvent::create(target_realm, HTML::EventNames::messageerror, event_init));
+        message_event_target->dispatch_event(MessageEvent::create(target_realm, HTML::EventNames::messageerror, event_init));
         return;
     }
     auto deserialize_record = deserialize_record_or_error.release_value();
@@ -380,7 +400,7 @@ void MessagePort::post_message_task_steps(SerializedTransferRecord& serialize_wi
     MessageEventInit event_init {};
     event_init.data = message_clone;
     event_init.ports = move(new_ports);
-    final_target_port->dispatch_event(MessageEvent::create(target_realm, HTML::EventNames::message, event_init));
+    message_event_target->dispatch_event(MessageEvent::create(target_realm, HTML::EventNames::message, event_init));
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-start

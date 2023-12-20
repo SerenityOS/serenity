@@ -3,6 +3,7 @@
 #import <HTML/WindowOrWorkerGlobalScope.idl>
 #import <HTML/WorkerLocation.idl>
 #import <HTML/WorkerNavigator.idl>
+#import <HTML/MessagePort.idl>
 
 // https://html.spec.whatwg.org/multipage/workers.html#workerglobalscope
 [Exposed=Worker]
@@ -19,8 +20,9 @@ interface WorkerGlobalScope : EventTarget {
     attribute EventHandler onrejectionhandled;
     attribute EventHandler onunhandledrejection;
 
-    // FIXME: This belongs on the subclasses of WorkerGlobalScope
-    undefined postMessage(any message, any transfer);
+    // FIXME: IDL overload issue here
+    // FIXME: undefined postMessage(any message, sequence<object> transfer);
+    undefined postMessage(any message, optional StructuredSerializeOptions options = {});
     attribute EventHandler onmessage;
     attribute EventHandler onmessageerror;
 };

@@ -32,8 +32,8 @@ class Worker : public DOM::EventTarget {
     JS_DECLARE_ALLOCATOR(Worker);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(String const& script_url, WorkerOptions const options, DOM::Document& document);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, String const& script_url, WorkerOptions const options)
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(String const& script_url, WorkerOptions const& options, DOM::Document& document);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, String const& script_url, WorkerOptions const& options)
     {
         auto& window = verify_cast<HTML::Window>(realm.global_object());
         return Worker::create(script_url, options, window.associated_document());
@@ -41,7 +41,7 @@ public:
 
     WebIDL::ExceptionOr<void> terminate();
 
-    WebIDL::ExceptionOr<void> post_message(JS::Value message, JS::Value transfer);
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, StructuredSerializeOptions const&);
 
     virtual ~Worker() = default;
 
@@ -55,7 +55,7 @@ public:
 #undef __ENUMERATE
 
 protected:
-    Worker(String const&, const WorkerOptions, DOM::Document&);
+    Worker(String const&, WorkerOptions const&, DOM::Document&);
 
 private:
     virtual void initialize(JS::Realm&) override;
@@ -66,17 +66,10 @@ private:
 
     JS::GCPtr<DOM::Document> m_document;
     JS::GCPtr<MessagePort> m_outside_port;
-    // FIXME: Move tihs state into the message port (and actually use it :) )
-    enum class PortState : u8 {
-        Header,
-        Data,
-        Error,
-    } m_outside_port_state { PortState::Header };
-    size_t m_outside_port_incoming_message_size { 0 };
 
     JS::GCPtr<WorkerAgent> m_agent;
 
-    void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort& outside_port, WorkerOptions const& options);
+    void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> outside_port, WorkerOptions const& options);
 };
 
 }
