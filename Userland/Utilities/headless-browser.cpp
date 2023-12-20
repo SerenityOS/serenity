@@ -214,12 +214,17 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
         loop.quit(0);
     }));
 
-    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string()));
+    auto url = URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string());
+    view.load(url);
 
     String result;
+    auto did_finish_test = false;
+    auto did_finish_loading = false;
 
     if (mode == TestMode::Layout) {
-        view.on_load_finish = [&](auto const&) {
+        view.on_load_finish = [&](auto const& loaded_url) {
+            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes));
+
             // NOTE: We take a screenshot here to force the lazy layout of SVG-as-image documents to happen.
             //       It also causes a lot more code to run, which is good for finding bugs. :^)
             (void)view.take_screenshot();
@@ -233,10 +238,18 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
         };
         view.on_text_test_finish = {};
     } else if (mode == TestMode::Text) {
-        view.on_load_finish = {};
+
+        view.on_load_finish = [&](auto const& loaded_url) {
+            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes));
+            did_finish_loading = true;
+            if (did_finish_test)
+                loop.quit(0);
+        };
         view.on_text_test_finish = [&]() {
             result = view.dump_text().release_value_but_fixme_should_propagate_errors();
-            loop.quit(0);
+            did_finish_test = true;
+            if (did_finish_loading)
+                loop.quit(0);
         };
     }
 
