@@ -302,6 +302,9 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
     };
 
     auto linear_srgb = matrix_multiply(conversion_matrix, xyz);
+    linear_srgb[0] = clamp(linear_srgb[0], 0.0f, 1.0f);
+    linear_srgb[1] = clamp(linear_srgb[1], 0.0f, 1.0f);
+    linear_srgb[2] = clamp(linear_srgb[2], 0.0f, 1.0f);
 
     // FIXME: Use the real sRGB curve by replacing this function with Gfx::ICC::sRGB().from_pcs().
     return { pow(linear_srgb[0], 1.0f / 2.2f), pow(linear_srgb[1], 1.0f / 2.2f), pow(linear_srgb[2], 1.0f / 2.2f) };
