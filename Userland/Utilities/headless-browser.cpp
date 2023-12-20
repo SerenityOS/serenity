@@ -215,7 +215,6 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     }));
 
     auto url = URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string());
-    view.load(url);
 
     String result;
     auto did_finish_test = false;
@@ -252,6 +251,8 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
                 loop.quit(0);
         };
     }
+
+    view.load(url);
 
     timeout_timer->start();
     loop.exec();
