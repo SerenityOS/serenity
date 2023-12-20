@@ -1742,16 +1742,14 @@ Document::IndicatedPart Document::determine_the_indicated_part() const
     // For an HTML document document, the following processing model must be followed to determine its indicated part:
 
     // 1. Let fragment be document's URL's fragment.
-    VERIFY(url().fragment().has_value());
-
-    auto fragment = url().fragment().value();
+    auto fragment = url().fragment();
 
     // 2. If fragment is the empty string, then return the special value top of the document.
-    if (fragment.is_empty())
+    if (!fragment.has_value() || fragment->is_empty())
         return Document::TopOfTheDocument {};
 
     // 3. Let potentialIndicatedElement be the result of finding a potential indicated element given document and fragment.
-    auto* potential_indicated_element = find_a_potential_indicated_element(fragment);
+    auto* potential_indicated_element = find_a_potential_indicated_element(*fragment);
 
     // 4. If potentialIndicatedElement is not null, then return potentialIndicatedElement.
     if (potential_indicated_element)
@@ -1759,7 +1757,7 @@ Document::IndicatedPart Document::determine_the_indicated_part() const
 
     // 5. Let fragmentBytes be the result of percent-decoding fragment.
     // 6. Let decodedFragment be the result of running UTF-8 decode without BOM on fragmentBytes.
-    auto decoded_fragment = AK::URL::percent_decode(fragment);
+    auto decoded_fragment = AK::URL::percent_decode(*fragment);
 
     // 7. Set potentialIndicatedElement to the result of finding a potential indicated element given document and decodedFragment.
     potential_indicated_element = find_a_potential_indicated_element(MUST(FlyString::from_deprecated_fly_string(decoded_fragment)));
