@@ -13,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
 #include <LibIPC/ConnectionFromClient.h>
@@ -79,14 +80,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool is_layout_test_mode = false;
     bool use_lagom_networking = false;
     bool use_gpu_painting = false;
+    bool wait_for_debugger = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting", 0);
+    args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger", 0);
 
     args_parser.parse(arguments);
+
+    if (wait_for_debugger) {
+        Core::Process::wait_for_debugger_and_break();
+    }
 
     if (use_gpu_painting) {
         WebContent::PageClient::set_use_gpu_painter();

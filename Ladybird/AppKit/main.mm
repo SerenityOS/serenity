@@ -43,12 +43,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> raw_urls;
     StringView webdriver_content_ipc_path;
     bool use_gpu_painting = false;
+    bool debug_web_content = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser");
     args_parser.add_positional_argument(raw_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
+    args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content", 0);
     args_parser.parse(arguments);
 
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
@@ -69,6 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::WebContentOptions web_content_options {
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
+        .debug_web_content = debug_web_content ? Ladybird::DebugWebContent::Yes : Ladybird::DebugWebContent::No,
     };
 
     auto* delegate = [[ApplicationDelegate alloc] init:move(initial_urls)

@@ -28,11 +28,17 @@ enum class UseLagomNetworking {
     Yes
 };
 
+enum class WaitForDebugger {
+    No,
+    Yes
+};
+
 struct WebContentOptions {
     EnableCallgrindProfiling enable_callgrind_profiling { EnableCallgrindProfiling::No };
     EnableGPUPainting enable_gpu_painting { EnableGPUPainting::No };
     IsLayoutTestMode is_layout_test_mode { IsLayoutTestMode::No };
     UseLagomNetworking use_lagom_networking { UseLagomNetworking::No };
+    WaitForDebugger wait_for_debugger { WaitForDebugger::No };
 };
 
 }
