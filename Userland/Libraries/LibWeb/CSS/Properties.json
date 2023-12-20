@@ -1,4 +1,10 @@
 {
+  "-webkit-appearance": {
+    "logical-alias-for": [
+      "appearance"
+    ],
+    "max-values": 1
+  },
   "accent-color": {
     "inherited": true,
     "initial": "auto",
