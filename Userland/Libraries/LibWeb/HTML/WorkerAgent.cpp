@@ -95,24 +95,38 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(WorkerAgent);
 
-WorkerAgent::WorkerAgent(AK::URL url, WorkerOptions const& options)
+WorkerAgent::WorkerAgent(AK::URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port)
     : m_worker_options(options)
     , m_url(move(url))
+    , m_outside_port(outside_port)
 {
+}
+
+void WorkerAgent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+
+    m_message_port = MessagePort::create(realm);
+    m_message_port->entangle_with(*m_outside_port);
+
 #ifndef AK_OS_SERENITY
-    // FIXME: Add factory function
     auto paths = MUST(get_paths_for_helper_process("WebWorker"sv));
     m_worker_ipc = MUST(launch_web_worker_process(paths));
 #else
     m_worker_ipc = MUST(Web::HTML::WebWorkerClient::try_create());
 #endif
 
-    int fds[2] = {};
-    MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fds));
+    TransferDataHolder data_holder;
+    MUST(m_message_port->transfer_steps(data_holder));
 
-    m_socket = MUST(Core::BufferedLocalSocket::create(MUST(Core::LocalSocket::adopt_fd(fds[0]))));
+    m_worker_ipc->async_start_dedicated_worker(m_url, m_worker_options.type, m_worker_options.credentials, m_worker_options.name, move(data_holder));
+}
 
-    m_worker_ipc->async_start_dedicated_worker(m_url, options.type, options.credentials, options.name, fds[1]);
+void WorkerAgent::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_message_port);
+    visitor.visit(m_outside_port);
 }
 
 }

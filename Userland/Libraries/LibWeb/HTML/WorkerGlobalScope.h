@@ -73,7 +73,7 @@ public:
     ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
-    WebIDL::ExceptionOr<void> post_message(JS::Value message, JS::Value transfer);
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, StructuredSerializeOptions const&);
 
     // Non-IDL public methods
 
@@ -84,14 +84,14 @@ public:
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
 
-    void set_outside_port(NonnullOwnPtr<Core::BufferedLocalSocket> port);
+    void set_internal_port(JS::NonnullGCPtr<MessagePort> port);
 
     void initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>);
 
-    Web::Page* page() { return &m_page; }
+    Web::Page* page() { return m_page.ptr(); }
 
 protected:
-    explicit WorkerGlobalScope(JS::Realm&, Web::Page&);
+    explicit WorkerGlobalScope(JS::Realm&, JS::NonnullGCPtr<Web::Page>);
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
@@ -99,13 +99,8 @@ private:
     JS::GCPtr<WorkerLocation> m_location;
     JS::GCPtr<WorkerNavigator> m_navigator;
 
-    OwnPtr<Core::BufferedLocalSocket> m_outside_port;
-    enum class PortState : u8 {
-        Header,
-        Data,
-        Error,
-    } m_outside_port_state { PortState::Header };
-    size_t m_outside_port_incoming_message_size { 0 };
+    JS::NonnullGCPtr<Web::Page> m_page;
+    JS::GCPtr<MessagePort> m_internal_port;
 
     // FIXME: Add all these internal slots
 
@@ -138,8 +133,6 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-cross-origin-isolated-capability
     bool m_cross_origin_isolated_capability { false };
-
-    Web::Page& m_page;
 };
 
 }

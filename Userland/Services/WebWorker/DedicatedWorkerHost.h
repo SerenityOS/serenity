@@ -10,24 +10,22 @@
 #include <AK/URL.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 
 namespace WebWorker {
 
 class DedicatedWorkerHost : public RefCounted<DedicatedWorkerHost> {
 public:
-    explicit DedicatedWorkerHost(Web::Page&, AK::URL url, String type, int outside_port);
+    explicit DedicatedWorkerHost(AK::URL url, String type);
     ~DedicatedWorkerHost();
 
-    void run();
+    void run(JS::NonnullGCPtr<Web::Page>, Web::HTML::TransferDataHolder message_port_data);
 
 private:
     RefPtr<Web::HTML::WorkerDebugConsoleClient> m_console;
-    Web::Page& m_page;
 
     AK::URL m_url;
     String m_type;
-
-    int m_outside_port { -1 };
 };
 
 }

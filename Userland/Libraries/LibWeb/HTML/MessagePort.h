@@ -61,6 +61,8 @@ public:
     virtual WebIDL::ExceptionOr<void> transfer_receiving_steps(HTML::TransferDataHolder&) override;
     virtual HTML::TransferType primary_interface() const override { return HTML::TransferType::MessagePort; }
 
+    void set_worker_event_target(JS::NonnullGCPtr<DOM::EventTarget>);
+
 private:
     explicit MessagePort(JS::Realm&);
 
@@ -91,6 +93,8 @@ private:
         Error,
     } m_socket_state { SocketState::Header };
     size_t m_socket_incoming_message_size { 0 };
+
+    JS::GCPtr<DOM::EventTarget> m_worker_event_target;
 };
 
 }

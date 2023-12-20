@@ -52,11 +52,12 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
-void ConnectionFromClient::start_dedicated_worker(AK::URL const& url, String const& type, String const&, String const&, IPC::File const& implicit_port)
+void ConnectionFromClient::start_dedicated_worker(AK::URL const& url, String const& type, String const&, String const&, Web::HTML::TransferDataHolder const& implicit_port)
 {
-    m_worker_host = make_ref_counted<DedicatedWorkerHost>(page(), url, type, implicit_port.take_fd());
-
-    m_worker_host->run();
+    m_worker_host = make_ref_counted<DedicatedWorkerHost>(url, type);
+    // FIXME: Yikes, const_cast to move? Feels like a LibIPC bug.
+    //     We should be able to move non-copyable types from a Message type.
+    m_worker_host->run(page(), move(const_cast<Web::HTML::TransferDataHolder&>(implicit_port)));
 }
 
 void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
