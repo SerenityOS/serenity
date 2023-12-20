@@ -14,6 +14,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoading.h>
+#include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
@@ -76,29 +77,6 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 
     auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8");
     parser->run(document.url());
-    return true;
-}
-
-static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
-{
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(document.append_child(html_element));
-
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(head_element));
-    auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(head_element->append_child(title_element));
-
-    auto title_text = document.create_text_node(MUST(String::from_byte_string(document.url().basename())));
-    MUST(title_element->append_child(title_text));
-
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(html_element->append_child(body_element));
-
-    auto pre_element = DOM::create_element(document, HTML::TagNames::pre, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(body_element->append_child(pre_element));
-
-    MUST(pre_element->append_child(document.create_text_node(String::from_utf8(StringView { data }).release_value_but_fixme_should_propagate_errors())));
     return true;
 }
 
@@ -219,8 +197,6 @@ bool parse_document(DOM::Document& document, ByteBuffer const& data, [[maybe_unu
         return build_video_document(document);
     if (mime_type.starts_with_bytes("audio/"sv))
         return build_audio_document(document);
-    if (mime_type == "text/plain" || mime_type == "application/json")
-        return build_text_document(document, data);
     if (mime_type == "text/markdown")
         return build_markdown_document(document, data);
     if (mime_type == "text/gemini")
@@ -377,6 +353,70 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
     return document;
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#navigate-text
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_text_document(HTML::NavigationParams& navigation_params, MimeSniff::MimeType type)
+{
+    // To load a text document, given a navigation params navigationParams and a string type:
+
+    // 1. Let document be the result of creating and initializing a Document object given "html", type, and navigationParams.
+    auto document = TRY(DOM::Document::create_and_initialize(DOM::Document::Type::XML, type.essence(), navigation_params));
+
+    // FIXME: 2. Set document's parser cannot change the mode flag to true.
+
+    // 3. Set document's mode to "no-quirks".
+    document->set_quirks_mode(DOM::QuirksMode::No);
+
+    // 4. Create an HTML parser and associate it with the document. Act as if the tokenizer had emitted a start tag token
+    //    with the tag name "pre" followed by a single U+000A LINE FEED (LF) character, and switch the HTML parser's tokenizer
+    //    to the PLAINTEXT state. Each task that the networking task source places on the task queue while fetching runs must
+    //    then fill the parser's input byte stream with the fetched bytes and cause the HTML parser to perform the appropriate
+    //    processing of the input stream.
+    //    document's encoding must be set to the character encoding used to decode the document during parsing.
+    //    The first task that the networking task source places on the task queue while fetching runs must process link
+    //    headers given document, navigationParams's response, and "media", after the task has been processed by the HTML parser.
+    //    Before any script execution occurs, the user agent must wait for scripts may run for the newly-created document to be
+    //    true for document.
+    //    When no more bytes are available, the user agent must queue a global task on the networking task source given
+    //    document's relevant global object to have the parser to process the implied EOF character, which eventually causes a
+    //    load event to be fired.
+    // FIXME: Parse as we receive the document data, instead of waiting for the whole document to be fetched first.
+    auto process_body = [document, url = navigation_params.response->url().value()](ByteBuffer data) {
+        auto encoding = run_encoding_sniffing_algorithm(document, data);
+        dbgln_if(HTML_PARSER_DEBUG, "The encoding sniffing algorithm returned encoding '{}'", encoding);
+
+        auto parser = HTML::HTMLParser::create_for_scripting(document);
+        parser->tokenizer().update_insertion_point();
+
+        parser->tokenizer().insert_input_at_insertion_point("<pre>\n"sv);
+        parser->run();
+
+        parser->tokenizer().switch_to(HTML::HTMLTokenizer::State::PLAINTEXT);
+        parser->tokenizer().insert_input_at_insertion_point(data);
+        parser->tokenizer().insert_eof();
+        parser->run(url);
+
+        document->set_encoding(MUST(String::from_byte_string(encoding)));
+
+        // 5. User agents may add content to the head element of document, e.g., linking to a style sheet, providing
+        //    script, or giving the document a title.
+        auto title = MUST(String::from_byte_string(LexicalPath::basename(url.to_byte_string())));
+        auto title_element = MUST(DOM::create_element(document, HTML::TagNames::title, Namespace::HTML));
+        MUST(document->head()->append_child(title_element));
+        auto title_text = document->heap().allocate<DOM::Text>(document->realm(), document, title);
+        MUST(title_element->append_child(*title_text));
+    };
+
+    auto process_body_error = [](auto) {
+        dbgln("FIXME: Load html page with an error if read of body failed.");
+    };
+
+    auto& realm = document->realm();
+    TRY(navigation_params.response->body()->fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }));
+
+    // 6. Return document.
+    return document;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
 {
@@ -418,7 +458,8 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
         || type.essence() == "text/css"_string
         || type.essence() == "text/plain"_string
         || type.essence() == "text/vtt"_string) {
-        // FIXME: Return the result of loading a text document given navigationParams and type.
+        // Return the result of loading a text document given navigationParams and type.
+        return load_text_document(navigation_params, type).release_value_but_fixme_should_propagate_errors();
     }
 
     // -> "multipart/x-mixed-replace"
