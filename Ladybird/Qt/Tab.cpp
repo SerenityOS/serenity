@@ -234,7 +234,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
     view().on_request_select_dropdown = [this](Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) {
         m_select_dropdown->clear();
-        m_select_dropdown->setMinimumWidth(minimum_width);
+        m_select_dropdown->setMinimumWidth(minimum_width / view().device_pixel_ratio());
         for (auto const& item : items) {
             select_dropdown_add_item(m_select_dropdown, item);
         }

@@ -380,7 +380,7 @@ void WebContentClient::did_request_color_picker(Color const& current_color)
 void WebContentClient::did_request_select_dropdown(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> const& items)
 {
     if (m_view.on_request_select_dropdown)
-        m_view.on_request_select_dropdown(m_view.to_widget_position(content_position), m_view.to_widget_position(Gfx::IntPoint { minimum_width, 0 }).x(), items);
+        m_view.on_request_select_dropdown(content_position, minimum_width, items);
 }
 
 void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
