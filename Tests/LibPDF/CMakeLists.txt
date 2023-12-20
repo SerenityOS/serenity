@@ -3,7 +3,7 @@ set(TEST_SOURCES
 )
 
 foreach(source IN LISTS TEST_SOURCES)
-    serenity_test("${source}" LibPDF LIBS LibCore LibPDF)
+    serenity_test("${source}" LibPDF LIBS LibCore LibGfx LibPDF)
 endforeach()
 
 set(TEST_FILES
