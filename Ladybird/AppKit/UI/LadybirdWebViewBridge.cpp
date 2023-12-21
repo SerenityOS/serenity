@@ -47,24 +47,6 @@ WebViewBridge::WebViewBridge(Vector<Web::DevicePixelRect> screen_rects, float de
             on_scroll_to_point(position);
     };
 
-    on_scroll_into_view = [this](auto rect) {
-        if (m_viewport_rect.contains(rect))
-            return;
-
-        auto position = m_viewport_rect.location();
-
-        if (rect.top() < m_viewport_rect.top()) {
-            position.set_y(rect.top());
-        } else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom()) {
-            position.set_y(rect.bottom() - m_viewport_rect.height());
-        } else {
-            return;
-        }
-
-        if (on_scroll_to_point)
-            on_scroll_to_point(position);
-    };
-
     on_scroll_to_point = [this](auto position) {
         if (on_scroll)
             on_scroll(to_widget_position(position));

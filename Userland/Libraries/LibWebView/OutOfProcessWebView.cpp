@@ -56,10 +56,6 @@ OutOfProcessWebView::OutOfProcessWebView()
         vertical_scrollbar().set_value(position.y());
     };
 
-    on_scroll_into_view = [this](auto rect) {
-        scroll_into_view(rect, true, true);
-    };
-
     on_cursor_change = [this](auto cursor) {
         set_override_cursor(cursor);
     };

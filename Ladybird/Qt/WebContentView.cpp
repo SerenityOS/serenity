@@ -99,16 +99,6 @@ WebContentView::WebContentView(WebContentOptions const& web_content_options, Str
         verticalScrollBar()->setValue(position.y());
     };
 
-    on_scroll_into_view = [this](auto rect) {
-        if (m_viewport_rect.contains(rect))
-            return;
-
-        if (rect.top() < m_viewport_rect.top())
-            verticalScrollBar()->setValue(rect.top());
-        else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom())
-            verticalScrollBar()->setValue(rect.bottom() - m_viewport_rect.height());
-    };
-
     on_cursor_change = [this](auto cursor) {
         update_cursor(cursor);
     };
