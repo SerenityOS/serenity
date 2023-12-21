@@ -76,9 +76,10 @@ void SuggestionManager::previous()
 
 CompletionSuggestion const& SuggestionManager::suggest()
 {
-    m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
+    auto const& suggestion = m_suggestions[m_next_suggestion_index];
     m_selected_suggestion_index = m_next_suggestion_index;
-    return m_last_shown_suggestion;
+    m_last_shown_suggestion = suggestion;
+    return suggestion;
 }
 
 void SuggestionManager::set_current_suggestion_initiation_index(size_t index)
