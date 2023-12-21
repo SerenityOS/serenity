@@ -348,6 +348,9 @@ public:
     {
 #if __has_builtin(__builtin_add_overflow_p)
         return __builtin_add_overflow_p(u, v, (T)0);
+#elif __has_builtin(__builtin_add_overflow)
+        T result;
+        return __builtin_add_overflow(u, v, &result);
 #else
         Checked checked;
         checked = u;
@@ -385,6 +388,9 @@ public:
     {
 #if __has_builtin(__builtin_mul_overflow_p)
         return __builtin_mul_overflow_p(u, v, (T)0);
+#elif __has_builtin(__builtin_mul_overflow)
+        T result;
+        return __builtin_mul_overflow(u, v, &result);
 #else
         Checked checked;
         checked = u;
