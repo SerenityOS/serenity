@@ -51,9 +51,21 @@ PageClient::PageClient(PageHost& owner, u64 id)
     , m_id(id)
 {
     setup_palette();
-    m_invalidation_coalescing_timer = Web::Platform::Timer::create_single_shot(0, [this] {
-        client().async_did_invalidate_content_rect({ m_invalidation_rect.x().value(), m_invalidation_rect.y().value(), m_invalidation_rect.width().value(), m_invalidation_rect.height().value() });
-        m_invalidation_rect = {};
+
+    m_repaint_timer = Web::Platform::Timer::create_single_shot(0, [this] {
+        if (!client().backing_stores().back_bitmap) {
+            warnln("Skip painting because back bitmap is not initialized");
+            return;
+        }
+
+        auto& back_bitmap = *client().backing_stores().back_bitmap;
+        auto viewport_rect = page().css_to_device_rect(page().top_level_traversable()->viewport_rect());
+        paint(viewport_rect, back_bitmap);
+
+        auto& backing_stores = client().backing_stores();
+        swap(backing_stores.front_bitmap, backing_stores.back_bitmap);
+        swap(backing_stores.front_bitmap_id, backing_stores.back_bitmap_id);
+        client().did_paint(viewport_rect.to_type<int>(), backing_stores.front_bitmap_id);
     });
 
 #ifdef HAS_ACCELERATED_GRAPHICS
@@ -61,6 +73,12 @@ PageClient::PageClient(PageHost& owner, u64 id)
         m_accelerated_graphics_context = AccelGfx::Context::create();
     }
 #endif
+}
+
+void PageClient::schedule_repaint()
+{
+    if (!m_repaint_timer->is_active())
+        m_repaint_timer->start();
 }
 
 void PageClient::visit_edges(JS::Cell::Visitor& visitor)
@@ -194,18 +212,12 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 void PageClient::set_viewport_rect(Web::DevicePixelRect const& rect)
 {
     page().top_level_traversable()->set_viewport_rect(page().device_to_css_rect(rect));
+    schedule_repaint();
 }
 
-void PageClient::page_did_invalidate(Web::CSSPixelRect const& content_rect)
+void PageClient::page_did_invalidate(Web::CSSPixelRect const&)
 {
-    m_invalidation_rect = m_invalidation_rect.united(page().enclosing_device_rect(content_rect));
-    if (!m_invalidation_coalescing_timer->is_active())
-        m_invalidation_coalescing_timer->start();
-}
-
-void PageClient::page_did_change_selection()
-{
-    client().async_did_change_selection();
+    schedule_repaint();
 }
 
 void PageClient::page_did_request_cursor_change(Gfx::StandardCursor cursor)

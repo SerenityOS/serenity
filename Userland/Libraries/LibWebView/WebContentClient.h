@@ -35,8 +35,6 @@ private:
     virtual void did_request_navigate_back() override;
     virtual void did_request_navigate_forward() override;
     virtual void did_request_refresh() override;
-    virtual void did_invalidate_content_rect(Gfx::IntRect const&) override;
-    virtual void did_change_selection() override;
     virtual void did_request_cursor_change(i32) override;
     virtual void did_layout(Gfx::IntSize) override;
     virtual void did_change_title(ByteString const&) override;

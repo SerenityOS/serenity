@@ -39,8 +39,6 @@ public:
     String const& handle() const { return m_client_state.client_handle; }
 
     void server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size);
-    void server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect rect);
-    void server_did_change_selection(Badge<WebContentClient>);
 
     void load(AK::URL const&);
     void load_html(StringView);
@@ -195,7 +193,6 @@ protected:
     };
     void resize_backing_stores_if_needed(WindowResizeInProgress);
 
-    void request_repaint();
     void handle_resize();
 
     virtual void create_client() { }
@@ -204,7 +201,6 @@ protected:
 
     struct SharedBitmap {
         i32 id { -1 };
-        i32 pending_paints { 0 };
         Web::DevicePixelSize last_painted_size;
         RefPtr<Gfx::Bitmap> bitmap;
     };
@@ -216,7 +212,6 @@ protected:
         SharedBitmap back_bitmap;
         i32 next_bitmap_id { 0 };
         bool has_usable_bitmap { false };
-        bool got_repaint_requests_while_painting { false };
     } m_client_state;
 
     AK::URL m_url;

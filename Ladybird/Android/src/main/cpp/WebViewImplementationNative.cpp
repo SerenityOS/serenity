@@ -94,7 +94,6 @@ void WebViewImplementationNative::set_viewport_geometry(int w, int h)
 {
     m_viewport_rect = { { 0, 0 }, { w, h } };
     client().async_set_viewport_rect(m_viewport_rect);
-    request_repaint();
     handle_resize();
 }
 

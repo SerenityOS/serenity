@@ -106,6 +106,14 @@ DevicePixelPoint Page::css_to_device_point(CSSPixelPoint point) const
     };
 }
 
+DevicePixelRect Page::css_to_device_rect(CSSPixelRect rect) const
+{
+    return {
+        rect.location().to_type<double>() * client().device_pixels_per_css_pixel(),
+        rect.size().to_type<double>() * client().device_pixels_per_css_pixel(),
+    };
+}
+
 CSSPixelRect Page::device_to_css_rect(DevicePixelRect rect) const
 {
     auto scale = client().device_pixels_per_css_pixel();

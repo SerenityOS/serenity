@@ -210,7 +210,6 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     Super::theme_change_event(event);
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
-    request_repaint();
 }
 
 void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
@@ -225,7 +224,6 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
 void OutOfProcessWebView::did_scroll()
 {
     client().async_set_viewport_rect(visible_content_rect().to_type<Web::DevicePixels>());
-    request_repaint();
 }
 
 ByteString OutOfProcessWebView::dump_layout_tree()
