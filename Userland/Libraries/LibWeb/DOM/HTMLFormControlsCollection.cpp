@@ -33,7 +33,7 @@ void HTMLFormControlsCollection::initialize(JS::Realm& realm)
 }
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmlformcontrolscollection-nameditem
-Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::named_item_or_radio_node_list(FlyString const& name)
+Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::named_item_or_radio_node_list(FlyString const& name) const
 {
     // 1. If name is the empty string, return null and stop the algorithm.
     if (name.is_empty())
