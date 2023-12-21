@@ -25,6 +25,8 @@ public:
 protected:
     virtual void initialize(JS::Realm&) override;
 
+    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const final;
+
 private:
     HTMLFormControlsCollection(ParentNode& root, Scope, Function<bool(Element const&)> filter);
 };
