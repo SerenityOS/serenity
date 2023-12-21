@@ -56,6 +56,8 @@ public:
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
     // ^HTMLElement
+    virtual void attribute_changed(FlyString const&, Optional<String> const&) override;
+
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
@@ -93,6 +95,10 @@ private:
     virtual i32 default_tab_index_value() const override;
 
     void create_shadow_tree_if_needed();
+
+    void update_placeholder_visibility();
+    JS::GCPtr<DOM::Element> m_placeholder_element;
+    JS::GCPtr<DOM::Text> m_placeholder_text_node;
 
     JS::GCPtr<DOM::Element> m_inner_text_element;
     JS::GCPtr<DOM::Text> m_text_node;
