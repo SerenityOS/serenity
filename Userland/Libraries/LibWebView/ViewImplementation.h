@@ -132,7 +132,6 @@ public:
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<void(i32, i32)> on_scroll_by_delta;
     Function<void(Gfx::IntPoint)> on_scroll_to_point;
-    Function<void(Gfx::IntRect)> on_scroll_into_view;
     Function<void(Gfx::StandardCursor)> on_cursor_change;
     Function<void(Gfx::IntPoint, ByteString const&)> on_enter_tooltip_area;
     Function<void()> on_leave_tooltip_area;
