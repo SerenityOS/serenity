@@ -9,6 +9,7 @@
 #include <AK/Endian.h>
 #include <AK/String.h>
 #include <LibCompress/LZWDecoder.h>
+#include <LibCompress/PackBitsDecoder.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
 
@@ -234,44 +235,8 @@ private:
             ByteBuffer decoded_bytes {};
 
             auto decode_packbits_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
-                auto strip_stream = make<FixedMemoryStream>(TRY(m_stream->read_in_place<u8 const>(num_bytes)));
-
-                decoded_bytes.clear();
-
-                Optional<i8> n {};
-                Optional<u8> saved_byte {};
-
-                while (strip_stream->remaining() > 0 || saved_byte.has_value()) {
-                    if (!n.has_value())
-                        n = TRY(strip_stream->read_value<i8>());
-
-                    if (n.value() >= 0 && !saved_byte.has_value()) {
-                        n.value() = n.value() - 1;
-                        if (n.value() == -1)
-                            n.clear();
-
-                        decoded_bytes.append(TRY(strip_stream->read_value<u8>()));
-                        continue;
-                    }
-
-                    if (n.value() == -128) {
-                        n.clear();
-                        continue;
-                    }
-
-                    if (!saved_byte.has_value())
-                        saved_byte = TRY(strip_stream->read_value<u8>());
-
-                    n.value() = n.value() + 1;
-
-                    decoded_bytes.append(*saved_byte);
-
-                    if (n == 1) {
-                        saved_byte.clear();
-                        n.clear();
-                    }
-                }
-
+                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
+                decoded_bytes = TRY(Compress::PackBits::decode_all(encoded_bytes));
                 return decoded_bytes;
             };
 

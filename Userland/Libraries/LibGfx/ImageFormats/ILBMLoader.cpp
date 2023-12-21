@@ -9,6 +9,7 @@
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
 #include <AK/IntegralMath.h>
+#include <LibCompress/PackBitsDecoder.h>
 #include <LibGfx/FourCC.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
 
@@ -246,39 +247,7 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
     if (plane_data_size > NumericLimits<u32>::max() || ceil_div(plane_data_size, 127ul) > length)
         return Error::from_string_literal("Uncompressed data size too large");
 
-    auto plane_data = TRY(ByteBuffer::create_uninitialized(plane_data_size));
-
-    u32 index = 0;
-    u32 read_bytes = 0;
-    // Uncompressing is done once we've read all buffer or plane buffer has been fully filled
-    while (read_bytes < length && index < plane_data_size) {
-        auto const byte = static_cast<i8>(data[read_bytes++]);
-        if (byte >= -127 && byte <= -1) {
-            // read next byte
-            if (read_bytes == data.size())
-                return Error::from_string_literal("Malformed compressed data");
-
-            u8 next_byte = data[read_bytes++];
-            if (index + -byte >= plane_data.size())
-                return Error::from_string_literal("Malformed compressed data");
-
-            for (u16 i = 0; i < -byte + 1; ++i) {
-                plane_data[index++] = next_byte;
-            }
-        } else if (byte >= 0) {
-            if (index + byte >= plane_data_size || read_bytes + byte >= length)
-                return Error::from_string_literal("Malformed compressed data");
-
-            for (u16 i = 0; i < byte + 1; ++i) {
-                plane_data[index] = data[read_bytes];
-                read_bytes++;
-                index++;
-            }
-        }
-    }
-
-    if (index != plane_data_size)
-        return Error::from_string_literal("Unexpected end of chunk while decompressing data");
+    auto plane_data = TRY(Compress::PackBits::decode_all(data, plane_data_size));
 
     return plane_data;
 }
