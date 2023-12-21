@@ -24,6 +24,7 @@ ErrorOr<NonnullLockRefPtr<VMObject>> AnonymousVMObject::try_clone()
         // object, effectively "pre-purging" it in the child process.
         auto clone = TRY(try_create_purgeable_with_size(size(), AllocationStrategy::None));
         clone->m_volatile = true;
+        clone->m_was_purged = true;
         return clone;
     }
 
