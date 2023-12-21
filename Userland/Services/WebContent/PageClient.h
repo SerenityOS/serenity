@@ -94,7 +94,6 @@ private:
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
-    virtual void page_did_click_link(const URL&, ByteString const& target, unsigned modifiers) override;
     virtual void page_did_middle_click_link(const URL&, ByteString const& target, unsigned modifiers) override;
     virtual void page_did_request_context_menu(Web::CSSPixelPoint) override;
     virtual void page_did_request_link_context_menu(Web::CSSPixelPoint, URL const&, ByteString const& target, unsigned modifiers) override;
