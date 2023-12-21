@@ -3,6 +3,7 @@ set(TEST_SOURCES
     TestDeflate.cpp
     TestGzip.cpp
     TestLzma.cpp
+    TestPackBits.cpp
     TestXz.cpp
     TestZlib.cpp
 )
