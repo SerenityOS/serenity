@@ -135,7 +135,7 @@ bool SemVer::satisfies(StringView const& semver_spec) const
     auto compare_op = lexer.consume_until([](auto const& ch) { return ch >= '0' && ch <= '9'; });
 
     auto spec_version = MUST(from_string_view(lexer.consume_all()));
-    // Lenient compare, tolerance for any prerelease or build metadata.
+    // Lenient compare, tolerance for any patch and pre-release.
     if (compare_op.is_empty())
         return is_same(spec_version, CompareType::Minor);
     if (compare_op == "!="sv)
@@ -156,7 +156,7 @@ bool SemVer::satisfies(StringView const& semver_spec) const
     if (compare_op == ">="sv)
         return is_same(spec_version) || is_greater_than(spec_version);
     if (compare_op == "<="sv)
-        return is_same(spec_version) || is_lesser_than(spec_version);
+        return is_same(spec_version) || !is_greater_than(spec_version);
 
     return false;
 }
@@ -168,7 +168,7 @@ ErrorOr<SemVer> from_string_view(StringView const& version, char normal_version_
     }
 
     if (version.count(normal_version_separator) < 2)
-        return Error::from_string_view("Insufficient occurrences of version separators"sv);
+        return Error::from_string_view("Insufficient occurrences of version separator"sv);
 
     if (version.count('+') > 1)
         return Error::from_string_view("Build metadata must be defined at most once"sv);

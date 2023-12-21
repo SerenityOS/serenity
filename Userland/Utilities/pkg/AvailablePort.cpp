@@ -28,44 +28,56 @@
 #include <Shell/PosixParser.h>
 #include <Shell/Shell.h>
 
-static bool is_installed(HashMap<String, InstalledPort>& installed_ports_database, StringView package_name)
+void AvailablePort::query_details_for_package(HashMap<String, AvailablePort>& available_ports, HashMap<String, InstalledPort> const& installed_ports, StringView package_name, bool verbose)
 {
-    auto port = installed_ports_database.find(package_name);
-    return port != installed_ports_database.end();
-}
-
-static Optional<AvailablePort&> find_port_package(HashMap<String, AvailablePort>& available_ports, StringView package_name)
-{
-    auto port = available_ports.find(package_name);
-    if (port == available_ports.end())
-        return {};
-    return port->value;
-}
-
-ErrorOr<int> AvailablePort::query_details_for_package(HashMap<String, AvailablePort>& available_ports, HashMap<String, InstalledPort>& installed_ports, StringView package_name, bool verbose)
-{
-    auto possible_available_port = find_port_package(available_ports, package_name);
-    if (!possible_available_port.has_value()) {
+    auto possible_available_port = available_ports.find(package_name);
+    if (possible_available_port != available_ports.end()) {
         outln("pkg: No match for queried name \"{}\"", package_name);
-        return 0;
+        return;
     }
 
-    auto& available_port = possible_available_port.release_value();
+    auto& available_port = possible_available_port->value;
 
-    outln("{}: {}, {}", available_port.name(), available_port.version(), available_port.website());
+    outln("{}: {}, {}", available_port.name(), available_port.version_string(), available_port.website());
     if (verbose) {
         out("Installed: ");
-        if (is_installed(installed_ports, package_name))
+        auto installed_port = installed_ports.find(package_name);
+        if (installed_port != installed_ports.end()) {
             outln("Yes");
-        else
+
+            out("Update Status: ");
+
+            auto error_or_available_version = available_port.version_semver();
+            auto error_or_installed_version = installed_port->value.version_semver();
+
+            if (error_or_available_version.is_error() || error_or_installed_version.is_error()) {
+                auto ip_version = installed_port->value.version_string();
+                auto ap_version = available_port.version_string();
+
+                if (ip_version == ap_version) {
+                    outln("Already on latest version");
+                } else {
+                    outln("Update to {} available", ap_version);
+                }
+                return;
+            }
+
+            auto available_version = error_or_available_version.value();
+            auto installed_version = error_or_installed_version.value();
+            if (available_version.is_same(installed_version, SemVer::CompareType::Patch)) {
+                outln("Already on latest version");
+            } else if (available_version.is_greater_than(installed_version)) {
+                outln("Update to {} available", available_port.version_string());
+            }
+        } else {
             outln("No");
+        }
     }
-    return 0;
 }
 
 static Optional<Markdown::Table::Column const&> get_column_in_table(Markdown::Table const& ports_table, StringView column_name)
 {
-    for (auto& column : ports_table.columns()) {
+    for (auto const& column : ports_table.columns()) {
         if (column_name == column.header.render_for_terminal())
             return column;
     }
@@ -151,9 +163,9 @@ ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list
     if (!possible_port_website_column.has_value())
         return Error::from_string_literal("pkg: Website column not found /usr/Ports/AvailablePorts.md");
 
-    auto& port_name_column = possible_port_name_column.release_value();
-    auto& port_version_column = possible_port_version_column.release_value();
-    auto& port_website_column = possible_port_website_column.release_value();
+    auto const& port_name_column = possible_port_name_column.release_value();
+    auto const& port_version_column = possible_port_version_column.release_value();
+    auto const& port_website_column = possible_port_website_column.release_value();
 
     VERIFY(port_name_column.rows.size() == port_version_column.rows.size());
     VERIFY(port_version_column.rows.size() == port_website_column.rows.size());

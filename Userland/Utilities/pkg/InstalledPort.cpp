@@ -38,29 +38,24 @@ ErrorOr<HashMap<String, InstalledPort>> InstalledPort::read_ports_database()
             // FIXME: Skip over invalid entries instead?
             return Error::from_string_view("Database entry too short"sv);
         }
-        auto string_type = parts[0];
-        auto name = TRY(String::from_utf8(parts[1]));
+        auto install_type_string = parts[0];
+        auto port_name = TRY(String::from_utf8(parts[1]));
 
-        if (auto maybe_type = type_from_string(string_type); maybe_type.has_value()) {
+        if (auto maybe_type = type_from_string(install_type_string); maybe_type.has_value()) {
             auto const type = maybe_type.release_value();
             if (parts.size() < 3)
                 return Error::from_string_view("Port is missing a version specification"sv);
-            auto version = TRY(String::from_utf8(parts[2]));
 
-            auto& port = ports.ensure(name, [&] { return InstalledPort { name, {}, {} }; });
-            port.m_type = type;
-            port.m_version = move(version);
-        } else if (string_type == "dependency"sv) {
-            // Accept an empty dependency list.
-            auto dependency_views = parts.span().slice(2);
+            ports.ensure(port_name, [=] { return InstalledPort { port_name, MUST(String::from_utf8(parts[2])), type }; });
+        } else if (install_type_string == "dependency"sv) {
             Vector<String> dependencies;
-            TRY(dependencies.try_ensure_capacity(dependency_views.size()));
-            for (auto const& view : dependency_views)
-                dependencies.unchecked_append(TRY(String::from_utf8(view)));
-
+            TRY(dependencies.try_ensure_capacity(parts.size() - 2));
+            for (auto const& dependency : parts.span().slice(2)) {
+                dependencies.unchecked_append(TRY(String::from_utf8(dependency)));
+            }
             // Assume the port as automatically installed if the "dependency" line occurs before the "manual"/"auto" line.
             // This is fine since these entries override the port type in any case.
-            auto& port = ports.ensure(name, [&] { return InstalledPort { name, Type::Auto, {} }; });
+            auto& port = ports.ensure(port_name, [&] { return InstalledPort { port_name, {}, Type::Auto }; });
             port.m_dependencies = move(dependencies);
         } else {
             return Error::from_string_literal("Unknown installed port type");
