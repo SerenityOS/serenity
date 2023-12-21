@@ -91,6 +91,7 @@ public:
     static ErrorOr<ByteString> from_utf8(ReadonlyBytes);
     static ErrorOr<ByteString> from_utf8(StringView string) { return from_utf8(string.bytes()); }
     static ByteString must_from_utf8(StringView string) { return MUST(from_utf8(string)); }
+    static ByteString from_utf8_without_validation(StringView string) { return ByteString { string }; }
 
     [[nodiscard]] static ByteString repeated(char, size_t count);
     [[nodiscard]] static ByteString repeated(StringView, size_t count);
