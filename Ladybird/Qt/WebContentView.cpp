@@ -527,7 +527,6 @@ void WebContentView::set_device_pixel_ratio(double device_pixel_ratio)
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
     update_viewport_rect();
     handle_resize();
-    request_repaint();
 }
 
 void WebContentView::update_viewport_rect()
@@ -537,15 +536,12 @@ void WebContentView::update_viewport_rect()
     Gfx::IntRect rect(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()), scaled_width, scaled_height);
 
     set_viewport_rect(rect);
-
-    request_repaint();
 }
 
 void WebContentView::update_zoom()
 {
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
     update_viewport_rect();
-    request_repaint();
 }
 
 void WebContentView::showEvent(QShowEvent* event)
@@ -733,7 +729,6 @@ bool WebContentView::event(QEvent* event)
 
     if (event->type() == QEvent::PaletteChange) {
         update_palette();
-        request_repaint();
         return QAbstractScrollArea::event(event);
     }
 

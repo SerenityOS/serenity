@@ -28,6 +28,8 @@ public:
 
     static void set_use_gpu_painter();
 
+    void schedule_repaint();
+
     virtual Web::Page& page() override { return *m_page; }
     virtual Web::Page const& page() const override { return *m_page; }
 
@@ -75,7 +77,6 @@ private:
     virtual double device_pixels_per_css_pixel() const override { return m_device_pixels_per_css_pixel; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
     virtual void page_did_invalidate(Web::CSSPixelRect const&) override;
-    virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
     virtual void page_did_change_title(ByteString const&) override;
@@ -148,8 +149,8 @@ private:
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };
 
-    RefPtr<Web::Platform::Timer> m_invalidation_coalescing_timer;
-    Web::DevicePixelRect m_invalidation_rect;
+    RefPtr<Web::Platform::Timer> m_repaint_timer;
+
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;

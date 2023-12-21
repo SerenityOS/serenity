@@ -70,6 +70,7 @@ public:
 
     CSSPixelPoint device_to_css_point(DevicePixelPoint) const;
     DevicePixelPoint css_to_device_point(CSSPixelPoint) const;
+    DevicePixelRect css_to_device_rect(CSSPixelRect) const;
     CSSPixelRect device_to_css_rect(DevicePixelRect) const;
     DevicePixelRect enclosing_device_rect(CSSPixelRect) const;
     DevicePixelRect rounded_device_rect(CSSPixelRect) const;
@@ -238,7 +239,6 @@ public:
     virtual void page_did_create_new_document(Web::DOM::Document&) { }
     virtual void page_did_destroy_document(Web::DOM::Document&) { }
     virtual void page_did_finish_loading(const AK::URL&) { }
-    virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(CSSPixelPoint) { }
     virtual void page_did_request_link_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }

@@ -44,6 +44,8 @@ public:
     PageHost& page_host() { return *m_page_host; }
     PageHost const& page_host() const { return *m_page_host; }
 
+    auto& backing_stores() { return m_backing_stores; }
+
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
@@ -58,7 +60,6 @@ private:
     virtual void update_screen_rects(Vector<Web::DevicePixelRect> const&, u32) override;
     virtual void load_url(URL const&) override;
     virtual void load_html(ByteString const&) override;
-    virtual void paint(Web::DevicePixelRect const&, i32) override;
     virtual void set_viewport_rect(Web::DevicePixelRect const&) override;
     virtual void mouse_down(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
     virtual void mouse_move(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
@@ -67,8 +68,7 @@ private:
     virtual void doubleclick(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
     virtual void key_down(i32, unsigned, u32) override;
     virtual void key_up(i32, unsigned, u32) override;
-    virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
-    virtual void remove_backing_store(i32) override;
+    virtual void add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
     virtual void debug_request(ByteString const&, ByteString const&) override;
     virtual void get_source() override;
     virtual void inspect_dom_tree() override;
@@ -132,20 +132,17 @@ private:
     virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
     virtual void select_all() override;
 
-    void flush_pending_paint_requests();
-
     void report_finished_handling_input_event(bool event_was_handled);
 
     NonnullOwnPtr<PageHost> m_page_host;
-    struct PaintRequest {
-        Web::DevicePixelRect content_rect;
-        NonnullRefPtr<Gfx::Bitmap> bitmap;
-        i32 bitmap_id { -1 };
-    };
-    Vector<PaintRequest> m_pending_paint_requests;
-    RefPtr<Web::Platform::Timer> m_paint_flush_timer;
 
-    HashMap<i32, NonnullRefPtr<Gfx::Bitmap>> m_backing_stores;
+    struct BackingStores {
+        i32 front_bitmap_id { -1 };
+        i32 back_bitmap_id { -1 };
+        RefPtr<Gfx::Bitmap> front_bitmap;
+        RefPtr<Gfx::Bitmap> back_bitmap;
+    };
+    BackingStores m_backing_stores;
 
     HashMap<Web::DOM::Document*, NonnullOwnPtr<WebContentConsoleClient>> m_console_clients;
     WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;

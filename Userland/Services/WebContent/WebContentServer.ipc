@@ -22,10 +22,8 @@ endpoint WebContentServer
     load_url(URL url) =|
     load_html(ByteString html) =|
 
-    add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap bitmap) =|
-    remove_backing_store(i32 backing_store_id) =|
+    add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap back_bitmap) =|
 
-    paint(Web::DevicePixelRect content_rect, i32 backing_store_id) =|
     set_viewport_rect(Web::DevicePixelRect rect) =|
 
     mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|

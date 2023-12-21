@@ -57,7 +57,6 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> sock
     : IPC::ConnectionFromClient<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket), 1)
     , m_page_host(PageHost::create(*this))
 {
-    m_paint_flush_timer = Web::Platform::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
     m_input_event_queue_timer = Web::Platform::Timer::create_single_shot(0, [this] { process_next_input_event(); });
 }
 
@@ -141,44 +140,12 @@ void ConnectionFromClient::set_viewport_rect(Web::DevicePixelRect const& rect)
     page().set_viewport_rect(rect);
 }
 
-void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap const& bitmap)
+void ConnectionFromClient::add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap)
 {
-    m_backing_stores.set(backing_store_id, *const_cast<Gfx::ShareableBitmap&>(bitmap).bitmap());
-}
-
-void ConnectionFromClient::remove_backing_store(i32 backing_store_id)
-{
-    m_backing_stores.remove(backing_store_id);
-    m_pending_paint_requests.remove_all_matching([backing_store_id](auto& pending_repaint_request) { return pending_repaint_request.bitmap_id == backing_store_id; });
-}
-
-void ConnectionFromClient::paint(Web::DevicePixelRect const& content_rect, i32 backing_store_id)
-{
-    for (auto& pending_paint : m_pending_paint_requests) {
-        if (pending_paint.bitmap_id == backing_store_id) {
-            pending_paint.content_rect = content_rect;
-            return;
-        }
-    }
-
-    auto it = m_backing_stores.find(backing_store_id);
-    if (it == m_backing_stores.end()) {
-        did_misbehave("Client requested paint with backing store ID");
-        return;
-    }
-
-    auto& bitmap = *it->value;
-    m_pending_paint_requests.append({ content_rect, bitmap, backing_store_id });
-    m_paint_flush_timer->start();
-}
-
-void ConnectionFromClient::flush_pending_paint_requests()
-{
-    for (auto& pending_paint : m_pending_paint_requests) {
-        page().paint(pending_paint.content_rect, *pending_paint.bitmap);
-        async_did_paint(pending_paint.content_rect.to_type<int>(), pending_paint.bitmap_id);
-    }
-    m_pending_paint_requests.clear();
+    m_backing_stores.front_bitmap_id = front_bitmap_id;
+    m_backing_stores.back_bitmap_id = back_bitmap_id;
+    m_backing_stores.front_bitmap = *const_cast<Gfx::ShareableBitmap&>(front_bitmap).bitmap();
+    m_backing_stores.back_bitmap = *const_cast<Gfx::ShareableBitmap&>(back_bitmap).bitmap();
 }
 
 void ConnectionFromClient::process_next_input_event()
@@ -881,7 +848,6 @@ Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_se
 void ConnectionFromClient::select_all()
 {
     page().page().focused_context().select_all();
-    page().page().client().page_did_change_selection();
 }
 
 Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_layout_tree()

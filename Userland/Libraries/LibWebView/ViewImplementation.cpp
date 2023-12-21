@@ -50,34 +50,14 @@ WebContentClient const& ViewImplementation::client() const
 
 void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
 {
-    if (m_client_state.back_bitmap.id != bitmap_id)
-        return;
-
-    m_client_state.has_usable_bitmap = true;
-    m_client_state.back_bitmap.pending_paints--;
-    m_client_state.back_bitmap.last_painted_size = size.to_type<Web::DevicePixels>();
-    swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
-
-    // We don't need the backup bitmap anymore, so drop it.
-    m_backup_bitmap = nullptr;
-
-    if (on_ready_to_paint)
-        on_ready_to_paint();
-
-    if (m_client_state.got_repaint_requests_while_painting) {
-        m_client_state.got_repaint_requests_while_painting = false;
-        request_repaint();
+    if (m_client_state.back_bitmap.id == bitmap_id) {
+        m_client_state.has_usable_bitmap = true;
+        m_client_state.back_bitmap.last_painted_size = size.to_type<Web::DevicePixels>();
+        swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
+        m_backup_bitmap = nullptr;
+        if (on_ready_to_paint)
+            on_ready_to_paint();
     }
-}
-
-void ViewImplementation::server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect)
-{
-    request_repaint();
-}
-
-void ViewImplementation::server_did_change_selection(Badge<WebContentClient>)
-{
-    request_repaint();
 }
 
 void ViewImplementation::load(AK::URL const& url)
@@ -322,16 +302,14 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
         m_client_state.back_bitmap = {};
     }
 
+    auto old_front_bitmap_id = m_client_state.front_bitmap.id;
+    auto old_back_bitmap_id = m_client_state.back_bitmap.id;
+
     auto reallocate_backing_store_if_needed = [&](SharedBitmap& backing_store) {
         if (!backing_store.bitmap || !backing_store.bitmap->size().contains(minimum_needed_size.to_type<int>())) {
             if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRA8888, minimum_needed_size.to_type<int>()); !new_bitmap_or_error.is_error()) {
-                if (backing_store.bitmap)
-                    client().async_remove_backing_store(backing_store.id);
-
-                backing_store.pending_paints = 0;
                 backing_store.bitmap = new_bitmap_or_error.release_value();
                 backing_store.id = m_client_state.next_bitmap_id++;
-                client().async_add_backing_store(backing_store.id, backing_store.bitmap->to_shareable_bitmap());
             }
             backing_store.last_painted_size = viewport_rect.size();
         }
@@ -340,22 +318,11 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
     reallocate_backing_store_if_needed(m_client_state.front_bitmap);
     reallocate_backing_store_if_needed(m_client_state.back_bitmap);
 
-    request_repaint();
-}
+    auto& front_bitmap = m_client_state.front_bitmap;
+    auto& back_bitmap = m_client_state.back_bitmap;
 
-void ViewImplementation::request_repaint()
-{
-    // If this widget was instantiated but not yet added to a window,
-    // it won't have a back bitmap yet, so we can just skip repaint requests.
-    if (!m_client_state.back_bitmap.bitmap)
-        return;
-    // Don't request a repaint until pending paint requests have finished.
-    if (m_client_state.back_bitmap.pending_paints) {
-        m_client_state.got_repaint_requests_while_painting = true;
-        return;
-    }
-    m_client_state.back_bitmap.pending_paints++;
-    client().async_paint(viewport_rect(), m_client_state.back_bitmap.id);
+    if (front_bitmap.id != old_front_bitmap_id || back_bitmap.id != old_back_bitmap_id)
+        client().async_add_backing_store(front_bitmap.id, front_bitmap.bitmap->to_shareable_bitmap(), back_bitmap.id, back_bitmap.bitmap->to_shareable_bitmap());
 }
 
 void ViewImplementation::handle_web_content_process_crash()

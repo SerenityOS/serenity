@@ -72,7 +72,6 @@ void WebViewBridge::set_viewport_rect(Gfx::IntRect viewport_rect, ForResize for_
     m_viewport_rect = viewport_rect;
 
     client().async_set_viewport_rect(m_viewport_rect.to_type<Web::DevicePixels>());
-    request_repaint();
 
     if (for_resize == ForResize::Yes) {
         handle_resize();

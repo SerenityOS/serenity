@@ -522,7 +522,6 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
                 }
                 document.navigable()->set_needs_display();
             }
-            m_browsing_context->page().client().page_did_change_selection();
         }
     }
 
