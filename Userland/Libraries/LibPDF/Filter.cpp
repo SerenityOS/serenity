@@ -8,6 +8,7 @@
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/LZWDecoder.h>
+#include <LibCompress/PackBitsDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibPDF/CommonNames.h>
@@ -210,30 +211,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, 
 
 PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
 {
-    constexpr size_t END_OF_DECODING = 128;
-    ByteBuffer buffer {};
-    while (true) {
-        VERIFY(bytes.size() > 0);
-        auto length = bytes[0];
-        bytes = bytes.slice(1);
-        if (length == END_OF_DECODING) {
-            VERIFY(bytes.is_empty());
-            break;
-        }
-        if (length < 128) {
-            TRY(buffer.try_append(bytes.slice(0, length + 1)));
-            bytes = bytes.slice(length + 1);
-        } else {
-            VERIFY(bytes.size() > 1);
-            auto byte_to_append = bytes[0];
-            bytes = bytes.slice(1);
-            size_t n_chars = 257 - length;
-            for (size_t i = 0; i < n_chars; ++i) {
-                TRY(buffer.try_append(byte_to_append));
-            }
-        }
-    }
-    return buffer;
+    return TRY(Compress::PackBits::decode_all(bytes, OptionalNone {}, Compress::PackBits::CompatibilityMode::PDF));
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
