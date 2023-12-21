@@ -14,12 +14,12 @@ namespace Web::DOM {
 
 JS_DEFINE_ALLOCATOR(RadioNodeList);
 
-JS::NonnullGCPtr<RadioNodeList> RadioNodeList::create(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
+JS::NonnullGCPtr<RadioNodeList> RadioNodeList::create(JS::Realm& realm, Node const& root, Scope scope, Function<bool(Node const&)> filter)
 {
     return realm.heap().allocate<RadioNodeList>(realm, realm, root, scope, move(filter));
 }
 
-RadioNodeList::RadioNodeList(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
+RadioNodeList::RadioNodeList(JS::Realm& realm, Node const& root, Scope scope, Function<bool(Node const&)> filter)
     : LiveNodeList(realm, root, scope, move(filter))
 {
 }

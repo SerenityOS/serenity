@@ -14,12 +14,12 @@ namespace Web::DOM {
 
 JS_DEFINE_ALLOCATOR(LiveNodeList);
 
-JS::NonnullGCPtr<NodeList> LiveNodeList::create(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
+JS::NonnullGCPtr<NodeList> LiveNodeList::create(JS::Realm& realm, Node const& root, Scope scope, Function<bool(Node const&)> filter)
 {
     return realm.heap().allocate<LiveNodeList>(realm, realm, root, scope, move(filter));
 }
 
-LiveNodeList::LiveNodeList(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
+LiveNodeList::LiveNodeList(JS::Realm& realm, Node const& root, Scope scope, Function<bool(Node const&)> filter)
     : NodeList(realm)
     , m_root(root)
     , m_filter(move(filter))

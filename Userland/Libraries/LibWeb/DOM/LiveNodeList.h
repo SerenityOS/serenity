@@ -24,7 +24,7 @@ public:
         Descendants,
     };
 
-    [[nodiscard]] static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Node const& root, Scope, Function<bool(Node const&)> filter);
     virtual ~LiveNodeList() override;
 
     virtual u32 length() const override;
@@ -33,7 +33,7 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 protected:
-    LiveNodeList(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
+    LiveNodeList(JS::Realm&, Node const& root, Scope, Function<bool(Node const&)> filter);
 
     Node* first_matching(Function<bool(Node const&)> const& filter) const;
 
@@ -42,7 +42,7 @@ private:
 
     JS::MarkedVector<Node*> collection() const;
 
-    JS::NonnullGCPtr<Node> m_root;
+    JS::NonnullGCPtr<Node const> m_root;
     Function<bool(Node const&)> m_filter;
     Scope m_scope { Scope::Descendants };
 };

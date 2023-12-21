@@ -55,6 +55,7 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
     JS::NonnullGCPtr<ParentNode> root() { return *m_root; }
+    JS::NonnullGCPtr<ParentNode const> root() const { return *m_root; }
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
