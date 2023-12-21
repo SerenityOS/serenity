@@ -77,4 +77,11 @@ Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::
     }));
 }
 
+WebIDL::ExceptionOr<JS::Value> HTMLFormControlsCollection::named_item_value(FlyString const& name) const
+{
+    return named_item_or_radio_node_list(name).visit(
+        [](Empty) -> JS::Value { return JS::js_undefined(); },
+        [](auto const& value) -> JS::Value { return value; });
+}
+
 }
