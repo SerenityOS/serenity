@@ -35,37 +35,39 @@ void CharacterData::set_data(String const& data)
     // NOTE: Since the offset is 0, it can never be above data's length, so this can never throw.
     // NOTE: Setting the data to the same value as the current data still causes a mutation observer callback.
     // FIXME: Figure out a way to make this a no-op again if the passed in data is the same as the current data.
-    MUST(replace_data(0, this->length(), data));
+    MUST(replace_data(0, this->length_in_utf16_code_units(), data));
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-substring
 WebIDL::ExceptionOr<String> CharacterData::substring_data(size_t offset, size_t count) const
 {
     // 1. Let length be node’s length.
-    auto length = this->length();
+    // FIXME: This is very inefficient!
+    auto utf16_data = MUST(AK::utf8_to_utf16(m_data));
+    Utf16View utf16_view { utf16_data };
+    auto length = utf16_view.length_in_code_units();
 
     // 2. If offset is greater than length, then throw an "IndexSizeError" DOMException.
     if (offset > length)
         return WebIDL::IndexSizeError::create(realm(), "Substring offset out of range."_fly_string);
 
-    // FIXME: The offset and count we are given here is in UTF-16 code units, but we are incorrectly assuming it is a byte offset.
-
     // 3. If offset plus count is greater than length, return a string whose value is the code units from the offsetth code unit
     //    to the end of node’s data, and then return.
     if (offset + count > length)
-        return MUST(m_data.substring_from_byte_offset(offset));
+        return MUST(utf16_view.substring_view(offset).to_utf8());
 
     // 4. Return a string whose value is the code units from the offsetth code unit to the offset+countth code unit in node’s data.
-    return MUST(m_data.substring_from_byte_offset(offset, count));
+    return MUST(utf16_view.substring_view(offset, count).to_utf8());
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-replace
 WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, String const& data)
 {
-    // FIXME: The offset and count we are given here is in UTF-16 code units, but we are incorrectly assuming it is a byte offset.
-
     // 1. Let length be node’s length.
-    auto length = this->length();
+    // FIXME: This is very inefficient!
+    auto utf16_data = MUST(AK::utf8_to_utf16(m_data));
+    Utf16View utf16_view { utf16_data };
+    auto length = utf16_view.length_in_code_units();
 
     // 2. If offset is greater than length, then throw an "IndexSizeError" DOMException.
     if (offset > length)
@@ -82,9 +84,9 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
     // 6. Let delete offset be offset + data’s length.
     // 7. Starting from delete offset code units, remove count code units from node’s data.
     StringBuilder builder;
-    builder.append(this->data().bytes_as_string_view().substring_view(0, offset));
+    builder.append(MUST(utf16_view.substring_view(0, offset).to_utf8()));
     builder.append(data);
-    builder.append(this->data().bytes_as_string_view().substring_view(offset + count));
+    builder.append(MUST(utf16_view.substring_view(offset + count).to_utf8()));
     m_data = MUST(builder.to_string());
 
     // 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
@@ -130,7 +132,7 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
 WebIDL::ExceptionOr<void> CharacterData::append_data(String const& data)
 {
     // The appendData(data) method steps are to replace data with node this, offset this’s length, count 0, and data data.
-    return replace_data(this->length(), 0, data);
+    return replace_data(this->length_in_utf16_code_units(), 0, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-insertdata
