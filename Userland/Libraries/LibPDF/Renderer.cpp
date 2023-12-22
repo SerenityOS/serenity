@@ -1221,7 +1221,8 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
     } else if (image_dict->contains(CommonNames::Mask)) {
         auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
         if (mask_object->is<StreamObject>()) {
-            return Error::rendering_unsupported_error("/Mask stream objects not yet implemented");
+            auto mask_bitmap = TRY(load_image(mask_object->cast<StreamObject>()));
+            TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
         } else if (mask_object->is<ArrayObject>()) {
             return Error::rendering_unsupported_error("/Mask array objects not yet implemented");
         }
