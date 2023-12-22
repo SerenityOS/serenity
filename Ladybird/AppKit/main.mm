@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::WebContentOptions web_content_options {
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
-        .debug_web_content = debug_web_content ? Ladybird::DebugWebContent::Yes : Ladybird::DebugWebContent::No,
+        .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
     };
 
     auto* delegate = [[ApplicationDelegate alloc] init:move(initial_urls)
