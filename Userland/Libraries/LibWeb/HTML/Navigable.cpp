@@ -869,7 +869,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         //       This is because we care about the same-originness of the embedded content against the parent context, not the navigation source.
 
         // 14. Set locationURL to response's location URL given currentURL's fragment.
-        auto location_url = response_holder->response()->location_url(current_url.fragment());
+        location_url = response_holder->response()->location_url(current_url.fragment());
 
         VERIFY(!location_url.is_error());
 
