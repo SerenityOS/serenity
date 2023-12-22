@@ -1492,11 +1492,8 @@ size_t Node::length() const
         return 0;
 
     // 2. If node is a CharacterData node, then return node’s data’s length.
-    if (is_character_data()) {
-        auto* character_data_node = verify_cast<CharacterData>(this);
-        // FIXME: This should be in UTF-16 code units, not byte size.
-        return character_data_node->data().bytes().size();
-    }
+    if (is_character_data())
+        return verify_cast<CharacterData>(*this).length_in_utf16_code_units();
 
     // 3. Return the number of node’s children.
     return child_count();

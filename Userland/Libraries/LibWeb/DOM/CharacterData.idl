@@ -6,7 +6,7 @@
 [Exposed=Window]
 interface CharacterData : Node {
     [LegacyNullToEmptyString] attribute DOMString data;
-    readonly attribute unsigned long length;
+    [ImplementedAs=length_in_utf16_code_units] readonly attribute unsigned long length;
 
     DOMString substringData(unsigned long offset, unsigned long count);
     undefined appendData(DOMString data);
