@@ -353,6 +353,19 @@ public:
         }());
     }
 
+    template<Arithmetic T>
+    Optional<T> to_number(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const
+    {
+#ifndef KERNEL
+        if constexpr (IsFloatingPoint<T>)
+            return StringUtils::convert_to_floating_point<T>(*this, trim_whitespace);
+#endif
+        if constexpr (IsSigned<T>)
+            return StringUtils::convert_to_int<T>(*this, trim_whitespace);
+        else
+            return StringUtils::convert_to_uint<T>(*this, trim_whitespace);
+    }
+
 private:
     friend class ByteString;
     char const* m_characters { nullptr };
