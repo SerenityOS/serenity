@@ -520,6 +520,48 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     return stream_object;
 }
 
+PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_inline_image()
+{
+    // Inline images contain a dictionary containing arbitrary values between BI and ID,
+    // and then arbitrary binary data between ID and EI.
+    // This means they need a special code path in the parser, so that image data in there doesn't confuse the operator parser.
+
+    HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until("ID"));
+    m_reader.consume(2); // "ID"
+
+    // "Unless the image uses ASCIIHexDecode or ASCII85Decode as one of its filters,
+    // the ID operator should be followed by a single white-space character,
+    // and the next character is interpreted as the first byte of image data."
+    // FIXME: Check for ASCIIHexDecode and ASCII85Decode.
+    m_reader.consume(1);
+
+    // FIMXE: PDF 2.0 added support for `/L` / `/Length` in inline image dicts. If that's present, we don't have to scan for `EI`.
+    auto stream_start = m_reader.offset();
+    while (!m_reader.done()) {
+        // FIXME: Should we allow EI after matches_delimiter() too?
+        bool expecting_ei = m_reader.matches_whitespace();
+        m_reader.consume();
+        if (expecting_ei && m_reader.matches("EI")) {
+            break;
+        }
+    }
+
+    if (m_reader.done())
+        return error("operator stream ended inside inline image");
+
+    // Points one past the end of the stream data.
+    // FIXME: If we add matches_delimiter() to expecting_ei above, this has to be 1 larger in the delimiter case.
+    auto stream_end = m_reader.offset();
+
+    m_reader.consume(2); // "EI"
+    m_reader.consume_whitespace();
+
+    auto stream_bytes = m_reader.bytes().slice(stream_start, stream_end - stream_start);
+
+    auto map_object = make_object<DictObject>(move(map));
+    return make_object<StreamObject>(move(map_object), MUST(ByteBuffer::copy(stream_bytes)));
+}
+
 PDFErrorOr<Vector<Operator>> Parser::parse_operators()
 {
     Vector<Operator> operators;
@@ -553,49 +595,10 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
 
             auto operator_type = Operator::operator_type_from_symbol(operator_string);
 
-            // Inline images contain a dictionary containing arbitrary values between BI and ID,
-            // and then arbitrary binary data between ID and EI.
-            // This means they need a special code path in the parser, so that image data in there doesn't confuse the operator parser.
             if (operator_type == OperatorType::InlineImageBegin) {
                 if (!operator_args.is_empty())
                     return error("operator args not empty on start of inline image");
-
-                HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until("ID"));
-                m_reader.consume(2); // "ID"
-
-                // "Unless the image uses ASCIIHexDecode or ASCII85Decode as one of its filters,
-                // the ID operator should be followed by a single white-space character,
-                // and the next character is interpreted as the first byte of image data."
-                // FIXME: Check for ASCIIHexDecode and ASCII85Decode.
-                m_reader.consume(1);
-
-                // FIMXE: PDF 2.0 added support for `/L` / `/Length` in inline image dicts. If that's present, we don't have to scan for `EI`.
-                auto stream_start = m_reader.offset();
-                while (!m_reader.done()) {
-                    // FIXME: Should we allow EI after matches_delimiter() too?
-                    bool expecting_ei = m_reader.matches_whitespace();
-                    m_reader.consume();
-                    if (expecting_ei && m_reader.matches("EI")) {
-                        break;
-                    }
-                }
-
-                if (m_reader.done())
-                    return error("operator stream ended inside inline image");
-
-                // Points one past the end of the stream data.
-                // FIXME: If we add matches_delimiter() to expecting_ei above, this has to be 1 larger in the delimiter case.
-                auto stream_end = m_reader.offset();
-
-                m_reader.consume(2); // "EI"
-                m_reader.consume_whitespace();
-
-                auto stream_bytes = m_reader.bytes().slice(stream_start, stream_end - stream_start);
-
-                Vector<Value> inline_image_args;
-                auto map_object = make_object<DictObject>(move(map));
-                inline_image_args.append(make_object<StreamObject>(move(map_object), MUST(ByteBuffer::copy(stream_bytes))));
-                operators.append(Operator(OperatorType::InlineImageEnd, move(inline_image_args)));
+                operators.append(Operator(OperatorType::InlineImageEnd, { TRY(parse_inline_image()) }));
                 continue;
             }
 

@@ -73,6 +73,8 @@ public:
     void pop_reference() { m_current_reference_stack.take_last(); }
 
 protected:
+    PDFErrorOr<NonnullRefPtr<StreamObject>> parse_inline_image();
+
     Error error(
         ByteString const& message
 #ifdef PDF_DEBUG
