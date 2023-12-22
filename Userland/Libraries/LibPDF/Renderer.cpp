@@ -1170,6 +1170,24 @@ void Renderer::show_empty_image(int width, int height)
     m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
 }
 
+static ErrorOr<void> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<const Gfx::Bitmap> mask_bitmap)
+{
+    // Make alpha mask same size as image.
+    if (mask_bitmap->size() != image_bitmap->size())
+        mask_bitmap = TRY(mask_bitmap->scaled_to_size(image_bitmap->size()));
+
+    image_bitmap->add_alpha_channel();
+    for (int j = 0; j < image_bitmap->height(); ++j) {
+        for (int i = 0; i < image_bitmap->width(); ++i) {
+            auto image_color = image_bitmap->get_pixel(i, j);
+            auto mask_color = mask_bitmap->get_pixel(i, j);
+            image_color = image_color.with_alpha(mask_color.luminosity());
+            image_bitmap->set_pixel(i, j, image_color);
+        }
+    }
+    return {};
+}
+
 PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
@@ -1183,21 +1201,7 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
     auto image_bitmap = TRY(load_image(image));
     if (image_dict->contains(CommonNames::SMask)) {
         auto smask_bitmap = TRY(load_image(TRY(image_dict->get_stream(m_document, CommonNames::SMask))));
-
-        // Make softmask same size as image.
-        // FIXME: The smask code here is fairly ad-hoc and incomplete.
-        if (smask_bitmap->size() != image_bitmap->size())
-            smask_bitmap = TRY(smask_bitmap->scaled_to_size(image_bitmap->size()));
-
-        image_bitmap->add_alpha_channel();
-        for (int j = 0; j < image_bitmap->height(); ++j) {
-            for (int i = 0; i < image_bitmap->width(); ++i) {
-                auto image_color = image_bitmap->get_pixel(i, j);
-                auto smask_color = smask_bitmap->get_pixel(i, j);
-                image_color = image_color.with_alpha(smask_color.luminosity());
-                image_bitmap->set_pixel(i, j, image_color);
-            }
-        }
+        TRY(apply_alpha_channel(image_bitmap, smask_bitmap));
     } else if (image_dict->contains(CommonNames::Mask)) {
         auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
         if (mask_object->is<StreamObject>()) {
