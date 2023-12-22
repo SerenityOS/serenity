@@ -531,8 +531,11 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_inline_image()
 
     // "Unless the image uses ASCIIHexDecode or ASCII85Decode as one of its filters,
     // the ID operator should be followed by a single white-space character,
-    // and the next character is interpreted as the first byte of image data."
-    // FIXME: Check for ASCIIHexDecode and ASCII85Decode.
+    // and the next character is interpreted as the first byte of image data. [...]
+    // The bytes between the ID and EI operators are treated much the same as a stream object’s data
+    // (see Section 3.2.7, “Stream Objects”), even though they do not follow the standard stream syntax.
+    // (This is an exception to the usual rule that the data in a content stream is interpreted
+    // according to the standard PDF syntax for objects.)"
     m_reader.consume(1);
 
     // FIMXE: PDF 2.0 added support for `/L` / `/Length` in inline image dicts. If that's present, we don't have to scan for `EI`.
