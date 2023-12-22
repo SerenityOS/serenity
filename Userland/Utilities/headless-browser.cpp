@@ -25,6 +25,7 @@
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/Promise.h>
 #include <LibCore/ResourceImplementationFile.h>
 #include <LibCore/Timer.h>
 #include <LibDiff/Format.h>
@@ -352,6 +353,16 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
 
 static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, bool dump_failed_ref_tests)
 {
+    // Clear the current document.
+    // FIXME: Implement a debug-request to do this more thoroughly.
+    auto promise = Core::Promise<Empty>::construct();
+    view.on_load_finish = [&](auto) {
+        promise->resolve({});
+    };
+    view.on_text_test_finish = {};
+    view.load(URL("about:blank"sv));
+    MUST(promise->await());
+
     s_current_test_path = input_path;
     switch (mode) {
     case TestMode::Text:
