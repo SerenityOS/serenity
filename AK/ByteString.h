@@ -119,6 +119,12 @@ public:
     [[nodiscard]] Optional<float> to_float(TrimWhitespace = TrimWhitespace::Yes) const;
 #endif
 
+    template<Arithmetic T>
+    Optional<T> to_number(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const
+    {
+        return view().to_number<T>(trim_whitespace);
+    }
+
     [[nodiscard]] ByteString to_lowercase() const;
     [[nodiscard]] ByteString to_uppercase() const;
     [[nodiscard]] ByteString to_snakecase() const;
