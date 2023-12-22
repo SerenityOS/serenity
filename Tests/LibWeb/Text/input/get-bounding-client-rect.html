@@ -13,12 +13,10 @@
 <script src="include.js"></script>
 <script>
     test(() => {
-        const rect = document.getElementById("box").getBoundingClientRect();
-        println(JSON.stringify(rect));
-    });
+        const box_rect = document.getElementById("box").getBoundingClientRect();
+        println(JSON.stringify(box_rect));
 
-    test(() => {
-        const rect = document.getElementById("inline").getBoundingClientRect();
-        println(JSON.stringify(rect));
+        const inline_rect = document.getElementById("inline").getBoundingClientRect();
+        println(JSON.stringify(inline_rect));
     });
 </script>
