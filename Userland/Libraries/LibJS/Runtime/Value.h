@@ -429,7 +429,7 @@ public:
         // For 32-bit system the pointer fully fits so we can just return it directly.
         static_assert(sizeof(void*) == sizeof(u32));
         return static_cast<FlatPtr>(encoded & 0xffff'ffff);
-#elif ARCH(X86_64) || ARCH(RISCV64)
+#elif ARCH(X86_64) || ARCH(RISCV64) || ARCH(PPC64LE)
         // For x86_64 and riscv64 the top 16 bits should be sign extending the "real" top bit (47th).
         // So first shift the top 16 bits away then using the right shift it sign extends the top 16 bits.
         return static_cast<FlatPtr>((static_cast<i64>(encoded << 16)) >> 16);

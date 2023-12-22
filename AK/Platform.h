@@ -29,6 +29,12 @@
 #    define AK_IS_ARCH_AARCH64() 0
 #endif
 
+#if defined(__powerpc64__) && defined(__LITTLE_ENDIAN__)
+#    define AK_IS_ARCH_PPC64LE() 1
+#else
+#    define AK_IS_ARCH_PPC64LE() 0
+#endif
+
 #if defined(__riscv) && __riscv_xlen == 64
 #    define AK_IS_ARCH_RISCV64() 1
 #else
@@ -138,6 +144,12 @@
 #    define VALIDATE_IS_AARCH64()
 #else
 #    define VALIDATE_IS_AARCH64() static_assert(false, "Trying to include aarch64 only header on non aarch64 platform");
+#endif
+
+#if ARCH(PPC64LE)
+#    define VALIDATE_IS_PPC64LE()
+#else
+#    define VALIDATE_IS_PPC64LE() static_assert(false, "Trying to include ppc64le only header on non ppc64le platform");
 #endif
 
 #if ARCH(RISCV64)

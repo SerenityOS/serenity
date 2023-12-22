@@ -24,6 +24,8 @@ namespace Web {
 #    define CPU_STRING "AArch64"
 #elif ARCH(I386)
 #    define CPU_STRING "x86"
+#elif ARCH(PPC64LE)
+#    define CPU_STRING "Power"
 #elif ARCH(RISCV64)
 #    define CPU_STRING "RISC-V 64"
 #else
