@@ -131,7 +131,13 @@ private:
     void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     PDFErrorOr<void> show_text(ByteString const&);
-    PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_image(NonnullRefPtr<StreamObject>);
+
+    struct LoadedImage {
+        NonnullRefPtr<Gfx::Bitmap> bitmap;
+        bool is_image_mask = false;
+    };
+    PDFErrorOr<LoadedImage> load_image(NonnullRefPtr<StreamObject>);
+
     PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
     void show_empty_image(int width, int height);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
