@@ -101,9 +101,9 @@ private:
     Cell* allocate_cell()
     {
         will_allocate(sizeof(T));
-        if constexpr (requires { T::cell_allocator.allocate_cell(*this); }) {
+        if constexpr (requires { T::cell_allocator.allocator.get().allocate_cell(*this); }) {
             if constexpr (IsSame<T, typename decltype(T::cell_allocator)::CellType>) {
-                return T::cell_allocator.allocate_cell(*this);
+                return T::cell_allocator.allocator.get().allocate_cell(*this);
             }
         }
         return allocator_for_size(sizeof(T)).allocate_cell(*this);
