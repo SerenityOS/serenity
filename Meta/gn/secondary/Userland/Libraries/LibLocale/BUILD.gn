@@ -8,7 +8,7 @@ locale_cache = cache_path + "CLDR/"
 
 if (enable_unicode_database_download) {
   download_file("locale_database_download") {
-    version = "44.0.1"
+    version = "44.1.0"
     url = "https://github.com/unicode-org/cldr-json/releases/download/" +
           version + "/cldr-" + version + "-json-modern.zip"
     cache = locale_cache
