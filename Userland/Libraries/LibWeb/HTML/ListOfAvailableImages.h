@@ -33,32 +33,28 @@ public:
         mutable Optional<u32> cached_hash;
     };
 
-    struct Entry final : public JS::Cell {
-        JS_CELL(Entry, Cell);
-        JS_DECLARE_ALLOCATOR(Entry);
+    struct Entry {
+        Entry(JS::NonnullGCPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
+            : image_data(move(image_data))
+            , ignore_higher_layer_caching(ignore_higher_layer_caching)
+        {
+        }
 
-    public:
-        static JS::NonnullGCPtr<Entry> create(JS::VM&, JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
-        ~Entry();
-
-        bool ignore_higher_layer_caching { false };
         JS::NonnullGCPtr<DecodedImageData> image_data;
-
-    private:
-        Entry(JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
+        bool ignore_higher_layer_caching { false };
     };
 
     ListOfAvailableImages();
     ~ListOfAvailableImages();
 
-    ErrorOr<void> add(Key const&, JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
+    void add(Key const&, JS::NonnullGCPtr<DecodedImageData>, bool ignore_higher_layer_caching);
     void remove(Key const&);
-    [[nodiscard]] JS::GCPtr<Entry> get(Key const&) const;
+    [[nodiscard]] Entry* get(Key const&);
 
     void visit_edges(JS::Cell::Visitor& visitor) override;
 
 private:
-    HashMap<Key, JS::NonnullGCPtr<Entry>> m_images;
+    HashMap<Key, NonnullOwnPtr<Entry>> m_images;
 };
 
 }

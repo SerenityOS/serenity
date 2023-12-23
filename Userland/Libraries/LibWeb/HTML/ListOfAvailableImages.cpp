@@ -10,7 +10,6 @@
 namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(ListOfAvailableImages);
-JS_DEFINE_ALLOCATOR(ListOfAvailableImages::Entry);
 
 ListOfAvailableImages::ListOfAvailableImages() = default;
 ListOfAvailableImages::~ListOfAvailableImages() = default;
@@ -33,31 +32,16 @@ u32 ListOfAvailableImages::Key::hash() const
     return cached_hash.value();
 }
 
-JS::NonnullGCPtr<ListOfAvailableImages::Entry> ListOfAvailableImages::Entry::create(JS::VM& vm, JS::NonnullGCPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
-{
-    return vm.heap().allocate_without_realm<Entry>(image_data, ignore_higher_layer_caching);
-}
-
 void ListOfAvailableImages::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     for (auto& it : m_images)
-        visitor.visit(it.value);
+        visitor.visit(it.value->image_data);
 }
 
-ListOfAvailableImages::Entry::Entry(JS::NonnullGCPtr<DecodedImageData> data, bool ignore_higher_layer_caching)
-    : ignore_higher_layer_caching(ignore_higher_layer_caching)
-    , image_data(data)
+void ListOfAvailableImages::add(Key const& key, JS::NonnullGCPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
 {
-}
-
-ListOfAvailableImages::Entry::~Entry() = default;
-
-ErrorOr<void> ListOfAvailableImages::add(Key const& key, JS::NonnullGCPtr<DecodedImageData> image_data, bool ignore_higher_layer_caching)
-{
-    auto entry = Entry::create(vm(), image_data, ignore_higher_layer_caching);
-    TRY(m_images.try_set(key, entry));
-    return {};
+    m_images.set(key, make<Entry>(image_data, ignore_higher_layer_caching));
 }
 
 void ListOfAvailableImages::remove(Key const& key)
@@ -65,12 +49,12 @@ void ListOfAvailableImages::remove(Key const& key)
     m_images.remove(key);
 }
 
-JS::GCPtr<ListOfAvailableImages::Entry> ListOfAvailableImages::get(Key const& key) const
+ListOfAvailableImages::Entry* ListOfAvailableImages::get(Key const& key)
 {
     auto it = m_images.find(key);
     if (it == m_images.end())
         return nullptr;
-    return it->value;
+    return it->value.ptr();
 }
 
 }
