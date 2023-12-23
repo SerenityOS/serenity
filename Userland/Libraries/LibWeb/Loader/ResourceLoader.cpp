@@ -10,6 +10,7 @@
 #include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/Resource.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -158,6 +159,18 @@ static void store_response_cookies(Page& page, AK::URL const& url, ByteString co
 
 static size_t resource_id = 0;
 
+static HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers_for_file(StringView path)
+{
+    // For file:// and resource:// URLs, we have to guess the MIME type, since there's no HTTP header to tell us what
+    // it is. We insert a fake Content-Type header here, so that clients can use it to learn the MIME type.
+    auto mime_type = Core::guess_mime_type_based_on_filename(path);
+
+    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
+    response_headers.set("Content-Type"sv, mime_type);
+
+    return response_headers;
+}
+
 void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback, ErrorCallback error_callback, Optional<u32> timeout, TimeoutCallback timeout_callback)
 {
     auto& url = request.url();
@@ -230,6 +243,22 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         return;
     }
 
+    if (url.scheme() == "resource") {
+        auto resource = Core::Resource::load_from_uri(url.serialize());
+        if (resource.is_error()) {
+            log_failure(request, resource.error());
+            return;
+        }
+
+        auto data = resource.value()->data();
+        auto response_headers = response_headers_for_file(url.serialize_path());
+
+        log_success(request);
+        success_callback(data, response_headers, {});
+
+        return;
+    }
+
     if (url.scheme() == "file") {
         if (request.page())
             m_page = request.page();
@@ -290,15 +319,11 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
                     error_callback(ByteString::formatted("{}", maybe_data.error()), 500u, {}, {});
                 return;
             }
+
             auto data = maybe_data.release_value();
+            auto response_headers = response_headers_for_file(request.url().serialize_path());
+
             log_success(request);
-
-            // NOTE: For file:// URLs, we have to guess the MIME type, since there's no HTTP header to tell us what this is.
-            //       We insert a fake Content-Type header here, so that clients can use it to learn the MIME type.
-            HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
-            auto mime_type = Core::guess_mime_type_based_on_filename(request.url().serialize_path());
-            response_headers.set("Content-Type"sv, mime_type);
-
             success_callback(data, response_headers, {});
         });
 
