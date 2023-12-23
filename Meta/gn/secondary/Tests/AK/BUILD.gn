@@ -21,7 +21,7 @@ tests = [
   "TestCircularDeque",
   "TestCircularQueue",
   "TestComplex",
-  "TestDeprecatedString",
+  "TestByteString",
   "TestDisjointChunks",
   "TestDistinctNumeric",
   "TestDoublyLinkedList",

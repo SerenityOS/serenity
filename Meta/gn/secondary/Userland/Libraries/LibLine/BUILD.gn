@@ -4,6 +4,7 @@ shared_library("LibLine") {
   deps = [
     "//AK",
     "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibUnicode",
   ]
   sources = [
     "Editor.cpp",
