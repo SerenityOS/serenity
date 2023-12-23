@@ -377,7 +377,7 @@ static i64 clip_bigint_to_sane_time(Crypto::SignedBigInteger const& value)
         return NumericLimits<i64>::max();
 
     // FIXME: Can we do this without string conversion?
-    return value.to_base_deprecated(10).to_int<i64>().value();
+    return value.to_base_deprecated(10).to_number<i64>().value();
 }
 
 // 21.4.1.20 GetNamedTimeZoneEpochNanoseconds ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getnamedtimezoneepochnanoseconds

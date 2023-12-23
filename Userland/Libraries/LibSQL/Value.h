@@ -87,10 +87,7 @@ public:
 
         return m_value->visit(
             [](ByteString const& value) -> Optional<T> {
-                if constexpr (IsSigned<T>)
-                    return value.to_int<T>();
-                else
-                    return value.to_uint<T>();
+                return value.to_number<T>();
             },
             [](Integer auto value) -> Optional<T> {
                 if (!AK::is_within_range<T>(value))

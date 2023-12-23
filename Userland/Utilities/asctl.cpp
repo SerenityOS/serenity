@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             auto& variable = command_arguments[i];
             if (variable.is_one_of("v"sv, "volume"sv)) {
-                auto volume = command_arguments[++i].to_int();
+                auto volume = command_arguments[++i].to_number<int>();
                 if (!volume.has_value()) {
                     warnln("Error: {} is not an integer volume", command_arguments[i - 1]);
                     return 1;
@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
                 values_to_set.set(AudioVariable::Mute, mute);
             } else if (variable.is_one_of("r"sv, "samplerate"sv)) {
-                auto sample_rate = command_arguments[++i].to_int();
+                auto sample_rate = command_arguments[++i].to_number<int>();
                 if (!sample_rate.has_value()) {
                     warnln("Error: {} is not an integer sample rate", command_arguments[i - 1]);
                     return 1;

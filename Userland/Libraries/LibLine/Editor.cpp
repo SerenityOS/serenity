@@ -263,7 +263,7 @@ ErrorOr<Vector<Editor::HistoryEntry>> Editor::try_load_history(StringView path)
     Vector<HistoryEntry> history;
     for (auto& str : hist.split_view("\n\n"sv)) {
         auto it = str.find("::"sv).value_or(0);
-        auto time = str.substring_view(0, it).to_int<time_t>().value_or(0);
+        auto time = str.substring_view(0, it).to_number<time_t>().value_or(0);
         auto string = str.substring_view(it == 0 ? it : it + 2);
         history.append({ string, time });
     }
@@ -945,7 +945,7 @@ ErrorOr<void> Editor::handle_read_event()
             m_state = m_previous_free_state;
             auto is_in_paste = m_state == InputState::Paste;
             for (auto& parameter : ByteString::copy(csi_parameter_bytes).split(';')) {
-                if (auto value = parameter.to_uint(); value.has_value())
+                if (auto value = parameter.to_number<unsigned>(); value.has_value())
                     csi_parameters.append(value.value());
                 else
                     csi_parameters.append(0);
@@ -2140,7 +2140,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
                 continue;
             }
             if (c == ';') {
-                auto maybe_row = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_uint();
+                auto maybe_row = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_number<unsigned>();
                 if (!maybe_row.has_value())
                     has_error = true;
                 row = maybe_row.value_or(1u);
@@ -2166,7 +2166,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
                 continue;
             }
             if (c == 'R') {
-                auto maybe_column = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_uint();
+                auto maybe_column = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_number<unsigned>();
                 if (!maybe_column.has_value())
                     has_error = true;
                 col = maybe_column.value_or(1u);

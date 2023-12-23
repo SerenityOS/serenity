@@ -157,7 +157,7 @@ TEST_CASE(many_strings)
     }
     EXPECT_EQ(strings.size(), 999u);
     for (auto& it : strings) {
-        EXPECT_EQ(it.key.to_int().value(), it.value);
+        EXPECT_EQ(it.key.to_number<int>().value(), it.value);
     }
     for (int i = 0; i < 999; ++i) {
         EXPECT_EQ(strings.remove(ByteString::number(i)), true);

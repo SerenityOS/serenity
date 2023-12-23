@@ -180,9 +180,9 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     if (it == m_private->full_name_to_font_map.end()) {
         auto parts = name.split_view(" "sv);
         if (parts.size() >= 4) {
-            auto slope = parts.take_last().to_int().value_or(0);
-            auto weight = parts.take_last().to_int().value_or(0);
-            auto size = parts.take_last().to_int().value_or(0);
+            auto slope = parts.take_last().to_number<int>().value_or(0);
+            auto weight = parts.take_last().to_number<int>().value_or(0);
+            auto size = parts.take_last().to_number<int>().value_or(0);
             auto family = MUST(String::join(' ', parts));
             return get(family, size, weight, Gfx::FontWidth::Normal, slope);
         }

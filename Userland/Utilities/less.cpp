@@ -616,7 +616,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto const& sequence = sequence_value.value();
 
-        if (sequence.to_uint().has_value()) {
+        if (sequence.to_number<unsigned>().has_value()) {
             modifier_buffer.append(sequence);
         } else {
             if (sequence == "" || sequence == "q" || sequence == "Q") {
@@ -624,28 +624,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else if (sequence == "j" || sequence == "\e[B" || sequence == "\n") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.down_n(modifier_buffer.to_byte_string().to_uint().value_or(1));
+                        pager.down_n(modifier_buffer.to_byte_string().to_number<unsigned>().value_or(1));
                     else
                         pager.down();
                 }
             } else if (sequence == "k" || sequence == "\e[A") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.up_n(modifier_buffer.to_byte_string().to_uint().value_or(1));
+                        pager.up_n(modifier_buffer.to_byte_string().to_number<unsigned>().value_or(1));
                     else
                         pager.up();
                 }
             } else if (sequence == "g") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.go_to_line(modifier_buffer.to_byte_string().to_uint().value());
+                        pager.go_to_line(modifier_buffer.to_byte_string().to_number<unsigned>().value());
                     else
                         pager.top();
                 }
             } else if (sequence == "G") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
-                        pager.go_to_line(modifier_buffer.to_byte_string().to_uint().value());
+                        pager.go_to_line(modifier_buffer.to_byte_string().to_number<unsigned>().value());
                     else
                         pager.bottom();
                 }

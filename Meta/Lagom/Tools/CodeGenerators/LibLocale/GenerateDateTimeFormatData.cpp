@@ -652,7 +652,7 @@ static ErrorOr<void> parse_week_data(ByteString core_path, CLDR& cldr)
     auto const& weekend_end_object = week_data_object.get_object("weekendEnd"sv).value();
 
     minimum_days_object.for_each_member([&](auto const& region, auto const& value) {
-        auto minimum_days = value.as_string().template to_uint<u8>();
+        auto minimum_days = value.as_string().template to_number<u8>();
         cldr.minimum_days.set(region, *minimum_days);
 
         if (!cldr.minimum_days_regions.contains_slow(region))
@@ -1279,7 +1279,7 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         auto symbol_lists = create_symbol_lists(2);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
-            if (auto key_index = key.to_uint(); key_index.has_value())
+            if (auto key_index = key.template to_number<unsigned>(); key_index.has_value())
                 symbols[*key_index] = cldr.unique_strings.ensure(move(symbol));
         };
 
@@ -1303,7 +1303,7 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         auto symbol_lists = create_symbol_lists(12);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
-            auto key_index = key.to_uint().value() - 1;
+            auto key_index = key.template to_number<unsigned>().value() - 1;
             symbols[key_index] = cldr.unique_strings.ensure(move(symbol));
         };
 
@@ -1611,7 +1611,7 @@ static ErrorOr<void> parse_day_periods(ByteString core_path, CLDR& cldr)
         VERIFY(time.substring_view(hour_end_index) == ":00"sv);
 
         auto hour = time.substring_view(0, hour_end_index);
-        return hour.template to_uint<u8>().value();
+        return hour.template to_number<u8>().value();
     };
 
     auto parse_day_period = [&](auto const& symbol, auto const& ranges) -> Optional<DayPeriod> {

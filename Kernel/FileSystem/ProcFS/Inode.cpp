@@ -159,7 +159,7 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringView n
     if (name == "self"sv)
         return procfs().get_inode({ fsid(), 2 });
 
-    auto pid = name.to_uint<unsigned>();
+    auto pid = name.to_number<unsigned>();
     if (!pid.has_value())
         return ESRCH;
     auto actual_pid = pid.value();

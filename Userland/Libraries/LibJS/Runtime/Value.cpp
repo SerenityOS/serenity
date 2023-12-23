@@ -677,7 +677,7 @@ double string_to_number(StringView string)
         return bigint.to_double();
     }
 
-    auto maybe_double = text.to_double(AK::TrimWhitespace::No);
+    auto maybe_double = text.to_number<double>(AK::TrimWhitespace::No);
     if (!maybe_double.has_value())
         return NAN;
 

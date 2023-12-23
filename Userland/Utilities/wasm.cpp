@@ -122,7 +122,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                     warnln("print what memory?");
                     continue;
                 }
-                auto value = args[2].to_uint<u64>();
+                auto value = args[2].to_number<u64>();
                 if (!value.has_value()) {
                     warnln("invalid memory index {}", args[2]);
                     continue;
@@ -144,7 +144,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                     warnln("print what function?");
                     continue;
                 }
-                auto value = args[2].to_uint<u64>();
+                auto value = args[2].to_number<u64>();
                 if (!value.has_value()) {
                     warnln("invalid function index {}", args[2]);
                     continue;
@@ -170,7 +170,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                 continue;
             }
             Optional<Wasm::FunctionAddress> address;
-            auto index = args[1].to_uint<u64>();
+            auto index = args[1].to_number<u64>();
             if (index.has_value()) {
                 address = config.frame().module().functions()[index.value()];
             } else {
@@ -203,7 +203,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             Vector<u64> values_to_push;
             Vector<Wasm::Value> values;
             for (size_t index = 2; index < args.size(); ++index)
-                values_to_push.append(args[index].to_uint().value_or(0));
+                values_to_push.append(args[index].to_number<u64>().value_or(0));
             for (auto& param : type.parameters())
                 values.append(Wasm::Value { param, values_to_push.take_last() });
 
@@ -332,7 +332,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .short_name = 0,
         .value_name = "u64",
         .accept_value = [&](StringView str) -> bool {
-            if (auto v = str.to_uint<u64>(); v.has_value()) {
+            if (auto v = str.to_number<u64>(); v.has_value()) {
                 values_to_push.append(v.value());
                 return true;
             }

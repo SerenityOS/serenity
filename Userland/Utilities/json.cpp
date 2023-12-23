@@ -141,7 +141,7 @@ JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t ke
     if (value.is_object()) {
         result = value.as_object().get(key).value_or({});
     } else if (value.is_array()) {
-        auto key_as_index = key.to_int();
+        auto key_as_index = key.to_number<int>();
         if (key_as_index.has_value())
             result = value.as_array().at(key_as_index.value());
     }

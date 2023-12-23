@@ -90,7 +90,7 @@ inline ErrorOr<void> TarInputStream::for_each_extended_header(F func)
         Optional<size_t> length_end_index = file_contents.find(' ');
         if (!length_end_index.has_value())
             return Error::from_string_literal("Malformed extended header: No length found.");
-        Optional<unsigned int> length = file_contents.substring_view(0, length_end_index.value()).to_uint();
+        Optional<unsigned> length = file_contents.substring_view(0, length_end_index.value()).to_number<unsigned>();
         if (!length.has_value())
             return Error::from_string_literal("Malformed extended header: Could not parse length.");
 

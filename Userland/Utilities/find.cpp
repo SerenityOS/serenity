@@ -133,7 +133,7 @@ public:
             arg = arg.substring_view(1);
         }
 
-        auto maybe_value = arg.to_uint<T>();
+        auto maybe_value = arg.to_number<T>();
         if (!maybe_value.has_value())
             return Error::from_errno(EINVAL);
 
@@ -192,7 +192,7 @@ public:
     MaxDepthCommand(char const* arg)
     {
         auto max_depth_string = StringView { arg, strlen(arg) };
-        auto maybe_max_depth = max_depth_string.to_uint<u32>();
+        auto maybe_max_depth = max_depth_string.to_number<u32>();
         if (!maybe_max_depth.has_value())
             fatal_error("-maxdepth: '{}' is not a valid non-negative integer", arg);
 
@@ -210,7 +210,7 @@ public:
     MinDepthCommand(char const* arg)
     {
         auto min_depth_string = StringView { arg, strlen(arg) };
-        auto maybe_min_depth = min_depth_string.to_uint<u32>();
+        auto maybe_min_depth = min_depth_string.to_number<u32>();
         if (!maybe_min_depth.has_value())
             fatal_error("-mindepth: '{}' is not a valid non-negative integer", arg);
 
@@ -296,7 +296,7 @@ public:
             m_uid = passwd->pw_uid;
         } else {
             // Attempt to parse it as decimal UID.
-            auto number = StringView { arg, strlen(arg) }.to_uint<uid_t>();
+            auto number = StringView { arg, strlen(arg) }.to_number<uid_t>();
             if (!number.has_value())
                 fatal_error("Invalid user: \033[1m{}", arg);
             m_uid = number.value();
@@ -320,7 +320,7 @@ public:
             m_gid = gr->gr_gid;
         } else {
             // Attempt to parse it as decimal GID.
-            auto number = StringView { arg, strlen(arg) }.to_uint<gid_t>();
+            auto number = StringView { arg, strlen(arg) }.to_number<gid_t>();
             if (!number.has_value())
                 fatal_error("Invalid group: \033[1m{}", arg);
             m_gid = number.value();

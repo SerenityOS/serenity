@@ -116,7 +116,7 @@ static int handle_size_arguments(size_t& numeric_value, StringView argument)
         break;
     }
 
-    Optional<unsigned> numeric_optional = value.to_uint();
+    Optional<unsigned> numeric_optional = value.to_number<unsigned>();
     if (!numeric_optional.has_value()) {
         warnln("Invalid size-value: {}", value);
         return -1;

@@ -316,7 +316,7 @@ Vector<NonnullOwnPtr<KString>> CommandLine::userspace_init_args() const
 UNMAP_AFTER_INIT size_t CommandLine::switch_to_tty() const
 {
     auto const default_tty = lookup("switch_to_tty"sv).value_or("1"sv);
-    auto switch_tty_number = default_tty.to_uint();
+    auto switch_tty_number = default_tty.to_number<unsigned>();
     if (switch_tty_number.has_value() && switch_tty_number.value() >= 1) {
         return switch_tty_number.value() - 1;
     }

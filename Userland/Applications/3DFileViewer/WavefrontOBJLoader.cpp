@@ -13,12 +13,12 @@
 
 static inline GLuint get_index_value(StringView& representation)
 {
-    return representation.to_uint().value_or(1) - 1;
+    return representation.to_number<GLuint>().value_or(1) - 1;
 }
 
 static ErrorOr<GLfloat> parse_float(StringView string)
 {
-    auto maybe_float = string.to_float(TrimWhitespace::No);
+    auto maybe_float = string.to_number<GLfloat>(TrimWhitespace::No);
     if (!maybe_float.has_value())
         return Error::from_string_literal("Wavefront: Expected floating point value when parsing TexCoord line");
 

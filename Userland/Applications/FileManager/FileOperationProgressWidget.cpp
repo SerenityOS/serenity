@@ -106,12 +106,12 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         if (parts[0] == "PROGRESS"sv) {
             VERIFY(parts.size() >= 8);
             did_progress(
-                parts[3].to_uint().value_or(0),
-                parts[4].to_uint().value_or(0),
-                parts[1].to_uint().value_or(0),
-                parts[2].to_uint().value_or(0),
-                parts[5].to_uint().value_or(0),
-                parts[6].to_uint().value_or(0),
+                parts[3].to_number<unsigned>().value_or(0),
+                parts[4].to_number<unsigned>().value_or(0),
+                parts[1].to_number<unsigned>().value_or(0),
+                parts[2].to_number<unsigned>().value_or(0),
+                parts[5].to_number<unsigned>().value_or(0),
+                parts[6].to_number<unsigned>().value_or(0),
                 parts[7]);
         }
     };

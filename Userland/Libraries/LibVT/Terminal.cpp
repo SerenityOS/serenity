@@ -1248,7 +1248,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         return;
     }
 
-    auto command_number = stringview_ify(0).to_uint();
+    auto command_number = stringview_ify(0).to_number<unsigned>();
     if (!command_number.has_value()) {
         unimplemented_osc_sequence(parameters, last_byte);
         return;
@@ -1288,9 +1288,9 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         if (parameters.size() < 2)
             dbgln("Atttempted to set window progress but gave too few parameters");
         else if (parameters.size() == 2)
-            m_client.set_window_progress(stringview_ify(1).to_int().value_or(-1), 0);
+            m_client.set_window_progress(stringview_ify(1).to_number<int>().value_or(-1), 0);
         else
-            m_client.set_window_progress(stringview_ify(1).to_int().value_or(-1), stringview_ify(2).to_int().value_or(0));
+            m_client.set_window_progress(stringview_ify(1).to_number<int>().value_or(-1), stringview_ify(2).to_number<int>().value_or(0));
         break;
     default:
         unimplemented_osc_sequence(parameters, last_byte);

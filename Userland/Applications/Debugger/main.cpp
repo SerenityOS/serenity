@@ -61,7 +61,7 @@ static bool handle_disassemble_command(ByteString const& command, FlatPtr first_
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
     if (parts.size() == 2) {
-        auto number = parts[1].to_uint();
+        auto number = parts[1].to_number<unsigned>();
         if (!number.has_value())
             return false;
         number_of_instructions_to_disassemble = number.value();
@@ -142,7 +142,7 @@ static bool handle_breakpoint_command(ByteString const& command)
         auto source_arguments = argument.split(':');
         if (source_arguments.size() != 2)
             return false;
-        auto line = source_arguments[1].to_uint();
+        auto line = source_arguments[1].to_number<unsigned>();
         if (!line.has_value())
             return false;
         auto file = source_arguments[0];

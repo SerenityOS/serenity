@@ -799,7 +799,7 @@ ErrorOr<Variant<Parser::EntityReference, ByteString>, ParseError> Parser::parse_
             auto decimal = TRY(expect_many(
                 ranges_for_search<Range('0', '9')>(),
                 "any of [0-9]"sv));
-            code_point = decimal.to_uint<u32>();
+            code_point = decimal.to_number<u32>();
         }
 
         if (!code_point.has_value() || !s_characters.contains(*code_point))

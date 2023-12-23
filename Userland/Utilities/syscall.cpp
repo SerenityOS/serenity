@@ -175,7 +175,7 @@ static FlatPtr parse_from(ArgIter& iter)
         return parse_parameter_buffer(iter);
 
     // Is it a number?
-    if (auto l = this_arg_string.to_uint(); l.has_value())
+    if (auto l = this_arg_string.to_number<unsigned>(); l.has_value())
         return *l;
 
     // Then it must be a string:

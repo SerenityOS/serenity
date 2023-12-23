@@ -39,7 +39,7 @@ Client::~Client() = default;
 
 ErrorOr<NonnullRefPtr<Session>, Web::WebDriver::Error> Client::find_session_with_id(StringView session_id)
 {
-    auto session_id_or_error = session_id.to_uint<>();
+    auto session_id_or_error = session_id.to_number<unsigned>();
     if (!session_id_or_error.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 

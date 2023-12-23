@@ -417,7 +417,7 @@ void AbstractTableView::set_visible_columns(StringView column_names)
         column_header().set_section_visible(column, false);
 
     column_names.for_each_split_view(',', SplitBehavior::Nothing, [&, this](StringView column_id_string) {
-        if (auto column = column_id_string.to_int(); column.has_value()) {
+        if (auto column = column_id_string.to_number<int>(); column.has_value()) {
             column_header().set_section_visible(column.value(), true);
         }
     });

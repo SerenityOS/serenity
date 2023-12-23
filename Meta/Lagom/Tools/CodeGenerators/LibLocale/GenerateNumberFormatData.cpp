@@ -441,7 +441,7 @@ static ErrorOr<void> parse_number_systems(ByteString locale_numbers_path, CLDR& 
             auto patterns = value.as_string().split(';');
             NumberFormat format {};
 
-            if (auto type = split_key[0].template to_uint<u64>(); type.has_value()) {
+            if (auto type = split_key[0].template to_number<u64>(); type.has_value()) {
                 VERIFY(*type % 10 == 0);
                 format.magnitude = static_cast<u8>(log10(*type));
 
@@ -580,7 +580,7 @@ static ErrorOr<void> parse_number_systems(ByteString locale_numbers_path, CLDR& 
         locale.number_systems.append(system_index);
     }
 
-    locale.minimum_grouping_digits = minimum_grouping_digits.template to_uint<u8>().value();
+    locale.minimum_grouping_digits = minimum_grouping_digits.template to_number<u8>().value();
     return {};
 }
 

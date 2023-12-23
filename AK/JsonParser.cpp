@@ -278,13 +278,13 @@ ErrorOr<JsonValue> JsonParser::parse_number()
 
     StringView number_string(number_buffer.data(), number_buffer.size());
 
-    auto to_unsigned_result = number_string.to_uint<u64>();
+    auto to_unsigned_result = number_string.to_number<u64>();
     if (to_unsigned_result.has_value()) {
         if (*to_unsigned_result <= NumericLimits<u32>::max())
             return JsonValue((u32)*to_unsigned_result);
 
         return JsonValue(*to_unsigned_result);
-    } else if (auto signed_number = number_string.to_int<i64>(); signed_number.has_value()) {
+    } else if (auto signed_number = number_string.to_number<i64>(); signed_number.has_value()) {
 
         if (*signed_number <= NumericLimits<i32>::max())
             return JsonValue((i32)*signed_number);

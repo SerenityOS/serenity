@@ -92,7 +92,7 @@ parse_state_machine(StringView input)
             if (lexer.next_is('\\')) {
                 num = (int)lexer.consume_escaped_character('\\');
             } else {
-                num = lexer.consume_until('\'').to_int().value();
+                num = lexer.consume_until('\'').to_number<int>().value();
                 lexer.ignore();
             }
             lexer.consume_specific('\'');

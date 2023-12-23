@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 return true;
             }
 
-            auto number = omit_pid_value.to_uint();
+            auto number = omit_pid_value.template to_number<pid_t>();
             if (!number.has_value())
                 return false;
 

@@ -60,8 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto maybe_major = major_string.to_int();
-    auto maybe_minor = minor_string.to_int();
+    auto maybe_major = major_string.to_number<int>();
+    auto maybe_minor = minor_string.to_number<int>();
     dev_t device;
     if (type == 'p') {
         if (maybe_major.has_value() || maybe_minor.has_value()) {

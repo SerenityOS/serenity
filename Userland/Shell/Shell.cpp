@@ -137,7 +137,7 @@ ByteString Shell::prompt() const
             if (next_char != 'w' && next_char != 'W')
                 continue;
 
-            auto const max_component_count = number_string.to_uint().value();
+            auto const max_component_count = number_string.to_number<unsigned>().value();
 
             ByteString const home_path = getenv("HOME");
 
@@ -412,7 +412,7 @@ ErrorOr<RefPtr<AST::Value const>> Shell::look_up_local_variable(StringView name)
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
 
-    if (auto index = name.to_uint(); index.has_value())
+    if (auto index = name.to_number<unsigned>(); index.has_value())
         return get_argument(index.value());
 
     return nullptr;
@@ -2620,7 +2620,7 @@ Optional<int> Shell::resolve_job_spec(StringView str)
         return {};
 
     // %number -> job id <number>
-    if (auto number = str.substring_view(1).to_uint(); number.has_value())
+    if (auto number = str.substring_view(1).to_number<unsigned>(); number.has_value())
         return number.value();
 
     // '%?str' -> iterate jobs and pick one with `str' in its command
@@ -2647,7 +2647,7 @@ void Shell::timer_event(Core::TimerEvent& event)
     auto const* autosave_env_ptr = getenv("HISTORY_AUTOSAVE_TIME_MS");
     auto option = autosave_env_ptr != NULL ? StringView { autosave_env_ptr, strlen(autosave_env_ptr) } : StringView {};
 
-    auto time = option.to_uint();
+    auto time = option.to_number<unsigned>();
     if (!time.has_value() || time.value() == 0) {
         m_history_autosave_time.clear();
         stop_timer();

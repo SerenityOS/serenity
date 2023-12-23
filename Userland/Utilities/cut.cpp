@@ -49,7 +49,7 @@ static bool expand_list(ByteString& list, Vector<Range>& ranges)
         }
 
         if (token[0] == '-') {
-            auto index = token.substring(1, token.length() - 1).to_uint();
+            auto index = token.substring(1, token.length() - 1).to_number<unsigned>();
             if (!index.has_value()) {
                 warnln("cut: invalid byte/character position '{}'", token);
                 return false;
@@ -62,7 +62,7 @@ static bool expand_list(ByteString& list, Vector<Range>& ranges)
 
             ranges.append({ 1, index.value() });
         } else if (token[token.length() - 1] == '-') {
-            auto index = token.substring(0, token.length() - 1).to_uint();
+            auto index = token.substring(0, token.length() - 1).to_number<unsigned>();
             if (!index.has_value()) {
                 warnln("cut: invalid byte/character position '{}'", token);
                 return false;
@@ -77,13 +77,13 @@ static bool expand_list(ByteString& list, Vector<Range>& ranges)
         } else {
             auto range = token.split('-', SplitBehavior::KeepEmpty);
             if (range.size() == 2) {
-                auto index1 = range[0].to_uint();
+                auto index1 = range[0].to_number<unsigned>();
                 if (!index1.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[0]);
                     return false;
                 }
 
-                auto index2 = range[1].to_uint();
+                auto index2 = range[1].to_number<unsigned>();
                 if (!index2.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[1]);
                     return false;
@@ -99,7 +99,7 @@ static bool expand_list(ByteString& list, Vector<Range>& ranges)
 
                 ranges.append({ index1.value(), index2.value() });
             } else if (range.size() == 1) {
-                auto index = range[0].to_uint();
+                auto index = range[0].to_number<unsigned>();
                 if (!index.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[0]);
                     return false;

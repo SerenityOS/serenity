@@ -254,7 +254,7 @@ ParseErrorOr<Tree> TextParser::parse_expression()
             if (token.type == TokenType::Identifier) {
                 expression = make_ref_counted<UnresolvedReference>(token.data);
             } else if (token.type == TokenType::Number) {
-                expression = make_ref_counted<MathematicalConstant>(token.data.to_int<i64>().value());
+                expression = make_ref_counted<MathematicalConstant>(token.data.to_number<i64>().value());
             } else if (token.type == TokenType::String) {
                 expression = make_ref_counted<StringLiteral>(token.data);
             } else {

@@ -88,12 +88,12 @@ static bool parse_pwddb_entry(char* raw_line, struct passwd& passwd_entry)
     auto& dir = parts[5];
     auto& shell = parts[6];
 
-    auto uid = uid_string.to_uint();
+    auto uid = uid_string.to_number<uid_t>();
     if (!uid.has_value()) {
         dbgln("getpwent(): Malformed UID on line {}", s_line_number);
         return false;
     }
-    auto gid = gid_string.to_uint();
+    auto gid = gid_string.to_number<gid_t>();
     if (!gid.has_value()) {
         dbgln("getpwent(): Malformed GID on line {}", s_line_number);
         return false;

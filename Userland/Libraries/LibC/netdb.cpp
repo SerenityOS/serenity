@@ -767,7 +767,7 @@ static bool fill_getproto_buffers(char const* line, ssize_t read)
     }
     __getproto_name_buffer = split_line[0];
 
-    auto number = split_line[1].to_int();
+    auto number = split_line[1].to_number<int>();
     if (!number.has_value())
         return false;
 

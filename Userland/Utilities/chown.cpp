@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto number = parts[0].to_uint();
+    auto number = parts[0].to_number<uid_t>();
     if (number.has_value()) {
         new_uid = number.value();
     } else {
@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (parts.size() == 2) {
-        auto number = parts[1].to_uint();
+        auto number = parts[1].to_number<gid_t>();
         if (number.has_value()) {
             new_gid = number.value();
         } else {

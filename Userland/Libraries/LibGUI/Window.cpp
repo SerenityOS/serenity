@@ -142,10 +142,10 @@ void Window::show()
         auto parts = StringView { launch_origin_rect_string, strlen(launch_origin_rect_string) }.split_view(',');
         if (parts.size() == 4) {
             launch_origin_rect = Gfx::IntRect {
-                parts[0].to_int().value_or(0),
-                parts[1].to_int().value_or(0),
-                parts[2].to_int().value_or(0),
-                parts[3].to_int().value_or(0),
+                parts[0].to_number<int>().value_or(0),
+                parts[1].to_number<int>().value_or(0),
+                parts[2].to_number<int>().value_or(0),
+                parts[3].to_number<int>().value_or(0),
             };
         }
         unsetenv("__libgui_launch_origin_rect");

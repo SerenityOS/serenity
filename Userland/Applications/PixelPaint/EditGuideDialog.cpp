@@ -80,7 +80,7 @@ Optional<float> EditGuideDialog::offset_as_pixel(ImageEditor const& editor)
 {
     float offset = 0;
     if (m_offset.ends_with('%')) {
-        auto percentage = m_offset.substring_view(0, m_offset.length() - 1).to_int();
+        auto percentage = m_offset.substring_view(0, m_offset.length() - 1).to_number<int>();
         if (!percentage.has_value())
             return {};
 
@@ -89,7 +89,7 @@ Optional<float> EditGuideDialog::offset_as_pixel(ImageEditor const& editor)
         else if (orientation() == PixelPaint::Guide::Orientation::Vertical)
             offset = editor.image().size().width() * ((double)percentage.value() / 100.0);
     } else {
-        auto parsed_int = m_offset.to_int();
+        auto parsed_int = m_offset.to_number<int>();
         if (!parsed_int.has_value())
             return {};
         offset = parsed_int.value();

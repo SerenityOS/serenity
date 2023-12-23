@@ -50,7 +50,7 @@ bool Parser::consume_line_number(size_t& number)
 {
     auto line = consume_while(is_ascii_digit);
 
-    auto maybe_number = line.to_uint<size_t>();
+    auto maybe_number = line.to_number<size_t>();
     if (!maybe_number.has_value())
         return false;
 

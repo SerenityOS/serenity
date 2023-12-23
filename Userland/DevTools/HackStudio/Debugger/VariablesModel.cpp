@@ -112,7 +112,7 @@ static Optional<u32> string_to_variable_value(StringView string_value, Debug::De
     }
 
     if (variable.type_name == "int") {
-        auto value = string_value.to_int();
+        auto value = string_value.to_number<int>();
         if (value.has_value())
             return value.value();
         return {};

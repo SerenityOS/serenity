@@ -177,7 +177,7 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
 
         size_t i = 0;
         for (auto& value : index_values) {
-            auto maybe_index = value.bytes_as_string_view().to_int();
+            auto maybe_index = value.bytes_as_string_view().to_number<int>();
             if (!maybe_index.has_value()) {
                 shell->raise_error(Shell::ShellError::InvalidSliceContentsError, ByteString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice->position());
                 return move(input_value);
@@ -227,7 +227,7 @@ static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String
 
         size_t i = 0;
         for (auto& value : index_values) {
-            auto maybe_index = value.bytes_as_string_view().to_int();
+            auto maybe_index = value.to_number<int>();
             if (!maybe_index.has_value()) {
                 shell->raise_error(Shell::ShellError::InvalidSliceContentsError, ByteString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice->position());
                 return move(values);
@@ -2697,8 +2697,8 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
                     values.append(make_ref_counted<StringValue>(TRY(builder.to_string())));
                 } else {
                     // Could be two numbers?
-                    auto start_int = start_str.bytes_as_string_view().to_int();
-                    auto end_int = end_str.bytes_as_string_view().to_int();
+                    auto start_int = start_str.to_number<int>();
+                    auto end_int = end_str.to_number<int>();
                     if (start_int.has_value() && end_int.has_value()) {
                         auto start = start_int.value();
                         auto end = end_int.value();

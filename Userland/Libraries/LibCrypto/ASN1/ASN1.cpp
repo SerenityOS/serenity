@@ -123,16 +123,16 @@ Optional<Core::DateTime> parse_utc_time(StringView time)
 {
     // YYMMDDhhmm[ss]Z or YYMMDDhhmm[ss](+|-)hhmm
     GenericLexer lexer(time);
-    auto year_in_century = lexer.consume(2).to_uint();
-    auto month = lexer.consume(2).to_uint();
-    auto day = lexer.consume(2).to_uint();
-    auto hour = lexer.consume(2).to_uint();
-    auto minute = lexer.consume(2).to_uint();
+    auto year_in_century = lexer.consume(2).to_number<unsigned>();
+    auto month = lexer.consume(2).to_number<unsigned>();
+    auto day = lexer.consume(2).to_number<unsigned>();
+    auto hour = lexer.consume(2).to_number<unsigned>();
+    auto minute = lexer.consume(2).to_number<unsigned>();
     Optional<unsigned> seconds, offset_hours, offset_minutes;
     [[maybe_unused]] bool negative_offset = false;
 
     if (lexer.next_is(is_any_of("0123456789"sv))) {
-        seconds = lexer.consume(2).to_uint();
+        seconds = lexer.consume(2).to_number<unsigned>();
         if (!seconds.has_value()) {
             return {};
         }
@@ -142,8 +142,8 @@ Optional<Core::DateTime> parse_utc_time(StringView time)
         lexer.consume();
     } else if (lexer.next_is(is_any_of("+-"sv))) {
         negative_offset = lexer.consume() == '-';
-        offset_hours = lexer.consume(2).to_uint();
-        offset_minutes = lexer.consume(2).to_uint();
+        offset_hours = lexer.consume(2).to_number<unsigned>();
+        offset_minutes = lexer.consume(2).to_number<unsigned>();
         if (!offset_hours.has_value() || !offset_minutes.has_value()) {
             return {};
         }
@@ -171,10 +171,10 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
 {
     // YYYYMMDDhh[mm[ss[.fff]]] or YYYYMMDDhh[mm[ss[.fff]]]Z or YYYYMMDDhh[mm[ss[.fff]]](+|-)hhmm
     GenericLexer lexer(time);
-    auto year = lexer.consume(4).to_uint();
-    auto month = lexer.consume(2).to_uint();
-    auto day = lexer.consume(2).to_uint();
-    auto hour = lexer.consume(2).to_uint();
+    auto year = lexer.consume(4).to_number<unsigned>();
+    auto month = lexer.consume(2).to_number<unsigned>();
+    auto day = lexer.consume(2).to_number<unsigned>();
+    auto hour = lexer.consume(2).to_number<unsigned>();
     Optional<unsigned> minute, seconds, milliseconds, offset_hours, offset_minutes;
     [[maybe_unused]] bool negative_offset = false;
     if (!lexer.is_eof()) {
@@ -182,7 +182,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
             goto done_parsing;
 
         if (!lexer.next_is(is_any_of("+-"sv))) {
-            minute = lexer.consume(2).to_uint();
+            minute = lexer.consume(2).to_number<unsigned>();
             if (!minute.has_value()) {
                 return {};
             }
@@ -191,7 +191,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
         }
 
         if (!lexer.next_is(is_any_of("+-"sv))) {
-            seconds = lexer.consume(2).to_uint();
+            seconds = lexer.consume(2).to_number<unsigned>();
             if (!seconds.has_value()) {
                 return {};
             }
@@ -200,7 +200,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
         }
 
         if (lexer.consume_specific('.')) {
-            milliseconds = lexer.consume(3).to_uint();
+            milliseconds = lexer.consume(3).to_number<unsigned>();
             if (!milliseconds.has_value()) {
                 return {};
             }
@@ -210,8 +210,8 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
 
         if (lexer.next_is(is_any_of("+-"sv))) {
             negative_offset = lexer.consume() == '-';
-            offset_hours = lexer.consume(2).to_uint();
-            offset_minutes = lexer.consume(2).to_uint();
+            offset_hours = lexer.consume(2).to_number<unsigned>();
+            offset_minutes = lexer.consume(2).to_number<unsigned>();
             if (!offset_hours.has_value() || !offset_minutes.has_value()) {
                 return {};
             }

@@ -88,7 +88,7 @@ ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
         return Error::from_string_view("Bad help page URL"sv);
 
     auto const section = url.path_segment_at_index(0);
-    auto maybe_section_number = section.to_uint();
+    auto maybe_section_number = section.to_number<unsigned>();
     if (!maybe_section_number.has_value())
         return Error::from_string_view("Bad section number"sv);
     auto section_number = maybe_section_number.value();

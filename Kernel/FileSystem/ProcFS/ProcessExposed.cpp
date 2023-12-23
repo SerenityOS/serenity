@@ -79,7 +79,7 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
 
 ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS& procfs, StringView name) const
 {
-    auto maybe_needle = name.to_uint();
+    auto maybe_needle = name.to_number<unsigned>();
     if (!maybe_needle.has_value())
         return ENOENT;
     auto needle = maybe_needle.release_value();
@@ -120,7 +120,7 @@ ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<E
 
 ErrorOr<NonnullRefPtr<Inode>> Process::lookup_children_directory(ProcFS& procfs, StringView name) const
 {
-    auto maybe_pid = name.to_uint();
+    auto maybe_pid = name.to_number<unsigned>();
     if (!maybe_pid.has_value())
         return ENOENT;
 
@@ -173,7 +173,7 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
 
 ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS& procfs, StringView name) const
 {
-    auto maybe_index = name.to_uint();
+    auto maybe_index = name.to_number<unsigned>();
     if (!maybe_index.has_value())
         return ENOENT;
 

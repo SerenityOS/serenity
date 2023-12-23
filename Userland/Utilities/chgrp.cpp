@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto number = gid_arg.to_uint();
+    auto number = gid_arg.to_number<unsigned>();
     if (number.has_value()) {
         new_gid = number.value();
     } else {

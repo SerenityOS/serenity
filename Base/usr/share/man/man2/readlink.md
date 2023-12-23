@@ -55,9 +55,9 @@ pid_t read_pid_using_readlink()
 
 ErrorOr<pid_t> read_pid_using_core_file()
 {
-    auto target = TRY(File::read_link("/proc/self"sv));
-    auto pid = target.to_uint();
-    ASSERT(pid.has_value());
+    auto target = TRY(FileSystem::read_link("/proc/self"sv));
+    auto pid = target.to_number<pid_t>();
+    VERIFY(pid.has_value());
     return pid.value();
 }
 ```

@@ -82,7 +82,7 @@ static ErrorOr<void> load_file(Options const& options, StringView filename, Stri
             }
         }
 
-        Line l = { key, key.to_int().value_or(0), line, options.numeric };
+        Line l = { key, key.to_number<int>().value_or(0), line, options.numeric };
 
         if (!options.unique || !seen.contains(l)) {
             lines.append(l);

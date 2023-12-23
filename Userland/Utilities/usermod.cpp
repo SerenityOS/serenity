@@ -17,7 +17,7 @@
 
 static Optional<gid_t> group_string_to_gid(StringView group)
 {
-    auto maybe_gid = group.to_uint<gid_t>();
+    auto maybe_gid = group.to_number<gid_t>();
     auto maybe_group_or_error = maybe_gid.has_value()
         ? Core::System::getgrgid(maybe_gid.value())
         : Core::System::getgrnam(group);

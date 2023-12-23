@@ -253,7 +253,7 @@ ErrorOr<JsonValue, Client::WrappedError> Client::read_body_as_json()
 
     for (auto const& header : m_request->headers()) {
         if (header.name.equals_ignoring_ascii_case("Content-Length"sv)) {
-            content_length = header.value.to_uint<size_t>(TrimWhitespace::Yes).value_or(0);
+            content_length = header.value.to_number<size_t>(TrimWhitespace::Yes).value_or(0);
             break;
         }
     }

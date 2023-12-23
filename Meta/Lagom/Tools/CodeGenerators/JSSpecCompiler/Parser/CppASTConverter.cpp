@@ -122,7 +122,7 @@ template<>
 NullableTree CppASTConverter::convert_node(Cpp::NumericLiteral const& literal)
 {
     // TODO: Numerical literals are not limited to i64.
-    return make_ref_counted<MathematicalConstant>(literal.value().to_int<i64>().value());
+    return make_ref_counted<MathematicalConstant>(literal.value().to_number<i64>().value());
 }
 
 template<>

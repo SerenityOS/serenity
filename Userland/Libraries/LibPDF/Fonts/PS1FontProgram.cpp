@@ -127,7 +127,7 @@ PDFErrorOr<Vector<ByteBuffer>> PS1FontProgram::parse_subroutines(Reader& reader)
                 return error("Array index out of bounds");
 
             if (isdigit(entry[0])) {
-                auto maybe_encrypted_size = entry.to_int();
+                auto maybe_encrypted_size = entry.to_number<int>();
                 if (!maybe_encrypted_size.has_value())
                     return error("Malformed array");
                 auto rd = TRY(parse_word(reader));
@@ -191,7 +191,7 @@ PDFErrorOr<float> PS1FontProgram::parse_float(Reader& reader)
 
 PDFErrorOr<int> PS1FontProgram::parse_int(Reader& reader)
 {
-    auto maybe_int = TRY(parse_word(reader)).to_int();
+    auto maybe_int = TRY(parse_word(reader)).to_number<int>();
     if (!maybe_int.has_value())
         return error("Invalid int");
     return maybe_int.value();

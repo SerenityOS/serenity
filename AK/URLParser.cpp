@@ -124,7 +124,7 @@ static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
     if (radix == 8)
         maybe_output = StringUtils::convert_to_uint_from_octal(input);
     else if (radix == 10)
-        maybe_output = input.to_uint();
+        maybe_output = input.to_number<u32>();
     else if (radix == 16)
         maybe_output = StringUtils::convert_to_uint_from_hex(input);
     else
@@ -1292,10 +1292,11 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 1. If buffer is not the empty string, then:
                 if (!buffer.is_empty()) {
                     // 1. Let port be the mathematical integer value that is represented by buffer in radix-10 using ASCII digits for digits with values 0 through 9.
-                    auto port = buffer.string_view().to_uint();
+                    auto port = buffer.string_view().to_number<u16>();
 
                     // 2. If port is greater than 2^16 − 1, port-out-of-range validation error, return failure.
-                    if (!port.has_value() || port.value() > 65535) {
+                    // NOTE: This is done by to_number.
+                    if (!port.has_value()) {
                         report_validation_error();
                         return {};
                     }

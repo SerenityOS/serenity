@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .short_name = 'O',
         .value_name = "seconds",
         .accept_value = [&display_if_older_than](StringView seconds_string) {
-            auto number = seconds_string.to_uint<u64>();
+            auto number = seconds_string.to_number<u64>();
 
             if (number.has_value() && number.value() <= NumericLimits<i64>::max()) {
                 auto now_time = UnixDateTime::now();
@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .value_name = "uid-list",
         .accept_value = [&uids_to_filter_by](StringView comma_separated_users) {
             for (auto user_string : comma_separated_users.split_view(',')) {
-                auto maybe_uid = user_string.to_uint<uid_t>();
+                auto maybe_uid = user_string.to_number<uid_t>();
                 if (maybe_uid.has_value()) {
                     uids_to_filter_by.set(maybe_uid.value());
                 } else {

@@ -415,7 +415,7 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
             size_t value = 0;
             while (match(TokenType::Char)) {
                 auto c = m_parser_state.current_token.value().substring_view(0, 1);
-                auto c_value = c.to_uint();
+                auto c_value = c.to_number<unsigned>();
                 if (!c_value.has_value())
                     break;
                 value *= 10;
@@ -615,7 +615,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             number_builder.append(consume().value());
         }
 
-        auto maybe_minimum = number_builder.to_byte_string().to_uint();
+        auto maybe_minimum = number_builder.to_byte_string().to_number<unsigned>();
         if (!maybe_minimum.has_value())
             return set_error(Error::InvalidBraceContent);
 
@@ -644,7 +644,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             number_builder.append(consume().value());
         }
         if (!number_builder.is_empty()) {
-            auto value = number_builder.to_byte_string().to_uint();
+            auto value = number_builder.to_byte_string().to_number<unsigned>();
             if (!value.has_value() || minimum > value.value() || *value > s_maximum_repetition_count)
                 return set_error(Error::InvalidBraceContent);
 
@@ -1206,7 +1206,7 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
 
         if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
             break;
-        if (!hex && !c.to_uint().has_value())
+        if (!hex && !c.to_number<unsigned>().has_value())
             break;
 
         offset += consume().value().length();
@@ -1226,7 +1226,7 @@ Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZe
         return {};
     if (hex)
         return AK::StringUtils::convert_to_uint_from_hex(str);
-    return str.to_uint();
+    return str.to_number<unsigned>();
 }
 
 bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minimum, ParseFlags flags)
@@ -1304,7 +1304,7 @@ bool ECMA262Parser::parse_interval_quantifier(Optional<u64>& repeat_min, Optiona
     auto low_bound_string = read_digits_as_string();
     chars_consumed += low_bound_string.length();
 
-    auto low_bound = low_bound_string.to_uint<u64>();
+    auto low_bound = low_bound_string.to_number<u64>();
 
     if (!low_bound.has_value()) {
         if (!m_should_use_browser_extended_grammar && done())
@@ -1320,7 +1320,7 @@ bool ECMA262Parser::parse_interval_quantifier(Optional<u64>& repeat_min, Optiona
         consume();
         ++chars_consumed;
         auto high_bound_string = read_digits_as_string();
-        auto high_bound = high_bound_string.to_uint<u64>();
+        auto high_bound = high_bound_string.to_number<u64>();
         if (high_bound.has_value()) {
             repeat_max = high_bound.value();
             chars_consumed += high_bound_string.length();
@@ -1587,7 +1587,7 @@ bool ECMA262Parser::parse_character_escape(Vector<CompareTypeAndValuePair>& comp
 bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_minimum, ParseFlags flags)
 {
     if (auto escape_str = read_digits_as_string(ReadDigitsInitialZeroState::Disallow); !escape_str.is_empty()) {
-        if (auto escape = escape_str.to_uint(); escape.has_value()) {
+        if (auto escape = escape_str.to_number<unsigned>(); escape.has_value()) {
             // See if this is a "back"-reference (we've already parsed the group it refers to)
             auto maybe_length = m_parser_state.capture_group_minimum_lengths.get(escape.value());
             if (maybe_length.has_value()) {

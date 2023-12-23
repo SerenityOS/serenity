@@ -96,17 +96,17 @@ void SearchPanel::search(StringView query)
             // FIXME: Handle JSON parsing errors
             auto const& json_place = json_places.at(i).as_object();
 
-            MapWidget::LatLng latlng = { json_place.get_byte_string("lat"sv).release_value().to_double().release_value(),
-                json_place.get_byte_string("lon"sv).release_value().to_double().release_value() };
+            MapWidget::LatLng latlng = { json_place.get_byte_string("lat"sv).release_value().to_number<double>().release_value(),
+                json_place.get_byte_string("lon"sv).release_value().to_number<double>().release_value() };
             String name = MUST(String::formatted("{}\n{:.5}, {:.5}", json_place.get_byte_string("display_name"sv).release_value(), latlng.latitude, latlng.longitude));
 
             // Calculate the right zoom level for bounding box
             auto const& json_boundingbox = json_place.get_array("boundingbox"sv);
             MapWidget::LatLngBounds bounds = {
-                { json_boundingbox->at(0).as_string().to_double().release_value(),
-                    json_boundingbox->at(2).as_string().to_double().release_value() },
-                { json_boundingbox->at(1).as_string().to_double().release_value(),
-                    json_boundingbox->at(3).as_string().to_double().release_value() }
+                { json_boundingbox->at(0).as_string().to_number<double>().release_value(),
+                    json_boundingbox->at(2).as_string().to_number<double>().release_value() },
+                { json_boundingbox->at(1).as_string().to_number<double>().release_value(),
+                    json_boundingbox->at(3).as_string().to_number<double>().release_value() }
             };
 
             m_places.append({ name, latlng, bounds.get_zoom() });

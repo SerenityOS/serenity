@@ -121,7 +121,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
                 continue;
             if (ch == '.' || ch == ')')
                 if (i + 1 < line.length() && line[i + 1] == ' ') {
-                    auto maybe_start_number = line.substring_view(offset, i - offset).to_uint<size_t>();
+                    auto maybe_start_number = line.substring_view(offset, i - offset).to_number<size_t>();
                     if (!maybe_start_number.has_value())
                         break;
                     if (first)

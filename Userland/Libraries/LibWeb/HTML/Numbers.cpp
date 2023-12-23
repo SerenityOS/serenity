@@ -84,7 +84,7 @@ Optional<u32> parse_non_negative_integer(StringView string)
 Optional<double> parse_floating_point_number(StringView string)
 {
     // FIXME: Implement spec compliant floating point number parsing
-    auto maybe_double = MUST(String::from_utf8(string)).to_number<double>(TrimWhitespace::Yes);
+    auto maybe_double = string.to_number<double>(TrimWhitespace::Yes);
     if (!maybe_double.has_value())
         return {};
     if (!isfinite(maybe_double.value()))

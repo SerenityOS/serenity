@@ -245,7 +245,7 @@ static Relation parse_relation(StringView relation)
         auto symbol = lhs.substring_view(0, *index);
         VERIFY(symbol.length() == 1);
 
-        auto modulus = lhs.substring_view(*index + modulus_operator.length()).to_uint();
+        auto modulus = lhs.substring_view(*index + modulus_operator.length()).to_number<unsigned>();
         VERIFY(modulus.has_value());
 
         parsed.symbol = symbol[0];
@@ -257,15 +257,15 @@ static Relation parse_relation(StringView relation)
 
     rhs.for_each_split_view(set_operator, SplitBehavior::Nothing, [&](auto set) {
         if (auto index = set.find(range_operator); index.has_value()) {
-            auto range_begin = set.substring_view(0, *index).to_uint();
+            auto range_begin = set.substring_view(0, *index).template to_number<unsigned>();
             VERIFY(range_begin.has_value());
 
-            auto range_end = set.substring_view(*index + range_operator.length()).to_uint();
+            auto range_end = set.substring_view(*index + range_operator.length()).template to_number<unsigned>();
             VERIFY(range_end.has_value());
 
             parsed.comparators.empend(Array { *range_begin, *range_end });
         } else {
-            auto value = set.to_uint();
+            auto value = set.template to_number<unsigned>();
             VERIFY(value.has_value());
 
             parsed.comparators.empend(*value);

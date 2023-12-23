@@ -82,7 +82,7 @@ double Token::double_value() const
         }
     }
     // This should always be a valid double
-    return value_string.to_double().release_value();
+    return value_string.to_number<double>().release_value();
 }
 
 static u32 hex2int(char x)

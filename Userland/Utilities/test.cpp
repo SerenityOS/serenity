@@ -306,8 +306,8 @@ public:
     NumericCompare(ByteString lhs, ByteString rhs, Mode mode)
         : m_mode(mode)
     {
-        auto lhs_option = lhs.trim_whitespace().to_int();
-        auto rhs_option = rhs.trim_whitespace().to_int();
+        auto lhs_option = lhs.trim_whitespace().to_number<int>();
+        auto rhs_option = rhs.trim_whitespace().to_number<int>();
 
         if (!lhs_option.has_value())
             fatal_error("expected integer expression: '%s'", lhs.characters());

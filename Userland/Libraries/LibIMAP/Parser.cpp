@@ -123,8 +123,8 @@ Optional<unsigned> Parser::try_parse_number()
 
     auto number = StringView(m_buffer.data() + m_position - number_matched, number_matched);
 
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, number.to_uint());
-    return number.to_uint();
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, number.to_number<unsigned>());
+    return number.to_number<unsigned>();
 }
 
 ErrorOr<unsigned> Parser::parse_number()

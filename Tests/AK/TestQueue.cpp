@@ -52,7 +52,7 @@ TEST_CASE(order)
     }
 
     for (int i = 0; i < 10000; ++i) {
-        EXPECT_EQ(strings.dequeue().to_int().value(), i);
+        EXPECT_EQ(strings.dequeue().to_number<int>().value(), i);
     }
 
     EXPECT(strings.is_empty());

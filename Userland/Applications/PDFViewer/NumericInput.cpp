@@ -12,7 +12,7 @@ NumericInput::NumericInput()
     set_text("0"sv);
 
     on_change = [&] {
-        auto number_opt = text().to_int();
+        auto number_opt = text().to_number<int>();
         if (number_opt.has_value()) {
             set_current_number(number_opt.value(), GUI::AllowCallback::No);
             return;
@@ -26,7 +26,7 @@ NumericInput::NumericInput()
             first = false;
         }
 
-        auto new_number_opt = builder.to_byte_string().to_int();
+        auto new_number_opt = builder.to_byte_string().to_number<int>();
         if (!new_number_opt.has_value()) {
             m_needs_text_reset = true;
             return;

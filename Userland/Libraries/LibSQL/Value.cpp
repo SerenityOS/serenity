@@ -241,7 +241,7 @@ Optional<double> Value::to_double() const
         return {};
 
     return m_value->visit(
-        [](ByteString const& value) -> Optional<double> { return value.to_double(); },
+        [](ByteString const& value) -> Optional<double> { return value.to_number<double>(); },
         [](Integer auto value) -> Optional<double> { return static_cast<double>(value); },
         [](double value) -> Optional<double> { return value; },
         [](bool value) -> Optional<double> { return static_cast<double>(value); },

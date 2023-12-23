@@ -172,7 +172,7 @@ static Optional<DateTime> parse_date_time(ReadonlySpan<StringView> segments)
         return {};
 
     DateTime date_time {};
-    date_time.year = segments[0].to_uint().value();
+    date_time.year = segments[0].to_number<unsigned>().value();
 
     if (segments.size() > 1)
         date_time.month = find_index(short_month_names.begin(), short_month_names.end(), segments[1]) + 1;
@@ -186,15 +186,15 @@ static Optional<DateTime> parse_date_time(ReadonlySpan<StringView> segments)
             date_time.after_weekday = find_index(short_day_names.begin(), short_day_names.end(), weekday);
 
             auto day = segments[2].substring_view(*index + ">="sv.length());
-            date_time.day = day.to_uint().value();
+            date_time.day = day.to_number<unsigned>().value();
         } else if (auto index = segments[2].find("<="sv); index.has_value()) {
             auto weekday = segments[2].substring_view(0, *index);
             date_time.before_weekday = find_index(short_day_names.begin(), short_day_names.end(), weekday);
 
             auto day = segments[2].substring_view(*index + "<="sv.length());
-            date_time.day = day.to_uint().value();
+            date_time.day = day.to_number<unsigned>().value();
         } else {
-            date_time.day = segments[2].to_uint().value();
+            date_time.day = segments[2].to_number<unsigned>().value();
         }
     }
 
@@ -202,9 +202,9 @@ static Optional<DateTime> parse_date_time(ReadonlySpan<StringView> segments)
         // FIXME: Some times end with a letter, e.g. "2:00u" and "2:00s". Figure out what this means and handle it.
         auto time_segments = segments[3].split_view(':');
 
-        date_time.hour = time_segments[0].to_int().value();
-        date_time.minute = time_segments.size() > 1 ? time_segments[1].substring_view(0, 2).to_uint().value() : 0;
-        date_time.second = time_segments.size() > 2 ? time_segments[2].substring_view(0, 2).to_uint().value() : 0;
+        date_time.hour = time_segments[0].to_number<int>().value();
+        date_time.minute = time_segments.size() > 1 ? time_segments[1].substring_view(0, 2).to_number<unsigned>().value() : 0;
+        date_time.second = time_segments.size() > 2 ? time_segments[2].substring_view(0, 2).to_number<unsigned>().value() : 0;
     }
 
     return date_time;
@@ -214,9 +214,9 @@ static i64 parse_time_offset(StringView segment)
 {
     auto segments = segment.split_view(':');
 
-    i64 hours = segments[0].to_int().value();
-    i64 minutes = segments.size() > 1 ? segments[1].to_uint().value() : 0;
-    i64 seconds = segments.size() > 2 ? segments[2].to_uint().value() : 0;
+    i64 hours = segments[0].to_number<int>().value();
+    i64 minutes = segments.size() > 1 ? segments[1].to_number<unsigned>().value() : 0;
+    i64 seconds = segments.size() > 2 ? segments[2].to_number<unsigned>().value() : 0;
 
     i64 sign = ((hours < 0) || (segments[0] == "-0"sv)) ? -1 : 1;
     return (hours * 3600) + sign * ((minutes * 60) + seconds);
@@ -309,12 +309,12 @@ static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
 
     DaylightSavingsOffset dst_offset {};
     dst_offset.offset = parse_time_offset(segments[8]);
-    dst_offset.year_from = segments[2].to_uint().value();
+    dst_offset.year_from = segments[2].to_number<unsigned>().value();
 
     if (segments[3] == "only")
         dst_offset.year_to = dst_offset.year_from;
     else if (segments[3] != "max"sv)
-        dst_offset.year_to = segments[3].to_uint().value();
+        dst_offset.year_to = segments[3].to_number<unsigned>().value();
 
     auto in_effect = Array { "0"sv, segments[5], segments[6], segments[7] };
     dst_offset.in_effect = parse_date_time(in_effect).release_value();
@@ -369,22 +369,22 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::InputBufferedFile& file, 
 
         if (coordinate.length() == 5) {
             // ±DDMM
-            parsed.degrees = coordinate.substring_view(0, 3).to_int().value();
-            parsed.minutes = coordinate.substring_view(3).to_int().value();
+            parsed.degrees = coordinate.substring_view(0, 3).template to_number<int>().value();
+            parsed.minutes = coordinate.substring_view(3).template to_number<int>().value();
         } else if (coordinate.length() == 6) {
             // ±DDDMM
-            parsed.degrees = coordinate.substring_view(0, 4).to_int().value();
-            parsed.minutes = coordinate.substring_view(4).to_int().value();
+            parsed.degrees = coordinate.substring_view(0, 4).template to_number<int>().value();
+            parsed.minutes = coordinate.substring_view(4).template to_number<int>().value();
         } else if (coordinate.length() == 7) {
             // ±DDMMSS
-            parsed.degrees = coordinate.substring_view(0, 3).to_int().value();
-            parsed.minutes = coordinate.substring_view(3, 2).to_int().value();
-            parsed.seconds = coordinate.substring_view(5).to_int().value();
+            parsed.degrees = coordinate.substring_view(0, 3).template to_number<int>().value();
+            parsed.minutes = coordinate.substring_view(3, 2).template to_number<int>().value();
+            parsed.seconds = coordinate.substring_view(5).template to_number<int>().value();
         } else if (coordinate.length() == 8) {
             // ±DDDDMMSS
-            parsed.degrees = coordinate.substring_view(0, 4).to_int().value();
-            parsed.minutes = coordinate.substring_view(4, 2).to_int().value();
-            parsed.seconds = coordinate.substring_view(6).to_int().value();
+            parsed.degrees = coordinate.substring_view(0, 4).template to_number<int>().value();
+            parsed.minutes = coordinate.substring_view(4, 2).template to_number<int>().value();
+            parsed.seconds = coordinate.substring_view(6).template to_number<int>().value();
         } else {
             VERIFY_NOT_REACHED();
         }

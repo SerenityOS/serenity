@@ -35,7 +35,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
         ByteString value = m_textbox->text();
         if (value.ends_with(m_suffix, AK::CaseSensitivity::CaseInsensitive))
             value = value.substring_view(0, value.length() - m_suffix.bytes_as_string_view().length());
-        auto integer_value = value.to_int();
+        auto integer_value = value.to_number<int>();
         if (integer_value.has_value())
             AbstractSlider::set_value(integer_value.value());
     };

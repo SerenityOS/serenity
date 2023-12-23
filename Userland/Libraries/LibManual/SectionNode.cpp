@@ -18,7 +18,7 @@ namespace Manual {
 
 ErrorOr<NonnullRefPtr<SectionNode>> SectionNode::try_create_from_number(StringView section)
 {
-    auto maybe_section_number = section.to_uint<u32>();
+    auto maybe_section_number = section.to_number<u32>();
     if (!maybe_section_number.has_value())
         return Error::from_string_literal("Section is not a number");
     auto section_number = maybe_section_number.release_value();

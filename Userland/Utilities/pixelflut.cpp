@@ -43,7 +43,7 @@ ErrorOr<NonnullRefPtr<Client>> Client::create(StringView image_path, StringView 
 {
     // Extract hostname and port and connect to server.
     auto parts = server.split_view(':');
-    auto maybe_port = parts.take_last().to_uint();
+    auto maybe_port = parts.take_last().to_number<unsigned>();
     if (!maybe_port.has_value())
         return Error::from_string_view("Invalid port number"sv);
 
@@ -60,8 +60,8 @@ ErrorOr<NonnullRefPtr<Client>> Client::create(StringView image_path, StringView 
         return Error::from_string_view("Server didn't return size correctly"sv);
 
     auto size_parts = size_line.split_view(' ');
-    auto maybe_width = size_parts[1].to_uint();
-    auto maybe_height = size_parts[2].to_uint();
+    auto maybe_width = size_parts[1].to_number<unsigned>();
+    auto maybe_height = size_parts[2].to_number<unsigned>();
     if (!maybe_width.has_value() || !maybe_height.has_value())
         return Error::from_string_view("Width or height invalid"sv);
 

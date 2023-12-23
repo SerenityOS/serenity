@@ -136,7 +136,7 @@ public:
             return false;
         }
 
-        auto property_index = m_string.to_uint(TrimWhitespace::No);
+        auto property_index = m_string.to_number<unsigned>(TrimWhitespace::No);
         if (!property_index.has_value() || property_index.value() == NumericLimits<u32>::max()) {
             m_string_may_be_number = false;
             return false;

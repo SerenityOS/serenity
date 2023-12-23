@@ -358,7 +358,7 @@ ByteString deduplicate_destination_file_name(ByteString const& destination)
     auto last_hyphen_index = title_without_counter.find_last('-');
     if (last_hyphen_index.has_value()) {
         auto counter_string = title_without_counter.substring_view(*last_hyphen_index + 1);
-        auto last_counter = counter_string.to_uint();
+        auto last_counter = counter_string.to_number<unsigned>();
         if (last_counter.has_value()) {
             next_counter = *last_counter + 1;
             title_without_counter = title_without_counter.substring_view(0, *last_hyphen_index);

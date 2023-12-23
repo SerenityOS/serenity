@@ -269,8 +269,8 @@ descriptor_parser:
         auto last_character = descriptor.bytes_as_string_view().bytes().last();
         auto descriptor_without_last_character = descriptor.bytes_as_string_view().substring_view(0, descriptor.bytes_as_string_view().length() - 1);
 
-        auto as_int = descriptor_without_last_character.to_int<i32>();
-        auto as_float = descriptor_without_last_character.to_float();
+        auto as_int = descriptor_without_last_character.to_number<i32>();
+        auto as_float = descriptor_without_last_character.to_number<float>();
 
         // - If the descriptor consists of a valid non-negative integer followed by a U+0077 LATIN SMALL LETTER W character
         if (last_character == 'w' && as_int.has_value()) {

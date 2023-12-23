@@ -370,8 +370,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto layer_x_position = data_and_type.metadata.get("pixelpaint-layer-x");
         auto layer_y_position = data_and_type.metadata.get("pixelpaint-layer-y");
         if (layer_x_position.has_value() && layer_y_position.has_value()) {
-            auto x = layer_x_position.value().to_int();
-            auto y = layer_y_position.value().to_int();
+            auto x = layer_x_position.value().to_number<int>();
+            auto y = layer_y_position.value().to_number<int>();
             if (x.has_value() && x.value()) {
                 auto pasted_layer_location = Gfx::IntPoint { x.value(), y.value() };
 
@@ -1211,7 +1211,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
         }
 
-        auto zoom_level_optional = value.view().trim("%"sv, TrimMode::Right).to_int();
+        auto zoom_level_optional = value.view().trim("%"sv, TrimMode::Right).to_number<int>();
         if (!zoom_level_optional.has_value()) {
             // Indicate that a parse-error occurred by resetting the text to the current state.
             editor->on_scale_change(editor->scale());

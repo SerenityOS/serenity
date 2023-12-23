@@ -235,7 +235,7 @@ static T parse_boolean_feature(StringView value)
         return T::Yes;
 
     // 4. Let parsed be the result of parsing value as an integer.
-    auto parsed = value.to_int<i64>();
+    auto parsed = value.to_number<i64>();
 
     // 5. If parsed is an error, then set it to 0.
     if (!parsed.has_value())

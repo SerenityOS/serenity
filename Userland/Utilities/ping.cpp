@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (interval_in_seconds_string.is_empty())
                 return false;
 
-            auto interval_in_seconds = interval_in_seconds_string.to_double();
+            auto interval_in_seconds = interval_in_seconds_string.to_number<double>();
             if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0 || interval_in_seconds.value() > UINT32_MAX)
                 return false;
 

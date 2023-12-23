@@ -46,7 +46,7 @@ void HTMLTableElement::visit_edges(Cell::Visitor& visitor)
 
 static unsigned parse_border(ByteString const& value)
 {
-    return value.to_uint().value_or(0);
+    return value.to_number<unsigned>().value_or(0);
 }
 
 void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) const
