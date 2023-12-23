@@ -158,42 +158,6 @@ ByteBuffer ByteString::to_byte_buffer() const
     return ByteBuffer::copy(bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
-template<typename T>
-Optional<T> ByteString::to_int(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_int<T>(view(), trim_whitespace);
-}
-
-template Optional<i8> ByteString::to_int(TrimWhitespace) const;
-template Optional<i16> ByteString::to_int(TrimWhitespace) const;
-template Optional<i32> ByteString::to_int(TrimWhitespace) const;
-template Optional<long> ByteString::to_int(TrimWhitespace) const;
-template Optional<long long> ByteString::to_int(TrimWhitespace) const;
-
-template<typename T>
-Optional<T> ByteString::to_uint(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
-}
-
-template Optional<u8> ByteString::to_uint(TrimWhitespace) const;
-template Optional<u16> ByteString::to_uint(TrimWhitespace) const;
-template Optional<u32> ByteString::to_uint(TrimWhitespace) const;
-template Optional<unsigned long> ByteString::to_uint(TrimWhitespace) const;
-template Optional<unsigned long long> ByteString::to_uint(TrimWhitespace) const;
-
-#ifndef KERNEL
-Optional<double> ByteString::to_double(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_floating_point<double>(*this, trim_whitespace);
-}
-
-Optional<float> ByteString::to_float(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_floating_point<float>(*this, trim_whitespace);
-}
-#endif
-
 bool ByteString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);
