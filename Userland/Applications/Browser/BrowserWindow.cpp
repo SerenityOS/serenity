@@ -275,7 +275,7 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            String homepage_url = String::from_byte_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url())).release_value_but_fixme_should_propagate_errors();
+            String homepage_url = String::from_byte_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);

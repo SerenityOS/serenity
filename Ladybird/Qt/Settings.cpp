@@ -82,7 +82,7 @@ void Settings::set_autocomplete_engine(EngineProvider const& engine_provider)
 
 QString Settings::new_tab_page()
 {
-    static auto const default_new_tab_url = qstring_from_ak_string(Browser::default_new_tab_url());
+    static auto const default_new_tab_url = qstring_from_ak_string(Browser::default_new_tab_url);
     return m_qsettings->value("new_tab_page", default_new_tab_url).toString();
 }
 
