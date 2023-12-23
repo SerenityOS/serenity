@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
+#include <AK/NeverDestroyed.h>
 #include <AK/NonnullOwnPtr.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/HeapBlock.h>
@@ -61,7 +62,7 @@ class TypeIsolatingCellAllocator {
 public:
     using CellType = T;
 
-    CellAllocator allocator { sizeof(T) };
+    NeverDestroyed<CellAllocator> allocator { sizeof(T) };
 };
 
 }
