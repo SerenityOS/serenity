@@ -120,10 +120,7 @@ public:
             [](FloatingPoint auto v) { return (T)v; },
             [](Detail::Boolean v) -> T { return v.value ? 1 : 0; },
             [](ByteString const& v) {
-                if constexpr (IsUnsigned<T>)
-                    return v.to_uint<T>().value_or(0u);
-                else
-                    return v.to_int<T>().value_or(0);
+                return v.to_number<T>().value_or(0);
             },
             [](Enum auto const&) -> T { return 0; },
             [](OneOf<Gfx::IntPoint, Gfx::IntRect, Gfx::IntSize, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) -> T { return 0; });

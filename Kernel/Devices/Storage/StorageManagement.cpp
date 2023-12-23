@@ -248,7 +248,7 @@ UNMAP_AFTER_INIT Optional<unsigned> StorageManagement::extract_boot_device_parti
         PANIC("StorageManagement: Invalid root boot parameter.");
     }
 
-    auto parameter_number = parameter_view.substring_view(partition_number_prefix.length()).to_uint<unsigned>();
+    auto parameter_number = parameter_view.substring_view(partition_number_prefix.length()).to_number<unsigned>();
     if (!parameter_number.has_value()) {
         PANIC("StorageManagement: Invalid root boot parameter.");
     }
@@ -268,7 +268,7 @@ UNMAP_AFTER_INIT Array<unsigned, 3> StorageManagement::extract_boot_device_addre
             return;
         if (parts_count > 2)
             return;
-        auto parameter_number = parameter_view.to_uint<unsigned>();
+        auto parameter_number = parameter_view.to_number<unsigned>();
         if (!parameter_number.has_value()) {
             parse_failure = true;
             return;

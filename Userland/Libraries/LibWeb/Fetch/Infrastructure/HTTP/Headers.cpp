@@ -342,11 +342,11 @@ ErrorOr<HeaderList::ExtractLengthResult> HeaderList::extract_length() const
     }
 
     // 5. If candidateValue is the empty string or has a code point that is not an ASCII digit, then return null.
-    // NOTE: to_uint does this for us.
+    // NOTE: to_number does this for us.
     // 6. Return candidateValue, interpreted as decimal number.
     // NOTE: The spec doesn't say anything about trimming here, so we don't trim. If it contains a space, step 5 will cause us to return null.
     // FIXME: This will return an empty Optional if it cannot fit into a u64, is this correct?
-    auto conversion_result = AK::StringUtils::convert_to_uint<u64>(candidate_value.value(), TrimWhitespace::No);
+    auto conversion_result = candidate_value.value().to_number<u64>(TrimWhitespace::No);
     if (!conversion_result.has_value())
         return Empty {};
     return ExtractLengthResult { conversion_result.release_value() };
@@ -851,7 +851,7 @@ Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes value)
     auto range_start = lexer.consume_while(is_ascii_digit);
 
     // 5. Let rangeStartValue be rangeStart, interpreted as decimal number, if rangeStart is not the empty string; otherwise null.
-    auto range_start_value = range_start.to_uint<u64>();
+    auto range_start_value = range_start.to_number<u64>();
 
     // 6. If the code point at position within data is not U+002D (-), then return failure.
     // 7. Advance position by 1.
@@ -862,7 +862,7 @@ Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes value)
     auto range_end = lexer.consume_while(is_ascii_digit);
 
     // 9. Let rangeEndValue be rangeEnd, interpreted as decimal number, if rangeEnd is not the empty string; otherwise null.
-    auto range_end_value = range_end.to_uint<u64>();
+    auto range_end_value = range_end.to_number<u64>();
 
     // 10. If position is not past the end of data, then return failure.
     if (!lexer.is_eof())

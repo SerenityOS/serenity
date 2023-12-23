@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (!set_date.is_empty()) {
-        auto number = set_date.to_uint();
+        auto number = set_date.to_number<unsigned>();
 
         if (!number.has_value()) {
             warnln("date: Invalid timestamp value");

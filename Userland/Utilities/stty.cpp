@@ -298,14 +298,14 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
         parameters.append(StringView { raw_parameters[i], strlen(raw_parameters[i]) });
 
     auto parse_baud = [&](size_t idx) -> Optional<speed_t> {
-        auto maybe_numeric_value = parameters[idx].to_uint<uint32_t>();
+        auto maybe_numeric_value = parameters[idx].to_number<uint32_t>();
         if (maybe_numeric_value.has_value())
             return numeric_value_to_speed(maybe_numeric_value.value());
         return {};
     };
 
     auto parse_number = [&](size_t idx) -> Optional<cc_t> {
-        return parameters[idx].to_uint<cc_t>();
+        return parameters[idx].to_number<cc_t>();
     };
 
     auto looks_like_stty_readable = [&](size_t idx) {
@@ -355,7 +355,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
             }
             return value;
         } else if (is_ascii_digit(parameters[idx][0])) {
-            auto maybe_value = parameters[idx].to_uint<cc_t>();
+            auto maybe_value = parameters[idx].to_number<cc_t>();
             if (!maybe_value.has_value()) {
                 warnln("Invalid decimal character code {}", parameters[idx]);
                 return {};

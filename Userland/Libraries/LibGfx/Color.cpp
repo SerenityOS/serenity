@@ -49,9 +49,9 @@ static Optional<Color> parse_rgb_color(StringView string)
     if (parts.size() != 3)
         return {};
 
-    auto r = parts[0].to_double().map(AK::clamp_to<u8, double>);
-    auto g = parts[1].to_double().map(AK::clamp_to<u8, double>);
-    auto b = parts[2].to_double().map(AK::clamp_to<u8, double>);
+    auto r = parts[0].to_number<double>().map(AK::clamp_to<u8, double>);
+    auto g = parts[1].to_number<double>().map(AK::clamp_to<u8, double>);
+    auto b = parts[2].to_number<double>().map(AK::clamp_to<u8, double>);
 
     if (!r.has_value() || !g.has_value() || !b.has_value())
         return {};
@@ -70,9 +70,9 @@ static Optional<Color> parse_rgba_color(StringView string)
     if (parts.size() != 4)
         return {};
 
-    auto r = parts[0].to_double().map(AK::clamp_to<u8, double>);
-    auto g = parts[1].to_double().map(AK::clamp_to<u8, double>);
-    auto b = parts[2].to_double().map(AK::clamp_to<u8, double>);
+    auto r = parts[0].to_number<double>().map(AK::clamp_to<u8, double>);
+    auto g = parts[1].to_number<double>().map(AK::clamp_to<u8, double>);
+    auto b = parts[2].to_number<double>().map(AK::clamp_to<u8, double>);
 
     double alpha = 0;
     auto alpha_str = parts[3].trim_whitespace();

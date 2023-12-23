@@ -125,8 +125,8 @@ TEST_CASE(repeated)
 
 TEST_CASE(to_int)
 {
-    EXPECT_EQ(ByteString("123").to_int().value(), 123);
-    EXPECT_EQ(ByteString("-123").to_int().value(), -123);
+    EXPECT_EQ(ByteString("123").to_number<int>().value(), 123);
+    EXPECT_EQ(ByteString("-123").to_number<int>().value(), -123);
 }
 
 TEST_CASE(to_lowercase)

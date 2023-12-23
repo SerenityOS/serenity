@@ -88,7 +88,7 @@ static bool parse_grpdb_entry(char* buffer, size_t buffer_size, struct group& gr
     auto& gid_string = parts[2];
     StringView members_string = parts[3];
 
-    auto gid = gid_string.to_uint();
+    auto gid = gid_string.to_number<gid_t>();
     if (!gid.has_value()) {
         warnln("parse_grpdb_entry(): Malformed GID on line {}", s_line_number);
         return false;

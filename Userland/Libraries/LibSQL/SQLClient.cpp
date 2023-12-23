@@ -129,7 +129,7 @@ static ErrorOr<bool> should_launch_server(ByteString const& pid_path)
             return contents.release_error();
         }
 
-        pid = StringView { contents.value() }.to_int<pid_t>();
+        pid = StringView { contents.value() }.to_number<pid_t>();
     }
 
     if (!pid.has_value()) {

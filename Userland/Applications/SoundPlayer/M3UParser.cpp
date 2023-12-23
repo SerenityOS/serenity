@@ -70,7 +70,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             VERIFY(separator.has_value());
             auto seconds = ext_inf.value().substring_view(0, separator.value());
             VERIFY(!seconds.is_whitespace() && !seconds.is_null() && !seconds.is_empty());
-            metadata_for_next_file.track_length_in_seconds = seconds.to_uint();
+            metadata_for_next_file.track_length_in_seconds = seconds.to_number<unsigned>();
             auto display_name = ext_inf.value().substring_view(seconds.length() + 1);
             VERIFY(!display_name.is_empty() && !display_name.is_null() && !display_name.is_empty());
             metadata_for_next_file.track_display_title = display_name;

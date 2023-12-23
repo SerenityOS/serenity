@@ -55,10 +55,7 @@ public:
         if (!has_key(group, key))
             return default_value;
 
-        if constexpr (IsSigned<T>)
-            return read_entry(group, key, "").to_int<T>().value_or(default_value);
-        else
-            return read_entry(group, key, "").to_uint<T>().value_or(default_value);
+        return read_entry(group, key, "").to_number<T>().value_or(default_value);
     }
 
     void write_entry(ByteString const& group, ByteString const& key, ByteString const& value);

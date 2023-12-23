@@ -130,5 +130,5 @@ static Optional<pid_t> determine_pid_to_profile(StringView pid_argument, bool al
     }
 
     // pid_argument is guaranteed to have a value
-    return pid_argument.to_int();
+    return pid_argument.to_number<pid_t>();
 }

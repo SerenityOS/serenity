@@ -1052,7 +1052,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
                 view.byte_offset_of(it) - *integer_or_word_start_offset);
 
             if (all_of(integer_or_word, is_ascii_digit))
-                tokens.append(*integer_or_word.as_string().to_int());
+                tokens.append(*integer_or_word.as_string().to_number<int>());
             else
                 tokens.append(TRY(expression.substring_from_byte_offset_with_shared_superstring(*integer_or_word_start_offset, integer_or_word.length())));
 
@@ -1239,7 +1239,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
         auto integer_or_word = view.substring_view(*integer_or_word_start_offset);
 
         if (all_of(integer_or_word, is_ascii_digit))
-            tokens.append(*integer_or_word.as_string().to_int());
+            tokens.append(*integer_or_word.as_string().to_number<int>());
         else
             tokens.append(TRY(expression.substring_from_byte_offset_with_shared_superstring(*integer_or_word_start_offset, integer_or_word.length())));
 
@@ -1262,7 +1262,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
                     builder.join(' ', TRY(const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this))));
                     resolved_name = TRY(builder.to_string());
 
-                    auto integer = resolved_name.bytes_as_string_view().to_int<i64>();
+                    auto integer = resolved_name.to_number<i64>();
                     if (integer.has_value())
                         return *integer;
                 }

@@ -179,7 +179,7 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
         .short_name = 'p',
         .accept_value = [&pids](auto comma_separated_pids) {
             for (auto pid : comma_separated_pids.split_view(',')) {
-                auto maybe_integer = pid.to_int();
+                auto maybe_integer = pid.template to_number<pid_t>();
                 if (!maybe_integer.has_value())
                     return false;
 

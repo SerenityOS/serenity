@@ -70,7 +70,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     if (name == "." || name == "..")
         return *this;
 
-    auto pty_index = name.to_uint();
+    auto pty_index = name.to_number<unsigned>();
     if (!pty_index.has_value())
         return ENOENT;
 

@@ -22,10 +22,10 @@
 static bool try_set_offset_and_length_parameters(ByteString const& arg_offset, ByteString const& arg_length, u64& offset, u64& length)
 {
     // TODO: Add support for hex values
-    auto possible_offset = arg_offset.to_uint<u64>();
+    auto possible_offset = arg_offset.to_number<u64>();
     if (!possible_offset.has_value())
         return false;
-    auto possible_length = arg_length.to_uint<u64>();
+    auto possible_length = arg_length.to_number<u64>();
     if (!possible_length.has_value())
         return false;
     offset = possible_offset.value();

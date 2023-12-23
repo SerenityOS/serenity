@@ -1165,7 +1165,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
     if (number.is_empty()) {
         pipe_fd = -1;
     } else {
-        auto fd = number.to_int();
+        auto fd = number.to_number<int>();
         pipe_fd = fd.value_or(-1);
     }
 
@@ -1200,7 +1200,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
             if (number.is_empty()) {
                 dest_pipe_fd = -1;
             } else {
-                auto fd = number.to_int();
+                auto fd = number.to_number<int>();
                 dest_pipe_fd = fd.value_or(-1);
             }
             auto redir = create<AST::Fd2FdRedirection>(pipe_fd, dest_pipe_fd); // Redirection Fd2Fd
@@ -1791,7 +1791,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
             else
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromStart;
-            auto number = abs(selector.event.text.bytes_as_string_view().to_int().value_or(0));
+            auto number = abs(selector.event.text.to_number<int>().value_or(0));
             if (number != 0)
                 selector.event.index = number - 1;
             else
@@ -1819,7 +1819,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         ssize_t offset = -1;
         if (isdigit(c)) {
             auto num = consume_while(is_digit);
-            auto value = num.to_uint();
+            auto value = num.to_number<unsigned>();
             if (!value.has_value())
                 return {};
             word_selector_kind = AST::HistorySelector::WordSelectorKind::Index;

@@ -37,7 +37,7 @@ CursorParams CursorParams::parse_from_filename(StringView cursor_path, Gfx::IntP
             }
             if (k == i)
                 return {};
-            auto parsed_number = params_str.substring_view(i, k - i).to_uint();
+            auto parsed_number = params_str.substring_view(i, k - i).to_number<unsigned>();
             if (!parsed_number.has_value())
                 return {};
             i = k;

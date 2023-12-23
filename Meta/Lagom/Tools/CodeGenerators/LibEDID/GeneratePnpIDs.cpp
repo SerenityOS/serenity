@@ -26,19 +26,19 @@ static ErrorOr<ApprovalDate> parse_approval_date(StringView date)
     if (parts.size() != 3)
         return Error::from_string_literal("Failed to parse approval date parts (mm/dd/yyyy)");
 
-    auto month = parts[0].to_uint();
+    auto month = parts[0].to_number<unsigned>();
     if (!month.has_value())
         return Error::from_string_literal("Failed to parse month from approval date");
     if (month.value() == 0 || month.value() > 12)
         return Error::from_string_literal("Invalid month in approval date");
 
-    auto day = parts[1].to_uint();
+    auto day = parts[1].to_number<unsigned>();
     if (!day.has_value())
         return Error::from_string_literal("Failed to parse day from approval date");
     if (day.value() == 0 || day.value() > 31)
         return Error::from_string_literal("Invalid day in approval date");
 
-    auto year = parts[2].to_uint();
+    auto year = parts[2].to_number<unsigned>();
     if (!year.has_value())
         return Error::from_string_literal("Failed to parse year from approval date");
     if (year.value() < 1900 || year.value() > 2999)

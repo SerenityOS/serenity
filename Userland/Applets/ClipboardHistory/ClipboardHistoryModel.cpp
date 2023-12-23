@@ -41,7 +41,7 @@ ErrorOr<String> ClipboardHistoryModel::column_name(int column) const
 
 static StringView bpp_for_format_resilient(ByteString format)
 {
-    unsigned format_uint = format.to_uint().value_or(static_cast<unsigned>(Gfx::BitmapFormat::Invalid));
+    unsigned format_uint = format.to_number<unsigned>().value_or(static_cast<unsigned>(Gfx::BitmapFormat::Invalid));
     // Cannot use Gfx::Bitmap::bpp_for_format here, as we have to accept invalid enum values.
     switch (static_cast<Gfx::BitmapFormat>(format_uint)) {
     case Gfx::BitmapFormat::BGRx8888:
@@ -79,10 +79,10 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
         }
         if (data_and_type.mime_type.starts_with("glyph/"sv)) {
             StringBuilder builder;
-            auto count = data_and_type.metadata.get("count").value().to_uint().value_or(0);
-            auto start = data_and_type.metadata.get("start").value().to_uint().value_or(0);
-            auto width = data_and_type.metadata.get("width").value().to_uint().value_or(0);
-            auto height = data_and_type.metadata.get("height").value().to_uint().value_or(0);
+            auto count = data_and_type.metadata.get("count").value().to_number<unsigned>().value_or(0);
+            auto start = data_and_type.metadata.get("start").value().to_number<unsigned>().value_or(0);
+            auto width = data_and_type.metadata.get("width").value().to_number<unsigned>().value_or(0);
+            auto height = data_and_type.metadata.get("height").value().to_number<unsigned>().value_or(0);
             if (count > 1) {
                 builder.appendff("U+{:04X}..U+{:04X} ({} glyphs) [{}x{}]", start, start + count - 1, count, width, height);
             } else {

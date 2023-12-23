@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     {
         // try convert UID to int
-        auto arg = ByteString(arg_uid).to_int();
+        auto arg = ByteString(arg_uid).to_number<int>();
         if (arg.has_value())
             arg_uid_int = arg.value();
     }

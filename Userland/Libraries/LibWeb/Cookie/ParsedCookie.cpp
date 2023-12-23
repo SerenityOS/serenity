@@ -167,7 +167,7 @@ void on_max_age_attribute(ParsedCookie& parsed_cookie, StringView attribute_valu
         return;
 
     // Let delta-seconds be the attribute-value converted to an integer.
-    if (auto delta_seconds = attribute_value.to_int(); delta_seconds.has_value()) {
+    if (auto delta_seconds = attribute_value.to_number<int>(); delta_seconds.has_value()) {
         if (*delta_seconds <= 0) {
             // If delta-seconds is less than or equal to zero (0), let expiry-time be the earliest representable date and time.
             parsed_cookie.expiry_time_from_max_age_attribute = UnixDateTime::earliest();
@@ -251,7 +251,7 @@ Optional<UnixDateTime> parse_date_time(StringView date_string)
         if (!all_of(token, isdigit))
             return false;
 
-        if (auto converted = token.to_uint(); converted.has_value()) {
+        if (auto converted = token.to_number<unsigned>(); converted.has_value()) {
             result = *converted;
             return true;
         }

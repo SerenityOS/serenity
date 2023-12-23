@@ -23,7 +23,7 @@ PluralRules::PluralRules(Object& prototype)
 ::Locale::PluralOperands get_operands(StringView string)
 {
     // 1.Let n be ! ToNumber(s).
-    auto number = string.to_double(AK::TrimWhitespace::Yes).release_value();
+    auto number = string.to_number<double>(AK::TrimWhitespace::Yes).release_value();
 
     // 2. Assert: n is finite.
     VERIFY(isfinite(number));
@@ -57,7 +57,7 @@ PluralRules::PluralRules(Object& prototype)
             return static_cast<u64>(fabs(value));
         },
         [](StringView value) {
-            auto value_as_int = value.template to_int<i64>().value();
+            auto value_as_int = value.template to_number<i64>().value();
             return static_cast<u64>(value_as_int);
         });
 
@@ -65,7 +65,7 @@ PluralRules::PluralRules(Object& prototype)
     auto fraction_digit_count = fraction_slice.length();
 
     // 8. Let f be ! ToNumber(fracSlice).
-    auto fraction = fraction_slice.is_empty() ? 0u : fraction_slice.template to_uint<u64>().value();
+    auto fraction = fraction_slice.is_empty() ? 0u : fraction_slice.template to_number<u64>().value();
 
     // 9. Let significantFracSlice be the value of fracSlice stripped of trailing "0".
     auto significant_fraction_slice = fraction_slice.trim("0"sv, TrimMode::Right);
@@ -74,7 +74,7 @@ PluralRules::PluralRules(Object& prototype)
     auto significant_fraction_digit_count = significant_fraction_slice.length();
 
     // 11. Let significantFrac be ! ToNumber(significantFracSlice).
-    auto significant_fraction = significant_fraction_slice.is_empty() ? 0u : significant_fraction_slice.template to_uint<u64>().value();
+    auto significant_fraction = significant_fraction_slice.is_empty() ? 0u : significant_fraction_slice.template to_number<u64>().value();
 
     // 12. Return a new Record { [[Number]]: abs(n), [[IntegerDigits]]: i, [[FractionDigits]]: f, [[NumberOfFractionDigits]]: fracDigitCount, [[FractionDigitsWithoutTrailing]]: significantFrac, [[NumberOfFractionDigitsWithoutTrailing]]: significantFracDigitCount }.
     return ::Locale::PluralOperands {

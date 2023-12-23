@@ -500,11 +500,7 @@ void ArgsParser::add_option(I& value, char const* help_string, char const* long_
         short_name,
         value_name,
         [&value](StringView view) -> ErrorOr<bool> {
-            Optional<I> opt;
-            if constexpr (IsSigned<I>)
-                opt = view.to_int<I>();
-            else
-                opt = view.to_uint<I>();
+            Optional<I> opt = view.to_number<I>();
             value = opt.value_or(0);
             return opt.has_value();
         },
@@ -530,7 +526,7 @@ void ArgsParser::add_option(double& value, char const* help_string, char const* 
         short_name,
         value_name,
         [&value](StringView s) -> ErrorOr<bool> {
-            auto opt = s.to_double();
+            auto opt = s.to_number<double>();
             value = opt.value_or(0.0);
             return opt.has_value();
         },
@@ -548,7 +544,7 @@ void ArgsParser::add_option(Optional<double>& value, char const* help_string, ch
         short_name,
         value_name,
         [&value](StringView s) -> ErrorOr<bool> {
-            value = s.to_double();
+            value = s.to_number<double>();
             return value.has_value();
         },
         hide_mode,
@@ -565,7 +561,7 @@ void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, ch
         short_name,
         value_name,
         [&value](StringView s) -> ErrorOr<bool> {
-            value = AK::StringUtils::convert_to_uint<size_t>(s);
+            value = s.to_number<size_t>();
             return value.has_value();
         },
         hide_mode,
@@ -676,11 +672,7 @@ void ArgsParser::add_positional_argument(I& value, char const* help_string, char
         required == Required::Yes ? 1 : 0,
         1,
         [&value](StringView view) -> ErrorOr<bool> {
-            Optional<I> opt;
-            if constexpr (IsSigned<I>)
-                opt = view.to_int<I>();
-            else
-                opt = view.to_uint<I>();
+            Optional<I> opt = view.to_number<I>();
             value = opt.value_or(0);
             return opt.has_value();
         },
@@ -705,7 +697,7 @@ void ArgsParser::add_positional_argument(double& value, char const* help_string,
         required == Required::Yes ? 1 : 0,
         1,
         [&value](StringView s) -> ErrorOr<bool> {
-            auto opt = s.to_double();
+            auto opt = s.to_number<double>();
             value = opt.value_or(0.0);
             return opt.has_value();
         }

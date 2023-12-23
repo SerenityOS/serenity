@@ -835,7 +835,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     if (is_ndashdigit_dimension(first_value)) {
         auto const& dimension = first_value.token();
         int a = dimension.dimension_value_int();
-        auto maybe_b = dimension.dimension_unit().bytes_as_string_view().substring_view(1).to_int();
+        auto maybe_b = dimension.dimension_unit().bytes_as_string_view().substring_view(1).to_number<int>();
         if (maybe_b.has_value()) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, maybe_b.value() };
@@ -845,7 +845,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     }
     // <dashndashdigit-ident>
     if (is_dashndashdigit_ident(first_value)) {
-        auto maybe_b = first_value.token().ident().bytes_as_string_view().substring_view(2).to_int();
+        auto maybe_b = first_value.token().ident().bytes_as_string_view().substring_view(2).to_number<int>();
         if (maybe_b.has_value()) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { -1, maybe_b.value() };
@@ -958,7 +958,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
     // '+'?† <ndashdigit-ident>
     if (is_ndashdigit_ident(first_after_plus)) {
-        auto maybe_b = first_after_plus.token().ident().bytes_as_string_view().substring_view(1).to_int();
+        auto maybe_b = first_after_plus.token().ident().bytes_as_string_view().substring_view(1).to_number<int>();
         if (maybe_b.has_value()) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 1, maybe_b.value() };

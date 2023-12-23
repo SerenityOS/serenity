@@ -148,12 +148,12 @@ ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& me
         return Error::from_string_view("Width or aspect in incorrect format"sv);
 
     // We intentionally discard floating-point data here. If you need more resolution, just use a larger width.
-    auto const width = maybe_width->to_int();
+    auto const width = maybe_width->to_number<int>();
     auto const aspect_parts = maybe_aspect->split_view(':');
     if (aspect_parts.size() != 2)
         return Error::from_string_view("Aspect specification must have the exact format `width:height`"sv);
-    auto aspect_width = aspect_parts[0].to_int<int>();
-    auto aspect_height = aspect_parts[1].to_int<int>();
+    auto aspect_width = aspect_parts[0].to_number<int>();
+    auto aspect_height = aspect_parts[1].to_number<int>();
     if (!aspect_width.has_value() || !aspect_height.has_value() || aspect_width.value() == 0 || aspect_height.value() == 0)
         return Error::from_string_view("Aspect width and height must be non-zero integers"sv);
 

@@ -54,7 +54,7 @@ static void parse_time(StringView input_time, timespec& atime, timespec& mtime)
         auto literal = lexer.consume(2);
         if (literal.length() < 2)
             err("invalid time format '{}' -- expected 2 digits per parameter", input_time);
-        auto maybe_parameter = literal.to_uint();
+        auto maybe_parameter = literal.to_number<unsigned>();
         if (maybe_parameter.has_value())
             parameters.append(maybe_parameter.value());
         else
@@ -102,7 +102,7 @@ static void parse_datetime(StringView input_datetime, timespec& atime, timespec&
     StringView time_zone;
 
     auto lex_number = [&](unsigned& value, size_t n) {
-        auto maybe_value = lexer.consume(n).to_uint();
+        auto maybe_value = lexer.consume(n).to_number<unsigned>();
         if (!maybe_value.has_value())
             err("invalid datetime format '{}' -- expected number at index {}", input_datetime, lexer.tell());
         else

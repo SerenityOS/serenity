@@ -79,7 +79,7 @@ CellType const& Cell::type() const
         return *m_type;
 
     if (m_kind == LiteralString) {
-        if (m_data.to_int().has_value())
+        if (m_data.to_number<int>().has_value())
             return *CellType::get_by_name("Numeric"sv);
     }
 

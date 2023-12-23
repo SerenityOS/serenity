@@ -263,7 +263,7 @@ void Job::on_socket_connected()
             auto http_minor_version = parse_ascii_digit(parts[0][7]);
             m_legacy_connection = http_major_version < 1 || (http_major_version == 1 && http_minor_version == 0);
 
-            auto code = parts[1].to_uint();
+            auto code = parts[1].to_number<unsigned>();
             if (!code.has_value()) {
                 dbgln("Job: Expected numeric HTTP status");
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
@@ -312,7 +312,7 @@ void Job::on_socket_connected()
                 // We've reached the end of the headers, there's a possibility that the server
                 // responds with nothing (content-length = 0 with normal encoding); if that's the case,
                 // quit early as we won't be reading anything anyway.
-                if (auto result = m_headers.get("Content-Length"sv).value_or(""sv).to_uint(); result.has_value()) {
+                if (auto result = m_headers.get("Content-Length"sv).value_or(""sv).to_number<unsigned>(); result.has_value()) {
                     if (result.value() == 0 && !m_headers.get("Transfer-Encoding"sv).value_or(""sv).view().trim_whitespace().equals_ignoring_ascii_case("chunked"sv))
                         return finish_up();
                 }
@@ -370,7 +370,7 @@ void Job::on_socket_connected()
                 dbgln_if(JOB_DEBUG, "Content-Encoding {} detected, cannot stream output :(", value);
                 m_can_stream_response = false;
             } else if (name.equals_ignoring_ascii_case("Content-Length"sv)) {
-                auto length = value.to_uint<u64>();
+                auto length = value.to_number<u64>();
                 if (length.has_value())
                     m_content_length = length.value();
             }

@@ -183,7 +183,7 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
                 commit_and_advance_to(current_header.value, next_state);
 
                 if (current_header.name.equals_ignoring_ascii_case("Content-Length"sv))
-                    content_length = current_header.value.to_uint();
+                    content_length = current_header.value.to_number<unsigned>();
 
                 headers.append(move(current_header));
                 break;

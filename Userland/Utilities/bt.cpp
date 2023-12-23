@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     while (iterator.has_next()) {
-        pid_t tid = iterator.next_path().to_int().value();
+        pid_t tid = iterator.next_path().to_number<pid_t>().value();
         outln("thread: {}", tid);
         outln("frames:");
         auto symbols = Symbolication::symbolicate_thread(pid, tid);

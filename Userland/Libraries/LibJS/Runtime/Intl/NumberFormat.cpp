@@ -647,7 +647,7 @@ Vector<PatternPartition> partition_number_pattern(VM& vm, NumberFormat& number_f
         else if ((part.starts_with("unitIdentifier:"sv)) && (number_format.style() == NumberFormat::Style::Unit)) {
             // Note: Our implementation combines "unitPrefix" and "unitSuffix" into one field, "unitIdentifier".
 
-            auto identifier_index = part.substring_view("unitIdentifier:"sv.length()).to_uint();
+            auto identifier_index = part.substring_view("unitIdentifier:"sv.length()).to_number<unsigned>();
             VERIFY(identifier_index.has_value());
 
             // i. Let unit be numberFormat.[[Unit]].
@@ -862,7 +862,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
             else if (part.starts_with("compactIdentifier:"sv)) {
                 // Note: Our implementation combines "compactSymbol" and "compactName" into one field, "compactIdentifier".
 
-                auto identifier_index = part.substring_view("compactIdentifier:"sv.length()).to_uint();
+                auto identifier_index = part.substring_view("compactIdentifier:"sv.length()).to_number<unsigned>();
                 VERIFY(identifier_index.has_value());
 
                 // 1. Let compactSymbol be an ILD string representing exponent in short form, which may depend on x in languages having different plural forms. The implementation must be able to provide this string, or else the pattern would not have a "{compactSymbol}" placeholder.
@@ -1034,7 +1034,7 @@ static RawPrecisionResult to_raw_precision_function(MathematicalValue const& num
 
         result.number = result.number.divided_by(10);
 
-        if (mode == PreferredResult::GreaterThanNumber && digit.to_uint().value() != 0)
+        if (mode == PreferredResult::GreaterThanNumber && digit.to_number<unsigned>().value() != 0)
             result.number = result.number.plus(1);
     }
 
@@ -1183,7 +1183,7 @@ static RawFixedResult to_raw_fixed_function(MathematicalValue const& number, int
 
         result.number = result.number.multiplied_by(10);
 
-        if (mode == PreferredResult::GreaterThanNumber && digit.to_uint().value() != 0)
+        if (mode == PreferredResult::GreaterThanNumber && digit.to_number<unsigned>().value() != 0)
             result.number = result.number.plus(1);
     }
 

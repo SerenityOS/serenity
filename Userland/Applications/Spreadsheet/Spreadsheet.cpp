@@ -204,7 +204,7 @@ Optional<Position> Sheet::parse_cell_name(StringView name) const
     if (it == m_columns.end())
         return {};
 
-    return Position { it.index(), row.to_uint().value() };
+    return Position { it.index(), row.to_number<unsigned>().value() };
 }
 
 Optional<size_t> Sheet::column_index(StringView column_name) const

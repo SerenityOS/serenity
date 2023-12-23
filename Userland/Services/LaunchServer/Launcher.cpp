@@ -397,7 +397,7 @@ bool Launcher::open_file_url(const URL& url)
         url.query()->bytes_as_string_view().for_each_split_view('&', SplitBehavior::Nothing, [&](auto parameter) {
             auto pair = parameter.split_view('=');
             if (pair.size() == 2 && pair[0] == "line_number") {
-                auto line = pair[1].to_int();
+                auto line = pair[1].template to_number<int>();
                 if (line.has_value())
                     // TextEditor uses file:line:col to open a file at a specific line number
                     filepath = ByteString::formatted("{}:{}", filepath, line.value());

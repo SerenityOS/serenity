@@ -176,7 +176,7 @@ unsigned HTMLImageElement::width() const
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
     auto width_attr = deprecated_get_attribute(HTML::AttributeNames::width);
-    if (auto converted = width_attr.to_uint(); converted.has_value())
+    if (auto converted = width_attr.to_number<unsigned>(); converted.has_value())
         return *converted;
 
     // ...or else the density-corrected intrinsic width and height of the image, in CSS pixels,
@@ -204,7 +204,7 @@ unsigned HTMLImageElement::height() const
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
     auto height_attr = deprecated_get_attribute(HTML::AttributeNames::height);
-    if (auto converted = height_attr.to_uint(); converted.has_value())
+    if (auto converted = height_attr.to_number<unsigned>(); converted.has_value())
         return *converted;
 
     // ...or else the density-corrected intrinsic height and height of the image, in CSS pixels,

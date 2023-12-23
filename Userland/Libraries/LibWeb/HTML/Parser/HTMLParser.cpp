@@ -4475,7 +4475,7 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
         number_string.append(*position);
         ++position;
     }
-    auto integer_value = number_string.string_view().to_int();
+    auto integer_value = number_string.string_view().to_number<int>();
 
     // 6. If position is past the end of input, then return value as a length.
     if (position == input.end())

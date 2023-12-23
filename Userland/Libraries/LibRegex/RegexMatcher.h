@@ -135,7 +135,7 @@ public:
                         continue;
                     }
                     auto number = lexer.consume_while(isdigit);
-                    if (auto index = number.to_uint(); index.has_value() && result.n_capture_groups >= index.value()) {
+                    if (auto index = number.to_number<unsigned>(); index.has_value() && result.n_capture_groups >= index.value()) {
                         builder.append(result.capture_group_matches[i][index.value() - 1].view.to_byte_string());
                     } else {
                         builder.appendff("\\{}", number);

@@ -578,14 +578,14 @@ TEST_CASE(invalid_hex_floats)
     EXPECT_HEX_PARSE_TO_VALUE_AND_CONSUME_CHARS("0xCAPE", 0xCAp0, 4);
 }
 
-#define BENCHMARK_DOUBLE_PARSING(value, iterations)     \
-    do {                                                \
-        auto data = #value##sv;                         \
-        auto true_result = value;                       \
-        for (int i = 0; i < iterations * 10'000; ++i) { \
-            AK::taint_for_optimizer(data);              \
-            EXPECT_EQ(data.to_double(), true_result);   \
-        }                                               \
+#define BENCHMARK_DOUBLE_PARSING(value, iterations)           \
+    do {                                                      \
+        auto data = #value##sv;                               \
+        auto true_result = value;                             \
+        for (int i = 0; i < iterations * 10'000; ++i) {       \
+            AK::taint_for_optimizer(data);                    \
+            EXPECT_EQ(data.to_number<double>(), true_result); \
+        }                                                     \
     } while (false)
 
 BENCHMARK_CASE(one)

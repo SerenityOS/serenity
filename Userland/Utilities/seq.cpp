@@ -28,7 +28,7 @@ static void print_usage(FILE* stream)
 
 static double get_double(char const* name, StringView d_string, size_t* number_of_decimals)
 {
-    auto d = d_string.to_double();
+    auto d = d_string.to_number<double>();
     if (!d.has_value()) {
         warnln("{}: invalid argument \"{}\"", name, d_string);
         print_usage(stderr);

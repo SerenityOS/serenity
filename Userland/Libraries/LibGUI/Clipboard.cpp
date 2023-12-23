@@ -79,23 +79,23 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
     if (mime_type != "image/x-serenityos")
         return nullptr;
 
-    auto width = metadata.get("width").value_or("0").to_uint();
+    auto width = metadata.get("width").value_or("0").to_number<unsigned>();
     if (!width.has_value() || width.value() == 0)
         return nullptr;
 
-    auto height = metadata.get("height").value_or("0").to_uint();
+    auto height = metadata.get("height").value_or("0").to_number<unsigned>();
     if (!height.has_value() || height.value() == 0)
         return nullptr;
 
-    auto scale = metadata.get("scale").value_or("0").to_uint();
+    auto scale = metadata.get("scale").value_or("0").to_number<unsigned>();
     if (!scale.has_value() || scale.value() == 0)
         return nullptr;
 
-    auto pitch = metadata.get("pitch").value_or("0").to_uint();
+    auto pitch = metadata.get("pitch").value_or("0").to_number<unsigned>();
     if (!pitch.has_value() || pitch.value() == 0)
         return nullptr;
 
-    auto format = metadata.get("format").value_or("0").to_uint();
+    auto format = metadata.get("format").value_or("0").to_number<unsigned>();
     if (!format.has_value() || format.value() == 0)
         return nullptr;
 

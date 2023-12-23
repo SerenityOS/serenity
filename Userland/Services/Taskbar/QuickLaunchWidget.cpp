@@ -339,7 +339,7 @@ void QuickLaunchWidget::load_entries(bool save)
         auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
         auto values = value.split(':');
 
-        config_entries.append({ values[0].to_int().release_value(), values[1] });
+        config_entries.append({ values[0].to_number<int>().release_value(), values[1] });
     }
 
     quick_sort(config_entries, [](ConfigEntry const& a, ConfigEntry const& b) {

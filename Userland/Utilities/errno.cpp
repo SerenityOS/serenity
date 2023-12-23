@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    if (auto maybe_error_code = keyword.to_int(); maybe_error_code.has_value()) {
+    if (auto maybe_error_code = keyword.to_number<int>(); maybe_error_code.has_value()) {
         auto error_code = maybe_error_code.value();
         auto error = strerror(error_code);
         if (error == "Unknown error"sv) {

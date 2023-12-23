@@ -3858,7 +3858,7 @@ ByteString Validator::Errors::find_instruction_name(SourceLocation const& locati
     if (!index.has_value() || !end_index.has_value())
         return ByteString::formatted("{}", location);
 
-    auto opcode = location.function_name().substring_view(index.value() + 1, end_index.value() - index.value() - 1).to_uint();
+    auto opcode = location.function_name().substring_view(index.value() + 1, end_index.value() - index.value() - 1).to_number<unsigned>();
     if (!opcode.has_value())
         return ByteString::formatted("{}", location);
 

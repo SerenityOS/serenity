@@ -182,7 +182,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         Optional<IPv4Address> genmask;
-        if (auto cidr_int = cidr.to_int(); cidr_int.has_value())
+        if (auto cidr_int = cidr.to_number<int>(); cidr_int.has_value())
             genmask = AK::IPv4Address::netmask_from_cidr(cidr_int.value());
         else
             genmask = AK::IPv4Address::from_string(value_netmask_address);

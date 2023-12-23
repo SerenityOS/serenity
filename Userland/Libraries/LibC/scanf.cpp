@@ -410,7 +410,7 @@ extern "C" int vsscanf(char const* input, char const* format, va_list ap)
         [[maybe_unused]] int width_specifier = 0;
         if (format_lexer.next_is(isdigit)) {
             auto width_digits = format_lexer.consume_while([](char c) { return isdigit(c); });
-            width_specifier = width_digits.to_int().value();
+            width_specifier = width_digits.to_number<int>().value();
             // FIXME: Actually use width specifier
         }
 

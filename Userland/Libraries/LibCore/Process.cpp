@@ -209,7 +209,7 @@ ErrorOr<bool> Process::is_being_debugged()
         auto const parts = line.split_view(':');
         if (parts.size() < 2 || parts[0] != "TracerPid"sv)
             continue;
-        auto tracer_pid = parts[1].to_uint<u32>();
+        auto tracer_pid = parts[1].to_number<u32>();
         return (tracer_pid != 0UL);
     }
     return false;

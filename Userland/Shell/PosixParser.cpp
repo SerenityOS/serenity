@@ -2084,7 +2084,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_io_redirect()
     Optional<int> io_number;
 
     if (peek().type == Token::Type::IoNumber)
-        io_number = consume().value.bytes_as_string_view().to_int();
+        io_number = consume().value.to_number<int>();
 
     if (auto io_file = TRY(parse_io_file(start_position, io_number)))
         return io_file;
@@ -2194,7 +2194,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_io_file(AST::Position start_position, O
                     source_fd);
             }
 
-            auto maybe_target_fd = text.bytes_as_string_view().to_int();
+            auto maybe_target_fd = text.to_number<int>();
             if (maybe_target_fd.has_value()) {
                 auto target_fd = maybe_target_fd.release_value();
                 if (is_less)

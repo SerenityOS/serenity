@@ -60,8 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Map widget
     Maps::UsersMapWidget::Options options {};
-    options.center.latitude = Config::read_string("Maps"sv, "MapView"sv, "CenterLatitude"sv, "30"sv).to_double().value_or(30.0);
-    options.center.longitude = Config::read_string("Maps"sv, "MapView"sv, "CenterLongitude"sv, "0"sv).to_double().value_or(0.0);
+    options.center.latitude = Config::read_string("Maps"sv, "MapView"sv, "CenterLatitude"sv, "30"sv).to_number<double>().value_or(30.0);
+    options.center.longitude = Config::read_string("Maps"sv, "MapView"sv, "CenterLongitude"sv, "0"sv).to_number<double>().value_or(0.0);
     options.zoom = Config::read_i32("Maps"sv, "MapView"sv, "Zoom"sv, MAP_ZOOM_DEFAULT);
     auto& map_widget = main_widget.add<Maps::UsersMapWidget>(options);
     map_widget.set_frame_style(Gfx::FrameStyle::SunkenContainer);

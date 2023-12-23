@@ -90,7 +90,7 @@ private:
         case Type::Integer:
             return as_integer;
         case Type::String:
-            if (auto converted = as_string.to_int(); converted.has_value())
+            if (auto converted = as_string.to_number<int>(); converted.has_value())
                 return converted.value();
             fail("Not an integer: '{}'", as_string);
         }
@@ -371,7 +371,7 @@ private:
     {
         if (m_op == StringOperation::Substring || m_op == StringOperation::Match) {
             auto substr = string();
-            if (auto integer = substr.to_int(); integer.has_value())
+            if (auto integer = substr.to_number<int>(); integer.has_value())
                 return integer.value();
             else
                 fail("Not an integer: '{}'", substr);

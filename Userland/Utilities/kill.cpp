@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (!number.has_value())
-            number = strings[1].substring_view(1).to_uint();
+            number = strings[1].substring_view(1).to_number<unsigned>();
 
         if (!number.has_value()) {
             warnln("'{}' is not a valid signal name or number", &strings[1][1]);
@@ -69,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         signum = number.value();
     }
-    auto pid_opt = strings[pid_argi].to_int();
+    auto pid_opt = strings[pid_argi].to_number<pid_t>();
     if (!pid_opt.has_value()) {
         warnln("'{}' is not a valid PID", strings[pid_argi]);
         return 3;

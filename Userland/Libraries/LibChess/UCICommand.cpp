@@ -161,31 +161,31 @@ ErrorOr<NonnullOwnPtr<GoCommand>> GoCommand::from_string(StringView command)
             go_command->ponder = true;
         } else if (tokens[i] == "wtime") {
             VERIFY(i++ < tokens.size());
-            go_command->wtime = tokens[i].to_int().value();
+            go_command->wtime = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "btime") {
             VERIFY(i++ < tokens.size());
-            go_command->btime = tokens[i].to_int().value();
+            go_command->btime = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "winc") {
             VERIFY(i++ < tokens.size());
-            go_command->winc = tokens[i].to_int().value();
+            go_command->winc = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "binc") {
             VERIFY(i++ < tokens.size());
-            go_command->binc = tokens[i].to_int().value();
+            go_command->binc = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "movestogo") {
             VERIFY(i++ < tokens.size());
-            go_command->movestogo = tokens[i].to_int().value();
+            go_command->movestogo = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "depth") {
             VERIFY(i++ < tokens.size());
-            go_command->depth = tokens[i].to_int().value();
+            go_command->depth = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "nodes") {
             VERIFY(i++ < tokens.size());
-            go_command->nodes = tokens[i].to_int().value();
+            go_command->nodes = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "mate") {
             VERIFY(i++ < tokens.size());
-            go_command->mate = tokens[i].to_int().value();
+            go_command->mate = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "movetime") {
             VERIFY(i++ < tokens.size());
-            go_command->movetime = tokens[i].to_int().value();
+            go_command->movetime = tokens[i].to_number<int>().value();
         } else if (tokens[i] == "infinite") {
             go_command->infinite = true;
         }
@@ -344,7 +344,7 @@ ErrorOr<NonnullOwnPtr<InfoCommand>> InfoCommand::from_string(StringView command)
     auto info_command = TRY(try_make<InfoCommand>());
 
     auto parse_integer_token = [](StringView value_token) -> ErrorOr<int> {
-        auto value_as_integer = value_token.to_int();
+        auto value_as_integer = value_token.to_number<int>();
         if (!value_as_integer.has_value())
             return Error::from_string_literal("Expected integer token");
 

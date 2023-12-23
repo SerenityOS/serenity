@@ -52,7 +52,7 @@ Optional<FlatPtr> kernel_base()
 
         auto kernel_base_str = ByteString { file_content.value(), NoChomp };
         using AddressType = u64;
-        auto maybe_kernel_base = kernel_base_str.to_uint<AddressType>();
+        auto maybe_kernel_base = kernel_base_str.to_number<AddressType>();
         if (!maybe_kernel_base.has_value()) {
             s_kernel_base_state = KernelBaseState::Invalid;
             return {};

@@ -298,7 +298,7 @@ ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
         .max_values = 1,
         .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
-            if (auto number = value.to_uint(); number.has_value()) {
+            if (auto number = value.to_number<unsigned>(); number.has_value()) {
                 job_id = number.value();
                 is_pid = true;
                 return true;
@@ -705,7 +705,7 @@ ErrorOr<int> Shell::builtin_fg(Main::Arguments arguments)
         .max_values = 1,
         .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
-            if (auto number = value.to_uint(); number.has_value()) {
+            if (auto number = value.to_number<unsigned>(); number.has_value()) {
                 job_id = number.value();
                 is_pid = true;
                 return true;
@@ -776,7 +776,7 @@ ErrorOr<int> Shell::builtin_disown(Main::Arguments arguments)
         .max_values = INT_MAX,
         .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
-            if (auto number = value.to_uint(); number.has_value()) {
+            if (auto number = value.to_number<unsigned>(); number.has_value()) {
                 job_ids.append(number.value());
                 id_is_pid.append(true);
                 return true;
@@ -1237,7 +1237,7 @@ ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
         .max_values = INT_MAX,
         .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
-            if (auto number = value.to_uint(); number.has_value()) {
+            if (auto number = value.to_number<unsigned>(); number.has_value()) {
                 job_ids.append(number.value());
                 id_is_pid.append(true);
                 return true;
@@ -1543,14 +1543,14 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         case Type::String:
             return AST::make_ref_counted<AST::StringValue>(TRY(String::from_utf8(value)));
         case Type::I32:
-            if (auto number = value.to_int(); number.has_value())
+            if (auto number = value.to_number<int>(); number.has_value())
                 return AST::make_ref_counted<AST::StringValue>(TRY(String::number(*number)));
 
             warnln("Invalid value for type i32: {}", value);
             return OptionalNone {};
         case Type::U32:
         case Type::Size:
-            if (auto number = value.to_uint(); number.has_value())
+            if (auto number = value.to_number<unsigned>(); number.has_value())
                 return AST::make_ref_counted<AST::StringValue>(TRY(String::number(*number)));
 
             warnln("Invalid value for type u32|size: {}", value);
@@ -1860,7 +1860,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 return false;
             }
 
-            auto number = value.to_uint();
+            auto number = value.to_number<unsigned>();
             if (!number.has_value()) {
                 warnln("Invalid value for --min: '{}', expected a non-negative number", value);
                 return false;
@@ -1888,7 +1888,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 return false;
             }
 
-            auto number = value.to_uint();
+            auto number = value.to_number<unsigned>();
             if (!number.has_value()) {
                 warnln("Invalid value for --max: '{}', expected a non-negative number", value);
                 return false;

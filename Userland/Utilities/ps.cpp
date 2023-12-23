@@ -248,21 +248,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
         provided_filtering_option = true;
-        auto pid = pid_string.to_int();
+        auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
     args_parser.add_option(make_list_option(parent_pid_list, "Show processes with a matching PPID. (Comma- or space-separated list.)", "ppid", {}, "pid-list", [&](StringView pid_string) {
         provided_filtering_option = true;
-        auto pid = pid_string.to_int();
+        auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list.) Processes will be listed in the order given.", nullptr, 'q', "pid-list", [&](StringView pid_string) {
         provided_quick_pid_list = true;
-        auto pid = pid_string.to_int();
+        auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
@@ -278,7 +278,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
         provided_filtering_option = true;
-        if (auto uid = user_string.to_uint<uid_t>(); uid.has_value()) {
+        if (auto uid = user_string.to_number<uid_t>(); uid.has_value()) {
             return uid.value();
         }
 

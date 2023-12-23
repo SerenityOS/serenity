@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019-2023, Shannon Booth <shannon@serenityos.org>
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
@@ -188,8 +189,8 @@ NonnullRefPtr<GUI::Widget> EllipseTool::get_properties_widget()
         m_aspect_w_textbox->set_fixed_height(20);
         m_aspect_w_textbox->set_fixed_width(25);
         m_aspect_w_textbox->on_change = [this] {
-            auto x = m_aspect_w_textbox->text().to_int().value_or(0);
-            auto y = m_aspect_h_textbox->text().to_int().value_or(0);
+            auto x = m_aspect_w_textbox->text().to_number<int>().value_or(0);
+            auto y = m_aspect_h_textbox->text().to_number<int>().value_or(0);
             if (x > 0 && y > 0) {
                 m_aspect_ratio = (float)x / (float)y;
             } else {

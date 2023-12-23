@@ -108,19 +108,19 @@ public:
         u32 d {};
 
         if (parts.size() == 1) {
-            d = parts[0].to_uint().value_or(256);
+            d = parts[0].to_number<u32>().value_or(256);
         } else if (parts.size() == 2) {
-            a = parts[0].to_uint().value_or(256);
-            d = parts[1].to_uint().value_or(256);
+            a = parts[0].to_number<u32>().value_or(256);
+            d = parts[1].to_number<u32>().value_or(256);
         } else if (parts.size() == 3) {
-            a = parts[0].to_uint().value_or(256);
-            b = parts[1].to_uint().value_or(256);
-            d = parts[2].to_uint().value_or(256);
+            a = parts[0].to_number<u32>().value_or(256);
+            b = parts[1].to_number<u32>().value_or(256);
+            d = parts[2].to_number<u32>().value_or(256);
         } else if (parts.size() == 4) {
-            a = parts[0].to_uint().value_or(256);
-            b = parts[1].to_uint().value_or(256);
-            c = parts[2].to_uint().value_or(256);
-            d = parts[3].to_uint().value_or(256);
+            a = parts[0].to_number<u32>().value_or(256);
+            b = parts[1].to_number<u32>().value_or(256);
+            c = parts[2].to_number<u32>().value_or(256);
+            d = parts[3].to_number<u32>().value_or(256);
         } else {
             return {};
         }

@@ -99,14 +99,14 @@ Optional<i32> AriaData::parse_integer(Optional<String> const& value)
 {
     if (!value.has_value())
         return {};
-    return value->bytes_as_string_view().to_int();
+    return value->bytes_as_string_view().to_number<i32>();
 }
 
 Optional<f64> AriaData::parse_number(Optional<String> const& value)
 {
     if (!value.has_value())
         return {};
-    return value->bytes_as_string_view().to_double(TrimWhitespace::Yes);
+    return value->to_number<double>(TrimWhitespace::Yes);
 }
 
 Optional<String> AriaData::aria_active_descendant_or_default() const

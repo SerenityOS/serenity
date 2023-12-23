@@ -1057,11 +1057,11 @@ void MainWidget::paste_glyphs()
     if (!mime_type.starts_with("glyph/x-fonteditor"sv))
         return;
 
-    auto glyph_count = metadata.get("count").value().to_uint().value_or(0);
+    auto glyph_count = metadata.get("count").value().to_number<unsigned>().value_or(0);
     if (!glyph_count)
         return;
 
-    auto height = metadata.get("height").value().to_uint().value_or(0);
+    auto height = metadata.get("height").value().to_number<unsigned>().value_or(0);
     if (!height)
         return;
 

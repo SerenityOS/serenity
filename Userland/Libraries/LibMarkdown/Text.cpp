@@ -643,7 +643,7 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
 
         auto width_string = dimensions.substring_view(1, *dimension_seperator - 1);
         if (!width_string.is_empty()) {
-            auto width = width_string.to_int();
+            auto width = width_string.to_number<int>();
             if (!width.has_value())
                 return false;
             image_width = width;
@@ -652,7 +652,7 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
         auto height_start = *dimension_seperator + 1;
         if (height_start < dimensions.length()) {
             auto height_string = dimensions.substring_view(height_start);
-            auto height = height_string.to_int();
+            auto height = height_string.to_number<int>();
             if (!height.has_value())
                 return false;
             image_height = height;

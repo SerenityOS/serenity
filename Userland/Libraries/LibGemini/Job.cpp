@@ -167,7 +167,7 @@ void Job::on_socket_connected()
             auto first_part = view.substring_view(0, space_index);
             auto second_part = view.substring_view(space_index + 1);
 
-            auto status = first_part.to_uint();
+            auto status = first_part.to_number<unsigned>();
             if (!status.has_value()) {
                 dbgln("Job: Expected numeric status code");
                 m_state = State::Failed;

@@ -927,7 +927,7 @@ ByteString ImageEditor::generate_unique_layer_name(ByteString const& original_la
 
     auto after_copy_suffix_view = original_layer_name.substring_view(copy_suffix_index.value() + copy_string_view.length());
     if (!after_copy_suffix_view.is_empty()) {
-        auto after_copy_suffix_number = after_copy_suffix_view.trim_whitespace().to_int();
+        auto after_copy_suffix_number = after_copy_suffix_view.trim_whitespace().to_number<int>();
         if (!after_copy_suffix_number.has_value())
             return ByteString::formatted("{}{}", original_layer_name, copy_string_view);
     }

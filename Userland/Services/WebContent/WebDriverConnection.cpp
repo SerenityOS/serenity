@@ -150,7 +150,7 @@ static ErrorOr<Web::DOM::Element*, Web::WebDriver::Error> get_known_connected_el
 {
     // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference().
     //       For now the element is only represented by its ID.
-    auto element = element_id.to_int();
+    auto element = element_id.to_number<int>();
     if (!element.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an integer");
 
@@ -197,7 +197,7 @@ static ErrorOr<Web::DOM::ShadowRoot*, Web::WebDriver::Error> get_known_shadow_ro
 {
     // NOTE: The whole concept of "known shadow roots" is not implemented yet. See get_or_create_a_shadow_root_reference().
     //       For now the shadow root is only represented by its ID.
-    auto shadow_root = shadow_id.to_int();
+    auto shadow_root = shadow_id.to_number<int>();
     if (!shadow_root.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Shadow ID is not an integer");
 

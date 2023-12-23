@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        auto size_opt = resize.to_int<off_t>();
+        auto size_opt = resize.to_number<off_t>();
         if (!size_opt.has_value() || Checked<off_t>::multiplication_would_overflow(size_opt.value(), multiplier)) {
             args_parser.print_usage(stderr, arguments.strings[0]);
             return 1;

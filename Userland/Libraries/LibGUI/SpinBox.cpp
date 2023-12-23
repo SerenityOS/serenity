@@ -24,7 +24,7 @@ SpinBox::SpinBox()
         if (!weak_this)
             return;
 
-        auto value = m_editor->text().to_uint();
+        auto value = m_editor->text().to_number<unsigned>();
         if (!value.has_value() && m_editor->text().length() > 0)
             m_editor->do_delete();
     };
@@ -81,7 +81,7 @@ void SpinBox::set_value_from_current_text()
     if (m_editor->text().is_empty())
         return;
 
-    auto value = m_editor->text().to_int();
+    auto value = m_editor->text().to_number<int>();
     if (value.has_value())
         set_value(value.value());
     else
