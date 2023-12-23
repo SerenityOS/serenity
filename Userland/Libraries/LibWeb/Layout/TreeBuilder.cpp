@@ -148,8 +148,15 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
         return;
 
     if (display.is_inline_outside()) {
-        // Inlines can be inserted into the nearest ancestor.
-        auto& insertion_point = insertion_parent_for_inline_node(m_ancestor_stack.last());
+        // Inlines can be inserted into the nearest ancestor without "display: contents".
+        auto& nearest_ancestor_without_display_contents = [&]() -> Layout::NodeWithStyle& {
+            for (auto& ancestor : m_ancestor_stack.in_reverse()) {
+                if (!ancestor->display().is_contents())
+                    return ancestor;
+            }
+            VERIFY_NOT_REACHED();
+        }();
+        auto& insertion_point = insertion_parent_for_inline_node(nearest_ancestor_without_display_contents);
         if (mode == AppendOrPrepend::Prepend)
             insertion_point.prepend_child(node);
         else
