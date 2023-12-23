@@ -192,10 +192,10 @@ def promote_type(t: TIFFType) -> TIFFType:
     return t
 
 
-def tiff_type_to_cpp(t: TIFFType, without_promotion: bool = False) -> str:
+def tiff_type_to_cpp(t: TIFFType, with_promotion: bool = True) -> str:
     # To simplify the code generator and the Metadata class API, all u16 are promoted to u32
     # Note that the Value<> type doesn't include u16 for this reason
-    if not without_promotion:
+    if with_promotion:
         t = promote_type(t)
     if t in [TIFFType.ASCII, TIFFType.UTF8]:
         return 'String'
@@ -232,7 +232,7 @@ struct TypePromoter<{}> {{
 """
     for t in TIFFType:
         if promote_type(t) != t:
-            output += specialization_template.format(tiff_type_to_cpp(t, without_promotion=True), tiff_type_to_cpp(t))
+            output += specialization_template.format(tiff_type_to_cpp(t, with_promotion=False), tiff_type_to_cpp(t))
 
     return output
 
