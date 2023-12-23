@@ -41,6 +41,7 @@ public:
 
     ErrorOr<void> decode_frame()
     {
+        TRY(ensure_baseline_tags_presence(m_metadata));
         auto maybe_error = decode_frame_impl();
 
         if (maybe_error.is_error()) {

@@ -96,7 +96,7 @@ class ExtraSample(EnumWithExportName):
     UnassociatedAlpha = 2
 
 
-tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum']
+tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum', 'is_required']
 
 Tag = namedtuple(
     'Tag',
@@ -106,16 +106,17 @@ Tag = namedtuple(
 
 # FIXME: Some tag have only a few allowed values, we should ensure that
 known_tags: List[Tag] = [
-    Tag('256', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageWidth"),
-    Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageHeight"),
-    Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample"),
-    Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression),
-    Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation", PhotometricInterpretation),
-    Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets"),
+    Tag('256', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageWidth", is_required=True),
+    Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageHeight", is_required=True),
+    Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample", is_required=True),
+    Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression, is_required=True),
+    Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation",
+        PhotometricInterpretation, is_required=True),
+    Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets", is_required=True),
     Tag('274', [TIFFType.UnsignedShort], [1], Orientation.Default, "Orientation", Orientation),
-    Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel"),
-    Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip"),
-    Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts"),
+    Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel", is_required=True),
+    Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip", is_required=True),
+    Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts", is_required=True),
     Tag('282', [TIFFType.UnsignedRational], [], None, "XResolution"),
     Tag('283', [TIFFType.UnsignedRational], [], None, "YResolution"),
     Tag('284', [TIFFType.UnsignedShort], [], PlanarConfiguration.Chunky, "PlanarConfiguration", PlanarConfiguration),
@@ -131,6 +132,8 @@ HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(Metadata& 
                                  " {namespace}Type type, u32 count, Vector<{namespace}Value>&& value)")
 HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
+
+ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_presence(Metadata const& metadata)"
 
 LICENSE = R"""/*
  * Copyright (c) 2023, Lucas Chollet <lucas.chollet@serenityos.org>
@@ -351,6 +354,7 @@ using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>
 {export_enum_to_string_converter([tag.associated_enum for tag in known_tags if tag.associated_enum] + [TIFFType])}
 
 {HANDLE_TAG_SIGNATURE};
+{ENSURE_BASELINE_TAG_PRESENCE};
 
 }}
 
@@ -433,6 +437,10 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
                 name_for_enum_tag_value(static_cast<{tag.associated_enum.export_name()}>(v.get<u32>()))));"""
                                              for tag in tags if tag.associated_enum])
 
+    ensure_tag_presence = '\n'.join([fR"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
+        return Error::from_string_literal("Unable to decode image, missing required tag {tag.name}.");
+""" for tag in filter(lambda tag: tag.is_required, known_tags)])
+
     output = fR"""{LICENSE}
 
 #include <AK/Debug.h>
@@ -465,6 +473,13 @@ static String value_formatter(u32 tag_id, Value const& v) {{
     builder.append(']');
     return MUST(builder.to_string());
 }}
+
+{ENSURE_BASELINE_TAG_PRESENCE}
+{{
+{ensure_tag_presence}
+    return {{}};
+}}
+
 
 {HANDLE_TAG_SIGNATURE}
 {{
