@@ -8,7 +8,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/Resource.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWebView/InspectorClient.h>
@@ -340,10 +339,6 @@ void InspectorClient::load_inspector()
 {
     StringBuilder builder;
 
-    // FIXME: Teach LibWeb how to load resource:// URIs instead of needing to read these files here.
-    auto inspector_css = MUST(Core::Resource::load_from_uri("resource://ladybird/inspector.css"sv));
-    auto inspector_js = MUST(Core::Resource::load_from_uri("resource://ladybird/inspector.js"sv));
-
     builder.append(R"~~~(
 <!DOCTYPE html>
 <html>
@@ -353,10 +348,10 @@ void InspectorClient::load_inspector()
 )~~~"sv);
 
     builder.append(HTML_HIGHLIGHTER_STYLE);
-    builder.append(inspector_css->data());
 
     builder.append(R"~~~(
     </style>
+    <link href="resource://ladybird/inspector.css" rel="stylesheet" />
 </head>
 <body>
     <div class="split-view">
@@ -424,13 +419,7 @@ void InspectorClient::load_inspector()
         </div>
     </div>
 
-    <script type="text/javascript">
-)~~~"sv);
-
-    builder.append(inspector_js->data());
-
-    builder.append(R"~~~(
-    </script>
+    <script type="text/javascript" src="resource://ladybird/inspector.js"></script>
 </body>
 </html>
 )~~~"sv);
