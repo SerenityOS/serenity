@@ -69,6 +69,12 @@ public:
 
     DeprecatedFlyString to_lowercase() const;
 
+    template<Arithmetic T>
+    Optional<T> to_number(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const
+    {
+        return view().to_number<T>(trim_whitespace);
+    }
+
     template<typename T = int>
     Optional<T> to_int(TrimWhitespace = TrimWhitespace::Yes) const;
     template<typename T = unsigned>
