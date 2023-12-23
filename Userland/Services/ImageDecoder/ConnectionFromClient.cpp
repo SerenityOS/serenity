@@ -22,10 +22,10 @@ void ConnectionFromClient::die()
     Core::EventLoop::current().quit(0);
 }
 
-static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder const& decoder, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
+static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder const& decoder, Optional<Gfx::IntSize> ideal_size, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
 {
     for (size_t i = 0; i < decoder.frame_count(); ++i) {
-        auto frame_or_error = decoder.frame(i);
+        auto frame_or_error = decoder.frame(i, ideal_size);
         if (frame_or_error.is_error()) {
             bitmaps.append(Gfx::ShareableBitmap {});
             durations.append(0);
@@ -37,7 +37,7 @@ static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder
     }
 }
 
-static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<ByteString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
+static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
 {
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
@@ -54,10 +54,10 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
     }
     is_animated = decoder->is_animated();
     loop_count = decoder->loop_count();
-    decode_image_to_bitmaps_and_durations_with_decoder(*decoder, bitmaps, durations);
+    decode_image_to_bitmaps_and_durations_with_decoder(*decoder, ideal_size, bitmaps, durations);
 }
 
-Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer, Optional<ByteString> const& mime_type)
+Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> const& ideal_size, Optional<ByteString> const& mime_type)
 {
     if (!encoded_buffer.is_valid()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
@@ -68,7 +68,7 @@ Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_i
     u32 loop_count = 0;
     Vector<Gfx::ShareableBitmap> bitmaps;
     Vector<u32> durations;
-    decode_image_to_details(encoded_buffer, mime_type, is_animated, loop_count, bitmaps, durations);
+    decode_image_to_details(encoded_buffer, ideal_size, mime_type, is_animated, loop_count, bitmaps, durations);
     return { is_animated, loop_count, bitmaps, durations };
 }
 

@@ -3,5 +3,5 @@
 
 endpoint ImageDecoderServer
 {
-    decode_image(Core::AnonymousBuffer data, Optional<ByteString> mime_type) => (bool is_animated, u32 loop_count, Vector<Gfx::ShareableBitmap> bitmaps, Vector<u32> durations)
+    decode_image(Core::AnonymousBuffer data, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type) => (bool is_animated, u32 loop_count, Vector<Gfx::ShareableBitmap> bitmaps, Vector<u32> durations)
 }
