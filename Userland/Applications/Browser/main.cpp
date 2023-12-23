@@ -133,8 +133,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
 
-    Browser::g_home_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url());
-    Browser::g_new_tab_url = Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, Browser::default_new_tab_url());
+    Browser::g_home_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url);
+    Browser::g_new_tab_url = Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, Browser::default_new_tab_url);
     Browser::g_search_engine = Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, WebView::default_search_engine().query_url);
     Browser::g_content_filters_enabled = Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, Browser::default_enable_content_filters);
     Browser::g_autoplay_allowed_on_all_websites = Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, Browser::default_allow_autoplay_on_all_websites);
