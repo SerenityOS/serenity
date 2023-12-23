@@ -2563,6 +2563,8 @@ static void generate_named_properties_object_definitions(IDL::Interface const& i
     generator.append(R"~~~(
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
+JS_DEFINE_ALLOCATOR(@named_properties_class@);
+
 @named_properties_class@::@named_properties_class@(JS::Realm& realm)
   : JS::Object(realm, nullptr, MayInterfereWithIndexedPropertyAccess::Yes)
   , m_realm(realm)

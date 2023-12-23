@@ -14,6 +14,7 @@ namespace JS::Intl {
 
 class NumberFormatFunction final : public NativeFunction {
     JS_OBJECT(NumberFormatFunction, NativeFunction);
+    JS_DECLARE_ALLOCATOR(NumberFormatFunction);
 
 public:
     static NonnullGCPtr<NumberFormatFunction> create(Realm&, NumberFormat&);

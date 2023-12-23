@@ -11,6 +11,8 @@
 
 namespace Web::FileAPI {
 
+JS_DEFINE_ALLOCATOR(FileList);
+
 JS::NonnullGCPtr<FileList> FileList::create(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
 {
     return realm.heap().allocate<FileList>(realm, realm, move(files));

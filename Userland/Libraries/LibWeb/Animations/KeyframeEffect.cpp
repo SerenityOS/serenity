@@ -9,6 +9,8 @@
 
 namespace Web::Animations {
 
+JS_DEFINE_ALLOCATOR(KeyframeEffect);
+
 JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
 {
     return realm.heap().allocate<KeyframeEffect>(realm, realm);

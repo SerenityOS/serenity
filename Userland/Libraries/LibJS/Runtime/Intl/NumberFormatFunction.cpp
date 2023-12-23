@@ -10,6 +10,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(NumberFormatFunction);
+
 // 15.5.2 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
 NonnullGCPtr<NumberFormatFunction> NumberFormatFunction::create(Realm& realm, NumberFormat& number_format)
 {

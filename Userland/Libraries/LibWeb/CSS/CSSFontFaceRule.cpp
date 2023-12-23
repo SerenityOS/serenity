@@ -14,6 +14,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSFontFaceRule);
+
 JS::NonnullGCPtr<CSSFontFaceRule> CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
 {
     return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face));
