@@ -19,8 +19,11 @@ CellAllocator::CellAllocator(size_t cell_size)
 
 Cell* CellAllocator::allocate_cell(Heap& heap)
 {
+    if (!m_list_node.is_in_list())
+        heap.register_cell_allocator({}, *this);
+
     if (m_usable_blocks.is_empty()) {
-        auto block = HeapBlock::create_with_cell_size(heap, m_cell_size);
+        auto block = HeapBlock::create_with_cell_size(heap, *this, m_cell_size);
         m_usable_blocks.append(*block.leak_ptr());
     }
 

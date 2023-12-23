@@ -50,17 +50,17 @@ Heap::Heap(VM& vm)
 #endif
 
     if constexpr (HeapBlock::min_possible_cell_size <= 16) {
-        m_allocators.append(make<CellAllocator>(16));
+        m_size_based_cell_allocators.append(make<CellAllocator>(16));
     }
     static_assert(HeapBlock::min_possible_cell_size <= 24, "Heap Cell tracking uses too much data!");
-    m_allocators.append(make<CellAllocator>(32));
-    m_allocators.append(make<CellAllocator>(64));
-    m_allocators.append(make<CellAllocator>(96));
-    m_allocators.append(make<CellAllocator>(128));
-    m_allocators.append(make<CellAllocator>(256));
-    m_allocators.append(make<CellAllocator>(512));
-    m_allocators.append(make<CellAllocator>(1024));
-    m_allocators.append(make<CellAllocator>(3072));
+    m_size_based_cell_allocators.append(make<CellAllocator>(32));
+    m_size_based_cell_allocators.append(make<CellAllocator>(64));
+    m_size_based_cell_allocators.append(make<CellAllocator>(96));
+    m_size_based_cell_allocators.append(make<CellAllocator>(128));
+    m_size_based_cell_allocators.append(make<CellAllocator>(256));
+    m_size_based_cell_allocators.append(make<CellAllocator>(512));
+    m_size_based_cell_allocators.append(make<CellAllocator>(1024));
+    m_size_based_cell_allocators.append(make<CellAllocator>(3072));
 }
 
 Heap::~Heap()
@@ -517,12 +517,12 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
 
     for (auto* block : empty_blocks) {
         dbgln_if(HEAP_DEBUG, " - HeapBlock empty @ {}: cell_size={}", block, block->cell_size());
-        allocator_for_size(block->cell_size()).block_did_become_empty({}, *block);
+        block->cell_allocator().block_did_become_empty({}, *block);
     }
 
     for (auto* block : full_blocks_that_became_usable) {
         dbgln_if(HEAP_DEBUG, " - HeapBlock usable again @ {}: cell_size={}", block, block->cell_size());
-        allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
+        block->cell_allocator().block_did_become_usable({}, *block);
     }
 
     if constexpr (HEAP_DEBUG) {

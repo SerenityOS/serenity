@@ -81,6 +81,8 @@ public:
     void did_create_execution_context(Badge<ExecutionContext>, ExecutionContext&);
     void did_destroy_execution_context(Badge<ExecutionContext>, ExecutionContext&);
 
+    void register_cell_allocator(Badge<CellAllocator>, CellAllocator&);
+
     BlockAllocator& block_allocator() { return m_block_allocator; }
 
     void uproot_cell(Cell* cell);
@@ -120,19 +122,19 @@ private:
     ALWAYS_INLINE CellAllocator& allocator_for_size(size_t cell_size)
     {
         // FIXME: Use binary search?
-        for (auto& allocator : m_allocators) {
+        for (auto& allocator : m_size_based_cell_allocators) {
             if (allocator->cell_size() >= cell_size)
                 return *allocator;
         }
-        dbgln("Cannot get CellAllocator for cell size {}, largest available is {}!", cell_size, m_allocators.last()->cell_size());
+        dbgln("Cannot get CellAllocator for cell size {}, largest available is {}!", cell_size, m_size_based_cell_allocators.last()->cell_size());
         VERIFY_NOT_REACHED();
     }
 
     template<typename Callback>
     void for_each_block(Callback callback)
     {
-        for (auto& allocator : m_allocators) {
-            if (allocator->for_each_block(callback) == IterationDecision::Break)
+        for (auto& allocator : m_all_cell_allocators) {
+            if (allocator.for_each_block(callback) == IterationDecision::Break)
                 return;
         }
     }
@@ -143,7 +145,8 @@ private:
 
     bool m_should_collect_on_every_allocation { false };
 
-    Vector<NonnullOwnPtr<CellAllocator>> m_allocators;
+    Vector<NonnullOwnPtr<CellAllocator>> m_size_based_cell_allocators;
+    CellAllocator::List m_all_cell_allocators;
 
     HandleImpl::List m_handles;
     MarkedVectorBase::List m_marked_vectors;
@@ -193,6 +196,11 @@ inline void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer
 {
     VERIFY(m_weak_containers.contains(set));
     m_weak_containers.remove(set);
+}
+
+inline void Heap::register_cell_allocator(Badge<CellAllocator>, CellAllocator& allocator)
+{
+    m_all_cell_allocators.append(allocator);
 }
 
 }

@@ -45,6 +45,9 @@ public:
     void block_did_become_empty(Badge<Heap>, HeapBlock&);
     void block_did_become_usable(Badge<Heap>, HeapBlock&);
 
+    IntrusiveListNode<CellAllocator> m_list_node;
+    using List = IntrusiveList<&CellAllocator::m_list_node>;
+
 private:
     size_t const m_cell_size;
 

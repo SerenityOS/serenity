@@ -26,7 +26,7 @@ class HeapBlock : public HeapBlockBase {
 
 public:
     using HeapBlockBase::block_size;
-    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
+    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, CellAllocator&, size_t);
 
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
@@ -90,8 +90,10 @@ public:
 
     IntrusiveListNode<HeapBlock> m_list_node;
 
+    CellAllocator& cell_allocator() { return m_cell_allocator; }
+
 private:
-    HeapBlock(Heap&, size_t cell_size);
+    HeapBlock(Heap&, CellAllocator&, size_t cell_size);
 
     bool has_lazy_freelist() const { return m_next_lazy_freelist_index < cell_count(); }
 
@@ -106,6 +108,7 @@ private:
         return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]);
     }
 
+    CellAllocator& m_cell_allocator;
     size_t m_cell_size { 0 };
     size_t m_next_lazy_freelist_index { 0 };
     GCPtr<FreelistEntry> m_freelist;
