@@ -383,50 +383,38 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
                 // 2. Let Pk be ! ToString(𝔽(k)).
                 auto property_key = PropertyKey { k };
 
-                // FIXME: Spec bug: https://github.com/tc39/proposal-array-from-async/issues/33.
-                //        Implementing the following would cause an infinite loop.
-                //
-                // 3. Let next be ? Await(IteratorStep(iteratorRecord)).
-                // 4. If next is false, then
-                //     a. Perform ? Set(A, "length", 𝔽(k), true).
-                //     b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
-                // 5. Let nextValue be ? IteratorValue(next).
-                //
-                // Below implements the suggested fix: https://github.com/tc39/proposal-array-from-async/issues/33#issuecomment-1279296963
-                //
-                // There also seems to be a second issue here where we are not respecting array mutation. After resolving the first entry, the
-                // iterator should also take into account any other changes which are made to async_items (which does not seem to be happening).
+                // FIXME: There seems to be a bug here where we are not respecting array mutation. After resolving the first entry, the
+                //        iterator should also take into account any other changes which are made to async_items (which does not seem to
+                //        be happening).
 
-                // Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+                // 3. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
                 auto next_result = TRY(JS::call(vm, iterator_record->next_method, iterator_record->iterator));
 
-                // Set nextResult to ? Await(nextResult).
+                // 4. Set nextResult to ? Await(nextResult).
                 next_result = TRY(await(vm, next_result));
 
-                // If nextResult is not an Object, throw a TypeError exception.
+                // 5. If nextResult is not an Object, throw a TypeError exception.
                 if (!next_result.is_object())
                     return vm.throw_completion<TypeError>(ErrorType::IterableNextBadReturn);
 
-                // Let done be ? IteratorComplete(nextResult).
+                // 6. Let done be ? IteratorComplete(nextResult).
                 auto done = TRY(JS::iterator_complete(vm, next_result.as_object()));
 
-                // If done is true,
+                // 7. If done is true,
                 if (done) {
-                    // Perform ? Set(A, "length", 𝔽(k), true).
+                    // a. Perform ? Set(A, "length", 𝔽(k), true).
                     TRY(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
 
-                    // Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+                    // b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
                     return Completion { Completion::Type::Return, array, {} };
                 }
 
-                // Let nextValue be ? IteratorValue(nextResult).
+                // 8. Let nextValue be ? IteratorValue(nextResult).
                 auto next_value = TRY(iterator_value(vm, next_result.as_object()));
-
-                // (spec deviation ends here)
 
                 Value mapped_value;
 
-                // 6. If mapping is true, then
+                // 9. If mapping is true, then
                 if (mapping) {
                     // a. Let mappedValue be Call(mapfn, thisArg, « nextValue, 𝔽(k) »).
                     auto mapped_value_or_error = JS::call(vm, mapfn, this_arg, next_value, Value(k));
@@ -448,19 +436,19 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
 
                     mapped_value = mapped_value_or_error.value();
                 }
-                // 7. Else, let mappedValue be nextValue.
+                // 10. Else, let mappedValue be nextValue.
                 else {
                     mapped_value = next_value;
                 }
 
-                // 8. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
+                // 11. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
                 auto define_status = array->create_data_property_or_throw(property_key, mapped_value);
 
-                // 9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
+                // 12. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
                 if (define_status.is_error())
                     return *TRY(iterator_close(vm, *iterator_record, define_status.release_error()));
 
-                // 10. Set k to k + 1.
+                // 13. Set k to k + 1.
             }
         }
         // k. Else,
