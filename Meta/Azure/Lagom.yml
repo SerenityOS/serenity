@@ -152,6 +152,7 @@ jobs:
           ninja test
         displayName: 'Test'
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+        timeoutInMinutes: 60
         env:
           SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
           CTEST_OUTPUT_ON_FAILURE: 1
