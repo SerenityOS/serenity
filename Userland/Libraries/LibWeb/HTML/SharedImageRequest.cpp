@@ -40,8 +40,11 @@ SharedImageRequest::SharedImageRequest(JS::NonnullGCPtr<Page> page, AK::URL url,
 {
 }
 
-SharedImageRequest::~SharedImageRequest()
+SharedImageRequest::~SharedImageRequest() = default;
+
+void SharedImageRequest::finalize()
 {
+    Base::finalize();
     auto& shared_image_requests = m_document->shared_image_requests();
     shared_image_requests.remove(m_url);
 }
