@@ -373,7 +373,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
         key.origin = document().origin();
 
         // 3. If the list of available images contains an entry for key, then:
-        if (auto entry = document().list_of_available_images().get(key)) {
+        if (auto* entry = document().list_of_available_images().get(key)) {
             // 1. Set the ignore higher-layer caching flag for that entry.
             entry->ignore_higher_layer_caching = true;
 
@@ -598,7 +598,7 @@ void HTMLImageElement::add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequ
                 image_request->set_state(ImageRequest::State::CompletelyAvailable);
 
                 // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
-                document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
+                document().list_of_available_images().add(key, *image_data, true);
 
                 // 4. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
                 if (!maybe_omit_events || previous_url != url_string)
@@ -731,7 +731,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
             image_request->set_state(ImageRequest::State::CompletelyAvailable);
 
             // 4. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
-            document().list_of_available_images().add(key, image_data, true).release_value_but_fixme_should_propagate_errors();
+            document().list_of_available_images().add(key, image_data, true);
 
             // 5. Upgrade the pending request to the current request.
             upgrade_pending_request_to_current_request();
@@ -749,7 +749,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
 
     // 14. If the list of available images contains an entry for key, then set image request's image data to that of the entry.
     //     Continue to the next step.
-    if (auto entry = document().list_of_available_images().get(key)) {
+    if (auto* entry = document().list_of_available_images().get(key)) {
         image_request->set_image_data(entry->image_data);
         step_15(selected_source.value(), *image_request, key, entry->image_data);
     }
