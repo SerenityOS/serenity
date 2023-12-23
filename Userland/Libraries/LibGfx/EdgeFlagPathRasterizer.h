@@ -163,13 +163,6 @@ private:
     struct EdgeExtent {
         int min_x;
         int max_x;
-
-        template<typename T>
-        void memset_extent(T* data, int value)
-        {
-            if (min_x <= max_x)
-                memset(data + min_x, value, (max_x - min_x + 1) * sizeof(T));
-        }
     };
 
     void fill_internal(Painter&, Path const&, auto color_or_function, Painter::WindingRule, FloatPoint offset);
@@ -190,7 +183,23 @@ private:
 
     Vector<SampleType> m_scanline;
     Vector<WindingCounts> m_windings;
-    Vector<Detail::Edge*> m_edge_table;
+
+    class EdgeTable {
+    public:
+        EdgeTable() = default;
+
+        void set_scanline_range(int min_scanline, int max_scanline)
+        {
+            this->min_scanline = min_scanline;
+            edges.resize(max_scanline - min_scanline + 1);
+        }
+
+        auto& operator[](int scanline) { return edges[scanline - min_scanline]; }
+
+    private:
+        Vector<Detail::Edge*> edges;
+        int min_scanline { 0 };
+    } m_edge_table;
 };
 
 extern template class EdgeFlagPathRasterizer<8>;
