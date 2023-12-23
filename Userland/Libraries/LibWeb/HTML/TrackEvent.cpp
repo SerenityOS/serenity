@@ -10,6 +10,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(TrackEvent);
+
 JS::NonnullGCPtr<TrackEvent> TrackEvent::create(JS::Realm& realm, FlyString const& event_name, TrackEventInit event_init)
 {
     return realm.heap().allocate<TrackEvent>(realm, realm, event_name, move(event_init));

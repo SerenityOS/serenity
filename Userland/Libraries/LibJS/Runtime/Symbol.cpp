@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Symbol);
+
 Symbol::Symbol(Optional<String> description, bool is_global)
     : m_description(move(description))
     , m_is_global(is_global)

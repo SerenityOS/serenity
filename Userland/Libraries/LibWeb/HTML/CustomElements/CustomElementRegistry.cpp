@@ -20,6 +20,7 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(CustomElementRegistry);
 JS_DEFINE_ALLOCATOR(CustomElementDefinition);
 
 CustomElementRegistry::CustomElementRegistry(JS::Realm& realm)
