@@ -31,10 +31,18 @@
 
 namespace Gfx {
 
-static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigned samples_per_pixel, FloatPoint origin)
+static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigned samples_per_pixel, FloatPoint origin,
+    int top_clip_scanline, int bottom_clip_scanline, int& min_edge_y, int& max_edge_y)
 {
     Vector<Detail::Edge> edges;
     edges.ensure_capacity(lines.size());
+    // The first visible y value.
+    auto top_clip = top_clip_scanline * int(samples_per_pixel);
+    // The last visible y value.
+    auto bottom_clip = (bottom_clip_scanline + 1) * int(samples_per_pixel) - 1;
+    min_edge_y = bottom_clip;
+    max_edge_y = top_clip;
+
     for (auto& line : lines) {
         auto p0 = line.a() - origin;
         auto p1 = line.b() - origin;
@@ -54,12 +62,32 @@ static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigne
 
         auto min_y = static_cast<int>(p0.y());
         auto max_y = static_cast<int>(p1.y());
+
+        // Clip edges that start below the bottom clip...
+        if (min_y > bottom_clip)
+            continue;
+        // ...and edges that end before the top clip.
+        if (max_y < top_clip)
+            continue;
+
         float start_x = p0.x();
         float end_x = p1.x();
 
         auto dx = end_x - start_x;
         auto dy = max_y - min_y;
         auto dxdy = dx / dy;
+
+        // Trim off the non-visible portions of the edge.
+        if (min_y < top_clip) {
+            start_x += (top_clip - min_y) * dxdy;
+            min_y = top_clip;
+        }
+        if (max_y > bottom_clip) {
+            max_y = bottom_clip;
+        }
+
+        min_edge_y = min(min_y, min_edge_y);
+        max_edge_y = max(max_y, max_edge_y);
 
         edges.unchecked_append(Detail::Edge {
             start_x,
@@ -76,8 +104,8 @@ template<unsigned SamplesPerPixel>
 EdgeFlagPathRasterizer<SamplesPerPixel>::EdgeFlagPathRasterizer(IntSize size)
     : m_size(size.width() + 1, size.height() + 1)
 {
+    // FIXME: Clip the scanline width to the visible section (tricky).
     m_scanline.resize(m_size.width());
-    m_edge_table.resize(m_size.height());
 }
 
 template<unsigned SamplesPerPixel>
@@ -122,24 +150,23 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
     if (lines.is_empty())
         return;
 
-    auto edges = prepare_edges(lines, SamplesPerPixel, origin);
+    int min_edge_y = 0;
+    int max_edge_y = 0;
+    auto top_clip_scanline = m_clip.top() - m_blit_origin.y();
+    auto bottom_clip_scanline = m_clip.bottom() - m_blit_origin.y() - 1;
+    auto edges = prepare_edges(lines, SamplesPerPixel, origin, top_clip_scanline, bottom_clip_scanline, min_edge_y, max_edge_y);
+    if (edges.is_empty())
+        return;
 
-    int min_scanline = m_size.height();
-    int max_scanline = 0;
+    int min_scanline = min_edge_y / SamplesPerPixel;
+    int max_scanline = max_edge_y / SamplesPerPixel;
+    m_edge_table.set_scanline_range(min_scanline, max_scanline);
     for (auto& edge : edges) {
-        int start_scanline = edge.min_y / SamplesPerPixel;
-        int end_scanline = edge.max_y / SamplesPerPixel;
-
         // Create a linked-list of edges starting on this scanline:
+        int start_scanline = edge.min_y / SamplesPerPixel;
         edge.next_edge = m_edge_table[start_scanline];
         m_edge_table[start_scanline] = &edge;
-
-        min_scanline = min(min_scanline, start_scanline);
-        max_scanline = max(max_scanline, end_scanline);
     }
-
-    // FIXME: We could probably clip some of the egde plotting if we know it won't be shown.
-    // Though care would have to be taken to ensure the active edges are correct at the first drawn scaline.
 
     auto empty_edge_extent = [&] {
         return EdgeExtent { m_size.width() - 1, 0 };
@@ -288,14 +315,6 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::write_pixel(Painter& painter, int 
 template<unsigned SamplesPerPixel>
 void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
 {
-    auto dest_y = m_blit_origin.y() + scanline;
-    if (!m_clip.contains_vertically(dest_y)) {
-        // FIXME: This memset only really needs to be done on transition from clipped to not clipped,
-        // or not at all if we properly clipped egde plotting.
-        edge_extent.memset_extent(m_scanline.data(), 0);
-        return;
-    }
-
     SampleType sample = 0;
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
         sample ^= m_scanline[x];
@@ -307,14 +326,6 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(Paint
 template<unsigned SamplesPerPixel>
 void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
 {
-    // NOTE: Same FIXMEs apply from accumulate_even_odd_scanline()
-    auto dest_y = m_blit_origin.y() + scanline;
-    if (!m_clip.contains_vertically(dest_y)) {
-        edge_extent.memset_extent(m_scanline.data(), 0);
-        edge_extent.memset_extent(m_windings.data(), 0);
-        return;
-    }
-
     SampleType sample = 0;
     WindingCounts sum_winding = {};
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
