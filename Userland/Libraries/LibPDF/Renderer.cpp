@@ -1165,8 +1165,8 @@ Gfx::AffineTransform Renderer::calculate_image_space_transformation(int width, i
 
 void Renderer::show_empty_image(int width, int height)
 {
-    auto image_space_transofmation = calculate_image_space_transformation(width, height);
-    auto image_border = image_space_transofmation.map(Gfx::IntRect { 0, 0, width, height });
+    auto image_space_transformation = calculate_image_space_transformation(width, height);
+    auto image_border = image_space_transformation.map(Gfx::IntRect { 0, 0, width, height });
     m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
 }
 
