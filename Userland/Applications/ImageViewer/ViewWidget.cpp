@@ -237,7 +237,7 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
         // Use out-of-process decoding for raster formats.
         auto client = TRY(ImageDecoderClient::Client::try_create());
         auto mime_type = Core::guess_mime_type_based_on_filename(path);
-        auto decoded_image = client->decode_image(file_data, mime_type);
+        auto decoded_image = client->decode_image(file_data, OptionalNone {}, mime_type);
         if (!decoded_image.has_value()) {
             return Error::from_string_literal("Failed to decode image");
         }

@@ -57,7 +57,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::decode_bitmap(ReadonlyBytes bitmap_da
     auto optional_mime_type = guessed_mime_type.map([](auto mime_type) { return mime_type.to_byte_string(); });
 
     // FIXME: Find a way to avoid the memory copying here.
-    auto maybe_decoded_image = client->decode_image(bitmap_data, optional_mime_type);
+    auto maybe_decoded_image = client->decode_image(bitmap_data, OptionalNone {}, optional_mime_type);
     if (!maybe_decoded_image.has_value())
         return Error::from_string_literal("Image decode failed");
 

@@ -32,7 +32,7 @@ class Client final
 public:
     Client(NonnullOwnPtr<Core::LocalSocket>);
 
-    Optional<DecodedImage> decode_image(ReadonlyBytes, Optional<ByteString> mime_type = {});
+    Optional<DecodedImage> decode_image(ReadonlyBytes, Optional<Gfx::IntSize> ideal_size = {}, Optional<ByteString> mime_type = {});
 
     Function<void()> on_death;
 
