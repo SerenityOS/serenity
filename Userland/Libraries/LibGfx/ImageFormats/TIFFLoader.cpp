@@ -5,11 +5,13 @@
  */
 
 #include "TIFFLoader.h"
+#include <AK/ConstrainedStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/String.h>
 #include <LibCompress/LZWDecoder.h>
 #include <LibCompress/PackBitsDecoder.h>
+#include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
 
@@ -278,6 +280,20 @@ private:
             };
 
             TRY(loop_over_pixels(move(decode_lzw_strip)));
+            break;
+        }
+        case Compression::AdobeDeflate: {
+            // This is an extension from the Technical Notes from 2002:
+            // https://web.archive.org/web/20160305055905/http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf
+            ByteBuffer decoded_bytes {};
+            auto decode_zlib = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+                auto stream = make<ConstrainedStream>(MaybeOwned<Stream>(*m_stream), num_bytes);
+                auto decompressed_stream = TRY(Compress::ZlibDecompressor::create(move(stream)));
+                decoded_bytes = TRY(decompressed_stream->read_until_eof(4096));
+                return decoded_bytes;
+            };
+
+            TRY(loop_over_pixels(move(decode_zlib)));
             break;
         }
         case Compression::PackBits: {

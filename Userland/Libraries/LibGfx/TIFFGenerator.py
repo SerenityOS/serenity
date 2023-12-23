@@ -47,6 +47,7 @@ class Compression(EnumWithExportName):
     Group4Fax = 4
     LZW = 5
     JPEG = 6
+    AdobeDeflate = 8
     PackBits = 32773
 
 
