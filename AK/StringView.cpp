@@ -222,40 +222,7 @@ bool StringView::copy_characters_to_buffer(char* buffer, size_t buffer_size) con
     return characters_to_copy == m_length;
 }
 
-template<typename T>
-Optional<T> StringView::to_int() const
-{
-    return StringUtils::convert_to_int<T>(*this);
-}
-
-template Optional<i8> StringView::to_int() const;
-template Optional<i16> StringView::to_int() const;
-template Optional<i32> StringView::to_int() const;
-template Optional<long> StringView::to_int() const;
-template Optional<long long> StringView::to_int() const;
-
-template<typename T>
-Optional<T> StringView::to_uint() const
-{
-    return StringUtils::convert_to_uint<T>(*this);
-}
-
-template Optional<u8> StringView::to_uint() const;
-template Optional<u16> StringView::to_uint() const;
-template Optional<u32> StringView::to_uint() const;
-template Optional<unsigned long> StringView::to_uint() const;
-template Optional<unsigned long long> StringView::to_uint() const;
-
 #ifndef KERNEL
-Optional<double> StringView::to_double(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_floating_point<double>(*this, trim_whitespace);
-}
-
-Optional<float> StringView::to_float(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_floating_point<float>(*this, trim_whitespace);
-}
 
 bool StringView::operator==(ByteString const& string) const
 {

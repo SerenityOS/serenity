@@ -71,40 +71,6 @@ DeprecatedFlyString::DeprecatedFlyString(StringView string)
     }
 }
 
-template<typename T>
-Optional<T> DeprecatedFlyString::to_int(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_int<T>(view(), trim_whitespace);
-}
-
-template Optional<i8> DeprecatedFlyString::to_int(TrimWhitespace) const;
-template Optional<i16> DeprecatedFlyString::to_int(TrimWhitespace) const;
-template Optional<i32> DeprecatedFlyString::to_int(TrimWhitespace) const;
-template Optional<i64> DeprecatedFlyString::to_int(TrimWhitespace) const;
-
-template<typename T>
-Optional<T> DeprecatedFlyString::to_uint(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
-}
-
-template Optional<u8> DeprecatedFlyString::to_uint(TrimWhitespace) const;
-template Optional<u16> DeprecatedFlyString::to_uint(TrimWhitespace) const;
-template Optional<u32> DeprecatedFlyString::to_uint(TrimWhitespace) const;
-template Optional<u64> DeprecatedFlyString::to_uint(TrimWhitespace) const;
-
-#ifndef KERNEL
-Optional<double> DeprecatedFlyString::to_double(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_floating_point<double>(view(), trim_whitespace);
-}
-
-Optional<float> DeprecatedFlyString::to_float(TrimWhitespace trim_whitespace) const
-{
-    return StringUtils::convert_to_floating_point<float>(view(), trim_whitespace);
-}
-#endif
-
 bool DeprecatedFlyString::equals_ignoring_ascii_case(StringView other) const
 {
     return StringUtils::equals_ignoring_ascii_case(view(), other);
