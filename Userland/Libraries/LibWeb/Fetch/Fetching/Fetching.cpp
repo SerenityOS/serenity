@@ -832,6 +832,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         // Return the result of running HTTP fetch given fetchParams.
         return http_fetch(realm, fetch_params);
     }
+    // AD-HOC: "resource"
+    else if (request->current_url().scheme() == "resource"sv) {
+        return TRY(nonstandard_resource_loader_file_or_http_network_fetch(realm, fetch_params));
+    }
 
     // 4. Return a network error.
     auto message = request->current_url().scheme() == "about"sv
