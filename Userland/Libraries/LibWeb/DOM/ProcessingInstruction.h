@@ -17,16 +17,16 @@ class ProcessingInstruction final : public CharacterData {
 public:
     virtual ~ProcessingInstruction() override = default;
 
-    virtual FlyString node_name() const override { return MUST(FlyString::from_deprecated_fly_string(m_target)); }
+    virtual FlyString node_name() const override { return m_target; }
 
-    ByteString const& target() const { return m_target; }
+    String const& target() const { return m_target; }
 
 private:
-    ProcessingInstruction(Document&, ByteString const& data, ByteString const& target);
+    ProcessingInstruction(Document&, String const& data, String const& target);
 
     virtual void initialize(JS::Realm&) override;
 
-    ByteString m_target;
+    String m_target;
 };
 
 template<>

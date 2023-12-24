@@ -1427,7 +1427,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_pr
     // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
 
     // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
-    return heap().allocate<ProcessingInstruction>(realm(), *this, data.to_byte_string(), target.to_byte_string());
+    return heap().allocate<ProcessingInstruction>(realm(), *this, data, target);
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()

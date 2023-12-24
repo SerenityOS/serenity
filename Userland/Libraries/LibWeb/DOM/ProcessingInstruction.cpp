@@ -13,8 +13,8 @@ namespace Web::DOM {
 
 JS_DEFINE_ALLOCATOR(ProcessingInstruction);
 
-ProcessingInstruction::ProcessingInstruction(Document& document, ByteString const& data, ByteString const& target)
-    : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, MUST(String::from_byte_string(data)))
+ProcessingInstruction::ProcessingInstruction(Document& document, String const& data, String const& target)
+    : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, data)
     , m_target(target)
 {
 }
