@@ -151,7 +151,7 @@ public:
 
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
-    ByteString selected_text() const;
+    String selected_text() const;
     void select_all();
 
     void did_edit(Badge<EditEventHandler>);
@@ -221,8 +221,6 @@ private:
     JS::GCPtr<DOM::Position> m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
-
-    ByteString m_name;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     JS::GCPtr<BrowsingContextGroup> m_group;

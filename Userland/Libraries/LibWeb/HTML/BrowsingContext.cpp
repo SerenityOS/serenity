@@ -412,15 +412,15 @@ void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> positi
     reset_cursor_blink_cycle();
 }
 
-static ByteString visible_text_in_range(DOM::Range const& range)
+static String visible_text_in_range(DOM::Range const& range)
 {
     // NOTE: This is an adaption of Range stringification, but we skip over DOM nodes that don't have a corresponding layout node.
     StringBuilder builder;
 
     if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
         if (!range.start_container()->layout_node())
-            return ""sv;
-        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset())).to_byte_string();
+            return String {};
+        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset()));
     }
 
     if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
@@ -434,18 +434,18 @@ static ByteString visible_text_in_range(DOM::Range const& range)
     if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
         builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().bytes_as_string_view().substring_view(0, range.end_offset()));
 
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
-ByteString BrowsingContext::selected_text() const
+String BrowsingContext::selected_text() const
 {
-    auto* document = active_document();
+    auto const* document = active_document();
     if (!document)
-        return ""sv;
+        return String {};
     auto selection = const_cast<DOM::Document&>(*document).get_selection();
     auto range = selection->range();
     if (!range)
-        return ""sv;
+        return String {};
     return visible_text_in_range(*range);
 }
 
