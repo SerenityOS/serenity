@@ -23,9 +23,9 @@ class HTMLOutputElement final
 public:
     virtual ~HTMLOutputElement() override;
 
-    ByteString const& type() const
+    String const& type() const
     {
-        static ByteString output = "output";
+        static String const output = "output"_string;
         return output;
     }
 
