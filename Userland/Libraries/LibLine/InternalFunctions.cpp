@@ -168,7 +168,7 @@ void Editor::erase_character_forwards()
     auto end_of_next_grapheme = closest_cursor_left_offset + 1 >= m_cached_buffer_metrics.grapheme_breaks.size()
         ? m_buffer.size()
         : m_cached_buffer_metrics.grapheme_breaks[closest_cursor_left_offset + 1];
-    for (; m_cursor < end_of_next_grapheme;)
+    for (auto cursor = m_cursor; cursor < end_of_next_grapheme; ++cursor)
         remove_at_index(m_cursor);
     m_refresh_needed = true;
 }
