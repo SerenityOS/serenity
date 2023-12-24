@@ -89,7 +89,7 @@ Element* HTMLCollection::named_item(FlyString const& name_) const
     auto elements = collect_matching_elements();
     // 2. Return the first element in the collection for which at least one of the following is true:
     //      - it has an ID which is key;
-    if (auto it = elements.find_if([&](auto& entry) { return entry->deprecated_attribute(HTML::AttributeNames::id) == name; }); it != elements.end())
+    if (auto it = elements.find_if([&](auto& entry) { return entry->id().has_value() && entry->id().value() == name_; }); it != elements.end())
         return *it;
     //      - it is in the HTML namespace and has a name attribute whose value is key;
     if (auto it = elements.find_if([&](auto& entry) { return entry->namespace_uri() == Namespace::HTML && entry->name() == name; }); it != elements.end())
@@ -109,9 +109,9 @@ Vector<FlyString> HTMLCollection::supported_property_names() const
 
     for (auto& element : elements) {
         // 1. If element has an ID which is not in result, append element’s ID to result.
-        if (auto maybe_id = element->attribute(HTML::AttributeNames::id); maybe_id.has_value()) {
-            if (!result.contains_slow(maybe_id.value()))
-                result.append(maybe_id.release_value());
+        if (auto const& id = element->id(); id.has_value()) {
+            if (!result.contains_slow(id.value()))
+                result.append(id.value());
         }
 
         // 2. If element is in the HTML namespace and has a name attribute whose value is neither the empty string nor is in result, append element’s name attribute value to result.
