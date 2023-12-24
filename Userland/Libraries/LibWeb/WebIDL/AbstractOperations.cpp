@@ -317,7 +317,7 @@ JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(Variant<Bindings
 
     // 1. If P is not a supported property name of O, then return false.
     // NOTE: This is in it's own variable to enforce the type.
-    Vector<String> supported_property_names = variant.visit([](auto* o) { return o->supported_property_names(); });
+    auto supported_property_names = variant.visit([](auto* o) { return o->supported_property_names(); });
     auto property_key_string = MUST(String::from_byte_string(property_key.to_string()));
     if (!supported_property_names.contains_slow(property_key_string))
         return false;
