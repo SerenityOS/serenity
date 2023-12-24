@@ -233,11 +233,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_attribute(Attr& attribute
 
     // 2. Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
     size_t old_attribute_index = 0;
-    ByteString deprecated_namespace_uri;
-    if (attribute.namespace_uri().has_value())
-        deprecated_namespace_uri = attribute.namespace_uri().value().to_deprecated_fly_string();
-
-    auto* old_attribute = get_attribute_ns(deprecated_namespace_uri, attribute.local_name(), &old_attribute_index);
+    auto* old_attribute = get_attribute_ns(attribute.namespace_uri(), attribute.local_name(), &old_attribute_index);
 
     // 3. If oldAttr is attr, return attr.
     if (old_attribute == &attribute)
