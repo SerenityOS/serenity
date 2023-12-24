@@ -51,7 +51,7 @@ void WindowEnvironmentSettingsObject::setup(Page& page, AK::URL const& creation_
         settings_object->target_browsing_context = reserved_environment->target_browsing_context;
 
         // 2. Set reservedEnvironment's id to the empty string.
-        reserved_environment->id = ByteString::empty();
+        reserved_environment->id = String {};
     }
 
     // 5. Otherwise, ...
@@ -60,7 +60,7 @@ void WindowEnvironmentSettingsObject::setup(Page& page, AK::URL const& creation_
         //        settings object's target browsing context to null,
         //        and settings object's active service worker to null.
         static i64 next_id = 1;
-        settings_object->id = ByteString::number(next_id++);
+        settings_object->id = MUST(String::number(next_id++));
         settings_object->target_browsing_context = nullptr;
     }
 
@@ -68,8 +68,8 @@ void WindowEnvironmentSettingsObject::setup(Page& page, AK::URL const& creation_
     //    settings object's top-level creation URL to topLevelCreationURL,
     //    and settings object's top-level origin to topLevelOrigin.
     settings_object->creation_url = creation_url;
-    settings_object->top_level_creation_url = top_level_creation_url;
-    settings_object->top_level_origin = top_level_origin;
+    settings_object->top_level_creation_url = move(top_level_creation_url);
+    settings_object->top_level_origin = move(top_level_origin);
 
     // 7. Set realm's [[HostDefined]] field to settings object.
     // Non-Standard: We store the ESO next to the web intrinsics in a custom HostDefined object
@@ -90,10 +90,10 @@ JS::GCPtr<DOM::Document> WindowEnvironmentSettingsObject::responsible_document()
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:api-url-character-encoding
-ByteString WindowEnvironmentSettingsObject::api_url_character_encoding()
+String WindowEnvironmentSettingsObject::api_url_character_encoding()
 {
     // Return the current character encoding of window's associated Document.
-    return m_window->associated_document().encoding_or_default().to_byte_string();
+    return m_window->associated_document().encoding_or_default();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:api-base-url

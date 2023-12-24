@@ -20,7 +20,7 @@ struct Environment {
     virtual ~Environment() = default;
 
     // An id https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-id
-    ByteString id;
+    String id;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-creation-url
     AK::URL creation_url;
@@ -69,7 +69,7 @@ struct EnvironmentSettingsObject
     virtual JS::GCPtr<DOM::Document> responsible_document() = 0;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#api-url-character-encoding
-    virtual ByteString api_url_character_encoding() = 0;
+    virtual String api_url_character_encoding() = 0;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#api-base-url
     virtual AK::URL api_base_url() = 0;
@@ -111,7 +111,7 @@ struct EnvironmentSettingsObject
     bool is_scripting_enabled() const;
     bool is_scripting_disabled() const;
 
-    bool module_type_allowed(ByteString const& module_type) const;
+    bool module_type_allowed(StringView module_type) const;
 
     void disallow_further_import_maps();
 
