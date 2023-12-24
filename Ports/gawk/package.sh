@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gawk'
-version='5.2.2'
+version='5.3.0'
 useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gnu/gawk/gawk-${version}.tar.gz#945aef7ccff101f20b22a10802bc005e994ab2b8ea3e724cc1a197c62f41f650"
+    "https://ftpmirror.gnu.org/gnu/gawk/gawk-${version}.tar.gz#378f8864ec21cfceaa048f7e1869ac9b4597b449087caf1eb55e440d30273336"
 )
 depends=(
     'gmp'
