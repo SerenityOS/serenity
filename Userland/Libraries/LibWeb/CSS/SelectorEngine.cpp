@@ -151,7 +151,8 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
             // This selector is always false is match value is empty.
             return false;
         }
-        auto const view = element.attribute(attribute_name).value_or({}).bytes_as_string_view().split_view(' ');
+        auto attribute_value = element.attribute(attribute_name).value_or({});
+        auto const view = attribute_value.bytes_as_string_view().split_view(' ');
         auto const size = view.size();
         for (size_t i = 0; i < size; ++i) {
             auto const value = view.at(i);
