@@ -130,6 +130,12 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<void const*> u
     case SO_REUSEADDR:
         dbgln("FIXME: SO_REUSEADDR requested, but not implemented.");
         return {};
+    case SO_BROADCAST: {
+        if (user_value_size != sizeof(int))
+            return EINVAL;
+        m_broadcast_allowed = TRY(copy_typed_from_user(static_ptr_cast<int const*>(user_value))) != 0;
+        return {};
+    }
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
@@ -233,6 +239,14 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
             return EINVAL;
         TRY(copy_to_user(static_ptr_cast<int*>(value), &routing_disabled));
         size = sizeof(routing_disabled);
+        return copy_to_user(value_size, &size);
+    }
+    case SO_BROADCAST: {
+        int broadcast_allowed = m_broadcast_allowed ? 1 : 0;
+        if (size < sizeof(broadcast_allowed))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &broadcast_allowed));
+        size = sizeof(broadcast_allowed);
         return copy_to_user(value_size, &size);
     }
     default:

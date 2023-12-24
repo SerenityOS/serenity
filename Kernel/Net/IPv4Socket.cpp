@@ -211,9 +211,10 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, UserOrKernelBuffer cons
     if (!is_connected() && m_peer_address.is_zero())
         return set_so_error(EPIPE);
 
+    auto allow_broadcast = m_broadcast_allowed ? AllowBroadcast::Yes : AllowBroadcast::No;
     auto allow_using_gateway = ((flags & MSG_DONTROUTE) || m_routing_disabled) ? AllowUsingGateway::No : AllowUsingGateway::Yes;
     auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
-    auto routing_decision = route_to(m_peer_address, m_local_address, adapter, allow_using_gateway);
+    auto routing_decision = route_to(m_peer_address, m_local_address, adapter, allow_broadcast, allow_using_gateway);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
 

@@ -85,7 +85,8 @@ ErrorOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserO
 ErrorOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t data_length)
 {
     auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
-    auto routing_decision = route_to(peer_address(), local_address(), adapter);
+    auto allow_broadcast = m_broadcast_allowed ? AllowBroadcast::Yes : AllowBroadcast::No;
+    auto routing_decision = route_to(peer_address(), local_address(), adapter, allow_broadcast);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();

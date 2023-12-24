@@ -49,6 +49,11 @@ static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, C
         dbgln("ERROR: setsockopt(SO_BINDTODEVICE) :: {}", strerror(errno));
         return false;
     }
+    int allow_broadcast = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &allow_broadcast, sizeof(int)) < 0) {
+        dbgln("ERROR: setsockopt(SO_BROADCAST) :: {}", strerror(errno));
+        return false;
+    }
 
     sockaddr_in dst;
     memset(&dst, 0, sizeof(dst));
