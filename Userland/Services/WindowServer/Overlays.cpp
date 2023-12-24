@@ -316,13 +316,21 @@ void WindowGeometryOverlay::window_rect_changed()
         if (m_last_updated != new_update_state) {
             m_last_updated = new_update_state;
 
+            StringBuilder builder;
+            builder.append(geometry_rect.to_byte_string());
+
             if (!window->size_increment().is_empty()) {
                 int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
                 int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
-                m_label = ByteString::formatted("{} ({}x{})", geometry_rect, width_steps, height_steps);
-            } else {
-                m_label = geometry_rect.to_byte_string();
+                builder.append(ByteString::formatted(" ({}x{})", width_steps, height_steps));
             }
+
+            if (window->resize_aspect_ratio().has_value()) {
+                auto ratio = window->resize_aspect_ratio().value();
+                builder.append(ByteString::formatted(" 🔒{}:{}", ratio.width(), ratio.height()));
+            }
+
+            m_label = builder.to_byte_string();
             m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().pixel_size_rounded_up() + 10 };
 
             m_ideal_overlay_rect = calculate_ideal_overlay_rect();
