@@ -3357,8 +3357,12 @@ void Document::start_intersection_observing_a_lazy_loading_element(Element& elem
                 }
 
                 // 3. If resumptionSteps is null, then return.
-                if (!resumption_steps)
-                    return JS::js_undefined();
+                if (!resumption_steps) {
+                    // NOTE: This is wrong in the spec, since we want to keep processing
+                    //       entries even if one of them doesn't have resumption steps.
+                    // FIXME: Spec bug: https://github.com/whatwg/html/issues/10019
+                    continue;
+                }
 
                 // 4. Stop intersection-observing a lazy loading element for entry.target.
                 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#stop-intersection-observing-a-lazy-loading-element
