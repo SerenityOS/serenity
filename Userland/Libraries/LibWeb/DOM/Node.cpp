@@ -872,7 +872,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto processing_instruction = verify_cast<ProcessingInstruction>(this);
 
         // Set copy’s target and data to those of node.
-        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data().to_byte_string(), processing_instruction->target());
+        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data(), processing_instruction->target());
         copy = processing_instruction_copy;
     }
     // Otherwise, Do nothing.
