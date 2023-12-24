@@ -884,7 +884,6 @@ public:
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
-    [[nodiscard]] bool has_alternative_signal_stack() const;
     [[nodiscard]] bool is_in_alternative_signal_stack() const;
 
     FPUState& fpu_state() { return m_fpu_state; }
@@ -1177,8 +1176,7 @@ private:
     u32 m_pending_signals { 0 };
     u8 m_currently_handled_signal { 0 };
     u32 m_signal_mask { 0 };
-    FlatPtr m_alternative_signal_stack { 0 };
-    FlatPtr m_alternative_signal_stack_size { 0 };
+    Optional<Memory::VirtualRange> m_alternative_signal_stack;
     SignalBlockerSet m_signal_blocker_set;
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };

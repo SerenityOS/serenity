@@ -117,17 +117,20 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
     return saved_ax;
 }
 
-ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
+ErrorOr<Memory::VirtualRange> Process::remap_range_as_stack(FlatPtr address, size_t size)
 {
     // FIXME: This duplicates a lot of logic from sys$mprotect, this should be abstracted out somehow
-    auto range_to_remap = TRY(Memory::expand_range_to_page_boundaries(address, size));
+    // NOTE: We shrink the given range to page boundaries (instead of expanding it), as sigaltstack's manpage suggests
+    // using malloc() to allocate the stack region, and many heap implementations (including ours) store heap chunk
+    // metadata in memory just before the vended pointer, which we would end up zeroing.
+    auto range_to_remap = TRY(Memory::shrink_range_to_page_boundaries(address, size));
     if (!range_to_remap.size())
         return EINVAL;
 
     if (!is_user_range(range_to_remap))
         return EFAULT;
 
-    return address_space().with([&](auto& space) -> ErrorOr<void> {
+    return address_space().with([&](auto& space) -> ErrorOr<Memory::VirtualRange> {
         if (auto* whole_region = space->find_region_from_range(range_to_remap)) {
             if (!whole_region->is_mmap())
                 return EPERM;
@@ -141,7 +144,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
             whole_region->clear_to_zero();
             whole_region->remap();
 
-            return {};
+            return range_to_remap;
         }
 
         if (auto* old_region = space->find_region_containing(range_to_remap)) {
@@ -174,7 +177,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
             }
             TRY(new_region->map(space->page_directory()));
 
-            return {};
+            return range_to_remap;
         }
 
         if (auto const& regions = TRY(space->find_regions_intersecting(range_to_remap)); regions.size()) {
@@ -235,7 +238,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
                 TRY(new_region->map(space->page_directory()));
             }
 
-            return {};
+            return range_to_remap;
         }
 
         return EINVAL;
@@ -249,13 +252,16 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<stack_t const*> user_ss, Use
 
     if (user_old_ss) {
         stack_t old_ss_value {};
-        old_ss_value.ss_sp = (void*)Thread::current()->m_alternative_signal_stack;
-        old_ss_value.ss_size = Thread::current()->m_alternative_signal_stack_size;
-        old_ss_value.ss_flags = 0;
-        if (!Thread::current()->has_alternative_signal_stack())
+        if (Thread::current()->m_alternative_signal_stack.has_value()) {
+            old_ss_value.ss_sp = Thread::current()->m_alternative_signal_stack->base().as_ptr();
+            old_ss_value.ss_size = Thread::current()->m_alternative_signal_stack->size();
+            if (Thread::current()->is_in_alternative_signal_stack())
+                old_ss_value.ss_flags = SS_ONSTACK;
+            else
+                old_ss_value.ss_flags = 0;
+        } else {
             old_ss_value.ss_flags = SS_DISABLE;
-        else if (Thread::current()->is_in_alternative_signal_stack())
-            old_ss_value.ss_flags = SS_ONSTACK;
+        }
         TRY(copy_to_user(user_old_ss, &old_ss_value));
     }
 
@@ -266,8 +272,7 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<stack_t const*> user_ss, Use
             return EPERM;
 
         if (ss.ss_flags == SS_DISABLE) {
-            Thread::current()->m_alternative_signal_stack_size = 0;
-            Thread::current()->m_alternative_signal_stack = 0;
+            Thread::current()->m_alternative_signal_stack.clear();
         } else if (ss.ss_flags == 0) {
             if (ss.ss_size <= MINSIGSTKSZ)
                 return ENOMEM;
@@ -278,10 +283,7 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<stack_t const*> user_ss, Use
             // protections, sigaltstack ranges are carved out of their regions, zeroed, and
             // turned into read/writable MAP_STACK-enabled regions.
             // This is inspired by OpenBSD's solution: https://man.openbsd.org/sigaltstack.2
-            TRY(remap_range_as_stack((FlatPtr)ss.ss_sp, ss.ss_size));
-
-            Thread::current()->m_alternative_signal_stack = (FlatPtr)ss.ss_sp;
-            Thread::current()->m_alternative_signal_stack_size = ss.ss_size;
+            Thread::current()->m_alternative_signal_stack = TRY(remap_range_as_stack((FlatPtr)ss.ss_sp, ss.ss_size));
         } else {
             return EINVAL;
         }
