@@ -5,6 +5,7 @@ set(TEST_SOURCES
     TestEnvironment.cpp
     TestIo.cpp
     TestLibCExec.cpp
+    TestLibCGrp.cpp
     TestLibCDirEnt.cpp
     TestLibCInodeWatcher.cpp
     TestLibCMkTemp.cpp

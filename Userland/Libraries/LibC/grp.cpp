@@ -6,7 +6,9 @@
  */
 
 #include <AK/Format.h>
+#include <AK/Forward.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <errno.h>
 #include <errno_codes.h>
@@ -53,6 +55,16 @@ struct group* getgrgid(gid_t gid)
     return nullptr;
 }
 
+int getgrgid_r(gid_t gid, struct group* group_buf, char* buffer, size_t buffer_size, struct group** group_entry_ptr)
+{
+    while (0 == getgrent_r(group_buf, buffer, buffer_size, group_entry_ptr)) {
+        if (group_buf->gr_gid == gid) {
+            return 0;
+        }
+    }
+    return ENOENT;
+}
+
 struct group* getgrnam(char const* name)
 {
     setgrent();
@@ -62,6 +74,14 @@ struct group* getgrnam(char const* name)
             return gr;
     }
     return nullptr;
+}
+int getgrnam_r(char const* name, struct group* group_buf, char* buffer, size_t buffer_size, struct group** group_entry_ptr)
+{
+    while (0 == getgrent_r(group_buf, buffer, buffer_size, group_entry_ptr)) {
+        if (!strcmp(group_buf->gr_name, name))
+            return 0;
+    }
+    return ENOENT;
 }
 
 static bool parse_grpdb_entry(char* buffer, size_t buffer_size, struct group& group_entry)
