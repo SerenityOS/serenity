@@ -842,7 +842,7 @@ Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_gr
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
-    return page().page().focused_context().selected_text();
+    return page().page().focused_context().selected_text().to_byte_string();
 }
 
 void ConnectionFromClient::select_all()
