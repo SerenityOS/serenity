@@ -117,7 +117,9 @@ ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_k
         // For typed arrays:
         if (object.is_typed_array()) {
             auto& typed_array = static_cast<TypedArrayBase&>(object);
-            if (!typed_array.viewed_array_buffer()->is_detached() && index < typed_array.array_length()) {
+            auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
+
+            if (is_valid_integer_index(typed_array, canonical_index)) {
                 switch (typed_array.kind()) {
                 case TypedArrayBase::Kind::Uint8Array:
                     return fast_typed_array_get_element<u8>(typed_array, index);
@@ -139,7 +141,6 @@ ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_k
                 }
             }
 
-            auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
             switch (typed_array.kind()) {
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     case TypedArrayBase::Kind::ClassName:                                           \
@@ -395,7 +396,9 @@ ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_valu
         // For typed arrays:
         if (object.is_typed_array()) {
             auto& typed_array = static_cast<TypedArrayBase&>(object);
-            if (!typed_array.viewed_array_buffer()->is_detached() && index < typed_array.array_length() && value.is_int32()) {
+            auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
+
+            if (value.is_int32() && is_valid_integer_index(typed_array, canonical_index)) {
                 switch (typed_array.kind()) {
                 case TypedArrayBase::Kind::Uint8Array:
                     fast_typed_array_set_element<u8>(typed_array, index, static_cast<u8>(value.as_i32()));
@@ -423,7 +426,7 @@ ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_valu
                     break;
                 }
             }
-            auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
+
             switch (typed_array.kind()) {
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     case TypedArrayBase::Kind::ClassName:                                           \
