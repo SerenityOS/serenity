@@ -1554,7 +1554,7 @@ Vector<String> Window::supported_property_names()
     // The supported property names of a Window object window at any moment consist of the following,
     // in tree order according to the element that contributed them, ignoring later duplicates:
 
-    HashTable<String> property_names;
+    HashTable<FlyString> property_names;
 
     // - window's document-tree child navigable target name property set;
     auto child_navigable_property_set = document_tree_child_navigable_target_name_property_set();
@@ -1570,15 +1570,15 @@ Vector<String> Window::supported_property_names()
             if (auto const& name = element.attribute(AttributeNames::name); name.has_value())
                 property_names.set(name.value(), AK::HashSetExistingEntryBehavior::Keep);
         }
-        if (auto const& name = element.attribute(AttributeNames::id); name.has_value())
-            property_names.set(name.value(), AK::HashSetExistingEntryBehavior::Keep);
+        if (auto const& name = element.id(); name.has_value())
+            property_names.set(name.value().to_string(), AK::HashSetExistingEntryBehavior::Keep);
         return IterationDecision::Continue;
     });
 
     Vector<String> names;
     names.ensure_capacity(property_names.size());
     for (auto const& name : property_names) {
-        names.append(name);
+        names.append(name.to_string());
     }
 
     return names;
