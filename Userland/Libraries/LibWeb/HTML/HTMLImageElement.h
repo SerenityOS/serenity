@@ -96,6 +96,8 @@ public:
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_image_element() const override { return true; }
+
     virtual void initialize(JS::Realm&) override;
     virtual void finalize() override;
 
@@ -136,4 +138,9 @@ private:
     CSSPixelSize m_last_seen_viewport_size;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLImageElement>() const { return is_html_image_element(); }
 }

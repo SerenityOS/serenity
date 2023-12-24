@@ -51,6 +51,8 @@ public:
 private:
     HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_object_element() const override { return true; }
+
     virtual void initialize(JS::Realm&) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
@@ -86,4 +88,9 @@ private:
     JS::GCPtr<SharedImageRequest> m_image_request;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLObjectElement>() const { return is_html_object_element(); }
 }

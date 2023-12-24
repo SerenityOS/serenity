@@ -103,6 +103,10 @@ public:
     virtual bool is_html_br_element() const { return false; }
     virtual bool is_html_button_element() const { return false; }
     virtual bool is_html_slot_element() const { return false; }
+    virtual bool is_html_embed_element() const { return false; }
+    virtual bool is_html_object_element() const { return false; }
+    virtual bool is_html_form_element() const { return false; }
+    virtual bool is_html_image_element() const { return false; }
     virtual bool is_navigable_container() const { return false; }
     virtual bool is_lazy_loading() const { return false; }
 
