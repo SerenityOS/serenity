@@ -1288,11 +1288,11 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArra
         // NOTE: We verify above that target_offset + source_length is valid, so this cannot fail.
         auto target_index = MUST(CanonicalIndex::from_double(vm, CanonicalIndex::Type::Index, target_offset + k));
 
-        // d. Perform ? IntegerIndexedElementSet(target, targetIndex, value).
+        // d. Perform ? TypedArraySetElement(target, targetIndex, value).
         // FIXME: This is very awkward.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(target))                                                      \
-        TRY(integer_indexed_element_set<Type>(target, target_index, value));
+        TRY(typed_array_set_element<Type>(target, target_index, value));
         JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
