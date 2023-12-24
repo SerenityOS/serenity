@@ -2041,14 +2041,17 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
     // 4. Let byteOffset be chunk.[[ByteOffset]].
     auto byte_offset = typed_array->byte_offset();
 
-    // 5. Let byteLength be chunk.[[ByteLength]].
-    auto byte_length = typed_array->byte_length();
-
     // 6. If ! IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (buffer->is_detached()) {
-        auto error = JS::TypeError::create(realm, "Buffer is detached"sv);
-        return JS::throw_completion(error);
-    }
+    // FIXME: The streams spec has not been updated for resizable ArrayBuffer objects. We must perform step 6 before
+    //        invoking TypedArrayByteLength in step 5. We also must check if the array is out-of-bounds, rather than
+    //        just detached.
+    auto typed_array_record = JS::make_typed_array_with_buffer_witness_record(*typed_array, JS::ArrayBuffer::Order::SeqCst);
+
+    if (JS::is_typed_array_out_of_bounds(typed_array_record))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BufferOutOfBounds, "TypedArray"sv);
+
+    // 5. Let byteLength be chunk.[[ByteLength]].
+    auto byte_length = JS::typed_array_byte_length(typed_array_record);
 
     // 7. Let transferredBuffer be ? TransferArrayBuffer(buffer).
     auto transferred_buffer = TRY(transfer_array_buffer(realm, *buffer));

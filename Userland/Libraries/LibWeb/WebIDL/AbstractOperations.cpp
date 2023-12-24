@@ -38,6 +38,12 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
     if (is<JS::TypedArrayBase>(buffer_source)) {
         auto const& es_buffer_source = static_cast<JS::TypedArrayBase const&>(buffer_source);
 
+        auto typed_array_record = JS::make_typed_array_with_buffer_witness_record(es_buffer_source, JS::ArrayBuffer::Order::SeqCst);
+
+        // AD-HOC: The WebIDL spec has not been updated for resizable ArrayBuffer objects. This check follows the behavior of step 7.
+        if (JS::is_typed_array_out_of_bounds(typed_array_record))
+            return ByteBuffer {};
+
         // 1. Set esArrayBuffer to esBufferSource.[[ViewedArrayBuffer]].
         es_array_buffer = es_buffer_source.viewed_array_buffer();
 
@@ -45,7 +51,7 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
         offset = es_buffer_source.byte_offset();
 
         // 3. Set length to esBufferSource.[[ByteLength]].
-        length = es_buffer_source.byte_length();
+        length = JS::typed_array_byte_length(typed_array_record);
     } else if (is<JS::DataView>(buffer_source)) {
         auto const& es_buffer_source = static_cast<JS::DataView const&>(buffer_source);
 

@@ -24,3 +24,17 @@ test("basic functionality", () => {
         expect(typedArray.byteLength).toBe(T.expected);
     });
 });
+
+test("resizable ArrayBuffer", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let arrayBuffer = new ArrayBuffer(T.array.BYTES_PER_ELEMENT * 2, {
+            maxByteLength: T.array.BYTES_PER_ELEMENT * 4,
+        });
+
+        let typedArray = new T.array(arrayBuffer, T.array.BYTES_PER_ELEMENT, 1);
+        expect(typedArray.byteLength).toBe(T.array.BYTES_PER_ELEMENT);
+
+        arrayBuffer.resize(T.array.BYTES_PER_ELEMENT);
+        expect(typedArray.byteLength).toBe(0);
+    });
+});

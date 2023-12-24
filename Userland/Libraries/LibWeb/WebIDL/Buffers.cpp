@@ -13,7 +13,16 @@ namespace Web::WebIDL {
 
 u32 BufferableObjectBase::byte_length() const
 {
-    return m_bufferable_object.visit([](auto& obj) { return static_cast<u32>(obj->byte_length()); });
+    return m_bufferable_object.visit(
+        [](JS::NonnullGCPtr<JS::TypedArrayBase> typed_array) {
+            auto typed_array_record = JS::make_typed_array_with_buffer_witness_record(typed_array, JS::ArrayBuffer::Order::SeqCst);
+            return JS::typed_array_byte_length(typed_array_record);
+        },
+        [](JS::NonnullGCPtr<JS::DataView> data_view) {
+            auto view_record = JS::make_data_view_with_buffer_witness_record(data_view, JS::ArrayBuffer::Order::SeqCst);
+            return JS::get_view_byte_length(view_record);
+        },
+        [](JS::NonnullGCPtr<JS::ArrayBuffer> array_buffer) { return static_cast<u32>(array_buffer->byte_length()); });
 }
 
 JS::NonnullGCPtr<JS::Object> BufferableObjectBase::raw_object()

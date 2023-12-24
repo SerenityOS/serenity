@@ -49,13 +49,17 @@ WebIDL::ExceptionOr<JS::Handle<WebIDL::ArrayBufferView>> Crypto::get_random_valu
     if (!array->is_typed_array_base())
         return WebIDL::TypeMismatchError::create(realm(), "array must be one of Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, BigInt64Array, or BigUint64Array"_fly_string);
 
+    auto const& typed_array = *array->bufferable_object().get<JS::NonnullGCPtr<JS::TypedArrayBase>>();
+    auto typed_array_record = JS::make_typed_array_with_buffer_witness_record(typed_array, JS::ArrayBuffer::Order::SeqCst);
+
+    // IMPLEMENTATION DEFINED: If the viewed array buffer is out-of-bounds, throw a InvalidStateError and terminate the algorithm.
+    if (JS::is_typed_array_out_of_bounds(typed_array_record))
+        return WebIDL::InvalidStateError::create(realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "TypedArray"sv)));
+
     // 2. If the byteLength of array is greater than 65536, throw a QuotaExceededError and terminate the algorithm.
-    if (array->viewed_array_buffer()->byte_length() > 65536)
+    if (JS::typed_array_byte_length(typed_array_record) > 65536)
         return WebIDL::QuotaExceededError::create(realm(), "array's byteLength may not be greater than 65536"_fly_string);
 
-    // IMPLEMENTATION DEFINED: If the viewed array buffer is detached, throw a InvalidStateError and terminate the algorithm.
-    if (array->viewed_array_buffer()->is_detached())
-        return WebIDL::InvalidStateError::create(realm(), "array is detached"_fly_string);
     // FIXME: Handle SharedArrayBuffers
 
     // 3. Overwrite all elements of array with cryptographically strong random values of the appropriate type.

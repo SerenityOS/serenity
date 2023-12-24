@@ -9,6 +9,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/ByteLength.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
@@ -17,11 +18,6 @@
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
-
-class TypedArrayBase;
-
-ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM&, Value);
-ThrowCompletionOr<void> validate_typed_array(VM&, TypedArrayBase&);
 
 class TypedArrayBase : public Object {
     JS_OBJECT(TypedArrayBase, Object);
@@ -41,15 +37,15 @@ public:
 
     using IntrinsicConstructor = NonnullGCPtr<TypedArrayConstructor> (Intrinsics::*)();
 
-    u32 array_length() const { return m_array_length; }
-    u32 byte_length() const { return m_byte_length; }
+    ByteLength const& array_length() const { return m_array_length; }
+    ByteLength const& byte_length() const { return m_byte_length; }
     u32 byte_offset() const { return m_byte_offset; }
     ContentType content_type() const { return m_content_type; }
     ArrayBuffer* viewed_array_buffer() const { return m_viewed_array_buffer; }
     IntrinsicConstructor intrinsic_constructor() const { return m_intrinsic_constructor; }
 
-    void set_array_length(u32 length) { m_array_length = length; }
-    void set_byte_length(u32 length) { m_byte_length = length; }
+    void set_array_length(ByteLength length) { m_array_length = move(length); }
+    void set_byte_length(ByteLength length) { m_byte_length = move(length); }
     void set_byte_offset(u32 offset) { m_byte_offset = offset; }
     void set_viewed_array_buffer(ArrayBuffer* array_buffer) { m_viewed_array_buffer = array_buffer; }
 
@@ -78,8 +74,8 @@ protected:
         set_is_typed_array();
     }
 
-    u32 m_array_length { 0 };
-    u32 m_byte_length { 0 };
+    ByteLength m_array_length { 0 };
+    ByteLength m_byte_length { 0 };
     u32 m_byte_offset { 0 };
     ContentType m_content_type { ContentType::Number };
     Kind m_kind {};
@@ -90,25 +86,17 @@ private:
     virtual void visit_edges(Visitor&) override;
 };
 
-// 10.4.5.14 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
-inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex property_index)
-{
-    // 1. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return false.
-    if (typed_array.viewed_array_buffer()->is_detached())
-        return false;
+// 10.4.5.8 TypedArray With Buffer Witness Records, https://tc39.es/ecma262/#sec-typedarray-with-buffer-witness-records
+struct TypedArrayWithBufferWitness {
+    NonnullGCPtr<TypedArrayBase const> object; // [[Object]]
+    ByteLength cached_buffer_byte_length;      // [[CachedBufferByteLength]]
+};
 
-    // 2. If IsIntegralNumber(index) is false, return false.
-    // 3. If index is -0𝔽, return false.
-    if (!property_index.is_index())
-        return false;
-
-    // 4. If ℝ(index) < 0 or ℝ(index) ≥ O.[[ArrayLength]], return false.
-    if (property_index.as_index() >= typed_array.array_length())
-        return false;
-
-    // 5. Return true.
-    return true;
-}
+TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record(TypedArrayBase const&, ArrayBuffer::Order);
+u32 typed_array_byte_length(TypedArrayWithBufferWitness const&);
+u32 typed_array_length(TypedArrayWithBufferWitness const&);
+bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const&);
+bool is_valid_integer_index(TypedArrayBase const&, CanonicalIndex);
 
 // 10.4.5.15 TypedArrayGetElement ( O, index ), https://tc39.es/ecma262/#sec-typedarraygetelement
 template<typename T>
@@ -394,45 +382,68 @@ public:
     {
         auto& vm = this->vm();
 
-        // 1. Let keys be a new empty List.
+        // 1. Let taRecord be MakeTypedArrayWithBufferWitnessRecord(O, seq-cst).
+        auto typed_array_record = make_typed_array_with_buffer_witness_record(*this, ArrayBuffer::Order::SeqCst);
+
+        // 2. Let keys be a new empty List.
         auto keys = MarkedVector<Value> { heap() };
 
-        // 2. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false, then
-        if (!m_viewed_array_buffer->is_detached()) {
-            // a. For each integer i starting with 0 such that i < O.[[ArrayLength]], in ascending order, do
-            for (size_t i = 0; i < m_array_length; ++i) {
-                // i. Add ! ToString(𝔽(i)) as the last element of keys.
-                keys.append(PrimitiveString::create(vm, ByteString::number(i)));
+        // 3. If IsTypedArrayOutOfBounds(taRecord) is false, then
+        if (!is_typed_array_out_of_bounds(typed_array_record)) {
+            // a. Let length be TypedArrayLength(taRecord).
+            auto length = typed_array_length(typed_array_record);
+
+            // b. For each integer i such that 0 ≤ i < length, in ascending order, do
+            for (size_t i = 0; i < length; ++i) {
+                // i. Append ! ToString(𝔽(i)) to keys.
+                keys.append(PrimitiveString::create(vm, MUST(String::number(i))));
             }
         }
 
-        // 3. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+        // 4. For each own property key P of O such that P is a String and P is not an integer index, in ascending chronological order of property creation, do
         for (auto& it : shape().property_table()) {
             if (it.key.is_string()) {
-                // a. Add P as the last element of keys.
+                // a. Append P to keys.
                 keys.append(it.key.to_value(vm));
             }
         }
 
-        // 4. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+        // 5. For each own property key P of O such that P is a Symbol, in ascending chronological order of property creation, do
         for (auto& it : shape().property_table()) {
             if (it.key.is_symbol()) {
-                // a. Add P as the last element of keys.
+                // a. Append P to keys.
                 keys.append(it.key.to_value(vm));
             }
         }
 
-        // 5. Return keys.
+        // 6. Return keys.
         return { move(keys) };
     }
 
     ReadonlySpan<UnderlyingBufferDataType> data() const
     {
-        return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
+        auto typed_array_record = make_typed_array_with_buffer_witness_record(*this, ArrayBuffer::Order::SeqCst);
+
+        if (is_typed_array_out_of_bounds(typed_array_record)) {
+            // FIXME: Propagate this as an error?
+            return {};
+        }
+
+        auto length = typed_array_length(typed_array_record);
+        return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), length };
     }
+
     Span<UnderlyingBufferDataType> data()
     {
-        return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
+        auto typed_array_record = make_typed_array_with_buffer_witness_record(*this, ArrayBuffer::Order::SeqCst);
+
+        if (is_typed_array_out_of_bounds(typed_array_record)) {
+            // FIXME: Propagate this as an error?
+            return {};
+        }
+
+        auto length = typed_array_length(typed_array_record);
+        return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), length };
     }
 
     virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); }
@@ -466,8 +477,10 @@ protected:
     }
 };
 
+ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM&, Value);
 ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM&, FunctionObject& constructor, MarkedVector<Value> arguments);
 ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM&, TypedArrayBase const& exemplar, MarkedVector<Value> arguments);
+ThrowCompletionOr<TypedArrayWithBufferWitness> validate_typed_array(VM&, Object const&, ArrayBuffer::Order);
 ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, FunctionObject* comparefn);
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                       \

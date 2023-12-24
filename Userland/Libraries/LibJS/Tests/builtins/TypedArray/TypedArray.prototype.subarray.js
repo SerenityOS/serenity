@@ -43,3 +43,17 @@ test("basic functionality", () => {
         expect(typedArray[1]).toBe(4n);
     });
 });
+
+test("resizable ArrayBuffer", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
+            maxByteLength: T.BYTES_PER_ELEMENT * 4,
+        });
+
+        let typedArray = new T(arrayBuffer, T.BYTES_PER_ELEMENT, 1);
+        expect(typedArray.subarray(0, 1).byteLength).toBe(T.BYTES_PER_ELEMENT);
+
+        arrayBuffer.resize(T.BYTES_PER_ELEMENT);
+        expect(typedArray.subarray(0, 1).byteLength).toBe(0);
+    });
+});
