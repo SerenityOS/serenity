@@ -64,6 +64,7 @@
 #include <LibWeb/Internals/Internals.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 #include <LibWeb/Selection/Selection.h>
 #include <LibWeb/URL/URL.h>
@@ -1260,30 +1261,35 @@ void Window::scroll(ScrollToOptions const& options)
     // 6. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any.
     auto viewport_height = viewport_rect.height();
 
-    (void)viewport_width;
-    (void)viewport_height;
+    auto const document = top_level_traversable->active_document();
+    auto scrolling_area = document->paintable_box()->scrollable_overflow_rect()->to_type<float>();
 
-    // FIXME: 7.
+    // 7. FIXME: For now we always assume overflow direction is rightward
     // -> If the viewport has rightward overflow direction
     //    Let x be max(0, min(x, viewport scrolling area width - viewport width)).
+    x = max(0.0f, min(x, scrolling_area.width() - viewport_width));
     // -> If the viewport has leftward overflow direction
     //    Let x be min(0, max(x, viewport width - viewport scrolling area width)).
 
-    // FIXME: 8.
+    // 8. FIXME: For now we always assume overflow direction is downward
     // -> If the viewport has downward overflow direction
     //    Let y be max(0, min(y, viewport scrolling area height - viewport height)).
+    y = max(0.0f, min(y, scrolling_area.height() - viewport_height));
     // -> If the viewport has upward overflow direction
     //    Let y be min(0, max(y, viewport height - viewport scrolling area height)).
 
     // FIXME: 9. Let position be the scroll position the viewport would have by aligning the x-coordinate x of the viewport
     //           scrolling area with the left of the viewport and aligning the y-coordinate y of the viewport scrolling area
     //           with the top of the viewport.
+    auto position = Gfx::FloatPoint { x, y };
 
-    // FIXME: 10. If position is the same as the viewport’s current scroll position, and the viewport does not have an ongoing
-    //            smooth scroll, abort these steps.
+    // 10. If position is the same as the viewport’s current scroll position, and the viewport does not have an ongoing
+    //     smooth scroll, abort these steps.
+    if (position == viewport_rect.location())
+        return;
 
     // 11. Let document be the viewport’s associated Document.
-    auto const document = top_level_traversable->active_document();
+    //     NOTE: document is already defined above.
 
     // 12. Perform a scroll of the viewport to position, document’s root element as the associated element, if there is
     //     one, or null otherwise, and the scroll behavior being the value of the behavior dictionary member of options.
