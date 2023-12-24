@@ -18,12 +18,6 @@ Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operat
         operation = Operation::None; // Don't apply the "%" operation twice
     }
 
-    // If a previous operation is still in progress, finish it
-    // Makes hitting "1+2+3=" equivalent to hitting "1+2=+3="
-    if (m_binary_operation_in_progress != Operation::None) {
-        argument = finish_binary_operation(m_binary_operation_saved_left_side, m_binary_operation_in_progress, argument);
-    }
-
     switch (operation) {
     case Operation::None:
         m_current_value = argument;
@@ -33,6 +27,11 @@ Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operat
     case Operation::Subtract:
     case Operation::Multiply:
     case Operation::Divide:
+        // If a previous operation is still in progress, finish it
+        // Makes hitting "1+2+3=" equivalent to hitting "1+2=+3="
+        if (m_binary_operation_in_progress != Operation::None) {
+            argument = finish_binary_operation(m_binary_operation_saved_left_side, m_binary_operation_in_progress, argument);
+        }
         m_binary_operation_saved_left_side = argument;
         m_binary_operation_in_progress = operation;
         m_current_value = argument;
@@ -45,7 +44,6 @@ Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operat
             break;
         }
         m_current_value = argument.sqrt();
-        clear_operation();
         break;
     case Operation::Inverse:
         if (argument == Crypto::BigFraction {}) {
@@ -54,7 +52,6 @@ Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operat
             break;
         }
         m_current_value = argument.invert();
-        clear_operation();
         break;
     case Operation::Percent:
         m_current_value = argument * Crypto::BigFraction { 1, 100 };
@@ -79,6 +76,9 @@ Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operat
         m_current_value = m_mem;
         break;
     case Operation::Equals:
+        if (m_binary_operation_in_progress != Operation::None) {
+            argument = finish_binary_operation(m_binary_operation_saved_left_side, m_binary_operation_in_progress, argument);
+        }
         m_current_value = argument;
         break;
     }
