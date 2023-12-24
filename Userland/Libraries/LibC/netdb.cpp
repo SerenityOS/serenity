@@ -891,11 +891,11 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
     if (!service_file_line.has_value()) {
         if (service) {
             char* end;
-            port = htons(strtol(service, &end, 10));
+            port = strtol(service, &end, 10);
             if (*end)
                 return EAI_FAIL;
         } else {
-            port = htons(0);
+            port = 0;
         }
 
         if (hints && hints->ai_socktype != 0)
@@ -913,7 +913,7 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
     for (int host_index = 0; host_ent->h_addr_list[host_index]; host_index++) {
         sockaddr_in* sin = new sockaddr_in;
         sin->sin_family = AF_INET;
-        sin->sin_port = port;
+        sin->sin_port = htons(port);
         memcpy(&sin->sin_addr.s_addr, host_ent->h_addr_list[host_index], host_ent->h_length);
 
         addrinfo* info = new addrinfo;
