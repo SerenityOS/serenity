@@ -58,6 +58,7 @@ shared_library("LibJS") {
     "ParserError.cpp",
     "Print.cpp",
     "Runtime/AbstractOperations.cpp",
+    "Runtime/Accessor.cpp",
     "Runtime/Agent.cpp",
     "Runtime/AggregateError.cpp",
     "Runtime/AggregateErrorConstructor.cpp",
