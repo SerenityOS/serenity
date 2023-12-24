@@ -35,10 +35,10 @@ void HTMLTitleElement::children_changed()
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text
-ByteString HTMLTitleElement::text()
+String HTMLTitleElement::text() const
 {
     // The text attribute's getter must return this title element's child text content.
-    return child_text_content().to_byte_string();
+    return child_text_content();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-title-text

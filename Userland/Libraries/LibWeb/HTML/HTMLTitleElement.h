@@ -17,7 +17,7 @@ class HTMLTitleElement final : public HTMLElement {
 public:
     virtual ~HTMLTitleElement() override;
 
-    ByteString text();
+    String text() const;
     void set_text(String const& value);
 
 private:
