@@ -321,4 +321,18 @@ inline ErrorOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr add
     return Memory::VirtualRange { base, end - base.get() };
 }
 
+inline ErrorOr<Memory::VirtualRange> shrink_range_to_page_boundaries(FlatPtr address, size_t size)
+{
+    if ((address + size) < address)
+        return EINVAL;
+
+    auto base = TRY(Memory::page_round_up(address));
+    auto end = Memory::page_round_down(address + size);
+
+    if (end < base)
+        return EINVAL;
+
+    return Memory::VirtualRange { VirtualAddress(base), end - base };
+}
+
 }
