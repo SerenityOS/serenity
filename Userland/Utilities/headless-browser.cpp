@@ -261,6 +261,11 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     if (did_timeout)
         return TestResult::Timeout;
 
+    if (expectation_path.is_empty()) {
+        out("{}", result);
+        return TestResult::Skipped;
+    }
+
     auto expectation_file_or_error = Core::File::open(expectation_path, Core::File::OpenMode::Read);
     if (expectation_file_or_error.is_error()) {
         warnln("Failed opening '{}': {}", expectation_path, expectation_file_or_error.error());
@@ -561,34 +566,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No));
-    RefPtr<Core::Timer> timer;
 
     if (!test_root_path.is_empty()) {
         return run_tests(*view, test_root_path, dump_failed_ref_tests);
-    }
-
-    if (dump_layout_tree) {
-        view->on_load_finish = [&](auto const&) {
-            (void)view->take_screenshot();
-            auto layout_tree = view->dump_layout_tree().release_value_but_fixme_should_propagate_errors();
-            auto paint_tree = view->dump_paint_tree().release_value_but_fixme_should_propagate_errors();
-
-            out("{}\n{}", layout_tree, paint_tree);
-            fflush(stdout);
-
-            event_loop.quit(0);
-        };
-    } else if (dump_text) {
-        view->on_load_finish = [&](auto const&) {
-            auto text = view->dump_text().release_value_but_fixme_should_propagate_errors();
-
-            out("{}", text);
-            fflush(stdout);
-
-            event_loop.quit(0);
-        };
-    } else if (web_driver_ipc_path.is_empty()) {
-        timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, screenshot_timeout));
     }
 
     auto url = WebView::sanitize_url(raw_url);
@@ -597,6 +577,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Error::from_string_literal("Invalid URL");
     }
 
-    view->load(*url);
-    return event_loop.exec();
+    if (dump_layout_tree) {
+        TRY(run_dump_test(*view, raw_url, ""sv, TestMode::Layout));
+        return 0;
+    }
+
+    if (dump_text) {
+        TRY(run_dump_test(*view, raw_url, ""sv, TestMode::Text));
+        return 0;
+    }
+
+    if (web_driver_ipc_path.is_empty()) {
+        auto timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, screenshot_timeout));
+        return event_loop.exec();
+    }
+
+    return 0;
 }
