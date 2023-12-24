@@ -33,3 +33,17 @@ test("basic functionality", () => {
         expect(arrayFromOffset[1]).toBe(!isBigIntArray ? 3 : 3n);
     });
 });
+
+test("resizable ArrayBuffer", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
+            maxByteLength: T.BYTES_PER_ELEMENT * 4,
+        });
+
+        let typedArray = new T(arrayBuffer, T.BYTES_PER_ELEMENT, 1);
+        expect(typedArray.byteOffset).toBe(T.BYTES_PER_ELEMENT);
+
+        arrayBuffer.resize(T.BYTES_PER_ELEMENT);
+        expect(typedArray.byteOffset).toBe(0);
+    });
+});

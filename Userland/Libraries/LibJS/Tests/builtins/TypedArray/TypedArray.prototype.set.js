@@ -15,6 +15,33 @@ const BIGINT_TYPED_ARRAYS = [
     { array: BigInt64Array, maxUnsignedInteger: 2n ** 63n - 1n },
 ];
 
+describe("errors", () => {
+    test("ArrayBuffer out of bounds", () => {
+        TYPED_ARRAYS.forEach(T => {
+            let arrayBuffer = new ArrayBuffer(T.array.BYTES_PER_ELEMENT * 2, {
+                maxByteLength: T.array.BYTES_PER_ELEMENT * 4,
+            });
+
+            let typedArray = new T.array(arrayBuffer, T.array.BYTES_PER_ELEMENT, 1);
+            arrayBuffer.resize(T.array.BYTES_PER_ELEMENT);
+
+            expect(() => {
+                typedArray.set([0]);
+            }).toThrowWithMessage(
+                TypeError,
+                "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
+            );
+
+            expect(() => {
+                typedArray.set(new T.array());
+            }).toThrowWithMessage(
+                TypeError,
+                "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
+            );
+        });
+    });
+});
+
 // FIXME: Write out a full test suite for this function. This currently only performs a single regression test.
 describe("normal behavior", () => {
     // Previously, we didn't apply source's byte offset on the code path for setting a typed array

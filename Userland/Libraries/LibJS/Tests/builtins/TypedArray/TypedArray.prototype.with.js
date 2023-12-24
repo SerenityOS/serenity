@@ -48,6 +48,24 @@ describe("errors", () => {
             }).toThrowWithMessage(RangeError, "Invalid integer index: -inf");
         });
     });
+
+    test("ArrayBuffer out of bounds", () => {
+        TYPED_ARRAYS.forEach(T => {
+            let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
+                maxByteLength: T.BYTES_PER_ELEMENT * 4,
+            });
+
+            let typedArray = new T(arrayBuffer, T.BYTES_PER_ELEMENT, 1);
+            arrayBuffer.resize(T.BYTES_PER_ELEMENT);
+
+            expect(() => {
+                typedArray.with(0, 0);
+            }).toThrowWithMessage(
+                TypeError,
+                "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
+            );
+        });
+    });
 });
 
 describe("normal behavior", () => {

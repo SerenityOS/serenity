@@ -309,7 +309,12 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
         data = buffer.buffer();
     } else if (is<JS::TypedArrayBase>(buffer_object)) {
         auto& buffer = static_cast<JS::TypedArrayBase&>(*buffer_object);
-        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
+
+        auto typed_array_record = JS::make_typed_array_with_buffer_witness_record(buffer, JS::ArrayBuffer::Order::SeqCst);
+        if (JS::is_typed_array_out_of_bounds(typed_array_record))
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::BufferOutOfBounds, "TypedArray"sv);
+
+        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), JS::typed_array_byte_length(typed_array_record));
     } else if (is<JS::DataView>(buffer_object)) {
         auto& buffer = static_cast<JS::DataView&>(*buffer_object);
 

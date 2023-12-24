@@ -11,7 +11,10 @@ describe("errors", () => {
             detachArrayBuffer(typedArray.buffer);
 
             Atomics.notify(typedArray, 0, 0);
-        }).toThrowWithMessage(TypeError, "ArrayBuffer is detached");
+        }).toThrowWithMessage(
+            TypeError,
+            "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
+        );
     });
 
     test("invalid TypedArray type", () => {

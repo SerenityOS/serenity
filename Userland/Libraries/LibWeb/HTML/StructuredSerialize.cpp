@@ -526,9 +526,7 @@ private:
             if constexpr (IsSame<ViewType, JS::DataView>) {
                 return JS::make_data_view_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
             } else {
-                // FIXME: Create a TypedArray record when TypedArray supports resizable ArrayBuffer objects.
-                TODO();
-                return 0;
+                return JS::make_typed_array_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
             }
         }();
 
@@ -537,7 +535,8 @@ private:
             if (JS::is_view_out_of_bounds(view_record))
                 return WebIDL::DataCloneError::create(*m_vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "DataView"sv)));
         } else {
-            // FIXME: Check TypedArray bounds when TypedArray supports resizable ArrayBuffer objects.
+            if (JS::is_typed_array_out_of_bounds(view_record))
+                return WebIDL::DataCloneError::create(*m_vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "TypedArray"sv)));
         }
 
         // 2. Let buffer be the value of value's [[ViewedArrayBuffer]] internal slot.
@@ -570,9 +569,9 @@ private:
             vector.append(ValueTag::ArrayBufferView);
             vector.extend(move(buffer_serialized));             // [[ArrayBufferSerialized]]
             TRY(serialize_string(vector, view.element_name())); // [[Constructor]]
-            vector.append(view.byte_length());
+            vector.append(JS::typed_array_byte_length(view_record));
             vector.append(view.byte_offset());
-            vector.append(view.array_length());
+            vector.append(JS::typed_array_length(view_record));
         }
         return {};
     }

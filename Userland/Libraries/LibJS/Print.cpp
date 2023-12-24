@@ -445,19 +445,26 @@ ErrorOr<void> print_number(JS::PrintContext& print_context, T number)
 ErrorOr<void> print_typed_array(JS::PrintContext& print_context, JS::TypedArrayBase const& typed_array_base, HashTable<JS::Object*>& seen_objects)
 {
     auto& array_buffer = *typed_array_base.viewed_array_buffer();
-    auto length = typed_array_base.array_length();
+
+    auto typed_array_record = JS::make_typed_array_with_buffer_witness_record(typed_array_base, JS::ArrayBuffer::Order::SeqCst);
     TRY(print_type(print_context, typed_array_base.class_name()));
+
+    TRY(js_out(print_context, "\n  buffer: "));
+    TRY(print_type(print_context, "ArrayBuffer"sv));
+    TRY(js_out(print_context, " @ {:p}", &array_buffer));
+
+    if (JS::is_typed_array_out_of_bounds(typed_array_record)) {
+        TRY(js_out(print_context, "\n  <out of bounds>"));
+        return {};
+    }
+
+    auto length = JS::typed_array_length(typed_array_record);
+
     TRY(js_out(print_context, "\n  length: "));
     TRY(print_value(print_context, JS::Value(length), seen_objects));
     TRY(js_out(print_context, "\n  byteLength: "));
-    TRY(print_value(print_context, JS::Value(typed_array_base.byte_length()), seen_objects));
-    TRY(js_out(print_context, "\n  buffer: "));
-    TRY(print_type(print_context, "ArrayBuffer"sv));
-    if (array_buffer.is_detached())
-        TRY(js_out(print_context, " (detached)"));
-    TRY(js_out(print_context, " @ {:p}", &array_buffer));
-    if (length == 0 || array_buffer.is_detached())
-        return {};
+    TRY(print_value(print_context, JS::Value(JS::typed_array_byte_length(typed_array_record)), seen_objects));
+
     TRY(js_out(print_context, "\n"));
     // FIXME: This kinda sucks.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
