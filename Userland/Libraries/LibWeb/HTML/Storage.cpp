@@ -149,10 +149,10 @@ void Storage::broadcast(StringView key, StringView old_value, StringView new_val
     // FIXME: Implement.
 }
 
-Vector<String> Storage::supported_property_names() const
+Vector<FlyString> Storage::supported_property_names() const
 {
     // The supported property names on a Storage object storage are the result of running get the keys on storage's map.
-    Vector<String> names;
+    Vector<FlyString> names;
     names.ensure_capacity(m_map.size());
     for (auto const& key : m_map.keys())
         names.unchecked_append(key);

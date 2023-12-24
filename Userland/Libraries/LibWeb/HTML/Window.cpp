@@ -1548,7 +1548,7 @@ OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
-Vector<String> Window::supported_property_names()
+Vector<FlyString> Window::supported_property_names()
 {
     // The Window object supports named properties.
     // The supported property names of a Window object window at any moment consist of the following,
@@ -1575,13 +1575,7 @@ Vector<String> Window::supported_property_names()
         return IterationDecision::Continue;
     });
 
-    Vector<String> names;
-    names.ensure_capacity(property_names.size());
-    for (auto const& name : property_names) {
-        names.append(name.to_string());
-    }
-
-    return names;
+    return property_names.values();
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object

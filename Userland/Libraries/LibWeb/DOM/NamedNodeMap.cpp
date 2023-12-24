@@ -49,10 +49,10 @@ bool NamedNodeMap::is_supported_property_index(u32 index) const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-names%E2%91%A0
-Vector<String> NamedNodeMap::supported_property_names() const
+Vector<FlyString> NamedNodeMap::supported_property_names() const
 {
     // 1. Let names be the qualified names of the attributes in this NamedNodeMap object’s attribute list, with duplicates omitted, in order.
-    Vector<String> names;
+    Vector<FlyString> names;
     names.ensure_capacity(m_attributes.size());
 
     for (auto const& attribute : m_attributes) {

@@ -28,7 +28,7 @@ void MimeTypeArray::initialize(JS::Realm& realm)
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewing-support:support-named-properties-2
-Vector<String> MimeTypeArray::supported_property_names() const
+Vector<FlyString> MimeTypeArray::supported_property_names() const
 {
     // The MimeTypeArray interface supports named properties. If the user agent's PDF viewer supported is true, then they are the PDF viewer mime types. Otherwise, they are the empty list.
     auto const& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
@@ -36,9 +36,9 @@ Vector<String> MimeTypeArray::supported_property_names() const
         return {};
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-types
-    static Vector<String> const mime_types = {
-        "application/pdf"_string,
-        "text/pdf"_string,
+    static Vector<FlyString> const mime_types = {
+        "application/pdf"_fly_string,
+        "text/pdf"_fly_string,
     };
 
     return mime_types;

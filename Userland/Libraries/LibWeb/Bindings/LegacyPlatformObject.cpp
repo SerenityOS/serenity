@@ -126,7 +126,7 @@ WebIDL::ExceptionOr<void> LegacyPlatformObject::invoke_indexed_property_setter(J
 WebIDL::ExceptionOr<void> LegacyPlatformObject::invoke_named_property_setter(String const& property_name, JS::Value value)
 {
     // 1. Let creating be true if P is not a supported property name, and false otherwise.
-    Vector<String> supported_property_names = this->supported_property_names();
+    auto supported_property_names = this->supported_property_names();
     bool creating = !supported_property_names.contains_slow(property_name);
 
     // FIXME: We do not have this information at this point, so converting the value is left as an exercise to the inheritor of LegacyPlatformObject.
@@ -219,8 +219,8 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_define_own_property(J
 
         // 1. Let creating be true if P is not a supported property name, and false otherwise.
         // NOTE: This is in it's own variable to enforce the type.
-        Vector<String> supported_property_names = this->supported_property_names();
-        bool creating = !supported_property_names.contains_slow(MUST(String::from_byte_string(property_name_as_string)));
+        auto supported_property_names = this->supported_property_names();
+        bool creating = !supported_property_names.contains_slow(MUST(FlyString::from_deprecated_fly_string(property_name_as_string)));
 
         // 2. If O implements an interface with the [LegacyOverrideBuiltIns] extended attribute or O does not have an own property named P, then:
         // NOTE: Own property lookup has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
@@ -348,7 +348,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LegacyPlatformObject::interna
     // 3. If O supports named properties, then for each P of O’s supported property names that is visible according to the named property visibility algorithm, append P to keys.
     if (supports_named_properties()) {
         for (auto& named_property : supported_property_names()) {
-            if (TRY(WebIDL::is_named_property_exposed_on_object({ this }, named_property.to_byte_string())))
+            if (TRY(WebIDL::is_named_property_exposed_on_object({ this }, named_property.to_deprecated_fly_string())))
                 keys.append(JS::PrimitiveString::create(vm, named_property));
         }
     }
@@ -381,7 +381,7 @@ WebIDL::ExceptionOr<JS::Value> LegacyPlatformObject::named_item_value(FlyString 
     return JS::js_undefined();
 }
 
-Vector<String> LegacyPlatformObject::supported_property_names() const
+Vector<FlyString> LegacyPlatformObject::supported_property_names() const
 {
     return {};
 }

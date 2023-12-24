@@ -99,10 +99,10 @@ Element* HTMLCollection::named_item(FlyString const& name_) const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-names
-Vector<String> HTMLCollection::supported_property_names() const
+Vector<FlyString> HTMLCollection::supported_property_names() const
 {
     // 1. Let result be an empty list.
-    Vector<String> result;
+    Vector<FlyString> result;
 
     // 2. For each element represented by the collection, in tree order:
     auto elements = collect_matching_elements();
@@ -119,7 +119,7 @@ Vector<String> HTMLCollection::supported_property_names() const
             if (auto maybe_name = element->attribute(HTML::AttributeNames::name); maybe_name.has_value()) {
                 auto name = maybe_name.release_value();
                 if (!name.is_empty() && !result.contains_slow(name))
-                    result.append(move(name));
+                    result.append(name);
             }
         }
     }
