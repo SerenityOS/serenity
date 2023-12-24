@@ -241,6 +241,14 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
         size = sizeof(routing_disabled);
         return copy_to_user(value_size, &size);
     }
+    case SO_REUSEADDR: {
+        int reuse_address = 0;
+        if (size < sizeof(reuse_address))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &reuse_address));
+        size = sizeof(reuse_address);
+        return copy_to_user(value_size, &size);
+    }
     case SO_BROADCAST: {
         int broadcast_allowed = m_broadcast_allowed ? 1 : 0;
         if (size < sizeof(broadcast_allowed))
