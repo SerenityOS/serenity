@@ -110,9 +110,9 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalI
     return true;
 }
 
-// 10.4.5.15 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
+// 10.4.5.15 TypedArrayGetElement ( O, index ), https://tc39.es/ecma262/#sec-typedarraygetelement
 template<typename T>
-inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
+inline ThrowCompletionOr<Value> typed_array_get_element(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
     // 1. If IsValidIntegerIndex(O, index) is false, return undefined.
     if (!is_valid_integer_index(typed_array, property_index))
@@ -122,26 +122,26 @@ inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const
     auto offset = typed_array.byte_offset();
 
     // 3. Let elementSize be TypedArrayElementSize(O).
-    // 4. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    Checked<size_t> indexed_position = property_index.as_index();
-    indexed_position *= typed_array.element_size();
-    indexed_position += offset;
+    // 4. Let byteIndexInBuffer be (ℝ(index) × elementSize) + offset.
+    Checked<size_t> byte_index_in_buffer = property_index.as_index();
+    byte_index_in_buffer *= typed_array.element_size();
+    byte_index_in_buffer += offset;
     // FIXME: Not exactly sure what we should do when overflow occurs.
     //        Just return as if it's an invalid index for now.
-    if (indexed_position.has_overflow()) {
-        dbgln("integer_indexed_element_get(): indexed_position overflowed, returning as if it's an invalid index.");
+    if (byte_index_in_buffer.has_overflow()) {
+        dbgln("typed_array_get_element(): byte_index_in_buffer overflowed, returning as if it's an invalid index.");
         return js_undefined();
     }
 
     // 5. Let elementType be TypedArrayElementType(O).
-    // 6. Return GetValueFromBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, true, Unordered).
-    return typed_array.viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
+    // 6. Return GetValueFromBuffer(O.[[ViewedArrayBuffer]], byteIndexInBuffer, elementType, true, unordered).
+    return typed_array.viewed_array_buffer()->template get_value<T>(byte_index_in_buffer.value(), true, ArrayBuffer::Order::Unordered);
 }
 
-// 10.4.5.16 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
+// 10.4.5.16 TypedArraySetElement ( O, index, value ), https://tc39.es/ecma262/#sec-typedarraysetelement
 // NOTE: In error cases, the function will return as if it succeeded.
 template<typename T>
-inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, CanonicalIndex property_index, Value value)
+inline ThrowCompletionOr<void> typed_array_set_element(TypedArrayBase& typed_array, CanonicalIndex property_index, Value value)
 {
     VERIFY(!value.is_empty());
     auto& vm = typed_array.vm();
@@ -164,20 +164,20 @@ inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed
     auto offset = typed_array.byte_offset();
 
     // b. Let elementSize be TypedArrayElementSize(O).
-    // c. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    Checked<size_t> indexed_position = property_index.as_index();
-    indexed_position *= typed_array.element_size();
-    indexed_position += offset;
+    // c. Let byteIndexInBuffer be (ℝ(index) × elementSize) + offset.
+    Checked<size_t> byte_index_in_buffer = property_index.as_index();
+    byte_index_in_buffer *= typed_array.element_size();
+    byte_index_in_buffer += offset;
     // FIXME: Not exactly sure what we should do when overflow occurs.
     //        Just return as if it succeeded for now.
-    if (indexed_position.has_overflow()) {
-        dbgln("integer_indexed_element_set(): indexed_position overflowed, returning as if succeeded.");
+    if (byte_index_in_buffer.has_overflow()) {
+        dbgln("typed_array_set_element(): byte_index_in_buffer overflowed, returning as if succeeded.");
         return {};
     }
 
     // d. Let elementType be TypedArrayElementType(O).
-    // e. Perform SetValueInBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, numValue, true, Unordered).
-    typed_array.viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered);
+    // e. Perform SetValueInBuffer(O.[[ViewedArrayBuffer]], byteIndexInBuffer, elementType, numValue, true, unordered).
+    typed_array.viewed_array_buffer()->template set_value<T>(byte_index_in_buffer.value(), num_value, true, ArrayBuffer::Order::Unordered);
 
     // 4. Return unused.
     return {};
@@ -206,8 +206,8 @@ public:
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. Let value be IntegerIndexedElementGet(O, numericIndex).
-                auto value = MUST_OR_THROW_OOM(integer_indexed_element_get<T>(*this, numeric_index));
+                // i. Let value be TypedArrayGetElement(O, numericIndex).
+                auto value = MUST_OR_THROW_OOM(typed_array_get_element<T>(*this, numeric_index));
 
                 // ii. If value is undefined, return undefined.
                 if (value.is_undefined())
@@ -286,9 +286,9 @@ public:
                 if (property_descriptor.writable.has_value() && !*property_descriptor.writable)
                     return false;
 
-                // vi. If Desc has a [[Value]] field, perform ? IntegerIndexedElementSet(O, numericIndex, Desc.[[Value]]).
+                // vi. If Desc has a [[Value]] field, perform ? TypedArraySetElement(O, numericIndex, Desc.[[Value]]).
                 if (property_descriptor.value.has_value())
-                    TRY(integer_indexed_element_set<T>(*this, numeric_index, *property_descriptor.value));
+                    TRY(typed_array_set_element<T>(*this, numeric_index, *property_descriptor.value));
 
                 // vii. Return true.
                 return true;
@@ -316,8 +316,8 @@ public:
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. Return IntegerIndexedElementGet(O, numericIndex).
-                return integer_indexed_element_get<T>(*this, numeric_index);
+                // i. Return TypedArrayGetElement(O, numericIndex).
+                return typed_array_get_element<T>(*this, numeric_index);
             }
         }
 
@@ -345,8 +345,8 @@ public:
             if (!numeric_index.is_undefined()) {
                 // i. If SameValue(O, Receiver) is true, then
                 if (same_value(this, receiver)) {
-                    // 1. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
-                    TRY(integer_indexed_element_set<T>(*this, numeric_index, value));
+                    // 1. Perform ? TypedArraySetElement(O, numericIndex, V).
+                    TRY(typed_array_set_element<T>(*this, numeric_index, value));
 
                     // 2. Return true.
                     return true;
