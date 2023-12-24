@@ -201,7 +201,7 @@ public:
     static void set_inspector_object_exposed(bool);
     static void set_internals_object_exposed(bool);
 
-    [[nodiscard]] OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();
+    [[nodiscard]] OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();
 
     [[nodiscard]] Vector<FlyString> supported_property_names();
     [[nodiscard]] WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const&);

@@ -1506,7 +1506,7 @@ JS::NonnullGCPtr<CustomElementRegistry> Window::custom_elements()
 }
 
 // https://html.spec.whatwg.org/#document-tree-child-navigable-target-name-property-set
-OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_navigable_target_name_property_set()
+OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_navigable_target_name_property_set()
 {
     // The document-tree child navigable target name property set of a Window object window is the return value of running these steps:
 
@@ -1514,7 +1514,7 @@ OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_
     auto children = associated_document().document_tree_child_navigables();
 
     // 2. Let firstNamedChildren be an empty ordered set.
-    OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> first_named_children;
+    OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> first_named_children;
 
     // 3. For each navigable of children:
     for (auto const& navigable : children) {
@@ -1534,7 +1534,7 @@ OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_
     }
 
     // 4. Let names be an empty ordered set.
-    OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> names;
+    OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> names;
 
     // 5. For each navigable of firstNamedChildren:
     for (auto const& [name, navigable] : first_named_children) {
