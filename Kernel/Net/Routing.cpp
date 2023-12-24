@@ -178,7 +178,7 @@ static MACAddress multicast_ethernet_address(IPv4Address const& address)
     return MACAddress { 0x01, 0x00, 0x5e, (u8)(address[1] & 0x7f), address[2], address[3] };
 }
 
-RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through, AllowUsingGateway allow_using_gateway)
+RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through, AllowBroadcast allow_broadcast, AllowUsingGateway allow_using_gateway)
 {
     auto matches = [&](auto& adapter) {
         if (!through)
@@ -291,8 +291,11 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
     // If it's a broadcast, we already know everything we need to know.
     // FIXME: We should also deal with the case where `target_addr` is
     //        a broadcast to a subnet rather than a full broadcast.
-    if (target_addr == 0xffffffff && matches(adapter))
-        return { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+    if (target_addr == 0xffffffff && matches(adapter)) {
+        if (allow_broadcast == AllowBroadcast::Yes)
+            return { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+        return { nullptr, {} };
+    }
 
     if (adapter == NetworkingManagement::the().loopback_adapter())
         return { adapter, adapter->mac_address() };
