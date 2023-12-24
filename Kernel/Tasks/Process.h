@@ -688,7 +688,7 @@ private:
 
     ErrorOr<GlobalFutexKey> get_futex_key(FlatPtr user_address, bool shared);
 
-    ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
+    ErrorOr<Memory::VirtualRange> remap_range_as_stack(FlatPtr address, size_t size);
 
     ErrorOr<FlatPtr> open_impl(Userspace<Syscall::SC_open_params const*>);
     ErrorOr<FlatPtr> close_impl(int fd);

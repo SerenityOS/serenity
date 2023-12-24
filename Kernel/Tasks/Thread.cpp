@@ -752,8 +752,7 @@ void Thread::reset_signals_for_exec()
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
     m_signal_action_masks.fill({});
     // A successful call to execve(2) removes any existing alternate signal stack
-    m_alternative_signal_stack = 0;
-    m_alternative_signal_stack_size = 0;
+    m_alternative_signal_stack.clear();
 }
 
 // Certain exceptions, such as SIGSEGV and SIGILL, put a
@@ -881,15 +880,12 @@ bool Thread::is_signal_masked(u8 signal) const
     return (1 << (signal - 1)) & m_signal_mask;
 }
 
-bool Thread::has_alternative_signal_stack() const
-{
-    return m_alternative_signal_stack_size != 0;
-}
-
 bool Thread::is_in_alternative_signal_stack() const
 {
     auto sp = get_register_dump_from_stack().userspace_sp();
-    return sp >= m_alternative_signal_stack && sp < m_alternative_signal_stack + m_alternative_signal_stack_size;
+    if (!m_alternative_signal_stack.has_value())
+        return false;
+    return m_alternative_signal_stack->contains(VirtualAddress(sp));
 }
 
 static ErrorOr<void> push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
@@ -1025,12 +1021,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_signal_mask |= new_signal_mask;
     m_have_any_unmasked_pending_signals.store((m_pending_signals & ~m_signal_mask) != 0, AK::memory_order_release);
 
-    bool use_alternative_stack = ((action.flags & SA_ONSTACK) != 0) && has_alternative_signal_stack() && !is_in_alternative_signal_stack();
+    bool use_alternative_stack = ((action.flags & SA_ONSTACK) != 0) && m_alternative_signal_stack.has_value() && !is_in_alternative_signal_stack();
 
     auto setup_stack = [&](RegisterState& state) -> ErrorOr<void> {
         FlatPtr stack;
         if (use_alternative_stack)
-            stack = m_alternative_signal_stack + m_alternative_signal_stack_size;
+            stack = m_alternative_signal_stack->end().get();
         else
             stack = state.userspace_sp();
 
@@ -1042,7 +1038,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             .uc_stack = {
                 .ss_sp = bit_cast<void*>(stack),
                 .ss_flags = action.flags & SA_ONSTACK,
-                .ss_size = use_alternative_stack ? m_alternative_signal_stack_size : 0,
+                .ss_size = use_alternative_stack ? m_alternative_signal_stack->size() : 0,
             },
             .uc_mcontext = {},
         };
