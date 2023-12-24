@@ -31,26 +31,26 @@ Vector<CrossOriginProperty> cross_origin_properties(Variant<HTML::Location const
         // 2. If O is a Location object, then return « { [[Property]]: "href", [[NeedsGet]]: false, [[NeedsSet]]: true }, { [[Property]]: "replace" } ».
         [](HTML::Location const*) -> Vector<CrossOriginProperty> {
             return {
-                { .property = "href"sv, .needs_get = false, .needs_set = true },
-                { .property = "replace"sv },
+                { .property = "href"_string, .needs_get = false, .needs_set = true },
+                { .property = "replace"_string },
             };
         },
         // 3. Return « { [[Property]]: "window", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "self", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "location", [[NeedsGet]]: true, [[NeedsSet]]: true }, { [[Property]]: "close" }, { [[Property]]: "closed", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "focus" }, { [[Property]]: "blur" }, { [[Property]]: "frames", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "length", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "top", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "opener", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "parent", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "postMessage" } ».
         [](HTML::Window const*) -> Vector<CrossOriginProperty> {
             return {
-                { .property = "window"sv, .needs_get = true, .needs_set = false },
-                { .property = "self"sv, .needs_get = true, .needs_set = false },
-                { .property = "location"sv, .needs_get = true, .needs_set = true },
-                { .property = "close"sv },
-                { .property = "closed"sv, .needs_get = true, .needs_set = false },
-                { .property = "focus"sv },
-                { .property = "blur"sv },
-                { .property = "frames"sv, .needs_get = true, .needs_set = false },
-                { .property = "length"sv, .needs_get = true, .needs_set = false },
-                { .property = "top"sv, .needs_get = true, .needs_set = false },
-                { .property = "opener"sv, .needs_get = true, .needs_set = false },
-                { .property = "parent"sv, .needs_get = true, .needs_set = false },
-                { .property = "postMessage"sv },
+                { .property = "window"_string, .needs_get = true, .needs_set = false },
+                { .property = "self"_string, .needs_get = true, .needs_set = false },
+                { .property = "location"_string, .needs_get = true, .needs_set = true },
+                { .property = "close"_string },
+                { .property = "closed"_string, .needs_get = true, .needs_set = false },
+                { .property = "focus"_string },
+                { .property = "blur"_string },
+                { .property = "frames"_string, .needs_get = true, .needs_set = false },
+                { .property = "length"_string, .needs_get = true, .needs_set = false },
+                { .property = "top"_string, .needs_get = true, .needs_set = false },
+                { .property = "opener"_string, .needs_get = true, .needs_set = false },
+                { .property = "parent"_string, .needs_get = true, .needs_set = false },
+                { .property = "postMessage"_string },
             };
         });
 }
@@ -106,7 +106,7 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<HT
     if (!property_key.is_string()) {
         return {};
     }
-    auto const& property_key_string = property_key.as_string();
+    auto const& property_key_string = MUST(FlyString::from_deprecated_fly_string(property_key.as_string()));
 
     // 2. For each e of CrossOriginProperties(O):
     for (auto const& entry : cross_origin_properties(object_const_variant)) {
