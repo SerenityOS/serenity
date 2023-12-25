@@ -155,7 +155,9 @@ u8 ScaledFont::glyph_fixed_width() const
 
 RefPtr<Font> ScaledFont::with_size(float point_size) const
 {
-    return adopt_ref(*new Gfx::ScaledFont(*m_font, point_size, point_size));
+    if (point_size == m_point_height && point_size == m_point_width)
+        return const_cast<ScaledFont*>(this);
+    return m_font->scaled_font(point_size);
 }
 
 Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const

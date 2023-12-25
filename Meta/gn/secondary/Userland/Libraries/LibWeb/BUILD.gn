@@ -306,7 +306,6 @@ shared_library("LibWeb") {
   public_configs = [ ":configs" ]
   sources = [
     "Dump.cpp",
-    "FontCache.cpp",
     "Namespace.cpp",
     "PixelUnits.cpp",
   ]

@@ -21,6 +21,7 @@ class Font;
 class GlyphBitmap;
 class ImageDecoder;
 struct FontPixelMetrics;
+class ScaledFont;
 
 template<typename T>
 class Line;

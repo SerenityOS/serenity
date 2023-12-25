@@ -55,7 +55,6 @@
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/Node.h>
@@ -122,19 +121,7 @@ public:
             start_loading_next_url();
             return nullptr;
         }
-
-        if (auto it = m_cached_fonts.find(point_size); it != m_cached_fonts.end())
-            return it->value;
-
-        // FIXME: It might be nicer to have a global cap on the number of fonts we cache
-        //        instead of doing it at the per-font level like this.
-        constexpr size_t max_cached_font_size_count = 64;
-        if (m_cached_fonts.size() > max_cached_font_size_count)
-            m_cached_fonts.remove(m_cached_fonts.begin());
-
-        auto font = adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
-        m_cached_fonts.set(point_size, font);
-        return font;
+        return m_vector_font->scaled_font(point_size);
     }
 
 private:
@@ -189,8 +176,6 @@ private:
     Vector<Gfx::UnicodeRange> m_unicode_ranges;
     RefPtr<Gfx::VectorFont> m_vector_font;
     Vector<AK::URL> m_urls;
-
-    HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
 
 struct StyleComputer::MatchingFontCandidate {
@@ -1796,14 +1781,11 @@ RefPtr<Gfx::FontCascadeList const> StyleComputer::compute_font_for_style_values(
     // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
 
     // Note: This is modified by the find_font() lambda
-    FontSelector font_selector;
     bool monospace = false;
 
     float const font_size_in_pt = font_size_in_px * 0.75f;
 
     auto find_font = [&](FlyString const& family) -> RefPtr<Gfx::FontCascadeList const> {
-        font_selector = { family, font_size_in_pt, weight, width, slope };
-
         FontFaceKey key {
             .family_name = family,
             .weight = weight,
@@ -2381,9 +2363,8 @@ CSSPixelRect StyleComputer::viewport_rect() const
     return {};
 }
 
-void StyleComputer::did_load_font(FlyString const& family_name)
+void StyleComputer::did_load_font(FlyString const&)
 {
-    m_font_cache.did_load_font({}, family_name);
     document().invalidate_style();
 }
 

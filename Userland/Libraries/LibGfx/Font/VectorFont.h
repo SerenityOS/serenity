@@ -14,6 +14,8 @@
 
 namespace Gfx {
 
+class ScaledFont;
+
 struct ScaledFontMetrics {
     float ascender { 0 };
     float descender { 0 };
@@ -35,7 +37,7 @@ struct ScaledGlyphMetrics {
 
 class VectorFont : public RefCounted<VectorFont> {
 public:
-    virtual ~VectorFont() { }
+    virtual ~VectorFont();
     virtual ScaledFontMetrics metrics(float x_scale, float y_scale) const = 0;
     virtual ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const = 0;
     virtual float glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const = 0;
@@ -52,6 +54,14 @@ public:
     virtual u8 slope() const = 0;
     virtual bool is_fixed_width() const = 0;
     virtual bool has_color_bitmaps() const = 0;
+
+    [[nodiscard]] NonnullRefPtr<ScaledFont> scaled_font(float point_size) const;
+
+protected:
+    VectorFont();
+
+private:
+    mutable HashMap<float, NonnullRefPtr<ScaledFont>> m_scaled_fonts;
 };
 
 }

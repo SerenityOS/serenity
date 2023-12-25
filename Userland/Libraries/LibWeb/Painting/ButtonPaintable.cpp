@@ -5,7 +5,6 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/ButtonBox.h>
@@ -65,7 +64,7 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
         painter.draw_text(
             text_rect.to_type<int>(),
             static_cast<HTML::HTMLInputElement const&>(dom_node).value(),
-            document().style_computer().font_cache().scaled_font(layout_box().first_available_font(), context.device_pixels_per_css_pixel()),
+            layout_box().scaled_font(context.device_pixels_per_css_pixel()),
             Gfx::TextAlignment::Center,
             computed_values().color());
         painter.restore();
