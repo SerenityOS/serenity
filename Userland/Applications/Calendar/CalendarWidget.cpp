@@ -11,6 +11,7 @@
 #include <Applications/Calendar/CalendarWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -105,6 +106,9 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
 
     auto help_menu = parent_window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(parent_window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Calendar.md"sv), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Calendar"_string, TRY(GUI::Icon::try_create_default_icon("app-calendar"sv)), parent_window));
 
     return widget;
