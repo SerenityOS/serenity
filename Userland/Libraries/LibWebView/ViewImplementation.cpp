@@ -321,8 +321,11 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
     auto& front_bitmap = m_client_state.front_bitmap;
     auto& back_bitmap = m_client_state.back_bitmap;
 
-    if (front_bitmap.id != old_front_bitmap_id || back_bitmap.id != old_back_bitmap_id)
-        client().async_add_backing_store(front_bitmap.id, front_bitmap.bitmap->to_shareable_bitmap(), back_bitmap.id, back_bitmap.bitmap->to_shareable_bitmap());
+    if (front_bitmap.id != old_front_bitmap_id || back_bitmap.id != old_back_bitmap_id) {
+        client().async_add_backing_store(front_bitmap.id, front_bitmap.bitmap->to_shareable_bitmap(), back_bitmap.id,
+            back_bitmap.bitmap->to_shareable_bitmap());
+        client().async_set_viewport_rect(viewport_rect);
+    }
 }
 
 void ViewImplementation::handle_web_content_process_crash()
