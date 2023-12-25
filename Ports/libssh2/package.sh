@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libssh2'
-version='1.10.0'
+version='1.11.0'
 useconfigure='true'
 files=(
-    "https://www.libssh2.org/download/libssh2-${version}.tar.gz#2d64e90f3ded394b91d3a2e774ca203a4179f69aebee03003e5a6fa621e41d51"
+    "https://www.libssh2.org/download/libssh2-${version}.tar.gz#3736161e41e2693324deb38c26cfdc3efe6209d634ba4258db1cecff6a5ad461"
 )
 depends=(
     'openssl'
