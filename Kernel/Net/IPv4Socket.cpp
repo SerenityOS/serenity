@@ -204,8 +204,10 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, UserOrKernelBuffer cons
             return set_so_error(EAFNOSUPPORT);
         }
 
-        m_peer_address = IPv4Address((u8 const*)&ia.sin_addr.s_addr);
-        m_peer_port = ntohs(ia.sin_port);
+        if (type() != SOCK_STREAM) {
+            m_peer_address = IPv4Address((u8 const*)&ia.sin_addr.s_addr);
+            m_peer_port = ntohs(ia.sin_port);
+        }
     }
 
     if (!is_connected() && m_peer_address.is_zero())
