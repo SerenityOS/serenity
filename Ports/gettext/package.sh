@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gettext'
-version='0.22'
+version='0.22.4'
 useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz#49f089be11b490170bbf09ed2f51e5f5177f55be4cc66504a5861820e0fb06ab"
+    "https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz#c1e0bb2a4427a9024390c662cd532d664c4b36b8ff444ed5e54b115fdb7a1aea"
 )
 depends=(
     'libiconv'
