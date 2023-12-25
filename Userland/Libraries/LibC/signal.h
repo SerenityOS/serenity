@@ -28,6 +28,7 @@ int sigfillset(sigset_t*);
 int sigaddset(sigset_t*, int sig);
 int sigaltstack(stack_t const* ss, stack_t* old_ss);
 int sigdelset(sigset_t*, int sig);
+int siginterrupt(int sig, int flag);
 int sigismember(sigset_t const*, int sig);
 int sigprocmask(int how, sigset_t const* set, sigset_t* old_set);
 int sigpending(sigset_t*);
