@@ -17,7 +17,6 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/FontCache.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWeb/Painting/PaintContext.h>
@@ -300,7 +299,8 @@ inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
 
 inline Gfx::Font const& Node::scaled_font(float scale_factor) const
 {
-    return document().style_computer().font_cache().scaled_font(first_available_font(), scale_factor);
+    auto const& font = first_available_font();
+    return *font.with_size(font.point_size() * scale_factor);
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const

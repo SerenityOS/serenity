@@ -25,6 +25,7 @@ set(SOURCES
     Font/OpenType/Tables.cpp
     Font/ScaledFont.cpp
     Font/Typeface.cpp
+    Font/VectorFont.cpp
     Font/WOFF/Font.cpp
     Font/WOFF2/Font.cpp
     GradientPainting.cpp

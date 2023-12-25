@@ -64,7 +64,7 @@ RefPtr<Font> Typeface::get_font(float point_size, Font::AllowInexactSizeMatch al
     VERIFY(point_size >= 0);
 
     if (m_vector_font)
-        return adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
+        return m_vector_font->scaled_font(point_size);
 
     RefPtr<BitmapFont> best_match;
     int size = roundf(point_size);

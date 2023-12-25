@@ -16,7 +16,6 @@
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/FontCache.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -47,8 +46,6 @@ public:
 
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
-
-    FontCache& font_cache() const { return m_font_cache; }
 
     NonnullRefPtr<StyleProperties> create_document_style() const;
 
@@ -183,8 +180,6 @@ private:
     OwnPtr<RuleCache> m_user_rule_cache;
     OwnPtr<RuleCache> m_user_agent_rule_cache;
     JS::Handle<CSSStyleSheet> m_user_style_sheet;
-
-    mutable FontCache m_font_cache;
 
     using FontLoaderList = Vector<NonnullOwnPtr<FontLoader>>;
     HashMap<FontFaceKey, FontLoaderList> m_loaded_fonts;
