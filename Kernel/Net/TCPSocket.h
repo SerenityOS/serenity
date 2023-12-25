@@ -234,6 +234,8 @@ private:
 
     IntrusiveListNode<TCPSocket> m_retransmit_list_node;
 
+    Optional<IPv4SocketTuple> m_registered_socket_tuple;
+
 public:
     using RetransmitList = IntrusiveList<&TCPSocket::m_retransmit_list_node>;
     static MutexProtected<TCPSocket::RetransmitList>& sockets_for_retransmit();

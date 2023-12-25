@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/JsonArray.h>
+#include <LibCore/File.h>
 #include <LibTest/TestCase.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -79,4 +81,50 @@ TEST_CASE(tcp_sendto)
 
     rc = pthread_join(server, nullptr);
     EXPECT_EQ(rc, 0);
+}
+
+TEST_CASE(tcp_bind_connect)
+{
+    pthread_t server = start_tcp_server();
+
+    int client_fd = socket(AF_INET, SOCK_STREAM, 0);
+    EXPECT(client_fd >= 0);
+
+    sockaddr_in sin {};
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(port - 1);
+    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    int rc = bind(client_fd, (sockaddr*)(&sin), sizeof(sin));
+    EXPECT_EQ(rc, 0);
+
+    sockaddr_in dst {};
+    dst.sin_family = AF_INET;
+    dst.sin_port = htons(port);
+    dst.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    rc = connect(client_fd, (sockaddr*)(&dst), sizeof(dst));
+    EXPECT_EQ(rc, 0);
+
+    u8 data = 'A';
+    int nwritten = send(client_fd, &data, sizeof(data), 0);
+    EXPECT_EQ(nwritten, 1);
+
+    rc = close(client_fd);
+    EXPECT_EQ(rc, 0);
+
+    rc = pthread_join(server, nullptr);
+    EXPECT_EQ(rc, 0);
+
+    // Hacky check to make sure there are no registered TCP sockets, if the sockets were closed properly, there should
+    // be none left, but if the early-bind caused a desync in sockets_by_tuple a UAF'd socket will be left in there.
+    // NOTE: We have to loop since the TimedWait stage during socket close means the socket might not close immediately
+    // after our close(2) call. This also means that on failure we will loop here forever.
+    while (true) {
+        auto file = MUST(Core::File::open("/sys/kernel/net/tcp"sv, Core::File::OpenMode::Read));
+        auto file_contents = MUST(file->read_until_eof());
+        auto json = MUST(JsonValue::from_string(file_contents));
+        EXPECT(json.is_array());
+        if (json.as_array().size() == 0)
+            return;
+        sched_yield();
+    }
 }

@@ -143,6 +143,7 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const
         client->set_originator(*this);
 
         m_pending_release_for_accept.set(tuple, client);
+        client->m_registered_socket_tuple = tuple;
         table.set(tuple, client);
 
         return { move(client) };
@@ -504,6 +505,7 @@ ErrorOr<void> TCPSocket::protocol_bind()
                 auto it = table.find(proposed_tuple);
                 if (it == table.end()) {
                     set_local_port(port);
+                    m_registered_socket_tuple = proposed_tuple;
                     table.set(proposed_tuple, this);
                     dbgln_if(TCP_SOCKET_DEBUG, "...allocated port {}, tuple {}", port, proposed_tuple.to_string());
                     return {};
@@ -521,7 +523,9 @@ ErrorOr<void> TCPSocket::protocol_bind()
         bool ok = sockets_by_tuple().with_exclusive([&](auto& table) -> bool {
             if (table.contains(tuple()))
                 return false;
-            table.set(tuple(), this);
+            auto socket_tuple = tuple();
+            m_registered_socket_tuple = socket_tuple;
+            table.set(socket_tuple, this);
             return true;
         });
         if (!ok)
@@ -549,6 +553,21 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
         set_local_address(routing_decision.adapter->ipv4_address());
 
     TRY(ensure_bound());
+    if (m_registered_socket_tuple.has_value() && m_registered_socket_tuple != tuple()) {
+        // If the socket was manually bound (using bind(2)) instead of implicitly using connect,
+        // it will already be registered in the TCPSocket sockets_by_tuple table, under the previous
+        // socket tuple. We replace the entry in the table to ensure it is also properly removed on
+        // socket deletion, to prevent a dangling reference.
+        TRY(sockets_by_tuple().with_exclusive([this](auto& table) -> ErrorOr<void> {
+            auto removed = table.remove(*m_registered_socket_tuple);
+            VERIFY(removed);
+            if (table.contains(tuple()))
+                return set_so_error(EADDRINUSE);
+            table.set(tuple(), this);
+            return {};
+        }));
+        m_registered_socket_tuple = tuple();
+    }
 
     m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
