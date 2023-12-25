@@ -102,6 +102,20 @@ int sigdelset(sigset_t* set, int sig)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009696699/functions/siginterrupt.html
+int siginterrupt(int sig, int flag)
+{
+    struct sigaction act;
+    int rc = sigaction(sig, nullptr, &act);
+    if (rc < 0)
+        return rc;
+    if (flag)
+        act.sa_flags &= ~SA_RESTART;
+    else
+        act.sa_flags |= SA_RESTART;
+    return sigaction(sig, &act, nullptr);
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigismember.html
 int sigismember(sigset_t const* set, int sig)
 {
