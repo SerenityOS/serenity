@@ -56,6 +56,7 @@ set(LIBTEST_BASED_SOURCES
     TestSigAltStack.cpp
     TestSigHandler.cpp
     TestSigWait.cpp
+    TestTCPSocket.cpp
 )
 
 if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
