@@ -4,15 +4,12 @@ serenity_component(
     TARGETS CrashReporter
 )
 
-stringify_gml(CrashReporterWindow.gml CrashReporterWindowGML.h crash_reporter_window_gml)
+compile_gml(CrashReporterWindow.gml CrashReporterWindowGML.cpp)
 
 
 set(SOURCES
+    CrashReporterWindowGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    CrashReporterWindowGML.h
 )
 
 serenity_app(CrashReporter ICON app-crash-reporter)
