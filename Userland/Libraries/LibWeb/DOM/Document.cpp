@@ -1934,9 +1934,13 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     // 4. Fire an event named readystatechange at document.
     dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange));
 
-    if (readiness_value == HTML::DocumentReadyState::Complete && is_active() && navigable()->is_traversable()) {
-        HTML::HTMLLinkElement::load_fallback_favicon_if_needed(*this).release_value_but_fixme_should_propagate_errors();
-        navigable()->traversable_navigable()->page().client().page_did_finish_loading(url());
+    if (readiness_value == HTML::DocumentReadyState::Complete) {
+        if (navigable() && navigable()->is_traversable()) {
+            HTML::HTMLLinkElement::load_fallback_favicon_if_needed(*this).release_value_but_fixme_should_propagate_errors();
+            navigable()->traversable_navigable()->page().client().page_did_finish_loading(url());
+        } else {
+            m_needs_to_call_page_did_load = true;
+        }
     }
 }
 
@@ -3093,6 +3097,11 @@ void Document::make_active()
 
     // 4. Set window's relevant settings object's execution ready flag.
     HTML::relevant_settings_object(window).execution_ready = true;
+
+    if (m_needs_to_call_page_did_load) {
+        navigable()->traversable_navigable()->page().client().page_did_finish_loading(url());
+        m_needs_to_call_page_did_load = false;
+    }
 }
 
 HTML::ListOfAvailableImages& Document::list_of_available_images()
