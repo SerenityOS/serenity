@@ -1924,7 +1924,8 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
 
     auto const& containing_block_state = m_state.get(*grid_container().containing_block());
     auto height_of_containing_block = containing_block_state.content_height();
-    auto min_height = grid_container().computed_values().min_height().to_px(grid_container(), height_of_containing_block);
+    auto height_of_container_block_as_available_size = AvailableSize::make_definite(height_of_containing_block);
+    auto min_height = calculate_inner_height(grid_container(), height_of_container_block_as_available_size, grid_computed_values.min_height()).to_px(grid_container());
 
     // If automatic grid container height is less than min-height, we need to re-run the track sizing algorithm
     if (m_automatic_content_height < min_height) {
