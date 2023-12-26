@@ -390,3 +390,10 @@ test("source is not the same value as the receiver, and the index is invalid", (
         expect(receiver[2]).toBeUndefined();
     });
 });
+
+test("inherit functions from TypedArray instead of being implemented directly", () => {
+    TYPED_ARRAYS.forEach(T => {
+        expect(T.hasOwnProperty("from")).toBe(false);
+        expect(T.hasOwnProperty("to")).toBe(false);
+    });
+});

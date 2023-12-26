@@ -516,6 +516,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         auto& vm = this->vm();                                                                                              \
         Base::initialize(realm);                                                                                            \
                                                                                                                             \
+        /* NOTE: This is as these functions should be implemented by the TypedArrayConstructor, and not be defined here */  \
+        storage_delete(vm.names.from);                                                                                      \
+        storage_delete(vm.names.of);                                                                                        \
+                                                                                                                            \
         /* 23.2.6.2 TypedArray.prototype, https://tc39.es/ecma262/#sec-typedarray.prototype */                              \
         define_direct_property(vm.names.prototype, realm.intrinsics().snake_name##_prototype(), 0);                         \
                                                                                                                             \

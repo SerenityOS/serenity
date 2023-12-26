@@ -31,6 +31,7 @@ void TypedArrayConstructor::initialize(Realm& realm)
     // 23.2.2.3 %TypedArray%.prototype, https://tc39.es/ecma262/#sec-%typedarray%.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().typed_array_prototype(), 0);
 
+    // NOTE: If adding more native_functions here, remove them from TypedArray.cpp ConstructorName::initialize (as they should be inherited)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);
     define_native_function(realm, vm.names.of, of, 0, attr);
