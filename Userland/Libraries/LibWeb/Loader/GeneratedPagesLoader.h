@@ -11,8 +11,6 @@
 
 namespace Web {
 
-String resource_directory_url();
-void set_resource_directory_url(String);
 String error_page_url();
 void set_error_page_url(String);
 String directory_page_url();

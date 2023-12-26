@@ -14,18 +14,6 @@
 
 namespace Web {
 
-static String s_resource_directory_url = "file:///res"_string;
-
-String resource_directory_url()
-{
-    return s_resource_directory_url;
-}
-
-void set_resource_directory_url(String resource_directory_url)
-{
-    s_resource_directory_url = resource_directory_url;
-}
-
 static String s_error_page_url = "file:///res/ladybird/error.html"_string;
 
 String error_page_url()
@@ -59,7 +47,6 @@ ErrorOr<String> load_error_page(AK::URL const& url)
     auto template_contents = TRY(template_file->read_until_eof());
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("resource_directory_url", resource_directory_url());
     generator.set("failed_url", url.to_byte_string());
     generator.append(template_contents);
     return TRY(String::from_utf8(generator.as_string_view()));
@@ -101,7 +88,6 @@ ErrorOr<String> load_file_directory_page(LoadRequest const& request)
     auto template_contents = TRY(template_file->read_until_eof());
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("resource_directory_url", resource_directory_url());
     generator.set("path", escape_html_entities(lexical_path.string()));
     generator.set("parent_path", escape_html_entities(lexical_path.parent().string()));
     generator.set("contents", contents.to_byte_string());
