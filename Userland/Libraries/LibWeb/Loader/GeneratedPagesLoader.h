@@ -18,6 +18,6 @@ void set_directory_page_url(String);
 
 ErrorOr<String> load_error_page(AK::URL const&);
 
-ErrorOr<String> load_file_directory_page(LoadRequest const&);
+ErrorOr<String> load_file_directory_page(AK::URL const&);
 
 }
