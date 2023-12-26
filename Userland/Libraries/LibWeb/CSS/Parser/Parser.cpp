@@ -4935,7 +4935,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
 
 // https://www.w3.org/TR/css-transforms-1/#propdef-transform-origin
 // FIXME: This only supports a 2D position
-RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_origin_value(TokenStream<ComponentValue>& tokens)
 {
     enum class Axis {
         None,
@@ -4974,15 +4974,14 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
         return OptionalNone {};
     };
 
-    auto make_list = [](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> NonnullRefPtr<StyleValueList> {
-        StyleValueVector values;
-        values.append(x_value);
-        values.append(y_value);
-        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
+    auto transaction = tokens.begin_transaction();
+
+    auto make_list = [&transaction](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> NonnullRefPtr<StyleValueList> {
+        transaction.commit();
+        return StyleValueList::create(StyleValueVector { x_value, y_value }, StyleValueList::Separator::Space);
     };
 
-    auto tokens = TokenStream { component_values };
-    switch (component_values.size()) {
+    switch (tokens.remaining_token_count()) {
     case 1: {
         auto single_value = to_axis_offset(parse_css_value_for_property(PropertyID::TransformOrigin, tokens));
         if (!single_value.has_value())
@@ -5942,7 +5941,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TransformOrigin:
-        if (auto parsed_value = parse_transform_origin_value(component_values))
+        if (auto parsed_value = parse_transform_origin_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError ::SyntaxError;
     default:
