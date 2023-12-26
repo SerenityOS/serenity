@@ -266,7 +266,7 @@ private:
     RefPtr<StyleValue> parse_grid_track_placement_shorthand_value(PropertyID, TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_grid_template_areas_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_grid_area_shorthand_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_grid_shorthand_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_grid_shorthand_value(TokenStream<ComponentValue>&);
 
     OwnPtr<CalculationNode> parse_a_calculation(Vector<ComponentValue> const&);
 
