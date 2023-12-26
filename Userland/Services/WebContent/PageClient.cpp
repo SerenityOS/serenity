@@ -54,7 +54,6 @@ PageClient::PageClient(PageHost& owner, u64 id)
 
     m_repaint_timer = Web::Platform::Timer::create_single_shot(0, [this] {
         if (!client().backing_stores().back_bitmap) {
-            warnln("Skip painting because back bitmap is not initialized");
             return;
         }
 
