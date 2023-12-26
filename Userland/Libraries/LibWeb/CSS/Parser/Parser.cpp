@@ -5673,12 +5673,11 @@ RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(TokenStream<Component
         { GridTrackPlacementStyleValue::create(row_start), GridTrackPlacementStyleValue::create(column_start), GridTrackPlacementStyleValue::create(row_end), GridTrackPlacementStyleValue::create(column_end) });
 }
 
-RefPtr<StyleValue> Parser::parse_grid_shorthand_value(Vector<ComponentValue> const& component_value)
+RefPtr<StyleValue> Parser::parse_grid_shorthand_value(TokenStream<ComponentValue>& tokens)
 {
     // <'grid-template'> |
     // FIXME: <'grid-template-rows'> / [ auto-flow && dense? ] <'grid-auto-columns'>? |
     // FIXME: [ auto-flow && dense? ] <'grid-auto-rows'>? / <'grid-template-columns'>
-    TokenStream tokens { component_value };
     return parse_grid_track_size_list_shorthand_value(PropertyID::Grid, tokens);
 }
 
@@ -5895,7 +5894,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Grid:
-        if (auto parsed_value = parse_grid_shorthand_value(component_values))
+        if (auto parsed_value = parse_grid_shorthand_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplate:
