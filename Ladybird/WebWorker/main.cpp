@@ -49,9 +49,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     VERIFY(fd_passing_socket >= 0);
 
-    Web::set_error_page_url(TRY(String::formatted("file://{}/res/ladybird/error.html", s_serenity_resource_root)));
-    Web::set_directory_page_url(TRY(String::formatted("file://{}/res/ladybird/directory.html", s_serenity_resource_root)));
-
     TRY(Web::Bindings::initialize_main_thread_vm());
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebWorker::ConnectionFromClient>());

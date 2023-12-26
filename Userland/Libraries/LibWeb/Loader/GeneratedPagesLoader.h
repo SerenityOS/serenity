@@ -11,11 +11,6 @@
 
 namespace Web {
 
-String error_page_url();
-void set_error_page_url(String);
-String directory_page_url();
-void set_directory_page_url(String);
-
 ErrorOr<String> load_error_page(AK::URL const&);
 
 ErrorOr<String> load_file_directory_page(AK::URL const&);
