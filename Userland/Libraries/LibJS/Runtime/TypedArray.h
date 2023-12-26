@@ -509,8 +509,8 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
     private:                                                                                                      \
         PrototypeName(Object& prototype);                                                                         \
     };                                                                                                            \
-    class ConstructorName final : public TypedArrayConstructor {                                                  \
-        JS_OBJECT(ConstructorName, TypedArrayConstructor);                                                        \
+    class ConstructorName final : public NativeFunction {                                                         \
+        JS_OBJECT(ConstructorName, NativeFunction);                                                               \
         JS_DECLARE_ALLOCATOR(ConstructorName);                                                                    \
                                                                                                                   \
     public:                                                                                                       \

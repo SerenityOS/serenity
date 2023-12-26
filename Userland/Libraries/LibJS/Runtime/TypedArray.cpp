@@ -503,7 +503,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                       \
                                                                                                                             \
     ConstructorName::ConstructorName(Realm& realm, Object& prototype)                                                       \
-        : TypedArrayConstructor(realm.vm().names.ClassName.as_string(), prototype)                                          \
+        : NativeFunction(realm.vm().names.ClassName.as_string(), prototype)                                                 \
     {                                                                                                                       \
     }                                                                                                                       \
                                                                                                                             \
