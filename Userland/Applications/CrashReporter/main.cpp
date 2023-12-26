@@ -6,11 +6,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "MainWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/URL.h>
-#include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
@@ -208,8 +208,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             unlink_coredump(coredump_path);
     };
 
-    auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(crash_reporter_window_gml));
+    auto widget = TRY(CrashReporter::MainWidget::try_create());
+    window->set_main_widget(widget);
 
     auto& icon_image_widget = *widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
