@@ -5526,7 +5526,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID
 
 // https://www.w3.org/TR/css-grid-2/#explicit-grid-shorthand
 // 7.4. Explicit Grid Shorthand: the grid-template property
-RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID property_id, Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     // The grid-template property is a shorthand for setting grid-template-columns, grid-template-rows,
     // and grid-template-areas in a single declaration. It has several distinct syntax forms:
@@ -5539,27 +5539,31 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID
     //    - Sets grid-template-rows to the <track-size>s following each string (filling in auto for any missing sizes),
     //      and splicing in the named lines defined before/after each size.
     //    - Sets grid-template-columns to the track listing specified after the slash (or none, if not specified).
+    auto transaction = tokens.begin_transaction();
+
+    // FIXME: Read the parts in place if possible, instead of constructing separate vectors and streams.
     Vector<ComponentValue> template_rows_tokens;
     Vector<ComponentValue> template_columns_tokens;
     Vector<ComponentValue> template_area_tokens;
 
-    int forward_slash_index = -1;
-    for (size_t x = 0; x < component_values.size(); x++) {
-        if (component_values[x].is_delim('/')) {
-            forward_slash_index = x;
-            break;
-        }
-    }
+    bool found_forward_slash = false;
 
-    for (size_t x = 0; x < (forward_slash_index > -1 ? forward_slash_index : component_values.size()); x++) {
-        if (component_values[x].is_token() && component_values[x].token().is(Token::Type::String))
-            template_area_tokens.append(component_values[x]);
+    while (tokens.has_next_token()) {
+        auto& token = tokens.next_token();
+        if (token.is_delim('/')) {
+            if (found_forward_slash)
+                return nullptr;
+            found_forward_slash = true;
+            continue;
+        }
+        if (found_forward_slash) {
+            template_columns_tokens.append(token);
+            continue;
+        }
+        if (token.is(Token::Type::String))
+            template_area_tokens.append(token);
         else
-            template_rows_tokens.append(component_values[x]);
-    }
-    if (forward_slash_index > -1) {
-        for (size_t x = forward_slash_index + 1; x < component_values.size(); x++)
-            template_columns_tokens.append(component_values[x]);
+            template_rows_tokens.append(token);
     }
 
     TokenStream template_area_token_stream { template_area_tokens };
@@ -5568,6 +5572,13 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID
     auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_token_stream);
     auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_token_stream, true);
     auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_token_stream);
+
+    if (template_area_token_stream.has_next_token()
+        || template_rows_token_stream.has_next_token()
+        || template_columns_token_stream.has_next_token())
+        return nullptr;
+
+    transaction.commit();
     return ShorthandStyleValue::create(property_id,
         { PropertyID::GridTemplateAreas, PropertyID::GridTemplateRows, PropertyID::GridTemplateColumns },
         { parsed_template_areas_values.release_nonnull(), parsed_template_rows_values.release_nonnull(), parsed_template_columns_values.release_nonnull() });
@@ -5667,7 +5678,8 @@ RefPtr<StyleValue> Parser::parse_grid_shorthand_value(Vector<ComponentValue> con
     // <'grid-template'> |
     // FIXME: <'grid-template-rows'> / [ auto-flow && dense? ] <'grid-auto-columns'>? |
     // FIXME: [ auto-flow && dense? ] <'grid-auto-rows'>? / <'grid-template-columns'>
-    return parse_grid_track_size_list_shorthand_value(PropertyID::Grid, component_value);
+    TokenStream tokens { component_value };
+    return parse_grid_track_size_list_shorthand_value(PropertyID::Grid, tokens);
 }
 
 // https://www.w3.org/TR/css-grid-1/#grid-template-areas-property
@@ -5887,7 +5899,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplate:
-        if (auto parsed_value = parse_grid_track_size_list_shorthand_value(property_id, component_values))
+        if (auto parsed_value = parse_grid_track_size_list_shorthand_value(property_id, tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateAreas:
