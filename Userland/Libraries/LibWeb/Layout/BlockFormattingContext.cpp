@@ -751,8 +751,28 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        if (!block_container_state.has_definite_width())
-            block_container_state.set_content_width(greatest_child_width(block_container));
+        if (!block_container_state.has_definite_width()) {
+            auto width = greatest_child_width(block_container);
+            auto computed_values = block_container.computed_values();
+            // NOTE: Min and max constraints are not applied to a box that is being sized as intrinsic because
+            //       according to css-sizing-3 spec:
+            //       The min-content size of a box in each axis is the size it would have if it was a float given an
+            //       auto size in that axis (and no minimum or maximum size in that axis) and if its containing block
+            //       was zero-sized in that axis.
+            if (block_container_state.width_constraint == SizeConstraint::None) {
+                if (!should_treat_max_width_as_none(block_container, available_space.width)) {
+                    auto max_width = calculate_inner_width(block_container, available_space.width,
+                        computed_values.max_width());
+                    width = min(width, max_width.to_px(block_container));
+                }
+                if (!computed_values.min_width().is_auto()) {
+                    auto min_width = calculate_inner_width(block_container, available_space.width,
+                        computed_values.min_width());
+                    width = max(width, min_width.to_px(block_container));
+                }
+            }
+            block_container_state.set_content_width(width);
+        }
         if (!block_container_state.has_definite_height())
             block_container_state.set_content_height(bottom_of_lowest_margin_box);
     }
