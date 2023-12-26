@@ -245,10 +245,11 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
 
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
 
-    bool const has_mss_option = flags == TCPFlags::SYN;
-    const size_t options_size = has_mss_option ? sizeof(TCPOptionMSS) : 0;
-    const size_t tcp_header_size = sizeof(TCPPacket) + options_size;
-    const size_t buffer_size = ipv4_payload_offset + tcp_header_size + payload_size;
+    bool const has_mss_option = flags & TCPFlags::SYN;
+    bool const has_window_scale_option = flags & TCPFlags::SYN;
+    size_t const options_size = (has_mss_option ? sizeof(TCPOptionMSS) : 0) + (has_window_scale_option ? sizeof(TCPOptionWindowScale) : 0);
+    size_t const tcp_header_size = sizeof(TCPPacket) + align_up_to(options_size, 4);
+    size_t const buffer_size = ipv4_payload_offset + tcp_header_size + payload_size;
     auto packet = routing_decision.adapter->acquire_packet_buffer(buffer_size);
     if (!packet)
         return set_so_error(ENOMEM);
@@ -260,7 +261,10 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
     VERIFY(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
-    tcp_packet.set_window_size(min(available_space_in_receive_buffer(), NumericLimits<u16>::max()));
+    auto window_size = available_space_in_receive_buffer();
+    if ((flags & TCPFlags::SYN) == 0 && m_window_scaling_supported)
+        window_size >>= receive_window_scale();
+    tcp_packet.set_window_size(min(window_size, NumericLimits<u16>::max()));
     tcp_packet.set_sequence_number(m_sequence_number);
     tcp_packet.set_data_offset(tcp_header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
@@ -284,12 +288,20 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
         m_sequence_number += payload_size;
     }
 
+    u8* next_option = packet->buffer->data() + ipv4_payload_offset + sizeof(TCPPacket);
     if (has_mss_option) {
         u16 mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
         TCPOptionMSS mss_option { mss };
-        VERIFY(packet->buffer->size() >= ipv4_payload_offset + sizeof(TCPPacket) + sizeof(mss_option));
-        memcpy(packet->buffer->data() + ipv4_payload_offset + sizeof(TCPPacket), &mss_option, sizeof(mss_option));
+        memcpy(next_option, &mss_option, sizeof(mss_option));
+        next_option += sizeof(mss_option);
     }
+    if (has_window_scale_option) {
+        TCPOptionWindowScale window_scale_option { receive_window_scale() };
+        memcpy(next_option, &window_scale_option, sizeof(window_scale_option));
+        next_option += sizeof(window_scale_option);
+    }
+    if ((options_size % 4) != 0)
+        *next_option = to_underlying(TCPOptionKind::End);
 
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
@@ -339,7 +351,7 @@ void TCPSocket::receive_tcp_packet(TCPPacket const& packet, u16 size)
                         old_adapter->release_packet_buffer(*packet.buffer);
                     TCPPacket& tcp_packet = *(TCPPacket*)(packet.buffer->buffer->data() + packet.ipv4_payload_offset);
                     if (m_send_window_size != tcp_packet.window_size()) {
-                        m_send_window_size = tcp_packet.window_size();
+                        m_send_window_size = tcp_packet.window_size() << m_send_window_scale;
                     }
                     auto payload_size = packet.buffer->buffer->data() + packet.buffer->buffer->size() - (u8*)tcp_packet.payload();
                     unacked_packets.size -= payload_size;
@@ -367,7 +379,7 @@ void TCPSocket::receive_tcp_packet(TCPPacket const& packet, u16 size)
 bool TCPSocket::should_delay_next_ack() const
 {
     // FIXME: We don't know the MSS here so make a reasonable guess.
-    const size_t mss = 1500;
+    size_t const mss = 1500;
 
     // RFC 1122 says we should send an ACK for every two full-sized segments.
     if (m_ack_number >= m_last_ack_number_sent + 2 * mss)

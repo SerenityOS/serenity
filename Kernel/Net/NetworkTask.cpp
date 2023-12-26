@@ -430,6 +430,19 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
     dbgln_if(TCP_DEBUG, "handle_tcp: got socket {}; state={}", socket->tuple().to_string(), TCPSocket::to_string(socket->state()));
 
     socket->receive_tcp_packet(tcp_packet, ipv4_packet.payload_size());
+    Optional<u8> send_window_scale;
+    if (tcp_packet.has_syn()) {
+        tcp_packet.for_each_option([&send_window_scale](auto const& option) {
+            if (option.kind() != TCPOptionKind::WindowScale)
+                return;
+            if (option.length() != sizeof(TCPOptionWindowScale))
+                return;
+            auto scale = static_cast<TCPOptionWindowScale const&>(option).value();
+            if (scale > 14)
+                return; // Maximum allowed as per RFC7323
+            send_window_scale = scale;
+        });
+    }
 
     switch (socket->state()) {
     case TCPSocket::State::Closed:
@@ -459,6 +472,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             [[maybe_unused]] auto rc2 = client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
             client->set_state(TCPSocket::State::SynReceived);
+            if (send_window_scale.has_value())
+                client->set_send_window_scale(*send_window_scale);
             return;
         }
         default:
@@ -472,6 +487,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             (void)socket->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
             socket->set_state(TCPSocket::State::SynReceived);
+            if (send_window_scale.has_value())
+                socket->set_send_window_scale(*send_window_scale);
             return;
         case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
@@ -479,6 +496,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
+            if (send_window_scale.has_value())
+                socket->set_send_window_scale(*send_window_scale);
             return;
         case TCPFlags::ACK | TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);

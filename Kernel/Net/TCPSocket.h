@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/IntegralMath.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Time.h>
 #include <Kernel/Library/LockWeakPtr.h>
@@ -135,6 +136,12 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
+    void set_send_window_scale(size_t scale)
+    {
+        m_window_scaling_supported = true;
+        m_send_window_scale = scale;
+    }
+
     // FIXME: Make this configurable?
     static constexpr u32 maximum_duplicate_acks = 5;
     void set_duplicate_acks(u32 acks) { m_duplicate_acks = acks; }
@@ -188,6 +195,14 @@ private:
     void enqueue_for_retransmit();
     void dequeue_for_retransmit();
 
+    static constexpr size_t receive_window_scale()
+    {
+        auto buffer_size_bit_length = AK::log2(receive_buffer_size) + 1;
+        if (buffer_size_bit_length < 16)
+            return 0;
+        return buffer_size_bit_length - 16;
+    }
+
     LockWeakPtr<TCPSocket> m_originator;
     HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
@@ -229,6 +244,8 @@ private:
     // Default to maximum window size. receive_tcp_packet() will update from the
     // peer's advertised window size.
     u32 m_send_window_size { 64 * KiB };
+    bool m_window_scaling_supported { false };
+    size_t m_send_window_scale { 0 };
 
     bool m_no_delay { false };
 
