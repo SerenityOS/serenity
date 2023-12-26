@@ -90,6 +90,8 @@ protected:
     static ErrorOr<NonnullOwnPtr<DoubleBuffer>> try_create_receive_buffer();
     void drop_receive_buffer();
 
+    size_t available_space_in_receive_buffer() const { return m_receive_buffer ? m_receive_buffer->space_for_writing() : 0; }
+
 private:
     virtual bool is_ipv4() const override { return true; }
 

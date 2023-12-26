@@ -260,7 +260,7 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
     VERIFY(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
-    tcp_packet.set_window_size(NumericLimits<u16>::max());
+    tcp_packet.set_window_size(min(available_space_in_receive_buffer(), NumericLimits<u16>::max()));
     tcp_packet.set_sequence_number(m_sequence_number);
     tcp_packet.set_data_offset(tcp_header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
