@@ -5253,12 +5253,13 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
     }
 }
 
-RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values, bool allow_separate_line_name_blocks)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list(TokenStream<ComponentValue>& tokens, bool allow_separate_line_name_blocks)
 {
-    TokenStream tokens { component_values };
+    auto transaction = tokens.begin_transaction();
 
     if (contains_single_none_ident(tokens)) {
         tokens.next_token();
+        transaction.commit();
         return GridTrackSizeListStyleValue::make_none();
     }
 
@@ -5268,12 +5269,16 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
     while (tokens.has_next_token()) {
         auto token = tokens.next_token();
         if (token.is_block()) {
-            if (last_object_was_line_names && !allow_separate_line_name_blocks)
+            if (last_object_was_line_names && !allow_separate_line_name_blocks) {
+                transaction.commit();
                 return GridTrackSizeListStyleValue::make_auto();
+            }
             last_object_was_line_names = true;
             Vector<String> line_names;
-            if (!token.block().is_square())
+            if (!token.block().is_square()) {
+                transaction.commit();
                 return GridTrackSizeListStyleValue::make_auto();
+            }
             TokenStream block_tokens { token.block().values() };
             block_tokens.skip_whitespace();
             while (block_tokens.has_next_token()) {
@@ -5285,8 +5290,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
         } else {
             last_object_was_line_names = false;
             auto track_sizing_function = parse_track_sizing_function(token);
-            if (!track_sizing_function.has_value())
+            if (!track_sizing_function.has_value()) {
+                transaction.commit();
                 return GridTrackSizeListStyleValue::make_auto();
+            }
             // FIXME: Handle multiple repeat values (should combine them here, or remove
             // any other ones if the first one is auto-fill, etc.)
             track_list.append(track_sizing_function.value());
@@ -5294,6 +5301,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
     }
     while (line_names_list.size() <= track_list.size())
         line_names_list.append({});
+
+    transaction.commit();
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
 }
 
@@ -5554,9 +5563,11 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID
     }
 
     TokenStream template_area_token_stream { template_area_tokens };
+    TokenStream template_rows_token_stream { template_rows_tokens };
+    TokenStream template_columns_token_stream { template_columns_tokens };
     auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_token_stream);
-    auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_tokens, true);
-    auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_tokens);
+    auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_token_stream, true);
+    auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_token_stream);
     return ShorthandStyleValue::create(property_id,
         { PropertyID::GridTemplateAreas, PropertyID::GridTemplateRows, PropertyID::GridTemplateColumns },
         { parsed_template_areas_values.release_nonnull(), parsed_template_rows_values.release_nonnull(), parsed_template_columns_values.release_nonnull() });
@@ -5884,11 +5895,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
-        if (auto parsed_value = parse_grid_track_size_list(component_values))
+        if (auto parsed_value = parse_grid_track_size_list(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateRows:
-        if (auto parsed_value = parse_grid_track_size_list(component_values))
+        if (auto parsed_value = parse_grid_track_size_list(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoColumns:
