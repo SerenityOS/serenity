@@ -5350,21 +5350,24 @@ RefPtr<GridAutoFlowStyleValue> Parser::parse_grid_auto_flow_value(TokenStream<Co
     return GridAutoFlowStyleValue::create(axis.value_or(GridAutoFlowStyleValue::Axis::Row), dense.value_or(GridAutoFlowStyleValue::Dense::No));
 }
 
-RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(TokenStream<ComponentValue>& tokens)
 {
     // https://www.w3.org/TR/css-grid-2/#auto-tracks
     // <track-size>+
     Vector<CSS::ExplicitGridTrack> track_list;
-    TokenStream tokens { component_values };
+    auto transaction = tokens.begin_transaction();
     while (tokens.has_next_token()) {
         auto token = tokens.next_token();
         auto track_sizing_function = parse_track_sizing_function(token);
-        if (!track_sizing_function.has_value())
+        if (!track_sizing_function.has_value()) {
+            transaction.commit();
             return GridTrackSizeListStyleValue::make_auto();
+        }
         // FIXME: Handle multiple repeat values (should combine them here, or remove
-        // any other ones if the first one is auto-fill, etc.)
+        //        any other ones if the first one is auto-fill, etc.)
         track_list.append(track_sizing_function.value());
     }
+    transaction.commit();
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, {}));
 }
 
@@ -5889,11 +5892,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoColumns:
-        if (auto parsed_value = parse_grid_auto_track_sizes(component_values))
+        if (auto parsed_value = parse_grid_auto_track_sizes(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoRows:
-        if (auto parsed_value = parse_grid_auto_track_sizes(component_values))
+        if (auto parsed_value = parse_grid_auto_track_sizes(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
