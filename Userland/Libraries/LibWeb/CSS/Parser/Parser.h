@@ -258,7 +258,7 @@ private:
     RefPtr<StyleValue> parse_easing_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_origin_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
+    RefPtr<StyleValue> parse_grid_track_size_list(TokenStream<ComponentValue>&, bool allow_separate_line_name_blocks = false);
     RefPtr<StyleValue> parse_grid_auto_track_sizes(TokenStream<ComponentValue>&);
     RefPtr<GridAutoFlowStyleValue> parse_grid_auto_flow_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_grid_track_size_list_shorthand_value(PropertyID, Vector<ComponentValue> const&);
