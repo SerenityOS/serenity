@@ -193,6 +193,21 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
     };
 
+    auto respond_directory_page = [log_success, log_failure](LoadRequest const& request, AK::URL const& url, SuccessCallback const& success_callback, ErrorCallback const& error_callback) {
+        auto maybe_response = load_file_directory_page(url);
+        if (maybe_response.is_error()) {
+            log_failure(request, maybe_response.error());
+            if (error_callback)
+                error_callback(ByteString::formatted("{}", maybe_response.error()), 500u, {}, {});
+            return;
+        }
+
+        log_success(request);
+        HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
+        response_headers.set("Content-Type"sv, "text/html"sv);
+        success_callback(maybe_response.release_value().bytes(), response_headers, {});
+    };
+
     if (is_port_blocked(url.port_or_default())) {
         log_failure(request, ByteString::formatted("The port #{} is blocked", url.port_or_default()));
         return;
@@ -250,6 +265,12 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             return;
         }
 
+        // When resource URI is a directory use file directory loader to generate response
+        if (resource.value()->is_directory()) {
+            respond_directory_page(request, resource.value()->file_url(), success_callback, error_callback);
+            return;
+        }
+
         auto data = resource.value()->data();
         auto response_headers = response_headers_for_file(url.serialize_path());
 
@@ -268,7 +289,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             return;
         }
 
-        FileRequest file_request(url.serialize_path(), [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request](ErrorOr<i32> file_or_error) {
+        FileRequest file_request(url.serialize_path(), [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, respond_directory_page](ErrorOr<i32> file_or_error) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -287,18 +308,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             // When local file is a directory use file directory loader to generate response
             auto maybe_is_valid_directory = Core::Directory::is_valid_directory(fd);
             if (!maybe_is_valid_directory.is_error() && maybe_is_valid_directory.value()) {
-                auto maybe_response = load_file_directory_page(request);
-                if (maybe_response.is_error()) {
-                    log_failure(request, maybe_response.error());
-                    if (error_callback)
-                        error_callback(ByteString::formatted("{}", maybe_response.error()), 500u, {}, {});
-                    return;
-                }
-
-                log_success(request);
-                HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
-                response_headers.set("Content-Type"sv, "text/html"sv);
-                success_callback(maybe_response.release_value().bytes(), response_headers, {});
+                respond_directory_page(request, request.url(), success_callback, error_callback);
                 return;
             }
 

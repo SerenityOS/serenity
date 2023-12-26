@@ -52,10 +52,10 @@ ErrorOr<String> load_error_page(AK::URL const& url)
     return TRY(String::from_utf8(generator.as_string_view()));
 }
 
-ErrorOr<String> load_file_directory_page(LoadRequest const& request)
+ErrorOr<String> load_file_directory_page(AK::URL const& url)
 {
     // Generate HTML contents entries table
-    auto lexical_path = LexicalPath(request.url().serialize_path());
+    auto lexical_path = LexicalPath(url.serialize_path());
     Core::DirIterator dt(lexical_path.string(), Core::DirIterator::Flags::SkipParentAndBaseDir);
     Vector<ByteString> names;
     while (dt.has_next())
@@ -89,7 +89,7 @@ ErrorOr<String> load_file_directory_page(LoadRequest const& request)
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("path", escape_html_entities(lexical_path.string()));
-    generator.set("parent_path", escape_html_entities(lexical_path.parent().string()));
+    generator.set("parent_url", TRY(String::formatted("file://{}", escape_html_entities(lexical_path.parent().string()))));
     generator.set("contents", contents.to_byte_string());
     generator.append(template_contents);
     return TRY(String::from_utf8(generator.as_string_view()));
