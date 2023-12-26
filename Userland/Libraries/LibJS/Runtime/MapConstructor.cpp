@@ -26,7 +26,7 @@ void MapConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
 
-    // 24.1.2.1 Map.prototype, https://tc39.es/ecma262/#sec-map.prototype
+    // 24.1.2.2 Map.prototype, https://tc39.es/ecma262/#sec-map.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().map_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -72,7 +72,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> MapConstructor::construct(FunctionObject
     return map;
 }
 
-// 3.1 Map.groupBy ( items, callbackfn ), https://tc39.es/proposal-array-grouping/#sec-map.groupby
+// 24.1.2.1 Map.groupBy ( items, callbackfn ), https://tc39.es/ecma262/#sec-map.groupby
 JS_DEFINE_NATIVE_FUNCTION(MapConstructor::group_by)
 {
     auto& realm = *vm.current_realm();
@@ -113,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapConstructor::group_by)
     return map;
 }
 
-// 24.1.2.2 get Map [ @@species ], https://tc39.es/ecma262/#sec-get-map-@@species
+// 24.1.2.3 get Map [ @@species ], https://tc39.es/ecma262/#sec-get-map-@@species
 JS_DEFINE_NATIVE_FUNCTION(MapConstructor::symbol_species_getter)
 {
     return vm.this_value();
