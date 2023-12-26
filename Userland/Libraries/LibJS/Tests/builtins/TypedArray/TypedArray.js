@@ -390,3 +390,12 @@ test("source is not the same value as the receiver, and the index is invalid", (
         expect(receiver[2]).toBeUndefined();
     });
 });
+
+test("constructor functions are defined in the TypedArray prototype, rather than the object itself", () => {
+    TYPED_ARRAYS.forEach(T => {
+        for (property of ["of", "from"]) {
+            expect(T.hasOwnProperty(property)).toBe(false);
+            expect(Object.getPrototypeOf(T).hasOwnProperty(property)).toBe(true);
+        }
+    });
+});
