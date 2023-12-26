@@ -767,6 +767,8 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#pending-animation-event-queue
     Vector<PendingAnimationEvent> m_pending_animation_event_queue;
+
+    bool m_needs_to_call_page_did_load { false };
 };
 
 template<>
