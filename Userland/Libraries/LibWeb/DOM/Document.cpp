@@ -1940,6 +1940,14 @@ void Document::completely_finish_loading()
     if (!navigable())
         return;
 
+    ScopeGuard notify_observers = [this] {
+        auto observers_to_notify = m_document_observers.values();
+        for (auto& document_observer : observers_to_notify) {
+            if (document_observer->document_completely_loaded())
+                document_observer->document_completely_loaded()->function()();
+        }
+    };
+
     // 1. Assert: document's browsing context is non-null.
     VERIFY(browsing_context());
 
@@ -1967,12 +1975,6 @@ void Document::completely_finish_loading()
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
             container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load));
         });
-    }
-
-    auto observers_to_notify = m_document_observers.values();
-    for (auto& document_observer : observers_to_notify) {
-        if (document_observer->document_completely_loaded())
-            document_observer->document_completely_loaded()->function()();
     }
 }
 
