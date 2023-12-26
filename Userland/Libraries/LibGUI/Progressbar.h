@@ -30,6 +30,7 @@ public:
 
     ByteString text() const { return m_text; }
     void set_text(ByteString text) { m_text = move(text); }
+    void set_text(String const& text) { m_text = ByteString(text); }
 
     enum Format {
         NoText,
