@@ -38,7 +38,7 @@ MutexProtected<IPv4Socket::List>& IPv4Socket::all_sockets()
 
 ErrorOr<NonnullOwnPtr<DoubleBuffer>> IPv4Socket::try_create_receive_buffer()
 {
-    return DoubleBuffer::try_create("IPv4Socket: Receive buffer"sv, 256 * KiB);
+    return DoubleBuffer::try_create("IPv4Socket: Receive buffer"sv, receive_buffer_size);
 }
 
 ErrorOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)

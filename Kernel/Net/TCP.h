@@ -21,19 +21,57 @@ struct TCPFlags {
     };
 };
 
-class [[gnu::packed]] TCPOptionMSS {
+enum class TCPOptionKind : u8 {
+    End = 0,
+    Nop = 1,
+    MSS = 2,
+    WindowScale = 3,
+    SACKPermitted = 4,
+    SACK = 5,
+    Timestamp = 6,
+};
+
+class [[gnu::packed]] TCPOption {
+public:
+    TCPOptionKind kind() const { return m_kind; }
+    u8 length() const { return m_length; }
+
+protected:
+    TCPOption(TCPOptionKind kind, u8 length)
+        : m_kind(kind)
+        , m_length(length) {};
+
+private:
+    TCPOptionKind m_kind { TCPOptionKind::End };
+    u8 m_length { sizeof(TCPOption) };
+};
+
+class [[gnu::packed]] TCPOptionMSS : public TCPOption {
 public:
     TCPOptionMSS(u16 value)
-        : m_value(value)
+        : TCPOption(TCPOptionKind::MSS, sizeof(TCPOptionMSS))
+        , m_value(value)
     {
     }
 
     u16 value() const { return m_value; }
 
 private:
-    u8 m_option_kind { 0x02 };
-    u8 m_option_length { sizeof(TCPOptionMSS) };
     NetworkOrdered<u16> m_value;
+};
+
+class [[gnu::packed]] TCPOptionWindowScale : public TCPOption {
+public:
+    TCPOptionWindowScale(u8 value)
+        : TCPOption(TCPOptionKind::WindowScale, sizeof(TCPOptionWindowScale))
+        , m_value(value)
+    {
+    }
+
+    u8 value() const { return m_value; }
+
+private:
+    NetworkOrdered<u8> m_value;
 };
 
 static_assert(AssertSize<TCPOptionMSS, 4>());
@@ -79,6 +117,28 @@ public:
 
     void const* payload() const { return ((u8 const*)this) + header_size(); }
     void* payload() { return ((u8*)this) + header_size(); }
+
+    template<typename Callback>
+    void for_each_option(Callback callback) const
+    {
+        auto const* next_option = (u8 const*)this + sizeof(TCPPacket);
+        auto const* options_end = payload();
+        while (next_option < options_end) {
+            if ((size_t)options_end - (size_t)next_option < sizeof(TCPOption))
+                return; // Not enough space left for another option
+            auto const* option = (TCPOption const*)next_option;
+            if (option->kind() == TCPOptionKind::End)
+                return;
+            if (option->kind() == TCPOptionKind::Nop) {
+                next_option += 1;
+                continue;
+            }
+            if (option->length() < sizeof(TCPOption))
+                return; // minimal option length
+            callback(*option);
+            next_option += option->length();
+        }
+    }
 
 private:
     NetworkOrdered<u16> m_source_port;

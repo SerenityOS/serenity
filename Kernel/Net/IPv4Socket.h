@@ -68,6 +68,8 @@ public:
     BufferMode buffer_mode() const { return m_buffer_mode; }
 
 protected:
+    static constexpr size_t receive_buffer_size = 256 * KiB;
+
     IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> optional_scratch_buffer);
     virtual StringView class_name() const override { return "IPv4Socket"sv; }
 
