@@ -72,9 +72,6 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
-    Web::set_error_page_url(TRY(String::formatted("file://{}/res/ladybird/error.html", s_serenity_resource_root)));
-    Web::set_directory_page_url(TRY(String::formatted("file://{}/res/ladybird/directory.html", s_serenity_resource_root)));
-
     TRY(Web::Bindings::initialize_main_thread_vm());
 
     auto maybe_content_filter_error = load_content_filters();
