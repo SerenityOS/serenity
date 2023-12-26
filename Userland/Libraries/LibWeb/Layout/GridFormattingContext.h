@@ -269,10 +269,13 @@ private:
     void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
     void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const&, GridDimension const, size_t span);
     void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension const);
-    void maximize_tracks(AvailableSpace const&, GridDimension const);
+    void maximize_tracks_using_available_size(AvailableSpace const& available_space, GridDimension const dimension);
+    void maximize_tracks(GridDimension const);
     void expand_flexible_tracks(AvailableSpace const&, GridDimension const);
     void stretch_auto_tracks(AvailableSpace const&, GridDimension const);
     void run_track_sizing(AvailableSpace const&, GridDimension const);
+
+    CSSPixels calculate_grid_container_maximum_size(GridDimension const) const;
 
     CSS::Size const& get_item_preferred_size(GridItem const&, GridDimension const) const;
 

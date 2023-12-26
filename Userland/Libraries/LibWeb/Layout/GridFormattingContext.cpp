@@ -1121,7 +1121,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
     }
 }
 
-void GridFormattingContext::maximize_tracks(AvailableSpace const& available_space, GridDimension const dimension)
+void GridFormattingContext::maximize_tracks_using_available_size(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-grow-tracks
     // 12.6. Maximize Tracks
@@ -1157,10 +1157,45 @@ void GridFormattingContext::maximize_tracks(AvailableSpace const& available_spac
             break;
         free_space_px = get_free_space_px();
     }
+}
 
-    // FIXME: If this would cause the grid to be larger than the grid container’s inner size as limited by its
+void GridFormattingContext::maximize_tracks(GridDimension const dimension)
+{
+    // https://www.w3.org/TR/css-grid-2/#algo-grow-tracks
+    // 12.6. Maximize Tracks
+
+    auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+
+    Vector<CSSPixels> saved_base_sizes;
+    for (auto& track : tracks)
+        saved_base_sizes.append(track.base_size);
+
+    maximize_tracks_using_available_size(*m_available_space, dimension);
+
+    // If this would cause the grid to be larger than the grid container’s inner size as limited by its
     // max-width/height, then redo this step, treating the available grid space as equal to the grid
     // container’s inner size when it’s sized to its max-width/height.
+    CSSPixels grid_container_inner_size = 0;
+    for (auto& track : tracks)
+        grid_container_inner_size += track.base_size;
+    auto const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
+    auto const& computed_values = grid_container().computed_values();
+    auto should_treat_grid_container_maximum_size_as_none = [&] {
+        if (dimension == GridDimension::Column)
+            return should_treat_max_width_as_none(grid_container(), available_size);
+        return !computed_values.max_height().is_auto();
+    }();
+    auto maximum_size = calculate_grid_container_maximum_size(dimension);
+    if (!should_treat_grid_container_maximum_size_as_none && grid_container_inner_size > maximum_size) {
+        for (size_t i = 0; i < tracks.size(); i++)
+            tracks[i].base_size = saved_base_sizes[i];
+        auto available_space_with_max_width = *m_available_space;
+        if (dimension == GridDimension::Column)
+            available_space_with_max_width.width = AvailableSize::make_definite(maximum_size);
+        else
+            available_space_with_max_width.height = AvailableSize::make_definite(maximum_size);
+        maximize_tracks_using_available_size(available_space_with_max_width, dimension);
+    }
 }
 
 void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& available_space, GridDimension const dimension)
@@ -1307,7 +1342,7 @@ void GridFormattingContext::run_track_sizing(AvailableSpace const& available_spa
     resolve_intrinsic_track_sizes(available_space, dimension);
 
     // 3. Maximize Tracks
-    maximize_tracks(available_space, dimension);
+    maximize_tracks(dimension);
 
     // 4. Expand Flexible Tracks
     expand_flexible_tracks(available_space, dimension);
@@ -2243,6 +2278,14 @@ int GridItem::gap_adjusted_column(Box const& grid_box) const
     return grid_box.computed_values().column_gap().is_auto() ? column : column * 2;
 }
 
+CSSPixels GridFormattingContext::calculate_grid_container_maximum_size(GridDimension const dimension) const
+{
+    auto const& computed_values = grid_container().computed_values();
+    if (dimension == GridDimension::Column)
+        return calculate_inner_width(grid_container(), m_available_space->width, computed_values.max_width()).to_px(grid_container());
+    return calculate_inner_height(grid_container(), m_available_space->height, computed_values.max_height()).to_px(grid_container());
+}
+
 CSS::Size const& GridFormattingContext::get_item_preferred_size(GridItem const& item, GridDimension const dimension) const
 {
     if (dimension == GridDimension::Column)
@@ -2357,11 +2400,19 @@ CSSPixels GridFormattingContext::calculate_limited_min_content_contribution(Grid
     // The limited min-content contribution of an item is its min-content contribution,
     // limited by the max track sizing function (which could be the argument to a fit-content() track
     // sizing function) if that is fixed and ultimately floored by its minimum contribution.
-    // FIXME: limit by max track sizing function
     auto min_content_contribution = calculate_min_content_contribution(item, dimension);
     auto minimum_contribution = calculate_minimum_contribution(item, dimension);
     if (min_content_contribution < minimum_contribution)
         return minimum_contribution;
+
+    // FIXME: limit by max track sizing function instead of grid container maximum size
+    auto const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
+    if (!should_treat_max_width_as_none(grid_container(), available_size)) {
+        auto max_width = calculate_grid_container_maximum_size(dimension);
+        if (min_content_contribution > max_width)
+            return max_width;
+    }
+
     return min_content_contribution;
 }
 
@@ -2370,11 +2421,19 @@ CSSPixels GridFormattingContext::calculate_limited_max_content_contribution(Grid
     // The limited max-content contribution of an item is its max-content contribution,
     // limited by the max track sizing function (which could be the argument to a fit-content() track
     // sizing function) if that is fixed and ultimately floored by its minimum contribution.
-    // FIXME: limit by max track sizing function
     auto max_content_contribution = calculate_max_content_contribution(item, dimension);
     auto minimum_contribution = calculate_minimum_contribution(item, dimension);
     if (max_content_contribution < minimum_contribution)
         return minimum_contribution;
+
+    // FIXME: limit by max track sizing function instead of grid container maximum size
+    auto const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
+    if (!should_treat_max_width_as_none(grid_container(), available_size)) {
+        auto max_width = calculate_grid_container_maximum_size(dimension);
+        if (max_content_contribution > max_width)
+            return max_width;
+    }
+
     return max_content_contribution;
 }
 
