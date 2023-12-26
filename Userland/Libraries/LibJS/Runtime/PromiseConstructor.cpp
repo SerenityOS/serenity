@@ -480,14 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
     return TRY(promise_resolve(vm, constructor.as_object(), value));
 }
 
-// 27.2.4.8 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
-{
-    // 1. Return the this value.
-    return vm.this_value();
-}
-
-// 1.1.1.1 Promise.withResolvers ( ), https://tc39.es/proposal-promise-with-resolvers/#sec-promise.withResolvers
+// 27.2.4.8 Promise.withResolvers ( ), https://tc39.es/ecma262/#sec-promise.withResolvers
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::with_resolvers)
 {
     auto& realm = *vm.current_realm();
@@ -512,6 +505,13 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::with_resolvers)
 
     // 7. Return obj.
     return object;
+}
+
+// 27.2.4.9 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
+{
+    // 1. Return the this value.
+    return vm.this_value();
 }
 
 }
