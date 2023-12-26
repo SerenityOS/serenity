@@ -1981,8 +1981,8 @@ void Navigable::set_needs_display()
 
 void Navigable::set_needs_display(CSSPixelRect const& rect)
 {
-    if (!viewport_rect().intersects(rect))
-        return;
+    // FIXME: Ignore updates outside the visible viewport rect.
+    //        This requires accounting for fixed-position elements in the input rect, which we don't do yet.
 
     if (is<TraversableNavigable>(*this)) {
         static_cast<TraversableNavigable*>(this)->page().client().page_did_invalidate(to_top_level_rect(rect));
