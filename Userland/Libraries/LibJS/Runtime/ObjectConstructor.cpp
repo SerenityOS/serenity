@@ -29,7 +29,7 @@ void ObjectConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
 
-    // 20.1.2.19 Object.prototype, https://tc39.es/ecma262/#sec-object.prototype
+    // 20.1.2.21 Object.prototype, https://tc39.es/ecma262/#sec-object.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().object_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -373,7 +373,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
     return TRY(object->internal_get_prototype_of());
 }
 
-// 2.1 Object.groupBy ( items, callbackfn ), https://tc39.es/proposal-array-grouping/#sec-object.groupby
+// 20.1.2.13 Object.groupBy ( items, callbackfn ), https://tc39.es/ecma262/#sec-object.groupby
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::group_by)
 {
     auto& realm = *vm.current_realm();
@@ -400,7 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::group_by)
     return object;
 }
 
-// 20.1.2.13 Object.hasOwn ( O, P ), https://tc39.es/ecma262/#sec-object.hasown
+// 20.1.2.14 Object.hasOwn ( O, P ), https://tc39.es/ecma262/#sec-object.hasown
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 {
     // 1. Let obj be ? ToObject(O).
@@ -413,14 +413,14 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
     return Value(TRY(object->has_own_property(key)));
 }
 
-// 20.1.2.14 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
+// 20.1.2.15 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 {
     // 1. Return SameValue(value1, value2).
     return Value(same_value(vm.argument(0), vm.argument(1)));
 }
 
-// 20.1.2.15 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
+// 20.1.2.16 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
 {
     auto argument = vm.argument(0);
@@ -433,7 +433,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
     return Value(TRY(argument.as_object().is_extensible()));
 }
 
-// 20.1.2.16 Object.isFrozen ( O ), https://tc39.es/ecma262/#sec-object.isfrozen
+// 20.1.2.17 Object.isFrozen ( O ), https://tc39.es/ecma262/#sec-object.isfrozen
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
 {
     auto argument = vm.argument(0);
@@ -446,7 +446,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
     return Value(TRY(argument.as_object().test_integrity_level(Object::IntegrityLevel::Frozen)));
 }
 
-// 20.1.2.17 Object.isSealed ( O ), https://tc39.es/ecma262/#sec-object.issealed
+// 20.1.2.18 Object.isSealed ( O ), https://tc39.es/ecma262/#sec-object.issealed
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
 {
     auto argument = vm.argument(0);
@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
     return Value(TRY(argument.as_object().test_integrity_level(Object::IntegrityLevel::Sealed)));
 }
 
-// 20.1.2.18 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
+// 20.1.2.19 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
     auto& realm = *vm.current_realm();
@@ -474,7 +474,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
     return Array::create_from(realm, name_list);
 }
 
-// 20.1.2.19 Object.preventExtensions ( O ), https://tc39.es/ecma262/#sec-object.preventextensions
+// 20.1.2.20 Object.preventExtensions ( O ), https://tc39.es/ecma262/#sec-object.preventextensions
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
 {
     auto argument = vm.argument(0);
@@ -496,7 +496,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
     return argument;
 }
 
-// 20.1.2.21 Object.seal ( O ), https://tc39.es/ecma262/#sec-object.seal
+// 20.1.2.22 Object.seal ( O ), https://tc39.es/ecma262/#sec-object.seal
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
 {
     auto argument = vm.argument(0);
@@ -516,7 +516,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
     return argument;
 }
 
-// 20.1.2.22 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
+// 20.1.2.23 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
     auto proto = vm.argument(1);
@@ -545,7 +545,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
     return object;
 }
 
-// 20.1.2.23 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
+// 20.1.2.24 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
     auto& realm = *vm.current_realm();

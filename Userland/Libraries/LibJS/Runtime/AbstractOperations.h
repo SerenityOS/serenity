@@ -180,7 +180,7 @@ Vector<T> merge_lists(Vector<T> const& a, Vector<T> const& b)
     return merged;
 }
 
-// 4.2 AddValueToKeyedGroup ( groups, key, value ), https://tc39.es/proposal-array-grouping/#sec-add-value-to-keyed-group
+// 7.3.35 AddValueToKeyedGroup ( groups, key, value ), https://tc39.es/ecma262/#sec-add-value-to-keyed-group
 template<typename GroupsType, typename KeyType>
 void add_value_to_keyed_group(VM& vm, GroupsType& groups, KeyType key, Value value)
 {
@@ -210,7 +210,7 @@ void add_value_to_keyed_group(VM& vm, GroupsType& groups, KeyType key, Value val
     // 4. Return unused.
 }
 
-// 4.1 GroupBy ( items, callbackfn, keyCoercion ), https://tc39.es/proposal-array-grouping/#sec-group-by
+// 7.3.36 GroupBy ( items, callbackfn, keyCoercion ), https://tc39.es/ecma262/#sec-groupby
 template<typename GroupsType, typename KeyType>
 ThrowCompletionOr<GroupsType> group_by(VM& vm, Value items, Value callback_function)
 {
@@ -224,8 +224,7 @@ ThrowCompletionOr<GroupsType> group_by(VM& vm, Value items, Value callback_funct
     // 3. Let groups be a new empty List.
     GroupsType groups;
 
-    // 4. Let iteratorRecord be ? GetIterator(items).
-    // FIXME: The Array Grouping proposal is out of date - the `kind` parameter is now required.
+    // 4. Let iteratorRecord be ? GetIterator(items, sync).
     auto iterator_record = TRY(get_iterator(vm, items, IteratorHint::Sync));
 
     // 5. Let k be 0.
