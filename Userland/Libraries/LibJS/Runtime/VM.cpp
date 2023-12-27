@@ -149,7 +149,7 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
 
         // The default implementation of HostResizeArrayBuffer is to return NormalCompletion(unhandled).
 
-        if (auto result = buffer.buffer().try_resize(new_byte_length); result.is_error())
+        if (auto result = buffer.buffer().try_resize(new_byte_length, ByteBuffer::ZeroFillNewElements::Yes); result.is_error())
             return throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, new_byte_length);
 
         return HandledByHost::Handled;
