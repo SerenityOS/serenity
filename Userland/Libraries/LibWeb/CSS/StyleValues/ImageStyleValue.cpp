@@ -124,6 +124,13 @@ Optional<CSSPixels> ImageStyleValue::natural_height() const
     return {};
 }
 
+Optional<CSSPixelFraction> ImageStyleValue::natural_aspect_ratio() const
+{
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_aspect_ratio();
+    return {};
+}
+
 void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const
 {
     if (auto const* b = bitmap(m_current_frame_index, dest_rect.size().to_type<int>()); b != nullptr) {

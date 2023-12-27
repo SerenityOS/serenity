@@ -23,6 +23,15 @@ public:
     virtual Optional<CSSPixels> natural_width() const { return {}; }
     virtual Optional<CSSPixels> natural_height() const { return {}; }
 
+    virtual Optional<CSSPixelFraction> natural_aspect_ratio() const
+    {
+        auto width = natural_width();
+        auto height = natural_height();
+        if (width.has_value() && height.has_value())
+            return *width / *height;
+        return {};
+    }
+
     virtual void load_any_resources(DOM::Document&) {};
     virtual void resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize) const {};
 
