@@ -16,14 +16,26 @@ const BIGINT_TYPED_ARRAYS = [
 ];
 
 describe("errors", () => {
-    test("ArrayBuffer out of bounds", () => {
-        TYPED_ARRAYS.forEach(T => {
-            let arrayBuffer = new ArrayBuffer(T.array.BYTES_PER_ELEMENT * 2, {
-                maxByteLength: T.array.BYTES_PER_ELEMENT * 4,
+    function argumentErrorTests(T) {
+        test(`requires at least one argument (${T.name})`, () => {
+            expect(() => {
+                new T().set();
+            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+        });
+
+        test(`source array in bounds (${T.name})`, () => {
+            expect(() => {
+                new T().set([0]);
+            }).toThrowWithMessage(RangeError, "Overflow or out of bounds in target length");
+        });
+
+        test(`ArrayBuffer out of bounds  (${T.name})`, () => {
+            let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
+                maxByteLength: T.BYTES_PER_ELEMENT * 4,
             });
 
-            let typedArray = new T.array(arrayBuffer, T.array.BYTES_PER_ELEMENT, 1);
-            arrayBuffer.resize(T.array.BYTES_PER_ELEMENT);
+            let typedArray = new T(arrayBuffer, T.BYTES_PER_ELEMENT, 1);
+            arrayBuffer.resize(T.BYTES_PER_ELEMENT);
 
             expect(() => {
                 typedArray.set([0]);
@@ -33,13 +45,16 @@ describe("errors", () => {
             );
 
             expect(() => {
-                typedArray.set(new T.array());
+                typedArray.set(new T());
             }).toThrowWithMessage(
                 TypeError,
                 "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
             );
         });
-    });
+    }
+
+    TYPED_ARRAYS.forEach(({ array: T }) => argumentErrorTests(T));
+    BIGINT_TYPED_ARRAYS.forEach(({ array: T }) => argumentErrorTests(T));
 });
 
 // FIXME: Write out a full test suite for this function. This currently only performs a single regression test.
@@ -129,23 +144,4 @@ test("detached buffer", () => {
 
         expect(typedArray.length).toBe(0);
     });
-});
-
-describe("errors", () => {
-    function argumentErrorTests(T) {
-        test(`requires at least one argument (${T.name})`, () => {
-            expect(() => {
-                new T().set();
-            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
-        });
-
-        test(`source array in bounds (${T.name})`, () => {
-            expect(() => {
-                new T().set([0]);
-            }).toThrowWithMessage(RangeError, "Overflow or out of bounds in target length");
-        });
-    }
-
-    TYPED_ARRAYS.forEach(({ array: T }) => argumentErrorTests(T));
-    BIGINT_TYPED_ARRAYS.forEach(({ array: T }) => argumentErrorTests(T));
 });
