@@ -514,8 +514,10 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
             message_generator.append(";");
         } else if (is_try) {
             message_generator.append(R"~~~();
-        if (!result)
-            return IPC::ErrorCode::PeerDisconnected;)~~~");
+        if (!result) {
+            m_connection.shutdown();
+            return IPC::ErrorCode::PeerDisconnected;
+        })~~~");
             if (inner_return_type != "void") {
                 message_generator.appendln(R"~~~(
         return move(*result);)~~~");
