@@ -54,4 +54,38 @@ describe("normal behavior", () => {
             expect(buffer.byteLength).toBe(i);
         }
     });
+
+    test("enlarged buffers filled with zeros", () => {
+        let buffer = new ArrayBuffer(5, { maxByteLength: 10 });
+
+        const readBuffer = () => {
+            let array = new Uint8Array(buffer, 0, buffer.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+            let values = [];
+
+            for (let value of array) {
+                values.push(Number(value));
+            }
+
+            return values;
+        };
+
+        const writeBuffer = values => {
+            let array = new Uint8Array(buffer, 0, buffer.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+            array.set(values);
+        };
+
+        expect(readBuffer()).toEqual([0, 0, 0, 0, 0]);
+
+        writeBuffer([1, 2, 3, 4, 5]);
+        expect(readBuffer()).toEqual([1, 2, 3, 4, 5]);
+
+        buffer.resize(8);
+        expect(readBuffer()).toEqual([1, 2, 3, 4, 5, 0, 0, 0]);
+
+        writeBuffer([1, 2, 3, 4, 5, 6, 7, 8]);
+        expect(readBuffer()).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+
+        buffer.resize(10);
+        expect(readBuffer()).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 0, 0]);
+    });
 });
