@@ -4368,6 +4368,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
+#include <LibWeb/WebIDL/Types.h>
 
 )~~~");
 
