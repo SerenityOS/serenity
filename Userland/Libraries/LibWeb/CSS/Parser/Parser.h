@@ -228,7 +228,7 @@ private:
     RefPtr<StyleValue> parse_rect_value(ComponentValue const&);
     RefPtr<StyleValue> parse_ratio_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_string_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_image_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_image_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_paint_value(TokenStream<ComponentValue>&);
     enum class PositionParsingMode {
         Normal,

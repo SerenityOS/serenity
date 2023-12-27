@@ -2528,18 +2528,28 @@ RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_va
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_image_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_image_value(TokenStream<ComponentValue>& tokens)
 {
-    auto url = parse_url_function(component_value);
-    if (url.has_value())
+    auto transaction = tokens.begin_transaction();
+    auto& token = tokens.next_token();
+
+    if (auto url = parse_url_function(token); url.has_value()) {
+        transaction.commit();
         return ImageStyleValue::create(url.value());
-    auto linear_gradient = parse_linear_gradient_function(component_value);
-    if (linear_gradient)
+    }
+    if (auto linear_gradient = parse_linear_gradient_function(token)) {
+        transaction.commit();
         return linear_gradient;
-    auto conic_gradient = parse_conic_gradient_function(component_value);
-    if (conic_gradient)
+    }
+    if (auto conic_gradient = parse_conic_gradient_function(token)) {
+        transaction.commit();
         return conic_gradient;
-    return parse_radial_gradient_function(component_value);
+    }
+    if (auto radial_gradient = parse_radial_gradient_function(token)) {
+        transaction.commit();
+        return radial_gradient;
+    }
+    return nullptr;
 }
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
@@ -6490,10 +6500,8 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Image); property.has_value()) {
-        if (auto maybe_image = parse_image_value(peek_token)) {
-            (void)tokens.next_token();
+        if (auto maybe_image = parse_image_value(tokens))
             return PropertyAndValue { *property, maybe_image };
-        }
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Position); property.has_value()) {
