@@ -39,7 +39,7 @@ void ReadableStreamBYOBRequest::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_view);
 }
 
-WebIDL::ExceptionOr<void> ReadableStreamBYOBRequest::respond(u64 bytes_written)
+WebIDL::ExceptionOr<void> ReadableStreamBYOBRequest::respond(WebIDL::UnsignedLongLong bytes_written)
 {
     // 1. If this.[[controller]] is undefined, throw a TypeError exception.
     if (!m_controller)

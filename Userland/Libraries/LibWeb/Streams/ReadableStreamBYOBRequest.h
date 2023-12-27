@@ -11,6 +11,7 @@
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::Streams {
 
@@ -28,7 +29,7 @@ public:
 
     void set_view(JS::GCPtr<WebIDL::ArrayBufferView> value) { m_view = value; }
 
-    WebIDL::ExceptionOr<void> respond(u64 bytes_written);
+    WebIDL::ExceptionOr<void> respond(WebIDL::UnsignedLongLong bytes_written);
 
 private:
     explicit ReadableStreamBYOBRequest(JS::Realm&);
