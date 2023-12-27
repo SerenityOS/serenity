@@ -882,10 +882,10 @@ Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes value)
 }
 
 // https://fetch.spec.whatwg.org/#default-user-agent-value
-ErrorOr<ByteBuffer> default_user_agent_value()
+ByteBuffer default_user_agent_value()
 {
     // A default `User-Agent` value is an implementation-defined header value for the `User-Agent` header.
-    return ByteBuffer::copy(default_user_agent.bytes());
+    return MUST(ByteBuffer::copy(ResourceLoader::the().user_agent().bytes()));
 }
 
 }

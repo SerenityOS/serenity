@@ -1354,7 +1354,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         if (!http_request->header_list()->contains("User-Agent"sv.bytes())) {
             auto header = Infrastructure::Header {
                 .name = MUST(ByteBuffer::copy("User-Agent"sv.bytes())),
-                .value = TRY_OR_THROW_OOM(vm, Infrastructure::default_user_agent_value()),
+                .value = Infrastructure::default_user_agent_value(),
             };
             TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
         }
