@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,5 +63,22 @@ JS::Completion construct(WebIDL::CallbackType& callback, Args&&... args)
 }
 
 JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(Variant<Bindings::LegacyPlatformObject const*, HTML::Window*> const& variant, JS::PropertyKey const& property_key);
+
+// https://webidl.spec.whatwg.org/#abstract-opdef-integerpart
+double integer_part(double n);
+
+enum class EnforceRange {
+    Yes,
+    No,
+};
+
+enum class Clamp {
+    Yes,
+    No,
+};
+
+// https://webidl.spec.whatwg.org/#abstract-opdef-converttoint
+template<Integral T>
+JS::ThrowCompletionOr<T> convert_to_int(JS::VM& vm, JS::Value, EnforceRange enforce_range = EnforceRange::No, Clamp clamp = Clamp::No);
 
 }

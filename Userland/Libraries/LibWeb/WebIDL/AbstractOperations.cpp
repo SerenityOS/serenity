@@ -1,22 +1,26 @@
 /*
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Promise.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::WebIDL {
 
@@ -365,5 +369,114 @@ JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(Variant<Bindings
     // 6. Return true.
     return true;
 }
+
+// https://webidl.spec.whatwg.org/#abstract-opdef-integerpart
+double integer_part(double n)
+{
+    // 1. Let r be floor(abs(n)).
+    auto r = floor(abs(n));
+
+    // 2. If n < 0, then return -1 × r.
+    if (n < 0)
+        return -r;
+
+    // 3. Otherwise, return r.
+    return r;
+}
+
+// https://webidl.spec.whatwg.org/#abstract-opdef-converttoint
+template<Integral T>
+JS::ThrowCompletionOr<T> convert_to_int(JS::VM& vm, JS::Value value, EnforceRange enforce_range, Clamp clamp)
+{
+    double upper_bound = 0;
+    double lower_bound = 0;
+
+    // 1. If bitLength is 64, then:
+    if constexpr (sizeof(T) == 4) {
+        // 1. Let upperBound be 2^(53) − 1
+        upper_bound = JS::MAX_ARRAY_LIKE_INDEX;
+
+        // 2. If signedness is "unsigned", then let lowerBound be 0.
+        if constexpr (IsUnsigned<T>) {
+            lower_bound = 0;
+        }
+        // 3. Otherwise let lowerBound be −2^(53) + 1.
+        else {
+            lower_bound = -JS::MAX_ARRAY_LIKE_INDEX;
+        }
+
+        // Note: this ensures long long types associated with [EnforceRange] or [Clamp] extended attributes are representable in ECMAScript’s Number type as unambiguous integers.
+    } else {
+        // 2. Otherwise, if signedness is "unsigned", then:
+        //     1. Let lowerBound be 0.
+        //     2. Let upperBound be 2^(bitLength) − 1.
+        // 3. Otherwise:
+        //     1. Let lowerBound be -2^(bitLength − 1).
+        //     2. Let upperBound be 2^(bitLength − 1) − 1.
+        lower_bound = NumericLimits<T>::min();
+        upper_bound = NumericLimits<T>::max();
+    }
+
+    // 4. Let x be ? ToNumber(V).
+    auto x = TRY(value.to_number(vm)).as_double();
+
+    // 5. If x is −0, then set x to +0.
+    if (x == -0.)
+        x = 0.;
+
+    // 6. If the conversion is to an IDL type associated with the [EnforceRange] extended attribute, then:
+    if (enforce_range == EnforceRange::Yes) {
+        // 1. If x is NaN, +∞, or −∞, then throw a TypeError.
+        if (isnan(x) || isinf(x))
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NumberIsNaNOrInfinity);
+
+        // 2. Set x to IntegerPart(x).
+        x = integer_part(x);
+
+        // 3. If x < lowerBound or x > upperBound, then throw a TypeError.
+        if (x < lower_bound || x > upper_bound)
+            return vm.throw_completion<JS::RangeError>(MUST(String::formatted("Number '{}' is outside of allowed range of {} to {}", x, lower_bound, upper_bound)));
+
+        // 4. Return x.
+        return x;
+    }
+
+    // 7. If x is not NaN and the conversion is to an IDL type associated with the [Clamp] extended attribute, then:
+    if (clamp == Clamp::Yes && !isnan(x)) {
+        // 1. Set x to min(max(x, lowerBound), upperBound).
+        x = min(max(x, lower_bound), upper_bound);
+
+        // 2. Round x to the nearest integer, choosing the even integer if it lies halfway between two, and choosing +0 rather than −0.
+        // 3. Return x.
+        return round(x);
+    }
+
+    // 8. If x is NaN, +0, +∞, or −∞, then return +0.
+    if (isnan(x) || x == 0.0 || isinf(x))
+        return 0;
+
+    // 9. Set x to IntegerPart(x).
+    x = integer_part(x);
+
+    // 10. Set x to x modulo 2^bitLength.
+    auto constexpr two_pow_bitlength = NumericLimits<MakeUnsigned<T>>::max() + 1.0;
+    x = JS::modulo(x, two_pow_bitlength);
+
+    // 11. If signedness is "signed" and x ≥ 2^(bitLength − 1), then return x − 2^(bitLength).
+    if (IsSigned<T> && x > NumericLimits<T>::max())
+        return x - two_pow_bitlength;
+
+    // 12. Otherwise, return x.
+    return x;
+}
+
+template JS::ThrowCompletionOr<Byte> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<Octet> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<Short> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<UnsignedShort> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<Long> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<UnsignedLong> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<LongLong> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
+template JS::ThrowCompletionOr<UnsignedLongLong> convert_to_int(JS::VM& vm, JS::Value, EnforceRange, Clamp);
 
 }
