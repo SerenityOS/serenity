@@ -13,9 +13,19 @@ Angle AngleOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> 
     return calculated->resolve_angle().value();
 }
 
+Flex FlexOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
+{
+    return calculated->resolve_flex().value();
+}
+
 Frequency FrequencyOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
 {
     return calculated->resolve_frequency().value();
+}
+
+i64 IntegerOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
+{
+    return calculated->resolve_integer().value();
 }
 
 Length LengthOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node) const
@@ -28,6 +38,11 @@ Length LengthOrCalculated::resolved(Length::ResolutionContext const& context) co
     if (is_calculated())
         return calculated()->resolve_length(context).value();
     return value();
+}
+
+double NumberOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
+{
+    return calculated->resolve_number().value();
 }
 
 Percentage PercentageOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const

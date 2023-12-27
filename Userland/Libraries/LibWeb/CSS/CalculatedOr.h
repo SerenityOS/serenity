@@ -8,6 +8,7 @@
 
 #include <AK/Variant.h>
 #include <LibWeb/CSS/Angle.h>
+#include <LibWeb/CSS/Flex.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
@@ -84,11 +85,25 @@ public:
     Angle resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
 };
 
+class FlexOrCalculated : public CalculatedOr<Flex> {
+public:
+    using CalculatedOr<Flex>::CalculatedOr;
+
+    Flex resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
+};
+
 class FrequencyOrCalculated : public CalculatedOr<Frequency> {
 public:
     using CalculatedOr<Frequency>::CalculatedOr;
 
     Frequency resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
+};
+
+class IntegerOrCalculated : public CalculatedOr<i64> {
+public:
+    using CalculatedOr<i64>::CalculatedOr;
+
+    i64 resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
 };
 
 class LengthOrCalculated : public CalculatedOr<Length> {
@@ -97,6 +112,13 @@ public:
 
     Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
     [[nodiscard]] Length resolved(Length::ResolutionContext const&) const;
+};
+
+class NumberOrCalculated : public CalculatedOr<double> {
+public:
+    using CalculatedOr<double>::CalculatedOr;
+
+    double resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
 };
 
 class PercentageOrCalculated : public CalculatedOr<Percentage> {
