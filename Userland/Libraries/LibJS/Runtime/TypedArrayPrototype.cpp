@@ -1846,7 +1846,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     MarkedVector<Value> arguments(vm.heap());
 
     // 15. If O.[[ArrayLength]] is auto and end is undefined, then
-    if (typed_array->array_length().is_auto()) {
+    if (typed_array->array_length().is_auto() && end.is_undefined()) {
         // a. Let argumentsList be « buffer, 𝔽(beginByteOffset) ».
         arguments.empend(buffer);
         arguments.empend(begin_byte_offset.value());

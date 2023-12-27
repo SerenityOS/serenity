@@ -57,3 +57,21 @@ test("resizable ArrayBuffer", () => {
         expect(typedArray.subarray(0, 1).byteLength).toBe(0);
     });
 });
+
+test("resizable ArrayBuffer resized during `start` parameter access", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
+            maxByteLength: T.BYTES_PER_ELEMENT * 4,
+        });
+
+        let badAccessor = {
+            valueOf: () => {
+                arrayBuffer.resize(T.BYTES_PER_ELEMENT * 4);
+                return 0;
+            },
+        };
+
+        let typedArray = new T(arrayBuffer);
+        expect(typedArray.subarray(badAccessor, typedArray.length).length).toBe(2);
+    });
+});
