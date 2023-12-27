@@ -433,11 +433,16 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
         executor.update_immutable_bitmap_texture_cache(immutable_bitmaps);
     }
 
+    HashTable<u32> skipped_sample_corner_commands;
     size_t next_command_index = 0;
     while (next_command_index < m_painting_commands.size()) {
         auto& command = m_painting_commands[next_command_index++];
         auto bounding_rect = command_bounding_rectangle(command);
         if (bounding_rect.has_value() && (bounding_rect->is_empty() || executor.would_be_fully_clipped_by_painter(*bounding_rect))) {
+            if (command.has<SampleUnderCorners>()) {
+                auto const& sample_under_corners = command.get<SampleUnderCorners>();
+                skipped_sample_corner_commands.set(sample_under_corners.id);
+            }
             continue;
         }
 
@@ -533,6 +538,14 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
                 return executor.sample_under_corners(command.id, command.corner_radii, command.border_rect, command.corner_clip);
             },
             [&](BlitCornerClipping const& command) {
+                if (skipped_sample_corner_commands.contains(command.id)) {
+                    // FIXME: If a sampling command falls outside the viewport and is not executed, the associated blit
+                    //        should also be skipped if it is within the viewport. In a properly generated list of
+                    //        painting commands, sample and blit commands should have matching rectangles, preventing
+                    //        this discrepancy.
+                    dbgln("Skipping blit_corner_clipping command because the sample_under_corners command was skipped.");
+                    return CommandResult::Continue;
+                }
                 return executor.blit_corner_clipping(command.id);
             },
             [&](PaintBorders const& command) {
