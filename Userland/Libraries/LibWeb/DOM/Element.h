@@ -103,7 +103,7 @@ public:
     // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
     Optional<String> get_attribute(StringView name) const;
     ByteString deprecated_get_attribute(StringView name) const;
-    ByteString get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
+    String get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
 

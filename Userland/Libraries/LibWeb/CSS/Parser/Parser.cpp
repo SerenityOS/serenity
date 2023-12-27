@@ -75,6 +75,7 @@
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 
 static void log_parse_error(SourceLocation const& location = SourceLocation::current())
@@ -6976,11 +6977,11 @@ bool Parser::substitute_attr_function(DOM::Element& element, StringView property
             // with leading and trailing ASCII whitespace stripped. (No CSS parsing of the value is performed.)
             // If the attribute value, after trimming, is the empty string, there is instead no substitution value.
             // If the <custom-ident>’s value is a CSS-wide keyword or `default`, there is instead no substitution value.
-            auto substitution_value = attribute_value.trim_whitespace();
+            auto substitution_value = MUST(attribute_value.trim(Infra::ASCII_WHITESPACE));
             if (!substitution_value.is_empty()
                 && !substitution_value.equals_ignoring_ascii_case("default"sv)
                 && !is_css_wide_keyword(substitution_value)) {
-                dest.empend(Token::create_ident(MUST(FlyString::from_deprecated_fly_string(substitution_value))));
+                dest.empend(Token::create_ident(substitution_value));
                 return true;
             }
         } else if (attribute_type.equals_ignoring_ascii_case("length"_fly_string)) {
@@ -7016,7 +7017,7 @@ bool Parser::substitute_attr_function(DOM::Element& element, StringView property
             // The substitution value is a CSS string, whose value is the literal value of the attribute.
             // (No CSS parsing or "cleanup" of the value is performed.)
             // No value triggers fallback.
-            dest.empend(Token::create_string(MUST(FlyString::from_deprecated_fly_string(attribute_value))));
+            dest.empend(Token::create_string(attribute_value));
             return true;
         } else if (attribute_type.equals_ignoring_ascii_case("time"_fly_string)) {
             // Parse a component value from the attribute’s value.
@@ -7033,7 +7034,7 @@ bool Parser::substitute_attr_function(DOM::Element& element, StringView property
             // The substitution value is a CSS <url> value, whose url is the literal value of the attribute.
             // (No CSS parsing or "cleanup" of the value is performed.)
             // No value triggers fallback.
-            dest.empend(Token::create_url(MUST(FlyString::from_deprecated_fly_string(attribute_value))));
+            dest.empend(Token::create_url(attribute_value));
             return true;
         } else {
             // Dimension units
