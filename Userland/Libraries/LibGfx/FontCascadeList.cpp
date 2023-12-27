@@ -21,7 +21,7 @@ void FontCascadeList::add(NonnullRefPtr<Font> font, Vector<UnicodeRange> unicode
 void FontCascadeList::extend(FontCascadeList const& other)
 {
     for (auto const& font : other.m_fonts) {
-        m_fonts.append({ font.font->clone(), font.unicode_ranges });
+        m_fonts.append({ font.font, font.unicode_ranges });
     }
 }
 
