@@ -198,6 +198,8 @@ private:
     Optional<URL::URL> parse_url_function(ComponentValue const&);
     RefPtr<StyleValue> parse_url_value(ComponentValue const&);
 
+    template<typename TElement>
+    Optional<Vector<TElement>> parse_color_stop_list(TokenStream<ComponentValue>& tokens, auto is_position, auto get_position);
     Optional<Vector<LinearColorStopListElement>> parse_linear_color_stop_list(TokenStream<ComponentValue>&);
     Optional<Vector<AngularColorStopListElement>> parse_angular_color_stop_list(TokenStream<ComponentValue>&);
 
