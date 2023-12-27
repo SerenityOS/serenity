@@ -591,6 +591,31 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @cpp_name@ = @parameter.optional_default_value@L;
 )~~~");
         }
+    } else if (parameter.type->name() == "unsigned long long") {
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    WebIDL::UnsignedLongLong @cpp_name@;
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<WebIDL::UnsignedLongLong> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(convert_to_int<WebIDL::UnsignedLongLong>(vm, @js_name@@js_suffix@));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@ULL;
+)~~~");
+        }
     } else if (parameter.type->name() == "Promise") {
         // NOTE: It's not clear to me where the implicit wrapping of non-Promise values in a resolved
         // Promise is defined in the spec; https://webidl.spec.whatwg.org/#idl-promise doesn't say
