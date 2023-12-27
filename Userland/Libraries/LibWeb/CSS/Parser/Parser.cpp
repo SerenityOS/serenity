@@ -1195,11 +1195,12 @@ Optional<URL::URL> Parser::parse_url_function(ComponentValue const& component_va
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_url_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_url_value(TokenStream<ComponentValue>& tokens)
 {
-    auto url = parse_url_function(component_value);
+    auto url = parse_url_function(tokens.peek_token());
     if (!url.has_value())
         return nullptr;
+    (void)tokens.next_token();
     return URLStyleValue::create(*url);
 }
 
@@ -2585,8 +2586,7 @@ RefPtr<StyleValue> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens
     if (auto color_or_none = parse_color_or_none(); color_or_none.has_value())
         return *color_or_none;
 
-    if (auto url = parse_url_value(tokens.peek_token())) {
-        (void)tokens.next_token();
+    if (auto url = parse_url_value(tokens)) {
         tokens.skip_whitespace();
         if (auto color_or_none = parse_color_or_none(); color_or_none == nullptr) {
             // Fail to parse if the fallback is invalid, but otherwise ignore it.
@@ -6561,10 +6561,8 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Url); property.has_value()) {
-        if (auto url = parse_url_value(peek_token)) {
-            (void)tokens.next_token();
+        if (auto url = parse_url_value(tokens))
             return PropertyAndValue { *property, url };
-        }
     }
 
     bool property_accepts_dimension = any_property_accepts_type(property_ids, ValueType::Angle).has_value()

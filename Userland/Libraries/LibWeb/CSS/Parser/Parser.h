@@ -196,7 +196,7 @@ private:
     Optional<ExplicitGridTrack> parse_track_sizing_function(ComponentValue const&);
 
     Optional<URL::URL> parse_url_function(ComponentValue const&);
-    RefPtr<StyleValue> parse_url_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_url_value(TokenStream<ComponentValue>&);
 
     template<typename TElement>
     Optional<Vector<TElement>> parse_color_stop_list(TokenStream<ComponentValue>& tokens, auto is_position, auto get_position);
