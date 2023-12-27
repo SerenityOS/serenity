@@ -159,19 +159,19 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
         return { .name = "bool", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "unsigned long" && !type.is_nullable())
-        return { .name = "u32", .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = "WebIDL::UnsignedLong", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "unsigned short" && !type.is_nullable())
-        return { .name = "u16", .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = "WebIDL::UnsignedShort", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "long long" && !type.is_nullable())
-        return { .name = "i64", .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = "WebIDL::LongLong", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "unsigned long long" && !type.is_nullable())
-        return { .name = "u64", .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = "WebIDL::UnsignedLongLong", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "long" && !type.is_nullable())
-        return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = "WebIDL::Long", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "any" || type.name() == "undefined")
         return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedVector };
@@ -494,11 +494,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name() == "unsigned long") {
         if (!optional || optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
-    u32 @cpp_name@;
+    WebIDL::UnsignedLong @cpp_name@;
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    Optional<u32> @cpp_name@;
+    Optional<WebIDL::UnsignedLong> @cpp_name@;
 )~~~");
         }
         if (optional) {
@@ -506,8 +506,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_undefined())
 )~~~");
         }
+        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(vm));
+    @cpp_name@ = TRY(convert_to_int<WebIDL::UnsignedLong>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -518,11 +519,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name() == "unsigned short") {
         if (!optional || optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
-    u16 @cpp_name@;
+    WebIDL::UnsignedShort @cpp_name@;
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    Optional<u16> @cpp_name@;
+    Optional<WebIDL::UnsignedShort> @cpp_name@;
 )~~~");
         }
         if (optional) {
@@ -530,8 +531,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_undefined())
 )~~~");
         }
+        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(vm));
+    @cpp_name@ = TRY(convert_to_int<WebIDL::UnsignedShort>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -542,11 +544,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name() == "long") {
         if (!optional || optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
-    i32 @cpp_name@;
+    WebIDL::Long @cpp_name@;
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    Optional<i32> @cpp_name@;
+    Optional<WebIDL::Long> @cpp_name@;
 )~~~");
         }
         if (optional) {
@@ -554,8 +556,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_undefined())
 )~~~");
         }
+        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(vm));
+    @cpp_name@ = TRY(convert_to_int<WebIDL::Long>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -566,11 +569,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name() == "long long") {
         if (!optional || optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
-    i64 @cpp_name@;
+    WebIDL::LongLong @cpp_name@;
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    Optional<i64> @cpp_name@;
+    Optional<WebIDL::LongLong> @cpp_name@;
 )~~~");
         }
         if (optional) {
@@ -578,8 +581,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_undefined())
 )~~~");
         }
+        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_bigint_int64(vm));
+    @cpp_name@ = TRY(convert_to_int<WebIDL::LongLong>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -3376,8 +3380,10 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
+#include <LibWeb/WebIDL/Types.h>
 
 )~~~");
 
@@ -3588,8 +3594,10 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #    include <LibWeb/URL/@name@.h>
 #endif
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/CallbackType.h>
+#include <LibWeb/WebIDL/Types.h>
 
 )~~~");
 
@@ -4044,6 +4052,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
+#include <LibWeb/WebIDL/Types.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
