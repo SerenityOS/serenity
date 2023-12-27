@@ -18,7 +18,7 @@
 namespace Web::CSS::Parser {
 
 template<typename TElement>
-static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_position, auto get_position, auto parse_color, auto parse_dimension)
+Optional<Vector<TElement>> Parser::parse_color_stop_list(TokenStream<ComponentValue>& tokens, auto is_position, auto get_position)
 {
     enum class ElementType {
         Garbage,
@@ -46,13 +46,13 @@ static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_po
                 return ElementType::ColorHint;
             }
             // <T-percentage> <color>
-            auto maybe_color = parse_color(tokens.next_token());
+            auto maybe_color = parse_color_value(tokens.next_token());
             if (!maybe_color)
                 return ElementType::Garbage;
             color = maybe_color.release_nonnull();
         } else {
             // [<color> <T-percentage>?]
-            auto maybe_color = parse_color(token);
+            auto maybe_color = parse_color_value(token);
             if (!maybe_color)
                 return ElementType::Garbage;
             color = maybe_color.release_nonnull();
@@ -124,9 +124,7 @@ Optional<Vector<LinearColorStopListElement>> Parser::parse_linear_color_stop_lis
     return parse_color_stop_list<LinearColorStopListElement>(
         tokens,
         [](Dimension& dimension) { return dimension.is_length_percentage(); },
-        [](Dimension& dimension) { return dimension.length_percentage(); },
-        [&](auto& token) { return parse_color_value(token); },
-        [&](auto& token) { return parse_dimension(token); });
+        [](Dimension& dimension) { return dimension.length_percentage(); });
 }
 
 Optional<Vector<AngularColorStopListElement>> Parser::parse_angular_color_stop_list(TokenStream<ComponentValue>& tokens)
@@ -136,9 +134,7 @@ Optional<Vector<AngularColorStopListElement>> Parser::parse_angular_color_stop_l
     return parse_color_stop_list<AngularColorStopListElement>(
         tokens,
         [](Dimension& dimension) { return dimension.is_angle_percentage(); },
-        [](Dimension& dimension) { return dimension.angle_percentage(); },
-        [&](auto& token) { return parse_color_value(token); },
-        [&](auto& token) { return parse_dimension(token); });
+        [](Dimension& dimension) { return dimension.angle_percentage(); });
 }
 
 RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
