@@ -18,6 +18,48 @@
 
 namespace Web::Painting {
 
+// https://drafts.csswg.org/css-images/#default-sizing
+static CSSPixelSize run_default_sizing_algorithm(
+    Optional<CSSPixels> specified_width, Optional<CSSPixels> specified_height,
+    Optional<CSSPixels> natural_width, Optional<CSSPixels> natural_height,
+    Optional<CSSPixelFraction> natural_aspect_ratio,
+    CSSPixelSize default_size)
+{
+    // If the specified size is a definite width and height, the concrete object size is given that width and height.
+    if (specified_width.has_value() && specified_height.has_value())
+        return CSSPixelSize { specified_width.value(), specified_height.value() };
+    // If the specified size is only a width or height (but not both) then the concrete object size is given that specified width or height.
+    // The other dimension is calculated as follows:
+    if (specified_width.has_value() || specified_height.has_value()) {
+        // 1. If the object has a natural aspect ratio,
+        // the missing dimension of the concrete object size is calculated using that aspect ratio and the present dimension.
+        if (natural_aspect_ratio.has_value() && !natural_aspect_ratio->might_be_saturated()) {
+            if (specified_width.has_value())
+                return CSSPixelSize { specified_width.value(), (CSSPixels(1) / natural_aspect_ratio.value()) * specified_width.value() };
+            if (specified_height.has_value())
+                return CSSPixelSize { specified_height.value() * natural_aspect_ratio.value(), specified_height.value() };
+        }
+        // 2. Otherwise, if the missing dimension is present in the object’s natural dimensions,
+        // the missing dimension is taken from the object’s natural dimensions.
+        if (specified_height.has_value() && natural_width.has_value())
+            return CSSPixelSize { natural_width.value(), specified_height.value() };
+        if (specified_width.has_value() && natural_height.has_value())
+            return CSSPixelSize { specified_width.value(), natural_height.value() };
+        // 3. Otherwise, the missing dimension of the concrete object size is taken from the default object size.
+        if (specified_height.has_value())
+            return CSSPixelSize { default_size.width(), specified_height.value() };
+        if (specified_width.has_value())
+            return CSSPixelSize { specified_width.value(), default_size.height() };
+        VERIFY_NOT_REACHED();
+    }
+    // If the specified size has no constraints:
+    // 1. If the object has a natural height or width, its size is resolved as if its natural dimensions were given as the specified size.
+    if (natural_width.has_value() || natural_height.has_value())
+        return run_default_sizing_algorithm(natural_width, natural_height, natural_width, natural_height, natural_aspect_ratio, default_size);
+    // FIXME: 2. Otherwise, its size is resolved as a contain constraint against the default object size.
+    return default_size;
+}
+
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
 void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, CSSPixelRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
 {
@@ -150,53 +192,43 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             break;
         }
 
-        // FIXME: Implement proper default sizing algorithm: https://drafts.csswg.org/css-images/#default-sizing
-        CSSPixels natural_image_width = image.natural_width().value_or(background_positioning_area.width());
-        CSSPixels natural_image_height = image.natural_height().value_or(background_positioning_area.height());
+        Optional<CSSPixels> specified_width {};
+        Optional<CSSPixels> specified_height {};
+        if (layer.size_type == CSS::BackgroundSize::LengthPercentage) {
+            if (!layer.size_x.is_auto())
+                specified_width = layer.size_x.to_px(layout_node, background_positioning_area.width());
+            if (!layer.size_y.is_auto())
+                specified_height = layer.size_y.to_px(layout_node, background_positioning_area.height());
+        }
+        auto concrete_image_size = run_default_sizing_algorithm(
+            specified_width, specified_height,
+            image.natural_width(), image.natural_height(), image.natural_aspect_ratio(),
+            background_positioning_area.size());
 
         // If any of these are zero, the NaNs will pop up in the painting code.
-        if (background_positioning_area.is_empty() || natural_image_height <= 0 || natural_image_width <= 0)
+        if (background_positioning_area.is_empty() || concrete_image_size.is_empty())
             continue;
 
         // Size
         CSSPixelRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            double max_width_ratio = (background_positioning_area.width() / natural_image_width).to_double();
-            double max_height_ratio = (background_positioning_area.height() / natural_image_height).to_double();
+            double max_width_ratio = (background_positioning_area.width() / concrete_image_size.width()).to_double();
+            double max_height_ratio = (background_positioning_area.height() / concrete_image_size.height()).to_double();
             double ratio = min(max_width_ratio, max_height_ratio);
-            image_rect.set_size(natural_image_width.scaled(ratio), natural_image_height.scaled(ratio));
+            image_rect.set_size(concrete_image_size.width().scaled(ratio), concrete_image_size.height().scaled(ratio));
             break;
         }
         case CSS::BackgroundSize::Cover: {
-            double max_width_ratio = (background_positioning_area.width() / natural_image_width).to_double();
-            double max_height_ratio = (background_positioning_area.height() / natural_image_height).to_double();
+            double max_width_ratio = (background_positioning_area.width() / concrete_image_size.width()).to_double();
+            double max_height_ratio = (background_positioning_area.height() / concrete_image_size.height()).to_double();
             double ratio = max(max_width_ratio, max_height_ratio);
-            image_rect.set_size(natural_image_width.scaled(ratio), natural_image_height.scaled(ratio));
+            image_rect.set_size(concrete_image_size.width().scaled(ratio), concrete_image_size.height().scaled(ratio));
             break;
         }
-        case CSS::BackgroundSize::LengthPercentage: {
-            CSSPixels width;
-            CSSPixels height;
-            bool x_is_auto = layer.size_x.is_auto();
-            bool y_is_auto = layer.size_y.is_auto();
-            if (x_is_auto && y_is_auto) {
-                width = natural_image_width;
-                height = natural_image_height;
-            } else if (x_is_auto) {
-                height = layer.size_y.to_px(layout_node, background_positioning_area.height());
-                width = natural_image_width * (height / natural_image_height);
-            } else if (y_is_auto) {
-                width = layer.size_x.to_px(layout_node, background_positioning_area.width());
-                height = natural_image_height * (width / natural_image_width);
-            } else {
-                width = layer.size_x.to_px(layout_node, background_positioning_area.width());
-                height = layer.size_y.to_px(layout_node, background_positioning_area.height());
-            }
-
-            image_rect.set_size(width, height);
+        case CSS::BackgroundSize::LengthPercentage:
+            image_rect.set_size(concrete_image_size);
             break;
-        }
         }
 
         // If after sizing we have a 0px image, we're done. Attempting to paint this would be an infinite loop.
@@ -223,10 +255,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // so that the original aspect ratio is restored.
             if (layer.repeat_x != layer.repeat_y) {
                 if (layer.size_x.is_auto()) {
-                    image_rect.set_width(natural_image_width * (image_rect.height() / natural_image_height));
+                    image_rect.set_width(image_rect.height() * (concrete_image_size.width() / concrete_image_size.height()));
                 }
                 if (layer.size_y.is_auto()) {
-                    image_rect.set_height(natural_image_height * (image_rect.width() / natural_image_width));
+                    image_rect.set_height(image_rect.width() * (concrete_image_size.height() / concrete_image_size.width()));
                 }
             }
         }
