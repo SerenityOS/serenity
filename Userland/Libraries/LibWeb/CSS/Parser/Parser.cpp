@@ -2340,13 +2340,15 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 }
 
 // https://www.w3.org/TR/CSS2/visufx.html#value-def-shape
-RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_rect_value(TokenStream<ComponentValue>& tokens)
 {
-    if (!component_value.is_function("rect"sv))
+    auto transaction = tokens.begin_transaction();
+    auto function_token = tokens.next_token();
+    if (!function_token.is_function("rect"sv))
         return nullptr;
 
     Vector<Length, 4> params;
-    auto tokens = TokenStream { component_value.function().values() };
+    auto argument_tokens = TokenStream { function_token.function().values() };
 
     enum class CommaRequirement {
         Unknown,
@@ -2367,30 +2369,30 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
     // <top> and <bottom> specify offsets from the top border edge of the box, and <right>, and
     //  <left> specify offsets from the left border edge of the box.
     for (size_t side = 0; side < 4; side++) {
-        tokens.skip_whitespace();
+        argument_tokens.skip_whitespace();
 
         // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
         // Negative lengths are permitted.
-        if (tokens.peek_token().is_ident("auto"sv)) {
-            (void)tokens.next_token(); // `auto`
+        if (argument_tokens.peek_token().is_ident("auto"sv)) {
+            (void)argument_tokens.next_token(); // `auto`
             params.append(Length::make_auto());
         } else {
-            auto maybe_length = parse_length(tokens);
+            auto maybe_length = parse_length(argument_tokens);
             if (!maybe_length.has_value())
                 return nullptr;
             // FIXME: Support calculated lengths
             params.append(maybe_length.value().value());
         }
-        tokens.skip_whitespace();
+        argument_tokens.skip_whitespace();
 
         // The last side, should be no more tokens following it.
         if (static_cast<Side>(side) == Side::Left) {
-            if (tokens.has_next_token())
+            if (argument_tokens.has_next_token())
                 return nullptr;
             break;
         }
 
-        bool next_is_comma = tokens.peek_token().is(Token::Type::Comma);
+        bool next_is_comma = argument_tokens.peek_token().is(Token::Type::Comma);
 
         // Authors should separate offset values with commas. User agents must support separation
         // with commas, but may also support separation without commas (but not a combination),
@@ -2400,7 +2402,7 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
 
         if (comma_requirement == CommaRequirement::RequiresCommas) {
             if (next_is_comma)
-                tokens.next_token();
+                argument_tokens.next_token();
             else
                 return nullptr;
         } else if (comma_requirement == CommaRequirement::RequiresNoCommas) {
@@ -2411,6 +2413,7 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
         }
     }
 
+    transaction.commit();
     return RectStyleValue::create(EdgeRect { params[0], params[1], params[2], params[3] });
 }
 
@@ -6549,10 +6552,8 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Rect); property.has_value()) {
-        if (auto maybe_rect = parse_rect_value(peek_token)) {
-            (void)tokens.next_token();
+        if (auto maybe_rect = parse_rect_value(tokens))
             return PropertyAndValue { *property, maybe_rect };
-        }
     }
 
     if (peek_token.is(Token::Type::String)) {
