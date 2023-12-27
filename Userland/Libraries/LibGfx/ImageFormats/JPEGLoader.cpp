@@ -1240,6 +1240,8 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
         return Error::from_string_literal("SOF repeated");
     }
 
+    // B.2.2 Frame header syntax
+
     [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     context.frame.precision = TRY(stream.read_u8());
