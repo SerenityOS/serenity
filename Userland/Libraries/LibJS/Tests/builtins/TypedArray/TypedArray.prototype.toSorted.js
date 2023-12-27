@@ -13,6 +13,38 @@ const TYPED_ARRAYS = [
 const BIGINT_TYPED_ARRAYS = [BigUint64Array, BigInt64Array];
 
 describe("errors", () => {
+    test("null or undefined this value", () => {
+        TYPED_ARRAYS.forEach(T => {
+            expect(() => {
+                T.prototype.toSorted.call();
+            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+
+            expect(() => {
+                T.prototype.toSorted.call(undefined);
+            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+
+            expect(() => {
+                T.prototype.toSorted.call(null);
+            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+        });
+
+        BIGINT_TYPED_ARRAYS.forEach(T => {});
+    });
+
+    test("invalid compare function", () => {
+        TYPED_ARRAYS.forEach(T => {
+            expect(() => {
+                new T([]).toSorted("foo");
+            }).toThrowWithMessage(TypeError, "foo is not a function");
+        });
+
+        BIGINT_TYPED_ARRAYS.forEach(T => {
+            expect(() => {
+                new T([]).toSorted("foo");
+            }).toThrowWithMessage(TypeError, "foo is not a function");
+        });
+    });
+
     test("ArrayBuffer out of bounds", () => {
         TYPED_ARRAYS.forEach(T => {
             let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
@@ -88,39 +120,5 @@ test("detached buffer", () => {
         expect(sortedTypedArray[0]).toBe(1);
         expect(sortedTypedArray[1]).toBe(2);
         expect(sortedTypedArray[2]).toBe(3);
-    });
-});
-
-describe("errors", () => {
-    test("null or undefined this value", () => {
-        TYPED_ARRAYS.forEach(T => {
-            expect(() => {
-                T.prototype.toSorted.call();
-            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
-
-            expect(() => {
-                T.prototype.toSorted.call(undefined);
-            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
-
-            expect(() => {
-                T.prototype.toSorted.call(null);
-            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
-        });
-
-        BIGINT_TYPED_ARRAYS.forEach(T => {});
-    });
-
-    test("invalid compare function", () => {
-        TYPED_ARRAYS.forEach(T => {
-            expect(() => {
-                new T([]).toSorted("foo");
-            }).toThrowWithMessage(TypeError, "foo is not a function");
-        });
-
-        BIGINT_TYPED_ARRAYS.forEach(T => {
-            expect(() => {
-                new T([]).toSorted("foo");
-            }).toThrowWithMessage(TypeError, "foo is not a function");
-        });
     });
 });

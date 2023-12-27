@@ -13,36 +13,6 @@ const TYPED_ARRAYS = [
 const BIGINT_TYPED_ARRAYS = [BigUint64Array, BigInt64Array];
 
 describe("errors", () => {
-    test("ArrayBuffer out of bounds", () => {
-        TYPED_ARRAYS.forEach(T => {
-            let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
-                maxByteLength: T.BYTES_PER_ELEMENT * 4,
-            });
-
-            let typedArray = new T(arrayBuffer, T.BYTES_PER_ELEMENT, 1);
-            arrayBuffer.resize(T.BYTES_PER_ELEMENT);
-
-            expect(() => {
-                typedArray.every(value => value === 0);
-            }).toThrowWithMessage(
-                TypeError,
-                "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
-            );
-        });
-    });
-});
-
-test("length is 1", () => {
-    TYPED_ARRAYS.forEach(T => {
-        expect(T.prototype.every).toHaveLength(1);
-    });
-
-    BIGINT_TYPED_ARRAYS.forEach(T => {
-        expect(T.prototype.every).toHaveLength(1);
-    });
-});
-
-describe("errors", () => {
     function errorTests(T) {
         test(`requires at least one argument (${T.name})`, () => {
             expect(() => {
@@ -58,10 +28,36 @@ describe("errors", () => {
                 new T().every(undefined);
             }).toThrowWithMessage(TypeError, "undefined is not a function");
         });
+
+        test(`ArrayBuffer out of bounds  (${T.name})`, () => {
+            let arrayBuffer = new ArrayBuffer(T.BYTES_PER_ELEMENT * 2, {
+                maxByteLength: T.BYTES_PER_ELEMENT * 4,
+            });
+
+            let typedArray = new T(arrayBuffer, T.BYTES_PER_ELEMENT, 1);
+            arrayBuffer.resize(T.BYTES_PER_ELEMENT);
+
+            expect(() => {
+                typedArray.every(value => value === 0);
+            }).toThrowWithMessage(
+                TypeError,
+                "TypedArray contains a property which references a value at an index not contained within its buffer's bounds"
+            );
+        });
     }
 
     TYPED_ARRAYS.forEach(T => errorTests(T));
     BIGINT_TYPED_ARRAYS.forEach(T => errorTests(T));
+});
+
+test("length is 1", () => {
+    TYPED_ARRAYS.forEach(T => {
+        expect(T.prototype.every).toHaveLength(1);
+    });
+
+    BIGINT_TYPED_ARRAYS.forEach(T => {
+        expect(T.prototype.every).toHaveLength(1);
+    });
 });
 
 test("basic functionality", () => {
