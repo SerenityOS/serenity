@@ -120,7 +120,7 @@ UNMAP_AFTER_INIT bool I8042Controller::check_existence_via_probing(Badge<HIDMana
     }
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
+UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices(EnableKeyboardFirstPortTranslation enable_first_port_translation)
 {
     u8 configuration;
     {
@@ -135,7 +135,13 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
         configuration = TRY(do_wait_then_read_any_input(I8042Port::Buffer));
         configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
         configuration &= ~I8042ConfigurationFlag::SecondPS2PortInterrupt;
-        configuration |= I8042ConfigurationFlag::FirstPS2PortTranslation;
+
+        // FIXME: Don't enable translation for the first i8042 port if nothing is connected
+        // or even worse - a mouse device, because we will get garbage data.
+        if (enable_first_port_translation == EnableKeyboardFirstPortTranslation::Yes)
+            configuration |= I8042ConfigurationFlag::FirstPS2PortTranslation;
+        else
+            configuration &= ~I8042ConfigurationFlag::FirstPS2PortTranslation;
 
         TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
         TRY(do_wait_then_write(I8042Port::Buffer, configuration));
@@ -197,7 +203,9 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
         // FIXME: Actually figure out the connected PS2 device type
         m_first_ps2_port.device_type = PS2DeviceType::StandardKeyboard;
         auto keyboard_device = TRY(KeyboardDevice::try_to_initialize());
-        auto error_or_device = PS2KeyboardDevice::try_to_initialize(*this, I8042PortIndex::FirstPort, *keyboard_device);
+        // FIXME: Determine if the user wants to operate in scan code set 3.
+        auto keyboard_device_scan_code_set = enable_first_port_translation == EnableKeyboardFirstPortTranslation::Yes ? ScanCodeSet::Set1 : ScanCodeSet::Set2;
+        auto error_or_device = PS2KeyboardDevice::try_to_initialize(*this, I8042PortIndex::FirstPort, keyboard_device_scan_code_set, *keyboard_device);
         if (error_or_device.is_error()) {
             dbgln("I8042: Keyboard device failed to initialize, disable");
             m_first_port_available = false;
