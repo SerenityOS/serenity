@@ -510,9 +510,15 @@ def setup_audio_backend(config: Configuration):
             capture_output=True,
             encoding="utf-8",
         ).stdout
-        if "-audiodev id=sdl" in qemu_audio_help:
+        if qemu_audio_help == "":
+            qemu_audio_help = run(
+                [str(config.qemu_binary), "-audiodev", "help"],
+                capture_output=True,
+                encoding="utf-8",
+            ).stdout
+        if "sdl" in qemu_audio_help:
             config.audio_backend = "sdl"
-        elif "-audiodev id=pa" in qemu_audio_help:
+        elif "pa" in qemu_audio_help:
             config.audio_backend = "pa,timer-period=2000"
 
     if config.audio_backend is not None:
