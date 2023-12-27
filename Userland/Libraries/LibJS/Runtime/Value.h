@@ -21,12 +21,12 @@
 #include <LibJS/Heap/GCPtr.h>
 #include <math.h>
 
+namespace JS {
+
 // 2 ** 53 - 1
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
 // Unique bit representation of negative zero (only sign bit set)
 static constexpr u64 NEGATIVE_ZERO_BITS = ((u64)1 << 63);
-
-namespace JS {
 
 static_assert(sizeof(double) == 8);
 static_assert(sizeof(void*) == sizeof(double) || sizeof(void*) == sizeof(u32));
