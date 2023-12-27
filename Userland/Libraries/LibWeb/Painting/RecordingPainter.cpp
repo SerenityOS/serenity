@@ -183,11 +183,11 @@ void RecordingPainter::draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color col
     });
 }
 
-void RecordingPainter::draw_text(Gfx::IntRect const& rect, StringView raw_text, Gfx::TextAlignment alignment, Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping)
+void RecordingPainter::draw_text(Gfx::IntRect const& rect, String raw_text, Gfx::TextAlignment alignment, Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping)
 {
     push_command(DrawText {
         .rect = state().translation.map(rect),
-        .raw_text = String::from_utf8(raw_text).release_value_but_fixme_should_propagate_errors(),
+        .raw_text = move(raw_text),
         .alignment = alignment,
         .color = color,
         .elision = elision,
@@ -195,11 +195,11 @@ void RecordingPainter::draw_text(Gfx::IntRect const& rect, StringView raw_text, 
     });
 }
 
-void RecordingPainter::draw_text(Gfx::IntRect const& rect, StringView raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping)
+void RecordingPainter::draw_text(Gfx::IntRect const& rect, String raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping)
 {
     push_command(DrawText {
         .rect = state().translation.map(rect),
-        .raw_text = String::from_utf8(raw_text).release_value_but_fixme_should_propagate_errors(),
+        .raw_text = move(raw_text),
         .alignment = alignment,
         .color = color,
         .elision = elision,
