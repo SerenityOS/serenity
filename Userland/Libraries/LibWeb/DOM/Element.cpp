@@ -130,17 +130,17 @@ ByteString Element::deprecated_get_attribute(StringView name) const
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value
-ByteString Element::get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_) const
+String Element::get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_) const
 {
     // 1. Let attr be the result of getting an attribute given namespace, localName, and element.
     auto const* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
 
     // 2. If attr is null, then return the empty string.
     if (!attribute)
-        return ByteString::empty();
+        return String {};
 
     // 3. Return attr’s value.
-    return attribute->value().to_byte_string();
+    return attribute->value();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
