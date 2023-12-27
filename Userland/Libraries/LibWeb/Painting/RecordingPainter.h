@@ -443,8 +443,8 @@ public:
 
     void draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color color, int thickness = 1, Gfx::Painter::LineStyle style = Gfx::Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
 
-    void draw_text(Gfx::IntRect const&, StringView, Gfx::Font const&, Gfx::TextAlignment = Gfx::TextAlignment::TopLeft, Color = Color::Black, Gfx::TextElision = Gfx::TextElision::None, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
-    void draw_text(Gfx::IntRect const& rect, StringView raw_text, Gfx::TextAlignment alignment = Gfx::TextAlignment::TopLeft, Color color = Color::Black, Gfx::TextElision elision = Gfx::TextElision::None, Gfx::TextWrapping wrapping = Gfx::TextWrapping::DontWrap);
+    void draw_text(Gfx::IntRect const&, String, Gfx::Font const&, Gfx::TextAlignment = Gfx::TextAlignment::TopLeft, Color = Color::Black, Gfx::TextElision = Gfx::TextElision::None, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
+    void draw_text(Gfx::IntRect const& rect, String raw_text, Gfx::TextAlignment alignment = Gfx::TextAlignment::TopLeft, Color color = Color::Black, Gfx::TextElision elision = Gfx::TextElision::None, Gfx::TextWrapping wrapping = Gfx::TextWrapping::DontWrap);
 
     void draw_signed_distance_field(Gfx::IntRect const& dst_rect, Color color, Gfx::GrayscaleBitmap const& sdf, float smoothing);
 
