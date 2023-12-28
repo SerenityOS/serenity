@@ -98,7 +98,7 @@
     M(NotAnObjectOfType, "Not an object of type {}")                                                                                    \
     M(NotAnObjectOrNull, "{} is neither an object nor null")                                                                            \
     M(NotAnObjectOrString, "{} is neither an object nor a string")                                                                      \
-    M(NotASharedArrayBuffer, "The TypedArray's underlying buffer must be a SharedArrayBuffer")                                          \
+    M(NotASharedArrayBuffer, "The array buffer object must be a SharedArrayBuffer")                                                     \
     M(NotAString, "{} is not a string")                                                                                                 \
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotImplemented, "TODO({} is not implemented in LibJS)")                                                                           \
