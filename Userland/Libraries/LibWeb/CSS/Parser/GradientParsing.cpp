@@ -444,29 +444,26 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
         tokens.skip_whitespace();
         if (!tokens.has_next_token())
             return {};
-        auto& token = tokens.next_token();
-        if (token.is(Token::Type::Ident)) {
-            auto extent = parse_extent_keyword(token.token().ident());
+        if (tokens.peek_token().is(Token::Type::Ident)) {
+            auto extent = parse_extent_keyword(tokens.next_token().token().ident());
             if (!extent.has_value())
                 return {};
             return commit_value(*extent, transaction_size);
         }
-        auto first_dimension = parse_dimension(token);
-        if (!first_dimension.has_value())
-            return {};
-        if (!first_dimension->is_length_percentage())
+        auto first_radius = parse_length_percentage(tokens);
+        if (!first_radius.has_value())
             return {};
         auto transaction_second_dimension = tokens.begin_transaction();
         tokens.skip_whitespace();
         if (tokens.has_next_token()) {
-            auto& second_token = tokens.next_token();
-            auto second_dimension = parse_dimension(second_token);
-            if (second_dimension.has_value() && second_dimension->is_length_percentage())
-                return commit_value(EllipseSize { first_dimension->length_percentage(), second_dimension->length_percentage() },
+            auto second_radius = parse_length_percentage(tokens);
+            if (second_radius.has_value())
+                return commit_value(EllipseSize { first_radius.release_value(), second_radius.release_value() },
                     transaction_size, transaction_second_dimension);
         }
-        if (first_dimension->is_length())
-            return commit_value(CircleSize { first_dimension->length() }, transaction_size);
+        // FIXME: Support calculated lengths
+        if (first_radius->is_length())
+            return commit_value(CircleSize { first_radius->length() }, transaction_size);
         return {};
     };
 
