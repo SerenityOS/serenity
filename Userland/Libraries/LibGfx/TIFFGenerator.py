@@ -140,12 +140,12 @@ known_tags: List[Tag] = [
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
 
-HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(Metadata& metadata, u16 tag,"
+HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(ExifMetadata& metadata, u16 tag,"
                                  " {namespace}Type type, u32 count, Vector<{namespace}Value>&& value)")
 HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
 
-ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_are_present(Metadata const& metadata)"
+ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_are_present(ExifMetadata const& metadata)"
 TIFF_TYPE_FROM_U16 = "ErrorOr<Type> tiff_type_from_u16(u16 type)"
 SIZE_OF_TIFF_TYPE = "u8 size_of_type(Type type)"
 
@@ -210,7 +210,7 @@ def promote_type(t: TIFFType) -> TIFFType:
 
 
 def tiff_type_to_cpp(t: TIFFType, with_promotion: bool = True) -> str:
-    # To simplify the code generator and the Metadata class API, all u16 are promoted to u32
+    # To simplify the code generator and the ExifMetadata class API, all u16 are promoted to u32
     # Note that the Value<> type doesn't include u16 for this reason
     if with_promotion:
         t = promote_type(t)
@@ -328,7 +328,7 @@ def generate_getter(tag: Tag) -> str:
 def generate_metadata_class(tags: List[Tag]) -> str:
     getters = '\n'.join([generate_getter(tag) for tag in tags])
 
-    output = fR"""class Metadata {{
+    output = fR"""class ExifMetadata {{
 public:
 {getters}
 private:
@@ -357,7 +357,7 @@ def generate_metadata_file(tags: List[Tag]) -> str:
 
 namespace Gfx {{
 
-class Metadata;
+class ExifMetadata;
 
 namespace TIFF {{
 

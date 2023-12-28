@@ -82,7 +82,7 @@ public:
         return ExifOrientedBitmap::oriented_size({ *m_metadata.image_width(), *m_metadata.image_height() }, *m_metadata.orientation());
     }
 
-    Metadata const& metadata() const
+    ExifMetadata const& metadata() const
     {
         return m_metadata;
     }
@@ -518,7 +518,7 @@ private:
     ByteOrder m_byte_order {};
     Optional<u32> m_next_ifd {};
 
-    Metadata m_metadata {};
+    ExifMetadata m_metadata {};
 };
 
 }
