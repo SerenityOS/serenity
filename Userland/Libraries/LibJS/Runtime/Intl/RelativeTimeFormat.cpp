@@ -101,7 +101,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
 
     // 4. If value is NaN, +∞𝔽, or -∞𝔽, throw a RangeError exception.
     if (!Value(value).is_finite_number())
-        return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaNOrInfinity);
+        return vm.throw_completion<RangeError>(ErrorType::NumberIsNaNOrInfinity);
 
     // 5. Let unit be ? SingularRelativeTimeUnit(unit).
     auto time_unit = TRY(singular_relative_time_unit(vm, unit));

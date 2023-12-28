@@ -56,7 +56,6 @@
     M(IntlInvalidTime, "Time value must be between -8.64E15 and 8.64E15")                                                               \
     M(IntlInvalidUnit, "Unit {} is not a valid time unit")                                                                              \
     M(IntlMinimumExceedsMaximum, "Minimum value {} is larger than maximum value {}")                                                    \
-    M(IntlNumberIsNaNOrInfinity, "Number must not be NaN or Infinity")                                                                  \
     M(IntlNumberIsNaNOrOutOfRange, "Value {} is NaN or is not between {} and {}")                                                       \
     M(IntlOptionUndefined, "Option {} must be defined when option {} is {}")                                                            \
     M(IntlNonNumericOr2DigitAfterNumericOr2Digit, "Styles other than 'numeric' and '2-digit' may not be used in smaller units after "   \
@@ -106,6 +105,7 @@
     M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
     M(NotUndefined, "{} is not undefined")                                                                                              \
     M(NumberIsNaN, "{} must not be NaN")                                                                                                \
+    M(NumberIsNaNOrInfinity, "Number must not be NaN or Infinity")                                                                      \
     M(NumberIsNegative, "{} must not be negative")                                                                                      \
     M(ObjectDefineOwnPropertyReturnedFalse, "Object's [[DefineOwnProperty]] method returned false")                                     \
     M(ObjectDeleteReturnedFalse, "Object's [[Delete]] method returned false")                                                           \
