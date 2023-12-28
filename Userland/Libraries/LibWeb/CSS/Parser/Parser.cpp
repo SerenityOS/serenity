@@ -3457,20 +3457,20 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(TokenStream<ComponentValue>
 {
     if (tokens.remaining_token_count() == 2) {
         auto transaction = tokens.begin_transaction();
-        auto horizontal = parse_dimension(tokens.next_token());
-        auto vertical = parse_dimension(tokens.next_token());
-        if (horizontal.has_value() && horizontal->is_length_percentage() && vertical.has_value() && vertical->is_length_percentage()) {
+        auto horizontal = parse_length_percentage(tokens);
+        auto vertical = parse_length_percentage(tokens);
+        if (horizontal.has_value() && vertical.has_value()) {
             transaction.commit();
-            return BorderRadiusStyleValue::create(horizontal->length_percentage(), vertical->length_percentage());
+            return BorderRadiusStyleValue::create(horizontal.release_value(), vertical.release_value());
         }
     }
 
     if (tokens.remaining_token_count() == 1) {
         auto transaction = tokens.begin_transaction();
-        auto radius = parse_dimension(tokens.next_token());
-        if (radius.has_value() && radius->is_length_percentage()) {
+        auto radius = parse_length_percentage(tokens);
+        if (radius.has_value()) {
             transaction.commit();
-            return BorderRadiusStyleValue::create(radius->length_percentage(), radius->length_percentage());
+            return BorderRadiusStyleValue::create(radius.value(), radius.value());
         }
     }
 
@@ -3524,22 +3524,22 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(TokenStream<Compo
     auto transaction = tokens.begin_transaction();
 
     while (tokens.has_next_token()) {
-        auto& token = tokens.next_token();
-        if (token.is_delim('/')) {
+        if (tokens.peek_token().is_delim('/')) {
             if (reading_vertical || horizontal_radii.is_empty())
                 return nullptr;
 
             reading_vertical = true;
+            (void)tokens.next_token(); // `/`
             continue;
         }
 
-        auto maybe_dimension = parse_dimension(token);
-        if (!maybe_dimension.has_value() || !maybe_dimension->is_length_percentage())
+        auto maybe_dimension = parse_length_percentage(tokens);
+        if (!maybe_dimension.has_value())
             return nullptr;
         if (reading_vertical) {
-            vertical_radii.append(maybe_dimension->length_percentage());
+            vertical_radii.append(maybe_dimension.release_value());
         } else {
-            horizontal_radii.append(maybe_dimension->length_percentage());
+            horizontal_radii.append(maybe_dimension.release_value());
         }
     }
 
