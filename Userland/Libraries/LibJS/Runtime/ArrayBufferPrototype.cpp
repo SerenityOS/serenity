@@ -48,7 +48,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_shared_array_buffer())
-        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::SharedArrayBuffer);
 
     // NOTE: These steps are done in byte_length()
     // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::max_byte_length)
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_shared_array_buffer())
-        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::SharedArrayBuffer);
 
     // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
     if (array_buffer_object->is_detached())
@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::resizable)
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_shared_array_buffer())
-        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::SharedArrayBuffer);
 
     // 4. If IsFixedLengthArrayBuffer(O) is false, return true; otherwise return false.
     return Value { !array_buffer_object->is_fixed_length() };
@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::resize)
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_shared_array_buffer())
-        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::SharedArrayBuffer);
 
     // 4. Let newByteLength be ? ToIndex(newLength).
     auto new_byte_length = TRY(new_length.to_index(vm));
