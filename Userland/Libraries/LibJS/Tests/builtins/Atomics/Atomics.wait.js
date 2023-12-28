@@ -31,10 +31,7 @@ describe("errors", () => {
         expect(() => {
             const typedArray = new Int32Array(4);
             Atomics.wait(typedArray, 0, 0, 0);
-        }).toThrowWithMessage(
-            TypeError,
-            "The TypedArray's underlying buffer must be a SharedArrayBuffer"
-        );
+        }).toThrowWithMessage(TypeError, "The array buffer object must be a SharedArrayBuffer");
     });
 
     test("invalid index", () => {
