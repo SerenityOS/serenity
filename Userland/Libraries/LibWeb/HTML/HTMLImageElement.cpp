@@ -299,8 +299,13 @@ public:
 
     void enqueue(JS::SafeFunction<void()> callback)
     {
+        // NOTE: We don't want to flush the queue on every image load, since that would be slow.
+        //       However, we don't want to keep growing the batch forever either.
+        static constexpr size_t max_loads_to_batch_before_flushing = 16;
+
         m_queue.append(move(callback));
-        m_timer->restart();
+        if (m_queue.size() < max_loads_to_batch_before_flushing)
+            m_timer->restart();
     }
 
 private:
