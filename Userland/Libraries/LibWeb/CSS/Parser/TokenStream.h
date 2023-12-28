@@ -66,6 +66,11 @@ public:
     {
     }
 
+    static TokenStream<T> of_single_token(T const& token)
+    {
+        return TokenStream(Span<T const> { &token, 1 });
+    }
+
     TokenStream(TokenStream<T> const&) = delete;
     TokenStream(TokenStream<T>&&) = default;
 
