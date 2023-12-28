@@ -407,15 +407,19 @@ def generate_tag_handler(tag: Tag) -> str:
     check_value = ''
     if tag.associated_enum is not None:
         not_in_value_list = f"({' && '.join([f'v != {v.value}' for v in tag.associated_enum])})"
-        check_value = fR"""TRY(value[0].visit(
-            []({tiff_type_to_cpp(tag.types[0])} const& v) -> ErrorOr<void> {{
-                if ({not_in_value_list})
-                    return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value for tag {tag.name}");
-                return {{}};
-            }},
-            [&](auto const&) -> ErrorOr<void> {{
-                VERIFY_NOT_REACHED();
-            }}));
+        check_value = fR"""
+        for (u32 i = 0; i < value.size(); ++i) {{
+            TRY(value[i].visit(
+                []({tiff_type_to_cpp(tag.types[0])} const& v) -> ErrorOr<void> {{
+                    if ({not_in_value_list})
+                        return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value for tag {tag.name}");
+                    return {{}};
+                }},
+                [&](auto const&) -> ErrorOr<void> {{
+                    VERIFY_NOT_REACHED();
+                }})
+            );
+        }}
 """
 
     output = fR"""    case {tag.id}:
