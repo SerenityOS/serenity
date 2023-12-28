@@ -1842,18 +1842,6 @@ Optional<LengthOrCalculated> Parser::parse_source_size_value(TokenStream<Compone
     return parse_length(tokens);
 }
 
-Optional<Length> Parser::parse_length(ComponentValue const& component_value)
-{
-    auto dimension = parse_dimension(component_value);
-    if (!dimension.has_value())
-        return {};
-
-    if (dimension->is_length())
-        return dimension->length();
-
-    return {};
-}
-
 Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
 {
     auto transaction = tokens.begin_transaction();
