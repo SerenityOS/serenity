@@ -1,3 +1,11 @@
+describe("errors", () => {
+    test("called on SharedArrayBuffer object", () => {
+        expect(() => {
+            ArrayBuffer.prototype.slice.call(new SharedArrayBuffer());
+        }).toThrowWithMessage(TypeError, "The array buffer object cannot be a SharedArrayBuffer");
+    });
+});
+
 test("single parameter", () => {
     const buffer = new ArrayBuffer(16);
     const fullView = new Int32Array(buffer);
