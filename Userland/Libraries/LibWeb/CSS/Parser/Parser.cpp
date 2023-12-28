@@ -2378,14 +2378,15 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
 
         // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
         // Negative lengths are permitted.
-        auto& current_token = tokens.next_token();
-        if (current_token.is_ident("auto"sv)) {
+        if (tokens.peek_token().is_ident("auto"sv)) {
+            (void)tokens.next_token(); // `auto`
             params.append(Length::make_auto());
         } else {
-            auto maybe_length = parse_length(current_token);
+            auto maybe_length = parse_length(tokens);
             if (!maybe_length.has_value())
                 return nullptr;
-            params.append(maybe_length.value());
+            // FIXME: Support calculated lengths
+            params.append(maybe_length.value().value());
         }
         tokens.skip_whitespace();
 
