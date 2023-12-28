@@ -94,65 +94,153 @@ Optional<StringView> extract_character_encoding_from_meta_element(ByteString con
     return TextCodec::get_standardized_encoding(encoding);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#concept-get-attributes-when-sniffing
 JS::GCPtr<DOM::Attr> prescan_get_attribute(DOM::Document& document, ByteBuffer const& input, size_t& position)
 {
+    // 1. If the byte at position is one of 0x09 (HT), 0x0A (LF), 0x0C (FF), 0x0D (CR), 0x20 (SP), or 0x2F (/) then advance position to the next byte and redo this step.
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
+
+    // 2. If the byte at position is 0x3E (>), then abort the get an attribute algorithm. There isn't one.
     if (input[position] == '>')
         return {};
 
+    // 3. Otherwise, the byte at position is the start of the attribute name. Let attribute name and attribute value be the empty string.
+    // 4. Process the byte at position as follows:
     StringBuilder attribute_name;
     while (true) {
+        // -> If it is 0x3D (=), and the attribute name is longer than the empty string
         if (input[position] == '=' && !attribute_name.is_empty()) {
+            // Advance position to the next byte and jump to the step below labeled value.
             ++position;
             goto value;
-        } else if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ')
+        }
+        // -> If it is 0x09 (HT), 0x0A (LF), 0x0C (FF), 0x0D (CR), or 0x20 (SP)
+        if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ') {
+            // Jump to the step below labeled spaces.
             goto spaces;
-        else if (input[position] == '/' || input[position] == '>')
-            return *DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
-        else
-            attribute_name.append_as_lowercase(input[position]);
+        }
+        // -> If it is 0x2F (/) or 0x3E (>)
+        if (input[position] == '/' || input[position] == '>') {
+            // Abort the get an attribute algorithm. The attribute's name is the value of attribute name, its value is the empty string.
+            return DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
+        }
+        // -> If it is in the range 0x41 (A) to 0x5A (Z)
+        if (input[position] >= 'A' && input[position] <= 'Z') {
+            // Append the code point b+0x20 to attribute name (where b is the value of the byte at position). (This converts the input to lowercase.)
+            attribute_name.append(input[position] + 0x20);
+        }
+        // -> Anything else
+        else {
+            // Append the code point with the same value as the byte at position to attribute name.
+            // (It doesn't actually matter how bytes outside the ASCII range are handled here,
+            // since only ASCII bytes can contribute to the detection of a character encoding.)
+            attribute_name.append_code_point(input[position]);
+        }
+
+        // 5. Advance position to the next byte and return to the previous step.
         ++position;
         if (prescan_should_abort(input, position))
             return {};
     }
 
 spaces:
+    // 6. Spaces: If the byte at position is one of 0x09 (HT), 0x0A (LF), 0x0C (FF), 0x0D (CR), or 0x20 (SP)
+    //    then advance position to the next byte, then, repeat this step.
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
+
+    // 7. If the byte at position is not 0x3D (=), abort the get an attribute algorithm.
+    //    The attribute's name is the value of attribute name, its value is the empty string.
     if (input[position] != '=')
         return DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
+
+    // 8. Advance position past the 0x3D (=) byte.
     ++position;
 
 value:
+    // 9. Value: If the byte at position is one of 0x09 (HT), 0x0A (LF), 0x0C (FF), 0x0D (CR), or 0x20 (SP)
+    //    then advance position to the next byte, then, repeat this step.
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
 
     StringBuilder attribute_value;
+    // 10. Process the byte at position as follows:
+
+    // -> If it is 0x22 (") or 0x27 (')
     if (input[position] == '"' || input[position] == '\'') {
+        // 1. Let b be the value of the byte at position.
         u8 quote_character = input[position];
+
+        // 2. Quote loop: Advance position to the next byte.
         ++position;
+
         for (; !prescan_should_abort(input, position); ++position) {
+            // 3. If the value of the byte at position is the value of b, then advance position to the next byte
+            //    and abort the "get an attribute" algorithm.
+            //    The attribute's name is the value of attribute name, and its value is the value of attribute value.
             if (input[position] == quote_character)
                 return DOM::Attr::create(document, MUST(attribute_name.to_string()), MUST(attribute_value.to_string()));
-            else
-                attribute_value.append_as_lowercase(input[position]);
+
+            // 4. Otherwise, if the value of the byte at position is in the range 0x41 (A) to 0x5A (Z),
+            //    then append a code point to attribute value whose value is 0x20 more than the value of the byte at position.
+            if (input[position] >= 'A' && input[position] <= 'Z') {
+                attribute_value.append(input[position] + 0x20);
+            }
+            // 5. Otherwise, append a code point to attribute value whose value is the same as the value of the byte at position.
+            else {
+                attribute_value.append_code_point(input[position]);
+            }
+
+            // 6. Return to the step above labeled quote loop.
         }
         return {};
-    } else if (input[position] == '>')
-        return DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
-    else
-        attribute_value.append_as_lowercase(input[position]);
+    }
 
-    ++position;
+    // -> If it is 0x3E (>)
+    if (input[position] == '>') {
+        // Abort the get an attribute algorithm. The attribute's name is the value of attribute name, its value is the empty string.
+        return DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
+    }
+
+    // -> If it is in the range 0x41 (A) to 0x5A (Z)
+    if (input[position] >= 'A' && input[position] <= 'Z') {
+        // Append a code point b+0x20 to attribute value (where b is the value of the byte at position).
+        attribute_value.append(input[position] + 0x20);
+        // Advance position to the next byte.
+        ++position;
+    }
+    // -> Anything else
+    else {
+        // Append a code point with the same value as the byte at position to attribute value.
+        attribute_value.append(input[position]);
+        // Advance position to the next byte.
+        ++position;
+    }
+
     if (prescan_should_abort(input, position))
         return {};
 
+    // 11. Process the byte at position as follows:
     for (; !prescan_should_abort(input, position); ++position) {
-        if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '>')
+        // -> If it is 0x09 (HT), 0x0A (LF), 0x0C (FF), 0x0D (CR), 0x20 (SP), or 0x3E (>)
+        if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '>') {
+            // Abort the get an attribute algorithm. The attribute's name is the value of attribute name and its value is the value of attribute value.
             return DOM::Attr::create(document, MUST(attribute_name.to_string()), MUST(attribute_value.to_string()));
-        else
-            attribute_value.append_as_lowercase(input[position]);
+        }
+
+        // -> If it is in the range 0x41 (A) to 0x5A (Z)
+        if (input[position] >= 'A' && input[position] <= 'Z') {
+            // Append a code point b+0x20 to attribute value (where b is the value of the byte at position).
+            attribute_value.append(input[position] + 0x20);
+        }
+        // -> Anything else
+        else {
+            // Append a code point with the same value as the byte at position to attribute value.
+            attribute_value.append(input[position]);
+        }
+
+        // 12. Advance position to the next byte and return to the previous step.
     }
     return {};
 }
