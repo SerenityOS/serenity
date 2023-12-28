@@ -1215,15 +1215,15 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
             struct timespec ts = {};
             clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
             auto pid = getpid();
-#    ifndef AK_OS_MACOS
-            // Darwin doesn't handle thread IDs the same way other Unixes do
+#    if defined(AK_OS_SERENITY) || defined(AK_OS_LINUX)
+            // Linux and Serenity handle thread IDs as if they are related to process ids
             auto tid = gettid();
             if (pid == tid)
 #    endif
             {
                 builder.appendff("{}.{:03} \033[33;1m{}({})\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name, pid);
             }
-#    ifndef AK_OS_MACOS
+#    if defined(AK_OS_SERENITY) || defined(AK_OS_LINUX)
             else {
                 builder.appendff("{}.{:03} \033[33;1m{}({}:{})\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name, pid, tid);
             }
