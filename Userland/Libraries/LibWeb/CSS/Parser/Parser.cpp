@@ -3950,36 +3950,35 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(TokenStream<ComponentVa
             // blur( <length>? )
             if (!tokens.has_next_token())
                 return Filter::Blur {};
-            auto blur_radius = parse_length(tokens.next_token());
+            auto blur_radius = parse_length(tokens);
+            tokens.skip_whitespace();
             if (!blur_radius.has_value())
                 return {};
-            return if_no_more_tokens_return(Filter::Blur { *blur_radius });
+            // FIXME: Support calculated radius
+            return if_no_more_tokens_return(Filter::Blur { blur_radius->value() });
         } else if (filter_token == FilterToken::DropShadow) {
             if (!tokens.has_next_token())
                 return {};
-            auto next_token = [&]() -> auto& {
-                auto& token = tokens.next_token();
-                tokens.skip_whitespace();
-                return token;
-            };
             // drop-shadow( [ <color>? && <length>{2,3} ] )
             // Note: The following code is a little awkward to allow the color to be before or after the lengths.
-            auto& first_param = next_token();
-            Optional<Length> maybe_radius = {};
-            auto maybe_color = parse_color(first_param);
-            auto x_offset = parse_length(maybe_color.has_value() ? next_token() : first_param);
+            Optional<LengthOrCalculated> maybe_radius = {};
+            auto maybe_color = parse_color(tokens.peek_token());
+            if (maybe_color.has_value())
+                (void)tokens.next_token();
+            auto x_offset = parse_length(tokens);
+            tokens.skip_whitespace();
             if (!x_offset.has_value() || !tokens.has_next_token()) {
                 return {};
             }
-            auto y_offset = parse_length(next_token());
+            auto y_offset = parse_length(tokens);
             if (!y_offset.has_value()) {
                 return {};
             }
             if (tokens.has_next_token()) {
-                auto& token = next_token();
-                maybe_radius = parse_length(token);
+                maybe_radius = parse_length(tokens);
                 if (!maybe_color.has_value() && (!maybe_radius.has_value() || tokens.has_next_token())) {
-                    maybe_color = parse_color(!maybe_radius.has_value() ? token : next_token());
+                    maybe_color = parse_color(tokens.next_token());
+                    tokens.skip_whitespace();
                     if (!maybe_color.has_value()) {
                         return {};
                     }
@@ -3987,7 +3986,8 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(TokenStream<ComponentVa
                     return {};
                 }
             }
-            return if_no_more_tokens_return(Filter::DropShadow { *x_offset, *y_offset, maybe_radius, maybe_color });
+            // FIXME: Support calculated offsets and radius
+            return if_no_more_tokens_return(Filter::DropShadow { x_offset->value(), y_offset->value(), maybe_radius.map([](auto& it) { return it.value(); }), maybe_color });
         } else if (filter_token == FilterToken::HueRotate) {
             // hue-rotate( [ <angle> | <zero> ]? )
             if (!tokens.has_next_token())
