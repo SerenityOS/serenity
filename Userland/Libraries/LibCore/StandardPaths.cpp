@@ -12,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -109,9 +110,22 @@ ErrorOr<ByteString> StandardPaths::runtime_directory()
     builder.append("/Library/Application Support"sv);
 #elif defined(AK_OS_HAIKU)
     builder.append("/boot/system/var/shared_memory"sv);
-#else
+#elif defined(AK_OS_LINUX)
     auto uid = getuid();
     builder.appendff("/run/user/{}", uid);
+#else
+    // Just create a directory in /tmp that's owned by us with 0700
+    auto uid = getuid();
+    builder.appendff("/tmp/runtime_{}", uid);
+    auto error_or_stat = System::stat(builder.string_view());
+    if (error_or_stat.is_error()) {
+        MUST(System::mkdir(builder.string_view(), 0700));
+    } else {
+        auto stat = error_or_stat.release_value();
+        VERIFY(S_ISDIR(stat.st_mode));
+        if ((stat.st_mode & 0777) != 0700)
+            warnln("{} has unexpected mode flags {}", builder.string_view(), stat.st_mode);
+    }
 #endif
 
     return LexicalPath::canonicalized_path(builder.to_byte_string());
