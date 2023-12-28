@@ -224,6 +224,7 @@
     M(RestrictedGlobalProperty, "Cannot declare global property '{}'")                                                                  \
     M(ShadowRealmEvaluateAbruptCompletion, "The evaluated script did not complete normally")                                            \
     M(ShadowRealmWrappedValueNonFunctionObject, "Wrapped value must be primitive or a function object, got {}")                         \
+    M(SharedArrayBuffer, "The array buffer object cannot be a SharedArrayBuffer")                                                       \
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
     M(SpeciesConstructorReturned, "Species constructor returned {}")                                                                    \
     M(StringNonGlobalRegExp, "RegExp argument is non-global")                                                                           \
@@ -298,7 +299,6 @@
     M(TemporalUnknownCriticalAnnotation, "Unknown annotation key in critical annotation: '{}'")                                         \
     M(TemporalZonedDateTimeRoundZeroOrNegativeLengthDay, "Cannot round a ZonedDateTime in a calendar or time zone that has zero or "    \
                                                          "negative length days")                                                        \
-    M(ThisCannotBeSharedArrayBuffer, "|this| cannot be a SharedArrayBuffer")                                                            \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
     M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \
