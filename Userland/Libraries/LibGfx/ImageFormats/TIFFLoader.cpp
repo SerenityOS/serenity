@@ -193,6 +193,9 @@ private:
         auto const strips_offset = *m_metadata.strip_offsets();
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
 
+        if (strips_offset.size() != strip_byte_counts.size())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes, aborting...");
+
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
 
