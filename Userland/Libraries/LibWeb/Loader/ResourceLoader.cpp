@@ -77,6 +77,9 @@ void ResourceLoader::prefetch_dns(AK::URL const& url)
 
 void ResourceLoader::preconnect(AK::URL const& url)
 {
+    if (url.scheme().is_one_of("file"sv, "data"sv))
+        return;
+
     if (ContentFilter::the().is_filtered(url)) {
         dbgln("ResourceLoader: Refusing to pre-connect to '{}': \033[31;1mURL was filtered\033[0m", url);
         return;
