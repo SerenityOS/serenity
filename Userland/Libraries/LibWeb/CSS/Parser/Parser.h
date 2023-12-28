@@ -186,7 +186,6 @@ private:
 
     Optional<Color> parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const&);
     Optional<Color> parse_color(ComponentValue const&);
-    Optional<Length> parse_length(ComponentValue const&);
     Optional<LengthOrCalculated> parse_source_size_value(TokenStream<ComponentValue>&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
     Optional<Gfx::UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
