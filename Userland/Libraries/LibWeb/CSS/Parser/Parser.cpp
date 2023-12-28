@@ -3580,15 +3580,11 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
     Optional<ShadowPlacement> placement;
 
     auto possibly_dynamic_length = [&](ComponentValue const& token) -> RefPtr<StyleValue> {
-        if (auto calculated_value = parse_calculated_value(token)) {
-            if (!calculated_value->resolves_to_length())
-                return nullptr;
-            return calculated_value;
-        }
-        auto maybe_length = parse_length(token);
+        auto tokens = TokenStream<ComponentValue>::of_single_token(token);
+        auto maybe_length = parse_length(tokens);
         if (!maybe_length.has_value())
             return nullptr;
-        return LengthStyleValue::create(maybe_length.release_value());
+        return maybe_length->as_style_value();
     };
 
     while (tokens.has_next_token()) {
