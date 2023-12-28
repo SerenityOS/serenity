@@ -7,9 +7,11 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/Size.h>
@@ -27,6 +29,28 @@ struct ImageFrameDescriptor {
 struct VectorImageFrameDescriptor {
     RefPtr<VectorGraphic> image;
     int duration { 0 };
+};
+
+class Metadata {
+public:
+    Metadata() = default;
+    virtual ~Metadata() = default;
+
+    HashMap<StringView, String> const& main_tags() const
+    {
+        if (m_main_tags.is_empty())
+            fill_main_tags();
+
+        // This is designed to be used in a general GUI, don't include too much information here.
+        VERIFY(m_main_tags.size() < 8);
+
+        return m_main_tags;
+    }
+
+protected:
+    virtual void fill_main_tags() const {};
+
+    mutable HashMap<StringView, String> m_main_tags;
 };
 
 enum class NaturalFrameFormat {
@@ -59,6 +83,9 @@ public:
     virtual size_t first_animated_frame_index() { return 0; }
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
+
+    virtual Optional<Metadata const&> metadata() { return OptionalNone {}; }
+
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
 
     virtual NaturalFrameFormat natural_frame_format() const { return NaturalFrameFormat::RGB; }
@@ -81,7 +108,10 @@ public:
     size_t loop_count() const { return m_plugin->loop_count(); }
     size_t frame_count() const { return m_plugin->frame_count(); }
     size_t first_animated_frame_index() const { return m_plugin->first_animated_frame_index(); }
+
     ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) const { return m_plugin->frame(index, ideal_size); }
+
+    Optional<Metadata const&> metadata() const { return m_plugin->metadata(); }
     ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
 
     NaturalFrameFormat natural_frame_format() { return m_plugin->natural_frame_format(); }
