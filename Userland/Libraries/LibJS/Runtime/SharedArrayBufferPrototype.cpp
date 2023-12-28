@@ -40,7 +40,8 @@ JS_DEFINE_NATIVE_FUNCTION(SharedArrayBufferPrototype::byte_length_getter)
     auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is false, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (!array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::NotASharedArrayBuffer);
 
     // 4. Let length be O.[[ArrayBufferByteLength]].
     // 5. Return 𝔽(length).
@@ -60,7 +61,8 @@ JS_DEFINE_NATIVE_FUNCTION(SharedArrayBufferPrototype::slice)
     auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is false, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (!array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::NotASharedArrayBuffer);
 
     // 4. Let len be O.[[ArrayBufferByteLength]].
     auto length = array_buffer_object->byte_length();
@@ -108,7 +110,8 @@ JS_DEFINE_NATIVE_FUNCTION(SharedArrayBufferPrototype::slice)
     auto* new_array_buffer_object = static_cast<ArrayBuffer*>(new_array_buffer.ptr());
 
     // 17. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (!new_array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::NotASharedArrayBuffer);
 
     // 18. If new.[[ArrayBufferData]] is O.[[ArrayBufferData]], throw a TypeError exception.
     if (new_array_buffer == array_buffer_object)

@@ -201,7 +201,7 @@ size_t array_buffer_byte_length(ArrayBuffer const& array_buffer, ArrayBuffer::Or
 ThrowCompletionOr<void> detach_array_buffer(VM& vm, ArrayBuffer& array_buffer, Optional<Value> key)
 {
     // 1. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
-    // FIXME: Check for shared buffer
+    VERIFY(!array_buffer.is_shared_array_buffer());
 
     // 2. If key is not present, set key to undefined.
     if (!key.has_value())
