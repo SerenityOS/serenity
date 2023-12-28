@@ -262,13 +262,15 @@ ThrowCompletionOr<Optional<size_t>> get_array_buffer_max_byte_length_option(VM& 
 }
 
 // 25.1.2.14 ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength
-ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability)
+ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability)
 {
     auto& realm = *vm.current_realm();
 
     // 1. Perform ? RequireInternalSlot(arrayBuffer, [[ArrayBufferData]]).
 
-    // FIXME: 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+    // 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+    if (array_buffer.is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::SharedArrayBuffer);
 
     // 3. If newLength is undefined, then
     // a. Let newByteLength be arrayBuffer.[[ArrayBufferByteLength]].
@@ -280,17 +282,25 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // FIXME: 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
-    // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+    Optional<size_t> new_max_byte_length;
+
+    // 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
+    // FIXME: The ArrayBuffer transfer spec is a bit out-of-date. IsResizableArrayBuffer no longer exists, we now have IsFixedLengthArrayBuffer.
+    if (preserve_resizability == PreserveResizability::PreserveResizability && !array_buffer.is_fixed_length()) {
+        // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+        new_max_byte_length = array_buffer.max_byte_length();
+    }
     // 7. Else,
-    // a. Let newMaxByteLength be empty.
+    else {
+        // a. Let newMaxByteLength be empty.
+    }
 
     // 8. If arrayBuffer.[[ArrayBufferDetachKey]] is not undefined, throw a TypeError exception.
     if (!array_buffer.detach_key().is_undefined())
         return vm.throw_completion<TypeError>(ErrorType::DetachKeyMismatch, array_buffer.detach_key(), js_undefined());
 
-    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, FIXME: newMaxByteLength).
-    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length));
+    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, newMaxByteLength).
+    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length, new_max_byte_length));
 
     // 10. Let copyLength be min(newByteLength, arrayBuffer.[[ArrayBufferByteLength]]).
     auto copy_length = min(new_byte_length, array_buffer.byte_length());
