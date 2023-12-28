@@ -128,7 +128,7 @@ JS::GCPtr<DOM::Attr> prescan_get_attribute(DOM::Document& document, ByteBuffer c
         // -> If it is in the range 0x41 (A) to 0x5A (Z)
         if (input[position] >= 'A' && input[position] <= 'Z') {
             // Append the code point b+0x20 to attribute name (where b is the value of the byte at position). (This converts the input to lowercase.)
-            attribute_name.append(input[position] + 0x20);
+            attribute_name.append_code_point(input[position] + 0x20);
         }
         // -> Anything else
         else {
@@ -185,7 +185,7 @@ value:
             // 4. Otherwise, if the value of the byte at position is in the range 0x41 (A) to 0x5A (Z),
             //    then append a code point to attribute value whose value is 0x20 more than the value of the byte at position.
             if (input[position] >= 'A' && input[position] <= 'Z') {
-                attribute_value.append(input[position] + 0x20);
+                attribute_value.append_code_point(input[position] + 0x20);
             }
             // 5. Otherwise, append a code point to attribute value whose value is the same as the value of the byte at position.
             else {
@@ -206,14 +206,14 @@ value:
     // -> If it is in the range 0x41 (A) to 0x5A (Z)
     if (input[position] >= 'A' && input[position] <= 'Z') {
         // Append a code point b+0x20 to attribute value (where b is the value of the byte at position).
-        attribute_value.append(input[position] + 0x20);
+        attribute_value.append_code_point(input[position] + 0x20);
         // Advance position to the next byte.
         ++position;
     }
     // -> Anything else
     else {
         // Append a code point with the same value as the byte at position to attribute value.
-        attribute_value.append(input[position]);
+        attribute_value.append_code_point(input[position]);
         // Advance position to the next byte.
         ++position;
     }
@@ -232,12 +232,12 @@ value:
         // -> If it is in the range 0x41 (A) to 0x5A (Z)
         if (input[position] >= 'A' && input[position] <= 'Z') {
             // Append a code point b+0x20 to attribute value (where b is the value of the byte at position).
-            attribute_value.append(input[position] + 0x20);
+            attribute_value.append_code_point(input[position] + 0x20);
         }
         // -> Anything else
         else {
             // Append a code point with the same value as the byte at position to attribute value.
-            attribute_value.append(input[position]);
+            attribute_value.append_code_point(input[position]);
         }
 
         // 12. Advance position to the next byte and return to the previous step.
