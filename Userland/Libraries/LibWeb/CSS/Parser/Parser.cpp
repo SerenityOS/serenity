@@ -2134,14 +2134,6 @@ Optional<Gfx::UnicodeRange> Parser::parse_unicode_range(StringView text)
 
 RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component_value)
 {
-    // Numbers with no units can be lengths, in two situations:
-    // 1) We're in quirks mode, and it's an integer.
-    // 2) It's a 0.
-    // We handle case 1 here. Case 2 is handled by NumericStyleValue pretending to be a LengthStyleValue if it is 0.
-
-    if (component_value.is(Token::Type::Number) && component_value.token().number_value() != 0 && !(m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)))
-        return nullptr;
-
     auto dimension = parse_dimension(component_value);
     if (!dimension.has_value())
         return nullptr;
