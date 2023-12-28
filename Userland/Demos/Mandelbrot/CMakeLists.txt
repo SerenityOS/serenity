@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Mandelbrot ICON app-mandelbrot)
-target_link_libraries(Mandelbrot PRIVATE LibGUI LibCore LibGfx LibMain)
+target_link_libraries(Mandelbrot PRIVATE LibCore LibFileSystemAccessClient LibGfx LibGUI LibMain)

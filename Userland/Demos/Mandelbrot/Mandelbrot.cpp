@@ -6,9 +6,10 @@
  */
 
 #include <LibCore/System.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/FilePicker.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -21,7 +22,6 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 class MandelbrotSet {
 public:
@@ -217,7 +217,7 @@ enum class ImageType {
 class Mandelbrot : public GUI::Frame {
     C_OBJECT(Mandelbrot)
 
-    ErrorOr<void> export_image(ByteString const& export_path, ImageType image_type);
+    ErrorOr<void> export_image(Core::File& export_path, ImageType image_type);
 
     enum class Zoom {
         In,
@@ -366,7 +366,7 @@ void Mandelbrot::resize_event(GUI::ResizeEvent& event)
     m_set.resize(event.size());
 }
 
-ErrorOr<void> Mandelbrot::export_image(ByteString const& export_path, ImageType image_type)
+ErrorOr<void> Mandelbrot::export_image(Core::File& export_file, ImageType image_type)
 {
     m_set.resize(Gfx::IntSize { 1920, 1080 });
     ByteBuffer encoded_data;
@@ -384,13 +384,8 @@ ErrorOr<void> Mandelbrot::export_image(ByteString const& export_path, ImageType 
         VERIFY_NOT_REACHED();
     }
     m_set.resize(size());
-    auto file = fopen(export_path.characters(), "wb");
-    if (!file) {
-        GUI::MessageBox::show(window(), ByteString::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot"sv, GUI::MessageBox::Type::Error);
-        return {};
-    }
-    fwrite(encoded_data.data(), 1, encoded_data.size(), file);
-    fclose(file);
+
+    TRY(export_file.write_until_depleted(encoded_data));
     return {};
 }
 
@@ -400,10 +395,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath"));
 
-#if 0
     TRY(Core::System::unveil("/res", "r"));
-    TRY(unveil(nullptr, nullptr));
-#endif
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(false);
@@ -417,29 +411,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto export_submenu = file_menu->add_submenu("&Export"_string);
 
+    auto const save_image = [&](ImageType type, StringView extension) {
+        auto const export_path = FileSystemAccessClient::Client::the().save_file(window, "mandelbrot"sv, extension);
+
+        if (export_path.is_error())
+            return;
+
+        if (auto result = mandelbrot->export_image(export_path.value().stream(), type); result.is_error())
+            GUI::MessageBox::show_error(window, ByteString::formatted("{}", result.error()));
+    };
+
     export_submenu->add_action(GUI::Action::create("As &BMP...",
         [&](GUI::Action&) {
-            Optional<ByteString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
-            if (!export_path.has_value())
-                return;
-            if (auto result = mandelbrot->export_image(export_path.value(), ImageType::BMP); result.is_error())
-                GUI::MessageBox::show_error(window, ByteString::formatted("{}", result.error()));
+            save_image(ImageType::BMP, ".bmp"sv);
         }));
     export_submenu->add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
-            Optional<ByteString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
-            if (!export_path.has_value())
-                return;
-            if (auto result = mandelbrot->export_image(export_path.value(), ImageType::PNG); result.is_error())
-                GUI::MessageBox::show_error(window, ByteString::formatted("{}", result.error()));
+            save_image(ImageType::PNG, ".png"sv);
         }));
     export_submenu->add_action(GUI::Action::create("As &QOI...",
         [&](GUI::Action&) {
-            Optional<ByteString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
-            if (!export_path.has_value())
-                return;
-            if (auto result = mandelbrot->export_image(export_path.value(), ImageType::QOI); result.is_error())
-                GUI::MessageBox::show_error(window, ByteString::formatted("{}", result.error()));
+            save_image(ImageType::QOI, ".qoi"sv);
         }));
 
     export_submenu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
