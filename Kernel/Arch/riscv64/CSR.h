@@ -215,4 +215,31 @@ struct [[gnu::packed]] alignas(u64) SSTATUS {
 };
 static_assert(AssertSize<SSTATUS, 8>());
 
+// 4.1.8 Supervisor Cause Register (scause)
+constexpr u64 SCAUSE_INTERRUPT_MASK = 1LU << 63;
+
+enum class SCAUSE : u64 {
+    // Interrupts
+    SupervisorSoftwareInterrupt = SCAUSE_INTERRUPT_MASK | 1,
+    SupervisorTimerInterrupt = SCAUSE_INTERRUPT_MASK | 5,
+    SupervisorExternalInterrupt = SCAUSE_INTERRUPT_MASK | 9,
+
+    // Exceptions
+    InstructionAddressMisaligned = 0,
+    InstructionAccessFault = 1,
+    IllegalInstrction = 2,
+    Breakpoint = 3,
+    LoadAddressMisaligned = 4,
+    LoadAccessFault = 5,
+    StoreOrAMOAddressMisaligned = 6,
+    StoreOrAMOAccessFault = 7,
+    EnvironmentCallFromUMode = 8,
+    EnvironmentCallFromSMode = 9,
+
+    InstructionPageFault = 12,
+    LoadPageFault = 13,
+
+    StoreOrAMOPageFault = 15,
+};
+
 }
