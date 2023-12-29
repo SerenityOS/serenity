@@ -156,7 +156,6 @@ struct FillRectWithRoundedCorners {
     Gfx::AntiAliasingPainter::CornerRadius top_right_radius;
     Gfx::AntiAliasingPainter::CornerRadius bottom_left_radius;
     Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius;
-    Optional<Gfx::FloatPoint> aa_translation {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
 };
@@ -166,7 +165,7 @@ struct FillPathUsingColor {
     Gfx::Path path;
     Color color;
     Gfx::Painter::WindingRule winding_rule;
-    Optional<Gfx::FloatPoint> aa_translation {};
+    Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
 };
@@ -177,7 +176,7 @@ struct FillPathUsingPaintStyle {
     NonnullRefPtr<Gfx::PaintStyle> paint_style;
     Gfx::Painter::WindingRule winding_rule;
     float opacity;
-    Optional<Gfx::FloatPoint> aa_translation {};
+    Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
 };
@@ -187,7 +186,7 @@ struct StrokePathUsingColor {
     Gfx::Path path;
     Color color;
     float thickness;
-    Optional<Gfx::FloatPoint> aa_translation {};
+    Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
 };
@@ -198,7 +197,7 @@ struct StrokePathUsingPaintStyle {
     NonnullRefPtr<Gfx::PaintStyle> paint_style;
     float thickness;
     float opacity = 1.0f;
-    Optional<Gfx::FloatPoint> aa_translation {};
+    Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
 };
@@ -364,11 +363,11 @@ public:
     virtual CommandResult paint_outer_box_shadow(PaintOuterBoxShadowParams const&) = 0;
     virtual CommandResult paint_inner_box_shadow(PaintOuterBoxShadowParams const&) = 0;
     virtual CommandResult paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const>, Color const&, int fragment_baseline, Gfx::IntPoint const& draw_location) = 0;
-    virtual CommandResult fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
-    virtual CommandResult fill_path_using_color(Gfx::Path const&, Color const& color, Gfx::Painter::WindingRule, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
-    virtual CommandResult fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
-    virtual CommandResult stroke_path_using_color(Gfx::Path const&, Color const& color, float thickness, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
-    virtual CommandResult stroke_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
+    virtual CommandResult fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius) = 0;
+    virtual CommandResult fill_path_using_color(Gfx::Path const&, Color const& color, Gfx::Painter::WindingRule, Gfx::FloatPoint const& aa_translation) = 0;
+    virtual CommandResult fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Gfx::FloatPoint const& aa_translation) = 0;
+    virtual CommandResult stroke_path_using_color(Gfx::Path const&, Color const& color, float thickness, Gfx::FloatPoint const& aa_translation) = 0;
+    virtual CommandResult stroke_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Gfx::FloatPoint const& aa_translation) = 0;
     virtual CommandResult draw_ellipse(Gfx::IntRect const&, Color const&, int thickness) = 0;
     virtual CommandResult fill_ellipse(Gfx::IntRect const&, Color const&, Gfx::AntiAliasingPainter::BlendMode blend_mode) = 0;
     virtual CommandResult draw_line(Color const& color, Gfx::IntPoint const& from, Gfx::IntPoint const& to, int thickness, Gfx::Painter::LineStyle, Color const& alternate_color) = 0;
