@@ -27,6 +27,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GroupBox.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/MessageBox.h>
@@ -451,6 +452,25 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
 
     } else {
         hide_icc_group("None"_string);
+    }
+
+    auto const& basic_metadata = image_decoder->metadata();
+    if (basic_metadata.has_value() && !basic_metadata->main_tags().is_empty()) {
+        auto& metadata_group = *tab.find_descendant_of_type_named<GUI::GroupBox>("image_basic_metadata");
+        metadata_group.set_visible(true);
+
+        auto const& tags = basic_metadata->main_tags();
+        for (auto const& field : tags) {
+            auto& widget = metadata_group.add<GUI::Widget>();
+            widget.set_layout<GUI::HorizontalBoxLayout>();
+
+            auto& key_label = widget.add<GUI::Label>(String::from_utf8(field.key).release_value_but_fixme_should_propagate_errors());
+            key_label.set_text_alignment(Gfx::TextAlignment::TopLeft);
+            key_label.set_fixed_width(80);
+
+            auto& value_label = widget.add<GUI::Label>(field.value);
+            value_label.set_text_alignment(Gfx::TextAlignment::TopLeft);
+        }
     }
 
     return {};
