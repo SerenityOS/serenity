@@ -167,6 +167,8 @@ bool StringView::contains(u32 needle) const
 
 bool StringView::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
+    if (needle.length() == 1)
+        return contains(needle.characters_without_null_termination()[0]);
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
