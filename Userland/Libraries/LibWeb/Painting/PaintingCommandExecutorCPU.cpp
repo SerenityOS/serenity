@@ -257,11 +257,9 @@ CommandResult PaintingCommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Optional<Gfx::FloatPoint> const& aa_translation)
+CommandResult PaintingCommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
     aa_painter.fill_rect_with_rounded_corners(
         rect,
         color,
@@ -272,38 +270,34 @@ CommandResult PaintingCommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::In
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_path_using_color(Gfx::Path const& path, Color const& color, Gfx::Painter::WindingRule winding_rule, Optional<Gfx::FloatPoint> const& aa_translation)
+CommandResult PaintingCommandExecutorCPU::fill_path_using_color(Gfx::Path const& path, Color const& color, Gfx::Painter::WindingRule winding_rule, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
+    aa_painter.translate(aa_translation);
     aa_painter.fill_path(path, color, winding_rule);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Optional<Gfx::FloatPoint> const& aa_translation)
+CommandResult PaintingCommandExecutorCPU::fill_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
+    aa_painter.translate(aa_translation);
     aa_painter.fill_path(path, paint_style, opacity, winding_rule);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::stroke_path_using_color(Gfx::Path const& path, Color const& color, float thickness, Optional<Gfx::FloatPoint> const& aa_translation)
+CommandResult PaintingCommandExecutorCPU::stroke_path_using_color(Gfx::Path const& path, Color const& color, float thickness, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
+    aa_painter.translate(aa_translation);
     aa_painter.stroke_path(path, color, thickness);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::stroke_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Optional<Gfx::FloatPoint> const& aa_translation)
+CommandResult PaintingCommandExecutorCPU::stroke_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
+    aa_painter.translate(aa_translation);
     aa_painter.stroke_path(path, paint_style, thickness, opacity);
     return CommandResult::Continue;
 }

@@ -496,7 +496,7 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
                 return executor.paint_text_shadow(command.blur_radius, command.shadow_bounding_rect, command.text_rect, command.glyph_run, command.color, command.fragment_baseline, command.draw_location);
             },
             [&](FillRectWithRoundedCorners const& command) {
-                return executor.fill_rect_with_rounded_corners(command.rect, command.color, command.top_left_radius, command.top_right_radius, command.bottom_left_radius, command.bottom_right_radius, command.aa_translation);
+                return executor.fill_rect_with_rounded_corners(command.rect, command.color, command.top_left_radius, command.top_right_radius, command.bottom_left_radius, command.bottom_right_radius);
             },
             [&](FillPathUsingColor const& command) {
                 return executor.fill_path_using_color(command.path, command.color, command.winding_rule, command.aa_translation);
