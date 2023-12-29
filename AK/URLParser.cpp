@@ -796,9 +796,12 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
     // 2. If input contains any ASCII tab or newline, invalid-URL-unit validation error.
     // 3. Remove all ASCII tab or newline from input.
-    if (processed_input.contains("\t"sv) || processed_input.contains("\n"sv)) {
-        report_validation_error();
-        processed_input = processed_input.replace("\t"sv, ""sv, ReplaceMode::All).replace("\n"sv, ""sv, ReplaceMode::All);
+    for (auto const ch : processed_input) {
+        if (ch == '\t' || ch == '\n') {
+            report_validation_error();
+            processed_input = processed_input.replace("\t"sv, ""sv, ReplaceMode::All).replace("\n"sv, ""sv, ReplaceMode::All);
+            break;
+        }
     }
 
     // 4. Let state be state override if given, or scheme start state otherwise.
