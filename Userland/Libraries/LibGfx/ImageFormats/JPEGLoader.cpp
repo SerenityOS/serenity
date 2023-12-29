@@ -1287,7 +1287,7 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
             bool channel_matches_y_factor = component.hsample_factor == y_component.hsample_factor && component.vsample_factor == y_component.vsample_factor;
             bool k_channel_matches_y = context.color_transform == ColorTransform::YCCK && i == 3 && channel_matches_y_factor;
 
-            if ((component.hsample_factor != 1 || component.vsample_factor != 1) && !k_channel_matches_y) {
+            if (((component.hsample_factor != 1 || component.vsample_factor != 1) && !k_channel_matches_y) || (i == 3 && !channel_matches_y_factor)) {
                 dbgln_if(JPEG_DEBUG, "Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
                     component.hsample_factor,
                     component.vsample_factor);
