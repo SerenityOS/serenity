@@ -9,9 +9,29 @@
 
 namespace Web::Painting {
 
+void DrawGlyphRun::translate_by(Gfx::IntPoint const& offset)
+{
+    for (auto& glyph : glyph_run) {
+        glyph.visit([&](auto& glyph) {
+            glyph.translate_by(offset.to_type<float>());
+        });
+    }
+    rect.translate_by(offset);
+}
+
 Gfx::IntRect PaintOuterBoxShadow::bounding_rect() const
 {
     return get_outer_box_shadow_bounding_rect(outer_box_shadow_params);
+}
+
+void PaintOuterBoxShadow::translate_by(Gfx::IntPoint const& offset)
+{
+    outer_box_shadow_params.device_content_rect.translate_by(offset.to_type<DevicePixels>());
+}
+
+void PaintInnerBoxShadow::translate_by(Gfx::IntPoint const& offset)
+{
+    outer_box_shadow_params.device_content_rect.translate_by(offset.to_type<DevicePixels>());
 }
 
 Gfx::IntRect SampleUnderCorners::bounding_rect() const
@@ -303,8 +323,8 @@ void RecordingPainter::push_stacking_context(PushStackingContextParams params)
 
 void RecordingPainter::pop_stacking_context()
 {
-    push_command(PopStackingContext {});
     m_state_stack.take_last();
+    push_command(PopStackingContext {});
 }
 
 void RecordingPainter::paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style)
@@ -405,11 +425,27 @@ static Optional<Gfx::IntRect> command_bounding_rectangle(PaintingCommand const& 
         });
 }
 
+void RecordingPainter::apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_frame_id)
+{
+    for (auto& command_with_scroll_id : m_painting_commands) {
+        if (command_with_scroll_id.scroll_frame_id.has_value()) {
+            auto const& scroll_frame_id = command_with_scroll_id.scroll_frame_id.value();
+            auto const& scroll_offset = offsets_by_frame_id[scroll_frame_id];
+            command_with_scroll_id.command.visit(
+                [&](auto& command) {
+                    if constexpr (requires { command.translate_by(scroll_offset); })
+                        command.translate_by(scroll_offset);
+                });
+        }
+    }
+}
+
 void RecordingPainter::execute(PaintingCommandExecutor& executor)
 {
     if (executor.needs_prepare_glyphs_texture()) {
         HashMap<Gfx::Font const*, HashTable<u32>> unique_glyphs;
-        for (auto& command : m_painting_commands) {
+        for (auto& command_with_scroll_id : m_painting_commands) {
+            auto& command = command_with_scroll_id.command;
             if (command.has<DrawGlyphRun>()) {
                 for (auto const& glyph_or_emoji : command.get<DrawGlyphRun>().glyph_run) {
                     if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
@@ -424,7 +460,8 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
 
     if (executor.needs_update_immutable_bitmap_texture_cache()) {
         HashMap<u32, Gfx::ImmutableBitmap const*> immutable_bitmaps;
-        for (auto const& command : m_painting_commands) {
+        for (auto const& command_with_scroll_id : m_painting_commands) {
+            auto& command = command_with_scroll_id.command;
             if (command.has<DrawScaledImmutableBitmap>()) {
                 auto const& immutable_bitmap = command.get<DrawScaledImmutableBitmap>().bitmap;
                 immutable_bitmaps.set(immutable_bitmap->id(), immutable_bitmap.ptr());
@@ -436,7 +473,8 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
     HashTable<u32> skipped_sample_corner_commands;
     size_t next_command_index = 0;
     while (next_command_index < m_painting_commands.size()) {
-        auto& command = m_painting_commands[next_command_index++];
+        auto& command_with_scroll_id = m_painting_commands[next_command_index++];
+        auto& command = command_with_scroll_id.command;
         auto bounding_rect = command_bounding_rectangle(command);
         if (bounding_rect.has_value() && (bounding_rect->is_empty() || executor.would_be_fully_clipped_by_painter(*bounding_rect))) {
             if (command.has<SampleUnderCorners>()) {
@@ -555,9 +593,9 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
         if (result == CommandResult::SkipStackingContext) {
             auto stacking_context_nesting_level = 1;
             while (next_command_index < m_painting_commands.size()) {
-                if (m_painting_commands[next_command_index].has<PushStackingContext>()) {
+                if (m_painting_commands[next_command_index].command.has<PushStackingContext>()) {
                     stacking_context_nesting_level++;
-                } else if (m_painting_commands[next_command_index].has<PopStackingContext>()) {
+                } else if (m_painting_commands[next_command_index].command.has<PopStackingContext>()) {
                     stacking_context_nesting_level--;
                 }
 

@@ -188,7 +188,15 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
     context.set_should_paint_overlay(paint_options.paint_overlay == Web::PaintOptions::PaintOverlay::Yes);
     context.set_device_viewport_rect(content_rect);
     context.set_has_focus(m_has_focus);
+
+    document->paintable()->collect_scroll_frames(context);
     document->paintable()->paint_all_phases(context);
+
+    Vector<Gfx::IntPoint> scroll_offsets_by_frame_id;
+    scroll_offsets_by_frame_id.resize(context.scroll_frames().size());
+    for (auto [_, scrollable_frame] : context.scroll_frames())
+        scroll_offsets_by_frame_id[scrollable_frame.id] = context.rounded_device_point(scrollable_frame.offset).to_type<int>();
+    recording_painter.apply_scroll_offsets(scroll_offsets_by_frame_id);
 
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS

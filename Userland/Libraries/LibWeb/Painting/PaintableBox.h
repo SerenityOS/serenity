@@ -194,7 +194,7 @@ public:
     void set_box_shadow_data(Vector<ShadowData> box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
     Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
 
-    PaintableBox const* nearest_scrollable_ancestor() const;
+    PaintableBox const* nearest_scrollable_ancestor_within_stacking_context() const;
 
 protected:
     explicit PaintableBox(Layout::Box const&);

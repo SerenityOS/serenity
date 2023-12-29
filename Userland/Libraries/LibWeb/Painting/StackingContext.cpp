@@ -184,7 +184,15 @@ void StackingContext::paint_child(PaintContext& context, StackingContext const& 
     if (parent_paintable)
         parent_paintable->before_children_paint(context, PaintPhase::Foreground);
 
+    PaintableBox const* nearest_scrollable_ancestor = child.paintable_box().nearest_scrollable_ancestor_within_stacking_context();
+
+    if (nearest_scrollable_ancestor)
+        nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
+
     child.paint(context);
+
+    if (nearest_scrollable_ancestor)
+        nearest_scrollable_ancestor->reset_scroll_offset(context, PaintPhase::Foreground);
 
     if (parent_paintable)
         parent_paintable->after_children_paint(context, PaintPhase::Foreground);
@@ -229,7 +237,7 @@ void StackingContext::paint_internal(PaintContext& context) const
         // Apply scroll offset of nearest scrollable ancestor before painting the positioned descendant.
         PaintableBox const* nearest_scrollable_ancestor = nullptr;
         if (paintable.is_paintable_box())
-            nearest_scrollable_ancestor = static_cast<PaintableBox const&>(paintable).nearest_scrollable_ancestor();
+            nearest_scrollable_ancestor = static_cast<PaintableBox const&>(paintable).nearest_scrollable_ancestor_within_stacking_context();
         if (nearest_scrollable_ancestor)
             nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
 
@@ -265,6 +273,12 @@ void StackingContext::paint_internal(PaintContext& context) const
     for (auto* child : m_children) {
         if (!child->paintable_box().is_positioned())
             continue;
+
+        PaintableBox const* nearest_scrollable_ancestor = child->paintable_box().nearest_scrollable_ancestor_within_stacking_context();
+
+        if (nearest_scrollable_ancestor)
+            nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
+
         auto containing_block = child->paintable_box().containing_block();
         auto const* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
         if (containing_block_paintable)
@@ -273,6 +287,9 @@ void StackingContext::paint_internal(PaintContext& context) const
             paint_child(context, *child);
         if (containing_block_paintable)
             containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
+
+        if (nearest_scrollable_ancestor)
+            nearest_scrollable_ancestor->reset_scroll_offset(context, PaintPhase::Foreground);
     }
 
     paint_node(paintable_box(), context, PaintPhase::Outline);

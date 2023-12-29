@@ -80,12 +80,22 @@ struct DrawGlyph {
     FloatPoint position;
     u32 code_point;
     NonnullRefPtr<Font const> font;
+
+    void translate_by(FloatPoint const& delta)
+    {
+        position.translate_by(delta);
+    }
 };
 
 struct DrawEmoji {
     FloatPoint position;
     Gfx::Bitmap const* emoji;
     NonnullRefPtr<Font const> font;
+
+    void translate_by(FloatPoint const& delta)
+    {
+        position.translate_by(delta);
+    }
 };
 
 using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;

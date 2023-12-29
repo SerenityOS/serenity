@@ -20,6 +20,8 @@ public:
     void paint_all_phases(PaintContext&);
     void build_stacking_context_tree_if_needed();
 
+    void collect_scroll_frames(PaintContext&) const;
+
 private:
     void build_stacking_context_tree();
 

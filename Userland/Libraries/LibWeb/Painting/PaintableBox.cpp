@@ -410,16 +410,17 @@ Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
 
 void PaintableBox::apply_scroll_offset(PaintContext& context, PaintPhase) const
 {
-    auto scroll_offset = -this->scroll_offset();
-    context.translate_scroll_offset_by(scroll_offset);
-    context.recording_painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
+    if (context.scroll_frames().contains(this)) {
+        context.recording_painter().save();
+        context.recording_painter().set_scroll_frame_id(context.scroll_frames().get(this)->id);
+    }
 }
 
 void PaintableBox::reset_scroll_offset(PaintContext& context, PaintPhase) const
 {
-    auto scroll_offset = this->scroll_offset();
-    context.translate_scroll_offset_by(scroll_offset);
-    context.recording_painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
+    if (context.scroll_frames().contains(this)) {
+        context.recording_painter().restore();
+    }
 }
 
 void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
@@ -445,10 +446,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (!m_clipping_overflow) {
         context.recording_painter().save();
-        auto scroll_offset = context.scroll_offset();
-        context.recording_painter().translate({ -context.enclosing_device_pixels(scroll_offset.x()), -context.enclosing_device_pixels(scroll_offset.y()) });
         context.recording_painter().add_clip_rect(context.enclosing_device_rect(*clip_rect).to_type<int>());
-        context.recording_painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
         m_clipping_overflow = true;
     }
 
@@ -826,10 +824,12 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     return {};
 }
 
-PaintableBox const* PaintableBox::nearest_scrollable_ancestor() const
+PaintableBox const* PaintableBox::nearest_scrollable_ancestor_within_stacking_context() const
 {
     auto* ancestor = parent();
     while (ancestor) {
+        if (ancestor->stacking_context_rooted_here())
+            return nullptr;
         if (ancestor->is_paintable_box() && static_cast<PaintableBox const*>(ancestor)->has_scrollable_overflow())
             return static_cast<PaintableBox const*>(ancestor);
         ancestor = ancestor->parent();

@@ -72,10 +72,13 @@ public:
 
     double device_pixels_per_css_pixel() const { return m_device_pixels_per_css_pixel; }
 
-    CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
-    void translate_scroll_offset_by(CSSPixelPoint offset) { m_scroll_offset.translate_by(offset); }
-
     u32 allocate_corner_clipper_id() { return m_next_corner_clipper_id++; }
+
+    struct ScrollFrame {
+        i32 id { -1 };
+        CSSPixelPoint offset;
+    };
+    HashMap<Painting::PaintableBox const*, ScrollFrame>& scroll_frames() { return m_scroll_frames; }
 
 private:
     Painting::RecordingPainter& m_recording_painter;
@@ -85,9 +88,9 @@ private:
     bool m_should_show_line_box_borders { false };
     bool m_should_paint_overlay { true };
     bool m_focus { false };
-    CSSPixelPoint m_scroll_offset;
     Gfx::AffineTransform m_svg_transform;
     u32 m_next_corner_clipper_id { 0 };
+    HashMap<Painting::PaintableBox const*, ScrollFrame> m_scroll_frames;
 };
 
 }

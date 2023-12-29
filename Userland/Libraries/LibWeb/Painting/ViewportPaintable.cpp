@@ -57,4 +57,22 @@ void ViewportPaintable::paint_all_phases(PaintContext& context)
     stacking_context()->paint(context);
 }
 
+void ViewportPaintable::collect_scroll_frames(PaintContext& context) const
+{
+    i32 next_id = 0;
+    for_each_in_subtree_of_type<PaintableBox>([&](auto const& paintable_box) {
+        if (paintable_box.has_scrollable_overflow()) {
+            auto offset = paintable_box.scroll_offset();
+            auto ancestor = paintable_box.parent();
+            while (ancestor) {
+                if (ancestor->is_paintable_box() && static_cast<PaintableBox const*>(ancestor)->has_scrollable_overflow())
+                    offset.translate_by(static_cast<PaintableBox const*>(ancestor)->scroll_offset());
+                ancestor = ancestor->parent();
+            }
+            context.scroll_frames().set(&paintable_box, { .id = next_id++, .offset = -offset });
+        }
+        return TraversalDecision::Continue;
+    });
+}
+
 }
