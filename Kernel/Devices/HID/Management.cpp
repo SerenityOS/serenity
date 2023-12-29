@@ -167,8 +167,7 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     // Note: If we happen to not have i8042 just return "gracefully" for now.
     if (!has_i8042_controller)
         return {};
-    auto i8042_enable_first_port_translation = kernel_command_line().i8042_enable_first_port_translation() ? I8042Controller::EnableKeyboardFirstPortTranslation::Yes : I8042Controller::EnableKeyboardFirstPortTranslation::No;
-    if (auto result_or_error = i8042_controller->detect_devices(i8042_enable_first_port_translation); result_or_error.is_error())
+    if (auto result_or_error = i8042_controller->detect_devices(I8042Controller::EnableKeyboardFirstPortTranslation::No); result_or_error.is_error())
         return {};
     m_hid_serial_io_controllers.with([&](auto& list) {
         list.append(i8042_controller);

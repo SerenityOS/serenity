@@ -131,16 +131,6 @@ UNMAP_AFTER_INIT bool CommandLine::is_early_boot_console_disabled() const
     PANIC("Unknown early_boot_console setting: {}", value);
 }
 
-UNMAP_AFTER_INIT bool CommandLine::i8042_enable_first_port_translation() const
-{
-    auto value = lookup("i8042_first_port_translation"sv).value_or("off"sv);
-    if (value == "off"sv)
-        return false;
-    if (value == "on"sv)
-        return true;
-    PANIC("Unknown i8042_enable_first_port_translation setting: {}", value);
-}
-
 UNMAP_AFTER_INIT I8042PresenceMode CommandLine::i8042_presence_mode() const
 {
     auto value = lookup("i8042_presence_mode"sv).value_or("auto"sv);
