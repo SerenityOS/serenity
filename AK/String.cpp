@@ -233,6 +233,19 @@ void String::destroy_string()
         m_data->unref();
 }
 
+String String::from_utf8_without_validation(ReadonlyBytes bytes)
+{
+    if (bytes.size() <= MAX_SHORT_STRING_BYTE_COUNT) {
+        ShortString short_string;
+        if (!bytes.is_empty())
+            memcpy(short_string.storage, bytes.data(), bytes.size());
+        short_string.byte_count_and_short_string_flag = (bytes.size() << 1) | SHORT_STRING_FLAG;
+        return String { short_string };
+    }
+    auto data = MUST(Detail::StringData::from_utf8(reinterpret_cast<char const*>(bytes.data()), bytes.size()));
+    return String { move(data) };
+}
+
 ErrorOr<String> String::from_utf8(StringView view)
 {
     if (!Utf8View { view }.validate())

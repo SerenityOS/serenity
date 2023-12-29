@@ -247,7 +247,7 @@ ErrorOr<String> Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
     TRY(process(input, [&builder](u32 c) { return builder.try_append_code_point(c); }));
-    return builder.to_string();
+    return builder.to_string_without_validation();
 }
 
 ErrorOr<void> UTF8Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
