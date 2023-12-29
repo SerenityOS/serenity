@@ -891,7 +891,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 }
 
                 // 2. Set url’s scheme to buffer.
-                url->m_scheme = buffer.to_string().release_value_but_fixme_should_propagate_errors();
+                url->m_scheme = buffer.to_string_without_validation();
 
                 // 3. If state override is given, then:
                 if (state_override.has_value()) {
@@ -1554,7 +1554,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         buffer.append(':');
                     }
                     // 2. Append buffer to url’s path.
-                    url->m_paths.append(buffer.to_string().release_value_but_fixme_should_propagate_errors());
+                    url->m_paths.append(buffer.to_string_without_validation());
                 }
 
                 // 5. Set buffer to the empty string.
@@ -1592,7 +1592,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
             // 1. If c is U+003F (?), then set url’s query to the empty string and state to query state.
             if (code_point == '?') {
-                url->m_paths[0] = buffer.to_string().release_value_but_fixme_should_propagate_errors();
+                url->m_paths[0] = buffer.to_string_without_validation();
                 url->m_query = String {};
                 buffer.clear();
                 state = State::Query;
@@ -1600,7 +1600,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             // 2. Otherwise, if c is U+0023 (#), then set url’s fragment to the empty string and state to fragment state.
             else if (code_point == '#') {
                 // NOTE: This needs to be percent decoded since the member variables contain decoded data.
-                url->m_paths[0] = buffer.to_string().release_value_but_fixme_should_propagate_errors();
+                url->m_paths[0] = buffer.to_string_without_validation();
                 url->m_fragment = String {};
                 buffer.clear();
                 state = State::Fragment;
@@ -1619,7 +1619,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 if (code_point != end_of_file) {
                     URL::append_percent_encoded_if_necessary(buffer, code_point, URL::PercentEncodeSet::C0Control);
                 } else {
-                    url->m_paths[0] = buffer.to_string().release_value_but_fixme_should_propagate_errors();
+                    url->m_paths[0] = buffer.to_string_without_validation();
                     buffer.clear();
                 }
             }
