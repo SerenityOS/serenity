@@ -70,6 +70,8 @@ public:
     requires(IsOneOf<RemoveCVReference<T>, ByteString, DeprecatedFlyString, FlyString, String>)
     static ErrorOr<String> from_utf8(T&&) = delete;
 
+    [[nodiscard]] static String from_utf8_without_validation(ReadonlyBytes);
+
     // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
     static ErrorOr<String> from_stream(Stream&, size_t byte_count);
 

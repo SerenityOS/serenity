@@ -73,6 +73,7 @@ public:
     [[nodiscard]] ByteString to_byte_string() const;
 #endif
 
+    [[nodiscard]] String to_string_without_validation() const;
     ErrorOr<String> to_string() const;
     ErrorOr<FlyString> to_fly_string() const;
 
