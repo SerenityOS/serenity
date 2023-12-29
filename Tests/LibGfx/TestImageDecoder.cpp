@@ -227,6 +227,27 @@ TEST_CASE(test_jpeg_rgb_components)
     TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 592, 800 }));
 }
 
+TEST_CASE(test_jpeg_ycck)
+{
+    Array test_inputs = {
+        TEST_INPUT("jpg/ycck-1111.jpg"sv),
+        // TEST_INPUT("jpg/ycck-2111.jpg"sv), // FIXME: Enable once this decodes correctly
+        // TEST_INPUT("jpg/ycck-2112.jpg"sv), // FIXME: Enable once this decodes correctly
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+        auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 592, 800 }));
+
+        // Compare difference between pixels so we don't depend on exact CMYK->RGB conversion behavior.
+        // These two pixels are currently off by one in R.
+        // FIXME: For 2111, they're off by way more.
+        EXPECT(frame.image->get_pixel(6, 319).distance_squared_to(frame.image->get_pixel(6, 320)) < 1.0f / 255.0f);
+    }
+}
+
 TEST_CASE(test_jpeg_sof2_spectral_selection)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/spectral_selection.jpg"sv)));
