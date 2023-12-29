@@ -24,6 +24,7 @@
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/AddressSanitizer.h>
 #include <Kernel/Tasks/Process.h>
 
 extern u8 start_of_kernel_image[];
@@ -105,6 +106,10 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     // By using a tag we don't have to query the VMObject for every page
     // whether it was committed or not
     m_lazy_committed_page = committed_pages.take_one();
+
+#ifdef HAS_ADDRESS_SANITIZER
+    initialize_kasan_shadow_memory();
+#endif
 }
 
 UNMAP_AFTER_INIT MemoryManager::~MemoryManager() = default;
@@ -578,6 +583,26 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         dmesgln("MM: Physical page entries: {}", range);
     });
 }
+
+#ifdef HAS_ADDRESS_SANITIZER
+void MemoryManager::initialize_kasan_shadow_memory()
+{
+    m_global_data.with([&](auto& global_data) {
+        // We map every 8 bytes of normal memory to 1 byte of shadow memory, so we need a 1/9 of total memory for the shadow memory.
+        auto virtual_range = global_data.region_tree.total_range();
+        auto shadow_range_size = MUST(page_round_up(ceil_div(virtual_range.size(), 9ul)));
+        dbgln("MM: Reserving {} bytes for KASAN shadow memory", shadow_range_size);
+
+        auto vmobject = MUST(AnonymousVMObject::try_create_with_size(shadow_range_size, AllocationStrategy::AllocateNow));
+        auto* shadow_region = MUST(Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWrite)).leak_ptr();
+        auto shadow_range = VirtualRange { virtual_range.base().offset(virtual_range.size() - shadow_range_size), shadow_range_size };
+        MUST(global_data.region_tree.place_specifically(*shadow_region, shadow_range));
+        MUST(shadow_region->map(kernel_page_directory()));
+
+        AddressSanitizer::init(shadow_region->vaddr().get());
+    });
+}
+#endif
 
 PhysicalPageEntry& MemoryManager::get_physical_page_entry(PhysicalAddress physical_address)
 {

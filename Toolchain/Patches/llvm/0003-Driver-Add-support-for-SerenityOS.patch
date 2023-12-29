@@ -145,7 +145,7 @@ new file mode 100644
 index 000000000..4fdf45a19
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,336 @@
+@@ -0,0 +1,340 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -482,12 +482,16 @@ index 000000000..4fdf45a19
 +
 +  return ToolChain::UNW_None;
 +}
++
++SanitizerMask Serenity::getSupportedSanitizers() const {
++  return ToolChain::getSupportedSanitizers() | SanitizerKind::KernelAddress;
++}
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
 index 000000000..feb31a0d6
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.h
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,102 @@
 +//===---- Serenity.h - SerenityOS ToolChain Implementation ------*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -562,6 +566,8 @@ index 000000000..feb31a0d6
 +  bool isPICDefault() const override { return true; }
 +  bool isPIEDefault(const llvm::opt::ArgList&) const override { return false; }
 +  bool isPICDefaultForced() const override { return false; }
++
++  SanitizerMask getSupportedSanitizers() const override;
 +
 +  bool IsMathErrnoDefault() const override { return false; }
 +
