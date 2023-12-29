@@ -232,7 +232,7 @@ TEST_CASE(test_jpeg_ycck)
     Array test_inputs = {
         TEST_INPUT("jpg/ycck-1111.jpg"sv),
         // TEST_INPUT("jpg/ycck-2111.jpg"sv), // FIXME: Enable once this decodes correctly
-        // TEST_INPUT("jpg/ycck-2112.jpg"sv), // FIXME: Enable once this decodes correctly
+        TEST_INPUT("jpg/ycck-2112.jpg"sv),
     };
 
     for (auto test_input : test_inputs) {
