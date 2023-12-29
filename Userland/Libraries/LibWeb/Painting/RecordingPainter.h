@@ -47,6 +47,8 @@ struct DrawGlyphRun {
     Gfx::IntRect rect;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset);
 };
 
 struct DrawText {
@@ -59,6 +61,7 @@ struct DrawText {
     Optional<NonnullRefPtr<Gfx::Font>> font {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct FillRect {
@@ -66,6 +69,7 @@ struct FillRect {
     Color color;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct DrawScaledBitmap {
@@ -75,6 +79,7 @@ struct DrawScaledBitmap {
     Gfx::Painter::ScalingMode scaling_mode;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return dst_rect; }
+    void translate_by(Gfx::IntPoint const& offset) { dst_rect.translate_by(offset); }
 };
 
 struct DrawScaledImmutableBitmap {
@@ -84,6 +89,7 @@ struct DrawScaledImmutableBitmap {
     Gfx::Painter::ScalingMode scaling_mode;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return dst_rect; }
+    void translate_by(Gfx::IntPoint const& offset) { dst_rect.translate_by(offset); }
 };
 
 struct SetClipRect {
@@ -116,6 +122,11 @@ struct PushStackingContext {
     CSS::ImageRendering image_rendering;
     StackingContextTransform transform;
     Optional<StackingContextMask> mask = {};
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        post_transform_translation.translate_by(offset);
+    }
 };
 
 struct PopStackingContext { };
@@ -125,16 +136,24 @@ struct PaintLinearGradient {
     LinearGradientData linear_gradient_data;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return gradient_rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        gradient_rect.translate_by(offset);
+    }
 };
 
 struct PaintOuterBoxShadow {
     PaintOuterBoxShadowParams outer_box_shadow_params;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
+    void translate_by(Gfx::IntPoint const& offset);
 };
 
 struct PaintInnerBoxShadow {
     PaintOuterBoxShadowParams outer_box_shadow_params;
+
+    void translate_by(Gfx::IntPoint const& offset);
 };
 
 struct PaintTextShadow {
@@ -147,6 +166,7 @@ struct PaintTextShadow {
     Gfx::IntPoint draw_location;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return { draw_location, shadow_bounding_rect.size() }; }
+    void translate_by(Gfx::IntPoint const& offset) { draw_location.translate_by(offset); }
 };
 
 struct FillRectWithRoundedCorners {
@@ -158,6 +178,7 @@ struct FillRectWithRoundedCorners {
     Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct FillPathUsingColor {
@@ -168,6 +189,12 @@ struct FillPathUsingColor {
     Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        path_bounding_rect.translate_by(offset);
+        aa_translation.translate_by(offset.to_type<float>());
+    }
 };
 
 struct FillPathUsingPaintStyle {
@@ -179,6 +206,12 @@ struct FillPathUsingPaintStyle {
     Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        path_bounding_rect.translate_by(offset);
+        aa_translation.translate_by(offset.to_type<float>());
+    }
 };
 
 struct StrokePathUsingColor {
@@ -189,6 +222,12 @@ struct StrokePathUsingColor {
     Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        path_bounding_rect.translate_by(offset);
+        aa_translation.translate_by(offset.to_type<float>());
+    }
 };
 
 struct StrokePathUsingPaintStyle {
@@ -200,6 +239,12 @@ struct StrokePathUsingPaintStyle {
     Gfx::FloatPoint aa_translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        path_bounding_rect.translate_by(offset);
+        aa_translation.translate_by(offset.to_type<float>());
+    }
 };
 
 struct DrawEllipse {
@@ -208,6 +253,11 @@ struct DrawEllipse {
     int thickness;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        rect.translate_by(offset);
+    }
 };
 
 struct FillEllipse {
@@ -216,6 +266,11 @@ struct FillEllipse {
     Gfx::AntiAliasingPainter::BlendMode blend_mode;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        rect.translate_by(offset);
+    }
 };
 
 struct DrawLine {
@@ -225,6 +280,12 @@ struct DrawLine {
     int thickness;
     Gfx::Painter::LineStyle style;
     Color alternate_color;
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        from.translate_by(offset);
+        to.translate_by(offset);
+    }
 };
 
 struct DrawSignedDistanceField {
@@ -234,6 +295,11 @@ struct DrawSignedDistanceField {
     float smoothing;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        rect.translate_by(offset);
+    }
 };
 
 struct PaintFrame {
@@ -242,6 +308,8 @@ struct PaintFrame {
     Gfx::FrameStyle style;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct ApplyBackdropFilter {
@@ -250,6 +318,11 @@ struct ApplyBackdropFilter {
     CSS::ResolvedBackdropFilter backdrop_filter;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return backdrop_region; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        backdrop_region.translate_by(offset);
+    }
 };
 
 struct DrawRect {
@@ -258,6 +331,8 @@ struct DrawRect {
     bool rough;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct PaintRadialGradient {
@@ -267,6 +342,8 @@ struct PaintRadialGradient {
     Gfx::IntSize size;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct PaintConicGradient {
@@ -275,6 +352,8 @@ struct PaintConicGradient {
     Gfx::IntPoint position;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset) { rect.translate_by(offset); }
 };
 
 struct DrawTriangleWave {
@@ -283,6 +362,12 @@ struct DrawTriangleWave {
     Color color;
     int amplitude;
     int thickness;
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        p1.translate_by(offset);
+        p2.translate_by(offset);
+    }
 };
 
 struct SampleUnderCorners {
@@ -292,6 +377,11 @@ struct SampleUnderCorners {
     CornerClip corner_clip;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        border_rect.translate_by(offset);
+    }
 };
 
 struct BlitCornerClipping {
@@ -299,6 +389,11 @@ struct BlitCornerClipping {
     Gfx::IntRect border_rect;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        border_rect.translate_by(offset);
+    }
 };
 
 struct PaintBorders {
@@ -307,6 +402,11 @@ struct PaintBorders {
     BordersDataDevicePixels borders_data;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return border_rect.to_type<int>(); }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        border_rect.translate_by(offset.to_type<DevicePixels>());
+    }
 };
 
 using PaintingCommand = Variant<
@@ -457,6 +557,11 @@ public:
 
     void set_font(Gfx::Font const& font);
 
+    void set_scroll_frame_id(i32 id)
+    {
+        state().scroll_frame_id = id;
+    }
+
     void save();
     void restore();
 
@@ -497,20 +602,28 @@ public:
         m_state_stack.append(State());
     }
 
+    void apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_frame_id);
+
 private:
     struct State {
         Gfx::AffineTransform translation;
         Optional<Gfx::IntRect> clip_rect;
+        Optional<i32> scroll_frame_id;
     };
     State& state() { return m_state_stack.last(); }
     State const& state() const { return m_state_stack.last(); }
 
     void push_command(PaintingCommand command)
     {
-        m_painting_commands.append(command);
+        m_painting_commands.append({ state().scroll_frame_id, command });
     }
 
-    Vector<PaintingCommand> m_painting_commands;
+    struct PaintingCommandWithScrollFrame {
+        Optional<i32> scroll_frame_id;
+        PaintingCommand command;
+    };
+
+    Vector<PaintingCommandWithScrollFrame> m_painting_commands;
     Vector<State> m_state_stack;
 };
 
