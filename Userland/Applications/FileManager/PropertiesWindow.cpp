@@ -442,7 +442,7 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
         } else {
             auto icc_profile = icc_profile_or_error.release_value();
 
-            tab.find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text("See below"_string);
+            tab.find_descendant_of_type_named<GUI::Widget>("image_has_icc_line")->set_visible(false);
             tab.find_descendant_of_type_named<GUI::Label>("image_icc_profile")->set_text(icc_profile->tag_string_data(Gfx::ICC::profileDescriptionTag).value_or({}));
             tab.find_descendant_of_type_named<GUI::Label>("image_icc_copyright")->set_text(icc_profile->tag_string_data(Gfx::ICC::copyrightTag).value_or({}));
             tab.find_descendant_of_type_named<GUI::Label>("image_icc_color_space")->set_text(TRY(String::from_utf8(data_color_space_name(icc_profile->data_color_space()))));

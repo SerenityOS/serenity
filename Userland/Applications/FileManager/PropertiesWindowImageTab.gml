@@ -68,6 +68,7 @@
         }
 
         @GUI::Widget {
+            name: "image_has_icc_line"
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 12
             }
