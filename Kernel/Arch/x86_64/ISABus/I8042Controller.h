@@ -94,12 +94,7 @@ class I8042Controller final : public SerialIOController {
 public:
     static ErrorOr<NonnullRefPtr<I8042Controller>> create();
 
-    enum class EnableKeyboardFirstPortTranslation {
-        Yes,
-        No
-    };
-    ErrorOr<void> detect_devices(EnableKeyboardFirstPortTranslation);
-
+    ErrorOr<void> detect_devices();
     virtual ErrorOr<void> send_command(PortIndex, DeviceCommand command) override;
     virtual ErrorOr<void> send_command(PortIndex, DeviceCommand command, u8 data) override;
 

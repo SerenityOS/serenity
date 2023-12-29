@@ -7,14 +7,13 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Devices/HID/Definitions.h>
 
 namespace Kernel {
 
 struct ScanCodeEvent {
-    Array<u8, 8> scan_code_bytes;
-    ScanCodeSet sent_scan_code_set { ScanCodeSet::Set1 };
-    u8 bytes_count { 0 };
+    u32 scan_code_value { 0 };
+    bool pressed { false };
+    bool e0_prefix { false };
 };
 
 }

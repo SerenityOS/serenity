@@ -167,7 +167,7 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     // Note: If we happen to not have i8042 just return "gracefully" for now.
     if (!has_i8042_controller)
         return {};
-    if (auto result_or_error = i8042_controller->detect_devices(I8042Controller::EnableKeyboardFirstPortTranslation::No); result_or_error.is_error())
+    if (auto result_or_error = i8042_controller->detect_devices(); result_or_error.is_error())
         return {};
     m_hid_serial_io_controllers.with([&](auto& list) {
         list.append(i8042_controller);
@@ -188,10 +188,10 @@ HIDManagement& HIDManagement::the()
     return *s_the;
 }
 
-u32 HIDManagement::get_char_from_character_map(KeyEvent event, u8 index) const
+u32 HIDManagement::get_char_from_character_map(KeyEvent event, bool num_lock_on) const
 {
-    VERIFY(index < CHAR_MAP_SIZE);
     auto modifiers = event.modifiers();
+    auto index = event.scancode & 0xFF; // Index is last byte of scan code.
     auto caps_lock_on = event.caps_lock_on;
 
     u32 code_point = 0;
@@ -213,6 +213,19 @@ u32 HIDManagement::get_char_from_character_map(KeyEvent event, u8 index) const
             code_point &= ~0x20;
         else if (code_point >= 'A' && code_point <= 'Z')
             code_point |= 0x20;
+    }
+
+    if (event.e0_prefix && event.key == Key_Slash) {
+        // If Key_Slash (scancode = 0x35) mapped to other form "/", we fix num pad key of "/" with this case.
+        code_point = '/';
+    } else if (event.e0_prefix && event.key != Key_Return) {
+        // Except for `keypad-/` and 'keypad-return', all e0 scan codes are not actually characters. i.e., `keypad-0` and
+        // `Insert` have the same scancode except for the prefix, but insert should not have a code_point.
+        code_point = 0;
+    } else if (!num_lock_on && !event.e0_prefix && event.scancode >= 0x47 && event.scancode <= 0x53 && event.key != Key_Minus && event.key != Key_Plus) {
+        // When Num Lock is off, some numpad keys have the same function as some of the extended keys like Home, End, PgDown, arrows etc.
+        // These keys should have the code_point set to 0.
+        code_point = 0;
     }
 
     return code_point;
