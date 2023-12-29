@@ -579,6 +579,10 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 Tab::~Tab()
 {
     close_sub_widgets();
+
+    // Delete the InspectorWidget explicitly to ensure it is deleted before the WebContentView. Otherwise, Qt
+    // can destroy these objects in any order, which may cause use-after-free in InspectorWidget's destructor.
+    delete m_inspector_widget;
 }
 
 void Tab::select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item)
