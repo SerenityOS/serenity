@@ -169,4 +169,15 @@
             }
         }
     }
+
+    @GUI::GroupBox {
+        name: "image_basic_metadata"
+        title: "Basic Metadata"
+        preferred_height: "shrink"
+        visible: false
+        layout: @GUI::VerticalBoxLayout {
+            margins: [12, 8, 0]
+            spacing: 2
+        }
+    }
 }
