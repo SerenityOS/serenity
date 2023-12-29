@@ -3,7 +3,7 @@
 .set MULTIBOOT_PAGE_ALIGN,    0x1
 .set MULTIBOOT_MEMORY_INFO,   0x2
 .set MULTIBOOT_VIDEO_MODE,    0x4
-.set multiboot_flags,         MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO
+.set multiboot_flags,         MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_VIDEO_MODE
 .set multiboot_checksum,      -(MULTIBOOT_MAGIC + multiboot_flags)
 
 .section .multiboot, "a"
