@@ -510,23 +510,25 @@ void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
 // https://url.spec.whatwg.org/#c0-control-percent-encode-set
 bool URL::code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
 {
+    // NOTE: Once we've checked for presence in the C0Control set, we know that the code point is
+    //       a valid ASCII character in the range 0x20..0x7E, so we can safely cast it to char.
     switch (set) {
     case URL::PercentEncodeSet::C0Control:
         return code_point < 0x20 || code_point > 0x7E;
     case URL::PercentEncodeSet::Fragment:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"<>`"sv.contains(code_point);
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"<>`"sv.contains(static_cast<char>(code_point));
     case URL::PercentEncodeSet::Query:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"#<>"sv.contains(code_point);
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"#<>"sv.contains(static_cast<char>(code_point));
     case URL::PercentEncodeSet::SpecialQuery:
         return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || code_point == '\'';
     case URL::PercentEncodeSet::Path:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || "?`{}"sv.contains(code_point);
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || "?`{}"sv.contains(static_cast<char>(code_point));
     case URL::PercentEncodeSet::Userinfo:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Path) || "/:;=@[\\]^|"sv.contains(code_point);
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Path) || "/:;=@[\\]^|"sv.contains(static_cast<char>(code_point));
     case URL::PercentEncodeSet::Component:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Userinfo) || "$%&+,"sv.contains(code_point);
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Userinfo) || "$%&+,"sv.contains(static_cast<char>(code_point));
     case URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Component) || "!'()~"sv.contains(code_point);
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Component) || "!'()~"sv.contains(static_cast<char>(code_point));
     case URL::PercentEncodeSet::EncodeURI:
         // NOTE: This is the same percent encode set that JS encodeURI() uses.
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
