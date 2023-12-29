@@ -348,7 +348,8 @@ void PrimitiveString::resolve_rope_if_needed(EncodingPreference preference) cons
         previous = current;
     }
 
-    m_utf8_string = MUST(builder.to_string());
+    // NOTE: We've already produced valid UTF-8 above, so there's no need for additional validation.
+    m_utf8_string = builder.to_string_without_validation();
     m_is_rope = false;
     m_lhs = nullptr;
     m_rhs = nullptr;
