@@ -14,12 +14,17 @@
 namespace Kernel {
 
 enum class HardwareTimerType {
+#if ARCH(X86_64)
     i8253 = 0x1,                   /* PIT */
     RTC = 0x2,                     /* Real Time Clock */
     HighPrecisionEventTimer = 0x3, /* also known as IA-PC HPET */
     LocalAPICTimer = 0x4,          /* Local APIC */
-#if ARCH(AARCH64)
-    RPiTimer = 0x5
+#elif ARCH(AARCH64)
+    RPiTimer = 0x5,
+#elif ARCH(RISCV64)
+    RISCVTimer = 0x6,
+#else
+#    error Unknown architecture
 #endif
 };
 
