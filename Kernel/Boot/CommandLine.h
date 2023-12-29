@@ -82,7 +82,6 @@ public:
     [[nodiscard]] bool is_pci_disabled() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_pc_speaker_enabled() const;
-    [[nodiscard]] bool i8042_enable_first_port_translation() const;
     [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;
     [[nodiscard]] I8042PresenceMode i8042_presence_mode() const;
     [[nodiscard]] bool is_force_pio() const;

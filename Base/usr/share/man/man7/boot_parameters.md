@@ -67,10 +67,6 @@ has set up before booting the Kernel, don't initialize any driver.
   **`none`** - Assume there's no i8042 controller in the system. 
   **`force`** - Assume there's i8042 controller in the system.
 
-* **`i8042_first_port_translation`**  - This parameter expects **`on`** or **`off`** and is by default set to **`off`**.
-  When set to **`off`**, the kernel will not enable first PS2 port translation.
-  When set to **`on`**, the kernel will enable first PS2 port translation.
-
 * **`panic`** - This parameter expects **`halt`** or **`shutdown`**. This is particularly useful in CI contexts.
 
 * **`pci`** - This parameter expects **`ecam`**, **`io`** or **`none`**. When selecting **`none`**
