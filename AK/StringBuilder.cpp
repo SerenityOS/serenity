@@ -200,7 +200,29 @@ ErrorOr<void> StringBuilder::try_append_code_point(u32 code_point)
 
 void StringBuilder::append_code_point(u32 code_point)
 {
-    MUST(try_append_code_point(code_point));
+    if (code_point <= 0x7f) {
+        m_buffer.append(static_cast<char>(code_point));
+    } else if (code_point <= 0x07ff) {
+        (void)will_append(2);
+        m_buffer.append(static_cast<char>((((code_point >> 6) & 0x1f) | 0xc0)));
+        m_buffer.append(static_cast<char>((((code_point >> 0) & 0x3f) | 0x80)));
+    } else if (code_point <= 0xffff) {
+        (void)will_append(3);
+        m_buffer.append(static_cast<char>((((code_point >> 12) & 0x0f) | 0xe0)));
+        m_buffer.append(static_cast<char>((((code_point >> 6) & 0x3f) | 0x80)));
+        m_buffer.append(static_cast<char>((((code_point >> 0) & 0x3f) | 0x80)));
+    } else if (code_point <= 0x10ffff) {
+        (void)will_append(4);
+        m_buffer.append(static_cast<char>((((code_point >> 18) & 0x07) | 0xf0)));
+        m_buffer.append(static_cast<char>((((code_point >> 12) & 0x3f) | 0x80)));
+        m_buffer.append(static_cast<char>((((code_point >> 6) & 0x3f) | 0x80)));
+        m_buffer.append(static_cast<char>((((code_point >> 0) & 0x3f) | 0x80)));
+    } else {
+        (void)will_append(3);
+        m_buffer.append(0xef);
+        m_buffer.append(0xbf);
+        m_buffer.append(0xbd);
+    }
 }
 
 #ifndef KERNEL
