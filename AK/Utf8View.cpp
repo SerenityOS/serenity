@@ -147,6 +147,13 @@ Utf8CodePointIterator& Utf8CodePointIterator::operator++()
 {
     VERIFY(m_length > 0);
 
+    // OPTIMIZATION: Fast path for ASCII characters.
+    if (*m_ptr <= 0x7F) {
+        m_ptr += 1;
+        m_length -= 1;
+        return *this;
+    }
+
     size_t code_point_length_in_bytes = underlying_code_point_length_in_bytes();
     if (code_point_length_in_bytes > m_length) {
         // We don't have enough data for the next code point. Skip one character and try again.
@@ -190,6 +197,11 @@ ReadonlyBytes Utf8CodePointIterator::underlying_code_point_bytes() const
 u32 Utf8CodePointIterator::operator*() const
 {
     VERIFY(m_length > 0);
+
+    // OPTIMIZATION: Fast path for ASCII characters.
+    if (*m_ptr <= 0x7F)
+        return *m_ptr;
+
     auto [code_point_length_in_bytes, code_point_value_so_far, first_byte_makes_sense] = Utf8View::decode_leading_byte(*m_ptr);
 
     if (!first_byte_makes_sense) {
