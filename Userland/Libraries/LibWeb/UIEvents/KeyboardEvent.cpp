@@ -143,9 +143,8 @@ static ErrorOr<Optional<String>> get_event_named_key(KeyCode platform_key)
 
     // 3.2. Modifier Keys, https://www.w3.org/TR/uievents-key/#keys-modifier
     case KeyCode::Key_Alt:
-        return "AltLeft"_string;
-    case KeyCode::Key_RightAlt:
-        return "AltRight"_string;
+        return "Alt"_string;
+    // FIXME: AltGraph
     case KeyCode::Key_CapsLock:
         return "CapsLock"_string;
     case KeyCode::Key_Control:
@@ -458,9 +457,7 @@ static ErrorOr<String> get_event_code(KeyCode platform_key, unsigned modifiers)
 
     // 3.1.2. Functional Keys, https://www.w3.org/TR/uievents-code/#key-alphanumeric-functional
     case KeyCode::Key_Alt:
-        return "AltLeft"_string;
-    case KeyCode::Key_RightAlt:
-        return "AltRight"_string;
+        return "Alt"_string; // FIXME: Detect left vs. right key.
     case KeyCode::Key_Backspace:
         return "Backspace"_string;
     case KeyCode::Key_CapsLock:
@@ -468,9 +465,7 @@ static ErrorOr<String> get_event_code(KeyCode platform_key, unsigned modifiers)
     case KeyCode::Key_Menu:
         return "ContextMenu"_string;
     case KeyCode::Key_Control:
-        return "ControlLeft"_string;
-    case KeyCode::Key_RightControl:
-        return "ControlRight"_string;
+        return "Control"_string; // FIXME: Detect left vs. right key.
     case KeyCode::Key_Return:
         return "Enter"_string;
     case KeyCode::Key_Super:
@@ -545,60 +540,7 @@ static ErrorOr<String> get_event_code(KeyCode platform_key, unsigned modifiers)
         return "PrintScreen"_string;
     case KeyCode::Key_ScrollLock:
         return "ScrollLock"_string;
-    case KeyCode::Key_PauseBreak:
-        return "Pause"_string;
-
-    // 3.6. Media Section, https://www.w3.org/TR/uievents-code/#media-keys
-    case KeyCode::Key_BrowserSearch:
-        return "BrowserSearch"_string;
-    case KeyCode::Key_BrowserFavorites:
-        return "BrowserFavorites"_string;
-    case KeyCode::Key_BrowserHome:
-        return "BrowserHome"_string;
-    case KeyCode::Key_PreviousTrack:
-        return "PreviousTrack"_string;
-    case KeyCode::Key_BrowserBack:
-        return "BrowserBack"_string;
-    case KeyCode::Key_BrowserForward:
-        return "BrowserForward"_string;
-    case KeyCode::Key_BrowserRefresh:
-        return "BrowserRefresh"_string;
-    case KeyCode::Key_BrowserStop:
-        return "BrowserStop"_string;
-    case KeyCode::Key_VolumeDown:
-        return "AudioVolumeDown"_string;
-    case KeyCode::Key_VolumeUp:
-        return "AudioVolumeUp"_string;
-    case KeyCode::Key_Wake:
-        return "WakeUp"_string;
-    case KeyCode::Key_Sleep:
-        return "Sleep"_string;
-    case KeyCode::Key_NextTrack:
-        return "NextTrack"_string;
-    case KeyCode::Key_MediaSelect:
-        return "MediaSelect"_string;
-    case KeyCode::Key_Email:
-        return "LaunchMail"_string;
-
-    case KeyCode::Key_Power:
-        return "Power"_string;
-    case KeyCode::Key_Stop:
-        return "MediaStop"_string;
-    case KeyCode::Key_PlayPause:
-        return "MediaPlayPause"_string;
-    case KeyCode::Key_Mute:
-        return "AudioVolumeMute"_string;
-    case KeyCode::Key_Calculator:
-        return "LaunchApp2"_string;
-    case KeyCode::Key_MyComputer:
-        return "LaunchApp1"_string;
-
-    // FIXME: Are these correct?
-    case KeyCode::Key_LeftGUI:
-        return "LaunchApp2"_string;
-    case KeyCode::Key_RightGUI:
-    case KeyCode::Key_Apps:
-        return "LaunchApp1"_string;
+    // FIXME: Pause
 
     // 3.7. Legacy, Non-Standard and Special Keys, https://www.w3.org/TR/uievents-code/#key-legacy
     case KeyCode::Key_Invalid:
