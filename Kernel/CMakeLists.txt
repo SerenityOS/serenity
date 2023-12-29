@@ -530,6 +530,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/SafeMem.cpp
         Arch/riscv64/SBI.cpp
         Arch/riscv64/SmapDisabler.cpp
+        Arch/riscv64/Timer.cpp
     )
 
     add_compile_options(-fno-stack-protector -fno-sanitize=all)
