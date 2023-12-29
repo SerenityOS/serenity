@@ -722,11 +722,15 @@ if (ENABLE_KERNEL_UNDEFINED_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
 endif()
 
-# Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
-# is not currently meant to be used, besides when developing Kernel ASAN support.
-#
 if (ENABLE_KERNEL_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=kernel-address)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+        # TODO: Support inline KASAN for improved performance
+        add_compile_options("SHELL:-mllvm -asan-instrumentation-with-call-threshold=0")
+        # TODO: Support KASAN stack poisoning (inline) for use-after-return and use-after-scope detection
+        add_compile_options("SHELL:-mllvm -asan-stack=0")
+    endif()
+    set_source_files_properties(Security/AddressSanitizer.cpp PROPERTIES COMPILE_FLAGS "-fno-sanitize=kernel-address")
     add_link_options(-fsanitize=kernel-address)
 endif()
 

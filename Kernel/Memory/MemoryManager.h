@@ -243,6 +243,10 @@ private:
     void initialize_physical_pages();
     void register_reserved_ranges();
 
+#ifdef HAS_ADDRESS_SANITIZER
+    void initialize_kasan_shadow_memory();
+#endif
+
     void unregister_kernel_region(Region&);
 
     void protect_kernel_image();

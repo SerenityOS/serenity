@@ -16,6 +16,7 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/AddressSanitizer.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 
 #if ARCH(X86_64) || ARCH(AARCH64) || ARCH(RISCV64)
@@ -65,11 +66,18 @@ public:
         }
     }
 
-    void* allocate()
+    void* allocate([[maybe_unused]] size_t requested_size)
     {
         VERIFY(m_freelist);
         ++m_allocated_slabs;
-        return exchange(m_freelist, m_freelist->next);
+#ifdef HAS_ADDRESS_SANITIZER
+        AddressSanitizer::fill_shadow((FlatPtr)m_freelist, sizeof(FreelistEntry::next), Kernel::AddressSanitizer::ShadowType::Unpoisoned8Bytes);
+#endif
+        auto* ptr = exchange(m_freelist, m_freelist->next);
+#ifdef HAS_ADDRESS_SANITIZER
+        AddressSanitizer::mark_region((FlatPtr)ptr, requested_size, m_slab_size, AddressSanitizer::ShadowType::Malloc);
+#endif
+        return ptr;
     }
 
     void deallocate(void* ptr)
@@ -77,7 +85,13 @@ public:
         VERIFY(ptr >= &m_data && ptr < ((u8*)this + block_size));
         --m_allocated_slabs;
         auto* freelist_entry = (FreelistEntry*)ptr;
+#ifdef HAS_ADDRESS_SANITIZER
+        AddressSanitizer::fill_shadow((FlatPtr)freelist_entry, sizeof(FreelistEntry::next), Kernel::AddressSanitizer::ShadowType::Unpoisoned8Bytes);
+#endif
         freelist_entry->next = m_freelist;
+#ifdef HAS_ADDRESS_SANITIZER
+        AddressSanitizer::fill_shadow((FlatPtr)freelist_entry, m_slab_size, AddressSanitizer::ShadowType::Free);
+#endif
         m_freelist = freelist_entry;
     }
 
@@ -122,7 +136,7 @@ public:
 
     size_t slab_size() const { return m_slab_size; }
 
-    void* allocate(CallerWillInitializeMemory caller_will_initialize_memory)
+    void* allocate(size_t requested_size, [[maybe_unused]] CallerWillInitializeMemory caller_will_initialize_memory)
     {
         if (m_usable_blocks.is_empty()) {
             // FIXME: This allocation wastes `block_size` bytes due to the implementation of kmalloc_aligned().
@@ -136,19 +150,23 @@ public:
             m_usable_blocks.append(*block);
         }
         auto* block = m_usable_blocks.first();
-        auto* ptr = block->allocate();
+        auto* ptr = block->allocate(requested_size);
         if (block->is_full())
             m_full_blocks.append(*block);
 
+#ifndef HAS_ADDRESS_SANITIZER
         if (caller_will_initialize_memory == CallerWillInitializeMemory::No) {
             memset(ptr, KMALLOC_SCRUB_BYTE, m_slab_size);
         }
+#endif
         return ptr;
     }
 
     void deallocate(void* ptr)
     {
+#ifndef HAS_ADDRESS_SANITIZER
         memset(ptr, KFREE_SCRUB_BYTE, m_slab_size);
+#endif
 
         auto* block = (KmallocSlabBlock*)((FlatPtr)ptr & KmallocSlabBlock::block_mask);
         bool block_was_full = block->is_full();
@@ -227,7 +245,7 @@ struct KmallocGlobalData {
 
         for (auto& slabheap : slabheaps) {
             if (size <= slabheap.slab_size() && alignment <= slabheap.slab_size())
-                return slabheap.allocate(caller_will_initialize_memory);
+                return slabheap.allocate(size, caller_will_initialize_memory);
         }
 
         for (auto& subheap : subheaps) {

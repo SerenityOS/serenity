@@ -11,6 +11,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <AK/kmalloc.h>
+#include <Kernel/Security/AddressSanitizer.h>
 
 namespace Kernel {
 
@@ -68,7 +69,7 @@ public:
         return needed_chunks * CHUNK_SIZE + (needed_chunks + 7) / 8;
     }
 
-    void* allocate(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory)
+    void* allocate(size_t size, size_t alignment, [[maybe_unused]] CallerWillInitializeMemory caller_will_initialize_memory)
     {
         // The minimum possible alignment is CHUNK_SIZE, since we only track chunks here, nothing smaller.
         if (alignment < CHUNK_SIZE)
@@ -104,17 +105,23 @@ public:
         VERIFY(first_chunk.value() <= aligned_first_chunk);
         VERIFY(aligned_first_chunk + chunks_needed <= first_chunk.value() + chunks_needed + chunk_alignment);
 
+#ifdef HAS_ADDRESS_SANITIZER
+        AddressSanitizer::mark_region((FlatPtr)a, real_size, (chunks_needed * CHUNK_SIZE), AddressSanitizer::ShadowType::Malloc);
+#endif
+
         u8* ptr = a->data;
         a->allocation_size_in_chunks = chunks_needed;
 
         m_bitmap.set_range_and_verify_that_all_bits_flip(aligned_first_chunk, chunks_needed, true);
 
         m_allocated_chunks += chunks_needed;
+#ifndef HAS_ADDRESS_SANITIZER
         if (caller_will_initialize_memory == CallerWillInitializeMemory::No) {
             if constexpr (HEAP_SCRUB_BYTE_ALLOC != 0) {
                 __builtin_memset(ptr, HEAP_SCRUB_BYTE_ALLOC, (chunks_needed * CHUNK_SIZE) - sizeof(AllocationHeader));
             }
         }
+#endif
 
         VERIFY((FlatPtr)ptr % alignment == 0);
         return ptr;
@@ -137,9 +144,13 @@ public:
         VERIFY(m_allocated_chunks >= a->allocation_size_in_chunks);
         m_allocated_chunks -= a->allocation_size_in_chunks;
 
+#ifdef HAS_ADDRESS_SANITIZER
+        AddressSanitizer::fill_shadow((FlatPtr)a, a->allocation_size_in_chunks * CHUNK_SIZE, AddressSanitizer::ShadowType::Free);
+#else
         if constexpr (HEAP_SCRUB_BYTE_FREE != 0) {
             __builtin_memset(a, HEAP_SCRUB_BYTE_FREE, a->allocation_size_in_chunks * CHUNK_SIZE);
         }
+#endif
     }
 
     bool contains(void const* ptr) const
