@@ -353,8 +353,9 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
     //    and it has a src attribute specified whose value is not the empty string,
     //    then set selected source to the value of the element's src attribute
     //    and set selected pixel density to 1.0.
-    if (!uses_srcset_or_picture() && has_attribute(HTML::AttributeNames::src) && !deprecated_attribute(HTML::AttributeNames::src).is_empty()) {
-        selected_source = TRY(String::from_byte_string(deprecated_attribute(HTML::AttributeNames::src)));
+    auto maybe_src_attribute = attribute(HTML::AttributeNames::src);
+    if (!uses_srcset_or_picture() && maybe_src_attribute.has_value() && !maybe_src_attribute.value().is_empty()) {
+        selected_source = maybe_src_attribute.release_value();
         selected_pixel_density = 1.0f;
     }
 
