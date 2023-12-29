@@ -636,4 +636,21 @@ bool String::equals_ignoring_ascii_case(StringView other) const
     return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other);
 }
 
+String String::repeated(String const& input, size_t count)
+{
+    VERIFY(!Checked<size_t>::multiplication_would_overflow(count, input.bytes().size()));
+    u8* buffer = nullptr;
+    auto data = MUST(Detail::StringData::create_uninitialized(count * input.bytes().size(), buffer));
+
+    if (input.bytes().size() == 1) {
+        memset(buffer, input.bytes().first(), count);
+        return String { move(data) };
+    }
+
+    for (size_t i = 0; i < count; ++i) {
+        memcpy(buffer + (i * input.bytes().size()), input.bytes().data(), input.bytes().size());
+    }
+    return String { data };
+}
+
 }

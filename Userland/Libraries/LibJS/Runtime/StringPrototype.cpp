@@ -777,10 +777,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
         return PrimitiveString::create(vm, String {});
 
     // 6. Return the String value that is made from n copies of S appended together.
-    StringBuilder builder;
-    for (size_t i = 0; i < n; ++i)
-        builder.append(string);
-    return PrimitiveString::create(vm, MUST(builder.to_string()));
+    return PrimitiveString::create(vm, String::repeated(string, n));
 }
 
 // 22.1.3.19 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
