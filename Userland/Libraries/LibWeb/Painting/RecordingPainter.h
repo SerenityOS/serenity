@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/SegmentedVector.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -623,7 +624,7 @@ private:
         PaintingCommand command;
     };
 
-    Vector<PaintingCommandWithScrollFrame> m_painting_commands;
+    AK::SegmentedVector<PaintingCommandWithScrollFrame, 512> m_painting_commands;
     Vector<State> m_state_stack;
 };
 

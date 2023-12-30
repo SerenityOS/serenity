@@ -63,6 +63,7 @@ set(AK_TEST_SOURCES
     TestQuickSort.cpp
     TestRedBlackTree.cpp
     TestRefPtr.cpp
+    TestSegmentedVector.cpp
     TestSIMD.cpp
     TestSinglyLinkedList.cpp
     TestSlugify.cpp
