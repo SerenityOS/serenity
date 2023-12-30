@@ -411,6 +411,8 @@ void RecordingPainter::draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2
 
 void RecordingPainter::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
 {
+    if (borders_data.top.width == 0 && borders_data.right.width == 0 && borders_data.bottom.width == 0 && borders_data.left.width == 0)
+        return;
     push_command(PaintBorders { border_rect, corner_radii, borders_data });
 }
 
