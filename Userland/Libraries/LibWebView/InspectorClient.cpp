@@ -89,6 +89,10 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_inspector_web_view.run_javascript(script);
     };
 
+    m_content_web_view.on_received_hovered_node_id = [this](auto node_id) {
+        select_node(node_id);
+    };
+
     m_content_web_view.on_received_console_message = [this](auto message_index) {
         handle_console_message(message_index);
     };
@@ -198,8 +202,7 @@ void InspectorClient::reset()
 
 void InspectorClient::select_hovered_node()
 {
-    auto hovered_node_id = m_content_web_view.get_hovered_node_id();
-    select_node(hovered_node_id);
+    m_content_web_view.get_hovered_node_id();
 }
 
 void InspectorClient::select_default_node()
