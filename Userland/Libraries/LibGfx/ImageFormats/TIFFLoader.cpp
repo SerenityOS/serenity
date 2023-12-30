@@ -47,6 +47,9 @@ public:
         if (m_metadata.strip_offsets()->size() != m_metadata.strip_byte_counts()->size())
             return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes");
 
+        if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value in BitsPerSample");
+
         return {};
     }
 
