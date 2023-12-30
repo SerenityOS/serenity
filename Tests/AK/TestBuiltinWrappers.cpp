@@ -72,13 +72,13 @@ RANDOMIZED_TEST_CASE(count_leading_zeroes)
 {
     //    count_leading_zeroes(0b000...0001000...000)
     // == count_leading_zeroes(0b000...0001___...___) (where _ is 0 or 1)
-    GEN(e, Gen::unsigned_int(0, 63));
+    GEN(e, Gen::number_u64(0, 63));
     auto power_of_two = 1ULL << e;
 
     // We add random one-bits below the leftmost (and only) one-bit.
     // This shouldn't change the output of count_leading_zeroes because
     // the function should only care about the most significant one.
-    GEN(below, Gen::unsigned_int(0, power_of_two - 1));
+    GEN(below, Gen::number_u64(0, power_of_two - 1));
     auto n = power_of_two + below;
 
     EXPECT_EQ(count_leading_zeroes(n), count_leading_zeroes(power_of_two));
@@ -89,7 +89,7 @@ RANDOMIZED_TEST_CASE(count_required_bits)
     // count_required_bits(n) == log2(n) + 1
 
     // log2(0) is -infinity, we don't care about that
-    GEN(n, Gen::unsigned_int(1, NumericLimits<u32>::max()));
+    GEN(n, Gen::number_u32(1, NumericLimits<u32>::max()));
 
     size_t expected = AK::log2(static_cast<double>(n)) + 1;
 
@@ -99,6 +99,6 @@ RANDOMIZED_TEST_CASE(count_required_bits)
 RANDOMIZED_TEST_CASE(bit_scan_forward_count_trailing_zeroes)
 {
     // Behaviour for 0 differs, so we skip it.
-    GEN(n, Gen::unsigned_int(1, 1 << 31));
+    GEN(n, Gen::number_u32(1, 1 << 31));
     EXPECT_EQ(bit_scan_forward(n), count_trailing_zeroes(n) + 1);
 }

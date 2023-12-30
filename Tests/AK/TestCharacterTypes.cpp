@@ -42,7 +42,7 @@ void randomized_compare_bool_output_over(u32 range, auto& old_function, auto& ne
     for (u32 n = 0; n < 100; ++n) {
         bool result1 = false;
         bool result2 = false;
-        GEN(i, Gen::unsigned_int(range - 1));
+        GEN(i, Gen::number_u64(range - 1));
         EXPECT_EQ(result1 = (old_function(i) > 0), result2 = (new_function(i) > 0));
         if (result1 != result2)
             FAIL(String::formatted("New result {} does not match old result {} for input {}.", result1, result2, i));
@@ -55,7 +55,7 @@ void randomized_compare_value_output_over(u32 range, auto& old_function, auto& n
     for (u32 n = 0; n < 100; ++n) {
         i64 result1 = false;
         i64 result2 = false;
-        GEN(i, Gen::unsigned_int(range - 1));
+        GEN(i, Gen::number_u64(range - 1));
         EXPECT_EQ(result1 = old_function(i), result2 = new_function(i));
         if (result1 != result2)
             FAIL(String::formatted("New result {} does not match old result {} for input {}.", result1, result2, i));

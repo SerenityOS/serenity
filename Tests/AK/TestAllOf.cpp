@@ -28,13 +28,13 @@ TEST_CASE(all_but_one_false)
 
 RANDOMIZED_TEST_CASE(trivial_all_true)
 {
-    GEN(vec, Gen::vector(0, 10, []() { return Gen::unsigned_int(); }));
+    GEN(vec, Gen::vector(0, 10, []() { return Gen::number_u64(); }));
     EXPECT(all_of(vec.begin(), vec.end(), [](auto) { return true; }));
 }
 
 RANDOMIZED_TEST_CASE(trivial_all_false)
 {
-    GEN(vec, Gen::vector(1, 10, []() { return Gen::unsigned_int(); }));
+    GEN(vec, Gen::vector(1, 10, []() { return Gen::number_u64(); }));
     EXPECT(!all_of(vec.begin(), vec.end(), [](auto) { return false; }));
 }
 

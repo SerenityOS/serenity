@@ -29,24 +29,24 @@ public:
     RandomRun() = default;
     RandomRun(RandomRun const& rhs) = default;
     RandomRun& operator=(RandomRun const& rhs) = default;
-    explicit RandomRun(Vector<u32> const& data)
+    explicit RandomRun(Vector<u64> const& data)
         : m_data(move(data))
     {
     }
     bool is_empty() const { return m_data.is_empty(); }
     bool contains_chunk(Chunk const& c) const { return c.index + c.size <= m_data.size(); }
-    void append(u32 n) { m_data.append(n); }
+    void append(u64 n) { m_data.append(n); }
     size_t size() const { return m_data.size(); }
-    Optional<u32> next()
+    Optional<u64> next()
     {
         if (m_current_index < m_data.size()) {
             return m_data[m_current_index++];
         }
-        return Optional<u32> {};
+        return Optional<u64> {};
     }
-    u32& operator[](size_t index) { return m_data[index]; }
-    u32 const& operator[](size_t index) const { return m_data[index]; }
-    Vector<u32> data() const { return m_data; }
+    u64& operator[](size_t index) { return m_data[index]; }
+    u64 const& operator[](size_t index) const { return m_data[index]; }
+    Vector<u64> data() const { return m_data; }
 
     // Shortlex sorting
     //
@@ -85,7 +85,7 @@ public:
 
     RandomRun with_sorted(Chunk c) const
     {
-        Vector<u32> new_data = m_data;
+        Vector<u64> new_data = m_data;
         AK::dual_pivot_quick_sort(
             new_data,
             c.index,
@@ -95,13 +95,13 @@ public:
     }
     RandomRun with_deleted(Chunk c) const
     {
-        Vector<u32> new_data(m_data);
+        Vector<u64> new_data(m_data);
         new_data.remove(c.index, c.size);
         return RandomRun(move(new_data));
     }
 
 private:
-    Vector<u32> m_data;
+    Vector<u64> m_data;
     size_t m_current_index = 0;
 };
 

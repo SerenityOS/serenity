@@ -70,35 +70,35 @@ TEST_CASE(large_populate_reverse)
 
 RANDOMIZED_TEST_CASE(pop_min_is_min)
 {
-    GEN(vec, Gen::vector(1, 10, []() { return Gen::unsigned_int(); }));
+    GEN(vec, Gen::vector(1, 10, []() { return Gen::number_u64(); }));
 
     auto sorted { vec };
     AK::quick_sort(sorted);
 
-    BinaryHeap<u32, u32, 10> heap;
+    BinaryHeap<u64, u64, 10> heap;
 
     // insert in a non-sorted order
-    for (u32 n : vec) {
+    for (u64 n : vec) {
         heap.insert(n, n);
     }
 
     // check in a sorted order
-    for (u32 sorted_n : sorted) {
+    for (u64 sorted_n : sorted) {
         EXPECT_EQ(heap.pop_min(), sorted_n);
     }
 }
 
 RANDOMIZED_TEST_CASE(peek_min_same_as_pop_min)
 {
-    GEN(vec, Gen::vector(1, 10, []() { return Gen::unsigned_int(); }));
-    BinaryHeap<u32, u32, 10> heap;
-    for (u32 n : vec) {
+    GEN(vec, Gen::vector(1, 10, []() { return Gen::number_u64(); }));
+    BinaryHeap<u64, u64, 10> heap;
+    for (u64 n : vec) {
         heap.insert(n, n);
     }
 
     while (!heap.is_empty()) {
-        u32 peeked = heap.peek_min();
-        u32 popped = heap.pop_min();
+        u64 peeked = heap.peek_min();
+        u64 popped = heap.pop_min();
         EXPECT_EQ(peeked, popped);
     }
 }
