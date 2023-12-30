@@ -187,6 +187,26 @@ void WebContentClient::did_inspect_dom_tree(ByteString const& dom_tree)
         m_view.on_received_dom_tree(dom_tree);
 }
 
+void WebContentClient::did_inspect_dom_node(bool has_style, ByteString const& computed_style, ByteString const& resolved_style, ByteString const& custom_properties, ByteString const& node_box_sizing, ByteString const& aria_properties_state)
+{
+    if (!m_view.on_received_dom_node_properties)
+        return;
+
+    Optional<ViewImplementation::DOMNodeProperties> properties;
+
+    if (has_style) {
+        properties = ViewImplementation::DOMNodeProperties {
+            .computed_style_json = MUST(String::from_byte_string(computed_style)),
+            .resolved_style_json = MUST(String::from_byte_string(resolved_style)),
+            .custom_properties_json = MUST(String::from_byte_string(custom_properties)),
+            .node_box_sizing_json = MUST(String::from_byte_string(node_box_sizing)),
+            .aria_properties_state_json = MUST(String::from_byte_string(aria_properties_state)),
+        };
+    }
+
+    m_view.on_received_dom_node_properties(move(properties));
+}
+
 void WebContentClient::did_inspect_accessibility_tree(ByteString const& accessibility_tree)
 {
     if (m_view.on_received_accessibility_tree)

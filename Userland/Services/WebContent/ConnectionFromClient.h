@@ -72,7 +72,7 @@ private:
     virtual void debug_request(ByteString const&, ByteString const&) override;
     virtual void get_source() override;
     virtual void inspect_dom_tree() override;
-    virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
+    virtual void inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
     virtual void inspect_accessibility_tree() override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
 

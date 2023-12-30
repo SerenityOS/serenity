@@ -49,6 +49,32 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
             select_default_node();
     };
 
+    m_content_web_view.on_received_dom_node_properties = [this](auto const& inspected_node_properties) {
+        StringBuilder builder;
+
+        // FIXME: Support box model metrics and ARIA properties.
+        auto generate_property_script = [&](auto const& computed_style, auto const& resolved_style, auto const& custom_properties) {
+            builder.append("inspector.createPropertyTables(\""sv);
+            builder.append_escaped_for_json(computed_style);
+            builder.append("\", \""sv);
+            builder.append_escaped_for_json(resolved_style);
+            builder.append("\", \""sv);
+            builder.append_escaped_for_json(custom_properties);
+            builder.append("\");"sv);
+        };
+
+        if (inspected_node_properties.has_value()) {
+            generate_property_script(
+                inspected_node_properties->computed_style_json,
+                inspected_node_properties->resolved_style_json,
+                inspected_node_properties->custom_properties_json);
+        } else {
+            generate_property_script("{}"sv, "{}"sv, "{}"sv);
+        }
+
+        m_inspector_web_view.run_javascript(builder.string_view());
+    };
+
     m_content_web_view.on_received_accessibility_tree = [this](auto const& accessibility_tree) {
         auto result = parse_json_tree(accessibility_tree);
         if (result.is_error()) {
@@ -101,31 +127,7 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     };
 
     m_inspector_web_view.on_inspector_selected_dom_node = [this](auto node_id, auto const& pseudo_element) {
-        auto inspected_node_properties = m_content_web_view.inspect_dom_node(node_id, pseudo_element);
-
-        StringBuilder builder;
-
-        // FIXME: Support box model metrics and ARIA properties.
-        auto generate_property_script = [&](auto const& computed_style, auto const& resolved_style, auto const& custom_properties) {
-            builder.append("inspector.createPropertyTables(\""sv);
-            builder.append_escaped_for_json(computed_style);
-            builder.append("\", \""sv);
-            builder.append_escaped_for_json(resolved_style);
-            builder.append("\", \""sv);
-            builder.append_escaped_for_json(custom_properties);
-            builder.append("\");"sv);
-        };
-
-        if (inspected_node_properties.is_error()) {
-            generate_property_script("{}"sv, "{}"sv, "{}"sv);
-        } else {
-            generate_property_script(
-                inspected_node_properties.value().computed_style_json,
-                inspected_node_properties.value().resolved_style_json,
-                inspected_node_properties.value().custom_properties_json);
-        }
-
-        m_inspector_web_view.run_javascript(builder.string_view());
+        m_content_web_view.inspect_dom_node(node_id, pseudo_element);
     };
 
     m_inspector_web_view.on_inspector_set_dom_node_text = [this](auto node_id, auto const& text) {

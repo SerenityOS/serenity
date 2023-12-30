@@ -53,6 +53,7 @@ private:
     virtual void did_request_media_context_menu(Gfx::IntPoint, ByteString const&, unsigned, Web::Page::MediaContextMenu const&) override;
     virtual void did_get_source(AK::URL const&, ByteString const&) override;
     virtual void did_inspect_dom_tree(ByteString const&) override;
+    virtual void did_inspect_dom_node(bool has_style, ByteString const& computed_style, ByteString const& resolved_style, ByteString const& custom_properties, ByteString const& node_box_sizing, ByteString const& aria_properties_state) override;
     virtual void did_inspect_accessibility_tree(ByteString const&) override;
     virtual void did_output_js_console_message(i32 message_index) override;
     virtual void did_get_js_console_messages(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages) override;
