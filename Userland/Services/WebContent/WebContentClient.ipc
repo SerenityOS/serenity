@@ -46,6 +46,7 @@ endpoint WebContentClient
     did_inspect_accessibility_tree(ByteString accessibility_tree) =|
     did_get_hovered_node_id(i32 node_id) =|
     did_finish_editing_dom_node(Optional<i32> node_id) =|
+    did_get_dom_node_html(String html) =|
 
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)

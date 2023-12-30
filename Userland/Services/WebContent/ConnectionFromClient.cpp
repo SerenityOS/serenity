@@ -781,17 +781,18 @@ void ConnectionFromClient::remove_dom_node(i32 node_id)
     async_did_finish_editing_dom_node(previous_dom_node->unique_id());
 }
 
-Messages::WebContentServer::GetDomNodeHtmlResponse ConnectionFromClient::get_dom_node_html(i32 node_id)
+void ConnectionFromClient::get_dom_node_html(i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node)
-        return OptionalNone {};
+        return;
 
     // FIXME: Implement Element's outerHTML attribute.
     auto container = Web::DOM::create_element(dom_node->document(), Web::HTML::TagNames::div, Web::Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     container->append_child(dom_node->clone_node(nullptr, true)).release_value_but_fixme_should_propagate_errors();
 
-    return container->inner_html().release_value_but_fixme_should_propagate_errors();
+    auto html = container->inner_html().release_value_but_fixme_should_propagate_errors();
+    async_did_get_dom_node_html(move(html));
 }
 
 void ConnectionFromClient::initialize_js_console(Badge<PageClient>, Web::DOM::Document& document)

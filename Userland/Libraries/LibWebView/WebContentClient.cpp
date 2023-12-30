@@ -225,6 +225,12 @@ void WebContentClient::did_finish_editing_dom_node(Optional<i32> const& node_id)
         m_view.on_finshed_editing_dom_node(node_id);
 }
 
+void WebContentClient::did_get_dom_node_html(String const& html)
+{
+    if (m_view.on_received_dom_node_html)
+        m_view.on_received_dom_node_html(html);
+}
+
 void WebContentClient::did_output_js_console_message(i32 message_index)
 {
     if (m_view.on_received_console_message)
