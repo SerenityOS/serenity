@@ -45,6 +45,7 @@ endpoint WebContentClient
     did_inspect_dom_node(bool has_style, ByteString computed_style,  ByteString resolved_style,  ByteString custom_properties, ByteString node_box_sizing, ByteString aria_properties_state) =|
     did_inspect_accessibility_tree(ByteString accessibility_tree) =|
     did_get_hovered_node_id(i32 node_id) =|
+    did_finish_editing_dom_node(Optional<i32> node_id) =|
 
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)

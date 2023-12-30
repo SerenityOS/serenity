@@ -156,9 +156,9 @@ void ViewImplementation::set_dom_node_text(i32 node_id, String text)
     client().async_set_dom_node_text(node_id, move(text));
 }
 
-Optional<i32> ViewImplementation::set_dom_node_tag(i32 node_id, String name)
+void ViewImplementation::set_dom_node_tag(i32 node_id, String name)
 {
-    return client().set_dom_node_tag(node_id, move(name));
+    client().async_set_dom_node_tag(node_id, move(name));
 }
 
 void ViewImplementation::add_dom_node_attributes(i32 node_id, Vector<Attribute> attributes)
@@ -171,19 +171,19 @@ void ViewImplementation::replace_dom_node_attribute(i32 node_id, String name, Ve
     client().async_replace_dom_node_attribute(node_id, move(name), move(replacement_attributes));
 }
 
-Optional<i32> ViewImplementation::create_child_element(i32 node_id)
+void ViewImplementation::create_child_element(i32 node_id)
 {
-    return client().create_child_element(node_id);
+    client().async_create_child_element(node_id);
 }
 
-Optional<i32> ViewImplementation::create_child_text_node(i32 node_id)
+void ViewImplementation::create_child_text_node(i32 node_id)
 {
-    return client().create_child_text_node(node_id);
+    client().async_create_child_text_node(node_id);
 }
 
-Optional<i32> ViewImplementation::clone_dom_node(i32 node_id)
+void ViewImplementation::clone_dom_node(i32 node_id)
 {
-    return client().clone_dom_node(node_id);
+    client().async_clone_dom_node(node_id);
 }
 
 void ViewImplementation::remove_dom_node(i32 node_id)

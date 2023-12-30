@@ -65,12 +65,12 @@ public:
     void get_hovered_node_id();
 
     void set_dom_node_text(i32 node_id, String text);
-    Optional<i32> set_dom_node_tag(i32 node_id, String name);
+    void set_dom_node_tag(i32 node_id, String name);
     void add_dom_node_attributes(i32 node_id, Vector<Attribute> attributes);
     void replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes);
-    Optional<i32> create_child_element(i32 node_id);
-    Optional<i32> create_child_text_node(i32 node_id);
-    Optional<i32> clone_dom_node(i32 node_id);
+    void create_child_element(i32 node_id);
+    void create_child_text_node(i32 node_id);
+    void clone_dom_node(i32 node_id);
     void remove_dom_node(i32 node_id);
     Optional<String> get_dom_node_html(i32 node_id);
 
@@ -144,6 +144,7 @@ public:
     Function<void(Optional<DOMNodeProperties>)> on_received_dom_node_properties;
     Function<void(ByteString const&)> on_received_accessibility_tree;
     Function<void(i32 node_id)> on_received_hovered_node_id;
+    Function<void(Optional<i32> const& node_id)> on_finshed_editing_dom_node;
     Function<void(i32 message_id)> on_received_console_message;
     Function<void(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)> on_received_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
