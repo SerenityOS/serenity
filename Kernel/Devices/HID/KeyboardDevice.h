@@ -34,8 +34,6 @@ public:
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return EINVAL; }
     virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
 
-    void handle_scan_code_input_event(ScanCodeEvent);
-
     // ^File
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
 
@@ -46,6 +44,11 @@ public:
         else
             m_modifiers &= ~modifier;
     }
+
+    u8 modifiers() const { return m_modifiers; }
+
+    void handle_input_event(KeyEvent);
+    bool num_lock_on() const { return m_num_lock_on; }
 
 protected:
     KeyboardDevice();
@@ -58,10 +61,6 @@ protected:
     bool m_caps_lock_to_ctrl_pressed { false };
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
-    bool m_left_shift_pressed { false };
-    bool m_right_shift_pressed { false };
-    bool m_left_super_pressed { false };
-    bool m_right_super_pressed { false };
 
     void key_state_changed(u8 raw, bool pressed);
 };
