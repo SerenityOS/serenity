@@ -40,8 +40,8 @@ endpoint WebContentClient
     did_request_accept_dialog() =|
     did_request_dismiss_dialog() =|
     did_get_source(URL url, ByteString source) =|
-    did_get_dom_tree(ByteString dom_tree) =|
-    did_get_accessibility_tree(ByteString accessibility_tree) =|
+    did_inspect_dom_tree(ByteString dom_tree) =|
+    did_inspect_accessibility_tree(ByteString accessibility_tree) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
     did_request_named_cookie(URL url, ByteString name) => (Optional<Web::Cookie::Cookie> cookie)
