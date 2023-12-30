@@ -277,6 +277,14 @@ static constexpr Complex<T> cexp(Complex<T> const& a)
 }
 }
 
+template<AK::Concepts::Arithmetic T>
+struct AK::Formatter<AK::Complex<T>> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, AK::Complex<T> c)
+    {
+        return Formatter<StringView>::format(builder, TRY(String::formatted("{}{:+}i", c.real(), c.imag())));
+    }
+};
+
 #if USING_AK_GLOBALLY
 using AK::approx_eq;
 using AK::cexp;
