@@ -42,9 +42,18 @@ public:
         return {};
     }
 
+    ErrorOr<void> ensure_baseline_tags_correctness() const
+    {
+        if (m_metadata.strip_offsets()->size() != m_metadata.strip_byte_counts()->size())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes");
+
+        return {};
+    }
+
     ErrorOr<void> decode_frame()
     {
         TRY(ensure_baseline_tags_presence(m_metadata));
+        TRY(ensure_baseline_tags_correctness());
         auto maybe_error = decode_frame_impl();
 
         if (maybe_error.is_error()) {
@@ -194,9 +203,6 @@ private:
     {
         auto const strips_offset = *m_metadata.strip_offsets();
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
-
-        if (strips_offset.size() != strip_byte_counts.size())
-            return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes, aborting...");
 
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
