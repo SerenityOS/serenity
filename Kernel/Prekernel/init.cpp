@@ -112,6 +112,13 @@ extern "C" [[noreturn]] void init()
 
     if (__builtin_strstr(kernel_cmdline, "disable_kaslr") == nullptr) {
         FlatPtr maximum_offset = (FlatPtr)KERNEL_PD_SIZE - MAX_KERNEL_SIZE - 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
+#ifdef KERNEL_ADDRESS_SANITIZER_ENABLED
+        // To allow for easy mapping between the kernel virtual addresses and KASAN shadow memory,
+        // we map shadow memory at the very end of the virtual range, so that we can index into it
+        // using just an offset. To ensure this range is free when needed, we restrict the possible
+        // KASLR range when KASAN is enabled to make sure we don't use the end of the virtual range.
+        maximum_offset -= ceil_div(maximum_offset, 9ul);
+#endif
         kernel_load_base += (generate_secure_seed() % maximum_offset);
         kernel_load_base &= ~(2 * MiB - 1);
     }
