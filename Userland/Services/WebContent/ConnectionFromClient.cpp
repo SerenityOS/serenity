@@ -474,7 +474,7 @@ void ConnectionFromClient::inspect_dom_tree()
     }
 }
 
-Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
+void ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
 {
     auto& top_context = page().page().top_level_browsing_context();
 
@@ -488,15 +488,18 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
     Web::DOM::Node* node = Web::DOM::Node::from_unique_id(node_id);
     // Note: Nodes without layout (aka non-visible nodes, don't have style computed)
     if (!node || !node->layout_node()) {
-        return { false, "", "", "", "", "" };
+        async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+        return;
     }
 
     node->document().set_inspected_node(node, pseudo_element);
 
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
-        if (!element.computed_css_values())
-            return { false, "", "", "", "", "" };
+        if (!element.computed_css_values()) {
+            async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+            return;
+        }
 
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> ByteString {
             StringBuilder builder;
@@ -580,8 +583,10 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
         if (pseudo_element.has_value()) {
             auto pseudo_element_node = element.get_pseudo_element_node(pseudo_element.value());
-            if (!pseudo_element_node)
-                return { false, "", "", "", "", "" };
+            if (!pseudo_element_node) {
+                async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+                return;
+            }
 
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
@@ -591,18 +596,22 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             ByteString resolved_values = "{}";
             ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
             ByteString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
-            return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json, "" };
+
+            async_did_inspect_dom_node(true, move(computed_values), move(resolved_values), move(custom_properties_json), move(node_box_sizing_json), {});
+            return;
         }
 
         ByteString computed_values = serialize_json(*element.computed_css_values());
-        ByteString resolved_values_json = serialize_json(element.resolved_css_values());
+        ByteString resolved_values = serialize_json(element.resolved_css_values());
         ByteString custom_properties_json = serialize_custom_properties_json(element, {});
         ByteString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
         ByteString aria_properties_state_json = serialize_aria_properties_state_json(element);
-        return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json, aria_properties_state_json };
+
+        async_did_inspect_dom_node(true, move(computed_values), move(resolved_values), move(custom_properties_json), move(node_box_sizing_json), move(aria_properties_state_json));
+        return;
     }
 
-    return { false, "", "", "", "", "" };
+    async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
 }
 
 void ConnectionFromClient::inspect_accessibility_tree()

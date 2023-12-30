@@ -59,8 +59,8 @@ public:
     void get_source();
 
     void inspect_dom_tree();
+    void inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element);
     void inspect_accessibility_tree();
-    ErrorOr<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element);
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
@@ -141,6 +141,7 @@ public:
     Function<void()> on_request_dismiss_dialog;
     Function<void(const AK::URL&, ByteString const&)> on_received_source;
     Function<void(ByteString const&)> on_received_dom_tree;
+    Function<void(Optional<DOMNodeProperties>)> on_received_dom_node_properties;
     Function<void(ByteString const&)> on_received_accessibility_tree;
     Function<void(i32 message_id)> on_received_console_message;
     Function<void(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)> on_received_console_messages;

@@ -38,7 +38,7 @@ endpoint WebContentServer
     debug_request(ByteString request, ByteString argument) =|
     get_source() =|
     inspect_dom_tree() =|
-    inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) => (bool has_style, ByteString computed_style,  ByteString resolved_style,  ByteString custom_properties, ByteString node_box_sizing, ByteString aria_properties_state)
+    inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) =|
     inspect_accessibility_tree() =|
     get_hovered_node_id() => (i32 node_id)
     js_console_input(ByteString js_source) =|
