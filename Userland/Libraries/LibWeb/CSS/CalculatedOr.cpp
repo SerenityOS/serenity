@@ -50,6 +50,11 @@ Percentage PercentageOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedSt
     return calculated->resolve_percentage().value();
 }
 
+Resolution ResolutionOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
+{
+    return calculated->resolve_resolution().value();
+}
+
 Time TimeOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
 {
     return calculated->resolve_time().value();

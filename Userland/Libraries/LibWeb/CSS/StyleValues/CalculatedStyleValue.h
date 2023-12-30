@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
+#include <LibWeb/CSS/Resolution.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/Time.h>
 
@@ -33,6 +34,7 @@ public:
         Length,
         Number,
         Percentage,
+        Resolution,
         Time,
     };
 
@@ -49,7 +51,7 @@ public:
 
     class CalculationResult {
     public:
-        using Value = Variant<Number, Angle, Flex, Frequency, Length, Percentage, Time>;
+        using Value = Variant<Number, Angle, Flex, Frequency, Length, Percentage, Resolution, Time>;
         CalculationResult(Value value)
             : m_value(move(value))
         {
@@ -99,6 +101,9 @@ public:
 
     bool resolves_to_percentage() const { return m_resolved_type.matches_percentage(); }
     Optional<Percentage> resolve_percentage() const;
+
+    bool resolves_to_resolution() const { return m_resolved_type.matches_resolution(); }
+    Optional<Resolution> resolve_resolution() const;
 
     bool resolves_to_time() const { return m_resolved_type.matches_time(); }
     bool resolves_to_time_percentage() const { return m_resolved_type.matches_time_percentage(); }

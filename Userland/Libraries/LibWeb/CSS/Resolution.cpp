@@ -14,6 +14,11 @@ Resolution::Resolution(double value, Type type)
 {
 }
 
+Resolution Resolution::make_dots_per_pixel(double value)
+{
+    return { value, Type::Dppx };
+}
+
 String Resolution::to_string() const
 {
     return MUST(String::formatted("{}dppx", to_dots_per_pixel()));

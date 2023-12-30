@@ -22,9 +22,13 @@ public:
     static Optional<Type> unit_from_name(StringView);
 
     Resolution(double value, Type type);
+    static Resolution make_dots_per_pixel(double);
 
     String to_string() const;
     double to_dots_per_pixel() const;
+
+    Type type() const { return m_type; }
+    double raw_value() const { return m_value; }
 
     bool operator==(Resolution const& other) const
     {
