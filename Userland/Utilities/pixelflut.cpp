@@ -118,7 +118,12 @@ ErrorOr<void> Client::send_current_pixel()
     auto hex_without_hash = hex.substring(1);
 
     // PX <x> <y> <hex color>
-    TRY(m_socket->write_formatted("PX {} {} {}\n", m_current_point.x() + m_image_offset.x(), m_current_point.y() + m_image_offset.y(), hex_without_hash));
+    while (true) {
+        auto result = m_socket->write_formatted("PX {} {} {}\n", m_current_point.x() + m_image_offset.x(), m_current_point.y() + m_image_offset.y(), hex_without_hash);
+        // Very contested servers will cause frequent EAGAIN errors.
+        if (!result.is_error() || result.error().code() != EAGAIN)
+            break;
+    }
     return {};
 }
 
