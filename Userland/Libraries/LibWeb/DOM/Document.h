@@ -551,6 +551,8 @@ public:
     };
     void append_pending_animation_event(PendingAnimationEvent const&);
 
+    bool ready_to_run_scripts() const { return m_ready_to_run_scripts; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -769,6 +771,9 @@ private:
     Vector<PendingAnimationEvent> m_pending_animation_event_queue;
 
     bool m_needs_to_call_page_did_load { false };
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scripts-may-run-for-the-newly-created-document
+    bool m_ready_to_run_scripts { false };
 };
 
 template<>

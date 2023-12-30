@@ -3628,7 +3628,8 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
         //        "process scroll behavior".
         scroll_to_the_fragment();
 
-        // FIXME: 2. At this point scripts may run for the newly-created document document.
+        // 2. At this point scripts may run for the newly-created document document.
+        m_ready_to_run_scripts = true;
     }
 
     // 7. Otherwise, if documentsEntryChanged is false and doNotReactivate is false, then:
