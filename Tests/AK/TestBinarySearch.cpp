@@ -122,10 +122,10 @@ TEST_CASE(unsigned_to_signed_regression)
 
 RANDOMIZED_TEST_CASE(finds_number_that_is_present)
 {
-    GEN(vec, Gen::vector(1, 16, []() { return Gen::unsigned_int(); }));
-    GEN(i, Gen::unsigned_int(0, vec.size() - 1));
+    GEN(vec, Gen::vector(1, 16, []() { return Gen::number_u64(); }));
+    GEN(i, Gen::number_u64(0, vec.size() - 1));
     AK::quick_sort(vec);
-    u32 n = vec[i];
+    u64 n = vec[i];
     auto ptr = binary_search(vec, n);
     EXPECT_NE(ptr, nullptr);
     EXPECT_EQ(*ptr, n);
@@ -133,10 +133,10 @@ RANDOMIZED_TEST_CASE(finds_number_that_is_present)
 
 RANDOMIZED_TEST_CASE(doesnt_find_number_that_is_not_present)
 {
-    GEN(vec, Gen::vector(1, 16, []() { return Gen::unsigned_int(); }));
+    GEN(vec, Gen::vector(1, 16, []() { return Gen::number_u64(); }));
     AK::quick_sort(vec);
 
-    u32 not_present = 0;
+    u64 not_present = 0;
     while (!vec.find(not_present).is_end()) {
         ++not_present;
     }

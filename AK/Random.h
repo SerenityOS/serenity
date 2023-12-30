@@ -60,6 +60,7 @@ inline T get_random()
 }
 
 u32 get_random_uniform(u32 max_bounds);
+u64 get_random_uniform_64(u64 max_bounds);
 
 template<typename Collection>
 inline void shuffle(Collection& collection)

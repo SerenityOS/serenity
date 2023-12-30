@@ -7,46 +7,47 @@
 #include <AK/StdLibExtras.h>
 #include <LibTest/Randomized/Generator.h>
 #include <LibTest/TestCase.h>
+#include <math.h>
 
 using namespace Test::Randomized;
 
-RANDOMIZED_TEST_CASE(unsigned_int_max_bounds)
+RANDOMIZED_TEST_CASE(number_u64_max_bounds)
 {
-    GEN(n, Gen::unsigned_int(10));
+    GEN(n, Gen::number_u64(10));
     EXPECT(n <= 10);
 }
 
-RANDOMIZED_TEST_CASE(unsigned_int_min_max_bounds)
+RANDOMIZED_TEST_CASE(number_u64_min_max_bounds)
 {
-    GEN(n, Gen::unsigned_int(3, 6));
+    GEN(n, Gen::number_u64(3, 6));
     EXPECT(n >= 3 && n <= 6);
 }
 
 RANDOMIZED_TEST_CASE(assume)
 {
-    GEN(n, Gen::unsigned_int(10));
+    GEN(n, Gen::number_u64(10));
     ASSUME(n % 2 == 0); // This will try to generate until it finds an even number
     EXPECT(n % 2 == 0); // This will then succeed
     // It will give up if the value doesn't pass the ASSUME(...) predicate 15 times in a row.
 }
 
-// TODO find a way to test that a test "unsigned_int(3) can't reach 0" fails
-// TODO find a way to test that a test "unsigned_int(3) can't reach 3" fails
-// TODO find a way to test that a test "unsigned_int(3,6) can't reach 3" fails
-// TODO find a way to test that a test "unsigned_int(3,6) can't reach 6" fails
-// TODO find a way to test that a test "unsigned_int(10) can reach n>10" fails
+// TODO find a way to test that a test "number_u64(3) can't reach 0" fails
+// TODO find a way to test that a test "number_u64(3) can't reach 3" fails
+// TODO find a way to test that a test "number_u64(3,6) can't reach 3" fails
+// TODO find a way to test that a test "number_u64(3,6) can't reach 6" fails
+// TODO find a way to test that a test "number_u64(10) can reach n>10" fails
 
 RANDOMIZED_TEST_CASE(map_like)
 {
-    GEN(n1, Gen::unsigned_int(10));
+    GEN(n1, Gen::number_u64(10));
     GEN(n2, n1 * 2);
     EXPECT(n2 % 2 == 0);
 }
 
 RANDOMIZED_TEST_CASE(bind_like)
 {
-    GEN(n1, Gen::unsigned_int(1, 9));
-    GEN(n2, Gen::unsigned_int(n1 * 10, n1 * 100));
+    GEN(n1, Gen::number_u64(1, 9));
+    GEN(n2, Gen::number_u64(n1 * 10, n1 * 100));
     EXPECT(n2 >= 10 && n2 <= 900);
 }
 
@@ -68,7 +69,7 @@ RANDOMIZED_TEST_CASE(bind_like)
 template<typename FN>
 Vector<InvokeResult<FN>> vector_suboptimal(FN item_gen)
 {
-    u32 length = Gen::unsigned_int(5);
+    u32 length = Gen::number_u64(5);
     Vector<InvokeResult<FN>> acc;
     for (u32 i = 0; i < length; ++i) {
         acc.append(item_gen());
@@ -79,7 +80,7 @@ Vector<InvokeResult<FN>> vector_suboptimal(FN item_gen)
 RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
 {
     u32 max_item = 5;
-    GEN(vec, vector_suboptimal([&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, vector_suboptimal([&]() { return Gen::number_u64(max_item); }));
     u32 sum = 0;
     for (u32 n : vec) {
         sum += n;
@@ -90,21 +91,21 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
 RANDOMIZED_TEST_CASE(vector)
 {
     u32 max_item = 5;
-    GEN(vec, Gen::vector([&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, Gen::vector([&]() { return Gen::number_u64(max_item); }));
     EXPECT(vec.size() <= 32);
 }
 
 RANDOMIZED_TEST_CASE(vector_length)
 {
     u32 max_item = 5;
-    GEN(vec, Gen::vector(3, [&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, Gen::vector(3, [&]() { return Gen::number_u64(max_item); }));
     EXPECT(vec.size() == 3);
 }
 
 RANDOMIZED_TEST_CASE(vector_min_max)
 {
     u32 max_item = 5;
-    GEN(vec, Gen::vector(1, 4, [&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, Gen::vector(1, 4, [&]() { return Gen::number_u64(max_item); }));
     EXPECT(vec.size() >= 1 && vec.size() <= 4);
 }
 
@@ -160,9 +161,57 @@ RANDOMIZED_TEST_CASE(boolean_false)
     EXPECT(b == false);
 }
 
+RANDOMIZED_TEST_CASE(one_of_int)
+{
+    GEN(x, Gen::one_of(1, 2));
+    EXPECT(x == 1 || x == 2);
+}
+
 RANDOMIZED_TEST_CASE(frequency_int)
 {
     GEN(x, Gen::frequency(Gen::Choice { 5, 'x' }, Gen::Choice { 1, 'o' }));
     ASSUME(x == 'x');
     EXPECT(x == 'x');
+}
+
+RANDOMIZED_TEST_CASE(percentage)
+{
+    GEN(x, Gen::percentage());
+    EXPECT(x >= 0 && x <= 1);
+}
+
+RANDOMIZED_TEST_CASE(number_f64_max_bounds)
+{
+    GEN(x, Gen::number_f64(10));
+    EXPECT(x <= 10);
+}
+
+RANDOMIZED_TEST_CASE(number_f64_min_max_bounds)
+{
+    GEN(x, Gen::number_f64(-10, 10));
+    EXPECT(x >= -10 && x <= 10);
+}
+
+RANDOMIZED_TEST_CASE(number_f64_never_nan)
+{
+    GEN(x, Gen::number_f64());
+    EXPECT(!isnan(x));
+}
+
+RANDOMIZED_TEST_CASE(number_f64_never_infinite)
+{
+    GEN(x, Gen::number_f64());
+    EXPECT(!isinf(x));
+}
+
+RANDOMIZED_TEST_CASE(number_u32_max_bounds)
+{
+    GEN(n, Gen::number_u32(10));
+    EXPECT(n <= 10);
+}
+
+RANDOMIZED_TEST_CASE(number_u32_min_max_bounds)
+{
+    GEN(n, Gen::number_u32(3, 6));
+    EXPECT(n >= 3 && n <= 6);
 }

@@ -77,15 +77,15 @@ ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_b
 }
 
 template<typename Fn, typename UpdateRunFn>
-ShrinkResult binary_shrink(u32 orig_low, u32 orig_high, UpdateRunFn update_run, RandomRun const& orig_run, Fn const& test_function)
+ShrinkResult binary_shrink(u64 orig_low, u64 orig_high, UpdateRunFn update_run, RandomRun const& orig_run, Fn const& test_function)
 {
     if (orig_low == orig_high) {
         return no_improvement(orig_run);
     }
 
     RandomRun current_best = orig_run;
-    u32 low = orig_low;
-    u32 high = orig_high;
+    u64 low = orig_low;
+    u64 high = orig_high;
 
     // Let's try with the best case (low = most shrunk) first
     RandomRun run_with_low = update_run(low, current_best);
@@ -111,7 +111,7 @@ ShrinkResult binary_shrink(u32 orig_low, u32 orig_high, UpdateRunFn update_run, 
     // pass/reject/overrun.
     ShrinkResult result = after_low;
     while (low + 1 < high) {
-        u32 mid = low + (high - low) / 2;
+        u64 mid = low + (high - low) / 2;
         RandomRun run_with_mid = update_run(mid, current_best);
         ShrinkResult after_mid = keep_if_better(run_with_mid, current_best, test_function);
         switch (after_mid.was_improvement) {
@@ -194,7 +194,7 @@ ShrinkResult shrink_delete(DeleteChunkAndMaybeDecPrevious command, RandomRun con
 template<typename Fn>
 ShrinkResult shrink_minimize(MinimizeChoice command, RandomRun const& run, Fn const& test_function)
 {
-    u32 value = run[command.index];
+    u64 value = run[command.index];
 
     // We can't minimize 0! Already the best possible case.
     if (value == 0) {
@@ -204,7 +204,7 @@ ShrinkResult shrink_minimize(MinimizeChoice command, RandomRun const& run, Fn co
     return binary_shrink(
         0,
         value,
-        [&](u32 new_value, RandomRun const& run) {
+        [&](u64 new_value, RandomRun const& run) {
             RandomRun copied_run = run;
             copied_run[command.index] = new_value;
             return copied_run;
@@ -236,12 +236,12 @@ ShrinkResult shrink_redistribute(RedistributeChoicesAndMaybeInc command, RandomR
 
     ShrinkResult after_swap = keep_if_better(run_after_swap, current_best, test_function);
     current_best = after_swap.run;
-    u32 constant_sum = current_best[command.right_index] + current_best[command.left_index];
+    u64 constant_sum = current_best[command.right_index] + current_best[command.left_index];
 
     ShrinkResult after_redistribute = binary_shrink(
         0,
         current_best[command.left_index],
-        [&](u32 new_value, RandomRun const& run) {
+        [&](u64 new_value, RandomRun const& run) {
             RandomRun copied_run = run;
             copied_run[command.left_index] = new_value;
             copied_run[command.right_index] = constant_sum - new_value;
@@ -275,7 +275,7 @@ ShrinkResult shrink_redistribute(RedistributeChoicesAndMaybeInc command, RandomR
     ShrinkResult after_inc_redistribute = binary_shrink(
         0,
         current_best[command.left_index],
-        [&](u32 new_value, RandomRun const& run) {
+        [&](u64 new_value, RandomRun const& run) {
             RandomRun copied_run = run;
             copied_run[command.left_index] = new_value;
             copied_run[command.right_index] = constant_sum - new_value;

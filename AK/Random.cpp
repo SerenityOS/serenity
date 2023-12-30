@@ -5,6 +5,8 @@
  */
 
 #include <AK/Random.h>
+#include <AK/UFixedBigInt.h>
+#include <AK/UFixedBigIntDivision.h>
 
 namespace AK {
 
@@ -24,6 +26,18 @@ u32 get_random_uniform(u32 max_bounds)
         // once-in-a-million chance to get to iteration 20. In theory we should be able to loop
         // forever. Here we prefer marginally imperfect random numbers over weird runtime behavior.
         random_value = get_random<u32>();
+    }
+    return random_value % max_bounds;
+}
+
+u64 get_random_uniform_64(u64 max_bounds)
+{
+    // Uses the same algorithm as `get_random_uniform`,
+    // by replacing u64 with u128 and u32 with u64.
+    const u64 max_usable = UINT64_MAX - static_cast<u64>((static_cast<u128>(UINT64_MAX) + 1) % max_bounds);
+    auto random_value = get_random<u64>();
+    for (int i = 0; i < 20 && random_value > max_usable; ++i) {
+        random_value = get_random<u64>();
     }
     return random_value % max_bounds;
 }

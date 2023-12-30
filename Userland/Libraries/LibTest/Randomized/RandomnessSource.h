@@ -26,11 +26,11 @@ public:
     static RandomnessSource live() { return RandomnessSource(RandomRun(), true); }
     static RandomnessSource recorded(RandomRun const& run) { return RandomnessSource(run, false); }
     RandomRun& run() { return m_run; }
-    u32 draw_value(u32 max, Function<u32()> random_generator)
+    u64 draw_value(u64 max, Function<u64()> random_generator)
     {
         // Live: use the random generator and remember the value.
         if (m_is_live) {
-            u32 value = random_generator();
+            u64 value = random_generator();
             m_run.append(value);
             return value;
         }

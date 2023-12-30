@@ -283,8 +283,8 @@ RANDOMIZED_TEST_CASE(set_get)
 {
     GEN(init, Gen::boolean());
     GEN(new_value, Gen::boolean());
-    GEN(size, Gen::unsigned_int(1, 64));
-    GEN(i, Gen::unsigned_int(size - 1));
+    GEN(size, Gen::number_u64(1, 64));
+    GEN(i, Gen::number_u64(size - 1));
 
     auto bitmap = MUST(Bitmap::create(size, init));
     bitmap.set(i, new_value);
@@ -295,11 +295,11 @@ RANDOMIZED_TEST_CASE(set_get)
 RANDOMIZED_TEST_CASE(set_range)
 {
     GEN(init, Gen::boolean());
-    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(size, Gen::number_u64(1, 64));
     GEN(new_value, Gen::boolean());
 
-    GEN(start, Gen::unsigned_int(size - 1));
-    GEN(len, Gen::unsigned_int(size - start - 1));
+    GEN(start, Gen::number_u64(size - 1));
+    GEN(len, Gen::number_u64(size - start - 1));
 
     auto bitmap = MUST(Bitmap::create(size, init));
     bitmap.set_range(start, len, new_value);
@@ -313,7 +313,7 @@ RANDOMIZED_TEST_CASE(set_range)
 RANDOMIZED_TEST_CASE(fill)
 {
     GEN(init, Gen::boolean());
-    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(size, Gen::number_u64(1, 64));
     GEN(new_value, Gen::boolean());
 
     auto bitmap = MUST(Bitmap::create(size, init));
@@ -334,11 +334,11 @@ TEST_CASE(find_one_anywhere_edge_case)
 RANDOMIZED_TEST_CASE(find_one_anywhere)
 {
     GEN(init, Gen::boolean());
-    GEN(size, Gen::unsigned_int(1, 64));
-    GEN(hint, Gen::unsigned_int(size - 1));
+    GEN(size, Gen::number_u64(1, 64));
+    GEN(hint, Gen::number_u64(size - 1));
 
     GEN(new_value, Gen::boolean());
-    GEN(i, Gen::unsigned_int(size - 1));
+    GEN(i, Gen::number_u64(size - 1));
 
     auto bitmap = MUST(Bitmap::create(size, init));
     bitmap.set(i, new_value);
@@ -363,10 +363,10 @@ TEST_CASE(find_first_edge_case)
 RANDOMIZED_TEST_CASE(find_first)
 {
     GEN(init, Gen::boolean());
-    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(size, Gen::number_u64(1, 64));
 
     GEN(new_value, Gen::boolean());
-    GEN(i, Gen::unsigned_int(size - 1));
+    GEN(i, Gen::number_u64(size - 1));
 
     auto bitmap = MUST(Bitmap::create(size, init));
     bitmap.set(i, new_value);
