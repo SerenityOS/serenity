@@ -470,7 +470,7 @@ void ConnectionFromClient::get_source()
 void ConnectionFromClient::inspect_dom_tree()
 {
     if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_dom_tree(doc->dump_dom_tree_as_json().to_byte_string());
+        async_did_inspect_dom_tree(doc->dump_dom_tree_as_json().to_byte_string());
     }
 }
 
@@ -603,6 +603,13 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
     }
 
     return { false, "", "", "", "", "" };
+}
+
+void ConnectionFromClient::inspect_accessibility_tree()
+{
+    if (auto* doc = page().page().top_level_browsing_context().active_document()) {
+        async_did_inspect_accessibility_tree(doc->dump_accessibility_tree_as_json().to_byte_string());
+    }
 }
 
 Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_hovered_node_id()
@@ -1043,13 +1050,6 @@ void ConnectionFromClient::toggle_media_controls_state()
 void ConnectionFromClient::set_user_style(String const& source)
 {
     page().page().set_user_style(source);
-}
-
-void ConnectionFromClient::inspect_accessibility_tree()
-{
-    if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json().to_byte_string());
-    }
 }
 
 void ConnectionFromClient::enable_inspector_prototype()

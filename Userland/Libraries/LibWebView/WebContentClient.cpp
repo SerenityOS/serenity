@@ -181,13 +181,13 @@ void WebContentClient::did_get_source(AK::URL const& url, ByteString const& sour
         m_view.on_received_source(url, source);
 }
 
-void WebContentClient::did_get_dom_tree(ByteString const& dom_tree)
+void WebContentClient::did_inspect_dom_tree(ByteString const& dom_tree)
 {
     if (m_view.on_received_dom_tree)
         m_view.on_received_dom_tree(dom_tree);
 }
 
-void WebContentClient::did_get_accessibility_tree(ByteString const& accessibility_tree)
+void WebContentClient::did_inspect_accessibility_tree(ByteString const& accessibility_tree)
 {
     if (m_view.on_received_accessibility_tree)
         m_view.on_received_accessibility_tree(accessibility_tree);

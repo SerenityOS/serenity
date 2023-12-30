@@ -52,8 +52,8 @@ private:
     virtual void did_request_image_context_menu(Gfx::IntPoint, AK::URL const&, ByteString const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_request_media_context_menu(Gfx::IntPoint, ByteString const&, unsigned, Web::Page::MediaContextMenu const&) override;
     virtual void did_get_source(AK::URL const&, ByteString const&) override;
-    virtual void did_get_dom_tree(ByteString const&) override;
-    virtual void did_get_accessibility_tree(ByteString const&) override;
+    virtual void did_inspect_dom_tree(ByteString const&) override;
+    virtual void did_inspect_accessibility_tree(ByteString const&) override;
     virtual void did_output_js_console_message(i32 message_index) override;
     virtual void did_get_js_console_messages(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
