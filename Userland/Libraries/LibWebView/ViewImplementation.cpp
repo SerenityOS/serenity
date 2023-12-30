@@ -191,9 +191,9 @@ void ViewImplementation::remove_dom_node(i32 node_id)
     client().async_remove_dom_node(node_id);
 }
 
-Optional<String> ViewImplementation::get_dom_node_html(i32 node_id)
+void ViewImplementation::get_dom_node_html(i32 node_id)
 {
-    return client().get_dom_node_html(node_id);
+    client().async_get_dom_node_html(node_id);
 }
 
 void ViewImplementation::debug_request(ByteString const& request, ByteString const& argument)

@@ -72,7 +72,7 @@ public:
     void create_child_text_node(i32 node_id);
     void clone_dom_node(i32 node_id);
     void remove_dom_node(i32 node_id);
-    Optional<String> get_dom_node_html(i32 node_id);
+    void get_dom_node_html(i32 node_id);
 
     void debug_request(ByteString const& request, ByteString const& argument = {});
 
@@ -145,6 +145,7 @@ public:
     Function<void(ByteString const&)> on_received_accessibility_tree;
     Function<void(i32 node_id)> on_received_hovered_node_id;
     Function<void(Optional<i32> const& node_id)> on_finshed_editing_dom_node;
+    Function<void(String const&)> on_received_dom_node_html;
     Function<void(i32 message_id)> on_received_console_message;
     Function<void(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)> on_received_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;

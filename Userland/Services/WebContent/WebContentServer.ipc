@@ -52,7 +52,7 @@ endpoint WebContentServer
     create_child_text_node(i32 node_id) =|
     clone_dom_node(i32 node_id) =|
     remove_dom_node(i32 node_id) =|
-    get_dom_node_html(i32 node_id) => (Optional<String> html)
+    get_dom_node_html(i32 node_id) =|
 
     take_document_screenshot() => (Gfx::ShareableBitmap data)
     take_dom_node_screenshot(i32 node_id) => (Gfx::ShareableBitmap data)

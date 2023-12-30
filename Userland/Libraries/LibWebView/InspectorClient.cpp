@@ -100,6 +100,11 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         inspect();
     };
 
+    m_content_web_view.on_received_dom_node_html = [this](auto const& html) {
+        if (m_content_web_view.on_insert_clipboard_entry)
+            m_content_web_view.on_insert_clipboard_entry(html, "unspecified"_string, "text/plain"_string);
+    };
+
     m_content_web_view.on_received_console_message = [this](auto message_index) {
         handle_console_message(message_index);
     };
@@ -241,11 +246,7 @@ void InspectorClient::context_menu_copy_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());
 
-    if (auto html = m_content_web_view.get_dom_node_html(m_context_menu_data->dom_node_id); html.has_value()) {
-        if (m_content_web_view.on_insert_clipboard_entry)
-            m_content_web_view.on_insert_clipboard_entry(*html, "unspecified"_string, "text/plain"_string);
-    }
-
+    m_content_web_view.get_dom_node_html(m_context_menu_data->dom_node_id);
     m_context_menu_data.clear();
 }
 
