@@ -93,6 +93,13 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         select_node(node_id);
     };
 
+    m_content_web_view.on_finshed_editing_dom_node = [this](auto const& node_id) {
+        m_pending_selection = node_id;
+        m_dom_tree_loaded = false;
+
+        inspect();
+    };
+
     m_content_web_view.on_received_console_message = [this](auto message_index) {
         handle_console_message(message_index);
     };
@@ -136,28 +143,18 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
 
     m_inspector_web_view.on_inspector_set_dom_node_text = [this](auto node_id, auto const& text) {
         m_content_web_view.set_dom_node_text(node_id, text);
-
-        m_pending_selection = node_id;
-        inspect();
     };
 
     m_inspector_web_view.on_inspector_set_dom_node_tag = [this](auto node_id, auto const& tag) {
-        m_pending_selection = m_content_web_view.set_dom_node_tag(node_id, tag);
-        inspect();
+        m_content_web_view.set_dom_node_tag(node_id, tag);
     };
 
     m_inspector_web_view.on_inspector_added_dom_node_attributes = [this](auto node_id, auto const& attributes) {
         m_content_web_view.add_dom_node_attributes(node_id, attributes);
-
-        m_pending_selection = node_id;
-        inspect();
     };
 
     m_inspector_web_view.on_inspector_replaced_dom_node_attribute = [this](auto node_id, auto const& name, auto const& replacement_attributes) {
         m_content_web_view.replace_dom_node_attribute(node_id, name, replacement_attributes);
-
-        m_pending_selection = node_id;
-        inspect();
     };
 
     m_inspector_web_view.on_inspector_executed_console_script = [this](auto const& script) {
@@ -268,9 +265,7 @@ void InspectorClient::context_menu_create_child_element()
 {
     VERIFY(m_context_menu_data.has_value());
 
-    m_pending_selection = m_content_web_view.create_child_element(m_context_menu_data->dom_node_id);
-    inspect();
-
+    m_content_web_view.create_child_element(m_context_menu_data->dom_node_id);
     m_context_menu_data.clear();
 }
 
@@ -278,9 +273,7 @@ void InspectorClient::context_menu_create_child_text_node()
 {
     VERIFY(m_context_menu_data.has_value());
 
-    m_pending_selection = m_content_web_view.create_child_text_node(m_context_menu_data->dom_node_id);
-    inspect();
-
+    m_content_web_view.create_child_text_node(m_context_menu_data->dom_node_id);
     m_context_menu_data.clear();
 }
 
@@ -288,9 +281,7 @@ void InspectorClient::context_menu_clone_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());
 
-    m_pending_selection = m_content_web_view.clone_dom_node(m_context_menu_data->dom_node_id);
-    inspect();
-
+    m_content_web_view.clone_dom_node(m_context_menu_data->dom_node_id);
     m_context_menu_data.clear();
 }
 
@@ -299,10 +290,6 @@ void InspectorClient::context_menu_remove_dom_node()
     VERIFY(m_context_menu_data.has_value());
 
     m_content_web_view.remove_dom_node(m_context_menu_data->dom_node_id);
-
-    m_pending_selection = m_body_node_id;
-    inspect();
-
     m_context_menu_data.clear();
 }
 
@@ -322,10 +309,6 @@ void InspectorClient::context_menu_remove_dom_node_attribute()
     VERIFY(m_context_menu_data->attribute.has_value());
 
     m_content_web_view.replace_dom_node_attribute(m_context_menu_data->dom_node_id, m_context_menu_data->attribute->name, {});
-
-    m_pending_selection = m_context_menu_data->dom_node_id;
-    inspect();
-
     m_context_menu_data.clear();
 }
 

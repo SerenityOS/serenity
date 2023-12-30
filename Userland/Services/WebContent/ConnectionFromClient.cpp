@@ -636,18 +636,24 @@ void ConnectionFromClient::get_hovered_node_id()
 void ConnectionFromClient::set_dom_node_text(i32 node_id, String const& text)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node || (!dom_node->is_text() && !dom_node->is_comment()))
+    if (!dom_node || (!dom_node->is_text() && !dom_node->is_comment())) {
+        async_did_finish_editing_dom_node({});
         return;
+    }
 
     auto& character_data = static_cast<Web::DOM::CharacterData&>(*dom_node);
     character_data.set_data(text);
+
+    async_did_finish_editing_dom_node(character_data.unique_id());
 }
 
-Messages::WebContentServer::SetDomNodeTagResponse ConnectionFromClient::set_dom_node_tag(i32 node_id, String const& name)
+void ConnectionFromClient::set_dom_node_tag(i32 node_id, String const& name)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node || !dom_node->is_element() || !dom_node->parent())
-        return OptionalNone {};
+    if (!dom_node || !dom_node->is_element() || !dom_node->parent()) {
+        async_did_finish_editing_dom_node({});
+        return;
+    }
 
     auto& element = static_cast<Web::DOM::Element&>(*dom_node);
     auto new_element = Web::DOM::create_element(element.document(), name, element.namespace_uri(), element.prefix(), element.is_value()).release_value_but_fixme_should_propagate_errors();
@@ -662,26 +668,32 @@ Messages::WebContentServer::SetDomNodeTagResponse ConnectionFromClient::set_dom_
     }
 
     element.parent()->replace_child(*new_element, element).release_value_but_fixme_should_propagate_errors();
-    return new_element->unique_id();
+    async_did_finish_editing_dom_node(new_element->unique_id());
 }
 
 void ConnectionFromClient::add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> const& attributes)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node || !dom_node->is_element())
+    if (!dom_node || !dom_node->is_element()) {
+        async_did_finish_editing_dom_node({});
         return;
+    }
 
     auto& element = static_cast<Web::DOM::Element&>(*dom_node);
 
     for (auto const& attribute : attributes)
         element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
+
+    async_did_finish_editing_dom_node(element.unique_id());
 }
 
 void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node || !dom_node->is_element())
+    if (!dom_node || !dom_node->is_element()) {
+        async_did_finish_editing_dom_node({});
         return;
+    }
 
     auto& element = static_cast<Web::DOM::Element&>(*dom_node);
     bool should_remove_attribute = true;
@@ -695,53 +707,69 @@ void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const&
 
     if (should_remove_attribute)
         element.remove_attribute(name);
+
+    async_did_finish_editing_dom_node(element.unique_id());
 }
 
-Messages::WebContentServer::CreateChildElementResponse ConnectionFromClient::create_child_element(i32 node_id)
+void ConnectionFromClient::create_child_element(i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node)
-        return OptionalNone {};
+    if (!dom_node) {
+        async_did_finish_editing_dom_node({});
+        return;
+    }
 
     auto element = Web::DOM::create_element(dom_node->document(), Web::HTML::TagNames::div, Web::Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     dom_node->append_child(element).release_value_but_fixme_should_propagate_errors();
 
-    return element->unique_id();
+    async_did_finish_editing_dom_node(element->unique_id());
 }
 
-Messages::WebContentServer::CreateChildTextNodeResponse ConnectionFromClient::create_child_text_node(i32 node_id)
+void ConnectionFromClient::create_child_text_node(i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node)
-        return OptionalNone {};
+    if (!dom_node) {
+        async_did_finish_editing_dom_node({});
+        return;
+    }
 
     auto text_node = dom_node->heap().allocate<Web::DOM::Text>(dom_node->realm(), dom_node->document(), "text"_string);
     dom_node->append_child(text_node).release_value_but_fixme_should_propagate_errors();
 
-    return text_node->unique_id();
+    async_did_finish_editing_dom_node(text_node->unique_id());
 }
 
-Messages::WebContentServer::CloneDomNodeResponse ConnectionFromClient::clone_dom_node(i32 node_id)
+void ConnectionFromClient::clone_dom_node(i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node || !dom_node->parent_node())
-        return OptionalNone {};
+    if (!dom_node || !dom_node->parent_node()) {
+        async_did_finish_editing_dom_node({});
+        return;
+    }
 
     auto dom_node_clone = dom_node->clone_node(nullptr, true);
     dom_node->parent_node()->insert_before(dom_node_clone, dom_node->next_sibling());
 
-    return dom_node_clone->unique_id();
+    async_did_finish_editing_dom_node(dom_node_clone->unique_id());
 }
 
 void ConnectionFromClient::remove_dom_node(i32 node_id)
 {
     auto* active_document = page().page().top_level_browsing_context().active_document();
-    if (!active_document)
+    if (!active_document) {
+        async_did_finish_editing_dom_node({});
         return;
+    }
 
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node)
+    if (!dom_node) {
+        async_did_finish_editing_dom_node({});
         return;
+    }
+
+    auto* previous_dom_node = dom_node->previous_sibling();
+    if (!previous_dom_node)
+        previous_dom_node = dom_node->parent();
 
     dom_node->remove();
 
@@ -749,6 +777,8 @@ void ConnectionFromClient::remove_dom_node(i32 node_id)
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
     //        which really hurts performance.
     active_document->force_layout();
+
+    async_did_finish_editing_dom_node(previous_dom_node->unique_id());
 }
 
 Messages::WebContentServer::GetDomNodeHtmlResponse ConnectionFromClient::get_dom_node_html(i32 node_id)
