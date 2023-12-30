@@ -1832,21 +1832,14 @@ Optional<TimePercentage> Parser::parse_time_percentage(TokenStream<ComponentValu
     return {};
 }
 
-Optional<LengthOrCalculated> Parser::parse_source_size_value(ComponentValue const& component_value)
+Optional<LengthOrCalculated> Parser::parse_source_size_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_value.is_ident("auto"sv)) {
+    if (tokens.peek_token().is_ident("auto"sv)) {
+        (void)tokens.next_token(); // auto
         return LengthOrCalculated { Length::make_auto() };
     }
 
-    if (auto calculated_value = parse_calculated_value(component_value)) {
-        return LengthOrCalculated { calculated_value.release_nonnull() };
-    }
-
-    if (auto length = parse_length(component_value); length.has_value()) {
-        return LengthOrCalculated { length.release_value() };
-    }
-
-    return {};
+    return parse_length(tokens);
 }
 
 Optional<Length> Parser::parse_length(ComponentValue const& component_value)
@@ -6625,7 +6618,8 @@ LengthOrCalculated Parser::Parser::parse_as_sizes_attribute()
         //    let size be its value and remove the component value from unparsed size.
         //    FIXME: Any CSS function other than the math functions is invalid.
         //    Otherwise, there is a parse error; continue.
-        if (auto source_size_value = parse_source_size_value(unparsed_size.last()); source_size_value.has_value()) {
+        auto last_value_stream = TokenStream<ComponentValue>::of_single_token(unparsed_size.last());
+        if (auto source_size_value = parse_source_size_value(last_value_stream); source_size_value.has_value()) {
             size = source_size_value.value();
             unparsed_size.take_last();
         } else {
