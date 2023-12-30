@@ -621,14 +621,16 @@ void ConnectionFromClient::inspect_accessibility_tree()
     }
 }
 
-Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_hovered_node_id()
+void ConnectionFromClient::get_hovered_node_id()
 {
+    i32 node_id = 0;
+
     if (auto* document = page().page().top_level_browsing_context().active_document()) {
-        auto hovered_node = document->hovered_node();
-        if (hovered_node)
-            return hovered_node->unique_id();
+        if (auto* hovered_node = document->hovered_node())
+            node_id = hovered_node->unique_id();
     }
-    return (i32)0;
+
+    async_did_get_hovered_node_id(node_id);
 }
 
 void ConnectionFromClient::set_dom_node_text(i32 node_id, String const& text)

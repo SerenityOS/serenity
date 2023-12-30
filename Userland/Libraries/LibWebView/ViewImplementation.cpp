@@ -146,9 +146,9 @@ void ViewImplementation::clear_inspected_dom_node()
     inspect_dom_node(0, {});
 }
 
-i32 ViewImplementation::get_hovered_node_id()
+void ViewImplementation::get_hovered_node_id()
 {
-    return client().get_hovered_node_id();
+    client().async_get_hovered_node_id();
 }
 
 void ViewImplementation::set_dom_node_text(i32 node_id, String text)

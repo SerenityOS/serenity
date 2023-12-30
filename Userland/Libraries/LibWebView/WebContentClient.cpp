@@ -213,6 +213,12 @@ void WebContentClient::did_inspect_accessibility_tree(ByteString const& accessib
         m_view.on_received_accessibility_tree(accessibility_tree);
 }
 
+void WebContentClient::did_get_hovered_node_id(i32 node_id)
+{
+    if (m_view.on_received_hovered_node_id)
+        m_view.on_received_hovered_node_id(node_id);
+}
+
 void WebContentClient::did_output_js_console_message(i32 message_index)
 {
     if (m_view.on_received_console_message)

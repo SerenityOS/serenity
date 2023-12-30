@@ -74,7 +74,7 @@ private:
     virtual void inspect_dom_tree() override;
     virtual void inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
     virtual void inspect_accessibility_tree() override;
-    virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
+    virtual void get_hovered_node_id() override;
 
     virtual void set_dom_node_text(i32 node_id, String const& text) override;
     virtual Messages::WebContentServer::SetDomNodeTagResponse set_dom_node_tag(i32 node_id, String const& name) override;
