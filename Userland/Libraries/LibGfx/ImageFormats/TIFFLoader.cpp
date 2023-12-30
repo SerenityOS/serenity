@@ -387,9 +387,18 @@ private:
         TRY(m_stream->seek(m_next_ifd.value()));
 
         auto const number_of_field = TRY(read_value<u16>());
+        auto next_tag_offset = TRY(m_stream->tell());
 
-        for (u16 i = 0; i < number_of_field; ++i)
-            TRY(read_tag());
+        for (u16 i = 0; i < number_of_field; ++i) {
+            TRY(m_stream->seek(next_tag_offset));
+            if (auto maybe_error = read_tag(); maybe_error.is_error() && TIFF_DEBUG)
+                dbgln("Unable to decode tag {}/{}", i + 1, number_of_field);
+
+            // Section 2: TIFF Structure
+            // IFD Entry
+            // Size of tag(u16) + type(u16) + count(u32) + value_or_offset(u32) = 12
+            next_tag_offset += 12;
+        }
 
         TRY(read_next_idf_offset());
         return {};

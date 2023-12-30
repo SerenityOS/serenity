@@ -546,6 +546,18 @@ TEST_CASE(test_tiff_16_bits)
     EXPECT_EQ(frame.image->get_pixel(60, 75), Gfx::Color::NamedColor::Red);
 }
 
+TEST_CASE(test_tiff_invalid_tag)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tiff/invalid_tag.tiff"sv)));
+    EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 10, 10 }));
+
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color::NamedColor::Black);
+    EXPECT_EQ(frame.image->get_pixel(0, 9), Gfx::Color::NamedColor::White);
+}
+
 TEST_CASE(test_webp_simple_lossy)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8.webp"sv)));
