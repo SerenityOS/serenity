@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
+#include <LibWeb/CSS/Resolution.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/Time.h>
 
@@ -126,6 +127,13 @@ public:
     using CalculatedOr<Percentage>::CalculatedOr;
 
     Percentage resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
+};
+
+class ResolutionOrCalculated : public CalculatedOr<Resolution> {
+public:
+    using CalculatedOr<Resolution>::CalculatedOr;
+
+    Resolution resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
 };
 
 class TimeOrCalculated : public CalculatedOr<Time> {

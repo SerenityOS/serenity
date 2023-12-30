@@ -42,6 +42,7 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [](Frequency const& frequency) { return frequency.to_hertz(); },
         [&context](Length const& length) { return length.to_px(*context).to_double(); },
         [](Percentage const& percentage) { return percentage.value(); },
+        [](Resolution const& resolution) { return resolution.to_dots_per_pixel(); },
         [](Time const& time) { return time.to_seconds(); });
 }
 
@@ -83,6 +84,8 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
         return { Length::make_px(CSSPixels::nearest_value_for(value)) };
     case CalculatedStyleValue::ResolvedType::Percentage:
         return { Percentage(value) };
+    case CalculatedStyleValue::ResolvedType::Resolution:
+        return { Resolution::make_dots_per_pixel(value) };
     case CalculatedStyleValue::ResolvedType::Time:
         return { Time::make_seconds(value) };
     }
@@ -144,6 +147,7 @@ Optional<CalculatedStyleValue::ResolvedType> NumericCalculationNode::resolved_ty
         [](Frequency const&) { return CalculatedStyleValue::ResolvedType::Frequency; },
         [](Length const&) { return CalculatedStyleValue::ResolvedType::Length; },
         [](Percentage const&) { return CalculatedStyleValue::ResolvedType::Percentage; },
+        [](Resolution const&) { return CalculatedStyleValue::ResolvedType::Resolution; },
         [](Time const&) { return CalculatedStyleValue::ResolvedType::Time; });
 }
 
@@ -178,7 +182,11 @@ Optional<CSSNumericType> NumericCalculationNode::determine_type(PropertyID prope
             //    the type is «[ "frequency" → 1 ]»
             return CSSNumericType { CSSNumericType::BaseType::Frequency, 1 };
         },
-        // FIXME: <resolution>
+        [](Resolution const&) {
+            // -> <resolution>
+            //    the type is «[ "resolution" → 1 ]»
+            return CSSNumericType { CSSNumericType::BaseType::Resolution, 1 };
+        },
         [](Flex const&) {
             // -> <flex>
             //    the type is «[ "flex" → 1 ]»
@@ -2115,6 +2123,15 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                     m_value = Length::make_px(this_px - other_px);
             }
         },
+        [&](Resolution const& resolution) {
+            auto this_dots_per_pixel = resolution.to_dots_per_pixel();
+            // NOTE: <resolution-percentage> is not a type, so we don't have to worry about percentages.
+            auto other_dots_per_pixel = other.m_value.get<Resolution>().to_dots_per_pixel();
+            if (op == SumOperation::Add)
+                m_value = Resolution::make_dots_per_pixel(this_dots_per_pixel + other_dots_per_pixel);
+            else
+                m_value = Resolution::make_dots_per_pixel(this_dots_per_pixel - other_dots_per_pixel);
+        },
         [&](Time const& time) {
             auto this_seconds = time.to_seconds();
             if (other.m_value.has<Time>()) {
@@ -2186,6 +2203,9 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
         [&](Length const& length) {
             m_value = Length::make_px(CSSPixels::nearest_value_for(length.to_px(*context) * static_cast<double>(other.m_value.get<Number>().value())));
         },
+        [&](Resolution const& resolution) {
+            m_value = Resolution::make_dots_per_pixel(resolution.to_dots_per_pixel() * other.m_value.get<Number>().value());
+        },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value());
         },
@@ -2221,6 +2241,9 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         [&](Length const& length) {
             m_value = Length::make_px(CSSPixels::nearest_value_for(length.to_px(*context) / static_cast<double>(denominator)));
         },
+        [&](Resolution const& resolution) {
+            m_value = Resolution::make_dots_per_pixel(resolution.to_dots_per_pixel() / denominator);
+        },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() / denominator);
         },
@@ -2246,6 +2269,9 @@ void CalculatedStyleValue::CalculationResult::negate()
         },
         [&](Length const& length) {
             m_value = Length { 0 - length.raw_value(), length.type() };
+        },
+        [&](Resolution const& resolution) {
+            m_value = Resolution { 0 - resolution.raw_value(), resolution.type() };
         },
         [&](Time const& time) {
             m_value = Time { 0 - time.raw_value(), time.type() };
@@ -2273,6 +2299,9 @@ void CalculatedStyleValue::CalculationResult::invert()
         },
         [&](Length const& length) {
             m_value = Length { 1 / length.raw_value(), length.type() };
+        },
+        [&](Resolution const& resolution) {
+            m_value = Resolution { 1 / resolution.raw_value(), resolution.type() };
         },
         [&](Time const& time) {
             m_value = Time { 1 / time.raw_value(), time.type() };
@@ -2400,6 +2429,14 @@ Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
     auto result = m_calculation->resolve({}, {});
     if (result.value().has<Percentage>())
         return result.value().get<Percentage>();
+    return {};
+}
+
+Optional<Resolution> CalculatedStyleValue::resolve_resolution() const
+{
+    auto result = m_calculation->resolve({}, {});
+    if (result.value().has<Resolution>())
+        return result.value().get<Resolution>();
     return {};
 }
 
