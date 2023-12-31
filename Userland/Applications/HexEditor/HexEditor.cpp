@@ -632,7 +632,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             if (byte_position >= m_document->size())
                 return;
 
-            bool const edited_flag = m_document->get(byte_position).modified;
+            auto const cell = m_document->get(byte_position);
 
             bool const selection_inbetween_start_end = byte_position >= m_selection_start && byte_position < m_selection_end;
             bool const selection_inbetween_end_start = byte_position >= m_selection_end && byte_position < m_selection_start;
@@ -659,26 +659,25 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 line_height()
             };
 
-            u8 const cell_value = m_document->get(byte_position).value;
-            auto line = String::formatted("{:02X}", cell_value).release_value_but_fixme_should_propagate_errors();
+            auto line = String::formatted("{:02X}", cell.value).release_value_but_fixme_should_propagate_errors();
             auto high_nibble = line.substring_from_byte_offset(0, 1).release_value_but_fixme_should_propagate_errors();
             auto low_nibble = line.substring_from_byte_offset(1).release_value_but_fixme_should_propagate_errors();
 
             Gfx::Color background_color_hex = palette().color(background_role());
             Gfx::Color background_color_text = background_color_hex;
             Gfx::Color text_color_hex = [&]() -> Gfx::Color {
-                if (edited_flag)
+                if (cell.modified)
                     return Color::Red;
-                if (cell_value == 0x00)
+                if (cell.value == 0x00)
                     return palette().color(ColorRole::PlaceholderText);
                 return palette().color(foreground_role());
             }();
             Gfx::Color text_color_text = text_color_hex;
-            auto& font = edited_flag ? this->font().bold_variant() : this->font();
+            auto& font = cell.modified ? this->font().bold_variant() : this->font();
 
             if (highlight_flag) {
-                background_color_hex = background_color_text = edited_flag ? palette().selection().inverted() : palette().selection();
-                text_color_hex = text_color_text = edited_flag ? text_color_hex : palette().selection_text();
+                background_color_hex = background_color_text = cell.modified ? palette().selection().inverted() : palette().selection();
+                text_color_hex = text_color_text = cell.modified ? text_color_hex : palette().selection_text();
             } else if (byte_position == m_position) {
                 background_color_hex = (m_edit_mode == EditMode::Hex) ? background_color_hex : palette().inactive_selection();
                 text_color_hex = (m_edit_mode == EditMode::Hex) ? text_color_text : palette().inactive_selection_text();
@@ -709,7 +708,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             if (m_edit_mode == EditMode::Hex)
                 draw_cursor_rect();
 
-            if (byte_position == m_position && !edited_flag) {
+            if (byte_position == m_position && !cell.modified) {
                 painter.draw_text(hex_display_rect_high_nibble, high_nibble, font, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? text_color_hex : palette().selection_text());
                 painter.draw_text(hex_display_rect_low_nibble, low_nibble, font, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? palette().selection_text() : text_color_hex);
             } else {
@@ -729,7 +728,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             if (m_edit_mode == EditMode::Text)
                 draw_cursor_rect();
 
-            char const character = is_ascii_printable(cell_value) ? cell_value : '.';
+            char const character = is_ascii_printable(cell.value) ? cell.value : '.';
             auto character_sv = StringView { &character, 1 };
             if (byte_position == m_position)
                 painter.draw_text(text_display_rect, character_sv, font, Gfx::TextAlignment::TopLeft, palette().selection_text());
