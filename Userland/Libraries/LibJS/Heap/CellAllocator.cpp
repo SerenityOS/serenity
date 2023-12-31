@@ -12,8 +12,9 @@
 
 namespace JS {
 
-CellAllocator::CellAllocator(size_t cell_size)
-    : m_cell_size(cell_size)
+CellAllocator::CellAllocator(size_t cell_size, char const* class_name)
+    : m_class_name(class_name)
+    , m_cell_size(cell_size)
 {
 }
 
@@ -23,7 +24,7 @@ Cell* CellAllocator::allocate_cell(Heap& heap)
         heap.register_cell_allocator({}, *this);
 
     if (m_usable_blocks.is_empty()) {
-        auto block = HeapBlock::create_with_cell_size(heap, *this, m_cell_size);
+        auto block = HeapBlock::create_with_cell_size(heap, *this, m_cell_size, m_class_name);
         m_usable_blocks.append(*block.leak_ptr());
     }
 
