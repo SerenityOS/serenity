@@ -413,7 +413,7 @@ void Job::on_socket_connected()
                         m_should_read_chunk_ending_line = false;
                         continue;
                     }
-                    auto size_lines = size_data.view().lines();
+                    auto size_lines = size_data.view().trim_whitespace().lines();
                     dbgln_if(JOB_DEBUG, "Job: Received a chunk with size '{}'", size_data);
                     if (size_lines.size() == 0) {
                         if (!m_socket->is_eof())
