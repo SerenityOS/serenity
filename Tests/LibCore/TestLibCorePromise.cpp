@@ -61,6 +61,26 @@ TEST_CASE(promise_chain_handlers)
     EXPECT(!rejected);
 }
 
+TEST_CASE(infallible_promise_chain_handlers)
+{
+    Core::EventLoop loop;
+
+    bool resolved = false;
+    bool rejected = false;
+
+    NonnullRefPtr<Core::Promise<int>> promise = MUST(Core::Promise<int>::try_create())
+                                                    ->when_resolved([&](int&) { resolved = true; })
+                                                    .when_rejected([&](AK::Error const&) { rejected = true; });
+
+    loop.deferred_invoke([=] {
+        promise->resolve(42);
+    });
+
+    (void)promise->await();
+    EXPECT(resolved);
+    EXPECT(!rejected);
+}
+
 TEST_CASE(promise_map)
 {
     Core::EventLoop loop;
