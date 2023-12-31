@@ -674,6 +674,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 return palette().color(foreground_role());
             }();
             Gfx::Color text_color_text = text_color_hex;
+            auto& font = edited_flag ? this->font().bold_variant() : this->font();
 
             if (highlight_flag) {
                 background_color_hex = background_color_text = edited_flag ? palette().selection().inverted() : palette().selection();
@@ -709,11 +710,11 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 draw_cursor_rect();
 
             if (byte_position == m_position && !edited_flag) {
-                painter.draw_text(hex_display_rect_high_nibble, high_nibble, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? text_color_hex : palette().selection_text());
-                painter.draw_text(hex_display_rect_low_nibble, low_nibble, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? palette().selection_text() : text_color_hex);
+                painter.draw_text(hex_display_rect_high_nibble, high_nibble, font, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? text_color_hex : palette().selection_text());
+                painter.draw_text(hex_display_rect_low_nibble, low_nibble, font, Gfx::TextAlignment::TopLeft, m_cursor_at_low_nibble ? palette().selection_text() : text_color_hex);
             } else {
-                painter.draw_text(hex_display_rect_high_nibble, high_nibble, Gfx::TextAlignment::TopLeft, text_color_hex);
-                painter.draw_text(hex_display_rect_low_nibble, low_nibble, Gfx::TextAlignment::TopLeft, text_color_hex);
+                painter.draw_text(hex_display_rect_high_nibble, high_nibble, font, Gfx::TextAlignment::TopLeft, text_color_hex);
+                painter.draw_text(hex_display_rect_low_nibble, low_nibble, font, Gfx::TextAlignment::TopLeft, text_color_hex);
             }
 
             Gfx::IntRect text_background_rect {
@@ -731,9 +732,9 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             char const character = is_ascii_printable(cell_value) ? cell_value : '.';
             auto character_sv = StringView { &character, 1 };
             if (byte_position == m_position)
-                painter.draw_text(text_display_rect, character_sv, Gfx::TextAlignment::TopLeft, palette().selection_text());
+                painter.draw_text(text_display_rect, character_sv, font, Gfx::TextAlignment::TopLeft, palette().selection_text());
             else
-                painter.draw_text(text_display_rect, character_sv, Gfx::TextAlignment::TopLeft, text_color_text);
+                painter.draw_text(text_display_rect, character_sv, font, Gfx::TextAlignment::TopLeft, text_color_text);
         }
     }
 }
