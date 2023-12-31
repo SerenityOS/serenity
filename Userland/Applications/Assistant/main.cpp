@@ -146,7 +146,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread map_fixed"));
 
     Core::LockFile lockfile("/tmp/lock/assistant.lock");
 

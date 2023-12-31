@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/NeverDestroyed.h>
 #include <AK/NonnullOwnPtr.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/HeapBlock.h>
 
 #define JS_DECLARE_ALLOCATOR(ClassName) \
@@ -49,8 +50,12 @@ public:
     IntrusiveListNode<CellAllocator> m_list_node;
     using List = IntrusiveList<&CellAllocator::m_list_node>;
 
+    BlockAllocator& block_allocator() { return m_block_allocator; }
+
 private:
     size_t const m_cell_size;
+
+    BlockAllocator m_block_allocator;
 
     using BlockList = IntrusiveList<&HeapBlock::m_list_node>;
     BlockList m_full_blocks;
