@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,11 +37,10 @@ Cell* CellAllocator::allocate_cell(Heap& heap)
 
 void CellAllocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
 {
-    auto& heap = block.heap();
     block.m_list_node.remove();
     // NOTE: HeapBlocks are managed by the BlockAllocator, so we don't want to `delete` the block here.
     block.~HeapBlock();
-    heap.block_allocator().deallocate_block(&block);
+    m_block_allocator.deallocate_block(&block);
 }
 
 void CellAllocator::block_did_become_usable(Badge<Heap>, HeapBlock& block)

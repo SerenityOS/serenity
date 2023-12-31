@@ -26,7 +26,7 @@ NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, CellAlloca
 #else
     char const* name = nullptr;
 #endif
-    auto* block = static_cast<HeapBlock*>(heap.block_allocator().allocate_block(name));
+    auto* block = static_cast<HeapBlock*>(cell_allocator.block_allocator().allocate_block(name));
     new (block) HeapBlock(heap, cell_allocator, cell_size);
     return NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block);
 }

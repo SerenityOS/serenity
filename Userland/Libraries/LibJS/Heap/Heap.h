@@ -15,7 +15,6 @@
 #include <AK/Vector.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
@@ -82,8 +81,6 @@ public:
     void did_destroy_execution_context(Badge<ExecutionContext>, ExecutionContext&);
 
     void register_cell_allocator(Badge<CellAllocator>, CellAllocator&);
-
-    BlockAllocator& block_allocator() { return m_block_allocator; }
 
     void uproot_cell(Cell* cell);
 
@@ -153,8 +150,6 @@ private:
     WeakContainer::List m_weak_containers;
 
     Vector<GCPtr<Cell>> m_uprooted_cells;
-
-    BlockAllocator m_block_allocator;
 
     size_t m_gc_deferrals { 0 };
     bool m_should_gc_when_deferral_ends { false };

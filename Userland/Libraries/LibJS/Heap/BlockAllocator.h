@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,9 +20,7 @@ public:
     void deallocate_block(void*);
 
 private:
-    static constexpr size_t max_cached_blocks = 512;
-
-    Vector<void*, max_cached_blocks> m_blocks;
+    Vector<void*> m_blocks;
 };
 
 }
