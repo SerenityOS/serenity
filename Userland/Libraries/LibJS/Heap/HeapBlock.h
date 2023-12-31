@@ -26,7 +26,7 @@ class HeapBlock : public HeapBlockBase {
 
 public:
     using HeapBlockBase::block_size;
-    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, CellAllocator&, size_t);
+    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, CellAllocator&, size_t cell_size, char const* class_name);
 
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }

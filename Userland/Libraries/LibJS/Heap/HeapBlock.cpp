@@ -18,11 +18,14 @@
 
 namespace JS {
 
-NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, CellAllocator& cell_allocator, size_t cell_size)
+NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, CellAllocator& cell_allocator, size_t cell_size, [[maybe_unused]] char const* class_name)
 {
 #ifdef AK_OS_SERENITY
     char name[64];
-    snprintf(name, sizeof(name), "LibJS: HeapBlock(%zu)", cell_size);
+    if (class_name)
+        snprintf(name, sizeof(name), "LibJS: HeapBlock(%zu): %s", cell_size, class_name);
+    else
+        snprintf(name, sizeof(name), "LibJS: HeapBlock(%zu)", cell_size);
 #else
     char const* name = nullptr;
 #endif

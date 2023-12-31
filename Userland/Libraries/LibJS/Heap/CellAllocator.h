@@ -17,13 +17,13 @@
     static JS::TypeIsolatingCellAllocator<ClassName> cell_allocator;
 
 #define JS_DEFINE_ALLOCATOR(ClassName) \
-    JS::TypeIsolatingCellAllocator<ClassName> ClassName::cell_allocator;
+    JS::TypeIsolatingCellAllocator<ClassName> ClassName::cell_allocator { #ClassName };
 
 namespace JS {
 
 class CellAllocator {
 public:
-    explicit CellAllocator(size_t cell_size);
+    CellAllocator(size_t cell_size, char const* class_name = nullptr);
     ~CellAllocator() = default;
 
     size_t cell_size() const { return m_cell_size; }
@@ -53,6 +53,7 @@ public:
     BlockAllocator& block_allocator() { return m_block_allocator; }
 
 private:
+    char const* const m_class_name { nullptr };
     size_t const m_cell_size;
 
     BlockAllocator m_block_allocator;
@@ -67,7 +68,12 @@ class TypeIsolatingCellAllocator {
 public:
     using CellType = T;
 
-    NeverDestroyed<CellAllocator> allocator { sizeof(T) };
+    TypeIsolatingCellAllocator(char const* class_name)
+        : allocator(sizeof(T), class_name)
+    {
+    }
+
+    NeverDestroyed<CellAllocator> allocator;
 };
 
 }
