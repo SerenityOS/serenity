@@ -634,10 +634,6 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
             auto const cell = m_document->get(byte_position);
 
-            bool const selection_inbetween_start_end = byte_position >= m_selection_start && byte_position < m_selection_end;
-            bool const selection_inbetween_end_start = byte_position >= m_selection_end && byte_position < m_selection_start;
-            bool const highlight_flag = selection_inbetween_start_end || selection_inbetween_end_start;
-
             Gfx::IntRect hex_display_rect_high_nibble {
                 frame_thickness() + offset_margin_width() + j * cell_width() + 2 * m_padding,
                 frame_thickness() + m_padding + i * line_height(),
@@ -663,27 +659,39 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             auto high_nibble = line.substring_from_byte_offset(0, 1).release_value_but_fixme_should_propagate_errors();
             auto low_nibble = line.substring_from_byte_offset(1).release_value_but_fixme_should_propagate_errors();
 
-            Gfx::Color background_color_hex = palette().color(background_role());
-            Gfx::Color background_color_text = background_color_hex;
-            Gfx::Color text_color_hex = [&]() -> Gfx::Color {
+            bool const selected = min(m_selection_start, m_selection_end) <= byte_position
+                && byte_position < max(m_selection_start, m_selection_end);
+
+            // Styling priorities are as follows, with smaller numbers beating larger ones:
+            // 1. Modified bytes
+            // 2. The cursor position
+            // 3. The selection
+            // 4. Null bytes
+            // 5. Regular formatting
+            auto determine_background_color = [&](EditMode edit_mode) -> Gfx::Color {
+                if (selected)
+                    return cell.modified ? palette().selection().inverted() : palette().selection();
+                if (byte_position == m_position && m_edit_mode != edit_mode)
+                    return palette().inactive_selection();
+                return palette().color(background_role());
+            };
+            auto determine_text_color = [&](EditMode edit_mode) -> Gfx::Color {
                 if (cell.modified)
                     return Color::Red;
+                if (selected)
+                    return palette().selection_text();
+                if (byte_position == m_position)
+                    return (m_edit_mode == edit_mode) ? palette().color(foreground_role()) : palette().inactive_selection_text();
                 if (cell.value == 0x00)
                     return palette().color(ColorRole::PlaceholderText);
                 return palette().color(foreground_role());
-            }();
-            Gfx::Color text_color_text = text_color_hex;
+            };
+            Gfx::Color background_color_hex = determine_background_color(EditMode::Hex);
+            Gfx::Color background_color_text = determine_background_color(EditMode::Text);
+            Gfx::Color text_color_hex = determine_text_color(EditMode::Hex);
+            Gfx::Color text_color_text = determine_text_color(EditMode::Text);
             auto& font = cell.modified ? this->font().bold_variant() : this->font();
 
-            if (highlight_flag) {
-                background_color_hex = background_color_text = cell.modified ? palette().selection().inverted() : palette().selection();
-                text_color_hex = text_color_text = cell.modified ? text_color_hex : palette().selection_text();
-            } else if (byte_position == m_position) {
-                background_color_hex = (m_edit_mode == EditMode::Hex) ? background_color_hex : palette().inactive_selection();
-                text_color_hex = (m_edit_mode == EditMode::Hex) ? text_color_text : palette().inactive_selection_text();
-                background_color_text = (m_edit_mode == EditMode::Text) ? background_color_text : palette().inactive_selection();
-                text_color_text = (m_edit_mode == EditMode::Text) ? text_color_text : palette().inactive_selection_text();
-            }
             painter.fill_rect(background_rect, background_color_hex);
 
             Gfx::IntRect text_display_rect {
