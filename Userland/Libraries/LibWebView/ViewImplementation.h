@@ -11,6 +11,7 @@
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
+#include <LibCore/Promise.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
@@ -95,8 +96,9 @@ public:
         Visible,
         Full,
     };
-    ErrorOr<LexicalPath> take_screenshot(ScreenshotType);
-    ErrorOr<LexicalPath> take_dom_node_screenshot(i32);
+    NonnullRefPtr<Core::Promise<LexicalPath>> take_screenshot(ScreenshotType);
+    NonnullRefPtr<Core::Promise<LexicalPath>> take_dom_node_screenshot(i32);
+    virtual void did_receive_screenshot(Badge<WebContentClient>, Gfx::ShareableBitmap const&);
 
     ErrorOr<LexicalPath> dump_gc_graph();
 
@@ -229,6 +231,8 @@ protected:
 
     size_t m_crash_count = 0;
     RefPtr<Core::Timer> m_repeated_crash_timer;
+
+    RefPtr<Core::Promise<LexicalPath>> m_pending_screenshot;
 };
 
 }

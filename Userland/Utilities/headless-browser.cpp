@@ -96,7 +96,21 @@ public:
 
     RefPtr<Gfx::Bitmap> take_screenshot()
     {
-        return client().take_document_screenshot().bitmap();
+        VERIFY(!m_pending_screenshot);
+
+        m_pending_screenshot = Core::Promise<RefPtr<Gfx::Bitmap>>::construct();
+        client().async_take_document_screenshot();
+
+        auto screenshot = MUST(m_pending_screenshot->await());
+        m_pending_screenshot = nullptr;
+
+        return screenshot;
+    }
+
+    virtual void did_receive_screenshot(Badge<WebView::WebContentClient>, Gfx::ShareableBitmap const& screenshot) override
+    {
+        VERIFY(m_pending_screenshot);
+        m_pending_screenshot->resolve(screenshot.bitmap());
     }
 
     ErrorOr<String> dump_layout_tree()
@@ -145,6 +159,7 @@ private:
 
 private:
     Gfx::IntRect m_viewport_rect;
+    RefPtr<Core::Promise<RefPtr<Gfx::Bitmap>>> m_pending_screenshot;
 };
 
 static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, int screenshot_timeout)

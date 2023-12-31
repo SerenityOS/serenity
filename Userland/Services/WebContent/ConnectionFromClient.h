@@ -121,8 +121,8 @@ private:
 
     virtual void enable_inspector_prototype() override;
 
-    virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
-    virtual Messages::WebContentServer::TakeDomNodeScreenshotResponse take_dom_node_screenshot(i32 node_id) override;
+    virtual void take_document_screenshot() override;
+    virtual void take_dom_node_screenshot(i32 node_id) override;
 
     virtual Messages::WebContentServer::DumpGcGraphResponse dump_gc_graph() override;
 

@@ -310,19 +310,19 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
     take_visible_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
-        if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
-            auto error = MUST(String::formatted("{}", result.error()));
-            QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error));
-        }
+        view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible)->when_rejected([this](auto const& error) {
+            auto error_message = MUST(String::formatted("{}", error));
+            QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error_message));
+        });
     });
 
     auto* take_full_screenshot_action = new QAction("Take &Full Screenshot", this);
     take_full_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(take_full_screenshot_action, &QAction::triggered, this, [this]() {
-        if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full); result.is_error()) {
-            auto error = MUST(String::formatted("{}", result.error()));
-            QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error));
-        }
+        view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full)->when_rejected([this](auto const& error) {
+            auto error_message = MUST(String::formatted("{}", error));
+            QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error_message));
+        });
     });
 
     m_page_context_menu = new QMenu("Context menu", this);
