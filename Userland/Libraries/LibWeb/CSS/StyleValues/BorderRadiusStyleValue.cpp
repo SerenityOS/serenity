@@ -24,9 +24,9 @@ ValueComparingNonnullRefPtr<StyleValue const> BorderRadiusStyleValue::absolutize
         return *this;
     auto absolutized_horizontal_radius = m_properties.horizontal_radius;
     auto absolutized_vertical_radius = m_properties.vertical_radius;
-    if (!m_properties.horizontal_radius.is_percentage())
+    if (m_properties.horizontal_radius.is_length())
         absolutized_horizontal_radius = m_properties.horizontal_radius.length().absolutized(viewport_rect, font_metrics, root_font_metrics);
-    if (!m_properties.vertical_radius.is_percentage())
+    if (m_properties.vertical_radius.is_length())
         absolutized_vertical_radius = m_properties.vertical_radius.length().absolutized(viewport_rect, font_metrics, root_font_metrics);
     return BorderRadiusStyleValue::create(absolutized_horizontal_radius, absolutized_vertical_radius);
 }
