@@ -1963,6 +1963,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             return {};
         }
 
+        if (match(TokenType::Eof)) {
+            set_error(Error::MismatchingBracket);
+            return {};
+        }
+
         if (match(TokenType::RightBracket) || match(TokenType::HyphenMinus))
             return {};
 

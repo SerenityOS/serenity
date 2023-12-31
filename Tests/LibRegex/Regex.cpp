@@ -1175,3 +1175,16 @@ TEST_CASE(inversion_state_in_char_class)
         EXPECT_EQ(result.capture_group_matches.first()[1].view.to_byte_string(), "}"sv);
     }
 }
+
+TEST_CASE(mismatching_brackets)
+{
+    auto const test_cases = Array {
+        "["sv,
+        "[ -"sv,
+    };
+
+    for (auto const& test_case : test_cases) {
+        Regex<ECMA262> re(test_case);
+        EXPECT_EQ(re.parser_result.error, regex::Error::MismatchingBracket);
+    }
+}
