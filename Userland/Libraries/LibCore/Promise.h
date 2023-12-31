@@ -82,13 +82,10 @@ public:
     template<CallableAs<void, Result&> F>
     Promise& when_resolved(F handler)
     {
-        on_resolution = [handler = move(handler)](Result& result) { return handler(result); };
-        if (is_resolved()) {
-            auto handler_result = on_resolution(m_result_or_rejection->value());
-            possibly_handle_rejection(handler_result);
-        }
-
-        return *this;
+        return when_resolved([handler = move(handler)](Result& result) -> ErrorOr<void> {
+            handler(result);
+            return {};
+        });
     }
 
     template<CallableAs<ErrorOr<void>, Result&> F>
