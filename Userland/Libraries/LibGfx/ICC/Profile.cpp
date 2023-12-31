@@ -1287,7 +1287,8 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
             // ICC v4, F.2 grayTRCTag
             // "connection = grayTRC[device]"
             float gray = evaluate_curve(grayTRCTag, color[0] / 255.f);
-            return FloatVector3 { gray, gray, gray };
+            FloatVector3 white { pcs_illuminant().X, pcs_illuminant().Y, pcs_illuminant().Z };
+            return white * gray;
         }
 
         // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
