@@ -724,15 +724,16 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             painter.fill_rect(text_background_rect, background_color_text);
-            auto character = String::formatted("{:c}", isprint(cell_value) ? cell_value : '.').release_value_but_fixme_should_propagate_errors();
 
             if (m_edit_mode == EditMode::Text)
                 draw_cursor_rect();
 
+            char const character = is_ascii_printable(cell_value) ? cell_value : '.';
+            auto character_sv = StringView { &character, 1 };
             if (byte_position == m_position)
-                painter.draw_text(text_display_rect, character, Gfx::TextAlignment::TopLeft, palette().selection_text());
+                painter.draw_text(text_display_rect, character_sv, Gfx::TextAlignment::TopLeft, palette().selection_text());
             else
-                painter.draw_text(text_display_rect, character, Gfx::TextAlignment::TopLeft, text_color_text);
+                painter.draw_text(text_display_rect, character_sv, Gfx::TextAlignment::TopLeft, text_color_text);
         }
     }
 }
