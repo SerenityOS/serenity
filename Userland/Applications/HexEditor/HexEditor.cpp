@@ -139,7 +139,7 @@ ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::File> new_file)
     } else {
         auto& memory_document = static_cast<HexDocumentMemory&>(*m_document);
         TRY(memory_document.write_to_file(*new_file));
-        m_document = HexDocumentFile::create(move(new_file)).release_value_but_fixme_should_propagate_errors();
+        m_document = TRY(HexDocumentFile::create(move(new_file)));
     }
 
     update();
