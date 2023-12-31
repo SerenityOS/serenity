@@ -370,27 +370,65 @@ static ErrorOr<LexicalPath> save_screenshot(Gfx::ShareableBitmap const& bitmap)
     return path;
 }
 
-ErrorOr<LexicalPath> ViewImplementation::take_screenshot(ScreenshotType type)
+NonnullRefPtr<Core::Promise<LexicalPath>> ViewImplementation::take_screenshot(ScreenshotType type)
 {
+    auto promise = Core::Promise<LexicalPath>::construct();
+
+    if (m_pending_screenshot) {
+        // For simplicitly, only allow taking one screenshot at a time for now. Revisit if we need
+        // to allow spamming screenshot requests for some reason.
+        promise->reject(Error::from_string_literal("A screenshot request is already in progress"));
+        return promise;
+    }
+
     Gfx::ShareableBitmap bitmap;
 
     switch (type) {
     case ScreenshotType::Visible:
-        if (auto* visible_bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr())
-            bitmap = visible_bitmap->to_shareable_bitmap();
+        if (auto* visible_bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr()) {
+            if (auto result = save_screenshot(visible_bitmap->to_shareable_bitmap()); result.is_error())
+                promise->reject(result.release_error());
+            else
+                promise->resolve(result.release_value());
+        }
         break;
+
     case ScreenshotType::Full:
-        bitmap = client().take_document_screenshot();
+        m_pending_screenshot = promise;
+        client().async_take_document_screenshot();
         break;
     }
 
-    return save_screenshot(bitmap);
+    return promise;
 }
 
-ErrorOr<LexicalPath> ViewImplementation::take_dom_node_screenshot(i32 node_id)
+NonnullRefPtr<Core::Promise<LexicalPath>> ViewImplementation::take_dom_node_screenshot(i32 node_id)
 {
-    auto bitmap = client().take_dom_node_screenshot(node_id);
-    return save_screenshot(bitmap);
+    auto promise = Core::Promise<LexicalPath>::construct();
+
+    if (m_pending_screenshot) {
+        // For simplicitly, only allow taking one screenshot at a time for now. Revisit if we need
+        // to allow spamming screenshot requests for some reason.
+        promise->reject(Error::from_string_literal("A screenshot request is already in progress"));
+        return promise;
+    }
+
+    m_pending_screenshot = promise;
+    client().async_take_dom_node_screenshot(node_id);
+
+    return promise;
+}
+
+void ViewImplementation::did_receive_screenshot(Badge<WebContentClient>, Gfx::ShareableBitmap const& screenshot)
+{
+    VERIFY(m_pending_screenshot);
+
+    if (auto result = save_screenshot(screenshot); result.is_error())
+        m_pending_screenshot->reject(result.release_error());
+    else
+        m_pending_screenshot->resolve(result.release_value());
+
+    m_pending_screenshot = nullptr;
 }
 
 ErrorOr<LexicalPath> ViewImplementation::dump_gc_graph()

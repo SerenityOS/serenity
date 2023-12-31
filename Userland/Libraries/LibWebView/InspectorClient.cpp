@@ -254,10 +254,13 @@ void InspectorClient::context_menu_screenshot_dom_node()
 {
     VERIFY(m_context_menu_data.has_value());
 
-    if (auto result = m_content_web_view.take_dom_node_screenshot(m_context_menu_data->dom_node_id); result.is_error())
-        append_console_warning(MUST(String::formatted("Warning: {}", result.error())));
-    else
-        append_console_message(MUST(String::formatted("Screenshot saved to: {}", result.value())));
+    m_content_web_view.take_dom_node_screenshot(m_context_menu_data->dom_node_id)
+        ->when_resolved([this](auto const& path) {
+            append_console_message(MUST(String::formatted("Screenshot saved to: {}", path)));
+        })
+        .when_rejected([this](auto const& error) {
+            append_console_warning(MUST(String::formatted("Warning: {}", error)));
+        });
 
     m_context_menu_data.clear();
 }

@@ -854,11 +854,13 @@ void ConnectionFromClient::js_console_request_messages(i32 start_index)
         m_top_level_document_console_client->send_messages(start_index);
 }
 
-Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient::take_document_screenshot()
+void ConnectionFromClient::take_document_screenshot()
 {
     auto* document = page().page().top_level_browsing_context().active_document();
-    if (!document || !document->document_element())
-        return Gfx::ShareableBitmap {};
+    if (!document || !document->document_element()) {
+        async_did_take_screenshot({});
+        return;
+    }
 
     auto const& content_size = page().content_size();
     Web::DevicePixelRect rect { { 0, 0 }, content_size };
@@ -866,21 +868,23 @@ Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient:
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
     page().paint(rect, *bitmap);
 
-    return bitmap->to_shareable_bitmap();
+    async_did_take_screenshot(bitmap->to_shareable_bitmap());
 }
 
-Messages::WebContentServer::TakeDomNodeScreenshotResponse ConnectionFromClient::take_dom_node_screenshot(i32 node_id)
+void ConnectionFromClient::take_dom_node_screenshot(i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
-    if (!dom_node || !dom_node->paintable_box())
-        return Gfx::ShareableBitmap {};
+    if (!dom_node || !dom_node->paintable_box()) {
+        async_did_take_screenshot({});
+        return;
+    }
 
     auto rect = page().page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
     page().paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
 
-    return bitmap->to_shareable_bitmap();
+    async_did_take_screenshot(bitmap->to_shareable_bitmap());
 }
 
 Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_graph()

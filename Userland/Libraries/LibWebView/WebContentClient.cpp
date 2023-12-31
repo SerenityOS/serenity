@@ -231,6 +231,11 @@ void WebContentClient::did_get_dom_node_html(String const& html)
         m_view.on_received_dom_node_html(html);
 }
 
+void WebContentClient::did_take_screenshot(Gfx::ShareableBitmap const& screenshot)
+{
+    m_view.did_receive_screenshot({}, screenshot);
+}
+
 void WebContentClient::did_output_js_console_message(i32 message_index)
 {
     if (m_view.on_received_console_message)

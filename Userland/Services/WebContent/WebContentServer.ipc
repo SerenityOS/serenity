@@ -54,8 +54,8 @@ endpoint WebContentServer
     remove_dom_node(i32 node_id) =|
     get_dom_node_html(i32 node_id) =|
 
-    take_document_screenshot() => (Gfx::ShareableBitmap data)
-    take_dom_node_screenshot(i32 node_id) => (Gfx::ShareableBitmap data)
+    take_document_screenshot() =|
+    take_dom_node_screenshot(i32 node_id) =|
 
     dump_gc_graph() => (String json)
 

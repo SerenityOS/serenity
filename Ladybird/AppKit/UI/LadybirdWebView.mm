@@ -791,14 +791,16 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 
 - (void)takeVisibleScreenshot:(id)sender
 {
-    auto result = m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible);
-    (void)result; // FIXME: Display an error if this failed.
+    m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible)->when_rejected([](auto const& error) {
+        (void)error; // FIXME: Display the error.
+    });
 }
 
 - (void)takeFullScreenshot:(id)sender
 {
-    auto result = m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Full);
-    (void)result; // FIXME: Display an error if this failed.
+    m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Full)->when_rejected([](auto const& error) {
+        (void)error; // FIXME: Display the error.
+    });
 }
 
 - (void)openLink:(id)sender
