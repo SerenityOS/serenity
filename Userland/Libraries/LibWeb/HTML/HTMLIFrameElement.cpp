@@ -39,8 +39,17 @@ JS::GCPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS:
 void HTMLIFrameElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
-    if (m_content_navigable)
-        process_the_iframe_attributes();
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:process-the-iframe-attributes-2
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:process-the-iframe-attributes-3
+    // Whenever an iframe element with a non-null content navigable has its srcdoc attribute set, changed, or removed,
+    // the user agent must process the iframe attributes.
+    // Similarly, whenever an iframe element with a non-null content navigable but with no srcdoc attribute specified
+    // has its src attribute set, changed, or removed, the user agent must process the iframe attributes.
+    if (m_content_navigable) {
+        if (name == AttributeNames::srcdoc || (name == AttributeNames::src && !has_attribute(AttributeNames::srcdoc)))
+            process_the_iframe_attributes();
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:the-iframe-element-6
