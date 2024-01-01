@@ -173,10 +173,14 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
 
 InspectorClient::~InspectorClient()
 {
-    m_content_web_view.on_received_dom_tree = nullptr;
+    m_content_web_view.on_finshed_editing_dom_node = nullptr;
     m_content_web_view.on_received_accessibility_tree = nullptr;
     m_content_web_view.on_received_console_message = nullptr;
     m_content_web_view.on_received_console_messages = nullptr;
+    m_content_web_view.on_received_dom_node_html = nullptr;
+    m_content_web_view.on_received_dom_node_properties = nullptr;
+    m_content_web_view.on_received_dom_tree = nullptr;
+    m_content_web_view.on_received_hovered_node_id = nullptr;
 }
 
 void InspectorClient::inspect()
