@@ -735,6 +735,10 @@ ErrorOr<Bytes> BrotliDecompressionStream::read_some(Bytes output_buffer)
             if (uncompressed_bytes.is_empty())
                 return Error::from_string_literal("eof");
 
+            // TODO: Replace the home-grown LookbackBuffer with AK::CircularBuffer.
+            for (auto c : uncompressed_bytes)
+                m_lookback_buffer.value().write(c);
+
             m_bytes_left -= uncompressed_bytes.size();
             bytes_read += uncompressed_bytes.size();
 
