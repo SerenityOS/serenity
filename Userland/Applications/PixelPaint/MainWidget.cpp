@@ -61,9 +61,11 @@ MainWidget::MainWidget()
 
     m_toolbox->on_tool_selection = [&](auto* tool) {
         auto* editor = current_image_editor();
-        VERIFY(editor);
-        editor->set_active_tool(tool);
-        m_tool_properties_widget->set_active_tool(tool);
+        // Ignore tool selection changes if we don't have an editor yet, e.g. if PixelPaint is started with a path argument.
+        if (editor) {
+            editor->set_active_tool(tool);
+            m_tool_properties_widget->set_active_tool(tool);
+        }
     };
 
     m_tab_widget->on_middle_click = [&](auto& widget) {
@@ -1298,6 +1300,7 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
     editor.set_path(file.filename().to_byte_string());
     editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
+    m_toolbox->ensure_tool_selection();
     GUI::Application::the()->set_most_recently_open_file(file.filename());
 }
 

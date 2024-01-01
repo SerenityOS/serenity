@@ -30,6 +30,7 @@ public:
     }
 
     Tool* active_tool() const { return m_active_tool; }
+    void ensure_tool_selection();
 
 private:
     friend class ToolButton;
