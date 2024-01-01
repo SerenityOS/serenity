@@ -1396,7 +1396,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
-        populate_session_history_entry_document(history_entry, source_snapshot_params, target_snapshot_params, navigation_id, move(navigation_params), csp_navigation_type, true, [this, history_entry, history_handling, navigation_id] {
+        populate_session_history_entry_document(history_entry, source_snapshot_params, target_snapshot_params, navigation_id, move(navigation_params), csp_navigation_type, true, [this, history_entry, history_handling, navigation_id, url] {
             // 1.     Append session history traversal steps to navigable's traversable to finalize a cross-document navigation given navigable, historyHandling, and historyEntry.
             traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
                 if (this->has_been_destroyed()) {
@@ -1409,6 +1409,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
                 }
                 finalize_a_cross_document_navigation(*this, to_history_handling_behavior(history_handling), history_entry);
             });
+
+            if (is_top_level_traversable() && url != history_entry->url) {
+                active_browsing_context()->page().client().page_did_start_loading(history_entry->url, true);
+            }
         }).release_value_but_fixme_should_propagate_errors();
     });
 
