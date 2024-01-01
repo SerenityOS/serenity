@@ -55,8 +55,8 @@ void ToolboxWidget::setup_tools()
         auto action = GUI::Action::create_checkable(tool->tool_name(), shortcut, Gfx::Bitmap::load_from_file(ByteString::formatted("/res/icons/pixelpaint/{}.png", icon_name)).release_value_but_fixme_should_propagate_errors(),
             [this, tool = tool.ptr()](auto& action) {
                 if (action.is_checked()) {
-                    on_tool_selection(tool);
                     m_active_tool = tool;
+                    ensure_tool_selection();
                 } else {
                     on_tool_selection(nullptr);
                 }
@@ -70,11 +70,11 @@ void ToolboxWidget::setup_tools()
         tool->set_action(action);
         m_tools.append(move(tool));
         if (is_default_tool) {
+            VERIFY(m_active_tool == nullptr);
             action->set_checked(true);
-            auto default_tool_index = m_tools.size() - 1;
-            deferred_invoke([&, default_tool_index]() {
-                VERIFY(m_active_tool == nullptr);
-                on_tool_selection(m_tools[default_tool_index]);
+            m_active_tool = m_tools[m_tools.size() - 1];
+            deferred_invoke([&]() {
+                ensure_tool_selection();
             });
         }
     };
@@ -100,4 +100,9 @@ void ToolboxWidget::setup_tools()
     add_tool("gradients"sv, { Mod_Ctrl, Key_G }, make<GradientTool>());
 }
 
+void ToolboxWidget::ensure_tool_selection()
+{
+    if (on_tool_selection)
+        on_tool_selection(m_active_tool);
+}
 }
