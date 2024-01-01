@@ -111,6 +111,8 @@ void Job::shutdown(ShutdownMode mode)
 {
     if (!m_socket)
         return;
+
+    m_socket->set_notifications_enabled(false);
     if (mode == ShutdownMode::CloseSocket) {
         m_socket->close();
         m_socket->on_ready_to_read = nullptr;
