@@ -405,8 +405,8 @@ def setup_virtualization_support(config: Configuration):
     if provided_virtualization_enable is not None:
         config.virtualization_support = provided_virtualization_enable == "1"
     else:
-        if (config.kvm_usable and config.architecture != Arch.Aarch64 and os.uname().machine != Arch.Aarch64.value) or (
-            config.qemu_kind == QEMUKind.NativeWindows and config.architecture != Arch.Aarch64
+        if (config.kvm_usable and config.architecture == Arch.x86_64 and os.uname().machine == Arch.x86_64.value) or (
+            config.qemu_kind == QEMUKind.NativeWindows and config.architecture == Arch.x86_64
         ):
             config.virtualization_support = True
 
@@ -459,7 +459,7 @@ def setup_cpu(config: Configuration):
 
 
 def setup_cpu_count(config: Configuration):
-    if config.architecture == Arch.Aarch64:
+    if config.architecture != Arch.x86_64:
         return
 
     provided_cpu_count = environ.get("SERENITY_CPUS")
