@@ -32,6 +32,7 @@ class Arch(Enum):
     """SerenityOS architecture, not host architecture."""
 
     Aarch64 = "aarch64"
+    RISCV64 = "riscv64"
     x86_64 = "x86_64"
 
 
@@ -294,6 +295,8 @@ def determine_serenity_arch() -> Arch:
     match environ.get("SERENITY_ARCH"):
         case "aarch64":
             return Arch.Aarch64
+        case "riscv64":
+            return Arch.RISCV64
         case "x86_64":
             return Arch.x86_64
         case _:
@@ -327,6 +330,8 @@ def setup_qemu_binary(config: Configuration):
         match config.architecture:
             case Arch.Aarch64:
                 qemu_binary_basename = "qemu-system-aarch64"
+            case Arch.RISCV64:
+                qemu_binary_basename = "qemu-system-riscv64"
             case Arch.x86_64:
                 qemu_binary_basename = "qemu-system-x86_64"
     if qemu_binary_basename is None:
@@ -685,10 +690,13 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
 
 
 def setup_kernel(config: Configuration):
-    if config.architecture == Arch.Aarch64:
-        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
-    else:
-        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Prekernel/Prekernel", "-initrd", "Kernel/Kernel"]
+    match config.architecture:
+        case Arch.Aarch64:
+            config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
+        case Arch.RISCV64:
+            config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
+        case Arch.x86_64:
+            config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Prekernel/Prekernel", "-initrd", "Kernel/Kernel"]
 
 
 def setup_machine_devices(config: Configuration):
@@ -712,6 +720,17 @@ def setup_machine_devices(config: Configuration):
             config.extra_arguments.extend(["-serial", "stdio"])
             config.qemu_cpu = None
             return
+
+    elif config.architecture == Arch.RISCV64:
+        config.qemu_machine = "virt"
+        config.cpu_count = None
+        config.vga_type = None
+        config.display_device = None
+        config.display_backend = None
+        config.audio_devices = []
+        config.extra_arguments.extend(["-serial", "stdio"])
+        config.qemu_cpu = None
+        return
 
     # Machine specific base setups
     match config.machine_type:
