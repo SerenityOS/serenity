@@ -36,6 +36,13 @@ void DOMRectList::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectListPrototype>(realm, "DOMRectList"_fly_string));
 }
 
+void DOMRectList::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& rect : m_rects)
+        visitor.visit(rect);
+}
+
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length
 u32 DOMRectList::length() const
 {

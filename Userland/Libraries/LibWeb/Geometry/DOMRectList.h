@@ -33,6 +33,7 @@ private:
     DOMRectList(JS::Realm&, Vector<JS::NonnullGCPtr<DOMRect>>);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     // ^Bindings::LegacyPlatformObject
     virtual bool supports_indexed_properties() const override { return true; }
