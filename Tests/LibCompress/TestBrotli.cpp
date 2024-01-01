@@ -6,8 +6,65 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/BitStream.h>
+#include <AK/MaybeOwned.h>
+#include <AK/MemoryStream.h>
 #include <LibCompress/Brotli.h>
 #include <LibCore/File.h>
+
+TEST_CASE(dictionary_use_after_uncompressed_block)
+{
+    // This input file contains one block of uncompressed data ("WHF") and then invokes
+    // a copy command that, together with the default distance, results in a dictionary
+    // lookup-and-copy ("categories").
+    // That in particular isn't a special combination, but dictionary indices depend on
+    // the count of bytes that have been decompressed so far, and we previously had
+    // a bug where uncompressed data was unaccounted for.
+
+    auto stream = make<AllocatingMemoryStream>();
+
+    // Brotli operates on bits instead of bytes, so we can't easily use a well-documented byte array.
+    // Instead, assemble the test case on-the-fly via a bit stream.
+    auto stream_in = LittleEndianOutputBitStream { MaybeOwned<Stream>(*stream) };
+    MUST(stream_in.write_bits(0b0u, 1u)); // WBITS = 16
+
+    MUST(stream_in.write_bits(0b0u, 1u));  // ISLAST = false
+    MUST(stream_in.write_bits(0b00u, 2u)); // MNIBBLES = 4
+    MUST(stream_in.write_bits(2u, 16u));   // MLEN - 1 = 2
+    MUST(stream_in.write_bits(0b1u, 1u));  // ISUNCOMPRESSED = true
+    MUST(stream_in.align_to_byte_boundary());
+    MUST(stream_in.write_until_depleted("WHF"sv.bytes())); // Literal uncompressed data
+
+    MUST(stream_in.write_bits(0b1u, 1u));    // ISLAST = true
+    MUST(stream_in.write_bits(0b0u, 1u));    // ISLASTEMPTY = false
+    MUST(stream_in.write_bits(0b00u, 2u));   // MNIBBLES = 4
+    MUST(stream_in.write_bits(9u, 16u));     // MLEN - 1 = 9
+    MUST(stream_in.write_bits(0b0u, 1u));    // NBLTYPESL = 1
+    MUST(stream_in.write_bits(0b0u, 1u));    // NBLTYPESI = 1
+    MUST(stream_in.write_bits(0b0u, 1u));    // NBLTYPESD = 1
+    MUST(stream_in.write_bits(0b00u, 2u));   // NPOSTFIX = 0
+    MUST(stream_in.write_bits(0b0000u, 4u)); // NDIRECT = 0
+    MUST(stream_in.write_bits(0b10u, 2u));   // CMODE[0] = 2
+    MUST(stream_in.write_bits(0b0u, 1u));    // NTREESL = 1
+    MUST(stream_in.write_bits(0b0u, 1u));    // NTREESD = 1
+    MUST(stream_in.write_bits(0b01u, 2u));   // literal_codes[0] hskip = 1
+    MUST(stream_in.write_bits(0b00u, 2u));   // literal_codes[0] number of symbols - 1 = 0
+    MUST(stream_in.write_bits(0u, 8u));      // literal_codes[0] symbols[0] = 0 (unused)
+    MUST(stream_in.write_bits(0b01u, 2u));   // iac_codes[0] hskip = 1
+    MUST(stream_in.write_bits(0b00u, 2u));   // iac_codes[0] number of symbols - 1 = 0
+    MUST(stream_in.write_bits(64u, 10u));    // iac_codes[0] symbols[0] = 64 (index = 1, insert_offset = 0, copy_offset = 0)
+    MUST(stream_in.write_bits(0b01u, 2u));   // distance_codes[0] hskip = 1
+    MUST(stream_in.write_bits(0b00u, 2u));   // distance_codes[0] number of symbols - 1 = 0
+    MUST(stream_in.write_bits(0u, 6u));      // distance_codes[0] symbols[0] = 0 (unused)
+
+    MUST(stream_in.align_to_byte_boundary());
+    MUST(stream_in.flush_buffer_to_stream());
+
+    auto decompressor = Compress::BrotliDecompressionStream { MaybeOwned<Stream>(*stream) };
+    auto buffer = TRY_OR_FAIL(decompressor.read_until_eof());
+
+    EXPECT_EQ(buffer.span(), "WHFcategories"sv.bytes());
+}
 
 static void run_test(StringView const file_name)
 {
