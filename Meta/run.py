@@ -694,6 +694,11 @@ def setup_kernel(config: Configuration):
 def setup_machine_devices(config: Configuration):
     # TODO: Maybe disable SPICE everwhere except the default machine?
 
+    if config.qemu_kind != QEMUKind.NativeWindows:
+        config.extra_arguments.extend(["-qmp", "unix:qmp-sock,server,nowait"])
+
+    config.extra_arguments.extend(["-name", "SerenityOS", "-d", "guest_errors"])
+
     # Architecture specifics.
     if config.architecture == Arch.Aarch64:
         config.qemu_machine = "raspi3b"
@@ -803,11 +808,6 @@ def setup_machine_devices(config: Configuration):
             config.network_default_device = f"{config.ethernet_device_type},netdev=br0"
         case MachineType.QEMUGrub | MachineType.QEMUExtLinux:
             config.kernel_cmdline = []
-
-    if config.qemu_kind != QEMUKind.NativeWindows:
-        config.extra_arguments.extend(["-qmp", "unix:qmp-sock,server,nowait"])
-
-    config.extra_arguments.extend(["-name", "SerenityOS", "-d", "guest_errors"])
 
 
 def assemble_arguments(config: Configuration) -> list[str | Path]:
