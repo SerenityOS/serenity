@@ -47,6 +47,8 @@ public:
     virtual bool is_paintable() const override;
     void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
+    virtual Optional<Gfx::Color> color_if_single_pixel_bitmap() const override;
+
     Function<void()> on_animate;
 
     JS::GCPtr<HTML::DecodedImageData> image_data() const;
