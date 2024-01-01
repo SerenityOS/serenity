@@ -355,24 +355,44 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         image.resolve_for_size(layout_node, image_rect.size());
 
-        while (image_y < css_clip_rect.bottom()) {
-            image_rect.set_y(image_y);
+        auto for_each_image_device_rect = [&](auto callback) {
+            while (image_y < css_clip_rect.bottom()) {
+                image_rect.set_y(image_y);
 
-            auto image_x = initial_image_x;
-            while (image_x < css_clip_rect.right()) {
-                image_rect.set_x(image_x);
-                auto image_device_rect = context.rounded_device_rect(image_rect);
-                if (image_device_rect != last_image_device_rect)
-                    image.paint(context, image_device_rect, image_rendering);
-                last_image_device_rect = image_device_rect;
-                if (!repeat_x)
+                auto image_x = initial_image_x;
+                while (image_x < css_clip_rect.right()) {
+                    image_rect.set_x(image_x);
+                    auto image_device_rect = context.rounded_device_rect(image_rect);
+                    callback(image_device_rect);
+                    if (!repeat_x)
+                        break;
+                    image_x += x_step;
+                }
+
+                if (!repeat_y)
                     break;
-                image_x += x_step;
+                image_y += y_step;
             }
+        };
 
-            if (!repeat_y)
-                break;
-            image_y += y_step;
+        if (auto color = image.color_if_single_pixel_bitmap(); color.has_value()) {
+            // OPTIMIZATION: If the image is a single pixel, we can just fill the whole area with it.
+            //               However, we must first figure out the real coverage area, taking repeat etc into account.
+
+            // FIXME: This could be written in a far more efficient way.
+            auto fill_rect = Optional<DevicePixelRect> {};
+            for_each_image_device_rect([&](auto const& image_device_rect) {
+                if (!fill_rect.has_value()) {
+                    fill_rect = image_device_rect;
+                } else {
+                    fill_rect = fill_rect->united(image_device_rect);
+                }
+            });
+            painter.fill_rect(fill_rect->to_type<int>(), color.value());
+        } else {
+            for_each_image_device_rect([&](auto const& image_device_rect) {
+                image.paint(context, image_device_rect, image_rendering);
+            });
         }
     }
 }
