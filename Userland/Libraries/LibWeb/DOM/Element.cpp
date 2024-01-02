@@ -224,13 +224,13 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Option
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
-WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& qualified_name, FlyString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& qualified_name, String const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
-    set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());
+    set_attribute_value(extracted_qualified_name.local_name(), value, extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());
 
     return {};
 }
@@ -242,7 +242,7 @@ void Element::append_attribute(Attr& attribute)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
-void Element::set_attribute_value(FlyString const& local_name, ByteString const& value, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
+void Element::set_attribute_value(FlyString const& local_name, String const& value, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
 {
     // 1. Let attribute be the result of getting an attribute given namespace, localName, and element.
     auto* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
@@ -253,14 +253,14 @@ void Element::set_attribute_value(FlyString const& local_name, ByteString const&
     if (!attribute) {
         QualifiedName name { local_name, prefix, namespace_ };
 
-        auto new_attribute = Attr::create(document(), move(name), MUST(String::from_byte_string(value)));
+        auto new_attribute = Attr::create(document(), move(name), value);
         m_attributes->append_attribute(new_attribute);
 
         return;
     }
 
     // 3. Change attribute to value.
-    attribute->change_attribute(MUST(String::from_byte_string(value)));
+    attribute->change_attribute(value);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributenode
