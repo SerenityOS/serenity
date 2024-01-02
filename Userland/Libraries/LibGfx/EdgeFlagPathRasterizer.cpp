@@ -262,7 +262,7 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
             else
                 active_edges = current_edge;
         } else {
-            // This egde sticks around for a few more scanlines.
+            // This edge sticks around for a few more scanlines.
             plot_edge(*current_edge, 0, SamplesPerPixel, edge_extent);
             prev_edge = current_edge;
             current_edge = current_edge->next_edge;
