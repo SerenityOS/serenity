@@ -4,7 +4,7 @@
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -321,14 +321,14 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
     } else if (!optional) {
         if (!parameter.type->is_nullable()) {
             scoped_generator.append(R"~~~(
-    String @cpp_name@;
+    @string_type@ @cpp_name@;
     if (!@legacy_null_to_empty_string@ || !@js_name@@js_suffix@.is_null()) {
         @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
     }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    Optional<String> @cpp_name@;
+    Optional<@string_type@> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish())
         @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
@@ -337,11 +337,11 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
         bool may_be_null = !optional_default_value.has_value() || parameter.type->is_nullable() || optional_default_value.value() == "null";
         if (may_be_null) {
             scoped_generator.append(R"~~~(
-    Optional<String> @cpp_name@;
+    Optional<@string_type@> @cpp_name@;
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    String @cpp_name@;
+    @string_type@ @cpp_name@;
 )~~~");
         }
 
@@ -352,7 +352,7 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
     })~~~");
         if (!may_be_null) {
             scoped_generator.append(R"~~~( else {
-        @cpp_name@ = MUST(String::from_utf8(@parameter.optional_default_value@sv));
+        @cpp_name@ = MUST(@string_type@::from_utf8(@parameter.optional_default_value@sv));
     }
 )~~~");
         } else {
@@ -363,7 +363,7 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, ByteString const& js_name, ByteString const& js_suffix, ByteString const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<ByteString> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, ByteString const& js_name, ByteString const& js_suffix, ByteString const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<ByteString> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0, bool string_to_fly_string = false)
 {
     auto scoped_generator = generator.fork();
     auto acceptable_cpp_name = make_input_acceptable_cpp(cpp_name);
@@ -371,6 +371,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("js_name", js_name);
     scoped_generator.set("js_suffix", js_suffix);
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
+    scoped_generator.set("string_type", string_to_fly_string ? "FlyString" : "String");
     scoped_generator.set("parameter.type.name", parameter.type->name());
 
     if (optional_default_value.has_value())
@@ -1532,7 +1533,8 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", ByteString::number(argument_index), parameter.name.to_snakecase(), interface, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic, 0);
+        bool fly_string = parameter.extended_attributes.contains("FlyString");
+        generate_to_cpp(generator, parameter, "arg", ByteString::number(argument_index), parameter.name.to_snakecase(), interface, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic, 0, fly_string);
         ++argument_index;
     }
 
