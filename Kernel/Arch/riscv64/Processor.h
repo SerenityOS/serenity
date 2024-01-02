@@ -211,7 +211,8 @@ ALWAYS_INLINE void ProcessorBase<T>::wait_check()
 template<typename T>
 ALWAYS_INLINE u64 ProcessorBase<T>::read_cpu_counter()
 {
-    TODO_RISCV64();
+    // FIXME
+    return 0;
 }
 
 }

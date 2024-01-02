@@ -209,7 +209,12 @@ constexpr T rint(T x)
 #elif ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintx, x);
 #endif
-    TODO();
+    i64 r;
+    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
+    asm("fcvt.l.d %0, %1, dyn"
+        : "=r"(r)
+        : "f"(x));
+    return static_cast<double>(r);
 }
 
 template<FloatingPoint T>
@@ -426,7 +431,7 @@ constexpr T fmod(T x, T y)
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
-    TODO();
+    return 0;
 #    endif
     if constexpr (IsSame<T, long double>)
         return __builtin_fmodl(x, y);
@@ -455,7 +460,7 @@ constexpr T remainder(T x, T y)
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
-    TODO();
+    return 0;
 #    endif
     if constexpr (IsSame<T, long double>)
         return __builtin_remainderl(x, y);
@@ -497,7 +502,28 @@ constexpr T sqrt(T x)
     return res;
 #elif ARCH(AARCH64)
     AARCH64_INSTRUCTION(fsqrt, x);
+#elif ARCH(RISCV64)
+    if constexpr (IsSame<T, float>) {
+        float res;
+        asm("fsqrt.s %0, %1"
+            : "=f"(res)
+            : "f"(x));
+        return res;
+    }
+    if constexpr (IsSame<T, double>) {
+        double res;
+        asm("fsqrt.d %0, %1"
+            : "=f"(res)
+            : "f"(x));
+        return res;
+    }
+    if constexpr (IsSame<T, long double>)
+        TODO();
 #else
+#    if defined(AK_OS_SERENITY)
+    // TODO: Add implementation for this function.
+    return 0;
+#    endif
     return __builtin_sqrt(x);
 #endif
 }
@@ -672,7 +698,7 @@ constexpr T atan(T value)
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
-    TODO();
+    return 0;
 #    endif
     return __builtin_atan(value);
 #endif
@@ -731,7 +757,7 @@ constexpr T atan2(T y, T x)
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
-    TODO();
+    return 0;
 #    endif
     return __builtin_atan2(y, x);
 #endif
@@ -899,7 +925,7 @@ constexpr T exp(T exponent)
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
-    TODO();
+    return 0;
 #    endif
     return __builtin_exp(exponent);
 #endif
@@ -925,7 +951,7 @@ constexpr T exp2(T exponent)
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
-    TODO();
+    return 0;
 #    endif
     return __builtin_exp2(exponent);
 #endif

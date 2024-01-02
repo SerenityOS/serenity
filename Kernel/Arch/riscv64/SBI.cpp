@@ -60,6 +60,23 @@ static SBIErrorOr<long> sbi_ecall2(EID extension_id, u32 function_id, unsigned l
     return static_cast<SBIError>(a0);
 }
 
+static SBIErrorOr<long> sbi_ecall3(EID extension_id, u32 function_id, unsigned long arg0, unsigned long arg1, unsigned long arg2)
+{
+    register unsigned long a0 asm("a0") = arg0;
+    register unsigned long a1 asm("a1") = arg1;
+    register unsigned long a2 asm("a2") = arg2;
+    register unsigned long a6 asm("a6") = function_id;
+    register unsigned long a7 asm("a7") = to_underlying(extension_id);
+    asm volatile("ecall"
+                 : "+r"(a0), "+r"(a1)
+                 : "r"(a0), "r"(a1), "r"(a2), "r"(a6), "r"(a7)
+                 : "memory");
+    if (a0 == to_underlying(SBIError::Success))
+        return static_cast<long>(a1);
+
+    return static_cast<SBIError>(a0);
+}
+
 namespace Base {
 
 SBIErrorOr<SpecificationVersion> get_spec_version()
@@ -142,6 +159,11 @@ LegacySBIErrorOr<void> console_putchar(int ch)
     return err;
 }
 
+long console_getchar()
+{
+    return sbi_legacy_ecall0(LegacyEID::ConsoleGetchar);
+}
+
 void shutdown()
 {
     sbi_legacy_ecall0(LegacyEID::SystemShutdown);
@@ -176,6 +198,11 @@ SBIError system_reset(ResetType reset_type, ResetReason reset_reason)
 }
 
 namespace DBCN {
+
+SBIErrorOr<long> debug_console_read(unsigned long num_bytes, unsigned long base_addr_lo, unsigned long base_addr_hi)
+{
+    return SBI::sbi_ecall3(EID::DebugConsole, to_underlying(FID::DebugConsoleRead), num_bytes, base_addr_lo, base_addr_hi);
+}
 
 SBIErrorOr<void> debug_console_write_byte(u8 byte)
 {

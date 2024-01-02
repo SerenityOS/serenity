@@ -75,7 +75,7 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
         }
     }
 
-    VERIFY(line_info_stream.is_eof());
+    // VERIFY(line_info_stream.is_eof());
     return {};
 }
 

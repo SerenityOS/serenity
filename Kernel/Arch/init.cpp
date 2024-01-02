@@ -58,6 +58,11 @@
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/kstdio.h>
 
+#include <Kernel/API/MousePacket.h>
+#include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
+#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/HID/PS2/KeyboardDevice.h>
+
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
 #    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
@@ -67,6 +72,8 @@
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #    include <Kernel/Arch/aarch64/RPi/MiniUART.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/SBI.h>
 #endif
 
 // Defined in the linker script
@@ -407,6 +414,68 @@ void init_stage2(void*)
     VMWareBackdoor::the(); // don't wait until first mouse packet
 #endif
     MUST(HIDManagement::initialize());
+
+    auto [_, hack_mouse_thread] = MUST(Process::create_kernel_process("Hack Mouse"sv, [] {
+        StringBuilder buffer;
+        auto hack_mouse = MUST(MouseDevice::try_to_initialize());
+
+        class DummySerialController final : public SerialIOController {
+            virtual ErrorOr<void> send_command(PortIndex, DeviceCommand) override { return {}; }
+            virtual ErrorOr<void> send_command(PortIndex, DeviceCommand, u8) override { return {}; }
+
+            virtual ErrorOr<void> reset_device(PortIndex) override { return {}; }
+            virtual ErrorOr<u8> read_from_device(PortIndex) override { return 0; }
+            virtual ErrorOr<void> prepare_for_input(PortIndex) override { return {}; }
+        };
+
+        DummySerialController dummy_serial_controller;
+
+        auto hack_keyboard = MUST(KeyboardDevice::try_to_initialize());
+        auto hack_ps2_keyboard = MUST(PS2KeyboardDevice::try_to_initialize(dummy_serial_controller, 0, ScanCodeSet::Set1, *hack_keyboard));
+        HIDManagement::the().attach_standalone_hid_device(hack_mouse);
+        HIDManagement::the().attach_standalone_hid_device(hack_keyboard);
+
+        while (!Process::current().is_dying()) {
+            for (;;) {
+                auto c = SBI::Legacy::console_getchar();
+                if (c == -1)
+                    break;
+
+                buffer.append(c);
+            }
+
+            if (buffer.string_view().ends_with('F')) {
+                buffer.string_view().for_each_split_view('F', SplitBehavior::Nothing, [&](StringView raw_packet_str) {
+                    auto const raw_packet = raw_packet_str.split_view(',');
+                    if (raw_packet.size() != 4)
+                        return;
+
+                    auto const maybe_x = raw_packet[0].to_number<int>();
+                    auto const maybe_y = raw_packet[1].to_number<int>();
+                    auto const maybe_buttons = raw_packet[2].to_number<int>();
+                    auto const maybe_scan_code_byte = raw_packet[3].to_number<int>();
+                    if (!maybe_x.has_value() || !maybe_y.has_value() || !maybe_buttons.has_value() || !maybe_scan_code_byte.has_value())
+                        return;
+
+                    MousePacket packet;
+                    packet.x = maybe_x.value();
+                    packet.y = maybe_y.value();
+                    packet.buttons = maybe_buttons.value();
+                    hack_mouse->handle_mouse_packet_input_event(packet);
+
+                    auto const scan_code_byte = maybe_scan_code_byte.value();
+                    if (scan_code_byte != 0)
+                        hack_ps2_keyboard->handle_byte_read_from_serial_input(scan_code_byte);
+                });
+                buffer.clear();
+            }
+
+            (void)Thread::current()->sleep(Duration::from_milliseconds(1));
+        }
+        Process::current().sys$exit(0);
+        VERIFY_NOT_REACHED();
+    }));
+    hack_mouse_thread->set_priority(THREAD_PRIORITY_HIGH);
 
     GraphicsManagement::the().initialize();
     ConsoleManagement::the().initialize();

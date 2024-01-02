@@ -135,6 +135,10 @@ LegacySBIErrorOr<void> set_timer(u64 stime_value);
 // Write data present in ch to debug console.
 LegacySBIErrorOr<void> console_putchar(int ch);
 
+// Console Getchar (EID #0x02)
+// Read a byte from debug console.
+long console_getchar();
+
 // System Shutdown (EID #0x08)
 // Puts all the harts to shutdown state from supervisor point of view.
 // This SBI call doesn’t return irrespective whether it succeeds or fails.
@@ -192,6 +196,10 @@ enum class FID : i32 {
     DebugConsoleRead = 1,
     DebugConsoleWriteByte = 2,
 };
+
+// Console Read (FID #1)
+// Read bytes from the debug console into an output memory.
+SBIErrorOr<long> debug_console_read(unsigned long num_bytes, unsigned long base_addr_lo, unsigned long base_addr_hi);
 
 // Console Write Byte (FID #2)
 // Write a single byte to the debug console.
