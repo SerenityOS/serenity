@@ -352,6 +352,7 @@ PDFErrorOr<ByteString> Parser::parse_hex_string()
     StringBuilder builder;
 
     while (true) {
+        m_reader.consume_whitespace();
         if (m_reader.matches('>')) {
             m_reader.consume();
             return builder.to_byte_string();
@@ -364,7 +365,6 @@ PDFErrorOr<ByteString> Parser::parse_hex_string()
                 if (ch == '>') {
                     // The hex string contains an odd number of characters, and the last character
                     // is assumed to be '0'
-                    m_reader.consume();
                     hex_value *= 16;
                     builder.append(static_cast<char>(hex_value));
                     return builder.to_byte_string();

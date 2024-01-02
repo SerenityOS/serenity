@@ -15,6 +15,27 @@
 #include <LibTest/Macros.h>
 #include <LibTest/TestCase.h>
 
+TEST_CASE(parse_value)
+{
+    // document isn't really used for anything, only to check there's no security_handler.
+    auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+
+    auto contents = "<50607><10\n>"sv;
+    PDF::Parser parser(contents.bytes());
+    parser.set_document(document->make_weak_ptr());
+
+    auto value1 = MUST(parser.parse_value(PDF::Parser::CanBeIndirectValue::No));
+    auto string1 = value1.get<NonnullRefPtr<PDF::Object>>()->cast<PDF::StringObject>();
+    EXPECT(string1->is_binary());
+    EXPECT_EQ(string1->string(), "\x50\x60\x70"sv);
+
+    auto value2 = MUST(parser.parse_value(PDF::Parser::CanBeIndirectValue::No));
+    auto string2 = value2.get<NonnullRefPtr<PDF::Object>>()->cast<PDF::StringObject>();
+    EXPECT(string2->is_binary());
+    EXPECT_EQ(string2->string(), "\x10"sv);
+}
+
 TEST_CASE(linearized_pdf)
 {
     auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
