@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023-2024, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -177,8 +177,8 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
 
     auto for_each_sample = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent, auto callback) {
         for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
-            int xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
-            if (xi < 0 || xi >= (int)m_scanline.size()) {
+            auto xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
+            if (xi < 0 || size_t(xi) >= m_scanline.size()) {
                 // FIXME: For very low dxdy values, floating point error can push the sample outside the scanline.
                 // This does not seem to make a visible difference most of the time (and is more likely from generated
                 // paths, such as this 3D canvas demo: https://www.kevs3d.co.uk/dev/html5logo/).
@@ -204,7 +204,7 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
         for (int scanline = min_scanline; scanline <= max_scanline; scanline++) {
             auto edge_extent = empty_edge_extent();
             active_edges = plot_edges_for_scanline(scanline, plot_edge, edge_extent, active_edges);
-            accumulate_even_odd_scanline(painter, scanline, edge_extent, color_or_function);
+            write_scanline<Painter::WindingRule::EvenOdd>(painter, scanline, edge_extent, color_or_function);
         }
     } else {
         VERIFY(winding_rule == Painter::WindingRule::Nonzero);
@@ -222,23 +222,30 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
         for (int scanline = min_scanline; scanline <= max_scanline; scanline++) {
             auto edge_extent = empty_edge_extent();
             active_edges = plot_edges_for_scanline(scanline, plot_edge, edge_extent, active_edges);
-            accumulate_non_zero_scanline(painter, scanline, edge_extent, color_or_function);
+            write_scanline<Painter::WindingRule::Nonzero>(painter, scanline, edge_extent, color_or_function);
         }
+    }
+}
+
+ALWAYS_INLINE static auto switch_on_color_or_function(auto& color_or_function, auto color_case, auto function_case)
+{
+    using ColorOrFunction = decltype(color_or_function);
+    constexpr bool has_constant_color = IsSame<RemoveCVReference<ColorOrFunction>, Color>;
+    if constexpr (has_constant_color) {
+        return color_case(color_or_function);
+    } else {
+        return function_case(color_or_function);
     }
 }
 
 template<unsigned SamplesPerPixel>
 Color EdgeFlagPathRasterizer<SamplesPerPixel>::scanline_color(int scanline, int offset, u8 alpha, auto& color_or_function)
 {
-    using ColorOrFunction = decltype(color_or_function);
-    constexpr bool has_constant_color = IsSame<RemoveCVReference<ColorOrFunction>, Color>;
-    auto color = [&] {
-        if constexpr (has_constant_color) {
-            return color_or_function;
-        } else {
-            return color_or_function({ offset, scanline });
-        }
-    }();
+    auto color = switch_on_color_or_function(
+        color_or_function, [](Color color) { return color; },
+        [&](auto& function) {
+            return function({ offset, scanline });
+        });
     return color.with_alpha(color.alpha() * alpha / 255);
 }
 
@@ -302,32 +309,18 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::write_pixel(Painter& painter, int scanline, int offset, SampleType sample, auto& color_or_function)
-{
-    auto dest = IntPoint { offset, scanline } + m_blit_origin;
-    if (!m_clip.contains_horizontally(dest.x()))
-        return;
-    // FIXME: We could detect runs of full coverage and use fast_u32_fills for those rather than many set_pixel() calls.
-    auto coverage = SubpixelSample::compute_coverage(sample);
-    if (coverage) {
-        auto paint_color = scanline_color(scanline, offset, coverage_to_alpha(coverage), color_or_function);
-        painter.set_physical_pixel(dest, paint_color, true);
-    }
-}
-
-template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(EdgeExtent edge_extent, auto sample_callback)
 {
     SampleType sample = 0;
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
         sample ^= m_scanline[x];
-        write_pixel(painter, scanline, x, sample, color_or_function);
+        sample_callback(x, sample);
         m_scanline[x] = 0;
     }
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeExtent edge_extent, auto sample_callback)
 {
     SampleType sample = 0;
     WindingCounts sum_winding = {};
@@ -348,10 +341,82 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(Paint
                 }
             }
         }
-        write_pixel(painter, scanline, x, sample, color_or_function);
+        sample_callback(x, sample);
         m_scanline[x] = 0;
         m_windings[x] = {};
     }
+}
+
+template<unsigned SamplesPerPixel>
+template<Painter::WindingRule WindingRule, typename Callback>
+void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_scanline(EdgeExtent edge_extent, Callback callback)
+{
+    if constexpr (WindingRule == Painter::WindingRule::EvenOdd)
+        accumulate_even_odd_scanline(edge_extent, callback);
+    else
+        accumulate_non_zero_scanline(edge_extent, callback);
+}
+
+template<unsigned SamplesPerPixel>
+void EdgeFlagPathRasterizer<SamplesPerPixel>::write_pixel(Painter& painter, int scanline, int offset, SampleType sample, auto& color_or_function)
+{
+    if (!sample)
+        return;
+    auto dest = IntPoint { offset, scanline } + m_blit_origin;
+    if (!m_clip.contains_horizontally(dest.x()))
+        return;
+    auto coverage = SubpixelSample::compute_coverage(sample);
+    auto paint_color = scanline_color(scanline, offset, coverage_to_alpha(coverage), color_or_function);
+    painter.set_physical_pixel(dest, paint_color, true);
+}
+
+template<unsigned SamplesPerPixel>
+void EdgeFlagPathRasterizer<SamplesPerPixel>::fast_fill_solid_color_span(Painter& painter, int scanline, int start, int end, Color color)
+{
+    auto dest_y = scanline + m_blit_origin.y();
+    auto start_x = max(m_clip.left(), start + m_blit_origin.x());
+    auto end_x = min(m_clip.right() - 1, end + m_blit_origin.x());
+    if (start_x > end_x)
+        return;
+    auto* dest_ptr = painter.target()->scanline(dest_y) + start_x;
+    fast_u32_fill(dest_ptr, color.value(), end_x - start_x + 1);
+}
+
+template<unsigned SamplesPerPixel>
+template<Painter::WindingRule WindingRule>
+void EdgeFlagPathRasterizer<SamplesPerPixel>::write_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
+{
+    // Simple case: Handle each pixel individually.
+    // Used for PaintStyle fills and semi-transparent colors.
+    auto write_scanline_pixelwise = [&](auto& color_or_function) {
+        accumulate_scanline<WindingRule>(edge_extent, [&](int x, SampleType sample) {
+            write_pixel(painter, scanline, x, sample, color_or_function);
+        });
+    };
+    // Fast fill case: Track spans of solid color and set the entire span via a fast_u32_fill().
+    // Used for opaque colors (i.e. alpha == 255).
+    auto write_scanline_with_fast_fills = [&](Color color) {
+        if (color.alpha() != 255)
+            return write_scanline_pixelwise(color);
+        constexpr SampleType full_converage = NumericLimits<SampleType>::max();
+        int full_converage_count = 0;
+        accumulate_scanline<WindingRule>(edge_extent, [&](int x, SampleType sample) {
+            if (sample == full_converage) {
+                full_converage_count++;
+                return;
+            } else {
+                write_pixel(painter, scanline, x, sample, color);
+            }
+            if (full_converage_count > 0) {
+                fast_fill_solid_color_span(painter, scanline, x - full_converage_count, x - 1, color);
+                full_converage_count = 0;
+            }
+        });
+        if (full_converage_count > 0)
+            fast_fill_solid_color_span(painter, scanline, edge_extent.max_x - full_converage_count, edge_extent.max_x, color);
+    };
+    switch_on_color_or_function(
+        color_or_function, write_scanline_with_fast_fills, write_scanline_pixelwise);
 }
 
 static IntSize path_bounds(Gfx::Path const& path)
