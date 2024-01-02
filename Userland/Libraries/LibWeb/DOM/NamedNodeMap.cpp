@@ -91,14 +91,9 @@ Attr const* NamedNodeMap::get_named_item(FlyString const& qualified_name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-getnameditemns
-Attr const* NamedNodeMap::get_named_item_ns(Optional<String> const& namespace_, FlyString const& local_name) const
+Attr const* NamedNodeMap::get_named_item_ns(Optional<FlyString> const& namespace_, FlyString const& local_name) const
 {
-    // FIXME: This conversion is quite ugly.
-    StringView namespace_view;
-    if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
-
-    return get_attribute_ns(namespace_view, local_name);
+    return get_attribute_ns(namespace_, local_name);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditem
@@ -128,15 +123,10 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(FlyString const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditemns
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(Optional<String> const& namespace_, FlyString const& local_name)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(Optional<FlyString> const& namespace_, FlyString const& local_name)
 {
-    // FIXME: This conversion is quite ugly.
-    StringView namespace_view;
-    if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
-
     // 1. Let attr be the result of removing an attribute given namespace, localName, and element.
-    auto const* attribute = remove_attribute_ns(namespace_view, local_name);
+    auto const* attribute = remove_attribute_ns(namespace_, local_name);
 
     // 2. If attr is null, then throw a "NotFoundError" DOMException.
     if (!attribute)
@@ -180,42 +170,25 @@ Attr const* NamedNodeMap::get_attribute(FlyString const& qualified_name, size_t*
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
-Attr const* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index) const
-{
-    // FIXME: We shouldn't need to do any conversion when looking up in the node map.
-    StringView namespace_view;
-    if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
-
-    return get_attribute_ns(namespace_view, local_name, item_index);
-}
-
-// https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
 Attr* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index)
 {
     return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute_ns(namespace_, local_name, item_index));
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
-Attr* NamedNodeMap::get_attribute_ns(StringView namespace_, FlyString const& local_name, size_t* item_index)
-{
-    return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute_ns(namespace_, local_name, item_index));
-}
-
-// https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
-Attr const* NamedNodeMap::get_attribute_ns(StringView namespace_, FlyString const& local_name, size_t* item_index) const
+Attr const* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index) const
 {
     if (item_index)
         *item_index = 0;
 
     // 1. If namespace is the empty string, then set it to null.
-    if (namespace_.is_empty())
-        namespace_ = {};
+    Optional<FlyString> normalized_namespace;
+    if (namespace_.has_value() && namespace_->is_empty())
+        normalized_namespace = namespace_;
 
     // 2. Return the attribute in element’s attribute list whose namespace is namespace and local name is localName, if any; otherwise null.
     for (auto const& attribute : m_attributes) {
-        // FIXME: This is quite awkard. We should probably be taking an Optional<FlyString> for namespace here.
-        if ((!attribute->namespace_uri().has_value() == namespace_.is_null() || attribute->namespace_uri() == namespace_) && attribute->local_name() == local_name)
+        if (attribute->namespace_uri() == normalized_namespace && attribute->local_name() == local_name)
             return attribute.ptr();
         if (item_index)
             ++(*item_index);
@@ -320,7 +293,7 @@ Attr const* NamedNodeMap::remove_attribute(FlyString const& qualified_name)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-namespace
-Attr const* NamedNodeMap::remove_attribute_ns(StringView namespace_, FlyString const& local_name)
+Attr const* NamedNodeMap::remove_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name)
 {
     size_t item_index = 0;
 

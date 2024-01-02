@@ -30,14 +30,14 @@ interface Element : Node {
 
     DOMString? getAttribute(DOMString qualifiedName);
     [CEReactions] undefined setAttribute(DOMString qualifiedName, DOMString value);
-    [CEReactions] undefined setAttributeNS(DOMString? namespace , DOMString qualifiedName , DOMString value);
+    [CEReactions] undefined setAttributeNS([FlyString] DOMString? namespace , [FlyString] DOMString qualifiedName , DOMString value);
     [CEReactions] Attr? setAttributeNode(Attr attr);
     [CEReactions] Attr? setAttributeNodeNS(Attr attr);
 
     [CEReactions] undefined removeAttribute(DOMString qualifiedName);
     [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
     boolean hasAttribute(DOMString qualifiedName);
-    boolean hasAttributeNS(DOMString? namespace, DOMString localName);
+    boolean hasAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     boolean hasAttributes();
     [SameObject] readonly attribute NamedNodeMap attributes;
     sequence<DOMString> getAttributeNames();
