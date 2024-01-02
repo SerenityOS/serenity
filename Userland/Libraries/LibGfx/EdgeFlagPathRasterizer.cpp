@@ -322,11 +322,9 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeE
                     auto winding = m_windings[x].counts[y_sub];
                     auto previous_winding_count = sum_winding.counts[y_sub];
                     sum_winding.counts[y_sub] += winding;
-                    // Toggle fill on change to/from zero
-                    if ((previous_winding_count == 0 && sum_winding.counts[y_sub] != 0)
-                        || (sum_winding.counts[y_sub] == 0 && previous_winding_count != 0)) {
+                    // Toggle fill on change to/from zero.
+                    if (bool(previous_winding_count) ^ bool(sum_winding.counts[y_sub]))
                         sample ^= subpixel_bit;
-                    }
                 }
             }
         }
