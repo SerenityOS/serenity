@@ -468,11 +468,11 @@ static DecoderErrorOr<TrackEntry> parse_track_entry(Streamer& streamer)
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackType attribute: {}", to_underlying(track_entry.track_type()));
             break;
         case TRACK_LANGUAGE_ID:
-            track_entry.set_language(TRY_READ(streamer.read_string()));
+            track_entry.set_language(DECODER_TRY_ALLOC(FlyString::from_utf8(TRY_READ(streamer.read_string()).view())));
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's Language attribute: {}", track_entry.language());
             break;
         case TRACK_CODEC_ID:
-            track_entry.set_codec_id(TRY_READ(streamer.read_string()));
+            track_entry.set_codec_id(DECODER_TRY_ALLOC(FlyString::from_utf8(TRY_READ(streamer.read_string()).view())));
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's CodecID attribute: {}", track_entry.codec_id());
             break;
         case TRACK_TIMESTAMP_SCALE_ID:

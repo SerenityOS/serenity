@@ -46,7 +46,7 @@ private:
     };
 
     DecoderErrorOr<TrackStatus*> get_track_status(Track track);
-    CodecID get_codec_id_for_string(DeprecatedFlyString const& codec_id);
+    CodecID get_codec_id_for_string(FlyString const& codec_id);
 
     Reader m_reader;
 

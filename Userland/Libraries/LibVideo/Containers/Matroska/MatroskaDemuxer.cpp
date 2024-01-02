@@ -71,7 +71,7 @@ DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(
     return &m_track_statuses.get(track).release_value();
 }
 
-CodecID MatroskaDemuxer::get_codec_id_for_string(DeprecatedFlyString const& codec_id)
+CodecID MatroskaDemuxer::get_codec_id_for_string(FlyString const& codec_id)
 {
     dbgln_if(MATROSKA_DEBUG, "Codec ID: {}", codec_id);
     if (codec_id == "V_VP8")
