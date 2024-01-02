@@ -300,7 +300,8 @@ auto modulo(T x, U y)
     if constexpr (IsFloatingPoint<T> || IsFloatingPoint<U>) {
         if constexpr (IsFloatingPoint<U>)
             VERIFY(isfinite(y));
-        return fmod(fmod(x, y) + y, y);
+        auto r = fmod(x, y);
+        return r < 0 ? r + y : r;
     } else {
         return ((x % y) + y) % y;
     }
