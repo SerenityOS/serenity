@@ -96,36 +96,32 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
 
     paintable.for_each_child([&context, phase](auto& child) {
         auto* stacking_context = child.stacking_context_rooted_here();
-
-        if (child.is_positioned()) {
-            // If `child` is positioned with a z-index of `0` or `auto`, skip over it.
-            auto const& z_index = child.computed_values().z_index();
-            if (!z_index.has_value() || z_index.value() == 0)
-                return;
-
-            // Skip positioned children with stacking contexts, these are handled in paint_internal().
-            if (stacking_context)
-                return;
-        }
-
-        if (stacking_context) {
-            // FIXME: This may not be fully correct with respect to the paint phases.
-            if (phase == StackingContextPaintPhase::Foreground)
-                paint_child(context, *stacking_context);
-            // Note: Don't further recuse into descendants as paint_child() will do that.
-            return;
-        }
+        auto const& z_index = child.computed_values().z_index();
 
         // NOTE: Grid specification https://www.w3.org/TR/css-grid-2/#z-order says that grid items should be treated
         //       the same way as CSS2 defines for inline-blocks:
         //       "For each one of these, treat the element as if it created a new stacking context, but any positioned
         //       descendants and descendants which actually create a new stacking context should be considered part of
         //       the parent stacking context, not this new one."
-        auto should_be_treated_as_stacking_context = child.layout_node().is_grid_item();
+        auto should_be_treated_as_stacking_context = child.layout_node().is_grid_item() && !z_index.has_value();
         if (should_be_treated_as_stacking_context) {
             // FIXME: This may not be fully correct with respect to the paint phases.
             if (phase == StackingContextPaintPhase::Foreground)
                 paint_node_as_stacking_context(child, context);
+            return;
+        }
+
+        if (stacking_context && z_index.has_value())
+            return;
+        if (child.is_positioned() && !z_index.has_value())
+            return;
+
+        if (stacking_context) {
+            // FIXME: This may not be fully correct with respect to the paint phases.
+            if (phase == StackingContextPaintPhase::Foreground) {
+                paint_child(context, *stacking_context);
+            }
+            // Note: Don't further recurse into descendants as paint_child() will do that.
             return;
         }
 
@@ -207,9 +203,8 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     // Stacking contexts formed by positioned descendants with negative z-indices (excluding 0) in z-index order
     // (most negative first) then tree order. (step 3)
+    // NOTE: This doesn't check if a descendant is positioned as modern CSS allows for alternative methods to establish stacking contexts.
     for (auto* child : m_children) {
-        if (!child->paintable_box().is_positioned())
-            continue;
         if (child->paintable_box().computed_values().z_index().has_value() && child->paintable_box().computed_values().z_index().value() < 0)
             paint_child(context, *child);
     }
@@ -270,10 +265,8 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     // Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order
     // (smallest first) then tree order. (Step 9)
+    // NOTE: This doesn't check if a descendant is positioned as modern CSS allows for alternative methods to establish stacking contexts.
     for (auto* child : m_children) {
-        if (!child->paintable_box().is_positioned())
-            continue;
-
         PaintableBox const* nearest_scrollable_ancestor = child->paintable_box().nearest_scrollable_ancestor_within_stacking_context();
 
         if (nearest_scrollable_ancestor)
