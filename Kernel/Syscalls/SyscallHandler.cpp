@@ -108,7 +108,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 #elif ARCH(AARCH64)
     // FIXME: Implement the security mechanism for aarch64
 #elif ARCH(RISCV64)
-    // FIXME: Implement the security mechanism for riscv64
+    RISCV64::CSR::clear_bits(RISCV64::CSR::Address::SSTATUS, 1 << to_underlying(RISCV64::CSR::SSTATUS::Offset::SUM));
 #else
 #    error Unknown architecture
 #endif

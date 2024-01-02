@@ -77,12 +77,24 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.x[2] = (FlatPtr)params.stack_location;
     regs.x[3] = (FlatPtr)params.stack_size;
 #elif ARCH(RISCV64)
-    TODO_RISCV64();
+    regs.satp = address_space().with([](auto& space) { return space->page_directory().satp(); });
+
+    // Set up the argument registers expected by pthread_create_helper.
+    regs.x[9] = (FlatPtr)params.entry;
+    regs.x[10] = (FlatPtr)params.entry_argument;
+    regs.x[11] = (FlatPtr)params.stack_location;
+    regs.x[12] = (FlatPtr)params.stack_size;
 #else
 #    error Unknown architecture
 #endif
 
     TRY(thread->make_thread_specific_region({}));
+
+#if ARCH(RISCV64)
+    // FIXME: HACK: we can't use Processor::set_thread_specific_data()
+    //              because Processor::current_thread() does not return the correct thread, so set it manually
+    regs.x[3] = thread->thread_specific_data().get();
+#endif
 
     PerformanceManager::add_thread_created_event(*thread);
 

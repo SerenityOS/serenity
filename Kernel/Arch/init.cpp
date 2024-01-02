@@ -221,7 +221,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
         {
             sizeof(struct multiboot_mmap_entry) - sizeof(u32),
             (u64)0x8020'0000,
-            (u64)128 * MiB - 0x20'0000,
+            (u64)1 * GiB - 0x20'0000,
             MULTIBOOT_MEMORY_AVAILABLE,
         }
     };
