@@ -15,19 +15,8 @@
 #    pragma GCC optimize("O3")
 #endif
 
-// This a pretty naive implementation of edge-flag scanline AA.
-// The paper lists many possible optimizations, maybe implement one? (FIXME!)
+// This an implementation of edge-flag scanline AA, as described in:
 // https://mlab.taik.fi/~kkallio/antialiasing/EdgeFlagAA.pdf
-// This currently implements:
-//      - The scanline buffer optimization (only allocate one scanline)
-// Possible other optimizations according to the paper:
-//      - Using fixed point numbers
-//      - Edge tracking
-//      - Mask tracking
-//      - Loop unrolling (compilers might handle this better now, the paper is from 2007)
-// Optimizations I think we could add:
-//      - Using fast_u32_fills() for runs of solid colors
-//      - Clipping the plotted edges earlier
 
 namespace Gfx {
 
