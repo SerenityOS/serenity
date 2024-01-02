@@ -13,6 +13,10 @@ let consoleGroupNextID = 0;
 let consoleHistory = [];
 let consoleHistoryIndex = 0;
 
+const decodeBase64 = encoded => {
+    return new TextDecoder().decode(Uint8Array.from(atob(encoded), c => c.charCodeAt(0)));
+};
+
 const beginSplitViewDrag = () => {
     let inspectorTop = document.getElementById("inspector-top");
     let inspectorBottom = document.getElementById("inspector-bottom");
@@ -100,7 +104,7 @@ inspector.reset = () => {
 
 inspector.loadDOMTree = tree => {
     let domTree = document.getElementById("dom-tree");
-    domTree.innerHTML = atob(tree);
+    domTree.innerHTML = decodeBase64(tree);
 
     let domNodes = domTree.querySelectorAll(".hoverable");
 
@@ -123,7 +127,7 @@ inspector.loadDOMTree = tree => {
 
 inspector.loadAccessibilityTree = tree => {
     let accessibilityTree = document.getElementById("accessibility-tree");
-    accessibilityTree.innerHTML = atob(tree);
+    accessibilityTree.innerHTML = decodeBase64(tree);
 };
 
 inspector.inspectDOMNodeID = nodeID => {
@@ -450,7 +454,7 @@ inspector.appendConsoleOutput = output => {
     let parent = consoleParentGroup();
 
     let element = document.createElement("p");
-    element.innerHTML = atob(output);
+    element.innerHTML = decodeBase64(output);
 
     parent.appendChild(element);
     scrollConsoleToBottom();
@@ -477,7 +481,7 @@ inspector.beginConsoleGroup = (label, startExpanded) => {
     details.open = startExpanded;
 
     let summary = document.createElement("summary");
-    summary.innerHTML = atob(label);
+    summary.innerHTML = decodeBase64(label);
 
     details.appendChild(summary);
     parent.appendChild(details);
