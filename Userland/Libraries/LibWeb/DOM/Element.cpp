@@ -224,15 +224,10 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Option
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
-WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& qualified_name, FlyString const& value)
 {
-    // FIXME: This conversion is ugly
-    Optional<FlyString> namespace_to_use;
-    if (namespace_.has_value())
-        namespace_to_use = namespace_.value();
-
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
     set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());
@@ -296,18 +291,14 @@ bool Element::has_attribute(FlyString const& name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattributens
-bool Element::has_attribute_ns(Optional<String> const& namespace_, FlyString const& name) const
+bool Element::has_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name) const
 {
-    StringView namespace_view;
-    if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
-
     // 1. If namespace is the empty string, then set it to null.
-    if (namespace_view.is_empty())
-        namespace_view = {};
-
     // 2. Return true if this has an attribute whose namespace is namespace and local name is localName; otherwise false.
-    return m_attributes->get_attribute_ns(namespace_view, name) != nullptr;
+    if (namespace_ == FlyString {})
+        return m_attributes->get_attribute_ns(OptionalNone {}, name) != nullptr;
+
+    return m_attributes->get_attribute_ns(namespace_, name) != nullptr;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-toggleattribute

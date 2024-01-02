@@ -92,8 +92,7 @@ public:
     Optional<FlyString> const& namespace_uri() const { return m_qualified_name.namespace_(); }
 
     bool has_attribute(FlyString const& name) const;
-    // FIXME: This should be taking a 'Optional<FlyString> const&'
-    bool has_attribute_ns(Optional<String> const& namespace_, FlyString const& name) const;
+    bool has_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name) const;
     bool has_attributes() const;
 
     ByteString deprecated_attribute(FlyString const& name) const { return deprecated_get_attribute(name); }
@@ -105,8 +104,7 @@ public:
 
     WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
 
-    // FIXME: This should be taking an Optional<FlyString>
-    WebIDL::ExceptionOr<void> set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value);
+    WebIDL::ExceptionOr<void> set_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& qualified_name, FlyString const& value);
     void set_attribute_value(FlyString const& local_name, ByteString const& value, Optional<FlyString> const& prefix = {}, Optional<FlyString> const& namespace_ = {});
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
