@@ -70,16 +70,19 @@ static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigne
         if (max_y < top_clip)
             continue;
 
-        float start_x = p0.x();
-        float end_x = p1.x();
-
+        auto start_x = p0.x();
+        auto end_x = p1.x();
         auto dx = end_x - start_x;
         auto dy = max_y - min_y;
+
+        if (dy == 0)
+            continue;
+
         auto dxdy = dx / dy;
 
         // Trim off the non-visible portions of the edge.
         if (min_y < top_clip) {
-            start_x += (top_clip - min_y) * dxdy;
+            start_x += dxdy * (top_clip - min_y);
             min_y = top_clip;
         }
         if (max_y > bottom_clip) {
