@@ -1,11 +1,7 @@
 import("//Ladybird/compile_qt_resource_file.gni")
+import("//Ladybird/enable_qt.gni")
 import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
-
-declare_args() {
-  # Build the Ladybird application using the Qt chrome.
-  enable_qt = current_os != "mac"
-}
 
 group("Ladybird") {
   if (current_os == "mac") {
