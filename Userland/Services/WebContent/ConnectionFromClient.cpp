@@ -659,7 +659,7 @@ void ConnectionFromClient::set_dom_node_tag(i32 node_id, String const& name)
     auto new_element = Web::DOM::create_element(element.document(), name, element.namespace_uri(), element.prefix(), element.is_value()).release_value_but_fixme_should_propagate_errors();
 
     element.for_each_attribute([&](auto const& attribute) {
-        new_element->set_attribute_value(attribute.local_name(), attribute.value().to_byte_string(), attribute.prefix(), attribute.namespace_uri());
+        new_element->set_attribute_value(attribute.local_name(), attribute.value(), attribute.prefix(), attribute.namespace_uri());
     });
 
     while (auto* child_node = element.first_child()) {
