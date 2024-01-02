@@ -167,10 +167,17 @@ private:
 
     void fill_internal(Painter&, Path const&, auto color_or_function, Painter::WindingRule, FloatPoint offset);
     Detail::Edge* plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent&, Detail::Edge* active_edges = nullptr);
-    void accumulate_even_odd_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
-    void accumulate_non_zero_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
+
+    template<Painter::WindingRule>
+    void write_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
     Color scanline_color(int scanline, int offset, u8 alpha, auto& color_or_function);
     void write_pixel(Painter&, int scanline, int offset, SampleType sample, auto& color_or_function);
+    void fast_fill_solid_color_span(Painter&, int scanline, int start, int end, Color color);
+
+    template<Painter::WindingRule, typename Callback>
+    void accumulate_scanline(EdgeExtent, Callback);
+    void accumulate_even_odd_scanline(EdgeExtent, auto sample_callback);
+    void accumulate_non_zero_scanline(EdgeExtent, auto sample_callback);
 
     struct WindingCounts {
         // NOTE: This only allows up to 256 winding levels. Increase this if required (i.e. to an i16).
