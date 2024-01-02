@@ -91,18 +91,16 @@ public:
     // NOTE: This is for the JS bindings
     Optional<FlyString> const& namespace_uri() const { return m_qualified_name.namespace_(); }
 
-    // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
-    bool has_attribute(StringView name) const;
-    bool has_attribute_ns(Optional<String> const& namespace_, StringView name) const;
+    bool has_attribute(FlyString const& name) const;
+    // FIXME: This should be taking a 'Optional<FlyString> const&'
+    bool has_attribute_ns(Optional<String> const& namespace_, FlyString const& name) const;
     bool has_attributes() const;
 
-    // FIXME: This should be taking a 'FlyString const&'
-    ByteString deprecated_attribute(StringView name) const { return deprecated_get_attribute(name); }
-    Optional<String> attribute(StringView name) const { return get_attribute(name); }
+    ByteString deprecated_attribute(FlyString const& name) const { return deprecated_get_attribute(name); }
+    Optional<String> attribute(FlyString const& name) const { return get_attribute(name); }
 
-    // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
-    Optional<String> get_attribute(StringView name) const;
-    ByteString deprecated_get_attribute(StringView name) const;
+    Optional<String> get_attribute(FlyString const& name) const;
+    ByteString deprecated_get_attribute(FlyString const& name) const;
     String get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
@@ -114,9 +112,7 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
 
     void append_attribute(Attr&);
-
-    // FIXME: This should take a 'FlyString cosnt&'
-    void remove_attribute(StringView name);
+    void remove_attribute(FlyString const& name);
 
     WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const;

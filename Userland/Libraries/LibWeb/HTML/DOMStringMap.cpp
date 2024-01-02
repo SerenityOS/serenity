@@ -190,7 +190,7 @@ WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMa
     }
 
     // Remove an attribute by name given name and the DOMStringMap's associated element.
-    auto data_name = builder.to_byte_string();
+    auto data_name = MUST(builder.to_string());
     m_associated_element->remove_attribute(data_name);
 
     // The spec doesn't have the step. This indicates that the deletion was successful.

@@ -85,13 +85,13 @@ Attr const* NamedNodeMap::item(u32 index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-getnameditem
-Attr const* NamedNodeMap::get_named_item(StringView qualified_name) const
+Attr const* NamedNodeMap::get_named_item(FlyString const& qualified_name) const
 {
     return get_attribute(qualified_name);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-getnameditemns
-Attr const* NamedNodeMap::get_named_item_ns(Optional<String> const& namespace_, StringView local_name) const
+Attr const* NamedNodeMap::get_named_item_ns(Optional<String> const& namespace_, FlyString const& local_name) const
 {
     // FIXME: This conversion is quite ugly.
     StringView namespace_view;
@@ -114,7 +114,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_named_item_ns(Attr& attri
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditem
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qualified_name)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(FlyString const& qualified_name)
 {
     // 1. Let attr be the result of removing an attribute given qualifiedName and element.
     auto const* attribute = remove_attribute(qualified_name);
@@ -128,7 +128,7 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qual
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditemns
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(Optional<String> const& namespace_, StringView local_name)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(Optional<String> const& namespace_, FlyString const& local_name)
 {
     // FIXME: This conversion is quite ugly.
     StringView namespace_view;
@@ -147,13 +147,13 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(Optional<Str
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
-Attr* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index)
+Attr* NamedNodeMap::get_attribute(FlyString const& qualified_name, size_t* item_index)
 {
     return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute(qualified_name, item_index));
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
-Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index) const
+Attr const* NamedNodeMap::get_attribute(FlyString const& qualified_name, size_t* item_index) const
 {
     if (item_index)
         *item_index = 0;
@@ -166,10 +166,10 @@ Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_
     for (auto const& attribute : m_attributes) {
         if (compare_as_lowercase) {
             if (attribute->name().equals_ignoring_ascii_case(qualified_name))
-                return attribute.ptr();
+                return attribute;
         } else {
             if (attribute->name() == qualified_name)
-                return attribute.ptr();
+                return attribute;
         }
 
         if (item_index)
@@ -197,13 +197,13 @@ Attr* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyS
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
-Attr* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index)
+Attr* NamedNodeMap::get_attribute_ns(StringView namespace_, FlyString const& local_name, size_t* item_index)
 {
     return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute_ns(namespace_, local_name, item_index));
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
-Attr const* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index) const
+Attr const* NamedNodeMap::get_attribute_ns(StringView namespace_, FlyString const& local_name, size_t* item_index) const
 {
     if (item_index)
         *item_index = 0;
@@ -304,7 +304,7 @@ void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name
-Attr const* NamedNodeMap::remove_attribute(StringView qualified_name)
+Attr const* NamedNodeMap::remove_attribute(FlyString const& qualified_name)
 {
     size_t item_index = 0;
 
@@ -320,7 +320,7 @@ Attr const* NamedNodeMap::remove_attribute(StringView qualified_name)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-namespace
-Attr const* NamedNodeMap::remove_attribute_ns(StringView namespace_, StringView local_name)
+Attr const* NamedNodeMap::remove_attribute_ns(StringView namespace_, FlyString const& local_name)
 {
     size_t item_index = 0;
 

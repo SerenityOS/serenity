@@ -107,7 +107,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-Optional<String> Element::get_attribute(StringView name) const
+Optional<String> Element::get_attribute(FlyString const& name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -120,7 +120,7 @@ Optional<String> Element::get_attribute(StringView name) const
     return attribute->value();
 }
 
-ByteString Element::deprecated_get_attribute(StringView name) const
+ByteString Element::deprecated_get_attribute(FlyString const& name) const
 {
     auto maybe_attribute = get_attribute(name);
     if (!maybe_attribute.has_value())
@@ -283,20 +283,20 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node_ns(Attr& attr)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
-void Element::remove_attribute(StringView name)
+void Element::remove_attribute(FlyString const& name)
 {
     // The removeAttribute(qualifiedName) method steps are to remove an attribute given qualifiedName and this, and then return undefined.
     m_attributes->remove_attribute(name);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
-bool Element::has_attribute(StringView name) const
+bool Element::has_attribute(FlyString const& name) const
 {
     return m_attributes->get_attribute(name) != nullptr;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattributens
-bool Element::has_attribute_ns(Optional<String> const& namespace_, StringView name) const
+bool Element::has_attribute_ns(Optional<String> const& namespace_, FlyString const& name) const
 {
     StringView namespace_view;
     if (namespace_.has_value())
