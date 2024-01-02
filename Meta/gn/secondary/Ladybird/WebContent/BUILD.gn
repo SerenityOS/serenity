@@ -1,3 +1,4 @@
+import("//Ladybird/enable_qt.gni")
 import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
 import("//Meta/gn/build/libs/pulse/enable.gni")
@@ -20,16 +21,12 @@ link_qt("WebContent_qt") {
 }
 
 executable("WebContent") {
-  configs += [
-    "//Ladybird:ladybird_config",
-    ":WebContent_qt",
-  ]
+  configs += [ "//Ladybird:ladybird_config" ]
   include_dirs = [
     "//Userland/Services",
     "//Ladybird",
   ]
   deps = [
-    ":generate_moc",
     "//AK",
     "//Meta/gn/build/libs/pulse",
     "//Userland/Libraries/LibCore",
@@ -52,15 +49,6 @@ executable("WebContent") {
     "//Ladybird/FontPlugin.cpp",
     "//Ladybird/HelperProcess.cpp",
     "//Ladybird/ImageCodecPlugin.cpp",
-    "//Ladybird/Qt/AudioCodecPluginQt.cpp",
-    "//Ladybird/Qt/AudioThread.cpp",
-    "//Ladybird/Qt/EventLoopImplementationQt.cpp",
-    "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
-    "//Ladybird/Qt/RequestManagerQt.cpp",
-    "//Ladybird/Qt/StringUtils.cpp",
-    "//Ladybird/Qt/WebSocketClientManagerQt.cpp",
-    "//Ladybird/Qt/WebSocketImplQt.cpp",
-    "//Ladybird/Qt/WebSocketQt.cpp",
     "//Ladybird/Utilities.cpp",
     "//Userland/Services/WebContent/ConnectionFromClient.cpp",
     "//Userland/Services/WebContent/ConsoleGlobalEnvironmentExtensions.cpp",
@@ -70,7 +58,24 @@ executable("WebContent") {
     "//Userland/Services/WebContent/WebDriverConnection.cpp",
     "main.cpp",
   ]
-  sources += get_target_outputs(":generate_moc")
+
+  if (enable_qt) {
+    configs += [ ":WebContent_qt" ]
+    sources += [
+      "//Ladybird/Qt/AudioCodecPluginQt.cpp",
+      "//Ladybird/Qt/AudioThread.cpp",
+      "//Ladybird/Qt/EventLoopImplementationQt.cpp",
+      "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
+      "//Ladybird/Qt/RequestManagerQt.cpp",
+      "//Ladybird/Qt/StringUtils.cpp",
+      "//Ladybird/Qt/WebSocketClientManagerQt.cpp",
+      "//Ladybird/Qt/WebSocketImplQt.cpp",
+      "//Ladybird/Qt/WebSocketQt.cpp",
+    ]
+
+    sources += get_target_outputs(":generate_moc")
+    deps += [ ":generate_moc" ]
+  }
 
   if (current_os == "linux" || current_os == "mac") {
     cflags_cc = [ "-DHAS_ACCELERATED_GRAPHICS" ]
