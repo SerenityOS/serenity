@@ -16,8 +16,11 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
+
+extern "C" void syscall_handler(TrapFrame const*);
 
 static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
 
@@ -99,7 +102,11 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
         }
 
         case EnvironmentCallFromUMode:
-            TODO();
+            trap_frame.regs->sepc += 4;
+            syscall_handler(&trap_frame);
+
+            // FIXME: HACK
+            trap_frame.regs->x[3] = Processor::current_thread()->thread_specific_data().get();
             break;
 
         case Breakpoint:
