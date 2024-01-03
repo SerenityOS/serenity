@@ -30,6 +30,7 @@ public:
     ByteString filename() const { return m_config->filename(); }
 
     ByteString name() const;
+    ByteString menu_name() const;
     ByteString executable() const;
     ByteString category() const;
     ByteString description() const;
