@@ -27,7 +27,7 @@ configopts=(
     '--without-pcre-jit'
 )
 launcher_name='PHP'
-launcher_category='Development'
+launcher_category='D&evelopment'
 launcher_command='/usr/local/bin/php -a'
 launcher_run_in_terminal='true'
 icon_file='win32/build/php.ico'
