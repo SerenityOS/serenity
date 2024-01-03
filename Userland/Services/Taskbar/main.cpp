@@ -239,9 +239,9 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     {
         int theme_identifier = 0;
         for (auto& theme : g_themes) {
-            auto action = GUI::Action::create_checkable(theme.name, [theme_identifier, &window](auto&) {
+            auto action = GUI::Action::create_checkable(theme.menu_name, [theme_identifier, current_theme_name, &window](auto&) {
                 auto& theme = g_themes[theme_identifier];
-                dbgln("Theme switched to {} at path {}", theme.name, theme.path);
+                dbgln("Theme switched from {} to {} at path {}", current_theme_name, theme.name, theme.path);
                 if (window.main_widget()->palette().color_scheme_path() != ""sv)
                     VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false, GUI::ConnectionToWindowServer::the().get_preferred_color_scheme()));
                 else
@@ -260,9 +260,11 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             return;
         auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
         auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
+        VERIFY(g_themes.size() == g_themes_menu->items().size());
         for (size_t index = 0; index < g_themes.size(); ++index) {
             auto* action = g_themes_menu->action_at(index);
-            action->set_checked(!theme_overridden && action->text() == current_theme_name);
+            auto& theme = g_themes[index];
+            action->set_checked(!theme_overridden && theme.name == current_theme_name);
         }
     };
 

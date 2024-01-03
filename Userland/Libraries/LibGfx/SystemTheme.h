@@ -296,6 +296,7 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(ByteString const& path, Optiona
 
 struct SystemThemeMetaData {
     ByteString name;
+    ByteString menu_name;
     ByteString path;
 };
 
