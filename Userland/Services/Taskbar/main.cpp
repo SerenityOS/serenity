@@ -93,6 +93,30 @@ Vector<Gfx::SystemThemeMetaData> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 GUI::ActionGroup g_themes_group;
 
+static bool less_than_ignore_hotkey(ByteString const& a, ByteString const& b)
+{
+    auto a_it = a.begin(), b_it = b.begin();
+    while (a_it != a.end() && b_it != b.end()) {
+        if (*a_it == '&') {
+            ++a_it;
+            continue;
+        }
+        if (*b_it == '&') {
+            ++b_it;
+            continue;
+        }
+        if (*a_it < *b_it) {
+            return true;
+        }
+        if (*a_it > *b_it) {
+            return false;
+        }
+        ++a_it;
+        ++b_it;
+    }
+    return a_it != a.end();
+}
+
 ErrorOr<Vector<ByteString>> discover_apps_and_categories()
 {
     HashTable<ByteString> seen_app_categories;
@@ -110,7 +134,7 @@ ErrorOr<Vector<ByteString>> discover_apps_and_categories()
     TRY(sorted_app_categories.try_ensure_capacity(seen_app_categories.size()));
     for (auto const& category : seen_app_categories)
         sorted_app_categories.unchecked_append(category);
-    quick_sort(sorted_app_categories);
+    quick_sort(sorted_app_categories, less_than_ignore_hotkey);
 
     return sorted_app_categories;
 }
