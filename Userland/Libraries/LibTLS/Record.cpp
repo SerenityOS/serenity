@@ -502,6 +502,8 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 payload_res = (i8)Error::DecryptionFailed;
                 auto packet = build_alert(true, (u8)AlertDescription::DECRYPTION_FAILED_RESERVED);
                 write_packet(packet);
+            } else {
+                notify_client_for_app_data();
             }
         }
         break;
