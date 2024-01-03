@@ -40,11 +40,6 @@ public:
         return m_buffer.data.try_ensure_capacity(m_buffer.data.size() + capacity);
     }
 
-    void append(u8 value)
-    {
-        m_buffer.data.unchecked_append(value);
-    }
-
     ErrorOr<void> append(u8 const* values, size_t count)
     {
         TRY(extend_capacity(count));
@@ -67,31 +62,7 @@ private:
 template<Arithmetic T>
 ErrorOr<void> encode(Encoder& encoder, T const& value)
 {
-    TRY(encoder.extend_capacity(sizeof(T)));
-
-    if constexpr (sizeof(T) == 1) {
-        encoder.append(static_cast<u8>(value));
-    } else if constexpr (sizeof(T) == 2) {
-        encoder.append(static_cast<u8>(value));
-        encoder.append(static_cast<u8>(value >> 8));
-    } else if constexpr (sizeof(T) == 4) {
-        encoder.append(static_cast<u8>(value));
-        encoder.append(static_cast<u8>(value >> 8));
-        encoder.append(static_cast<u8>(value >> 16));
-        encoder.append(static_cast<u8>(value >> 24));
-    } else if constexpr (sizeof(T) == 8) {
-        encoder.append(static_cast<u8>(value));
-        encoder.append(static_cast<u8>(value >> 8));
-        encoder.append(static_cast<u8>(value >> 16));
-        encoder.append(static_cast<u8>(value >> 24));
-        encoder.append(static_cast<u8>(value >> 32));
-        encoder.append(static_cast<u8>(value >> 40));
-        encoder.append(static_cast<u8>(value >> 48));
-        encoder.append(static_cast<u8>(value >> 56));
-    } else {
-        static_assert(DependentFalse<T>);
-    }
-
+    TRY(encoder.append(reinterpret_cast<u8 const*>(&value), sizeof(value)));
     return {};
 }
 
