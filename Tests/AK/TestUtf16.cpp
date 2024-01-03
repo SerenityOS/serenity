@@ -89,6 +89,36 @@ TEST_CASE(decode_utf16)
     EXPECT_EQ(i, expected.size());
 }
 
+TEST_CASE(utf16_literal)
+{
+    {
+        Utf16View view { u"" };
+        EXPECT(view.validate());
+        EXPECT_EQ(view.length_in_code_units(), 0u);
+    }
+    {
+        Utf16View view { u"a" };
+        EXPECT(view.validate());
+        EXPECT_EQ(view.length_in_code_units(), 1u);
+        EXPECT_EQ(view.code_unit_at(0), 0x61u);
+    }
+    {
+        Utf16View view { u"abc" };
+        EXPECT(view.validate());
+        EXPECT_EQ(view.length_in_code_units(), 3u);
+        EXPECT_EQ(view.code_unit_at(0), 0x61u);
+        EXPECT_EQ(view.code_unit_at(1), 0x62u);
+        EXPECT_EQ(view.code_unit_at(2), 0x63u);
+    }
+    {
+        Utf16View view { u"🙃" };
+        EXPECT(view.validate());
+        EXPECT_EQ(view.length_in_code_units(), 2u);
+        EXPECT_EQ(view.code_unit_at(0), 0xd83du);
+        EXPECT_EQ(view.code_unit_at(1), 0xde43u);
+    }
+}
+
 TEST_CASE(iterate_utf16)
 {
     auto string = MUST(AK::utf8_to_utf16("Привет 😀"sv));
