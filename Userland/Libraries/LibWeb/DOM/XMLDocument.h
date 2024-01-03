@@ -15,7 +15,7 @@ class XMLDocument final : public Document {
     JS_DECLARE_ALLOCATOR(XMLDocument);
 
 public:
-    static JS::NonnullGCPtr<XMLDocument> create(JS::Realm&, AK::URL const&);
+    static JS::NonnullGCPtr<XMLDocument> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
     virtual ~XMLDocument() override = default;
 
 private:
