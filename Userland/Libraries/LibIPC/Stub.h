@@ -9,15 +9,13 @@
 
 #include <AK/ByteString.h>
 #include <AK/OwnPtr.h>
+#include <LibIPC/Forward.h>
 
 namespace AK {
 class BufferStream;
 }
 
 namespace IPC {
-
-class Message;
-struct MessageBuffer;
 
 class Stub {
 public:
