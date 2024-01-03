@@ -64,6 +64,11 @@ void WindowOrWorkerGlobalScopeMixin::visit_edges(JS::Cell::Visitor& visitor)
         entry.value.visit_edges(visitor);
 }
 
+void WindowOrWorkerGlobalScopeMixin::finalize()
+{
+    clear_map_of_active_timers();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin
 WebIDL::ExceptionOr<String> WindowOrWorkerGlobalScopeMixin::origin() const
 {

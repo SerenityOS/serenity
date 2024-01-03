@@ -130,6 +130,12 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_byte_length_queuing_strategy_size_function);
 }
 
+void Window::finalize()
+{
+    Base::finalize();
+    WindowOrWorkerGlobalScopeMixin::finalize();
+}
+
 Window::~Window() = default;
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#normalizing-the-feature-name

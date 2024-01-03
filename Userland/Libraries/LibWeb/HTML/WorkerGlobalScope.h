@@ -95,6 +95,7 @@ protected:
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
+    virtual void finalize() override;
 
     JS::GCPtr<WorkerLocation> m_location;
     JS::GCPtr<WorkerNavigator> m_navigator;
