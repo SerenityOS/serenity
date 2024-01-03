@@ -46,6 +46,10 @@ PDFErrorOr<Version> DocumentParser::initialize()
         // If the length given in the linearization dictionary is not equal to the length
         // of the document, then this file has most likely been incrementally updated, and
         // should no longer be treated as linearized.
+        // FIXME: This check requires knowing the full size of the file, while linearization
+        //        is all about being able to render some of it without having to download all of it.
+        //        PDF 2.0 Annex G.7 "Accessing an updated file" talks about this some,
+        //        but mostly just throws its hand in the air.
         is_linearized = m_linearization_dictionary.value().length_of_file == m_reader.bytes().size();
     }
 
