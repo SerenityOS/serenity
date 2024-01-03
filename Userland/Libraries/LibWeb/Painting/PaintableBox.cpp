@@ -484,7 +484,7 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
     }
 }
 
-static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment)
+void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment)
 {
     auto const& browsing_context = text_node.browsing_context();
 
@@ -518,7 +518,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     context.recording_painter().draw_rect(cursor_device_rect, text_node.computed_values().color());
 }
 
-static void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
+void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
 {
     auto& painter = context.recording_painter();
     auto& font = fragment.layout_node().first_available_font();
@@ -600,7 +600,7 @@ static void paint_text_decoration(PaintContext& context, Layout::Node const& tex
     }
 }
 
-static void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, PaintPhase phase)
+void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, PaintPhase phase)
 {
     auto& painter = context.recording_painter();
 
@@ -680,6 +680,8 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     if (phase == PaintPhase::Foreground) {
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
+                if (fragment.contained_by_inline_node())
+                    continue;
                 if (is<Layout::TextNode>(fragment.layout_node())) {
                     auto& text_shadow = fragment.layout_node().computed_values().text_shadow();
                     if (!text_shadow.is_empty()) {
@@ -704,6 +706,8 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
+            if (fragment.contained_by_inline_node())
+                continue;
             auto fragment_absolute_rect = fragment.absolute_rect();
             auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
             if (context.should_show_line_box_borders()) {
