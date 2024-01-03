@@ -213,6 +213,25 @@ Utf16View Utf16View::unicode_substring_view(size_t code_point_offset, size_t cod
     VERIFY_NOT_REACHED();
 }
 
+bool Utf16View::starts_with(Utf16View const& needle) const
+{
+    if (needle.is_empty())
+        return true;
+    if (is_empty())
+        return false;
+    if (needle.length_in_code_units() > length_in_code_units())
+        return false;
+    if (begin_ptr() == needle.begin_ptr())
+        return true;
+
+    for (auto this_it = begin(), needle_it = needle.begin(); needle_it != needle.end(); ++needle_it, ++this_it) {
+        if (*this_it != *needle_it)
+            return false;
+    }
+
+    return true;
+}
+
 bool Utf16View::validate(size_t& valid_code_units) const
 {
     valid_code_units = 0;
