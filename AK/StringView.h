@@ -83,7 +83,7 @@ public:
         return m_characters[index];
     }
 
-    using ConstIterator = SimpleIterator<const StringView, char const>;
+    using ConstIterator = SimpleIterator<StringView const, char const>;
 
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }

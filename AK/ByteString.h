@@ -189,7 +189,7 @@ public:
         return bit_cast<u8>((*m_impl)[i]);
     }
 
-    using ConstIterator = SimpleIterator<const ByteString, char const>;
+    using ConstIterator = SimpleIterator<ByteString const, char const>;
 
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
