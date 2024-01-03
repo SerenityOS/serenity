@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SuppressedError.h>
 #include <LibJS/Runtime/ValueInlines.h>
 
@@ -1215,97 +1216,193 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
 // 22.1.3.19.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacementTemplate ), https://tc39.es/ecma262/#sec-getsubstitution
 ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement_template)
 {
-    auto replace_string = TRY(replacement_template.to_utf16_string(vm));
-    auto replace_view = replace_string.view();
+    // 1. Let stringLength be the length of str.
+    auto string_length = str.length_in_code_units();
 
+    // 2. Assert: position ≤ stringLength.
+    VERIFY(position <= string_length);
+
+    // 3. Let result be the empty String.
     Utf16Data result;
 
-    for (size_t i = 0; i < replace_view.length_in_code_units(); ++i) {
-        u16 curr = replace_view.code_unit_at(i);
+    // 4. Let templateRemainder be replacementTemplate.
+    auto replace_template_string = TRY(replacement_template.to_utf16_string(vm));
+    auto template_remainder = replace_template_string.view();
 
-        if ((curr != '$') || (i + 1 >= replace_view.length_in_code_units())) {
-            TRY_OR_THROW_OOM(vm, result.try_append(curr));
-            continue;
+    // 5. Repeat, while templateRemainder is not the empty String,
+    while (!template_remainder.is_empty()) {
+        // a. NOTE: The following steps isolate ref (a prefix of templateRemainder), determine refReplacement (its replacement), and then append that replacement to result.
+
+        Utf16View ref;
+        Utf16View ref_replacement;
+        Optional<Utf16String> capture_string;
+
+        // b. If templateRemainder starts with "$$", then
+        if (template_remainder.starts_with(u"$$")) {
+            // i. Let ref be "$$".
+            ref = u"$$";
+
+            // ii. Let refReplacement be "$".
+            ref_replacement = u"$";
         }
+        // c. Else if templateRemainder starts with "$`", then
+        else if (template_remainder.starts_with(u"$`")) {
+            // i. Let ref be "$`".
+            ref = u"$`";
 
-        u16 next = replace_view.code_unit_at(i + 1);
+            // ii. Let refReplacement be the substring of str from 0 to position.
+            ref_replacement = str.substring_view(0, position);
+        }
+        // d. Else if templateRemainder starts with "$&", then
+        else if (template_remainder.starts_with(u"$&")) {
+            // i. Let ref be "$&".
+            ref = u"$&";
 
-        if (next == '$') {
-            TRY_OR_THROW_OOM(vm, result.try_append('$'));
-            ++i;
-        } else if (next == '&') {
-            TRY_OR_THROW_OOM(vm, result.try_append(matched.data(), matched.length_in_code_units()));
-            ++i;
-        } else if (next == '`') {
-            auto substring = str.substring_view(0, position);
-            TRY_OR_THROW_OOM(vm, result.try_append(substring.data(), substring.length_in_code_units()));
-            ++i;
-        } else if (next == '\'') {
-            auto tail_pos = position + matched.length_in_code_units();
-            if (tail_pos < str.length_in_code_units()) {
-                auto substring = str.substring_view(tail_pos);
-                TRY_OR_THROW_OOM(vm, result.try_append(substring.data(), substring.length_in_code_units()));
+            // ii. Let refReplacement be matched.
+            ref_replacement = matched;
+        }
+        // e. Else if templateRemainder starts with "$'" (0x0024 (DOLLAR SIGN) followed by 0x0027 (APOSTROPHE)), then
+        else if (template_remainder.starts_with(u"$'")) {
+            // i. Let ref be "$'".
+            ref = u"$'";
+
+            // ii. Let matchLength be the length of matched.
+            auto match_length = matched.length_in_code_units();
+
+            // iii. Let tailPos be position + matchLength.
+            auto tail_pos = position + match_length;
+
+            // iv. Let refReplacement be the substring of str from min(tailPos, stringLength).
+            ref_replacement = str.substring_view(min(tail_pos, string_length));
+
+            // v. NOTE: tailPos can exceed stringLength only if this abstract operation was invoked by a call to the intrinsic @@replace method of %RegExp.prototype% on an object whose "exec" property is not the intrinsic %RegExp.prototype.exec%.
+        }
+        // f. Else if templateRemainder starts with "$" followed by 1 or more decimal digits, then
+        else if (template_remainder.starts_with(u"$") && template_remainder.length_in_code_units() > 1 && is_ascii_digit(template_remainder.code_unit_at(1))) {
+            // i. If templateRemainder starts with "$" followed by 2 or more decimal digits, let digitCount be 2. Otherwise, let digitCount be 1.
+            size_t digit_count = 1;
+
+            if (template_remainder.length_in_code_units() > 2 && is_ascii_digit(template_remainder.code_point_at(2)))
+                digit_count = 2;
+
+            // ii. Let digits be the substring of templateRemainder from 1 to 1 + digitCount.
+            auto digits = template_remainder.substring_view(1, digit_count);
+
+            // iii. Let index be ℝ(StringToNumber(digits)).
+            auto utf8_digits = MUST(digits.to_utf8());
+            auto index = static_cast<size_t>(string_to_number(utf8_digits));
+
+            // iv. Assert: 0 ≤ index ≤ 99.
+            VERIFY(index <= 99);
+
+            // v. Let captureLen be the number of elements in captures.
+            auto capture_length = captures.size();
+
+            // vi. If index > captureLen and digitCount = 2, then
+            if (index > capture_length && digit_count == 2) {
+                // 1. NOTE: When a two-digit replacement pattern specifies an index exceeding the count of capturing groups, it is treated as a one-digit replacement pattern followed by a literal digit.
+
+                // 2. Set digitCount to 1.
+                digit_count = 1;
+
+                // 3. Set digits to the substring of digits from 0 to 1.
+                digits = digits.substring_view(0, 1);
+
+                // 4. Set index to ℝ(StringToNumber(digits)).
+                utf8_digits = MUST(digits.to_utf8());
+                index = static_cast<size_t>(string_to_number(utf8_digits));
             }
-            ++i;
-        } else if (is_ascii_digit(next)) {
-            bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8());
-            auto capture_position = capture_position_string.to_number<u32>();
+            // vii. Let ref be the substring of templateRemainder from 0 to 1 + digitCount.
+            ref = template_remainder.substring_view(0, 1 + digit_count);
 
-            // NOTE: All major engines treat $10 as $1 followed by a literal '0' character
-            //       if there are fewer than 10 capture groups. The spec disagrees.
-            // Spec bug: https://github.com/tc39/ecma262/issues/1426
-            if (is_two_digits && capture_position.has_value() && (*capture_position > 0) && (*capture_position > captures.size())) {
-                is_two_digits = false;
-                capture_position_string = MUST(capture_position_string.substring_from_byte_offset(0, 1));
-                capture_position = capture_position_string.to_number<u32>();
-            }
+            // viii. If 1 ≤ index ≤ captureLen, then
+            if (1 <= index && index <= capture_length) {
+                // 1. Let capture be captures[index - 1].
+                auto capture = captures[index - 1];
 
-            if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
-                auto& value = captures[*capture_position - 1];
-
-                if (!value.is_undefined()) {
-                    auto value_string = TRY(value.to_utf16_string(vm));
-                    TRY_OR_THROW_OOM(vm, result.try_append(value_string.view().data(), value_string.length_in_code_units()));
+                // 2. If capture is undefined, then
+                if (capture.is_undefined()) {
+                    // a. Let refReplacement be the empty String.
+                    ref_replacement = {};
                 }
-
-                i += is_two_digits ? 2 : 1;
-            } else {
-                TRY_OR_THROW_OOM(vm, result.try_append(curr));
-            }
-        } else if (next == '<') {
-            auto start_position = i + 2;
-            Optional<size_t> end_position;
-
-            for (size_t j = start_position; j < replace_view.length_in_code_units(); ++j) {
-                if (replace_view.code_unit_at(j) == '>') {
-                    end_position = j;
-                    break;
+                // 3. Else,
+                else {
+                    // a. Let refReplacement be capture.
+                    capture_string = TRY(capture.to_utf16_string(vm));
+                    ref_replacement = capture_string->view();
                 }
             }
+            // ix. Else,
+            else {
+                // 1. Let refReplacement be ref.
+                ref_replacement = ref;
+            }
+        }
+        // g. Else if templateRemainder starts with "$<", then
+        else if (template_remainder.starts_with(u"$<")) {
+            // i. Let gtPos be StringIndexOf(templateRemainder, ">", 0).
+            // NOTE: We can actually start at index 2 because we know the string starts with "$<".
+            auto greater_than_position = string_index_of(template_remainder, u">", 2);
 
-            if (named_captures.is_undefined() || !end_position.has_value()) {
-                TRY_OR_THROW_OOM(vm, result.try_append(curr));
-            } else {
-                auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
-                auto group_name = TRY_OR_THROW_OOM(vm, group_name_view.to_byte_string(Utf16View::AllowInvalidCodeUnits::Yes));
+            // ii. If gtPos = -1 or namedCaptures is undefined, then
+            if (!greater_than_position.has_value() || named_captures.is_undefined()) {
+                // 1. Let ref be "$<".
+                ref = u"$<";
 
+                // 2. Let refReplacement be ref.
+                ref_replacement = ref;
+            }
+            // iii. Else,
+            else {
+                // 1. Let ref be the substring of templateRemainder from 0 to gtPos + 1.
+                ref = template_remainder.substring_view(0, *greater_than_position + 1);
+
+                // 2. Let groupName be the substring of templateRemainder from 2 to gtPos.
+                auto group_name_view = template_remainder.substring_view(2, *greater_than_position - 2);
+                auto group_name = MUST(group_name_view.to_byte_string(Utf16View::AllowInvalidCodeUnits::Yes));
+
+                // 3. Assert: namedCaptures is an Object.
+                VERIFY(named_captures.is_object());
+
+                // 4. Let capture be ? Get(namedCaptures, groupName).
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
-                if (!capture.is_undefined()) {
-                    auto capture_string = TRY(capture.to_utf16_string(vm));
-                    TRY_OR_THROW_OOM(vm, result.try_append(capture_string.view().data(), capture_string.length_in_code_units()));
+                // 5. If capture is undefined, then
+                if (capture.is_undefined()) {
+                    // a. Let refReplacement be the empty String.
+                    ref_replacement = {};
                 }
-
-                i = *end_position;
+                // 6. Else,
+                else {
+                    // a. Let refReplacement be ? ToString(capture).
+                    capture_string = TRY(capture.to_utf16_string(vm));
+                    ref_replacement = capture_string->view();
+                }
             }
-        } else {
-            TRY_OR_THROW_OOM(vm, result.try_append(curr));
         }
+        // h. Else,
+        else {
+            // i. Let ref be the substring of templateRemainder from 0 to 1.
+            ref = template_remainder.substring_view(0, 1);
+
+            // ii. Let refReplacement be ref.
+            ref_replacement = ref;
+        }
+
+        // i. Let refLength be the length of ref.
+        auto ref_length = ref.length_in_code_units();
+
+        // k. Set result to the string-concatenation of result and refReplacement.
+        result.append(ref_replacement.data(), ref_replacement.length_in_code_points());
+
+        // j. Set templateRemainder to the substring of templateRemainder from refLength.
+        // NOTE: We do this step last because refReplacement may point to templateRemainder.
+        template_remainder = template_remainder.substring_view(ref_length);
     }
 
-    return TRY_OR_THROW_OOM(vm, Utf16View { result }.to_utf8());
+    // 6. Return result.
+    return MUST(Utf16View { result }.to_utf8());
 }
 
 // 2.1.2 AddDisposableResource ( disposable, V, hint [ , method ] ), https://tc39.es/proposal-explicit-resource-management/#sec-adddisposableresource-disposable-v-hint-disposemethod
