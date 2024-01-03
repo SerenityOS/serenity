@@ -1,7 +1,7 @@
 [App]
-Name=GML Playground
+Name=&GML Playground
 Executable=/bin/GMLPlayground
-Category=Development
+Category=D&evelopment
 
 [Launcher]
 FileTypes=gml
