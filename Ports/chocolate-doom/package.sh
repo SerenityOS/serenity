@@ -16,6 +16,6 @@ depends=(
 )
 
 launcher_name='Chocolate Doom'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/chocolate-doom'
 icon_file='data/doom.png'

@@ -17,7 +17,7 @@ configopts=(
 use_fresh_config_sub='true'
 config_sub_paths=('config.sub')
 launcher_name='Pacman'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/pacman'
 icon_file='data/gfx/pacman_desktop.png'
 

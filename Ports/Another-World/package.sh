@@ -9,7 +9,7 @@ files=(
     "https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter/archive/refs/heads/master.zip#326de7622e5f83a83fce76e6032240157a9dde83c0d65319095c7e0b312af317"
 )
 launcher_name="Another World"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command="/opt/Another-World/raw --datapath=/opt/Another-World"
 
 configure() {

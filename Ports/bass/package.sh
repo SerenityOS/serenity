@@ -9,7 +9,7 @@ depends=("scummvm")
 bass_resource_path="/usr/local/share/games/${port}-${version}"
 
 launcher_name="Beneath a Steel Sky"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command="/usr/local/bin/scummvm --path=${bass_resource_path} sky"
 
 build() {

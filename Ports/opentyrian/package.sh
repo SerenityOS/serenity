@@ -16,7 +16,7 @@ depends=(
 )
 
 launcher_name='OpenTyrian'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/opentyrian'
 icon_file='linux/icons/tyrian-128.png'
 

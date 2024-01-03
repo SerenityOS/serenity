@@ -10,6 +10,6 @@ files=(
 )
 depends=("SDL2" "SDL2_image" "SDL2_mixer" "SDL2_ttf" "SDL2_gfx" "zstd" "libicu" "xz" "gettext" "curl")
 launcher_name=Freeciv
-launcher_category=Games
+launcher_category='&Games'
 launcher_command=/usr/local/bin/freeciv-sdl2
 icon_file=windows/client.ico

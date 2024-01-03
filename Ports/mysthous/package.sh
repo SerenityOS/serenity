@@ -9,7 +9,7 @@ depends=("scummvm")
 resource_path="/usr/local/share/games/${port}-${version}"
 
 launcher_name="Hi-Res Adventure #1: Mystery House"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command="/usr/local/bin/scummvm --path=${resource_path} hires1-apple2"
 
 build() {

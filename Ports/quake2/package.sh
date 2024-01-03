@@ -15,7 +15,7 @@ configopts=(
 )
 depends=('SDL2')
 launcher_name='Quake II'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/quake2'
 icon_file='docs/quake2.gif'
 

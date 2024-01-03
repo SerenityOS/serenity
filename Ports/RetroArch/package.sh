@@ -21,7 +21,7 @@ configopts=(
 )
 
 launcher_name=RetroArch
-launcher_category=Games
+launcher_category='&Games'
 launcher_command=/usr/local/bin/retroarch
 icon_file=media/retroarch.ico
 

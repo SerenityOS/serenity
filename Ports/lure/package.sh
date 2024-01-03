@@ -10,7 +10,7 @@ workdir="lure"
 resource_path="/usr/local/share/games/${port}-${version}"
 
 launcher_name="Lure of the Temptress"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command="/usr/local/bin/scummvm --path=${resource_path} lure"
 
 build() {

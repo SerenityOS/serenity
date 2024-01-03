@@ -15,7 +15,7 @@ files=(
     "https://github.com/NagyD/SDLPoP/archive/${commitid}.zip#d18cae8541fb8cbcc374fd998316993d561429a83f92061bc0754337ada774c5"
 )
 launcher_name='Prince of Persia'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/opt/PrinceOfPersia/prince'
 icon_file='src/icon.ico'
 

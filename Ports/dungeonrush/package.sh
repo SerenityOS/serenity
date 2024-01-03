@@ -9,7 +9,7 @@ files=(
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 depends=("SDL2" "SDL2_image" "SDL2_mixer" "SDL2_ttf" "SDL2_net")
 launcher_name="DungeonRush"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command=/opt/DungeonRush/dungeon_rush
 icon_file=dungeonrush.png
 

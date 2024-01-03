@@ -25,7 +25,7 @@ useconfigure='true'
 workdir="OpenRCT2-${version}"
 icon_file='resources/logo/icon_x16.png'
 launcher_name='OpenRCT2'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/openrct2'
 
 configure() {

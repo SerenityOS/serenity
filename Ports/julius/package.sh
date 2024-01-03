@@ -15,7 +15,7 @@ configopts=(
 )
 data_dir='/home/anon/Games/julius'
 launcher_name='Julius'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_workdir="${data_dir}/"
 launcher_command="/usr/local/bin/julius"
 icon_file='res/julius_32.png'

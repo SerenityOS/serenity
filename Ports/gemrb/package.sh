@@ -23,7 +23,7 @@ configopts=(
 )
 icon_file='artwork/gemrb-logo.ico'
 launcher_name='GemRB'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/gemrb'
 
 configure() {

@@ -19,5 +19,5 @@ installopts=(
     '--file=Makefile.sdl'
 )
 launcher_name='Doom'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/doom'

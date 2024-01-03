@@ -10,7 +10,7 @@ workdir="${port}-en-v${version}"
 resource_path="/usr/local/share/games/${port}-${version}"
 
 launcher_name="Sfinx"
-launcher_category=Games
+launcher_category="&Games"
 launcher_command="/usr/local/bin/scummvm --path=${resource_path} sfinx"
 
 build() {
