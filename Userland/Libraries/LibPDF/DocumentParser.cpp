@@ -390,18 +390,23 @@ PDFErrorOr<void> DocumentParser::validate_xref_table_and_fix_if_necessary()
     return {};
 }
 
+static PDFErrorOr<NonnullRefPtr<StreamObject>> indirect_value_as_stream(NonnullRefPtr<IndirectValue> indirect_value)
+{
+    auto value = indirect_value->value();
+    if (!value.has<NonnullRefPtr<Object>>())
+        return Error { Error::Type::Parse, "Expected indirect value to be a stream" };
+    auto value_object = value.get<NonnullRefPtr<Object>>();
+    if (!value_object->is<StreamObject>())
+        return Error { Error::Type::Parse, "Expected indirect value to be a stream" };
+    return value_object->cast<StreamObject>();
+}
+
 PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 {
-    auto first_number = TRY(parse_number());
-    auto second_number = TRY(parse_number());
+    auto xref_stream = TRY(parse_indirect_value());
+    auto stream = TRY(indirect_value_as_stream(xref_stream));
 
-    if (!m_reader.matches("obj"))
-        return error("Malformed xref object");
-    m_reader.move_by(3);
-    if (m_reader.matches_eol())
-        m_reader.consume_eol();
-
-    auto dict = TRY(parse_dict());
+    auto dict = stream->dict();
     auto type = TRY(dict->get_name(m_document, CommonNames::Type))->name();
     if (type != "XRef")
         return error("Malformed xref dictionary");
@@ -425,7 +430,6 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
     } else {
         subsections.append({ 0, number_of_object_entries });
     }
-    auto stream = TRY(parse_stream(dict));
     auto table = adopt_ref(*new XRefTable());
 
     auto field_to_long = [](ReadonlyBytes field) -> long {
@@ -562,22 +566,13 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
 
     m_reader.move_to(stream_offset);
 
-    auto first_number = TRY(parse_number());
-    auto second_number = TRY(parse_number());
+    auto obj_stream = TRY(parse_indirect_value());
+    auto stream = TRY(indirect_value_as_stream(obj_stream));
 
-    if (first_number.get<int>() != object_stream_index)
+    if (obj_stream->index() != object_stream_index)
         return error("Mismatching object stream index");
-    if (second_number.get<int>() != 0)
-        return error("Non-zero object stream generation number");
 
-    if (!m_reader.matches("obj"))
-        return error("Malformed object stream");
-    m_reader.move_by(3);
-    if (m_reader.matches_eol())
-        m_reader.consume_eol();
-
-    push_reference({ static_cast<u32>(first_number.get<int>()), static_cast<u32>(second_number.get<int>()) });
-    auto dict = TRY(parse_dict());
+    auto dict = stream->dict();
 
     auto type = TRY(dict->get_name(m_document, CommonNames::Type))->name();
     if (type != "ObjStm")
@@ -585,9 +580,6 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
 
     auto object_count = dict->get_value("N").get_u32();
     auto first_object_offset = dict->get_value("First").get_u32();
-
-    auto stream = TRY(parse_stream(dict));
-    pop_reference();
 
     Parser stream_parser(m_document, stream->bytes());
 
