@@ -25,8 +25,6 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 
-    [[nodiscard]] bool is_visible() const;
-
     virtual Optional<CSSPixelRect> get_masking_area() const { return {}; }
     virtual Optional<Gfx::Bitmap::MaskKind> get_mask_type() const { return {}; }
     virtual RefPtr<Gfx::Bitmap> calculate_mask(PaintContext&, CSSPixelRect const&) const { return {}; }
@@ -122,16 +120,8 @@ public:
 
     void set_overflow_data(OverflowData data) { m_overflow_data = move(data); }
 
-    StackingContext* stacking_context() { return m_stacking_context; }
-    StackingContext const* stacking_context() const { return m_stacking_context; }
-    void set_stacking_context(NonnullOwnPtr<StackingContext>);
-    StackingContext* enclosing_stacking_context();
-
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
     DOM::Node* dom_node() { return layout_box().dom_node(); }
-
-    DOM::Document const& document() const { return layout_box().document(); }
-    DOM::Document& document() { return layout_box().document(); }
 
     virtual void apply_scroll_offset(PaintContext&, PaintPhase) const override;
     virtual void reset_scroll_offset(PaintContext&, PaintPhase) const override;
@@ -142,8 +132,6 @@ public:
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
     virtual bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
-
-    void invalidate_stacking_context();
 
     enum class ConflictingElementKind {
         Cell,
@@ -194,8 +182,6 @@ public:
     void set_box_shadow_data(Vector<ShadowData> box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
     Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
 
-    PaintableBox const* nearest_scrollable_ancestor_within_stacking_context() const;
-
 protected:
     explicit PaintableBox(Layout::Box const&);
 
@@ -216,8 +202,6 @@ private:
 
     CSSPixelPoint m_offset;
     CSSPixelSize m_content_size;
-
-    OwnPtr<StackingContext> m_stacking_context;
 
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;

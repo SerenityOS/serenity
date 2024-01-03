@@ -54,8 +54,9 @@ class Paintable
     JS_CELL(Paintable, Cell);
 
 public:
-    virtual ~Paintable() = default;
+    virtual ~Paintable();
 
+    [[nodiscard]] bool is_visible() const;
     [[nodiscard]] bool is_positioned() const;
     [[nodiscard]] bool is_fixed_position() const { return layout_node().is_fixed_position(); }
     [[nodiscard]] bool is_absolutely_positioned() const { return layout_node().is_absolutely_positioned(); }
@@ -108,6 +109,13 @@ public:
         }
         return TraversalDecision::Continue;
     }
+
+    StackingContext* stacking_context() { return m_stacking_context; }
+    StackingContext const* stacking_context() const { return m_stacking_context; }
+    void set_stacking_context(NonnullOwnPtr<StackingContext>);
+    StackingContext* enclosing_stacking_context();
+
+    void invalidate_stacking_context();
 
     virtual void before_paint(PaintContext&, PaintPhase) const { }
     virtual void after_paint(PaintContext&, PaintPhase) const { }
@@ -171,8 +179,12 @@ public:
 
     [[nodiscard]] virtual bool is_paintable_box() const { return false; }
     [[nodiscard]] virtual bool is_paintable_with_lines() const { return false; }
+    [[nodiscard]] virtual bool is_inline_paintable() const { return false; }
 
-    StackingContext const* stacking_context_rooted_here() const;
+    DOM::Document const& document() const { return layout_node().document(); }
+    DOM::Document& document() { return layout_node().document(); }
+
+    PaintableBox const* nearest_scrollable_ancestor_within_stacking_context() const;
 
 protected:
     explicit Paintable(Layout::Node const&);
@@ -184,6 +196,8 @@ private:
     JS::NonnullGCPtr<Layout::Node const> m_layout_node;
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
     Optional<JS::GCPtr<Layout::Box const>> mutable m_containing_block;
+
+    OwnPtr<StackingContext> m_stacking_context;
 };
 
 inline DOM::Node* HitTestResult::dom_node()
