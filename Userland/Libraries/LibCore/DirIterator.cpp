@@ -8,6 +8,8 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 namespace Core {
 
@@ -60,6 +62,18 @@ bool DirIterator::advance_next()
         m_next = DirectoryEntry::from_stat(m_dir, *de);
 #else
         m_next = DirectoryEntry::from_dirent(*de);
+
+        // dirent structures from readdir aren't guaranteed to contain valid file types,
+        // as it is possible that the underlying filesystem doesn't keep track of those.
+        if (m_next->type == DirectoryEntry::Type::Unknown && !m_next->name.is_empty()) {
+            struct stat statbuf;
+            if (fstatat(dirfd(m_dir), de->d_name, &statbuf, AT_SYMLINK_NOFOLLOW) < 0) {
+                m_error = Error::from_errno(errno);
+                dbgln("DirIteration error: {}", m_error.value());
+                return false;
+            }
+            m_next->type = DirectoryEntry::directory_entry_type_from_stat(statbuf.st_mode);
+        }
 #endif
 
         if (m_next->name.is_empty())

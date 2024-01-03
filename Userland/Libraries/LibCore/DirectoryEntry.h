@@ -28,6 +28,7 @@ struct DirectoryEntry {
     ByteString name;
     ino_t inode_number;
 
+    static Type directory_entry_type_from_stat(mode_t st_mode);
     static DirectoryEntry from_dirent(dirent const&);
     static DirectoryEntry from_stat(DIR*, dirent const&);
 };
