@@ -1,7 +1,7 @@
 [App]
-Name=SQL Studio
+Name=&SQL Studio
 Executable=/bin/SQLStudio
-Category=Development
+Category=D&evelopment
 
 [Launcher]
 FileTypes=db,sql

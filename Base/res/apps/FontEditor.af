@@ -1,7 +1,7 @@
 [App]
-Name=Font Editor
+Name=&Font Editor
 Executable=/bin/FontEditor
-Category=Development
+Category=D&evelopment
 
 [Launcher]
 FileTypes=font
