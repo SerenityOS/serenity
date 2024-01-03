@@ -44,7 +44,7 @@ JS::NonnullGCPtr<Range> Range::create(Document& document)
     return realm.heap().allocate<Range>(realm, document);
 }
 
-JS::NonnullGCPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
+JS::NonnullGCPtr<Range> Range::create(Node& start_container, WebIDL::UnsignedLong start_offset, Node& end_container, WebIDL::UnsignedLong end_offset)
 {
     auto& realm = start_container.realm();
     return realm.heap().allocate<Range>(realm, start_container, start_offset, end_container, end_offset);
@@ -61,7 +61,7 @@ Range::Range(Document& document)
 {
 }
 
-Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
+Range::Range(Node& start_container, WebIDL::UnsignedLong start_offset, Node& end_container, WebIDL::UnsignedLong end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
     live_ranges().set(this);
@@ -207,13 +207,13 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
 }
 
 // https://dom.spec.whatwg.org/#concept-range-bp-set
-WebIDL::ExceptionOr<void> Range::set_start(Node& node, u32 offset)
+WebIDL::ExceptionOr<void> Range::set_start(Node& node, WebIDL::UnsignedLong offset)
 {
     // The setStart(node, offset) method steps are to set the start of this to boundary point (node, offset).
     return set_start_or_end(node, offset, StartOrEnd::Start);
 }
 
-WebIDL::ExceptionOr<void> Range::set_end(Node& node, u32 offset)
+WebIDL::ExceptionOr<void> Range::set_end(Node& node, WebIDL::UnsignedLong offset)
 {
     // The setEnd(node, offset) method steps are to set the end of this to boundary point (node, offset).
     return set_start_or_end(node, offset, StartOrEnd::End);
@@ -276,7 +276,7 @@ WebIDL::ExceptionOr<void> Range::set_end_after(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-compareboundarypoints
-WebIDL::ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& source_range) const
+WebIDL::ExceptionOr<WebIDL::Short> Range::compare_boundary_points(WebIDL::UnsignedShort how, Range const& source_range) const
 {
     // 1. If how is not one of
     //      - START_TO_START,
@@ -499,7 +499,7 @@ bool Range::intersects_node(Node const& node) const
 }
 
 // https://dom.spec.whatwg.org/#dom-range-ispointinrange
-WebIDL::ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset) const
+WebIDL::ExceptionOr<bool> Range::is_point_in_range(Node const& node, WebIDL::UnsignedLong offset) const
 {
     // 1. If node’s root is different from this’s root, return false.
     if (&node.root() != &root())
@@ -524,7 +524,7 @@ WebIDL::ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-comparepoint
-WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) const
+WebIDL::ExceptionOr<WebIDL::Short> Range::compare_point(Node const& node, WebIDL::UnsignedLong offset) const
 {
     // 1. If node’s root is different from this’s root, then throw a "WrongDocumentError" DOMException.
     if (&node.root() != &root())
