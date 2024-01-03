@@ -10,6 +10,8 @@
 #include <AK/Error.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Vector.h>
+#include <LibCore/Forward.h>
 #include <unistd.h>
 
 namespace IPC {
@@ -34,6 +36,8 @@ private:
 };
 
 struct MessageBuffer {
+    ErrorOr<void> transfer_message(Core::LocalSocket& fd_passing_socket, Core::LocalSocket& data_socket);
+
     Vector<u8, 1024> data;
     Vector<NonnullRefPtr<AutoCloseFileDescriptor>, 1> fds;
 };

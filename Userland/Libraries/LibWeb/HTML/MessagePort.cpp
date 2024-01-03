@@ -253,54 +253,9 @@ ErrorOr<void> MessagePort::send_message_on_socket(SerializedTransferRecord const
 {
     IPC::MessageBuffer buffer;
     IPC::Encoder encoder(buffer);
-    MUST(encoder.encode<u32>(0)); // placeholder for total size
     MUST(encoder.encode(serialize_with_transfer_result));
 
-    u32 buffer_size = buffer.data.size() - sizeof(u32); // size of *payload*
-    buffer.data[0] = buffer_size & 0xFF;
-    buffer.data[1] = (buffer_size >> 8) & 0xFF;
-    buffer.data[2] = (buffer_size >> 16) & 0xFF;
-    buffer.data[3] = (buffer_size >> 24) & 0xFF;
-
-    for (auto& fd : buffer.fds) {
-        if (auto result = m_fd_passing_socket->send_fd(fd->value()); result.is_error()) {
-            return Error::from_string_view("Can't send fd"sv);
-        }
-    }
-
-    ReadonlyBytes bytes_to_write { buffer.data.span() };
-    int writes_done = 0;
-    size_t initial_size = bytes_to_write.size();
-    while (!bytes_to_write.is_empty()) {
-        auto maybe_nwritten = m_socket->write_some(bytes_to_write);
-        writes_done++;
-        if (maybe_nwritten.is_error()) {
-            auto error = maybe_nwritten.release_error();
-            if (error.is_errno()) {
-                // FIXME: This is a hacky way to at least not crash on large messages
-                // The limit of 100 writes is arbitrary, and there to prevent indefinite spinning on the EventLoop
-                if (error.code() == EAGAIN && writes_done < 100) {
-                    sched_yield();
-                    continue;
-                }
-                switch (error.code()) {
-                case EPIPE:
-                    return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer");
-                case EAGAIN:
-                    return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed");
-                default:
-                    return Error::from_syscall("IPC::Connection::post_message write"sv, -error.code());
-                }
-            } else {
-                return error;
-            }
-        }
-
-        bytes_to_write = bytes_to_write.slice(maybe_nwritten.value());
-    }
-    if (writes_done > 1) {
-        dbgln("LibIPC::Connection FIXME Warning, needed {} writes needed to send message of size {}B, this is pretty bad, as it spins on the EventLoop", writes_done, initial_size);
-    }
+    TRY(buffer.transfer_message(*m_fd_passing_socket, *m_socket));
     return {};
 }
 
