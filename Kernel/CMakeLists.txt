@@ -523,6 +523,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Delay.cpp
         Arch/riscv64/InterruptManagement.cpp
         Arch/riscv64/Interrupts.cpp
+        Arch/riscv64/MMU.cpp
         Arch/riscv64/PageDirectory.cpp
         Arch/riscv64/Panic.cpp
         Arch/riscv64/PCI/Initializer.cpp

@@ -51,9 +51,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void pre_init(FlatPtr mhartid, Physical
     // Catch traps in pre_init
     RISCV64::CSR::write(RISCV64::CSR::Address::STVEC, bit_cast<FlatPtr>(&early_trap_handler));
 
-    // FIXME: Implement this
-
-    Processor::halt();
+    Memory::init_page_tables_and_jump_to_init();
 }
 
 }
