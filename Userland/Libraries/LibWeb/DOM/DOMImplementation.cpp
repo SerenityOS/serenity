@@ -58,7 +58,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 
     // 3. If qualifiedName is not the empty string, then set element to the result of running the internal createElementNS steps, given document, namespace, qualifiedName, and an empty dictionary.
     if (!qualified_name.is_empty())
-        element = TRY(xml_document->create_element_ns(namespace_.value(), qualified_name, ElementCreationOptions {}));
+        element = TRY(xml_document->create_element_ns(namespace_, qualified_name, ElementCreationOptions {}));
 
     // 4. If doctype is non-null, append doctype to document.
     if (doctype)
