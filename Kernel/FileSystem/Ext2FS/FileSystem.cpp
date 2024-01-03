@@ -214,6 +214,13 @@ u8 Ext2FS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& 
     }
 }
 
+Ext2FS::FeaturesOptional Ext2FS::get_features_optional() const
+{
+    if (m_super_block.s_rev_level > 0)
+        return static_cast<Ext2FS::FeaturesOptional>(m_super_block.s_feature_compat);
+    return Ext2FS::FeaturesOptional::None;
+}
+
 Ext2FS::FeaturesReadOnly Ext2FS::get_features_readonly() const
 {
     if (m_super_block.s_rev_level > 0)

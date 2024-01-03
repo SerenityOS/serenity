@@ -22,6 +22,13 @@ class Ext2FS final : public BlockBasedFileSystem {
     friend class Ext2FSInode;
 
 public:
+    // s_feature_compat
+    enum class FeaturesOptional : u32 {
+        None = 0,
+        ExtendedAttributes = EXT2_FEATURE_COMPAT_EXT_ATTR,
+    };
+    AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesOptional);
+
     // s_feature_ro_compat
     enum class FeaturesReadOnly : u32 {
         None = 0,
@@ -43,6 +50,7 @@ public:
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
+    FeaturesOptional get_features_optional() const;
     FeaturesReadOnly get_features_readonly() const;
 
     virtual StringView class_name() const override { return "Ext2FS"sv; }
