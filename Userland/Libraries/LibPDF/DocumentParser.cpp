@@ -725,6 +725,7 @@ bool DocumentParser::navigate_to_before_eof_marker()
 
     while (!m_reader.done()) {
         m_reader.consume_eol();
+        m_reader.consume_whitespace();
         if (m_reader.matches("%%EOF")) {
             m_reader.move_by(5);
             return true;
