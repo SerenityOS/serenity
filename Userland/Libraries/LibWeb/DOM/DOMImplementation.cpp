@@ -8,10 +8,10 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/DOMImplementation.h>
-#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/XMLDocument.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Namespace.h>
 
@@ -48,8 +48,8 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(Optional<String> const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
-    // FIXME: 1. Let document be a new XMLDocument
-    auto xml_document = Document::create(realm());
+    // 1. Let document be a new XMLDocument
+    auto xml_document = XMLDocument::create(realm());
 
     xml_document->set_ready_for_post_load_tasks(true);
 
