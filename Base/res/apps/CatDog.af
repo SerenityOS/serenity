@@ -1,4 +1,4 @@
 [App]
-Name=CatDog
+Name=&CatDog
 Executable=/bin/CatDog
-Category=Demos
+Category=&Demos

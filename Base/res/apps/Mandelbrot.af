@@ -1,4 +1,4 @@
 [App]
-Name=Mandelbrot
+Name=&Mandelbrot
 Executable=/bin/Mandelbrot
-Category=Demos
+Category=&Demos
