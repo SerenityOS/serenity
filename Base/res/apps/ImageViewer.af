@@ -1,7 +1,7 @@
 [App]
-Name=Image Viewer
+Name=&Image Viewer
 Executable=/bin/ImageViewer
-Category=Graphics
+Category=Gra&phics
 
 [Launcher]
 FileTypes=bmp,dds,gif,ico,iff,jpeg,jpg,jxl,lbm,pbm,pgm,png,ppm,qoi,tga,tiff,tif,tvg
