@@ -15,7 +15,7 @@ configopts=(
     "--without-x"
 )
 launcher_name="Tux Racer"
-launcher_category="Games"
+launcher_category="&Games"
 launcher_command="/usr/local/bin/tuxracer"
 
 # isnan() is a macro -> not linkable

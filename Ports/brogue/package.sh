@@ -13,7 +13,7 @@ makeopts+=(
     'bin/brogue'
 )
 launcher_name='Brogue'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/brogue'
 icon_file='bin/assets/icon.png'
 

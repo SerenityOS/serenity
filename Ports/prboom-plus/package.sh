@@ -28,7 +28,7 @@ configopts=(
 )
 
 launcher_name='PrBoom+'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/prboom-plus -vidmode gl'
 icon_file='ICONS/prboom-plus.ico'
 

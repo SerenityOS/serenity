@@ -21,7 +21,7 @@ configopts=(
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )
 launcher_name='ScummVM'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/scummvm'
 icon_file='icons/scummvm.ico'
 

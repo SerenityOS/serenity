@@ -9,7 +9,7 @@ files=(
     "https://github.com/FWGS/hlsdk-portable/archive/${_hlsdk_commit}.tar.gz#b010c94ed400e44508f43706aeea68b82615c6ad22d2b1b892e8d6201d97503d"
 )
 launcher_name='Half-Life'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='sh /home/anon/Games/halflife/hl.sh'
 
 export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"

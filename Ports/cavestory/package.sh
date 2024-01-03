@@ -14,7 +14,7 @@ depends=(
 )
 workdir="nxengine-evo-b427ed7bcd403a4dbb07703fe0eb015c3350bbfc"
 launcher_name='Cave Story'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/nxengine-evo'
 icon_file='platform/switch/icon.jpg'
 useconfigure='true'

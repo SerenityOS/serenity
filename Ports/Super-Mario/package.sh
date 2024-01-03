@@ -9,7 +9,7 @@ files=(
     "https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp/archive/refs/heads/master.zip#fcacc15d3b5afccb3227f982d3e05f2cfeb198f0fffd008fdcda005cb7f87f91"
 )
 launcher_name="Super Mario"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command=/opt/Super_Mario/uMario
 
 configure() {

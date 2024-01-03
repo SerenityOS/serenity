@@ -19,7 +19,7 @@ configopts=(
 )
 install_dir='/opt/devilutionx'
 launcher_name='DevilutionX'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command="${install_dir}/devilutionx"
 icon_file='Packaging/resources/icon_32.png'
 

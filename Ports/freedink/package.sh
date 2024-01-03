@@ -29,7 +29,7 @@ configopts=(
 )
 
 launcher_name='FreeDink'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/freedink --software-rendering --truecolor --nosound'
 icon_file='src/media/freedink.ico'
 

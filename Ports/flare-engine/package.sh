@@ -27,6 +27,6 @@ install() {
 }
 
 launcher_name='Flare'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/games/flare'
 icon_file='distribution/flare_logo_icon.png'

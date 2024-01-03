@@ -13,7 +13,7 @@ depends=(
 workdir="SeriousSamClassic-${version}"
 
 launcher_name='Serious Sam - The First Encounter'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command="/usr/local/bin/serioussam"
 icon_file='SamTFE/Sources/SeriousSam/res/SeriousSam.ico'
 

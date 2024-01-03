@@ -14,6 +14,6 @@ configopts=(
     "LIBS=-lm -lSDL_sound"
 )
 launcher_name='GLTron'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/gltron'
 icon_file='art/default/gltron.png'

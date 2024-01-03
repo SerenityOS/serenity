@@ -15,6 +15,6 @@ depends=(
     'SDL2'
 )
 launcher_name='Quake'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/bin/quake'
 icon_file='quake.png'

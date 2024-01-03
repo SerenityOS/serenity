@@ -9,7 +9,7 @@ depends=("scummvm")
 resource_path="/usr/local/share/games/${port}-${version}"
 
 launcher_name="Dráscula: The Vampire Strikes Back"
-launcher_category=Games
+launcher_category='&Games'
 launcher_command="/usr/local/bin/scummvm --path=${resource_path} drascula"
 
 build() {

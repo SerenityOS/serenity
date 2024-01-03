@@ -24,7 +24,7 @@ depends=(
     'SDL2_net'
 )
 launcher_name='DOSBox'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/usr/local/bin/dosbox'
 icon_file='contrib/icons/dosbox-staging.ico'
 

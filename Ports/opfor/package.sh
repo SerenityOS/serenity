@@ -9,7 +9,7 @@ files=(
     "https://github.com/FWGS/hlsdk-portable/archive/${_hlsdk_commit}.tar.gz#0cf2cb120c3e350d05233cc718126436e68f4f2f1289c1f31623a4c8aef419eb"
 )
 launcher_name='Half-Life: Opposing Force'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='sh /home/anon/Games/halflife/opfor.sh'
 
 configure() {

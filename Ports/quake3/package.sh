@@ -9,7 +9,7 @@ files=(
 workdir="ioq3-${commit_hash}"
 depends=("SDL2")
 launcher_name="Quake III Arena"
-launcher_category="Games"
+launcher_category="&Games"
 launcher_command=/usr/local/games/quake3/ioquake3
 icon_file="misc/quake3.png"
 

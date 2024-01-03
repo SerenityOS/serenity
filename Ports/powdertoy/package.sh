@@ -10,7 +10,7 @@ files=(
 workdir="The-Powder-Toy-${version}"
 launcher_name="The Powder Toy"
 icon_file="resources/icon.ico"
-launcher_category="Games"
+launcher_category="&Games"
 launcher_command="/usr/local/bin/powder"
 launcher_run_in_terminal=false
 

@@ -13,7 +13,7 @@ configopts=(
 depends=("SDL2" "SDL2_mixer")
 icon_file='desktop_version/icon.ico'
 launcher_name='VVVVVV'
-launcher_category='Games'
+launcher_category='&Games'
 launcher_command='/opt/VVVVVV/VVVVVV'
 
 configure() {
