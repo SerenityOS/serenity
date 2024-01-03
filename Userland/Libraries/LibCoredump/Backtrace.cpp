@@ -45,14 +45,20 @@ Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread
     : m_thread_info(move(thread_info))
 {
 #if ARCH(X86_64)
-    auto start_bp = m_thread_info.regs.rbp;
-    auto start_ip = m_thread_info.regs.rip;
+    auto start_frame_pointer = m_thread_info.regs.rbp;
+    auto start_pc = m_thread_info.regs.rip;
+    constexpr ptrdiff_t frame_pointer_return_address_offset = 8;
+    constexpr ptrdiff_t frame_pointer_previous_frame_pointer_offset = 0;
 #elif ARCH(AARCH64)
-    auto start_bp = m_thread_info.regs.x[29];
-    auto start_ip = m_thread_info.regs.pc;
+    auto start_frame_pointer = m_thread_info.regs.x[29];
+    auto start_pc = m_thread_info.regs.pc;
+    constexpr ptrdiff_t frame_pointer_return_address_offset = 8;
+    constexpr ptrdiff_t frame_pointer_previous_frame_pointer_offset = 0;
 #elif ARCH(RISCV64)
-    auto start_bp = m_thread_info.regs.x[7];
-    auto start_ip = m_thread_info.regs.pc;
+    auto start_frame_pointer = m_thread_info.regs.x[7];
+    auto start_pc = m_thread_info.regs.pc;
+    constexpr ptrdiff_t frame_pointer_return_address_offset = -8;
+    constexpr ptrdiff_t frame_pointer_previous_frame_pointer_offset = -16;
 #else
 #    error Unknown architecture
 #endif
@@ -61,39 +67,39 @@ Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread
     // call stack to determine how many frames it has.
     size_t frame_count = 0;
     {
-        auto bp = start_bp;
-        auto ip = start_ip;
-        while (bp && ip) {
+        auto frame_pointer = start_frame_pointer;
+        auto pc = start_pc;
+        while (frame_pointer != 0 && pc != 0) {
             ++frame_count;
-            auto next_ip = coredump.peek_memory(bp + sizeof(FlatPtr));
-            auto next_bp = coredump.peek_memory(bp);
-            if (!next_ip.has_value() || !next_bp.has_value())
+            auto next_pc = coredump.peek_memory(frame_pointer + frame_pointer_return_address_offset);
+            auto next_frame_pointer = coredump.peek_memory(frame_pointer + frame_pointer_previous_frame_pointer_offset);
+            if (!next_pc.has_value() || !next_frame_pointer.has_value())
                 break;
-            ip = next_ip.value();
-            bp = next_bp.value();
+            pc = next_pc.value();
+            frame_pointer = next_frame_pointer.value();
         }
     }
 
-    auto bp = start_bp;
-    auto ip = start_ip;
+    auto frame_pointer = start_frame_pointer;
+    auto pc = start_pc;
     size_t frame_index = 0;
-    while (bp && ip) {
-        // We use eip - 1 because the return address from a function frame
+    while (frame_pointer != 0 && pc != 0) {
+        // We use pc - 1 because the return address from a function frame
         // is the instruction that comes after the 'call' instruction.
         // However, because the first frame represents the faulting
         // instruction rather than the return address we don't subtract
         // 1 there.
-        VERIFY(ip > 0);
-        add_entry(coredump, ip - ((frame_index == 0) ? 0 : 1));
+        VERIFY(pc > 0);
+        add_entry(coredump, pc - ((frame_index == 0) ? 0 : 1));
         if (on_progress)
             on_progress(frame_index, frame_count);
         ++frame_index;
-        auto next_ip = coredump.peek_memory(bp + sizeof(FlatPtr));
-        auto next_bp = coredump.peek_memory(bp);
-        if (!next_ip.has_value() || !next_bp.has_value())
+        auto next_pc = coredump.peek_memory(frame_pointer + frame_pointer_return_address_offset);
+        auto next_frame_pointer = coredump.peek_memory(frame_pointer + frame_pointer_previous_frame_pointer_offset);
+        if (!next_pc.has_value() || !next_frame_pointer.has_value())
             break;
-        ip = next_ip.value();
-        bp = next_bp.value();
+        pc = next_pc.value();
+        frame_pointer = next_frame_pointer.value();
     }
 }
 
