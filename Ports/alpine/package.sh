@@ -17,7 +17,7 @@ depends=(
     'ca-certificates'
 )
 launcher_name='Alpine'
-launcher_category='Internet'
+launcher_category='&Internet'
 launcher_command='/usr/local/bin/alpine'
 launcher_run_in_terminal='true'
 icon_file='web/cgi/favicon.ico'
