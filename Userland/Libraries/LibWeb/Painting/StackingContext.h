@@ -8,18 +8,21 @@
 
 #include <AK/Vector.h>
 #include <LibGfx/Matrix4x4.h>
+#include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Painting {
 
 class StackingContext {
 public:
-    StackingContext(PaintableBox&, StackingContext* parent, size_t index_in_tree_order);
+    StackingContext(Paintable&, StackingContext* parent, size_t index_in_tree_order);
 
     StackingContext* parent() { return m_parent; }
     StackingContext const* parent() const { return m_parent; }
 
-    PaintableBox const& paintable_box() const { return *m_paintable_box; }
+    Paintable const& paintable() const { return *m_paintable; }
+    PaintableBox const& paintable_box() const { return verify_cast<PaintableBox>(*m_paintable); }
+    InlinePaintable const& inline_paintable() const { return verify_cast<InlinePaintable>(*m_paintable); }
 
     enum class StackingContextPaintPhase {
         BackgroundAndBorders,
@@ -42,7 +45,7 @@ public:
     void sort();
 
 private:
-    JS::NonnullGCPtr<PaintableBox> m_paintable_box;
+    JS::NonnullGCPtr<Paintable> m_paintable;
     Gfx::FloatMatrix4x4 m_transform;
     Gfx::FloatPoint m_transform_origin;
     StackingContext* const m_parent { nullptr };

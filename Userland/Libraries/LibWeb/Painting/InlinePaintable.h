@@ -24,6 +24,8 @@ public:
 
     CSSPixelRect bounding_rect() const;
 
+    virtual bool is_inline_paintable() const override { return true; }
+
     void mark_contained_fragments();
 
 private:

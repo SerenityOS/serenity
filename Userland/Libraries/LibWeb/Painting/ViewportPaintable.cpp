@@ -34,16 +34,15 @@ void ViewportPaintable::build_stacking_context_tree()
     set_stacking_context(make<StackingContext>(*this, nullptr, 0));
 
     size_t index_in_tree_order = 1;
-    for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paintable) {
-        auto& paintable_box = const_cast<PaintableBox&>(paintable);
-        paintable_box.invalidate_stacking_context();
-        if (!paintable_box.layout_box().establishes_stacking_context()) {
-            VERIFY(!paintable_box.stacking_context());
+    for_each_in_subtree([&](Paintable const& paintable) {
+        const_cast<Paintable&>(paintable).invalidate_stacking_context();
+        if (!paintable.layout_node().establishes_stacking_context()) {
+            VERIFY(!paintable.stacking_context());
             return TraversalDecision::Continue;
         }
-        auto* parent_context = paintable_box.enclosing_stacking_context();
+        auto* parent_context = const_cast<Paintable&>(paintable).enclosing_stacking_context();
         VERIFY(parent_context);
-        paintable_box.set_stacking_context(make<Painting::StackingContext>(paintable_box, parent_context, index_in_tree_order++));
+        const_cast<Paintable&>(paintable).set_stacking_context(make<Painting::StackingContext>(const_cast<Paintable&>(paintable), parent_context, index_in_tree_order++));
         return TraversalDecision::Continue;
     });
 

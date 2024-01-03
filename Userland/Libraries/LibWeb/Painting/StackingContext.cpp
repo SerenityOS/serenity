@@ -31,9 +31,9 @@ static void paint_node(Paintable const& paintable, PaintContext& context, PaintP
     paintable.after_paint(context, phase);
 }
 
-StackingContext::StackingContext(PaintableBox& paintable_box, StackingContext* parent, size_t index_in_tree_order)
-    : m_paintable_box(paintable_box)
-    , m_transform(combine_transformations(paintable_box.computed_values().transformations()))
+StackingContext::StackingContext(Paintable& paintable, StackingContext* parent, size_t index_in_tree_order)
+    : m_paintable(paintable)
+    , m_transform(combine_transformations(paintable.computed_values().transformations()))
     , m_transform_origin(compute_transform_origin())
     , m_parent(parent)
     , m_index_in_tree_order(index_in_tree_order)
@@ -46,8 +46,8 @@ StackingContext::StackingContext(PaintableBox& paintable_box, StackingContext* p
 void StackingContext::sort()
 {
     quick_sort(m_children, [](auto& a, auto& b) {
-        auto a_z_index = a->paintable_box().computed_values().z_index().value_or(0);
-        auto b_z_index = b->paintable_box().computed_values().z_index().value_or(0);
+        auto a_z_index = a->paintable().computed_values().z_index().value_or(0);
+        auto b_z_index = b->paintable().computed_values().z_index().value_or(0);
         if (a_z_index == b_z_index)
             return a->m_index_in_tree_order < b->m_index_in_tree_order;
         return a_z_index < b_z_index;
@@ -95,7 +95,7 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
     paintable.apply_clip_overflow_rect(context, to_paint_phase(phase));
 
     paintable.for_each_child([&context, phase](auto& child) {
-        auto* stacking_context = child.stacking_context_rooted_here();
+        auto* stacking_context = child.stacking_context();
         auto const& z_index = child.computed_values().z_index();
 
         // NOTE: Grid specification https://www.w3.org/TR/css-grid-2/#z-order says that grid items should be treated
@@ -176,11 +176,11 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
 
 void StackingContext::paint_child(PaintContext& context, StackingContext const& child)
 {
-    auto parent_paintable = child.paintable_box().parent();
+    auto parent_paintable = child.paintable().parent();
     if (parent_paintable)
         parent_paintable->before_children_paint(context, PaintPhase::Foreground);
 
-    PaintableBox const* nearest_scrollable_ancestor = child.paintable_box().nearest_scrollable_ancestor_within_stacking_context();
+    PaintableBox const* nearest_scrollable_ancestor = child.paintable().nearest_scrollable_ancestor_within_stacking_context();
 
     if (nearest_scrollable_ancestor)
         nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
@@ -198,41 +198,39 @@ void StackingContext::paint_internal(PaintContext& context) const
 {
     // For a more elaborate description of the algorithm, see CSS 2.1 Appendix E
     // Draw the background and borders for the context root (steps 1, 2)
-    paint_node(paintable_box(), context, PaintPhase::Background);
-    paint_node(paintable_box(), context, PaintPhase::Border);
+    paint_node(paintable(), context, PaintPhase::Background);
+    paint_node(paintable(), context, PaintPhase::Border);
 
     // Stacking contexts formed by positioned descendants with negative z-indices (excluding 0) in z-index order
     // (most negative first) then tree order. (step 3)
     // NOTE: This doesn't check if a descendant is positioned as modern CSS allows for alternative methods to establish stacking contexts.
     for (auto* child : m_children) {
-        if (child->paintable_box().computed_values().z_index().has_value() && child->paintable_box().computed_values().z_index().value() < 0)
+        if (child->paintable().computed_values().z_index().has_value() && child->paintable().computed_values().z_index().value() < 0)
             paint_child(context, *child);
     }
 
     // Draw the background and borders for block-level children (step 4)
-    paint_descendants(context, paintable_box(), StackingContextPaintPhase::BackgroundAndBorders);
+    paint_descendants(context, paintable(), StackingContextPaintPhase::BackgroundAndBorders);
     // Draw the non-positioned floats (step 5)
-    paint_descendants(context, paintable_box(), StackingContextPaintPhase::Floats);
+    paint_descendants(context, paintable(), StackingContextPaintPhase::Floats);
     // Draw inline content, replaced content, etc. (steps 6, 7)
-    paint_descendants(context, paintable_box(), StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
-    paint_node(paintable_box(), context, PaintPhase::Foreground);
-    paint_descendants(context, paintable_box(), StackingContextPaintPhase::Foreground);
+    paint_descendants(context, paintable(), StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
+    paint_node(paintable(), context, PaintPhase::Foreground);
+    paint_descendants(context, paintable(), StackingContextPaintPhase::Foreground);
 
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // FIXME: There's more to this step that we have yet to understand and implement.
-    paintable_box().for_each_in_subtree([&context](Paintable const& paintable) {
+    paintable().for_each_in_subtree([&context](Paintable const& paintable) {
         auto const& z_index = paintable.computed_values().z_index();
 
         if (!paintable.is_positioned() || (z_index.has_value() && z_index.value() != 0)) {
-            return paintable.stacking_context_rooted_here()
+            return paintable.stacking_context()
                 ? TraversalDecision::SkipChildrenAndContinue
                 : TraversalDecision::Continue;
         }
 
         // Apply scroll offset of nearest scrollable ancestor before painting the positioned descendant.
-        PaintableBox const* nearest_scrollable_ancestor = nullptr;
-        if (paintable.is_paintable_box())
-            nearest_scrollable_ancestor = static_cast<PaintableBox const&>(paintable).nearest_scrollable_ancestor_within_stacking_context();
+        PaintableBox const* nearest_scrollable_ancestor = paintable.nearest_scrollable_ancestor_within_stacking_context();
         if (nearest_scrollable_ancestor)
             nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
 
@@ -246,7 +244,7 @@ void StackingContext::paint_internal(PaintContext& context) const
         auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
         if (containing_block_paintable)
             containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
-        if (auto* child = paintable.stacking_context_rooted_here()) {
+        if (auto* child = paintable.stacking_context()) {
             paint_child(context, *child);
             exit_decision = TraversalDecision::SkipChildrenAndContinue;
         } else {
@@ -267,16 +265,16 @@ void StackingContext::paint_internal(PaintContext& context) const
     // (smallest first) then tree order. (Step 9)
     // NOTE: This doesn't check if a descendant is positioned as modern CSS allows for alternative methods to establish stacking contexts.
     for (auto* child : m_children) {
-        PaintableBox const* nearest_scrollable_ancestor = child->paintable_box().nearest_scrollable_ancestor_within_stacking_context();
+        PaintableBox const* nearest_scrollable_ancestor = child->paintable().nearest_scrollable_ancestor_within_stacking_context();
 
         if (nearest_scrollable_ancestor)
             nearest_scrollable_ancestor->apply_scroll_offset(context, PaintPhase::Foreground);
 
-        auto containing_block = child->paintable_box().containing_block();
+        auto containing_block = child->paintable().containing_block();
         auto const* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
         if (containing_block_paintable)
             containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
-        if (child->paintable_box().computed_values().z_index().has_value() && child->paintable_box().computed_values().z_index().value() >= 1)
+        if (child->paintable().computed_values().z_index().has_value() && child->paintable().computed_values().z_index().value() >= 1)
             paint_child(context, *child);
         if (containing_block_paintable)
             containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
@@ -285,20 +283,27 @@ void StackingContext::paint_internal(PaintContext& context) const
             nearest_scrollable_ancestor->reset_scroll_offset(context, PaintPhase::Foreground);
     }
 
-    paint_node(paintable_box(), context, PaintPhase::Outline);
+    paint_node(paintable(), context, PaintPhase::Outline);
 
     if (context.should_paint_overlay()) {
-        paint_node(paintable_box(), context, PaintPhase::Overlay);
-        paint_descendants(context, paintable_box(), StackingContextPaintPhase::FocusAndOverlay);
+        paint_node(paintable(), context, PaintPhase::Overlay);
+        paint_descendants(context, paintable(), StackingContextPaintPhase::FocusAndOverlay);
     }
 }
 
 Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transformation> const& transformations) const
 {
-    auto matrix = Gfx::FloatMatrix4x4::identity();
+    // https://drafts.csswg.org/css-transforms-1/#WD20171130 says:
+    // "No transform on non-replaced inline boxes, table-column boxes, and table-column-group boxes."
+    // and https://www.w3.org/TR/css-transforms-2/ does not say anything about what to do with inline boxes.
 
-    for (auto const& transform : transformations)
-        matrix = matrix * transform.to_matrix(paintable_box());
+    auto matrix = Gfx::FloatMatrix4x4::identity();
+    if (paintable().is_paintable_box()) {
+        for (auto const& transform : transformations)
+            matrix = matrix * transform.to_matrix(paintable_box());
+
+        return matrix;
+    }
 
     return matrix;
 }
@@ -321,35 +326,46 @@ static Gfx::FloatMatrix4x4 matrix_with_scaled_translation(Gfx::FloatMatrix4x4 ma
 
 void StackingContext::paint(PaintContext& context) const
 {
-    auto opacity = paintable_box().computed_values().opacity();
+    auto opacity = paintable().computed_values().opacity();
     if (opacity == 0.0f)
         return;
 
     RecordingPainterStateSaver saver(context.recording_painter());
 
     auto to_device_pixels_scale = float(context.device_pixels_per_css_pixel());
+    Gfx::IntRect source_paintable_rect;
+    if (paintable().is_paintable_box()) {
+        source_paintable_rect = context.enclosing_device_rect(paintable_box().absolute_paint_rect()).to_type<int>();
+    } else if (paintable().is_inline()) {
+        source_paintable_rect = context.enclosing_device_rect(inline_paintable().bounding_rect()).to_type<int>();
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
     RecordingPainter::PushStackingContextParams push_stacking_context_params {
         .opacity = opacity,
-        .is_fixed_position = paintable_box().is_fixed_position(),
-        .source_paintable_rect = context.enclosing_device_rect(paintable_box().absolute_paint_rect()).to_type<int>(),
-        .image_rendering = paintable_box().computed_values().image_rendering(),
+        .is_fixed_position = paintable().is_fixed_position(),
+        .source_paintable_rect = source_paintable_rect,
+        .image_rendering = paintable().computed_values().image_rendering(),
         .transform = {
             .origin = transform_origin().scaled(to_device_pixels_scale),
             .matrix = matrix_with_scaled_translation(transform_matrix(), to_device_pixels_scale),
         },
     };
 
-    if (auto masking_area = paintable_box().get_masking_area(); masking_area.has_value()) {
-        if (masking_area->is_empty())
-            return;
-        auto mask_bitmap = paintable_box().calculate_mask(context, *masking_area);
-        if (mask_bitmap) {
-            auto source_paintable_rect = context.enclosing_device_rect(*masking_area).to_type<int>();
-            push_stacking_context_params.source_paintable_rect = source_paintable_rect;
-            push_stacking_context_params.mask = StackingContextMask {
-                .mask_bitmap = mask_bitmap.release_nonnull(),
-                .mask_kind = *paintable_box().get_mask_type()
-            };
+    if (paintable().is_paintable_box()) {
+        if (auto masking_area = paintable_box().get_masking_area(); masking_area.has_value()) {
+            if (masking_area->is_empty())
+                return;
+            auto mask_bitmap = paintable_box().calculate_mask(context, *masking_area);
+            if (mask_bitmap) {
+                auto source_paintable_rect = context.enclosing_device_rect(*masking_area).to_type<int>();
+                push_stacking_context_params.source_paintable_rect = source_paintable_rect;
+                push_stacking_context_params.mask = StackingContextMask {
+                    .mask_bitmap = mask_bitmap.release_nonnull(),
+                    .mask_kind = *paintable_box().get_mask_type()
+                };
+            }
         }
     }
 
@@ -360,39 +376,40 @@ void StackingContext::paint(PaintContext& context) const
 
 Gfx::FloatPoint StackingContext::compute_transform_origin() const
 {
-    auto style_value = paintable_box().computed_values().transform_origin();
+    if (!paintable().is_paintable_box())
+        return {};
+
+    auto style_value = paintable().computed_values().transform_origin();
     // FIXME: respect transform-box property
     auto reference_box = paintable_box().absolute_border_box_rect();
-    auto x = reference_box.left() + style_value.x.to_px(paintable_box().layout_node(), reference_box.width());
-    auto y = reference_box.top() + style_value.y.to_px(paintable_box().layout_node(), reference_box.height());
+    auto x = reference_box.left() + style_value.x.to_px(paintable().layout_node(), reference_box.width());
+    auto y = reference_box.top() + style_value.y.to_px(paintable().layout_node(), reference_box.height());
     return { x.to_float(), y.to_float() };
 }
 
-template<typename U, typename Callback>
-static TraversalDecision for_each_in_inclusive_subtree_of_type_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
+template<typename Callback>
+static TraversalDecision for_each_in_inclusive_subtree_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
 {
-    if (paintable.stacking_context_rooted_here()) {
+    if (paintable.stacking_context()) {
         // Note: Include the stacking context (so we can hit test it), but don't recurse into it.
-        if (auto decision = callback(static_cast<U const&>(paintable)); decision != TraversalDecision::Continue)
+        if (auto decision = callback(paintable); decision != TraversalDecision::Continue)
             return decision;
         return TraversalDecision::SkipChildrenAndContinue;
     }
     for (auto* child = paintable.last_child(); child; child = child->previous_sibling()) {
-        if (for_each_in_inclusive_subtree_of_type_within_same_stacking_context_in_reverse<U>(*child, callback) == TraversalDecision::Break)
+        if (for_each_in_inclusive_subtree_within_same_stacking_context_in_reverse(*child, callback) == TraversalDecision::Break)
             return TraversalDecision::Break;
     }
-    if (is<U>(paintable)) {
-        if (auto decision = callback(static_cast<U const&>(paintable)); decision != TraversalDecision::Continue)
-            return decision;
-    }
+    if (auto decision = callback(paintable); decision != TraversalDecision::Continue)
+        return decision;
     return TraversalDecision::Continue;
 }
 
-template<typename U, typename Callback>
-static TraversalDecision for_each_in_subtree_of_type_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
+template<typename Callback>
+static TraversalDecision for_each_in_subtree_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
 {
     for (auto* child = paintable.last_child(); child; child = child->previous_sibling()) {
-        if (for_each_in_inclusive_subtree_of_type_within_same_stacking_context_in_reverse<U>(*child, callback) == TraversalDecision::Break)
+        if (for_each_in_inclusive_subtree_within_same_stacking_context_in_reverse(*child, callback) == TraversalDecision::Break)
             return TraversalDecision::Break;
     }
     return TraversalDecision::Continue;
@@ -400,7 +417,7 @@ static TraversalDecision for_each_in_subtree_of_type_within_same_stacking_contex
 
 Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTestType type) const
 {
-    if (!paintable_box().is_visible())
+    if (!paintable().is_visible())
         return {};
 
     auto transform_origin = this->transform_origin().to_type<CSSPixels>();
@@ -411,15 +428,17 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     };
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
-    if (paintable_box().is_fixed_position()) {
-        auto scroll_offset = paintable_box().document().navigable()->viewport_scroll_offset();
+    if (paintable().is_fixed_position()) {
+        auto scroll_offset = paintable().document().navigable()->viewport_scroll_offset();
         transformed_position.translate_by(-scroll_offset);
     }
 
     // FIXME: Support more overflow variations.
-    if (paintable_box().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-            return {};
+    if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
+        if (paintable().is_paintable_box()) {
+            if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                return {};
+        }
     }
 
     // NOTE: Hit testing basically happens in reverse painting order.
@@ -429,7 +448,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // NOTE: Hit testing follows reverse painting order, that's why the conditions here are reversed.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.paintable_box().computed_values().z_index().value_or(0) <= 0)
+        if (child.paintable().computed_values().z_index().value_or(0) <= 0)
             break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
@@ -438,7 +457,12 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     Optional<HitTestResult> result;
-    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
+    for_each_in_subtree_within_same_stacking_context_in_reverse(paintable(), [&](Paintable const& paintable) {
+        if (!paintable.is_paintable_box())
+            return TraversalDecision::Continue;
+
+        auto const& paintable_box = verify_cast<PaintableBox>(paintable);
+
         // FIXME: Support more overflow variations.
         if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
             if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
@@ -470,14 +494,19 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
         return result;
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-    if (paintable_box().layout_box().children_are_inline() && is<Layout::BlockContainer>(paintable_box().layout_box())) {
+    if (paintable().layout_node().children_are_inline() && is<Layout::BlockContainer>(paintable().layout_node())) {
         auto result = paintable_box().hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
     }
 
     // 4. the non-positioned floats.
-    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
+    for_each_in_subtree_within_same_stacking_context_in_reverse(paintable(), [&](Paintable const& paintable) {
+        if (!paintable.is_paintable_box())
+            return TraversalDecision::Continue;
+
+        auto const& paintable_box = verify_cast<PaintableBox>(paintable);
+
         // FIXME: Support more overflow variations.
         if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
             if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
@@ -496,8 +525,13 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
         return result;
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
-    if (!paintable_box().layout_box().children_are_inline()) {
-        for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
+    if (!paintable().layout_node().children_are_inline()) {
+        for_each_in_subtree_within_same_stacking_context_in_reverse(paintable(), [&](Paintable const& paintable) {
+            if (!paintable.is_paintable_box())
+                return TraversalDecision::Continue;
+
+            auto const& paintable_box = verify_cast<PaintableBox>(paintable);
+
             // FIXME: Support more overflow variations.
             if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
                 if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
@@ -520,7 +554,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // NOTE: Hit testing follows reverse painting order, that's why the conditions here are reversed.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.paintable_box().computed_values().z_index().value_or(0) >= 0)
+        if (child.paintable().computed_values().z_index().value_or(0) >= 0)
             break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
@@ -528,10 +562,12 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y())) {
-        return HitTestResult {
-            .paintable = const_cast<PaintableBox&>(paintable_box()),
-        };
+    if (paintable().is_paintable_box()) {
+        if (paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y())) {
+            return HitTestResult {
+                .paintable = const_cast<PaintableBox&>(paintable_box()),
+            };
+        }
     }
 
     return {};
@@ -542,9 +578,18 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {} {} [children: {}] (z-index: ", paintable_box().layout_box().debug_description(), paintable_box().absolute_rect(), m_children.size());
-    if (paintable_box().computed_values().z_index().has_value())
-        builder.appendff("{}", paintable_box().computed_values().z_index().value());
+    CSSPixelRect rect;
+    if (paintable().is_paintable_box()) {
+        rect = paintable_box().absolute_rect();
+    } else if (paintable().is_inline_paintable()) {
+        rect = inline_paintable().bounding_rect();
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", paintable().layout_node().debug_description(), rect, m_children.size());
+
+    if (paintable().computed_values().z_index().has_value())
+        builder.appendff("{}", paintable().computed_values().z_index().value());
     else
         builder.append("auto"sv);
     builder.append(')');

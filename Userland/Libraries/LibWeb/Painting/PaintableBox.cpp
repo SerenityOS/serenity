@@ -40,16 +40,6 @@ PaintableBox::~PaintableBox()
 {
 }
 
-bool PaintableBox::is_visible() const
-{
-    return computed_values().visibility() == CSS::Visibility::Visible && computed_values().opacity() != 0;
-}
-
-void PaintableBox::invalidate_stacking_context()
-{
-    m_stacking_context = nullptr;
-}
-
 PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
     : PaintableBox(layout_box)
 {
@@ -163,16 +153,6 @@ CSSPixelRect PaintableBox::absolute_paint_rect() const
     if (!m_absolute_paint_rect.has_value())
         m_absolute_paint_rect = compute_absolute_paint_rect();
     return *m_absolute_paint_rect;
-}
-
-StackingContext* PaintableBox::enclosing_stacking_context()
-{
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (auto* stacking_context = ancestor->stacking_context_rooted_here())
-            return const_cast<StackingContext*>(stacking_context);
-    }
-    // We should always reach the viewport's stacking context.
-    VERIFY_NOT_REACHED();
 }
 
 Optional<CSSPixelRect> PaintableBox::get_clip_rect() const
@@ -748,11 +728,6 @@ Layout::BlockContainer& PaintableWithLines::layout_box()
     return static_cast<Layout::BlockContainer&>(PaintableBox::layout_box());
 }
 
-void PaintableBox::set_stacking_context(NonnullOwnPtr<StackingContext> stacking_context)
-{
-    m_stacking_context = move(stacking_context);
-}
-
 Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     if (!is_visible())
@@ -826,19 +801,6 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
         return HitTestResult { const_cast<PaintableWithLines&>(*this) };
     return {};
-}
-
-PaintableBox const* PaintableBox::nearest_scrollable_ancestor_within_stacking_context() const
-{
-    auto* ancestor = parent();
-    while (ancestor) {
-        if (ancestor->stacking_context_rooted_here())
-            return nullptr;
-        if (ancestor->is_paintable_box() && static_cast<PaintableBox const*>(ancestor)->has_scrollable_overflow())
-            return static_cast<PaintableBox const*>(ancestor);
-        ancestor = ancestor->parent();
-    }
-    return nullptr;
 }
 
 }
