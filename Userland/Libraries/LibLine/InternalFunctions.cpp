@@ -221,8 +221,15 @@ void Editor::finish_edit()
 
 void Editor::kill_line()
 {
-    for (size_t i = 0; i < m_cursor; ++i)
+    if (m_cursor == 0)
+        return;
+
+    m_last_erased.clear_with_capacity();
+
+    for (size_t i = 0; i < m_cursor; ++i) {
+        m_last_erased.append(m_buffer[0]);
         remove_at_index(0);
+    }
     m_cursor = 0;
     m_inline_search_cursor = m_cursor;
     m_refresh_needed = true;
@@ -230,6 +237,11 @@ void Editor::kill_line()
 
 void Editor::erase_word_backwards()
 {
+    if (m_cursor == 0)
+        return;
+
+    m_last_erased.clear_with_capacity();
+
     // A word here is space-separated. `foo=bar baz` is two words.
     bool has_seen_nonspace = false;
     while (m_cursor > 0) {
@@ -239,18 +251,34 @@ void Editor::erase_word_backwards()
         } else {
             has_seen_nonspace = true;
         }
+
+        m_last_erased.append(m_buffer[m_cursor - 1]);
         erase_character_backwards();
     }
+
+    m_last_erased.reverse();
 }
 
 void Editor::erase_to_end()
 {
-    while (m_cursor < m_buffer.size())
+    if (m_cursor == m_buffer.size())
+        return;
+
+    m_last_erased.clear_with_capacity();
+
+    while (m_cursor < m_buffer.size()) {
+        m_last_erased.append(m_buffer[m_cursor]);
         erase_character_forwards();
+    }
 }
 
 void Editor::erase_to_beginning()
 {
+}
+
+void Editor::insert_last_erased()
+{
+    insert(Utf32View { m_last_erased.data(), m_last_erased.size() });
 }
 
 void Editor::transpose_characters()
@@ -507,6 +535,11 @@ void Editor::insert_last_words()
 
 void Editor::erase_alnum_word_backwards()
 {
+    if (m_cursor == 0)
+        return;
+
+    m_last_erased.clear_with_capacity();
+
     // A word here is contiguous alnums. `foo=bar baz` is three words.
     bool has_seen_alnum = false;
     while (m_cursor > 0) {
@@ -516,12 +549,21 @@ void Editor::erase_alnum_word_backwards()
         } else {
             has_seen_alnum = true;
         }
+
+        m_last_erased.append(m_buffer[m_cursor - 1]);
         erase_character_backwards();
     }
+
+    m_last_erased.reverse();
 }
 
 void Editor::erase_alnum_word_forwards()
 {
+    if (m_cursor == m_buffer.size())
+        return;
+
+    m_last_erased.clear_with_capacity();
+
     // A word here is contiguous alnums. `foo=bar baz` is three words.
     bool has_seen_alnum = false;
     while (m_cursor < m_buffer.size()) {
@@ -531,6 +573,8 @@ void Editor::erase_alnum_word_forwards()
         } else {
             has_seen_alnum = true;
         }
+
+        m_last_erased.append(m_buffer[m_cursor]);
         erase_character_forwards();
     }
 }

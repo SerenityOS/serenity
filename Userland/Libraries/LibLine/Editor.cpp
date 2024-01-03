@@ -164,6 +164,7 @@ void Editor::set_default_keybinds()
 
     // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
     register_key_input_callback(Key { '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));
+    register_key_input_callback(ctrl('Y'), EDITOR_INTERNAL_FUNCTION(insert_last_erased));
     register_key_input_callback(Key { 'b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_word));
     register_key_input_callback(Key { 'f', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_right_word));
     register_key_input_callback(Key { ctrl('B'), Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_nonspace_word));

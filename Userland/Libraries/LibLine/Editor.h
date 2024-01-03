@@ -124,6 +124,7 @@ struct Configuration {
     M(transpose_characters)                    \
     M(transpose_words)                         \
     M(insert_last_words)                       \
+    M(insert_last_erased)                      \
     M(erase_alnum_word_backwards)              \
     M(erase_alnum_word_forwards)               \
     M(capitalize_word)                         \
@@ -505,6 +506,7 @@ private:
     RefPtr<Core::Notifier> m_notifier;
 
     Vector<u32> m_paste_buffer;
+    Vector<u32> m_last_erased;
 
     bool m_initialized { false };
     bool m_refresh_needed { false };
