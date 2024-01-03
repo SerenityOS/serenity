@@ -1,4 +1,4 @@
 [App]
-Name=Game of Life
+Name=&Game of Life
 Executable=/bin/GameOfLife
-Category=Games
+Category=&Games

@@ -1,4 +1,4 @@
 [App]
-Name=2048
+Name=&2048
 Executable=/bin/2048
-Category=Games
+Category=&Games

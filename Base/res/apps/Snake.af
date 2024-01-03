@@ -1,4 +1,4 @@
 [App]
-Name=Snake
+Name=&Snake
 Executable=/bin/Snake
-Category=Games
+Category=&Games

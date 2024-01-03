@@ -1,4 +1,4 @@
 [App]
-Name=Chess
+Name=&Chess
 Executable=/bin/Chess
-Category=Games
+Category=&Games

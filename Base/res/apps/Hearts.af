@@ -1,4 +1,4 @@
 [App]
-Name=Hearts
+Name=&Hearts
 Executable=/bin/Hearts
-Category=Games
+Category=&Games
