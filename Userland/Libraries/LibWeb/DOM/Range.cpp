@@ -560,12 +560,16 @@ String Range::to_string() const
 
     // 2. If this’s start node is this’s end node and it is a Text node,
     //    then return the substring of that Text node’s data beginning at this’s start offset and ending at this’s end offset.
-    if (start_container() == end_container() && is<Text>(*start_container()))
-        return MUST(static_cast<Text const&>(*start_container()).data().substring_from_byte_offset(start_offset(), end_offset() - start_offset()));
+    if (start_container() == end_container() && is<Text>(*start_container())) {
+        auto const& text = static_cast<Text const&>(*start_container());
+        return MUST(text.substring_data(start_offset(), end_offset() - start_offset()));
+    }
 
     // 3. If this’s start node is a Text node, then append the substring of that node’s data from this’s start offset until the end to s.
-    if (is<Text>(*start_container()))
-        builder.append(static_cast<Text const&>(*start_container()).data().bytes_as_string_view().substring_view(start_offset()));
+    if (is<Text>(*start_container())) {
+        auto const& text = static_cast<Text const&>(*start_container());
+        builder.append(MUST(text.substring_data(start_offset(), text.length_in_utf16_code_units() - start_offset())));
+    }
 
     // 4. Append the concatenation of the data of all Text nodes that are contained in this, in tree order, to s.
     for (Node const* node = start_container(); node != end_container()->next_sibling(); node = node->next_in_pre_order()) {
@@ -574,8 +578,10 @@ String Range::to_string() const
     }
 
     // 5. If this’s end node is a Text node, then append the substring of that node’s data from its start until this’s end offset to s.
-    if (is<Text>(*end_container()))
-        builder.append(static_cast<Text const&>(*end_container()).data().bytes_as_string_view().substring_view(0, end_offset()));
+    if (is<Text>(*end_container())) {
+        auto const& text = static_cast<Text const&>(*end_container());
+        builder.append(MUST(text.substring_data(0, end_offset())));
+    }
 
     // 6. Return s.
     return MUST(builder.to_string());
