@@ -10,7 +10,7 @@
 
 namespace Web::DOM {
 
-AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
+AbstractRange::AbstractRange(Node& start_container, WebIDL::UnsignedLong start_offset, Node& end_container, WebIDL::UnsignedLong end_offset)
     : Bindings::PlatformObject(start_container.realm())
     , m_start_container(start_container)
     , m_start_offset(start_offset)
