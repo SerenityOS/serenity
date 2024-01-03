@@ -13,6 +13,7 @@ shared_library("LibIPC") {
     "Encoder.h",
     "File.h",
     "Forward.h",
+    "Message.cpp",
     "Message.h",
     "MultiServer.h",
     "SingleServer.h",
