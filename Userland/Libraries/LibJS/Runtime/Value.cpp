@@ -59,7 +59,7 @@ static inline bool same_type_for_equality(Value const& lhs, Value const& rhs)
     return false;
 }
 
-static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
+static Crypto::SignedBigInteger const BIGINT_ZERO { 0 };
 
 ALWAYS_INLINE bool both_number(Value const& lhs, Value const& rhs)
 {
@@ -655,14 +655,14 @@ static Optional<NumberParseResult> parse_number_text(StringView text)
 double string_to_number(StringView string)
 {
     // 1. Let text be StringToCodePoints(str).
-    ByteString text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
+    auto text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
 
     // 2. Let literal be ParseText(text, StringNumericLiteral).
     if (text.is_empty())
         return 0;
-    if (text == "Infinity" || text == "+Infinity")
+    if (text == "Infinity"sv || text == "+Infinity"sv)
         return INFINITY;
-    if (text == "-Infinity")
+    if (text == "-Infinity"sv)
         return -INFINITY;
 
     auto result = parse_number_text(text);
