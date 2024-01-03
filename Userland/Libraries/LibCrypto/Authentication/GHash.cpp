@@ -92,13 +92,13 @@ void galois_multiply(u32 (&z)[4], const u32 (&_x)[4], const u32 (&_y)[4])
     u32 y[4] { _y[0], _y[1], _y[2], _y[3] };
     __builtin_memset(z, 0, sizeof(z));
 
+#pragma GCC unroll 16
     for (ssize_t i = 127; i > -1; --i) {
-        if ((y[3 - (i / 32)] >> (i % 32)) & 1) {
-            z[0] ^= x[0];
-            z[1] ^= x[1];
-            z[2] ^= x[2];
-            z[3] ^= x[3];
-        }
+        auto r = -((y[3 - (i / 32)] >> (i % 32)) & 1);
+        z[0] ^= x[0] & r;
+        z[1] ^= x[1] & r;
+        z[2] ^= x[2] & r;
+        z[3] ^= x[3] & r;
         auto a0 = x[0] & 1;
         x[0] >>= 1;
         auto a1 = x[1] & 1;
@@ -111,8 +111,7 @@ void galois_multiply(u32 (&z)[4], const u32 (&_x)[4], const u32 (&_y)[4])
         x[3] >>= 1;
         x[3] |= a2 << 31;
 
-        if (a3)
-            x[0] ^= 0xe1000000;
+        x[0] ^= 0xe1000000 & -a3;
     }
 }
 
