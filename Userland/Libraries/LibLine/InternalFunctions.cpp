@@ -93,6 +93,23 @@ void Editor::cursor_left_word()
     m_inline_search_cursor = m_cursor;
 }
 
+void Editor::cursor_left_nonspace_word()
+{
+    auto has_seen_nonspace = false;
+    while (m_cursor) {
+        // after seeing at least one non-space, stop just before a space
+        if (is_ascii_space(m_buffer[m_cursor - 1])) {
+            if (has_seen_nonspace)
+                break;
+        } else {
+            has_seen_nonspace = true;
+        }
+
+        --m_cursor;
+    }
+    m_inline_search_cursor = m_cursor;
+}
+
 void Editor::cursor_left_character()
 {
     if (m_cursor > 0) {
@@ -113,6 +130,24 @@ void Editor::cursor_right_word()
                 break;
         } else {
             has_seen_alnum = true;
+        }
+
+        ++m_cursor;
+    }
+    m_inline_search_cursor = m_cursor;
+    m_search_offset = 0;
+}
+
+void Editor::cursor_right_nonspace_word()
+{
+    auto has_seen_nonspace = false;
+    while (m_cursor < m_buffer.size()) {
+        // after seeing at least one non-space, stop at the first space
+        if (is_ascii_space(m_buffer[m_cursor])) {
+            if (has_seen_nonspace)
+                break;
+        } else {
+            has_seen_nonspace = true;
         }
 
         ++m_cursor;

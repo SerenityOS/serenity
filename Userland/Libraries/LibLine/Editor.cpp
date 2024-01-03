@@ -166,6 +166,8 @@ void Editor::set_default_keybinds()
     register_key_input_callback(Key { '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));
     register_key_input_callback(Key { 'b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_word));
     register_key_input_callback(Key { 'f', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_right_word));
+    register_key_input_callback(Key { ctrl('B'), Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_nonspace_word));
+    register_key_input_callback(Key { ctrl('F'), Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_right_nonspace_word));
     // ^[^H: alt-backspace: backward delete word
     register_key_input_callback(Key { '\b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_backwards));
     register_key_input_callback(Key { 'd', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_forwards));

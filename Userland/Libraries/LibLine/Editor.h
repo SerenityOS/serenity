@@ -105,8 +105,10 @@ struct Configuration {
     M(clear_screen)                            \
     M(cursor_left_character)                   \
     M(cursor_left_word)                        \
+    M(cursor_left_nonspace_word)               \
     M(cursor_right_character)                  \
     M(cursor_right_word)                       \
+    M(cursor_right_nonspace_word)              \
     M(enter_search)                            \
     M(erase_character_backwards)               \
     M(erase_character_forwards)                \
