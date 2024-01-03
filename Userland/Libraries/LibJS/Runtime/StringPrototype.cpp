@@ -64,7 +64,7 @@ static Optional<size_t> split_match(Utf16View const& haystack, size_t start, Utf
 }
 
 // 6.1.4.1 StringIndexOf ( string, searchValue, fromIndex ), https://tc39.es/ecma262/#sec-stringindexof
-static Optional<size_t> string_index_of(Utf16View const& string, Utf16View const& search_value, size_t from_index)
+Optional<size_t> string_index_of(Utf16View const& string, Utf16View const& search_value, size_t from_index)
 {
     // 1. Let len be the length of string.
     size_t string_length = string.length_in_code_units();
