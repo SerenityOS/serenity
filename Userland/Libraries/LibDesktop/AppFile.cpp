@@ -70,6 +70,13 @@ bool AppFile::validate() const
 
 ByteString AppFile::name() const
 {
+    auto name = m_config->read_entry("App", "Name").trim_whitespace().replace("&"sv, ""sv);
+    VERIFY(!name.is_empty());
+    return name;
+}
+
+ByteString AppFile::menu_name() const
+{
     auto name = m_config->read_entry("App", "Name").trim_whitespace();
     VERIFY(!name.is_empty());
     return name;

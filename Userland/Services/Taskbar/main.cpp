@@ -78,6 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 struct AppMetadata {
     ByteString executable;
     ByteString name;
+    ByteString menu_name;
     ByteString category;
     ByteString working_directory;
     GUI::Icon icon;
@@ -99,7 +100,7 @@ ErrorOr<Vector<ByteString>> discover_apps_and_categories()
         if (af->exclude_from_system_menu())
             return;
         if (access(af->executable().characters(), X_OK) == 0) {
-            g_apps.append({ af->executable(), af->name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal(), af->requires_root() });
+            g_apps.append({ af->executable(), af->name(), af->menu_name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal(), af->requires_root() });
             seen_app_categories.set(af->category());
         }
     });
@@ -175,7 +176,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         }
 
         auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
-        parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier, &window](auto&) {
+        parent_menu->add_action(GUI::Action::create(app.menu_name, icon, [app_identifier, &window](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
             auto& app = g_apps[app_identifier];
             StringView executable;
