@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/DOMParserPrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/DOM/XMLDocument.h>
 #include <LibWeb/HTML/DOMParser.h>
 #include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -59,7 +60,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(StringView string, 
         parser->run("about:blank"sv);
     } else {
         // -> Otherwise
-        document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
+        document = DOM::XMLDocument::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
         document->set_content_type(Bindings::idl_enum_to_string(type));
 
         // 1. Create an XML parser parse, associated with document, and with XML scripting support disabled.
