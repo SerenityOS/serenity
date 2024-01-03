@@ -133,15 +133,18 @@ public:
 
     static bool is_eol(char);
     static bool is_whitespace(char);
+    static bool is_non_eol_whitespace(char);
 
     bool matches_eol() const;
     bool matches_whitespace() const;
+    bool matches_non_eol_whitespace() const;
     bool matches_number() const;
     bool matches_delimiter() const;
     bool matches_regular_character() const;
 
     bool consume_eol();
     bool consume_whitespace();
+    bool consume_non_eol_whitespace();
     char consume();
     void consume(int amount);
     bool consume(char);

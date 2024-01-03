@@ -16,8 +16,13 @@ bool Reader::is_eol(char c)
 
 bool Reader::is_whitespace(char c)
 {
+    return is_eol(c) || is_non_eol_whitespace(c);
+}
+
+bool Reader::is_non_eol_whitespace(char c)
+{
     // 3.1.1 Character Set
-    return is_eol(c) || c == 0 || c == 0x9 || c == 0xc || c == ' ';
+    return c == 0 || c == 0x9 || c == 0xc || c == ' ';
 }
 
 bool Reader::matches_eol() const
@@ -28,6 +33,11 @@ bool Reader::matches_eol() const
 bool Reader::matches_whitespace() const
 {
     return !done() && is_whitespace(peek());
+}
+
+bool Reader::matches_non_eol_whitespace() const
+{
+    return !done() && is_non_eol_whitespace(peek());
 }
 
 bool Reader::matches_number() const
@@ -68,6 +78,16 @@ bool Reader::consume_whitespace()
 {
     bool consumed = false;
     while (matches_whitespace()) {
+        consumed = true;
+        consume();
+    }
+    return consumed;
+}
+
+bool Reader::consume_non_eol_whitespace()
+{
+    bool consumed = false;
+    while (matches_non_eol_whitespace()) {
         consumed = true;
         consume();
     }
