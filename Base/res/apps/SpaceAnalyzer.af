@@ -1,4 +1,4 @@
 [App]
-Name=Space Analyzer
+Name=&Space Analyzer
 Executable=/bin/SpaceAnalyzer
-Category=Utilities
+Category=&Utilities

@@ -1,4 +1,4 @@
 [App]
-Name=Assistant
+Name=&Assistant
 Executable=/bin/Assistant
-Category=Utilities
+Category=&Utilities

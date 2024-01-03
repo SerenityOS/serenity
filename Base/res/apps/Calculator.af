@@ -1,4 +1,4 @@
 [App]
-Name=Calculator
+Name=&Calculator
 Executable=/bin/Calculator
-Category=Utilities
+Category=&Utilities
