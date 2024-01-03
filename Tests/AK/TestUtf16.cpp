@@ -310,3 +310,29 @@ TEST_CASE(substring_view)
         EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
     }
 }
+
+TEST_CASE(starts_with)
+{
+    EXPECT(Utf16View {}.starts_with(u""));
+    EXPECT(!Utf16View {}.starts_with(u" "));
+
+    EXPECT(Utf16View { u"a" }.starts_with(u""));
+    EXPECT(Utf16View { u"a" }.starts_with(u"a"));
+    EXPECT(!Utf16View { u"a" }.starts_with(u"b"));
+    EXPECT(!Utf16View { u"a" }.starts_with(u"ab"));
+
+    EXPECT(Utf16View { u"abc" }.starts_with(u""));
+    EXPECT(Utf16View { u"abc" }.starts_with(u"a"));
+    EXPECT(Utf16View { u"abc" }.starts_with(u"ab"));
+    EXPECT(Utf16View { u"abc" }.starts_with(u"abc"));
+    EXPECT(!Utf16View { u"abc" }.starts_with(u"b"));
+    EXPECT(!Utf16View { u"abc" }.starts_with(u"bc"));
+
+    auto emoji = Utf16View { u"😀🙃" };
+
+    EXPECT(emoji.starts_with(u""));
+    EXPECT(emoji.starts_with(u"😀"));
+    EXPECT(emoji.starts_with(u"😀🙃"));
+    EXPECT(!emoji.starts_with(u"a"));
+    EXPECT(!emoji.starts_with(u"🙃"));
+}
