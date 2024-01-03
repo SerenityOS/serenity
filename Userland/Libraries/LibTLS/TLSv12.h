@@ -8,6 +8,7 @@
 
 #include "Certificate.h"
 #include <AK/IPv4Address.h>
+#include <AK/Queue.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
@@ -197,6 +198,44 @@ struct Options {
 #undef OPTION_WITH_DEFAULTS
 };
 
+class SegmentedBuffer {
+public:
+    [[nodiscard]] size_t size() const { return m_size; }
+    [[nodiscard]] bool is_empty() const { return m_size == 0; }
+    void transfer(Bytes dest, size_t size)
+    {
+        VERIFY(size <= dest.size());
+        size_t transferred = 0;
+        while (transferred < size) {
+            auto& buffer = m_buffers.head();
+            size_t to_transfer = min(buffer.size() - m_offset_into_current_buffer, size - transferred);
+            memcpy(dest.offset(transferred), buffer.data() + m_offset_into_current_buffer, to_transfer);
+            transferred += to_transfer;
+            m_offset_into_current_buffer += to_transfer;
+            if (m_offset_into_current_buffer >= buffer.size()) {
+                m_buffers.dequeue();
+                m_offset_into_current_buffer = 0;
+            }
+            m_size -= to_transfer;
+        }
+    }
+
+    AK::ErrorOr<void> try_append(ReadonlyBytes data)
+    {
+        if (Checked<size_t>::addition_would_overflow(m_size, data.size()))
+            return AK::Error::from_errno(EOVERFLOW);
+
+        m_size += data.size();
+        m_buffers.enqueue(TRY(ByteBuffer::copy(data)));
+        return {};
+    }
+
+private:
+    size_t m_size { 0 };
+    Queue<ByteBuffer> m_buffers;
+    size_t m_offset_into_current_buffer { 0 };
+};
+
 struct Context {
     bool verify_chain(StringView host) const;
     bool verify_certificate_pair(Certificate const& subject, Certificate const& issuer) const;
@@ -237,7 +276,7 @@ struct Context {
 
     ByteBuffer tls_buffer;
 
-    ByteBuffer application_buffer;
+    SegmentedBuffer application_buffer;
 
     bool is_child { false };
 

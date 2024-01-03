@@ -27,8 +27,7 @@ ErrorOr<Bytes> TLSv12::read_some(Bytes bytes)
         return Bytes {};
     }
 
-    TRY(m_context.application_buffer.slice(0, size_to_read)).span().copy_to(bytes);
-    m_context.application_buffer = TRY(m_context.application_buffer.slice(size_to_read, m_context.application_buffer.size() - size_to_read));
+    m_context.application_buffer.transfer(bytes, size_to_read);
     return Bytes { bytes.data(), size_to_read };
 }
 
