@@ -498,7 +498,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         } else {
             dbgln_if(TLS_DEBUG, "application data message of size {}", plain.size());
 
-            if (m_context.application_buffer.try_append(plain.data(), plain.size()).is_error()) {
+            if (m_context.application_buffer.try_append(plain).is_error()) {
                 payload_res = (i8)Error::DecryptionFailed;
                 auto packet = build_alert(true, (u8)AlertDescription::DECRYPTION_FAILED_RESERVED);
                 write_packet(packet);
