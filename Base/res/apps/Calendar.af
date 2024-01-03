@@ -1,7 +1,7 @@
 [App]
-Name=Calendar
+Name=&Calendar
 Executable=/bin/Calendar
-Category=Office
+Category=&Office
 
 [Launcher]
 FileTypes=cal
