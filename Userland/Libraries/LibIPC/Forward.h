@@ -13,7 +13,7 @@ namespace IPC {
 class Decoder;
 class Encoder;
 class Message;
-struct MessageBuffer;
+class MessageBuffer;
 class File;
 class Stub;
 

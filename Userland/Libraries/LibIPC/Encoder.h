@@ -37,20 +37,20 @@ public:
 
     ErrorOr<void> extend_capacity(size_t capacity)
     {
-        return m_buffer.data.try_ensure_capacity(m_buffer.data.size() + capacity);
+        TRY(m_buffer.extend_data_capacity(capacity));
+        return {};
     }
 
     ErrorOr<void> append(u8 const* values, size_t count)
     {
-        TRY(extend_capacity(count));
-        m_buffer.data.unchecked_append(values, count);
+        TRY(m_buffer.append_data(values, count));
         return {};
     }
 
     ErrorOr<void> append_file_descriptor(int fd)
     {
-        auto auto_fd = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AutoCloseFileDescriptor(fd)));
-        return m_buffer.fds.try_append(move(auto_fd));
+        TRY(m_buffer.append_file_descriptor(fd));
+        return {};
     }
 
     ErrorOr<void> encode_size(size_t size);
