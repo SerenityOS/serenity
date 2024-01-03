@@ -1,4 +1,4 @@
 [App]
-Name=Help
+Name=&Help
 Executable=/bin/Help
-Category=Utilities
+Category=&Utilities

@@ -1,7 +1,7 @@
 [App]
-Name=Text Editor
+Name=Text &Editor
 Executable=/bin/TextEditor
-Category=Utilities
+Category=&Utilities
 
 [Launcher]
 FileTypes=txt,md,html,htm,js,json,ini

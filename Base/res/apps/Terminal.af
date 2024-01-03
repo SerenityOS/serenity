@@ -1,4 +1,4 @@
 [App]
-Name=Terminal
+Name=&Terminal
 Executable=/bin/Terminal
-Category=Utilities
+Category=&Utilities
