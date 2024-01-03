@@ -105,17 +105,17 @@ void Editor::cursor_left_character()
 
 void Editor::cursor_right_word()
 {
-    if (m_cursor < m_buffer.size()) {
-        // Temporarily put a space at the end of our buffer,
-        // doing this greatly simplifies the logic below.
-        m_buffer.append(' ');
-        for (;;) {
-            if (m_cursor >= m_buffer.size())
+    auto has_seen_alnum = false;
+    while (m_cursor < m_buffer.size()) {
+        // after seeing at least one alnum, stop at the first non-alnum
+        if (not is_ascii_alphanumeric(m_buffer[m_cursor])) {
+            if (has_seen_alnum)
                 break;
-            if (!is_ascii_alphanumeric(m_buffer[++m_cursor]))
-                break;
+        } else {
+            has_seen_alnum = true;
         }
-        m_buffer.take_last();
+
+        ++m_cursor;
     }
     m_inline_search_cursor = m_cursor;
     m_search_offset = 0;
