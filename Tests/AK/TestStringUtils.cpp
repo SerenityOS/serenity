@@ -407,6 +407,25 @@ TEST_CASE(find)
     EXPECT_EQ(AK::StringUtils::find(test_string, "78"sv).has_value(), false);
 }
 
+TEST_CASE(find_last)
+{
+    auto test_string = "abcdabc"sv;
+
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, ""sv), 7u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "a"sv), 4u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "b"sv), 5u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "c"sv), 6u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "ab"sv), 4u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "bc"sv), 5u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "abc"sv), 4u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "abcd"sv), 0u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, test_string), 0u);
+
+    EXPECT(!AK::StringUtils::find_last(test_string, "1"sv).has_value());
+    EXPECT(!AK::StringUtils::find_last(test_string, "e"sv).has_value());
+    EXPECT(!AK::StringUtils::find_last(test_string, "abd"sv).has_value());
+}
+
 TEST_CASE(replace_all_overlapping)
 {
     // Replace only should take into account non-overlapping instances of the
