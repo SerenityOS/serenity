@@ -10,7 +10,7 @@
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
 #include <AK/Noncopyable.h>
-#include <AK/Platform.h>
+#include <AK/Platform.h>24
 
 namespace AK {
 
