@@ -1,4 +1,4 @@
 [App]
-Name=Mail
+Name=&Mail
 Executable=/bin/Mail
-Category=Internet
+Category=&Internet

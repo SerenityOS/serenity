@@ -1,7 +1,7 @@
 [App]
-Name=Ladybird
+Name=&Ladybird
 Executable=/bin/Browser
-Category=Internet
+Category=&Internet
 
 [Launcher]
 FileTypes=html,htm
