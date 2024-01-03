@@ -79,6 +79,9 @@ public:
     Painting::BorderRadiiData const& border_radii_data() const { return m_border_radii_data; }
     void set_border_radii_data(Painting::BorderRadiiData const& border_radii_data) { m_border_radii_data = border_radii_data; }
 
+    bool contained_by_inline_node() const { return m_contained_by_inline_node; }
+    void set_contained_by_inline_node() { m_contained_by_inline_node = true; }
+
 private:
     JS::NonnullGCPtr<Node const> m_layout_node;
     int m_start { 0 };
@@ -90,6 +93,7 @@ private:
     CSSPixels m_baseline { 0 };
     Vector<Gfx::DrawGlyphOrEmoji> m_glyph_run;
     Painting::BorderRadiiData m_border_radii_data;
+    bool m_contained_by_inline_node { false };
 };
 
 }

@@ -24,6 +24,8 @@ public:
 
     CSSPixelRect bounding_rect() const;
 
+    void mark_contained_fragments();
+
 private:
     InlinePaintable(Layout::InlineNode const&);
 

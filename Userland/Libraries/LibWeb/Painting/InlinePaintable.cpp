@@ -146,6 +146,13 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
         }
     }
 
+    if (phase == PaintPhase::Foreground) {
+        for_each_fragment([&](auto const& fragment, bool, bool) {
+            if (is<Layout::TextNode>(fragment.layout_node()))
+                paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
+        });
+    }
+
     if (phase == PaintPhase::Overlay && layout_node().document().inspected_layout_node() == &layout_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
@@ -171,6 +178,15 @@ void InlinePaintable::for_each_fragment(Callback callback) const
         auto const& fragment = fragments[i];
         callback(fragment, i == 0, i == fragments.size() - 1);
     }
+}
+
+void InlinePaintable::mark_contained_fragments()
+{
+    verify_cast<PaintableWithLines>(*containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
+        if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
+            const_cast<Layout::LineBoxFragment&>(fragment).set_contained_by_inline_node();
+        return IterationDecision::Continue;
+    });
 }
 
 CSSPixelRect InlinePaintable::bounding_rect() const

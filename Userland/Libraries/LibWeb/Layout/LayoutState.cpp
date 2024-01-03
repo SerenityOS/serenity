@@ -460,6 +460,18 @@ void LayoutState::commit(Box& root)
 
     resolve_border_radii();
     resolve_box_shadow_data();
+
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        auto& node = const_cast<NodeWithStyle&>(used_values.node());
+        auto* paintable = node.paintable();
+        if (paintable && is<Painting::InlinePaintable>(*paintable)) {
+            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
+            // FIXME: Marking fragments contained by inline node is a hack required to skip them while painting
+            //        PaintableWithLines content.
+            inline_paintable.mark_contained_fragments();
+        }
+    }
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)
