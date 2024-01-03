@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Checked.h>
 #include <LibCore/Socket.h>
 #include <LibIPC/Message.h>
 #include <sched.h>
@@ -14,7 +15,12 @@ using MessageSizeType = u32;
 
 ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& fd_passing_socket, Core::LocalSocket& data_socket)
 {
-    MessageSizeType message_size = data.size();
+    Checked<MessageSizeType> checked_message_size { data.size() };
+
+    if (checked_message_size.has_overflow())
+        return Error::from_string_literal("Message is too large for IPC encoding");
+
+    auto message_size = checked_message_size.value();
     TRY(data.try_prepend(reinterpret_cast<u8 const*>(&message_size), sizeof(message_size)));
 
     for (auto const& fd : fds)
