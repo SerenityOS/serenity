@@ -19,7 +19,7 @@ files=(
 workdir="lite-xl-${commit_hash}"
 launcher_name='Lite-XL'
 icon_file='resources/icons/icon.ico'
-launcher_category='Development'
+launcher_category='D&evelopment'
 launcher_command='/usr/local/bin/lite-xl'
 launcher_run_in_terminal='false'
 

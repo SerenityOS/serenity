@@ -14,7 +14,7 @@ files=(
     "https://raw.githubusercontent.com/python/cpython/942dd9f3f77eef08fabddbd9fb883a866ad6d4cb/PC/pycon.ico#55c1e1fcabc2f254a6d02242912359d29f141d11c4892c20375d58b6dcd89ac0"
 )
 launcher_name='Python'
-launcher_category='Development'
+launcher_category='D&evelopment'
 launcher_command='/usr/local/bin/python3'
 launcher_run_in_terminal='true'
 icon_file='../pycon.ico' # This is an older icon that's downloaded separately, so we need to go outside of $workdir
