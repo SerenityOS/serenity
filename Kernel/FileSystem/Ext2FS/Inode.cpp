@@ -8,6 +8,7 @@
 #include <AK/MemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
+#include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/UnixTypes.h>
@@ -740,6 +741,8 @@ ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyst
     auto block_size = fs().logical_block_size();
     auto file_size = size();
 
+    bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
+
     // Directory entries are guaranteed not to span multiple blocks,
     // so we can iterate over blocks separately.
 
@@ -752,7 +755,7 @@ ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyst
         while (entry < entries_end) {
             if (entry->inode != 0) {
                 dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::traverse_as_directory(): inode {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry->inode, entry->name_len, entry->rec_len, entry->file_type, StringView(entry->name, entry->name_len));
-                TRY(callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }));
+                TRY(callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, has_file_type_attribute ? entry->file_type : (u8)EXT2_FT_UNKNOWN }));
             }
             entry = (ext2_extended_dir_entry*)((char*)entry + entry->rec_len);
         }
@@ -792,6 +795,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
 
     auto directory_data = TRY(ByteBuffer::create_uninitialized(directory_size));
     FixedMemoryStream stream { directory_data.bytes() };
+    bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
 
     for (auto& entry : entries) {
         dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name->length()), u16(entry.record_length), u8(entry.file_type), entry.name);
@@ -799,7 +803,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
         MUST(stream.write_value<u32>(entry.inode_index.value()));
         MUST(stream.write_value<u16>(entry.record_length));
         MUST(stream.write_value<u8>(entry.name->length()));
-        MUST(stream.write_value<u8>(entry.file_type));
+        MUST(stream.write_value<u8>(has_file_type_attribute ? entry.file_type : EXT2_FT_UNKNOWN));
         MUST(stream.write_until_depleted(entry.name->bytes()));
         int padding = entry.record_length - entry.name->length() - 8;
         for (int j = 0; j < padding; ++j)
@@ -835,20 +839,21 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
         return ENAMETOOLONG;
 
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::add_child(): Adding inode {} with name '{}' and mode {:o} to directory {}", identifier(), child.index(), name, mode, index());
+    bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
 
     Vector<Ext2FSDirectoryEntry> entries;
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         if (name == entry.name)
             return EEXIST;
         auto entry_name = TRY(KString::try_create(entry.name));
-        TRY(entries.try_append({ move(entry_name), entry.inode.index(), entry.file_type }));
+        TRY(entries.try_append({ move(entry_name), entry.inode.index(), has_file_type_attribute ? entry.file_type : (u8)EXT2_FT_UNKNOWN }));
         return {};
     }));
 
     TRY(child.increment_link_count());
 
     auto entry_name = TRY(KString::try_create(name));
-    TRY(entries.try_empend(move(entry_name), child.index(), to_ext2_file_type(mode)));
+    TRY(entries.try_empend(move(entry_name), child.index(), has_file_type_attribute ? to_ext2_file_type(mode) : (u8)EXT2_FT_UNKNOWN));
 
     TRY(write_directory(entries));
     TRY(populate_lookup_cache());
@@ -873,12 +878,13 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
     auto child_inode_index = (*it).value;
 
     InodeIdentifier child_id { fsid(), child_inode_index };
+    bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
 
     Vector<Ext2FSDirectoryEntry> entries;
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         if (name != entry.name) {
             auto entry_name = TRY(KString::try_create(entry.name));
-            TRY(entries.try_append({ move(entry_name), entry.inode.index(), entry.file_type }));
+            TRY(entries.try_append({ move(entry_name), entry.inode.index(), has_file_type_attribute ? entry.file_type : (u8)EXT2_FT_UNKNOWN }));
         }
         return {};
     }));
@@ -906,6 +912,7 @@ ErrorOr<void> Ext2FSInode::replace_child(StringView name, Inode& child)
         return ENAMETOOLONG;
 
     Vector<Ext2FSDirectoryEntry> entries;
+    bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
 
     Optional<InodeIndex> old_child_index;
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
@@ -913,7 +920,7 @@ ErrorOr<void> Ext2FSInode::replace_child(StringView name, Inode& child)
         auto inode_index = is_replacing_this_inode ? child.index() : entry.inode.index();
 
         auto entry_name = TRY(KString::try_create(entry.name));
-        TRY(entries.try_empend(move(entry_name), inode_index, to_ext2_file_type(child.mode())));
+        TRY(entries.try_empend(move(entry_name), inode_index, has_file_type_attribute ? to_ext2_file_type(child.mode()) : (u8)EXT2_FT_UNKNOWN));
         if (is_replacing_this_inode)
             old_child_index = entry.inode.index();
 
