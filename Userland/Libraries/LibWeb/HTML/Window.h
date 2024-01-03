@@ -210,6 +210,7 @@ private:
     explicit Window(JS::Realm&);
 
     virtual void visit_edges(Cell::Visitor&) override;
+    virtual void finalize() override;
 
     // ^HTML::GlobalEventHandlers
     virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }

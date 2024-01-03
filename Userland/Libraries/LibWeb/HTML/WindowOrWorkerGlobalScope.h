@@ -64,6 +64,7 @@ public:
 protected:
     void initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
+    void finalize();
 
 private:
     enum class Repeat {

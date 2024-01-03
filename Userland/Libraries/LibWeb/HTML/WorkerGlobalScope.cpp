@@ -55,6 +55,12 @@ void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_page);
 }
 
+void WorkerGlobalScope::finalize()
+{
+    Base::finalize();
+    WindowOrWorkerGlobalScopeMixin::finalize();
+}
+
 void WorkerGlobalScope::set_internal_port(JS::NonnullGCPtr<MessagePort> port)
 {
     m_internal_port = port;
