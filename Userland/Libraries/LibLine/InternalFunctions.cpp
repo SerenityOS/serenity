@@ -78,16 +78,17 @@ void Editor::search_backwards()
 
 void Editor::cursor_left_word()
 {
-    if (m_cursor > 0) {
-        auto skipped_at_least_one_character = false;
-        for (;;) {
-            if (m_cursor == 0)
+    auto has_seen_alnum = false;
+    while (m_cursor) {
+        // after seeing at least one alnum, stop just before a non-alnum
+        if (not is_ascii_alphanumeric(m_buffer[m_cursor - 1])) {
+            if (has_seen_alnum)
                 break;
-            if (skipped_at_least_one_character && !is_ascii_alphanumeric(m_buffer[m_cursor - 1])) // stop *after* a non-alnum, but only if it changes the position
-                break;
-            skipped_at_least_one_character = true;
-            --m_cursor;
+        } else {
+            has_seen_alnum = true;
         }
+
+        --m_cursor;
     }
     m_inline_search_cursor = m_cursor;
 }
