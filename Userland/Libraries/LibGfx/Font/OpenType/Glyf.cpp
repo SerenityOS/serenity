@@ -246,7 +246,9 @@ ReadonlyBytes Glyf::Glyph::program() const
 void Glyf::Glyph::append_path_impl(Gfx::Path& path, Gfx::AffineTransform const& transform) const
 {
     // Get offset for flags, x, and y.
-    u16 num_points = be_u16(m_slice.offset((m_num_contours - 1) * 2)) + 1;
+    u16 num_points = 0;
+    if (m_num_contours > 0)
+        num_points = be_u16(m_slice.offset((m_num_contours - 1) * 2)) + 1;
     u16 num_instructions = be_u16(m_slice.offset(m_num_contours * 2));
     u32 flags_offset = m_num_contours * 2 + 2 + num_instructions;
     u32 x_offset = 0;
