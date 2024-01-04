@@ -82,13 +82,13 @@ void Game::paint_event(GUI::PaintEvent& event)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    // FIXME: After #22573 is merged, then remove the case for F11 below and ensure it is in this check here which also checks for modifiers
+    if (event.modifiers() || event.key() == Key_F1 || event.key() == Key_F11) {
+        event.ignore();
+        return;
+    }
     switch (event.key()) {
     case Key_Escape:
         GUI::Application::the()->quit();
-        break;
-    case Key_F11:
-        event.ignore();
         break;
     default:
         player_input();
