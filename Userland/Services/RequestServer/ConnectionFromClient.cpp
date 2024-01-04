@@ -6,6 +6,8 @@
 
 #include <AK/Badge.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/RefCounted.h>
+#include <AK/Weakable.h>
 #include <LibCore/Proxy.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/Protocol.h>
@@ -105,19 +107,19 @@ Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certif
     return success;
 }
 
-struct Job {
-    explicit Job(URL url)
-        : m_url(move(url))
+class Job : public RefCounted<Job>
+    , public Weakable<Job> {
+public:
+    static NonnullRefPtr<Job> ensure(URL const& url)
     {
-    }
-
-    static Job& ensure(URL const& url)
-    {
-        if (auto it = s_jobs.find(url); it == s_jobs.end()) {
-            auto job = make<Job>(url);
-            s_jobs.set(url, move(job));
+        RefPtr<Job> job;
+        if (auto it = s_jobs.find(url); it != s_jobs.end())
+            job = it->value.strong_ref();
+        if (job == nullptr) {
+            job = adopt_ref(*new Job(url));
+            s_jobs.set(url, job);
         }
-        return *s_jobs.find(url)->value;
+        return *job;
     }
 
     void start(Core::Socket& socket)
@@ -125,19 +127,27 @@ struct Job {
         auto is_connected = socket.is_open();
         VERIFY(is_connected);
         ConnectionCache::request_did_finish(m_url, &socket);
-        s_jobs.remove(m_url);
     }
+
     void fail(Core::NetworkJob::Error error)
     {
         dbgln("Pre-connect to {} failed: {}", m_url, Core::to_string(error));
+    }
+
+    void will_be_destroyed() const
+    {
         s_jobs.remove(m_url);
     }
-    URL m_url;
 
 private:
-    static HashMap<URL, NonnullOwnPtr<Job>> s_jobs;
+    explicit Job(URL url)
+        : m_url(move(url))
+    {
+    }
+
+    URL m_url;
+    inline static HashMap<URL, WeakPtr<Job>> s_jobs {};
 };
-HashMap<URL, NonnullOwnPtr<Job>> Job::s_jobs {};
 
 void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level)
 {
@@ -153,7 +163,7 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
         });
     }
 
-    auto& job = Job::ensure(url);
+    auto job = Job::ensure(url);
     dbgln("EnsureConnection: Pre-connect to {}", url);
     auto do_preconnect = [&](auto& cache) {
         auto serialized_host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string();

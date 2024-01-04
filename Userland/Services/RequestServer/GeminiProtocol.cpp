@@ -31,7 +31,7 @@ OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, Byte
     auto protocol_request = GeminiRequest::create_with_job({}, client, *job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
-    ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job, proxy_data);
+    ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
 
     return protocol_request;
 }
