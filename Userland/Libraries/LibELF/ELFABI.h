@@ -482,18 +482,20 @@ typedef struct {
 } Elf64_Phdr;
 
 /* Segment types - p_type */
-#define PT_NULL 0            /* unused */
-#define PT_LOAD 1            /* loadable segment */
-#define PT_DYNAMIC 2         /* dynamic linking section */
-#define PT_INTERP 3          /* the RTLD */
-#define PT_NOTE 4            /* auxiliary information */
-#define PT_SHLIB 5           /* reserved - purpose undefined */
-#define PT_PHDR 6            /* program header */
-#define PT_TLS 7             /* thread local storage */
-#define PT_LOOS 0x60000000   /* reserved range for OS */
-#define PT_HIOS 0x6fffffff   /*  specific segment types */
-#define PT_LOPROC 0x70000000 /* reserved range for processor */
-#define PT_HIPROC 0x7fffffff /*  specific segment types */
+#define PT_NULL 0          /* unused */
+#define PT_LOAD 1          /* loadable segment */
+#define PT_DYNAMIC 2       /* dynamic linking section */
+#define PT_INTERP 3        /* the RTLD */
+#define PT_NOTE 4          /* auxiliary information */
+#define PT_SHLIB 5         /* reserved - purpose undefined */
+#define PT_PHDR 6          /* program header */
+#define PT_TLS 7           /* thread local storage */
+#define PT_LOOS 0x60000000 /* reserved range for OS */
+#define PT_HIOS 0x6fffffff /* specific segment types */
+
+#define PT_LOPROC 0x70000000           /* start of reserved range for processor specific segment types */
+#define PT_RISCV_ATTRIBUTES 0x70000003 /* RISC-V ELF attribute section */
+#define PT_HIPROC 0x7fffffff           /* end of reserved range for processor specific segment types */
 
 #define PT_GNU_EH_FRAME 0x6474e550 /* Exception handling info */
 #define PT_GNU_RELRO 0x6474e552    /* Read-only after relocation */

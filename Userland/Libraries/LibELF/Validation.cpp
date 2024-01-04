@@ -231,6 +231,12 @@ ErrorOr<bool> validate_program_headers(Elf_Ehdr const& elf_header, size_t file_s
     for (size_t header_index = 0; header_index < num_program_headers; ++header_index) {
         auto& program_header = program_header_begin[header_index];
 
+        if (elf_header.e_machine == EM_RISCV && program_header.p_type == PT_RISCV_ATTRIBUTES) {
+            // TODO: Handle RISC-V attribute section.
+            //       We have to continue here, as `p_memsz` is 0 when using the GNU toolchain
+            continue;
+        }
+
         if (program_header.p_filesz > program_header.p_memsz) {
             if (verbose)
                 dbgln("Program header ({}) has p_filesz ({}) larger than p_memsz ({})", header_index, program_header.p_filesz, program_header.p_memsz);
