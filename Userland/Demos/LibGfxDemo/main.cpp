@@ -200,6 +200,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
+    auto view_menu = window->add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)window->set_main_widget<Canvas>();
