@@ -510,6 +510,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_action(zoom_in_action);
     view_menu->add_action(reset_zoom_action);
     view_menu->add_action(zoom_out_action);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
