@@ -5,17 +5,24 @@
  */
 
 #include <Kernel/Arch/PowerState.h>
+#include <Kernel/Arch/riscv64/SBI.h>
 
 namespace Kernel {
 
 void arch_specific_reboot()
 {
-    TODO_RISCV64();
+    auto ret = SBI::SystemReset::system_reset(SBI::SystemReset::ResetType::ColdReboot, SBI::SystemReset::ResetReason::NoReason);
+    dbgln("SBI: Failed to reboot: {}", ret);
+    dbgln("SBI: Attempting to shut down using the legacy extension...");
+    SBI::Legacy::shutdown();
 }
 
 void arch_specific_poweroff()
 {
-    TODO_RISCV64();
+    auto ret = SBI::SystemReset::system_reset(SBI::SystemReset::ResetType::Shutdown, SBI::SystemReset::ResetReason::NoReason);
+    dbgln("SBI: Failed to shut down: {}", ret);
+    dbgln("SBI: Attempting to shut down using the legacy extension...");
+    SBI::Legacy::shutdown();
 }
 
 }
