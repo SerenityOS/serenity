@@ -44,6 +44,22 @@ static SBIErrorOr<long> sbi_ecall1(EID extension_id, u32 function_id, unsigned l
     return static_cast<SBIError>(a0);
 }
 
+static SBIErrorOr<long> sbi_ecall2(EID extension_id, u32 function_id, unsigned long arg0, unsigned long arg1)
+{
+    register unsigned long a0 asm("a0") = arg0;
+    register unsigned long a1 asm("a1") = arg1;
+    register unsigned long a6 asm("a6") = function_id;
+    register unsigned long a7 asm("a7") = to_underlying(extension_id);
+    asm volatile("ecall"
+                 : "+r"(a0), "+r"(a1)
+                 : "r"(a0), "r"(a1), "r"(a6), "r"(a7)
+                 : "memory");
+    if (a0 == to_underlying(SBIError::Success))
+        return static_cast<long>(a1);
+
+    return static_cast<SBIError>(a0);
+}
+
 namespace Base {
 
 SBIErrorOr<SpecificationVersion> get_spec_version()
@@ -141,6 +157,20 @@ SBIErrorOr<void> set_timer(u64 stime_value)
 {
     TRY(SBI::sbi_ecall1(EID::Timer, to_underlying(FID::SetTimer), stime_value));
     return {};
+}
+
+}
+
+namespace SystemReset {
+
+SBIError system_reset(ResetType reset_type, ResetReason reset_reason)
+{
+    auto const res = SBI::sbi_ecall2(EID::SystemReset, to_underlying(FID::SystemReset), to_underlying(reset_type), to_underlying(reset_reason));
+
+    // This SBI call shold only return if it didn't succeed
+    VERIFY(res.is_error());
+
+    return res.error();
 }
 
 }
