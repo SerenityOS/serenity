@@ -103,9 +103,9 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& 
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
     if constexpr (IsSame<typename TBadgedProtocol::Type, HttpsProtocol>)
-        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job, proxy_data);
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
     else
-        ConnectionCache::get_or_create_connection(ConnectionCache::g_tcp_connection_cache, url, *job, proxy_data);
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tcp_connection_cache, url, job, proxy_data);
 
     return protocol_request;
 }

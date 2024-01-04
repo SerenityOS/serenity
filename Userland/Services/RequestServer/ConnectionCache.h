@@ -61,21 +61,21 @@ struct Connection {
         Function<Vector<TLS::Certificate>()> provide_client_certificates {};
 
         template<typename T>
-        static JobData create(T& job)
+        static JobData create(NonnullRefPtr<T> job)
         {
             // Clang-format _really_ messes up formatting this, so just format it manually.
             // clang-format off
             return JobData {
-                .start = [&job](auto& socket) {
-                    job.start(socket);
+                .start = [job](auto& socket) {
+                    job->start(socket);
                 },
-                .fail = [&job](auto error) {
-                    job.fail(error);
+                .fail = [job](auto error) {
+                    job->fail(error);
                 },
-                .provide_client_certificates = [&job] {
-                    if constexpr (requires { job.on_certificate_requested; }) {
-                        if (job.on_certificate_requested)
-                            return job.on_certificate_requested();
+                .provide_client_certificates = [job] {
+                    if constexpr (requires { job->on_certificate_requested; }) {
+                        if (job->on_certificate_requested)
+                            return job->on_certificate_requested();
                     } else {
                         // "use" `job`, otherwise clang gets sad.
                         (void)job;
@@ -170,7 +170,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
     return {};
 }
 
-decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, Core::ProxyData proxy_data = {})
+decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto job, Core::ProxyData proxy_data = {})
 {
     using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
     auto& sockets_for_url = *cache.ensure({ url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string(), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
@@ -186,16 +186,16 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
         auto connection_result = proxy.tunnel<typename ConnectionType::SocketType, typename ConnectionType::StorageType>(url);
         if (connection_result.is_error()) {
             dbgln("ConnectionCache: Connection to {} failed: {}", url, connection_result.error());
-            Core::deferred_invoke([&job] {
-                job.fail(Core::NetworkJob::Error::ConnectionFailed);
+            Core::deferred_invoke([job] {
+                job->fail(Core::NetworkJob::Error::ConnectionFailed);
             });
             return ReturnType { nullptr };
         }
         auto socket_result = Core::BufferedSocket<typename ConnectionType::StorageType>::create(connection_result.release_value());
         if (socket_result.is_error()) {
             dbgln("ConnectionCache: Failed to make a buffered socket for {}: {}", url, socket_result.error());
-            Core::deferred_invoke([&job] {
-                job.fail(Core::NetworkJob::Error::ConnectionFailed);
+            Core::deferred_invoke([job] {
+                job->fail(Core::NetworkJob::Error::ConnectionFailed);
             });
             return ReturnType { nullptr };
         }
@@ -225,8 +225,8 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
         index = it.index();
     }
     if (sockets_for_url.is_empty()) {
-        Core::deferred_invoke([&job] {
-            job.fail(Core::NetworkJob::Error::ConnectionFailed);
+        Core::deferred_invoke([job] {
+            job->fail(Core::NetworkJob::Error::ConnectionFailed);
         });
         return ReturnType { nullptr };
     }
@@ -235,13 +235,13 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
     if (!connection.has_started) {
         if (auto result = recreate_socket_if_needed(connection, url); result.is_error()) {
             dbgln("ConnectionCache: request failed to start, failed to make a socket: {}", result.error());
-            Core::deferred_invoke([&job] {
-                job.fail(Core::NetworkJob::Error::ConnectionFailed);
+            Core::deferred_invoke([job] {
+                job->fail(Core::NetworkJob::Error::ConnectionFailed);
             });
             return ReturnType { nullptr };
         }
         dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
-        Core::deferred_invoke([&connection, url, &job] {
+        Core::deferred_invoke([&connection, url, job] {
             connection.has_started = true;
             connection.removal_timer->stop();
             connection.timer.start();
