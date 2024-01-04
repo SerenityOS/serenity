@@ -1276,7 +1276,7 @@ inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_spac
         FloatVector3 new_color = {
             (float)e[0] * color[0] + (float)e[1] * color[1] + (float)e[2] * color[2] + (float)e[9],
             (float)e[3] * color[0] + (float)e[4] * color[1] + (float)e[5] * color[2] + (float)e[10],
-            (float)e[6] * color[0] + (float)e[7] * color[1] + (float)e[8] * color[2] + (float)e[11]
+            (float)e[6] * color[0] + (float)e[7] * color[1] + (float)e[8] * color[2] + (float)e[11],
         };
         color = new_color.clamped(0.f, 1.f);
     }
