@@ -94,6 +94,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto settings_menu = window->add_menu("&Settings"_string);
     settings_menu->add_action(auto_modifier_action);
 
+    auto view_menu = window->add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Keyboard Mapper"_string, app_icon, window));

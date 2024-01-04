@@ -305,6 +305,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::Application::the()->quit();
     }));
 
+    auto view_menu = window.add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     window.add_menu(GUI::CommonMenus::make_accessibility_menu(*m_preview_widget));
 
     auto help_menu = window.add_menu("&Help"_string);

@@ -210,6 +210,11 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
+    auto view_menu = window.add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     auto go_menu = window.add_menu("&Go"_string);
     go_menu->add_action(*m_go_back_action);
     go_menu->add_action(*m_go_forward_action);
