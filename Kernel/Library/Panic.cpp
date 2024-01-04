@@ -10,6 +10,8 @@
 #    include <Kernel/Arch/x86_64/Shutdown.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Watchdog.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/SBI.h>
 #endif
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/KSyms.h>
@@ -25,6 +27,11 @@ namespace Kernel {
     virtualbox_shutdown();
 #elif ARCH(AARCH64)
     RPi::Watchdog::the().system_shutdown();
+#elif ARCH(RISCV64)
+    auto ret = SBI::SystemReset::system_reset(SBI::SystemReset::ResetType::Shutdown, SBI::SystemReset::ResetReason::SystemFailure);
+    dbgln("SBI: Failed to shut down: {}", ret);
+    dbgln("SBI: Attempting to shut down using the legacy extension...");
+    SBI::Legacy::shutdown();
 #endif
     // Note: If we failed to invoke platform shutdown, we need to halt afterwards
     // to ensure no further execution on any CPU still happens.
