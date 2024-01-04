@@ -438,7 +438,8 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
 }
 
 // 7.3.26 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
-ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashTable<PropertyKey> const& seen_names)
+// 14.6 CopyDataProperties ( target, source, excludedItems, excludedKeys [ , excludedValues ] ), https://tc39.es/proposal-temporal/#sec-copydataproperties
+ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashTable<PropertyKey> const& excluded_keys, HashTable<JS::Value> const& excluded_values)
 {
     // 1. If source is either undefined or null, return unused.
     if (source.is_nullish())
@@ -455,10 +456,10 @@ ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashT
         auto next_key = MUST(PropertyKey::from_value(vm, next_key_value));
 
         // a. Let excluded be false.
-        // b. For each element e of excludedItems, do
+        // b. For each element e of excludedKeys, do
         //    i. If SameValue(e, nextKey) is true, then
         //        1. Set excluded to true.
-        if (seen_names.contains(next_key))
+        if (excluded_keys.contains(next_key))
             continue;
 
         // c. If excluded is false, then
@@ -471,8 +472,14 @@ ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashT
             // 1. Let propValue be ? Get(from, nextKey).
             auto prop_value = TRY(from->get(next_key));
 
-            // 2. Perform ! CreateDataPropertyOrThrow(target, nextKey, propValue).
-            MUST(create_data_property_or_throw(next_key, prop_value));
+            // 2. If excludedValues is present, then
+            //     a. For each element e of excludedValues, do
+            //         i. If SameValue(e, propValue) is true, then
+            //             i. Set excluded to true.
+            // 3. If excluded is false, Perform ! CreateDataPropertyOrThrow(target, nextKey, propValue).
+            // NOTE: HashTable traits for JS::Value uses SameValue.
+            if (!excluded_values.contains(prop_value))
+                MUST(create_data_property_or_throw(next_key, prop_value));
         }
     }
 
