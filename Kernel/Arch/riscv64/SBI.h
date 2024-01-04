@@ -133,6 +133,11 @@ LegacySBIErrorOr<void> set_timer(u64 stime_value);
 // Write data present in ch to debug console.
 LegacySBIErrorOr<void> console_putchar(int ch);
 
+// System Shutdown (EID #0x08)
+// Puts all the harts to shutdown state from supervisor point of view.
+// This SBI call doesn’t return irrespective whether it succeeds or fails.
+[[noreturn]] void shutdown();
+
 }
 
 // Chapter 6. Timer Extension (EID #0x54494D45 "TIME")
