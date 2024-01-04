@@ -1053,6 +1053,11 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     view_menu->add_separator();
     view_menu->add_action(show_dotfiles_action);
 
+    view_menu->add_separator();
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+
     auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         toolbar_container.set_visible(true);
         breadcrumb_toolbar.set_visible(true);

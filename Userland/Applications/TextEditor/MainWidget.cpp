@@ -689,6 +689,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_sql_highlight);
     syntax_menu->add_action(*m_sql_highlight);
 
+    view_menu->add_separator();
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
