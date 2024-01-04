@@ -1,6 +1,6 @@
 -webkit-appearance: auto
 accent-color: auto
-align-content: stretch
+align-content: normal
 align-items: normal
 align-self: auto
 animation-delay: 0s
