@@ -50,22 +50,24 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
     encoding->m_descriptors = TRY(base_encoding->m_descriptors.clone());
     encoding->m_name_mapping = TRY(base_encoding->m_name_mapping.clone());
 
-    auto differences_array = TRY(dict->get_array(document, CommonNames::Differences));
+    if (dict->contains(CommonNames::Differences)) {
+        auto differences_array = TRY(dict->get_array(document, CommonNames::Differences));
 
-    u16 current_code_point = 0;
-    bool first = true;
+        u16 current_code_point = 0;
+        bool first = true;
 
-    for (auto& item : *differences_array) {
-        if (item.has_u32()) {
-            current_code_point = item.to_int();
-            first = false;
-        } else {
-            VERIFY(item.has<NonnullRefPtr<Object>>());
-            VERIFY(!first);
-            auto& object = item.get<NonnullRefPtr<Object>>();
-            auto name = object->cast<NameObject>()->name();
-            encoding->set(current_code_point, name);
-            current_code_point++;
+        for (auto& item : *differences_array) {
+            if (item.has_u32()) {
+                current_code_point = item.to_int();
+                first = false;
+            } else {
+                VERIFY(item.has<NonnullRefPtr<Object>>());
+                VERIFY(!first);
+                auto& object = item.get<NonnullRefPtr<Object>>();
+                auto name = object->cast<NameObject>()->name();
+                encoding->set(current_code_point, name);
+                current_code_point++;
+            }
         }
     }
 
