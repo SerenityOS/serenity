@@ -1302,15 +1302,27 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_
 {
     // https://drafts.csswg.org/css-grid/#algo-stretch
     // 12.8. Stretch auto Tracks
-
-    auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
-    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
-
     // When the content-distribution property of the grid container is normal or stretch in this axis,
     // this step expands tracks that have an auto max track sizing function by dividing any remaining
     // positive, definite free space equally amongst them. If the free space is indefinite, but the grid
     // container has a definite min-width/height, use that size to calculate the free space for this
     // step instead.
+
+    auto content_distribution_property_is_normal_or_stretch = false;
+    if (dimension == GridDimension::Column) {
+        auto const& justify_content = grid_container().computed_values().justify_content();
+        content_distribution_property_is_normal_or_stretch = justify_content == CSS::JustifyContent::Normal || justify_content == CSS::JustifyContent::Stretch;
+    } else {
+        auto const& align_content = grid_container().computed_values().align_content();
+        content_distribution_property_is_normal_or_stretch = align_content == CSS::AlignContent::Normal || align_content == CSS::AlignContent::Stretch;
+    }
+
+    if (!content_distribution_property_is_normal_or_stretch)
+        return;
+
+    auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+
     CSSPixels used_space = 0;
     for (auto& track : tracks_and_gaps) {
         if (!track.max_track_sizing_function.is_auto(available_size))
@@ -1876,8 +1888,24 @@ CSSPixelRect GridFormattingContext::get_grid_area_rect(GridItem const& grid_item
     int column_start = grid_item.gap_adjusted_column(grid_container());
     int column_end = grid_item.gap_adjusted_column(grid_container()) + resolved_column_span;
 
+    auto grid_container_width = m_available_space->width.to_px_or_zero();
+    CSSPixels sum_base_size_of_columns = 0;
+    for (size_t i = 0; i < m_grid_columns_and_gaps.size(); i++)
+        sum_base_size_of_columns += m_grid_columns_and_gaps[i].base_size;
+    auto const& justify_content = grid_container().computed_values().justify_content();
+
     CSSPixels x_start = 0;
     CSSPixels x_end = 0;
+    if (justify_content == CSS::JustifyContent::Center) {
+        auto free_space = grid_container_width - sum_base_size_of_columns;
+        x_start = free_space / 2;
+        x_end = free_space / 2;
+    } else if (justify_content == CSS::JustifyContent::End) {
+        auto free_space = grid_container_width - sum_base_size_of_columns;
+        x_start = free_space;
+        x_end = free_space;
+    }
+
     CSSPixels y_start = 0;
     CSSPixels y_end = 0;
     for (int i = 0; i < column_start; i++)
