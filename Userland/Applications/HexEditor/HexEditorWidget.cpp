@@ -555,6 +555,11 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     little_endian_mode->set_checked(use_little_endian);
     big_endian_mode->set_checked(!use_little_endian);
 
+    view_menu->add_separator();
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {

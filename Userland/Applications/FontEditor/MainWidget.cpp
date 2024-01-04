@@ -794,6 +794,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     scale_menu->add_action(*m_scale_ten_action);
     scale_menu->add_action(*m_scale_fifteen_action);
 
+    view_menu->add_separator();
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {

@@ -267,6 +267,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
     view_menu->add_action(*m_view_window_action);
     m_views_group.add_action(*m_view_window_action);
+    view_menu->add_separator();
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
 
     m_preview_window->on_close = [&] {
         m_view_frame_action->activate();
