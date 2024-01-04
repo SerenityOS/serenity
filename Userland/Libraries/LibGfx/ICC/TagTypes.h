@@ -1303,13 +1303,74 @@ inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_spac
     return output_color;
 }
 
-inline ErrorOr<void> LutBToATagData::evaluate(ColorSpace connection_space, FloatVector3 const&, Bytes out_bytes) const
+inline ErrorOr<void> LutBToATagData::evaluate(ColorSpace connection_space, FloatVector3 const& in_color, Bytes out_bytes) const
 {
     VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
     VERIFY(number_of_input_channels() == 3);
     VERIFY(number_of_output_channels() == out_bytes.size());
 
-    return Error::from_string_literal("LutBToATagData::evaluate: Not yet implemented");
+    // ICC v4, 10.13 lutBToAType
+    // "Data are processed using these elements via the following sequence:
+    //  (“B” curves) ⇨ (matrix) ⇨ (“M” curves) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (“A” curves)."
+
+    // See comment at start of LutAToBTagData::evaluate() for the clipping flow.
+    // This function generally is the same as LutAToBTagData::evaluate() upside down.
+
+    auto evaluate_curve = [](LutCurveType const& curve, float f) {
+        VERIFY(curve->type() == CurveTagData::Type || curve->type() == ParametricCurveTagData::Type);
+        if (curve->type() == CurveTagData::Type)
+            return static_cast<CurveTagData const&>(*curve).evaluate(f);
+        return static_cast<ParametricCurveTagData const&>(*curve).evaluate(f);
+    };
+
+    FloatVector3 color;
+    if (connection_space == ColorSpace::PCSXYZ) {
+        color = in_color * 32768 / 65535.0f;
+    } else {
+        VERIFY(connection_space == ColorSpace::PCSLAB);
+        color[0] = in_color[0] / 100.0f;
+        color[1] = (in_color[1] + 128.0f) / 255.0f;
+        color[2] = (in_color[2] + 128.0f) / 255.0f;
+    }
+
+    color = FloatVector3 {
+        evaluate_curve(m_b_curves[0], color[0]),
+        evaluate_curve(m_b_curves[1], color[1]),
+        evaluate_curve(m_b_curves[2], color[2])
+    };
+
+    VERIFY(m_e.has_value() == m_m_curves.has_value());
+    if (m_e.has_value()) {
+        // ICC v4, 10.13.3 Matrix
+        // "The resultant values Y1, Y2 and Y3 shall be clipped to the range 0,0 to 1,0 and used as inputs to the “M” curves."
+        EMatrix3x4 const& e = m_e.value();
+        FloatVector3 new_color = {
+            (float)e[0] * color[0] + (float)e[1] * color[1] + (float)e[2] * color[2] + (float)e[9],
+            (float)e[3] * color[0] + (float)e[4] * color[1] + (float)e[5] * color[2] + (float)e[10],
+            (float)e[6] * color[0] + (float)e[7] * color[1] + (float)e[8] * color[2] + (float)e[11],
+        };
+        color = new_color.clamped(0.f, 1.f);
+
+        auto const& m_curves = m_m_curves.value();
+        color = FloatVector3 {
+            evaluate_curve(m_curves[0], color[0]),
+            evaluate_curve(m_curves[1], color[1]),
+            evaluate_curve(m_curves[2], color[2])
+        };
+    }
+
+    VERIFY(m_clut.has_value() == m_a_curves.has_value());
+    if (m_clut.has_value()) {
+        // FIXME
+        return Error::from_string_literal("LutBToATagData::evaluate: Not yet implemented when CLUT present");
+    } else {
+        VERIFY(number_of_output_channels() == 3);
+        out_bytes[0] = round_to<u8>(color[0] * 255.0f);
+        out_bytes[1] = round_to<u8>(color[1] * 255.0f);
+        out_bytes[2] = round_to<u8>(color[2] * 255.0f);
+    }
+
+    return {};
 }
 
 }
