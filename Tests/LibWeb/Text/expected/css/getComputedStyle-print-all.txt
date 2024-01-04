@@ -87,7 +87,7 @@ inset-block-end: auto
 inset-block-start: auto
 inset-inline-end: auto
 inset-inline-start: auto
-justify-content: flex-start
+justify-content: normal
 justify-items: legacy
 justify-self: auto
 left: auto

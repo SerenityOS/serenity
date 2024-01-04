@@ -206,6 +206,7 @@
     "optimizequality=smooth"
   ],
   "justify-content": [
+    "normal",
     "start",
     "end",
     "flex-start",
@@ -213,7 +214,8 @@
     "center",
     "space-between",
     "space-around",
-    "space-evenly"
+    "space-evenly",
+    "stretch"
   ],
   "justify-items": [
     "baseline",
