@@ -184,6 +184,8 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
         m_divide_button->click();
     else if (event.code_point() == '%')
         m_percent_button->click();
+    else
+        event.ignore();
 
     update_display();
 }
