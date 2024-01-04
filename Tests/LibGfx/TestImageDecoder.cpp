@@ -100,6 +100,65 @@ TEST_CASE(test_gif)
     EXPECT(frame.duration == 400);
 }
 
+TEST_CASE(test_gif_without_global_color_table)
+{
+    Array<u8, 35> gif_data {
+        // Header (6 bytes): "GIF89a"
+        0x47,
+        0x49,
+        0x46,
+        0x38,
+        0x39,
+        0x61,
+
+        // Logical Screen Descriptor (7 bytes)
+        0x01,
+        0x00, // Width (1)
+        0x01,
+        0x00, // Height (1)
+        0x00, // Packed fields (NOTE: the MSB here is the Global Color Table flag!)
+        0x00, // Background Color Index
+        0x00, // Pixel Aspect Ratio
+
+        // Image Descriptor (10 bytes)
+        0x2C,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x01,
+        0x00,
+        0x80,
+
+        // Local Color Table (6 bytes: 2 colors, 3 bytes per color)
+        0x00,
+        0x00,
+        0x00, // Color 1: Black (RGB: 0, 0, 0)
+        0xff,
+        0x00,
+        0x00, // Color 2: Red (RGB: 255, 0, 0)
+
+        // Image Data (8 bytes)
+        0x02, // LZW Minimum Code Size
+        0x02, // Data Sub-block size (2 bytes)
+        0x4C,
+        0x01, // Image Data
+        0x00, // Data Sub-block Terminator
+
+        // Trailer (1 byte)
+        0x3B,
+    };
+
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(gif_data));
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    auto frame = TRY_OR_FAIL(plugin_decoder->frame(0));
+    EXPECT(frame.image);
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(1, 1));
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color::NamedColor::Red);
+}
+
 TEST_CASE(test_not_ico)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("png/buggie.png"sv)));
