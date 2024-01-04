@@ -42,6 +42,11 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
         auto base_encoding_obj = MUST(dict->get_object(document, CommonNames::BaseEncoding));
         base_encoding = TRY(Encoding::from_object(document, base_encoding_obj));
     } else {
+        // FIXME:
+        // "If this entry is absent, the Differences entry describes differences from an implicit base encoding.
+        // For a font program that is embedded in the PDF file, the implicit base encoding is the font program’s built-in encoding,
+        // as described above and further elaborated in the sections on specific font types below.
+        // Otherwise, for a nonsymbolic font, it is StandardEncoding, and for a symbolic font, it is the font’s built-in encoding."
         base_encoding = Encoding::standard_encoding();
     }
 
