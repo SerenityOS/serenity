@@ -322,6 +322,11 @@ ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
     edit_menu->add_separator();
     edit_menu->add_action(*m_run_script_action);
 
+    auto view_menu = window->add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([window](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
