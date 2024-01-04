@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_double_buffering_enabled(false);
     window->set_title("MasterWord");
-    window->set_resizable(false);
+    window->set_resizable(true);
     window->set_auto_shrink(true);
 
     auto main_widget = TRY(MasterWord::MainWidget::try_create());
@@ -126,6 +126,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     theme_actions.set_unchecking_allowed(false);
     theme_actions.add_action(system_theme_action);
     theme_actions.add_action(wordle_theme_action);
+
+    auto view_menu = window->add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
