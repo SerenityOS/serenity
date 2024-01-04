@@ -105,6 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::create(arguments));
+    auto const man_file = "/usr/share/man/man1/Applications/Browser.md"sv;
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");
@@ -113,6 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // the user's downloads directory.
     // FIXME: This should go away with a standalone download manager at some point.
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
     TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -171,7 +173,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         initial_urls.append(Browser::g_home_url);
 
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
-    auto window = Browser::BrowserWindow::construct(cookie_jar, initial_urls);
+    auto window = Browser::BrowserWindow::construct(cookie_jar, initial_urls, man_file);
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
