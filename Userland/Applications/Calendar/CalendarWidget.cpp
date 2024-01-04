@@ -109,6 +109,11 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
     view_menu->add_action(*view_month_action);
     view_menu->add_action(*view_year_action);
 
+    view_menu->add_separator();
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        parent_window->set_fullscreen(!parent_window->is_fullscreen());
+    }));
+
     auto help_menu = parent_window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(parent_window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {

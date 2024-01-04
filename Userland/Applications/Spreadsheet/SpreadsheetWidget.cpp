@@ -746,6 +746,11 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     edit_menu->add_action(*m_paste_action);
     edit_menu->add_action(*m_insert_emoji_action);
 
+    auto view_menu = window.add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(*m_search_action);
     help_menu->add_action(*m_functions_help_action);
