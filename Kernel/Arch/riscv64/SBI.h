@@ -204,6 +204,50 @@ void initialize();
 }
 
 template<>
+struct AK::Formatter<Kernel::SBI::SBIError> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::SBI::SBIError error)
+    {
+        auto string = "Unknown error"sv;
+
+        using enum Kernel::SBI::SBIError;
+        switch (error) {
+        case Success:
+            string = "Completed successfully"sv;
+            break;
+        case Failed:
+            string = "Failed"sv;
+            break;
+        case NotSupported:
+            string = "Not supported"sv;
+            break;
+        case InvalidParam:
+            string = "Invalid parameter(s)"sv;
+            break;
+        case Denied:
+            string = "Denied or not allowed"sv;
+            break;
+        case InvalidAddress:
+            string = "Invalid address(s)"sv;
+            break;
+        case AlreadyAvailable:
+            string = "Already available"sv;
+            break;
+        case AlreadyStarted:
+            string = "Already started"sv;
+            break;
+        case AlreadyStopped:
+            string = "Already stopped"sv;
+            break;
+        case NoSHMEM:
+            string = "Shared memory not available"sv;
+            break;
+        }
+
+        return builder.put_string(string);
+    }
+};
+
+template<>
 struct AK::Formatter<Kernel::SBI::Base::SpecificationVersion> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Kernel::SBI::Base::SpecificationVersion const& version)
     {
