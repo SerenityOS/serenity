@@ -240,20 +240,26 @@ static ErrorOr<void> load_header_and_logical_screen(GIFLoadingContext& context)
     context.logical_screen.width = TRY(context.stream.read_value<LittleEndian<u16>>());
     context.logical_screen.height = TRY(context.stream.read_value<LittleEndian<u16>>());
 
-    auto gcm_info = TRY(context.stream.read_value<u8>());
+    auto packed_fields = TRY(context.stream.read_value<u8>());
     context.background_color_index = TRY(context.stream.read_value<u8>());
     [[maybe_unused]] auto pixel_aspect_ratio = TRY(context.stream.read_value<u8>());
 
-    u8 bits_per_pixel = (gcm_info & 7) + 1;
-    int color_map_entry_count = 1;
-    for (int i = 0; i < bits_per_pixel; ++i)
-        color_map_entry_count *= 2;
+    // Global Color Table; if the flag is set, the Global Color Table will
+    // immediately follow the Logical Screen Descriptor.
+    bool global_color_table_flag = packed_fields & 0x80;
 
-    for (int i = 0; i < color_map_entry_count; ++i) {
-        u8 r = TRY(context.stream.read_value<u8>());
-        u8 g = TRY(context.stream.read_value<u8>());
-        u8 b = TRY(context.stream.read_value<u8>());
-        context.logical_screen.color_map[i] = { r, g, b };
+    if (global_color_table_flag) {
+        u8 bits_per_pixel = (packed_fields & 7) + 1;
+        int color_map_entry_count = 1;
+        for (int i = 0; i < bits_per_pixel; ++i)
+            color_map_entry_count *= 2;
+
+        for (int i = 0; i < color_map_entry_count; ++i) {
+            u8 r = TRY(context.stream.read_value<u8>());
+            u8 g = TRY(context.stream.read_value<u8>());
+            u8 b = TRY(context.stream.read_value<u8>());
+            context.logical_screen.color_map[i] = { r, g, b };
+        }
     }
 
     return {};
