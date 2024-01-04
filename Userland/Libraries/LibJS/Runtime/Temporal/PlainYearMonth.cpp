@@ -247,45 +247,67 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
     if (!TRY(calendar_equals(vm, calendar, other->calendar())))
         return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
 
-    // 5. Let settings be ? GetDifferenceSettings(operation, options, date, « "week", "day" », "month", "year").
-    auto settings = TRY(get_difference_settings(vm, operation, options_value, UnitGroup::Date, { "week"sv, "day"sv }, { "month"sv }, "year"sv));
+    // 5. Let resolvedOptions be ? SnapshotOwnProperties(? GetOptionsObject(options), null).
+    auto resolved_options = TRY(TRY(get_options_object(vm, options_value))->snapshot_own_properties(vm, nullptr));
 
-    // 6. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(vm, calendar, { "monthCode"sv, "year"sv }));
+    // 6. Let settings be ? GetDifferenceSettings(operation, resolvedOptions, date, « "week", "day" », "month", "year").
+    auto settings = TRY(get_difference_settings(vm, operation, resolved_options, UnitGroup::Date, { "week"sv, "day"sv }, { "month"sv }, "year"sv));
 
-    // 7. Let otherFields be ? PrepareTemporalFields(other, fieldNames, «»).
-    auto* other_fields = TRY(prepare_temporal_fields(vm, *other, field_names, Vector<StringView> {}));
-
-    // 8. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
-    MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
-
-    // 9. Let otherDate be ? CalendarDateFromFields(calendar, otherFields).
-    auto* other_date = TRY(calendar_date_from_fields(vm, calendar, *other_fields));
-
-    // 10. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* this_fields = TRY(prepare_temporal_fields(vm, year_month, field_names, Vector<StringView> {}));
-
-    // 11. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
-    MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
-
-    // 12. Let thisDate be ? CalendarDateFromFields(calendar, thisFields).
-    auto* this_date = TRY(calendar_date_from_fields(vm, calendar, *this_fields));
-
-    // 13. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, move(settings.largest_unit)));
-
-    // 14. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
-    auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *until_options));
-
-    auto result = DurationRecord { duration->years(), duration->months(), 0, 0, 0, 0, 0, 0, 0, 0 };
-
-    // 15. If settings.[[SmallestUnit]] is not "month" or settings.[[RoundingIncrement]] ≠ 1, then
-    if (settings.smallest_unit != "month"sv || settings.rounding_increment != 1) {
-        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], thisDate)).[[DurationRecord]].
-        result = TRY(round_duration(vm, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date)).duration_record;
+    // 7. If yearMonth.[[ISOYear]] = other.[[ISOYear]] and yearMonth.[[ISOMonth]] = other.[[ISOMonth]] and yearMonth.[[ISODay]] = other.[[ISODay]], then
+    if (year_month.iso_year() == other->iso_year() && year_month.iso_month() == other->iso_month() && year_month.iso_day() == other->iso_day()) {
+        // a. Return ! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        return MUST(create_temporal_duration(vm, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
-    // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    // 8. Perform ! CreateDataPropertyOrThrow(resolvedOptions, "largestUnit", settings.[[LargestUnit]]).
+    MUST(resolved_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, settings.largest_unit)));
+
+    // FIXME: 9. Let calendarRec be ? CreateCalendarMethodsRecord(calendar, « dateAdd, dateFromFields, dateUntil, fields »).
+
+    // 10. Let fieldNames be ? CalendarFields(calendarRec, « "monthCode", "year" »).
+    // FIXME: Pass through calendar record
+    auto field_names = TRY(calendar_fields(vm, calendar, { "monthCode"sv, "year"sv }));
+
+    // 11. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
+    auto* this_fields = TRY(prepare_temporal_fields(vm, year_month, field_names, Vector<StringView> {}));
+
+    // 12. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
+    MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
+
+    // 13. Let thisDate be ? CalendarDateFromFields(calendarRec, thisFields).
+    // FIXME: Pass through calendar record
+    auto* this_date = TRY(calendar_date_from_fields(vm, calendar, *this_fields));
+
+    // 14. Let otherFields be ? PrepareTemporalFields(other, fieldNames, «»).
+    auto* other_fields = TRY(prepare_temporal_fields(vm, *other, field_names, Vector<StringView> {}));
+
+    // 15. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
+    MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
+
+    // 16. Let otherDate be ? CalendarDateFromFields(calendarRec, otherFields).
+    // FIXME: Pass through calendar record
+    auto* other_date = TRY(calendar_date_from_fields(vm, calendar, *other_fields));
+
+    // 17. Perform ! CreateDataPropertyOrThrow(resolvedOptions, "largestUnit", settings.[[LargestUnit]]).
+    MUST(resolved_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, settings.largest_unit)));
+
+    // 18. Let result be ? CalendarDateUntil(calendarRec, thisDate, otherDate, resolvedOptions).
+    // FIXME: Pass through calendar record
+    auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *resolved_options));
+    auto result = DurationRecord { duration->years(), duration->months(), 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // 19. If settings.[[SmallestUnit]] is not "month" or settings.[[RoundingIncrement]] ≠ 1, then
+    if (settings.smallest_unit != "month"sv || settings.rounding_increment != 1) {
+        // a. Let roundRecord be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], thisDate, calendarRec).
+        // FIXME: Pass through calendar record
+        auto round_record = TRY(round_duration(vm, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date));
+
+        // FIXME: b. Let roundResult be roundRecord.[[DurationRecord]].
+        // FIXME: c. Set result to ? BalanceDateDurationRelative(roundResult.[[Years]], roundResult.[[Months]], 0, 0, settings.[[LargestUnit]], settings.[[SmallestUnit]], thisDate, calendarRec).
+        result = round_record.duration_record;
+    }
+
+    // 20. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
