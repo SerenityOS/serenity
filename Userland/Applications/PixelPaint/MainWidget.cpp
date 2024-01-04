@@ -605,6 +605,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     scopes_menu->add_action(histogram_action);
     scopes_menu->add_action(vectorscope_action);
 
+    m_view_menu->add_separator();
+    m_view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
+
     m_tool_menu = window.add_menu("&Tool"_string);
     m_toolbox->for_each_tool([&](auto& tool) {
         if (tool.action())
