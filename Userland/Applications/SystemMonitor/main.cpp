@@ -468,6 +468,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(make_frequency_action(3));
     TRY(make_frequency_action(5));
 
+    auto view_menu = window->add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("System Monitor"_string, app_icon, window));
