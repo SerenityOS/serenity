@@ -46,6 +46,8 @@ enum class EID : i32 {
     Base = 0x10,
     // Debug Console Extension ("DBCN")
     DebugConsole = 0x4442434E,
+    // System Reset Extension ("SRST")
+    SystemReset = 0x53525354,
     // Timer Extension ("TIME")
     Timer = 0x54494D45,
 };
@@ -152,6 +154,32 @@ enum class FID : i32 {
 // Programs the clock for next event after stime_value time. stime_value is in absolute time. This
 // function must clear the pending timer interrupt bit as well.
 SBIErrorOr<void> set_timer(u64 stime_value);
+
+}
+
+// Chapter 10. System Reset Extension (EID #0x53525354 "SRST")
+// Since SBI v0.2
+namespace SystemReset {
+
+enum class FID : i32 {
+    SystemReset = 0,
+};
+
+enum class ResetType : u32 {
+    Shutdown = 0x0,
+    ColdReboot = 0x1,
+    WarmReboot = 0x2,
+};
+
+enum class ResetReason : u32 {
+    NoReason = 0x0,
+    SystemFailure = 0x1,
+};
+
+// System reset (FID #0)
+// Reset the system based on provided reset_type and reset_reason. This is a synchronous call and
+// does not return if it succeeds.
+SBIError system_reset(ResetType reset_type, ResetReason reset_reason);
 
 }
 
