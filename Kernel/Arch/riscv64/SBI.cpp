@@ -86,6 +86,17 @@ SBIErrorOr<long> get_mimpid()
 
 namespace Legacy {
 
+static long sbi_legacy_ecall0(LegacyEID extension_id)
+{
+    register unsigned long a0 asm("a0");
+    register unsigned long a7 asm("a7") = to_underlying(extension_id);
+    asm volatile("ecall"
+                 : "=r"(a0)
+                 : "r"(a7)
+                 : "memory");
+    return static_cast<long>(a0);
+}
+
 static long sbi_legacy_ecall1(LegacyEID extension_id, unsigned long arg0)
 {
     register unsigned long a0 asm("a0") = arg0;
@@ -113,6 +124,13 @@ LegacySBIErrorOr<void> console_putchar(int ch)
         return {};
 
     return err;
+}
+
+void shutdown()
+{
+    sbi_legacy_ecall0(LegacyEID::SystemShutdown);
+
+    VERIFY_NOT_REACHED();
 }
 
 }
