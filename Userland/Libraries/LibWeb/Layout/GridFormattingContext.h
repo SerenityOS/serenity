@@ -265,15 +265,15 @@ private:
     template<typename Match>
     void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher);
 
-    void initialize_track_sizes(AvailableSpace const&, GridDimension const);
-    void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
-    void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const&, GridDimension const, size_t span);
-    void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension const);
-    void maximize_tracks_using_available_size(AvailableSpace const& available_space, GridDimension const dimension);
-    void maximize_tracks(GridDimension const);
-    void expand_flexible_tracks(AvailableSpace const&, GridDimension const);
-    void stretch_auto_tracks(AvailableSpace const&, GridDimension const);
-    void run_track_sizing(AvailableSpace const&, GridDimension const);
+    void initialize_track_sizes(GridDimension);
+    void resolve_intrinsic_track_sizes(GridDimension);
+    void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(GridDimension, size_t span);
+    void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension);
+    void maximize_tracks_using_available_size(AvailableSpace const& available_space, GridDimension dimension);
+    void maximize_tracks(GridDimension);
+    void expand_flexible_tracks(GridDimension);
+    void stretch_auto_tracks(GridDimension);
+    void run_track_sizing(GridDimension);
 
     CSSPixels calculate_grid_container_maximum_size(GridDimension const) const;
 

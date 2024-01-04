@@ -744,14 +744,14 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
     }
 }
 
-void GridFormattingContext::initialize_track_sizes(AvailableSpace const& available_space, GridDimension const dimension)
+void GridFormattingContext::initialize_track_sizes(GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-init
     // 12.4. Initialize Track Sizes
     // Initialize each track’s base size and growth limit.
 
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
-    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+    auto& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
 
     for (auto& track : tracks_and_gaps) {
         if (track.is_gap)
@@ -780,7 +780,7 @@ void GridFormattingContext::initialize_track_sizes(AvailableSpace const& availab
     }
 }
 
-void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& available_space, GridDimension const dimension)
+void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-content
     // 12.5. Resolve Intrinsic Track Sizes
@@ -794,7 +794,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
     // FIXME: 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
     // 2. Size tracks to fit non-spanning items:
-    increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(available_space, dimension, 1);
+    increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(dimension, 1);
 
     // 3. Increase sizes to accommodate spanning items crossing content-sized tracks: Next, consider the
     // items with a span of 2 that do not span a track with a flexible sizing function.
@@ -803,7 +803,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
     for (auto& item : m_grid_items)
         max_item_span = max(item.span(dimension), max_item_span);
     for (size_t span = 2; span <= max_item_span; span++)
-        increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(available_space, dimension, span);
+        increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(dimension, span);
 
     // 4. Increase sizes to accommodate spanning items crossing flexible tracks: Next, repeat the previous
     // step instead considering (together, rather than grouped by span size) all items that do span a
@@ -978,9 +978,9 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
     }
 }
 
-void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const& available_space, GridDimension const dimension, size_t span)
+void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(GridDimension const dimension, size_t span)
 {
-    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+    auto& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     for (auto& item : m_grid_items) {
         auto const item_span = item.span(dimension);
@@ -1198,7 +1198,7 @@ void GridFormattingContext::maximize_tracks(GridDimension const dimension)
     }
 }
 
-void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& available_space, GridDimension const dimension)
+void GridFormattingContext::expand_flexible_tracks(GridDimension const dimension)
 {
     // https://drafts.csswg.org/css-grid/#algo-flex-tracks
     // 12.7. Expand Flexible Tracks
@@ -1207,7 +1207,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
 
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+    auto& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
     // FIXME: This should idealy take a Span, as that is more idomatic, but Span does not yet support holding references
     auto find_the_size_of_an_fr = [&](Vector<GridTrack&> const& tracks, CSSPixels space_to_fill) -> CSSPixelFraction {
         // https://www.w3.org/TR/css-grid-2/#algo-find-fr-size
@@ -1242,7 +1242,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
 
     // First, find the grid’s used flex fraction:
     auto flex_fraction = [&]() -> CSSPixelFraction {
-        auto free_space = get_free_space(available_space, dimension);
+        auto free_space = get_free_space(*m_available_space, dimension);
         // If the free space is zero or if sizing the grid container under a min-content constraint:
         if ((free_space.is_definite() && free_space.to_px_or_zero() == 0) || available_size.is_min_content()) {
             // The used flex fraction is zero.
@@ -1298,7 +1298,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     }
 }
 
-void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_space, GridDimension const dimension)
+void GridFormattingContext::stretch_auto_tracks(GridDimension const dimension)
 {
     // https://drafts.csswg.org/css-grid/#algo-stretch
     // 12.8. Stretch auto Tracks
@@ -1321,7 +1321,7 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_
         return;
 
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
-    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+    auto& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
 
     CSSPixels used_space = 0;
     for (auto& track : tracks_and_gaps) {
@@ -1342,25 +1342,25 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_
     }
 }
 
-void GridFormattingContext::run_track_sizing(AvailableSpace const& available_space, GridDimension const dimension)
+void GridFormattingContext::run_track_sizing(GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-track-sizing
     // 12.3. Track Sizing Algorithm
 
     // 1. Initialize Track Sizes
-    initialize_track_sizes(available_space, dimension);
+    initialize_track_sizes(dimension);
 
     // 2. Resolve Intrinsic Track Sizes
-    resolve_intrinsic_track_sizes(available_space, dimension);
+    resolve_intrinsic_track_sizes(dimension);
 
     // 3. Maximize Tracks
     maximize_tracks(dimension);
 
     // 4. Expand Flexible Tracks
-    expand_flexible_tracks(available_space, dimension);
+    expand_flexible_tracks(dimension);
 
     // 5. Expand Stretched auto Tracks
-    stretch_auto_tracks(available_space, dimension);
+    stretch_auto_tracks(dimension);
 
     // If calculating the layout of a grid item in this step depends on the available space in the block
     // axis, assume the available space that it would have if any row with a definite max track sizing
@@ -1964,7 +1964,7 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
     // Do the first pass of resolving grid items box metrics to compute values that are independent of a track width
     resolve_items_box_metrics(GridDimension::Column);
 
-    run_track_sizing(available_space, GridDimension::Column);
+    run_track_sizing(GridDimension::Column);
 
     // Do the second pass of resolving box metrics to compute values that depend on a track width
     resolve_items_box_metrics(GridDimension::Column);
@@ -1976,7 +1976,7 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
     // Do the first pass of resolving grid items box metrics to compute values that are independent of a track height
     resolve_items_box_metrics(GridDimension::Row);
 
-    run_track_sizing(available_space, GridDimension::Row);
+    run_track_sizing(GridDimension::Row);
 
     // Do the second pass of resolving box metrics to compute values that depend on a track height
     resolve_items_box_metrics(GridDimension::Row);
@@ -1996,7 +1996,8 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
 
         AvailableSize width(available_space.width);
         AvailableSize height(AvailableSize::make_definite(min_height));
-        run_track_sizing(AvailableSpace(width, height), GridDimension::Row);
+        m_available_space = AvailableSpace(width, height);
+        run_track_sizing(GridDimension::Row);
 
         resolve_items_box_metrics(GridDimension::Row);
 
