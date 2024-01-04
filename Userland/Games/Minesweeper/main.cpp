@@ -74,6 +74,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game_menu->add_action(*chord_toggler_action);
     game_menu->add_separator();
 
+    // Put Fullscreen in Game rather than View
+    // When in beginner mode it can only show 3 menus. Adding View makes 4
+    game_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+    game_menu->add_separator();
+
     game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
