@@ -487,6 +487,23 @@ ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashT
     return {};
 }
 
+// 14.7 SnapshotOwnProperties ( source, proto [ , excludedKeys [ , excludedValues ] ] ), https://tc39.es/proposal-temporal/#sec-snapshotownproperties
+ThrowCompletionOr<NonnullGCPtr<Object>> Object::snapshot_own_properties(VM& vm, GCPtr<Object> prototype, HashTable<PropertyKey> const& excluded_keys, HashTable<Value> const& excluded_values)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let copy be OrdinaryObjectCreate(proto).
+    auto copy = Object::create(realm, prototype);
+
+    // 2. If excludedKeys is not present, set excludedKeys to « ».
+    // 3. If excludedValues is not present, set excludedValues to « ».
+    // 4. Perform ? CopyDataProperties(copy, source, excludedKeys, excludedValues).
+    TRY(copy->copy_data_properties(vm, Value { this }, excluded_keys, excluded_values));
+
+    // 5. Return copy.
+    return copy;
+}
+
 // 7.3.27 PrivateElementFind ( O, P ), https://tc39.es/ecma262/#sec-privateelementfind
 PrivateElement* Object::private_element_find(PrivateName const& name)
 {
