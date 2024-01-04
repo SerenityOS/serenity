@@ -321,12 +321,12 @@ Optional<ByteString> run_prescan_byte_stream_algorithm(DOM::Document& document, 
             prescan_skip_whitespace_and_slashes(input, position);
             while (prescan_get_attribute(document, input, position)) { };
         } else if (!prescan_should_abort(input, position + 1) && input[position] == '<' && (input[position + 1] == '!' || input[position + 1] == '/' || input[position + 1] == '?')) {
-            position += 2;
-            while (input[position] != '>') {
-                ++position;
+            position += 1;
+            do {
+                position += 1;
                 if (prescan_should_abort(input, position))
                     return {};
-            }
+            } while (input[position] != '>');
         } else {
             // Do nothing.
         }
