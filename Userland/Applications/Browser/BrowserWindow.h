@@ -51,9 +51,9 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    BrowserWindow(WebView::CookieJar&, Vector<URL> const&);
+    BrowserWindow(WebView::CookieJar&, Vector<URL> const&, StringView const);
 
-    void build_menus();
+    void build_menus(StringView const);
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
     void set_window_title_for_tab(Tab const&);
 

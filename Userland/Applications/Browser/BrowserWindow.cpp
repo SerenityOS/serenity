@@ -16,6 +16,7 @@
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
@@ -49,7 +50,7 @@ static ByteString bookmarks_file_path()
     return builder.to_byte_string();
 }
 
-BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& initial_urls)
+BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& initial_urls, StringView const man_file)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {
@@ -138,13 +139,13 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& 
     m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
     m_tab_widget->set_tab_position(vertical_tabs ? TabPosition::Left : TabPosition::Top);
 
-    build_menus();
+    build_menus(man_file);
 
     for (size_t i = 0; i < initial_urls.size(); ++i)
         create_new_tab(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
 }
 
-void BrowserWindow::build_menus()
+void BrowserWindow::build_menus(StringView const man_file)
 {
     auto file_menu = add_menu("&File"_string);
     file_menu->add_action(WindowActions::the().create_new_tab_action());
@@ -445,6 +446,9 @@ void BrowserWindow::build_menus()
 
     auto help_menu = add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(this));
+    help_menu->add_action(GUI::CommonActions::make_help_action([man_file](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
+    }));
     help_menu->add_action(WindowActions::the().about_action());
 }
 
