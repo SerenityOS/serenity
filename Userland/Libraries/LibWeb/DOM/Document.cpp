@@ -1077,26 +1077,39 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-[[nodiscard]] static Element::RequiredInvalidationAfterStyleChange update_style_recursively(DOM::Node& node)
+[[nodiscard]] static Element::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node)
 {
     bool const needs_full_style_update = node.document().needs_full_style_update();
     Element::RequiredInvalidationAfterStyleChange invalidation;
 
+    // NOTE: If the current node has `display:none`, we can disregard all invalidation
+    //       caused by its children, as they will not be rendered anyway.
+    //       We will still recompute style for the children, though.
+    bool is_display_none = false;
+
     if (is<Element>(node)) {
         invalidation |= static_cast<Element&>(node).recompute_style();
+        is_display_none = static_cast<Element&>(node).computed_css_values()->display().is_none();
     }
     node.set_needs_style_update(false);
 
     if (needs_full_style_update || node.child_needs_style_update()) {
         if (node.is_element()) {
             if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root_internal()) {
-                if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
-                    invalidation |= update_style_recursively(*shadow_root);
+                if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update()) {
+                    auto subtree_invalidation = update_style_recursively(*shadow_root);
+                    if (!is_display_none)
+                        invalidation |= subtree_invalidation;
+                }
             }
         }
+
         node.for_each_child([&](auto& child) {
-            if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update())
-                invalidation |= update_style_recursively(child);
+            if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update()) {
+                auto subtree_invalidation = update_style_recursively(child);
+                if (!is_display_none)
+                    invalidation |= subtree_invalidation;
+            }
             return IterationDecision::Continue;
         });
     }
