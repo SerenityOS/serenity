@@ -17,7 +17,7 @@
   },
   "align-content": {
     "inherited": false,
-    "initial": "stretch",
+    "initial": "normal",
     "valid-types": [
       "align-content"
     ]

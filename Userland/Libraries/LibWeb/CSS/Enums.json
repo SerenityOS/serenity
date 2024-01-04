@@ -1,5 +1,6 @@
 {
   "align-content": [
+    "normal",
     "flex-start",
     "flex-end",
     "center",

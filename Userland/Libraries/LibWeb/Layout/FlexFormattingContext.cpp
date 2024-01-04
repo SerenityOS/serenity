@@ -1637,6 +1637,7 @@ void FlexFormattingContext::align_all_flex_lines()
             break;
         }
 
+        case CSS::AlignContent::Normal:
         case CSS::AlignContent::Stretch:
             start_of_current_line = 0;
             break;
@@ -2146,7 +2147,7 @@ void FlexFormattingContext::handle_align_content_stretch()
         return;
 
     // align-content is stretch,
-    if (flex_container().computed_values().align_content() != CSS::AlignContent::Stretch)
+    if (flex_container().computed_values().align_content() != CSS::AlignContent::Stretch && flex_container().computed_values().align_content() != CSS::AlignContent::Normal)
         return;
 
     // and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
