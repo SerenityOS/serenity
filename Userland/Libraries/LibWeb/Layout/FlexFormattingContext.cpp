@@ -1319,6 +1319,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         if (auto_margins == 0 && number_of_items > 0) {
             switch (flex_container().computed_values().justify_content()) {
             case CSS::JustifyContent::Start:
+            case CSS::JustifyContent::Stretch:
+            case CSS::JustifyContent::Normal:
                 initial_offset = 0;
                 break;
             case CSS::JustifyContent::FlexStart:
@@ -1385,11 +1387,13 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         if (auto_margins == 0) {
             switch (flex_container().computed_values().justify_content()) {
+            case CSS::JustifyContent::Normal:
             case CSS::JustifyContent::FlexStart:
             case CSS::JustifyContent::Center:
             case CSS::JustifyContent::SpaceAround:
             case CSS::JustifyContent::SpaceBetween:
             case CSS::JustifyContent::SpaceEvenly:
+            case CSS::JustifyContent::Stretch:
                 if (is_direction_reverse()) {
                     flex_region_render_cursor = FlexRegionRenderCursor::Right;
                 }
@@ -2221,6 +2225,8 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels main_offset = 0;
     switch (flex_container().computed_values().justify_content()) {
     case CSS::JustifyContent::Start:
+    case CSS::JustifyContent::Stretch:
+    case CSS::JustifyContent::Normal:
         pack_from_end = false;
         break;
     case CSS::JustifyContent::FlexStart:
