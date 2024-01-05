@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -378,6 +379,38 @@ bool is_valid_iso_date(i32 year, u8 month, u8 day)
 
     // 4. Return true.
     return true;
+}
+
+// 3.5.6 DifferenceDate ( calendarRec, one, two, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencedate
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_date(VM& vm, Object const& calendar, PlainDate const& one, PlainDate const& two, Object const& options)
+{
+    // FIXME: 1. Assert: one.[[Calendar]] and two.[[Calendar]] have been determined to be equivalent as with CalendarEquals.
+    // FIXME: 2. Assert: options is an ordinary Object.
+
+    // 3. Assert: options.[[Prototype]] is null.
+    VERIFY(!options.prototype());
+
+    // 4. Assert: options has a "largestUnit" data property.
+    VERIFY(MUST(options.has_own_property(vm.names.largestUnit)));
+
+    // 5. If one.[[ISOYear]] = two.[[ISOYear]] and one.[[ISOMonth]] = two.[[ISOMonth]] and one.[[ISODay]] = two.[[ISODay]], then
+    if (one.iso_year() == two.iso_year() && one.iso_month() == two.iso_month() && one.iso_day() == two.iso_day()) {
+        // a. Return ! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        return *MUST(create_temporal_duration(vm, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+    }
+
+    // 6. If ! Get(options, "largestUnit") is "day", then
+    auto largest_unit = MUST(options.get(vm.names.largestUnit));
+    if (largest_unit.is_string() && largest_unit.as_string().utf8_string_view() == "day"sv) {
+        // a. Let days be DaysUntil(one, two).
+        auto days = days_until(one, two);
+
+        // b. Return ! CreateTemporalDuration(0, 0, 0, days, 0, 0, 0, 0, 0, 0).
+        return *MUST(create_temporal_duration(vm, 0, 0, 0, days, 0, 0, 0, 0, 0, 0));
+    }
+
+    // 7. Return ? CalendarDateUntil(calendarRec, one, two, options).
+    return *TRY(calendar_date_until(vm, calendar, Value { &one }, Value { &two }, options));
 }
 
 // 3.5.6 BalanceISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodate
