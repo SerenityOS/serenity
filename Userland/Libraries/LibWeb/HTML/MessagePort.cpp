@@ -297,8 +297,11 @@ void MessagePort::read_from_socket()
 
         auto serialize_with_transfer_result = MUST(decoder.decode<SerializedTransferRecord>());
 
-        post_message_task_steps(serialize_with_transfer_result);
+        // Make sure to advance our state machine before dispatching the MessageEvent,
+        // as dispatching events can run arbitrary JS (and cause us to receive another message!)
         m_socket_state = SocketState::Header;
+
+        post_message_task_steps(serialize_with_transfer_result);
         break;
     }
     case SocketState::Error:
