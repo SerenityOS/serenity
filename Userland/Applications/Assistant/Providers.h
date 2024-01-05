@@ -11,6 +11,7 @@
 #include <AK/URL.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Desktop.h>
+#include <LibGUI/Window.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibThreading/BackgroundAction.h>
 #include <typeinfo>
@@ -23,7 +24,7 @@ class Result : public RefCounted<Result> {
 public:
     virtual ~Result() = default;
 
-    virtual void activate() const = 0;
+    virtual void activate(GUI::Window&) const = 0;
 
     virtual Gfx::Bitmap const* bitmap() const = 0;
 
@@ -61,7 +62,7 @@ public:
     {
     }
     ~AppResult() override = default;
-    void activate() const override;
+    void activate(GUI::Window&) const override;
 
     virtual Gfx::Bitmap const* bitmap() const override { return m_bitmap; }
 
@@ -79,7 +80,7 @@ public:
     {
     }
     ~CalculatorResult() override = default;
-    void activate() const override;
+    void activate(GUI::Window&) const override;
 
     virtual Gfx::Bitmap const* bitmap() const override { return m_bitmap; }
 
@@ -94,7 +95,7 @@ public:
     {
     }
     ~FileResult() override = default;
-    void activate() const override;
+    void activate(GUI::Window&) const override;
 
     virtual Gfx::Bitmap const* bitmap() const override;
 };
@@ -107,7 +108,7 @@ public:
     {
     }
     ~TerminalResult() override = default;
-    void activate() const override;
+    void activate(GUI::Window&) const override;
 
     virtual Gfx::Bitmap const* bitmap() const override { return m_bitmap; }
 
@@ -123,7 +124,7 @@ public:
     {
     }
     ~URLResult() override = default;
-    void activate() const override;
+    void activate(GUI::Window&) const override;
 
     virtual Gfx::Bitmap const* bitmap() const override { return m_bitmap; }
 
