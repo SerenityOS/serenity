@@ -973,6 +973,7 @@ static ErrorOr<void> read_restart_interval(JPEGStream& stream, JPEGLoadingContex
         return Error::from_string_literal("Malformed DRI marker found");
     }
     context.dc_restart_interval = TRY(stream.read_u16());
+    dbgln_if(JPEG_DEBUG, "Restart marker: {}", context.dc_restart_interval);
     return {};
 }
 
