@@ -163,6 +163,8 @@ static ErrorOr<RefPtr<Gfx::Bitmap>> chunky_to_bitmap(ILBMLoadingContext& context
                 color = Color(chunky[index], chunky[index + 1], chunky[index + 2]);
             } else if (chunky[index] < context.color_table.size()) {
                 color = context.color_table[chunky[index]];
+                if (context.bm_header.mask == MaskType::HasTransparentColor && chunky[index] == context.bm_header.transparent_color)
+                    color = color.with_alpha(0);
             } else if (has_flag(context.viewport_mode, ViewportMode::HAM)) {
                 // Get the control bit which will tell use how current pixel should be calculated
                 u8 control = (chunky[index] >> context.cmap_bits) & 0x3;
