@@ -107,7 +107,7 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
     // (treating each track as its max track sizing function if that is definite or its minimum track sizing
     // function otherwise, flooring the max track sizing function by the min track sizing function if both
     // are definite, and taking gap into account)
-    // FIXME: take gap into account
+    auto const& column_gap = grid_container().computed_values().column_gap();
     for (auto& explicit_grid_track : track_list.first().repeat().grid_track_size_list().track_list()) {
         auto track_sizing_function = explicit_grid_track;
         if (track_sizing_function.is_minmax()) {
@@ -120,6 +120,9 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
         } else {
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
+
+        if (!column_gap.is_auto())
+            sum_of_grid_track_sizes += column_gap.to_px(grid_container(), available_space.width.to_px_or_zero());
     }
 
     if (sum_of_grid_track_sizes == 0)
