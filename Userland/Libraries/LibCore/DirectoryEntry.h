@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <AK/StringView.h>
 #include <dirent.h>
 
 namespace Core {
@@ -28,6 +29,8 @@ struct DirectoryEntry {
     ByteString name;
     ino_t inode_number;
 
+    static StringView posix_name_from_directory_entry_type(Type);
+    static StringView representative_name_from_directory_entry_type(Type);
     static Type directory_entry_type_from_stat(mode_t st_mode);
     static DirectoryEntry from_dirent(dirent const&);
     static DirectoryEntry from_stat(DIR*, dirent const&);
