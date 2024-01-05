@@ -326,7 +326,7 @@ template<typename T>
 requires(IsTrivial<T>)
 ReadonlyBytes to_readonly_bytes(Span<T> span)
 {
-    return ReadonlyBytes { static_cast<void*>(span.data()), span.size() * sizeof(T) };
+    return ReadonlyBytes { static_cast<void const*>(span.data()), span.size() * sizeof(T) };
 }
 
 template<typename T>
