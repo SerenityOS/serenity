@@ -244,19 +244,19 @@ private:
 
     Optional<int> get_line_index_by_line_name(GridDimension dimension, String const&);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);
-    int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&);
-    int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&);
+    int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list);
+    int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&);
 
     void build_grid_areas();
 
-    void place_grid_items(AvailableSpace const& available_space);
+    void place_grid_items();
     void place_item_with_row_and_column_position(Box const& child_box);
     void place_item_with_row_position(Box const& child_box);
     void place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
-    void initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<GridTrack>& tracks);
-    void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
+    void initialize_grid_tracks_from_definition(Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<GridTrack>& tracks);
+    void initialize_grid_tracks_for_columns_and_rows();
     void initialize_gap_tracks(AvailableSpace const&);
 
     void collapse_auto_fit_tracks_if_needed(GridDimension const);
