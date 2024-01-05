@@ -5372,8 +5372,7 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
     if (!part_two_tokens.has_next_token())
         return {};
 
-    Vector<CSS::ExplicitGridTrack> repeat_params;
-    Vector<Vector<String>> line_names_list;
+    Vector<Variant<ExplicitGridTrack, GridLineNames>> repeat_params;
     auto last_object_was_line_names = false;
     while (part_two_tokens.has_next_token()) {
         auto token = part_two_tokens.next_token();
@@ -5390,7 +5389,7 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
                 line_names.append(current_block_token.token().ident().to_string());
                 block_tokens.skip_whitespace();
             }
-            line_names_list.append(line_names);
+            repeat_params.append(GridLineNames { move(line_names) });
             part_two_tokens.skip_whitespace();
         } else {
             last_object_was_line_names = false;
@@ -5408,8 +5407,6 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
             part_two_tokens.skip_whitespace();
         }
     }
-    while (line_names_list.size() <= repeat_params.size())
-        line_names_list.append({});
 
     // Thus the precise syntax of the repeat() notation has several forms:
     // <track-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <track-size> ]+ <line-names>? )
@@ -5431,11 +5428,11 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
     // each other, the name lists are merged. For example, repeat(2, [a] 1fr [b]) is equivalent to [a]
     // 1fr [b a] 1fr [b].
     if (is_auto_fill)
-        return CSS::GridRepeat(CSS::GridTrackSizeList(repeat_params, line_names_list), CSS::GridRepeat::Type::AutoFill);
+        return GridRepeat(GridTrackSizeList(move(repeat_params)), GridRepeat::Type::AutoFill);
     else if (is_auto_fit)
-        return CSS::GridRepeat(CSS::GridTrackSizeList(repeat_params, line_names_list), CSS::GridRepeat::Type::AutoFit);
+        return GridRepeat(GridTrackSizeList(move(repeat_params)), GridRepeat::Type::AutoFit);
     else
-        return CSS::GridRepeat(CSS::GridTrackSizeList(repeat_params, line_names_list), repeat_count);
+        return GridRepeat(GridTrackSizeList(move(repeat_params)), repeat_count);
 }
 
 Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentValue const& token)
@@ -5480,8 +5477,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(TokenStream<ComponentValue
         return GridTrackSizeListStyleValue::make_none();
     }
 
-    Vector<CSS::ExplicitGridTrack> track_list;
-    Vector<Vector<String>> line_names_list;
+    Vector<Variant<ExplicitGridTrack, GridLineNames>> track_list;
     auto last_object_was_line_names = false;
     while (tokens.has_next_token()) {
         auto token = tokens.next_token();
@@ -5503,7 +5499,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(TokenStream<ComponentValue
                 line_names.append(current_block_token.token().ident().to_string());
                 block_tokens.skip_whitespace();
             }
-            line_names_list.append(line_names);
+            track_list.append(GridLineNames { move(line_names) });
         } else {
             last_object_was_line_names = false;
             auto track_sizing_function = parse_track_sizing_function(token);
@@ -5516,11 +5512,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(TokenStream<ComponentValue
             track_list.append(track_sizing_function.value());
         }
     }
-    while (line_names_list.size() <= track_list.size())
-        line_names_list.append({});
 
     transaction.commit();
-    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
+    return GridTrackSizeListStyleValue::create(GridTrackSizeList(move(track_list)));
 }
 
 // https://www.w3.org/TR/css-grid-1/#grid-auto-flow-property
@@ -5580,7 +5574,7 @@ RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(TokenStream<ComponentValu
 {
     // https://www.w3.org/TR/css-grid-2/#auto-tracks
     // <track-size>+
-    Vector<CSS::ExplicitGridTrack> track_list;
+    Vector<Variant<ExplicitGridTrack, GridLineNames>> track_list;
     auto transaction = tokens.begin_transaction();
     while (tokens.has_next_token()) {
         auto token = tokens.next_token();
@@ -5594,7 +5588,7 @@ RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(TokenStream<ComponentValu
         track_list.append(track_sizing_function.value());
     }
     transaction.commit();
-    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, {}));
+    return GridTrackSizeListStyleValue::create(GridTrackSizeList(move(track_list)));
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement(TokenStream<ComponentValue>& tokens)

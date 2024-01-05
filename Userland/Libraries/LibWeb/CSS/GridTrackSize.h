@@ -84,25 +84,28 @@ private:
     GridSize m_max_grid_size;
 };
 
+struct GridLineNames {
+    Vector<String> names;
+
+    String to_string() const;
+    bool operator==(GridLineNames const& other) const { return names == other.names; }
+};
+
 class GridTrackSizeList {
 public:
-    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names);
+    GridTrackSizeList(Vector<Variant<ExplicitGridTrack, GridLineNames>>&& list);
     GridTrackSizeList();
 
     static GridTrackSizeList make_none();
 
-    Vector<CSS::ExplicitGridTrack> track_list() const { return m_track_list; }
-    Vector<Vector<String>> line_names() const { return m_line_names; }
+    Vector<CSS::ExplicitGridTrack> track_list() const;
+    Vector<Variant<ExplicitGridTrack, GridLineNames>> list() const { return m_list; }
 
     String to_string() const;
-    bool operator==(GridTrackSizeList const& other) const
-    {
-        return m_line_names == other.line_names() && m_track_list == other.track_list();
-    }
+    bool operator==(GridTrackSizeList const& other) const;
 
 private:
-    Vector<CSS::ExplicitGridTrack> m_track_list;
-    Vector<Vector<String>> m_line_names;
+    Vector<Variant<ExplicitGridTrack, GridLineNames>> m_list;
 };
 
 class GridRepeat {

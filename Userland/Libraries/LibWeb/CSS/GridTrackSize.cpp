@@ -188,15 +188,21 @@ String ExplicitGridTrack::to_string() const
     }
 }
 
-GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names)
-    : m_track_list(track_list)
-    , m_line_names(line_names)
+String GridLineNames::to_string() const
+{
+    StringBuilder builder;
+    builder.append("["sv);
+    builder.join(' ', names);
+    builder.append("]"sv);
+    return MUST(builder.to_string());
+}
+
+GridTrackSizeList::GridTrackSizeList(Vector<Variant<ExplicitGridTrack, GridLineNames>>&& list)
+    : m_list(move(list))
 {
 }
 
 GridTrackSizeList::GridTrackSizeList()
-    : m_track_list({})
-    , m_line_names({})
 {
 }
 
@@ -208,30 +214,38 @@ GridTrackSizeList GridTrackSizeList::make_none()
 String GridTrackSizeList::to_string() const
 {
     StringBuilder builder;
-    auto print_line_names = [&](size_t index) -> void {
-        builder.append("["sv);
-        for (size_t y = 0; y < m_line_names[index].size(); ++y) {
-            builder.append(m_line_names[index][y]);
-            if (y != m_line_names[index].size() - 1)
-                builder.append(" "sv);
-        }
-        builder.append("]"sv);
-    };
-
-    for (size_t i = 0; i < m_track_list.size(); ++i) {
-        if (m_line_names.size() > 0 && m_line_names[i].size() > 0) {
-            print_line_names(i);
+    for (auto const& line_definition_or_name : m_list) {
+        if (!builder.is_empty())
             builder.append(" "sv);
+        if (line_definition_or_name.has<ExplicitGridTrack>()) {
+            builder.append(line_definition_or_name.get<ExplicitGridTrack>().to_string());
+        } else if (line_definition_or_name.has<GridLineNames>()) {
+            auto const& line_names = line_definition_or_name.get<GridLineNames>();
+            builder.append(line_names.to_string());
         }
-        builder.append(m_track_list[i].to_string());
-        if (i < m_track_list.size() - 1)
-            builder.append(" "sv);
-    }
-    if (m_line_names.size() > 0 && m_line_names[m_track_list.size()].size() > 0) {
-        builder.append(" "sv);
-        print_line_names(m_track_list.size());
     }
     return MUST(builder.to_string());
+}
+
+Vector<ExplicitGridTrack> GridTrackSizeList::track_list() const
+{
+    Vector<ExplicitGridTrack> track_list;
+    for (auto const& line_definition_or_name : m_list) {
+        if (line_definition_or_name.has<ExplicitGridTrack>())
+            track_list.append(line_definition_or_name.get<ExplicitGridTrack>());
+    }
+    return track_list;
+}
+
+bool GridTrackSizeList::operator==(GridTrackSizeList const& other) const
+{
+    if (m_list.size() != other.m_list.size())
+        return false;
+    for (size_t i = 0; i < m_list.size(); ++i) {
+        if (m_list[i] != other.m_list[i])
+            return false;
+    }
+    return true;
 }
 
 }
