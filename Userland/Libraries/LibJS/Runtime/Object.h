@@ -229,6 +229,8 @@ public:
     [[nodiscard]] bool is_typed_array() const { return m_is_typed_array; }
     void set_is_typed_array() { m_is_typed_array = true; }
 
+    Object const* prototype() const { return shape().prototype(); }
+
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
@@ -254,7 +256,6 @@ private:
     void set_shape(Shape& shape) { m_shape = &shape; }
 
     Object* prototype() { return shape().prototype(); }
-    Object const* prototype() const { return shape().prototype(); }
 
     bool m_may_interfere_with_indexed_property_access { false };
 
