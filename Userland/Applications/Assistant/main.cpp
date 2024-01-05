@@ -205,7 +205,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!app_state.selected_index.has_value())
             return;
         lockfile.release();
-        app_state.results[app_state.selected_index.value()]->activate();
+        app_state.results[app_state.selected_index.value()]->activate(window);
         GUI::Application::the()->quit();
     };
     text_box.on_up_pressed = [&]() {
@@ -251,8 +251,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             match.set_icon(result->bitmap());
             match.set_text(String::from_byte_string(result->title()).release_value_but_fixme_should_propagate_errors());
             match.set_tooltip(result->tooltip());
-            match.on_click = [&result](auto) {
-                result->activate();
+            match.on_click = [&](auto) {
+                result->activate(window);
                 GUI::Application::the()->quit();
             };
         }

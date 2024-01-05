@@ -11,11 +11,11 @@
 #include <AK/URL.h>
 #include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FileIconProvider.h>
+#include <LibGUI/Process.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ValueInlines.h>
@@ -29,7 +29,7 @@
 
 namespace Assistant {
 
-void AppResult::activate() const
+void AppResult::activate(GUI::Window& window) const
 {
     if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
         perror("chdir");
@@ -37,29 +37,29 @@ void AppResult::activate() const
     }
 
     auto arguments_list = m_arguments.split_view(' ');
-    m_app_file->spawn(arguments_list.span());
+    m_app_file->spawn_with_escalation_or_show_error(window, arguments_list.span());
 }
 
-void CalculatorResult::activate() const
+void CalculatorResult::activate(GUI::Window& window) const
 {
+    (void)window;
     GUI::Clipboard::the().set_plain_text(title());
 }
 
-void FileResult::activate() const
+void FileResult::activate(GUI::Window& window) const
 {
+    (void)window;
     Desktop::Launcher::open(URL::create_with_file_scheme(title()));
 }
 
-void TerminalResult::activate() const
+void TerminalResult::activate(GUI::Window& window) const
 {
-    // FIXME: This should be a GUI::Process::spawn_or_show_error(), however this is a
-    // Assistant::Result object, which does not have access to the application's GUI::Window* pointer
-    // (which spawn_or_show_error() needs in case it has to open a error message box).
-    (void)Core::Process::spawn("/bin/Terminal"sv, Array { "-k", "-e", title().characters() });
+    GUI::Process::spawn_or_show_error(&window, "/bin/Terminal"sv, Array { "-k", "-e", title().characters() });
 }
 
-void URLResult::activate() const
+void URLResult::activate(GUI::Window& window) const
 {
+    (void)window;
     Desktop::Launcher::open(URL::create_with_url_or_path(title()));
 }
 
