@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,17 +28,6 @@ public:
     virtual Inode& root_inode() override;
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
-
-    enum class FileType : u8 {
-        Directory,
-        Character,
-        Block,
-        Regular,
-        FIFO,
-        Link,
-        Socket,
-        Unknown,
-    };
 
 private:
     RAMFS();

@@ -8,6 +8,7 @@
 
 #include <Kernel/FileSystem/ProcFS/FileSystem.h>
 #include <Kernel/FileSystem/ProcFS/Inode.h>
+#include <Kernel/FileSystem/RAMBackedFileType.h>
 
 namespace Kernel {
 
@@ -30,6 +31,11 @@ ErrorOr<void> ProcFS::initialize()
 {
     m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcFSInode(const_cast<ProcFS&>(*this), 1)));
     return {};
+}
+
+u8 ProcFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
+{
+    return ram_backed_file_type_to_directory_entry_type(entry);
 }
 
 Inode& ProcFS::root_inode()

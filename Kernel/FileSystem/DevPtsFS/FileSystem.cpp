@@ -44,6 +44,11 @@ Inode& DevPtsFS::root_inode()
     return *m_root_inode;
 }
 
+u8 DevPtsFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
+{
+    return ram_backed_file_type_to_directory_entry_type(entry);
+}
+
 ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) const
 {
     if (inode_id.index() == 1)
