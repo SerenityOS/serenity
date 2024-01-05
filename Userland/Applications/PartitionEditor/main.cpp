@@ -64,7 +64,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto device_paths = get_device_paths();
 
     auto partition_model = PartitionEditor::PartitionModel::create();
-    TRY(partition_model->set_device_path(device_paths.first()));
+    auto found_it = device_paths.find_if([&](auto const& path) {
+        auto result = partition_model->set_device_path(path);
+        return !result.is_error();
+    });
+    // FIXME: Give the user some way to create a partition table
+    if (found_it == device_paths.end())
+        GUI::MessageBox::show_error(window, ByteString::formatted("No partition table found on any valid block device"));
 
     auto& device_combobox = *widget->find_descendant_of_type_named<GUI::ComboBox>("device_combobox");
     device_combobox.set_model(GUI::ItemListModel<ByteString>::create(device_paths));
