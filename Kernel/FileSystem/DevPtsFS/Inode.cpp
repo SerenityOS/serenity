@@ -7,6 +7,7 @@
 
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/DevPtsFS/Inode.h>
+#include <Kernel/FileSystem/RAMBackedFileType.h>
 
 namespace Kernel {
 
@@ -49,15 +50,17 @@ ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSy
     if (identifier().index() > 1)
         return ENOTDIR;
 
-    TRY(callback({ "."sv, identifier(), 0 }));
-    TRY(callback({ ".."sv, identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), to_underlying(RAMBackedFileType::Directory) }));
+    TRY(callback({ ".."sv, identifier(), to_underlying(RAMBackedFileType::Directory) }));
 
     return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<void> {
         StringBuilder builder;
         for (SlavePTY& slave_pty : list) {
             builder.clear();
             TRY(builder.try_appendff("{}", slave_pty.index()));
-            TRY(callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, 0 }));
+            // NOTE: We represent directory entries with DT_CHR as all
+            // inodes in this filesystem are assumed to be char devices.
+            TRY(callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, to_underlying(RAMBackedFileType::Character) }));
         }
         return {};
     });

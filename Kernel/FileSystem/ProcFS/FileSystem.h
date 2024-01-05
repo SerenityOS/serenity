@@ -28,6 +28,8 @@ public:
     virtual Inode& root_inode() override;
 
 private:
+    virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
+
     ProcFS();
 
     ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,7 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/RAMBackedFileType.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {
@@ -28,6 +29,10 @@ class SysFSComponent : public AtomicRefCounted<SysFSComponent> {
     friend class SysFSDirectory;
 
 public:
+    // NOTE: It is safe to assume that the regular file type is largely
+    // the most used file type in the SysFS filesystem.
+    virtual RAMBackedFileType type() const { return RAMBackedFileType::Regular; }
+
     virtual StringView name() const = 0;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return Error::from_errno(ENOTIMPL); }
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
@@ -61,6 +66,7 @@ private:
 
 class SysFSSymbolicLink : public SysFSComponent {
 public:
+    virtual RAMBackedFileType type() const override final { return RAMBackedFileType::Link; }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override final;
     virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
@@ -75,6 +81,7 @@ protected:
 
 class SysFSDirectory : public SysFSComponent {
 public:
+    virtual RAMBackedFileType type() const override final { return RAMBackedFileType::Directory; }
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override final;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override final;
 

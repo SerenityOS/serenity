@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -107,18 +107,18 @@ SysFSSymbolicLink::SysFSSymbolicLink(SysFSDirectory const& parent_directory, Sys
 
 ErrorOr<void> SysFSDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, component_index() }, to_underlying(RAMBackedFileType::Directory) }));
     if (is_root_directory()) {
-        TRY(callback({ ".."sv, { fsid, component_index() }, 0 }));
+        TRY(callback({ ".."sv, { fsid, component_index() }, to_underlying(RAMBackedFileType::Directory) }));
     } else {
         VERIFY(m_parent_directory);
-        TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
+        TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, to_underlying(RAMBackedFileType::Directory) }));
     }
 
     return m_child_components.with([&](auto& list) -> ErrorOr<void> {
         for (auto& child_component : list) {
             InodeIdentifier identifier = { fsid, child_component.component_index() };
-            TRY(callback({ child_component.name(), identifier, 0 }));
+            TRY(callback({ child_component.name(), identifier, to_underlying(child_component.type()) }));
         }
         return {};
     });

@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/FileSystem/RAMBackedFileType.h>
 #include <Kernel/FileSystem/SysFS/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Inode.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
@@ -23,6 +24,11 @@ ErrorOr<void> SysFS::initialize()
 {
     m_root_inode = TRY(SysFSComponentRegistry::the().root_directory().to_inode(*this));
     return {};
+}
+
+u8 SysFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
+{
+    return ram_backed_file_type_to_directory_entry_type(entry);
 }
 
 Inode& SysFS::root_inode()

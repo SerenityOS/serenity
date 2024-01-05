@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
- * Copyright (c) 2021-2023, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/FileSystem/ProcFS/Inode.h>
+#include <Kernel/FileSystem/RAMBackedFileType.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -108,16 +109,16 @@ ProcFSInode::ProcFSInode(ProcFS const& procfs_instance, InodeIndex inode_index)
 
 ErrorOr<void> ProcFSInode::traverse_as_root_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ "."sv, { fsid(), 1 }, 0 }));
-    TRY(callback({ ".."sv, { fsid(), 0 }, 0 }));
-    TRY(callback({ "self"sv, { fsid(), 2 }, 0 }));
+    TRY(callback({ "."sv, { fsid(), to_underlying(RAMBackedFileType::Directory) }, 0 }));
+    TRY(callback({ ".."sv, { fsid(), to_underlying(RAMBackedFileType::Directory) }, 0 }));
+    TRY(callback({ "self"sv, { fsid(), 2 }, to_underlying(RAMBackedFileType::Link) }));
 
     return Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
         VERIFY(!(process.pid() < 0));
         u64 process_id = (u64)process.pid().value();
         InodeIdentifier identifier = { fsid(), static_cast<InodeIndex>(process_id << 36) };
         auto process_id_string = TRY(KString::formatted("{:d}", process_id));
-        TRY(callback({ process_id_string->view(), identifier, 0 }));
+        TRY(callback({ process_id_string->view(), identifier, to_underlying(RAMBackedFileType::Directory) }));
         return {};
     });
 }
