@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
@@ -162,6 +163,31 @@ static ErrorOr<void> out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
     return {};
 }
 
+static ErrorOr<void> perform_debug_roundtrip(Gfx::ICC::Profile const& profile)
+{
+    size_t num_channels = Gfx::ICC::number_of_components_in_color_space(profile.data_color_space());
+    Vector<u8, 4> input, output;
+    input.resize(num_channels);
+    output.resize(num_channels);
+
+    size_t const num_total_roundtrips = 500;
+    size_t num_lossless_roundtrips = 0;
+
+    for (size_t i = 0; i < num_total_roundtrips; ++i) {
+        for (size_t j = 0; j < num_channels; ++j)
+            input[j] = get_random<u8>();
+        auto color_in_profile_connection_space = TRY(profile.to_pcs(input));
+        TRY(profile.from_pcs(profile, color_in_profile_connection_space, output));
+        if (input != output) {
+            outln("roundtrip failed for {} -> {}", input, output);
+        } else {
+            ++num_lossless_roundtrips;
+        }
+    }
+    outln("lossless roundtrips: {} / {}", num_lossless_roundtrips, num_total_roundtrips);
+    return {};
+}
+
 static ErrorOr<void> print_profile_measurement(Gfx::ICC::Profile const& profile)
 {
     auto lab_from_rgb = [&profile](u8 r, u8 g, u8 b) {
@@ -217,6 +243,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView reencode_out_path;
     args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE");
 
+    bool debug_roundtrip = false;
+    args_parser.add_option(debug_roundtrip, "Check how many u8 colors roundtrip losslessly through the profile. For debugging.", "debug-roundtrip", 0);
+
     bool measure = false;
     args_parser.add_option(measure, "For RGB ICC profiles, print perceptually smallest and largest color step", "measure", 0);
 
@@ -270,6 +299,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto reencoded_bytes = TRY(Gfx::ICC::encode(profile));
         auto output_stream = TRY(Core::File::open(reencode_out_path, Core::File::OpenMode::Write));
         TRY(output_stream->write_until_depleted(reencoded_bytes));
+    }
+
+    if (debug_roundtrip) {
+        TRY(perform_debug_roundtrip(*profile));
+        return 0;
     }
 
     if (measure) {
