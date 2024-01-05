@@ -147,6 +147,14 @@ private:
         bool invalid { false }; /* FIXME: Ignore ignore invalid areas during layout */
     };
 
+    struct GridLine {
+        Vector<String> names;
+    };
+    Vector<GridLine> m_row_lines;
+    Vector<GridLine> m_column_lines;
+
+    void init_grid_lines(GridDimension);
+
     HashMap<String, GridArea> m_grid_areas;
 
     Vector<GridTrack> m_grid_rows;
@@ -234,7 +242,7 @@ private:
 
     AvailableSize get_free_space(AvailableSpace const&, GridDimension const) const;
 
-    int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
+    Optional<int> get_line_index_by_line_name(GridDimension dimension, String const&);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&);
