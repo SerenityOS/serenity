@@ -250,11 +250,9 @@ static ErrorOr<void> load_header_and_logical_screen(GIFLoadingContext& context)
 
     if (global_color_table_flag) {
         u8 bits_per_pixel = (packed_fields & 7) + 1;
-        int color_map_entry_count = 1;
-        for (int i = 0; i < bits_per_pixel; ++i)
-            color_map_entry_count *= 2;
+        size_t color_map_entry_count = 1 << bits_per_pixel;
 
-        for (int i = 0; i < color_map_entry_count; ++i) {
+        for (size_t i = 0; i < color_map_entry_count; ++i) {
             u8 r = TRY(context.stream.read_value<u8>());
             u8 g = TRY(context.stream.read_value<u8>());
             u8 b = TRY(context.stream.read_value<u8>());
