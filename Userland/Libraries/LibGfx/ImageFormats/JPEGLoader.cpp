@@ -1197,11 +1197,6 @@ static inline bool validate_luma_and_modify_context(Component const& luma, JPEGL
         context.hsample_factor = luma.hsample_factor;
         context.vsample_factor = luma.vsample_factor;
 
-        if constexpr (JPEG_DEBUG) {
-            dbgln("Horizontal Subsampling Factor: {}", luma.hsample_factor);
-            dbgln("Vertical Subsampling Factor: {}", luma.vsample_factor);
-        }
-
         return true;
     }
     return false;
@@ -1272,6 +1267,8 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
         u8 subsample_factors = TRY(stream.read_u8());
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
+
+        dbgln_if(JPEG_DEBUG, "Component subsampling: {}, {}", component.hsample_factor, component.vsample_factor);
 
         if (i == 0) {
             // By convention, downsampling is applied only on chroma components. So we should
