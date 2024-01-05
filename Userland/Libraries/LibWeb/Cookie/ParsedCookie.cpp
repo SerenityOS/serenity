@@ -345,7 +345,9 @@ Optional<UnixDateTime> parse_date_time(StringView date_string)
     // 6. Let the parsed-cookie-date be the date whose day-of-month, month, year, hour, minute, and second (in UTC) are the
     //    day-of-month-value, the month-value, the year-value, the hour-value, the minute-value, and the second-value, respectively.
     //    If no such date exists, abort these steps and fail to parse the cookie-date.
-    // FIXME: Fail on dates that do not exist.
+    if (day_of_month > static_cast<unsigned int>(days_in_month(year, month)))
+        return {};
+
     // FIXME: This currently uses UNIX time, which is not equivalent to UTC due to leap seconds.
     auto parsed_cookie_date = UnixDateTime::from_unix_time_parts(year, month, day_of_month, hour, minute, second, 0);
 
