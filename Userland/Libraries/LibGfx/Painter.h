@@ -27,6 +27,19 @@
 
 namespace Gfx {
 
+ALWAYS_INLINE static Color color_for_format(BitmapFormat format, ARGB32 value)
+{
+    switch (format) {
+    case BitmapFormat::BGRA8888:
+        return Color::from_argb(value);
+    case BitmapFormat::BGRx8888:
+        return Color::from_rgb(value);
+    // FIXME: Handle other formats
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 class Painter {
 public:
     static constexpr int LINE_SPACING = 4;
