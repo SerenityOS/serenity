@@ -11,8 +11,10 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Process.h>
+#include <LibCore/StandardPaths.h>
 #include <LibDesktop/AppFile.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibGUI/MessageBox.h>
 
 namespace Desktop {
 
@@ -177,6 +179,43 @@ bool AppFile::spawn(ReadonlySpan<StringView> arguments) const
         return false;
 
     return true;
+}
+
+bool AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_arguments) const
+{
+    if (!is_valid())
+        return false;
+
+    StringView exe;
+    Vector<StringView, 2> args;
+    // FIXME: These single quotes won't be enough for executables with single quotes in their name.
+    auto pls_with_executable = ByteString::formatted("/bin/pls '{}'", executable());
+    if (run_in_terminal() && !requires_root()) {
+        exe = "/bin/Terminal"sv;
+        args = { "-e"sv, executable().view() };
+    } else if (!run_in_terminal() && requires_root()) {
+        exe = "/bin/Escalator"sv;
+        args = { executable().view() };
+    } else if (run_in_terminal() && requires_root()) {
+        exe = "/bin/Terminal"sv;
+        args = { "-e"sv, pls_with_executable.view() };
+    } else {
+        exe = executable().view();
+    }
+    args.extend(Vector(user_arguments));
+
+    auto pid = Core::Process::spawn(exe, args.span(),
+        working_directory().is_empty() ? Core::StandardPaths::home_directory() : working_directory());
+    if (pid.is_error())
+        return false;
+
+    return true;
+}
+
+void AppFile::spawn_with_escalation_or_show_error(GUI::Window& window, ReadonlySpan<StringView> arguments) const
+{
+    if (!spawn_with_escalation(arguments))
+        GUI::MessageBox::show_error(&window, ByteString::formatted("Failed to spawn {} with escalation", executable()));
 }
 
 }
