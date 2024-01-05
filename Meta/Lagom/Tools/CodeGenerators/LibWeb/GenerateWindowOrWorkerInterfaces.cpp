@@ -329,12 +329,28 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
     static constexpr u8 attr = JS::Attribute::Writable | JS::Attribute::Configurable;
 )~~~");
 
-    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, Optional<LegacyConstructor> const& legacy_constructor) {
+    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, Optional<LegacyConstructor> const& legacy_constructor, Optional<ByteString> const& legacy_alias_name) {
         gen.set("interface_name", name);
         gen.set("prototype_class", prototype_class);
 
         gen.append(R"~~~(
     global.define_intrinsic_accessor("@interface_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@interface_name@"_fly_string); });)~~~");
+
+        // https://webidl.spec.whatwg.org/#LegacyWindowAlias
+        if (legacy_alias_name.has_value()) {
+            if (legacy_alias_name->starts_with('(')) {
+                auto legacy_alias_names = legacy_alias_name->substring_view(1).split_view(',');
+                for (auto legacy_alias_name : legacy_alias_names) {
+                    gen.set("interface_alias_name", legacy_alias_name.trim_whitespace());
+                    gen.append(R"~~~(
+    global.define_intrinsic_accessor("@interface_alias_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@interface_name@"_fly_string); });)~~~");
+                }
+            } else {
+                gen.set("interface_alias_name", *legacy_alias_name);
+                gen.append(R"~~~(
+    global.define_intrinsic_accessor("@interface_alias_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@interface_name@"_fly_string); });)~~~");
+            }
+        }
 
         if (legacy_constructor.has_value()) {
             gen.set("legacy_interface_name", legacy_constructor->name);
@@ -354,10 +370,15 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
 
-        if (interface.is_namespace)
+        if (interface.is_namespace) {
             add_namespace(gen, interface.name, interface.namespace_class);
-        else if (!interface.extended_attributes.contains("LegacyNamespace"sv))
-            add_interface(gen, interface.namespaced_name, interface.prototype_class, lookup_legacy_constructor(interface));
+        } else if (!interface.extended_attributes.contains("LegacyNamespace"sv)) {
+            if (class_name == "Window") {
+                add_interface(gen, interface.namespaced_name, interface.prototype_class, lookup_legacy_constructor(interface), interface.extended_attributes.get("LegacyWindowAlias"sv));
+            } else {
+                add_interface(gen, interface.namespaced_name, interface.prototype_class, lookup_legacy_constructor(interface), {});
+            }
+        }
     }
 
     generator.append(R"~~~(
@@ -389,7 +410,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(!paths.is_empty());
     VERIFY(!base_path.is_empty());
 
-    const LexicalPath lexical_base(base_path);
+    LexicalPath const lexical_base(base_path);
 
     // Read in all IDL files, we must own the storage for all of these for the lifetime of the program
     Vector<ByteString> file_contents;
