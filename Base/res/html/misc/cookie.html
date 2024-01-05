@@ -22,6 +22,8 @@
     <label for=invalid5>The cookie is too large</label>
     <br /><input id=invalid6 type=button onclick="setCookie(this.value)" value="cookie11=value11; domain=uk.gov" />
     <label for=invalid6>The cookie's domain is on the Public Suffix List</label>
+    <br /><input id=invalid7 type=button onclick="setCookie(this.value)" value="cookie12=value12; expires=Sat, 31 Feb 2060 08:10:36 GMT" />
+    <label for=invalid4>The cookie has a date that does not exist</label>
     <br />
 
     <h3>Unretrievable cookies (the browser should accept these but not display them):</h3>
