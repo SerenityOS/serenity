@@ -2279,11 +2279,17 @@ void GridFormattingContext::init_grid_lines(GridDimension dimension)
                 if (explicit_track.is_default() || explicit_track.is_minmax()) {
                     lines.append({ .names = line_names });
                     line_names.clear();
-                } else if (explicit_track.is_repeat() && explicit_track.repeat().is_default()) {
+                } else if (explicit_track.is_repeat()) {
+                    int repeat_count = 0;
+                    if (explicit_track.repeat().is_auto_fill() || explicit_track.repeat().is_auto_fit())
+                        repeat_count = count_of_repeated_auto_fill_or_fit_tracks(lines_definition.track_list(), *m_available_space);
+                    else
+                        repeat_count = explicit_track.repeat().repeat_count();
                     auto const& repeat_track = explicit_track.repeat();
-                    for (int i = 0; i < repeat_track.repeat_count(); i++) {
+                    for (int i = 0; i < repeat_count; i++)
                         expand_lines_definition(repeat_track.grid_track_size_list());
-                    }
+                } else {
+                    VERIFY_NOT_REACHED();
                 }
             }
         }
