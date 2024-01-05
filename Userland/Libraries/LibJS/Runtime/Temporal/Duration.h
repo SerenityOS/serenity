@@ -107,7 +107,7 @@ struct MoveRelativeDateResult {
 // Used by RoundDuration to temporarily hold values
 struct RoundedDuration {
     DurationRecord duration_record;
-    double remainder;
+    double total;
 };
 
 // Table 8: Duration Record Fields, https://tc39.es/proposal-temporal/#table-temporal-duration-record-fields
