@@ -251,10 +251,12 @@ Optional<ByteString> run_prescan_byte_stream_algorithm(DOM::Document& document, 
     // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
 
     // Detects '<?x'
-    if (!prescan_should_abort(input, 6)) {
+    if (!prescan_should_abort(input, 5)) {
+        // A sequence of bytes starting with: 0x3C, 0x0, 0x3F, 0x0, 0x78, 0x0
         if (input[0] == 0x3C && input[1] == 0x00 && input[2] == 0x3F && input[3] == 0x00 && input[4] == 0x78 && input[5] == 0x00)
             return "utf-16le";
-        if (input[0] == 0x00 && input[1] == 0x3C && input[2] == 0x00 && input[4] == 0x3F && input[5] == 0x00 && input[6] == 0x78)
+        // A sequence of bytes starting with: 0x0, 0x3C, 0x0, 0x3F, 0x0, 0x78
+        if (input[0] == 0x00 && input[1] == 0x3C && input[2] == 0x00 && input[3] == 0x3F && input[4] == 0x00 && input[5] == 0x78)
             return "utf-16be";
     }
 
