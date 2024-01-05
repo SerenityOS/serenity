@@ -211,12 +211,18 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
         for (u8 p = 0; p < planes; p++) {
             u8 const plane_mask = 1 << (p % 8);
             size_t offset_base = (pitch * planes * y) + (p * pitch);
-            if (offset_base + pitch > bitplanes.size() || scanline + ((pitch - 1) * 8) + 7 >= chunky.size())
+            if (offset_base + pitch > bitplanes.size())
                 return Error::from_string_literal("Malformed bitplane data");
 
             for (u16 i = 0; i < pitch; i++) {
                 u8 bit = bitplanes[offset_base + i];
                 u8 rgb_shift = p / 8;
+
+                // Only throw an error if we would actually attempt to write
+                // outside of the chunky buffer. Some apps like PPaint produce
+                // malformed bitplane data but files are still accepted by most readers.
+                if (bit && scanline + ((pitch - 1) * 8) + 7 >= chunky.size())
+                    return Error::from_string_literal("Malformed bitplane data");
 
                 for (u8 b = 0; b < 8; b++) {
                     u8 mask = 1 << (7 - b);
