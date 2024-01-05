@@ -15,8 +15,8 @@
 namespace Kernel {
 
 #define REG_MAC 0x00
-#define REG_MAR4 0x0B
-#define REG_MAR0 0x0F
+#define REG_MAR0 0x08
+#define REG_MAR4 0x0C
 #define REG_EEE_LED 0x1B
 #define REG_TXADDR 0x20
 #define REG_COMMAND 0x37
