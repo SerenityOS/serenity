@@ -210,11 +210,10 @@ public:
         if (source.alpha() == 0)
             return *this;
 
-        int const d = 255 * (alpha() + source.alpha()) - alpha() * source.alpha();
-        u8 r = (red() * alpha() * (255 - source.alpha()) + source.red() * 255 * source.alpha()) / d;
-        u8 g = (green() * alpha() * (255 - source.alpha()) + source.green() * 255 * source.alpha()) / d;
-        u8 b = (blue() * alpha() * (255 - source.alpha()) + source.blue() * 255 * source.alpha()) / d;
-        u8 a = d / 255;
+        u8 a = 255 - ((255 - alpha()) * (255 - source.alpha()) / 255);
+        u8 r = (red() * (255 - source.alpha()) + source.red() * source.alpha()) / 255;
+        u8 g = (green() * (255 - source.alpha()) + source.green() * source.alpha()) / 255;
+        u8 b = (blue() * (255 - source.alpha()) + source.blue() * source.alpha()) / 255;
         return Color(r, g, b, a);
     }
 
