@@ -173,4 +173,24 @@ describe("errors", () => {
             "A starting point is required for balancing calendar units"
         );
     });
+
+    test("invalid calendar throws range exception when performing round", () => {
+        const duration = Temporal.Duration.from({ nanoseconds: 0 });
+
+        const calendar = new (class extends Temporal.Calendar {
+            dateAdd(date, duration, options) {
+                return date;
+            }
+        })("iso8601");
+
+        expect(() => {
+            duration.round({
+                relativeTo: new Temporal.PlainDate(1997, 5, 10, calendar),
+                smallestUnit: "years",
+            });
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid calendar, dateAdd() function returned result implying a year is zero days long"
+        );
+    });
 });

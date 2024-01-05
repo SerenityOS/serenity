@@ -445,6 +445,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 }
 
 // 7.3.21 Temporal.Duration.prototype.total ( totalOf ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total
+// FIXME: This is well out of date with the spec.
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
 {
     auto& realm = *vm.current_realm();
@@ -501,67 +502,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     // 12. Let roundRecord be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
     auto round_record = TRY(round_duration(vm, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, *unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
 
-    // 13. Let roundResult be roundRecord.[[DurationRecord]].
-    auto& round_result = round_record.duration_record;
-
-    double whole;
-
-    // 14. If unit is "year", then
-    if (unit == "year"sv) {
-        // a. Let whole be roundResult.[[Years]].
-        whole = round_result.years;
-    }
-    // 15. Else if unit is "month", then
-    else if (unit == "month"sv) {
-        // a. Let whole be roundResult.[[Months]].
-        whole = round_result.months;
-    }
-    // 16. Else if unit is "week", then
-    else if (unit == "week"sv) {
-        // a. Let whole be roundResult.[[Weeks]].
-        whole = round_result.weeks;
-    }
-    // 17. Else if unit is "day", then
-    else if (unit == "day"sv) {
-        // a. Let whole be roundResult.[[Days]].
-        whole = round_result.days;
-    }
-    // 18. Else if unit is "hour", then
-    else if (unit == "hour"sv) {
-        // a. Let whole be roundResult.[[Hours]].
-        whole = round_result.hours;
-    }
-    // 19. Else if unit is "minute", then
-    else if (unit == "minute"sv) {
-        // a. Let whole be roundResult.[[Minutes]].
-        whole = round_result.minutes;
-    }
-    // 20. Else if unit is "second", then
-    else if (unit == "second"sv) {
-        // a. Let whole be roundResult.[[Seconds]].
-        whole = round_result.seconds;
-    }
-    // 21. Else if unit is "millisecond", then
-    else if (unit == "millisecond"sv) {
-        // a. Let whole be roundResult.[[Milliseconds]].
-        whole = round_result.milliseconds;
-    }
-    // 22. Else if unit is "microsecond", then
-    else if (unit == "microsecond"sv) {
-        // a. Let whole be roundResult.[[Microseconds]].
-        whole = round_result.microseconds;
-    }
-    // 23. Else,
-    else {
-        // a. Assert: unit is "nanosecond".
-        VERIFY(unit == "nanosecond"sv);
-
-        // b. Let whole be roundResult.[[Nanoseconds]].
-        whole = round_result.nanoseconds;
-    }
-
-    // 24. Return 𝔽(whole + roundRecord.[[Remainder]]).
-    return Value(whole + round_record.remainder);
+    // 13. Return 𝔽(roundRecord.[[Total]]).
+    return Value(round_record.total);
 }
 
 // 7.3.22 Temporal.Duration.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring
