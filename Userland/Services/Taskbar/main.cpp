@@ -75,17 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return app->exec();
 }
 
-struct AppMetadata {
-    ByteString executable;
-    ByteString name;
-    ByteString menu_name;
-    ByteString category;
-    ByteString working_directory;
-    GUI::Icon icon;
-    bool run_in_terminal;
-    bool requires_root;
-};
-Vector<AppMetadata> g_apps;
+Vector<NonnullRefPtr<Desktop::AppFile>> g_apps;
 
 Color g_menu_selection_color;
 
@@ -124,11 +114,11 @@ ErrorOr<Vector<ByteString>> discover_apps_and_categories()
         if (af->exclude_from_system_menu())
             return;
         if (access(af->executable().characters(), X_OK) == 0) {
-            g_apps.append({ af->executable(), af->name(), af->menu_name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal(), af->requires_root() });
             seen_app_categories.set(af->category());
+            g_apps.append(move(af));
         }
     });
-    quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
+    quick_sort(g_apps, [](auto& a, auto& b) { return a->name() < b->name(); });
 
     Vector<ByteString> sorted_app_categories;
     TRY(sorted_app_categories.try_ensure_capacity(seen_app_categories.size()));
@@ -192,35 +182,18 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
     for (auto const& app : g_apps) {
-        auto icon = app.icon.bitmap_for_size(16);
+        auto icon = app->icon().bitmap_for_size(16);
 
         if constexpr (SYSTEM_MENU_DEBUG) {
             if (icon)
-                dbgln("App {} has icon with size {}", app.name, icon->size());
+                dbgln("App {} has icon with size {}", app->name(), icon->size());
         }
 
-        auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
-        parent_menu->add_action(GUI::Action::create(app.menu_name, icon, [app_identifier, &window](auto&) {
+        auto parent_menu = app_category_menus.get(app->category()).value_or(system_menu.ptr());
+        parent_menu->add_action(GUI::Action::create(app->menu_name(), icon, [app_identifier, &window](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
             auto& app = g_apps[app_identifier];
-            StringView executable;
-            Vector<char const*, 2> arguments;
-            // FIXME: These single quotes won't be enough for executables with single quotes in their name.
-            auto pls_with_executable = ByteString::formatted("/bin/pls '{}'", app.executable);
-            if (app.run_in_terminal && !app.requires_root) {
-                executable = "/bin/Terminal"sv;
-                arguments = { "-e", app.executable.characters() };
-            } else if (!app.run_in_terminal && app.requires_root) {
-                executable = "/bin/Escalator"sv;
-                arguments = { app.executable.characters() };
-            } else if (app.run_in_terminal && app.requires_root) {
-                executable = "/bin/Terminal"sv;
-                arguments = { "-e", pls_with_executable.characters() };
-            } else {
-                executable = app.executable;
-            }
-            GUI::Process::spawn_or_show_error(&window, executable, arguments,
-                app.working_directory.is_empty() ? Core::StandardPaths::home_directory() : app.working_directory);
+            app->spawn_with_escalation_or_show_error(window);
         }));
         ++app_identifier;
     }
