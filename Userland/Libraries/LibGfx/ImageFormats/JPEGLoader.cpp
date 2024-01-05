@@ -30,16 +30,22 @@ struct MacroblockMeta {
     u32 vpadded_count { 0 };
 };
 
+struct SamplingFactors {
+    u8 horizontal {};
+    u8 vertical {};
+
+    bool operator==(SamplingFactors const&) const = default;
+};
+
 // In the JPEG format, components are defined first at the frame level, then
 // referenced in each scan and aggregated with scan-specific information. The
 // two following structs mimic this hierarchy.
 
 struct Component {
     // B.2.2 - Frame header syntax
-    u8 id { 0 };                    // Ci, Component identifier
-    u8 hsample_factor { 1 };        // Hi, Horizontal sampling factor
-    u8 vsample_factor { 1 };        // Vi, Vertical sampling factor
-    u8 quantization_table_id { 0 }; // Tqi, Quantization table destination selector
+    u8 id { 0 };                               // Ci, Component identifier
+    SamplingFactors sampling_factors { 1, 1 }; // Hi, Horizontal sampling factor and Vi, Vertical sampling factor
+    u8 quantization_table_id { 0 };            // Tqi, Quantization table destination selector
 
     // The JPEG specification does not specify which component corresponds to
     // Y, Cb or Cr. This field (actually the index in the parent Vector) will
@@ -441,8 +447,7 @@ struct JPEGLoadingContext {
     Array<Optional<Array<u16, 64>>, 4> quantization_tables {};
 
     StartOfFrame frame;
-    u8 hsample_factor { 0 };
-    u8 vsample_factor { 0 };
+    SamplingFactors sampling_factors { 0 };
 
     Optional<Scan> current_scan {};
 
@@ -713,12 +718,12 @@ template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (auto const& scan_component : context.current_scan->components) {
-        for (u8 vfactor_i = 0; vfactor_i < scan_component.component.vsample_factor; vfactor_i++) {
-            for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
+        for (u8 vfactor_i = 0; vfactor_i < scan_component.component.sampling_factors.vertical; vfactor_i++) {
+            for (u8 hfactor_i = 0; hfactor_i < scan_component.component.sampling_factors.horizontal; hfactor_i++) {
                 // A.2.3 - Interleaved order
                 u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 if (!context.current_scan->are_components_interleaved()) {
-                    macroblock_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
+                    macroblock_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.sampling_factors.vertical) + (vfactor_i * scan_component.component.sampling_factors.horizontal));
 
                     // A.2.4 Completion of partial MCU
                     // If the component is [and only if!] to be interleaved, the encoding process
@@ -784,14 +789,14 @@ static void reset_decoder(JPEGLoadingContext& context)
 
 static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
 
             auto& huffman_stream = context.current_scan->huffman_stream;
 
             if (context.dc_restart_interval > 0) {
-                if (i != 0 && i % (context.dc_restart_interval * context.vsample_factor * context.hsample_factor) == 0) {
+                if (i != 0 && i % (context.dc_restart_interval * context.sampling_factors.vertical * context.sampling_factors.horizontal) == 0) {
                     reset_decoder(context);
 
                     // Restart markers are stored in byte boundaries. Advance the huffman stream cursor to
@@ -1189,13 +1194,12 @@ static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& con
 
 static inline bool validate_luma_and_modify_context(Component const& luma, JPEGLoadingContext& context)
 {
-    if ((luma.hsample_factor == 1 || luma.hsample_factor == 2) && (luma.vsample_factor == 1 || luma.vsample_factor == 2)) {
-        context.mblock_meta.hpadded_count += luma.hsample_factor == 1 ? 0 : context.mblock_meta.hcount % 2;
-        context.mblock_meta.vpadded_count += luma.vsample_factor == 1 ? 0 : context.mblock_meta.vcount % 2;
+    if ((luma.sampling_factors.horizontal == 1 || luma.sampling_factors.horizontal == 2) && (luma.sampling_factors.vertical == 1 || luma.sampling_factors.vertical == 2)) {
+        context.mblock_meta.hpadded_count += luma.sampling_factors.horizontal == 1 ? 0 : context.mblock_meta.hcount % 2;
+        context.mblock_meta.vpadded_count += luma.sampling_factors.vertical == 1 ? 0 : context.mblock_meta.vcount % 2;
         context.mblock_meta.padded_total = context.mblock_meta.hpadded_count * context.mblock_meta.vpadded_count;
         // For easy reference to relevant sample factors.
-        context.hsample_factor = luma.hsample_factor;
-        context.vsample_factor = luma.vsample_factor;
+        context.sampling_factors = luma.sampling_factors;
 
         return true;
     }
@@ -1265,30 +1269,30 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
         component.index = i;
 
         u8 subsample_factors = TRY(stream.read_u8());
-        component.hsample_factor = subsample_factors >> 4;
-        component.vsample_factor = subsample_factors & 0x0F;
+        component.sampling_factors.horizontal = subsample_factors >> 4;
+        component.sampling_factors.vertical = subsample_factors & 0x0F;
 
-        dbgln_if(JPEG_DEBUG, "Component subsampling: {}, {}", component.hsample_factor, component.vsample_factor);
+        dbgln_if(JPEG_DEBUG, "Component subsampling: {}, {}", component.sampling_factors.horizontal, component.sampling_factors.vertical);
 
         if (i == 0) {
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
                 dbgln_if(JPEG_DEBUG, "Unsupported luma subsampling factors: horizontal: {}, vertical: {}",
-                    component.hsample_factor,
-                    component.vsample_factor);
+                    component.sampling_factors.horizontal,
+                    component.sampling_factors.vertical);
                 return Error::from_string_literal("Unsupported luma subsampling factors");
             }
         } else {
             // YCCK with just CC subsampled and K matching Y is fine.
             auto const& y_component = context.components[0];
-            bool channel_matches_y_factor = component.hsample_factor == y_component.hsample_factor && component.vsample_factor == y_component.vsample_factor;
+            bool channel_matches_y_factor = component.sampling_factors == y_component.sampling_factors;
             bool k_channel_matches_y = context.color_transform == ColorTransform::YCCK && i == 3 && channel_matches_y_factor;
 
-            if (((component.hsample_factor != 1 || component.vsample_factor != 1) && !k_channel_matches_y) || (i == 3 && !channel_matches_y_factor)) {
+            if (((component.sampling_factors != SamplingFactors { 1, 1 }) && !k_channel_matches_y) || (i == 3 && !channel_matches_y_factor)) {
                 dbgln_if(JPEG_DEBUG, "Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
-                    component.hsample_factor,
-                    component.vsample_factor);
+                    component.sampling_factors.horizontal,
+                    component.sampling_factors.vertical);
                 return Error::from_string_literal("Unsupported chroma subsampling factors");
             }
         }
@@ -1354,8 +1358,8 @@ static ErrorOr<void> skip_segment(JPEGStream& stream)
 
 static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             for (u32 i = 0; i < context.components.size(); i++) {
                 auto const& component = context.components[i];
 
@@ -1366,8 +1370,8 @@ static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>&
 
                 auto const& table = context.quantization_tables[component.quantization_table_id].value();
 
-                for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
-                    for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
+                for (u32 vfactor_i = 0; vfactor_i < component.sampling_factors.vertical; vfactor_i++) {
+                    for (u32 hfactor_i = 0; hfactor_i < component.sampling_factors.horizontal; hfactor_i++) {
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[macroblock_index];
                         auto* block_component = get_component(block, i);
@@ -1399,12 +1403,12 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
     static float const s6 = AK::cos(6.0f / 16.0f * AK::Pi<float>) / 2.0f;
     static float const s7 = AK::cos(7.0f / 16.0f * AK::Pi<float>) / 2.0f;
 
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             for (u32 component_i = 0; component_i < context.components.size(); component_i++) {
                 auto& component = context.components[component_i];
-                for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
-                    for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
+                for (u8 vfactor_i = 0; vfactor_i < component.sampling_factors.vertical; vfactor_i++) {
+                    for (u8 hfactor_i = 0; hfactor_i < component.sampling_factors.horizontal; hfactor_i++) {
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[macroblock_index];
                         auto* block_component = get_component(block, component_i);
@@ -1551,10 +1555,10 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
     // F.2.1.5 - Inverse DCT (IDCT)
     auto const level_shift = 1 << (context.frame.precision - 1);
     auto const max_value = (1 << context.frame.precision) - 1;
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
+            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
                     u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     for (u8 i = 0; i < 8; ++i) {
                         for (u8 j = 0; j < 8; ++j) {
@@ -1584,13 +1588,13 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
     // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
     // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
     // 7 - Conversion to and from RGB
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             u32 const chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
             Macroblock const& chroma = macroblocks[chroma_block_index];
             // Overflows are intentional.
-            for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
-                for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
+            for (u8 vfactor_i = context.sampling_factors.vertical - 1; vfactor_i < context.sampling_factors.vertical; --vfactor_i) {
+                for (u8 hfactor_i = context.sampling_factors.horizontal - 1; hfactor_i < context.sampling_factors.horizontal; --hfactor_i) {
                     u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     auto* y = macroblocks[macroblock_index].y;
                     auto* cb = macroblocks[macroblock_index].cb;
@@ -1598,8 +1602,8 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
                     for (u8 i = 7; i < 8; --i) {
                         for (u8 j = 7; j < 8; --j) {
                             u8 const pixel = i * 8 + j;
-                            u32 const chroma_pxrow = (i / context.vsample_factor) + 4 * vfactor_i;
-                            u32 const chroma_pxcol = (j / context.hsample_factor) + 4 * hfactor_i;
+                            u32 const chroma_pxrow = (i / context.sampling_factors.vertical) + 4 * vfactor_i;
+                            u32 const chroma_pxcol = (j / context.sampling_factors.horizontal) + 4 * hfactor_i;
                             u32 const chroma_pixel = chroma_pxrow * 8 + chroma_pxcol;
                             int r = y[pixel] + 1.402f * (chroma.cr[chroma_pixel] - 128);
                             int g = y[pixel] - 0.3441f * (chroma.cb[chroma_pixel] - 128) - 0.7141f * (chroma.cr[chroma_pixel] - 128);
@@ -1626,10 +1630,10 @@ static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Ve
     // files: 0 represents 100% ink coverage, rather than 0% ink as you'd expect.
     // This is arguably a bug in Photoshop, but if you need to work with Photoshop
     // CMYK files, you will have to deal with it in your application.
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
+            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
                     u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     for (u8 i = 0; i < 8; ++i) {
                         for (u8 j = 0; j < 8; ++j) {
@@ -1650,10 +1654,10 @@ static void cmyk_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& m
     if (context.options.cmyk == JPEGDecoderOptions::CMYK::Normal)
         invert_colors_for_adobe_images(context, macroblocks);
 
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
-                for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
+            for (u8 vfactor_i = context.sampling_factors.vertical - 1; vfactor_i < context.sampling_factors.vertical; --vfactor_i) {
+                for (u8 hfactor_i = context.sampling_factors.horizontal - 1; hfactor_i < context.sampling_factors.horizontal; --hfactor_i) {
                     u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     auto* c = macroblocks[mb_index].y;
                     auto* m = macroblocks[mb_index].cb;
@@ -1690,10 +1694,10 @@ static void ycck_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& m
     ycbcr_to_rgb(context, macroblocks);
 
     // RGB to CMYK, as mentioned in https://www.smcm.iqfr.csic.es/docs/intel/ipp/ipp_manual/IPPI/ippi_ch15/functn_YCCKToCMYK_JPEG.htm#functn_YCCKToCMYK_JPEG
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
+            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
                     u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     for (u8 i = 0; i < 8; ++i) {
                         for (u8 j = 0; j < 8; ++j) {
