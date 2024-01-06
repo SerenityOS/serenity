@@ -57,7 +57,9 @@ enum class RoundingMode {
     ToZero = FE_TOWARDZERO,
     Up = FE_UPWARD,
     Down = FE_DOWNWARD,
-    ToEven = FE_TONEAREST
+    ToEven = FE_TONEAREST,
+    // Round to nearest, ties away from zero.
+    ToMaxMagnitude = FE_TOMAXMAGNITUDE,
 };
 
 // This is much branchier than it really needs to be
@@ -117,6 +119,9 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
             should_round = has_nonhalf_fraction || has_half_fraction;
         break;
     case RoundingMode::ToZero:
+        break;
+    case RoundingMode::ToMaxMagnitude:
+        should_round = true;
         break;
     }
 
@@ -397,6 +402,14 @@ double trunc(double x) NOEXCEPT
             : [temp] "m"(temp));
         return x;
     }
+#elif ARCH(RISCV64)
+    if (fabs(x) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.d %0, %1, rtz"
+            : "=r"(output)
+            : "f"(x));
+        return static_cast<double>(output);
+    }
 #endif
 
     return internal_to_integer(x, RoundingMode::ToZero);
@@ -413,6 +426,14 @@ float truncf(float x) NOEXCEPT
             : "+t"(x)
             : [temp] "m"(temp));
         return x;
+    }
+#elif ARCH(RISCV64)
+    if (fabsf(x) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.s %0, %1, rtz"
+            : "=r"(output)
+            : "f"(x));
+        return static_cast<float>(output);
     }
 #endif
 
@@ -444,8 +465,12 @@ double rint(double value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    i64 output;
+    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
+    asm("fcvt.l.d %0, %1, dyn"
+        : "=r"(output)
+        : "f"(value));
+    return static_cast<double>(output);
 #elif ARCH(X86_64)
     double res;
     asm(
@@ -463,8 +488,12 @@ float rintf(float value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    i64 output;
+    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
+    asm("fcvt.l.s %0, %1, dyn"
+        : "=r"(output)
+        : "f"(value));
+    return static_cast<float>(output);
 #elif ARCH(X86_64)
     float res;
     asm(
@@ -503,8 +532,12 @@ long lrint(double value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    i64 output;
+    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
+    asm("fcvt.l.d %0, %1, dyn"
+        : "=r"(output)
+        : "f"(value));
+    return output;
 #elif ARCH(X86_64)
     long res;
     asm(
@@ -523,8 +556,12 @@ long lrintf(float value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    i64 output;
+    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
+    asm("fcvt.l.s %0, %1, dyn"
+        : "=r"(output)
+        : "f"(value));
+    return output;
 #elif ARCH(X86_64)
     long res;
     asm(
@@ -544,8 +581,8 @@ long long llrintl(long double value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    // NOTE: RISC-V LP64 specifies long long == long.
+    return static_cast<long long>(lrintl(value));
 #elif ARCH(X86_64)
     long long res;
     asm(
@@ -564,8 +601,8 @@ long long llrint(double value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    // NOTE: RISC-V LP64 specifies long long == long.
+    return static_cast<long long>(lrint(value));
 #elif ARCH(X86_64)
     long long res;
     asm(
@@ -584,8 +621,8 @@ long long llrintf(float value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    // NOTE: RISC-V LP64 specifies long long == long.
+    return static_cast<long long>(lrintf(value));
 #elif ARCH(X86_64)
     long long res;
     asm(
@@ -680,16 +717,34 @@ long double frexpl(long double x, int* exp) NOEXCEPT
     return scalbnl(x, -(*exp));
 }
 
-#if !(ARCH(X86_64))
-
-double round(double value) NOEXCEPT
+double round(double x) NOEXCEPT
 {
-    return internal_to_integer(value, RoundingMode::ToEven);
+#if ARCH(RISCV64)
+    if (fabs(x) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.d %0, %1, rmm"
+            : "=r"(output)
+            : "f"(x));
+        return static_cast<double>(output);
+    }
+#endif
+
+    return internal_to_integer(x, RoundingMode::ToEven);
 }
 
-float roundf(float value) NOEXCEPT
+float roundf(float x) NOEXCEPT
 {
-    return internal_to_integer(value, RoundingMode::ToEven);
+#if ARCH(RISCV64)
+    if (fabsf(x) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.s %0, %1, rmm"
+            : "=r"(output)
+            : "f"(x));
+        return static_cast<float>(output);
+    }
+#endif
+
+    return internal_to_integer(x, RoundingMode::ToEven);
 }
 
 long double roundl(long double value) NOEXCEPT
@@ -699,174 +754,163 @@ long double roundl(long double value) NOEXCEPT
 
 long lroundf(float value) NOEXCEPT
 {
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long lround(double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long lroundl(long double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long long llroundf(float value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long long llround(double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long long llroundd(long double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-float floorf(float value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::Down);
-}
-
-double floor(double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::Down);
-}
-
-long double floorl(long double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::Down);
-}
-
-float ceilf(float value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::Up);
-}
-
-double ceil(double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::Up);
-}
-
-long double ceill(long double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::Up);
-}
-
-#else
-
-double round(double x) NOEXCEPT
-{
-    // Note: This is break-tie-away-from-zero, so not the hw's understanding of
-    //       "nearest", which would be towards even.
-    if (x == 0.)
-        return x;
-    if (x > 0.)
-        return floor(x + .5);
-    return ceil(x - .5);
-}
-
-float roundf(float x) NOEXCEPT
-{
-    if (x == 0.f)
-        return x;
-    if (x > 0.f)
-        return floorf(x + .5f);
-    return ceilf(x - .5f);
-}
-
-long double roundl(long double x) NOEXCEPT
-{
-    if (x == 0.L)
-        return x;
-    if (x > 0.L)
-        return floorl(x + .5L);
-    return ceill(x - .5L);
-}
-
-long lroundf(float value) NOEXCEPT
-{
-    return static_cast<long>(roundf(value));
-}
-
-long lround(double value) NOEXCEPT
-{
-    return static_cast<long>(round(value));
-}
-
-long lroundl(long double value) NOEXCEPT
-{
-    return static_cast<long>(roundl(value));
-}
-
-long long llroundf(float value) NOEXCEPT
-{
-    return static_cast<long long>(roundf(value));
-}
-
-long long llround(double value) NOEXCEPT
-{
-    return static_cast<long long>(round(value));
-}
-
-long long llroundd(long double value) NOEXCEPT
-{
-    return static_cast<long long>(roundl(value));
-}
-
-float floorf(float value) NOEXCEPT
-{
-    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
-    asm("frndint"
-        : "+t"(value));
-    return value;
-}
-
-double floor(double value) NOEXCEPT
-{
-    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
-    asm("frndint"
-        : "+t"(value));
-    return value;
-}
-
-long double floorl(long double value) NOEXCEPT
-{
-    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
-    asm("frndint"
-        : "+t"(value));
-    return value;
-}
-
-float ceilf(float value) NOEXCEPT
-{
-    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
-    asm("frndint"
-        : "+t"(value));
-    return value;
-}
-
-double ceil(double value) NOEXCEPT
-{
-    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
-    asm("frndint"
-        : "+t"(value));
-    return value;
-}
-
-long double ceill(long double value) NOEXCEPT
-{
-    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
-    asm("frndint"
-        : "+t"(value));
-    return value;
-}
-
+#if ARCH(RISCV64)
+    i64 output;
+    asm("fcvt.l.s %0, %1, rmm"
+        : "=r"(output)
+        : "f"(value));
+    return output;
 #endif
+
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long lround(double value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    i64 output;
+    asm("fcvt.l.d %0, %1, rmm"
+        : "=r"(output)
+        : "f"(value));
+    return output;
+#endif
+
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long lroundl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llroundf(float value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    i64 output;
+    asm("fcvt.l.s %0, %1, rmm"
+        : "=r"(output)
+        : "f"(value));
+    return output;
+#endif
+
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llround(double value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    i64 output;
+    asm("fcvt.l.d %0, %1, rmm"
+        : "=r"(output)
+        : "f"(value));
+    return output;
+#endif
+
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llroundd(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+float floorf(float value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    if (fabsf(value) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.s %0, %1, rdn"
+            : "=r"(output)
+            : "f"(value));
+        return static_cast<float>(output);
+    }
+#elif ARCH(X86_64)
+    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+#endif
+    return internal_to_integer(value, RoundingMode::Down);
+}
+
+double floor(double value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    if (fabs(value) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.d %0, %1, rdn"
+            : "=r"(output)
+            : "f"(value));
+        return static_cast<double>(output);
+    }
+#elif ARCH(X86_64)
+    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+#endif
+    return internal_to_integer(value, RoundingMode::Down);
+}
+
+long double floorl(long double value) NOEXCEPT
+{
+#if ARCH(X86_64)
+    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+#endif
+    return internal_to_integer(value, RoundingMode::Down);
+}
+
+float ceilf(float value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    if (fabsf(value) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.s %0, %1, rup"
+            : "=r"(output)
+            : "f"(value));
+        return static_cast<float>(output);
+    }
+#elif ARCH(X86_64)
+    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+#endif
+    return internal_to_integer(value, RoundingMode::Up);
+}
+
+double ceil(double value) NOEXCEPT
+{
+#if ARCH(RISCV64)
+    if (fabs(value) < LONG_LONG_MAX) {
+        i64 output;
+        asm("fcvt.l.d %0, %1, rup"
+            : "=r"(output)
+            : "f"(value));
+        return static_cast<double>(output);
+    }
+#elif ARCH(X86_64)
+    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+#endif
+    return internal_to_integer(value, RoundingMode::Up);
+}
+
+long double ceill(long double value) NOEXCEPT
+{
+#if ARCH(X86_64)
+    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+#endif
+    return internal_to_integer(value, RoundingMode::Up);
+}
 
 long double modfl(long double x, long double* intpart) NOEXCEPT
 {
