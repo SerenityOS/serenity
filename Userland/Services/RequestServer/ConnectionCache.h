@@ -98,6 +98,7 @@ struct Connection {
     Core::ElapsedTimer timer {};
     JobData job_data {};
     Proxy proxy {};
+    size_t max_queue_length { 0 };
 };
 
 struct ConnectionKey {
@@ -120,8 +121,13 @@ struct AK::Traits<RequestServer::ConnectionCache::ConnectionKey> : public AK::De
 
 namespace RequestServer::ConnectionCache {
 
+struct InferredServerProperties {
+    size_t requests_served_per_connection { NumericLimits<size_t>::max() };
+};
+
 extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache;
 extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache;
+extern HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
 
 void request_did_finish(URL const&, Core::Socket const*);
 void dump_jobs();
@@ -173,12 +179,21 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
 decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto job, Core::ProxyData proxy_data = {})
 {
     using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
-    auto& sockets_for_url = *cache.ensure({ url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string(), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
+
+    auto hostname = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string();
+    auto& properties = g_inferred_server_properties.ensure(hostname);
+
+    auto& sockets_for_url = *cache.ensure({ move(hostname), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
 
     Proxy proxy { proxy_data };
 
     using ReturnType = decltype(sockets_for_url[0].ptr());
-    auto it = sockets_for_url.find_if([](auto& connection) { return connection->request_queue.is_empty(); });
+    // Find the connection with an empty queue; if none exist, we'll find the least backed-up connection later.
+    // Note that servers that are known to serve a single request per connection (e.g. HTTP/1.0) usually have
+    // issues with concurrent connections, so we'll only allow one connection per URL in that case to avoid issues.
+    // This is a bit too aggressive, but there's no way to know if the server can handle concurrent connections
+    // without trying it out first, and that's not worth the effort as HTTP/1.0 is a legacy protocol anyway.
+    auto it = sockets_for_url.find_if([&](auto& connection) { return properties.requests_served_per_connection < 2 || connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
     auto failed_to_find_a_socket = it.is_end();
     if (failed_to_find_a_socket && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
@@ -253,6 +268,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto job, C
     } else {
         dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
         connection.request_queue.append(decltype(connection.job_data)::create(job));
+        connection.max_queue_length = max(connection.max_queue_length, connection.request_queue.size());
     }
     return &connection;
 }
