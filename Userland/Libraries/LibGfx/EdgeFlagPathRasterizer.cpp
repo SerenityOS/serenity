@@ -400,7 +400,7 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::write_scanline(Painter& painter, i
             }
         });
         if (full_converage_count > 0)
-            fast_fill_solid_color_span(painter, scanline, edge_extent.max_x - full_converage_count, edge_extent.max_x, color);
+            fast_fill_solid_color_span(painter, scanline, edge_extent.max_x - full_converage_count + 1, edge_extent.max_x, color);
     };
     switch_on_color_or_function(
         color_or_function, write_scanline_with_fast_fills, write_scanline_pixelwise);
