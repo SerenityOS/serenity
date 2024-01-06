@@ -269,8 +269,7 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
 {
     if constexpr (WEBDRIVER_DEBUG) {
         dbgln("Got HTTP request: {} {}", m_request->method_name(), m_request->resource());
-        if (!body.is_null())
-            dbgln("Body: {}", body.to_byte_string());
+        dbgln("Body: {}", body);
     }
 
     auto [handler, parameters] = TRY(match_route(*m_request));

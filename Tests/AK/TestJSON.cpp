@@ -115,7 +115,7 @@ TEST_CASE(json_duplicate_keys)
 TEST_CASE(json_u64_roundtrip)
 {
     auto big_value = 0xffffffffffffffffull;
-    auto json = JsonValue(big_value).to_byte_string();
+    auto json = JsonValue(big_value).serialized<StringBuilder>();
     auto value = JsonValue::from_string(json);
     EXPECT_EQ_FORCE(value.is_error(), false);
     EXPECT_EQ(value.value().as_u64(), big_value);

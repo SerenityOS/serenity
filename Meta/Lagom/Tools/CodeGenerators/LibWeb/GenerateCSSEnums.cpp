@@ -77,7 +77,7 @@ enum class ValueID;
         enum_generator.appendln("enum class @name:titlecase@ : @enum_type@ {");
 
         for (auto& member : members.values()) {
-            auto member_name = member.to_byte_string();
+            auto member_name = member.as_string();
             // Don't include aliases in the enum.
             if (member_name.contains('='))
                 continue;
@@ -126,7 +126,7 @@ Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
 
         for (auto& member : members.values()) {
             auto member_generator = enum_generator.fork();
-            auto member_name = member.to_byte_string();
+            auto member_name = member.as_string();
             if (member_name.contains('=')) {
                 auto parts = member_name.split_view('=');
                 member_generator.set("valueid:titlecase", title_casify(parts[0]));
@@ -154,7 +154,7 @@ ValueID to_value_id(@name:titlecase@ @name:snakecase@_value)
 
         for (auto& member : members.values()) {
             auto member_generator = enum_generator.fork();
-            auto member_name = member.to_byte_string();
+            auto member_name = member.as_string();
             if (member_name.contains('='))
                 continue;
             member_generator.set("member:titlecase", title_casify(member_name));
@@ -178,7 +178,7 @@ StringView to_string(@name:titlecase@ value)
 
         for (auto& member : members.values()) {
             auto member_generator = enum_generator.fork();
-            auto member_name = member.to_byte_string();
+            auto member_name = member.as_string();
             if (member_name.contains('='))
                 continue;
             member_generator.set("member:css", member_name);

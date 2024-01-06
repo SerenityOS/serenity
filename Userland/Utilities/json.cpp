@@ -108,11 +108,7 @@ void print(JsonValue const& value, int spaces_per_indent, int indent, bool use_c
         else if (value.is_null())
             out("\033[34;1m");
     }
-    if (value.is_string())
-        out("\"");
-    out("{}", value.to_byte_string());
-    if (value.is_string())
-        out("\"");
+    out("{}", value);
     if (use_color)
         out("\033[0m");
 }

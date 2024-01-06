@@ -731,7 +731,7 @@ ByteString Sheet::generate_inline_documentation_for(StringView function, size_t 
             builder.append('<');
         else if (i >= argc)
             builder.append('[');
-        builder.append(argnames[i].to_byte_string());
+        builder.append(argnames[i].as_string());
         if (i == argument_index)
             builder.append('>');
         else if (i >= argc)

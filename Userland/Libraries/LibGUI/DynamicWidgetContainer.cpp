@@ -144,7 +144,7 @@ void DynamicWidgetContainer::restore_view_state()
 
             order_or_error.value().as_array().for_each([&](auto& section_label) {
                 for (auto& container : containers) {
-                    if (container.section_label() == section_label.to_byte_string())
+                    if (container.section_label() == section_label.as_string())
                         new_child_order.append(container);
                 }
             });

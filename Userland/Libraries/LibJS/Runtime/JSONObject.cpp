@@ -439,7 +439,7 @@ Value JSONObject::parse_json_value(VM& vm, JsonValue const& value)
     if (value.is_number())
         return Value(value.to_double(0));
     if (value.is_string())
-        return PrimitiveString::create(vm, value.to_byte_string());
+        return PrimitiveString::create(vm, value.as_string());
     if (value.is_bool())
         return Value(static_cast<bool>(value.as_bool()));
     VERIFY_NOT_REACHED();

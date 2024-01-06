@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
         auto address = map.get_addr("address"sv).value_or(0);
-        auto size = map.get("size"sv).value_or({}).to_byte_string();
+        auto size = map.get_u64("size"sv).value();
 
         auto access = ByteString::formatted("{}{}{}{}{}",
             (map.get_bool("readable"sv).value_or(false) ? "r" : "-"),
@@ -61,13 +61,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         out("{:p}  ", address);
         out("{:>10} ", size);
         if (extended) {
-            auto resident = map.get("amount_resident"sv).value_or({}).to_byte_string();
-            auto dirty = map.get("amount_dirty"sv).value_or({}).to_byte_string();
-            auto vmobject = map.get_byte_string("vmobject"sv).value_or({});
+            auto resident = map.get_u64("amount_resident"sv).value();
+            auto dirty = map.get_u64("amount_dirty"sv).value();
+            auto vmobject = map.get_byte_string("vmobject"sv).value();
             if (vmobject.ends_with("VMObject"sv))
                 vmobject = vmobject.substring(0, vmobject.length() - 8);
-            auto purgeable = map.get("purgeable"sv).value_or({}).to_byte_string();
-            auto cow_pages = map.get("cow_pages"sv).value_or({}).to_byte_string();
+            auto purgeable = map.get_u64("purgeable"sv).value();
+            auto cow_pages = map.get_u64("cow_pages"sv).value();
             out("{:>10} ", resident);
             out("{:>10} ", dirty);
             out("{:6} ", access);

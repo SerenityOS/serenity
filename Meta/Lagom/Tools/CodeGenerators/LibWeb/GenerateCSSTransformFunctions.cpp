@@ -195,7 +195,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
             member_generator.append(first ? " "sv : ", "sv);
             first = false;
 
-            member_generator.append(MUST(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv)->to_byte_string())));
+            member_generator.append(MUST(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv)->as_bool())));
         });
 
         member_generator.append(R"~~~( }

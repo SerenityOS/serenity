@@ -58,7 +58,7 @@ void SlideObject::set_property(StringView name, JsonValue value)
 void GraphicsObject::set_property(StringView name, JsonValue value)
 {
     if (name == "color"sv) {
-        if (auto color = Gfx::Color::from_string(value.to_byte_string()); color.has_value()) {
+        if (auto color = Gfx::Color::from_string(value.as_string()); color.has_value()) {
             m_color = color.release_value();
         }
     }
@@ -68,15 +68,15 @@ void GraphicsObject::set_property(StringView name, JsonValue value)
 void Text::set_property(StringView name, JsonValue value)
 {
     if (name == "text"sv) {
-        m_text = value.to_byte_string();
+        m_text = value.as_string();
     } else if (name == "font"sv) {
-        m_font_family = value.to_byte_string();
+        m_font_family = value.as_string();
     } else if (name == "font-weight"sv) {
-        m_font_weight = Gfx::name_to_weight(value.to_byte_string());
+        m_font_weight = Gfx::name_to_weight(value.as_string());
     } else if (name == "font-size"sv) {
         m_font_size_in_pt = value.to_float();
     } else if (name == "text-alignment"sv) {
-        m_text_align = value.to_byte_string();
+        m_text_align = value.as_string();
     }
     GraphicsObject::set_property(name, move(value));
 }
@@ -84,11 +84,11 @@ void Text::set_property(StringView name, JsonValue value)
 void Image::set_property(StringView name, JsonValue value)
 {
     if (name == "path"sv) {
-        m_src = value.to_byte_string();
+        m_src = value.as_string();
     } else if (name == "scaling-mode"sv) {
-        if (value.to_byte_string() == "nearest-neighbor"sv)
+        if (value.as_string() == "nearest-neighbor"sv)
             m_image_rendering = "crisp-edges"sv;
-        else if (value.to_byte_string() == "smooth-pixels"sv)
+        else if (value.as_string() == "smooth-pixels"sv)
             m_image_rendering = "pixelated"sv;
     }
     SlideObject::set_property(name, move(value));
