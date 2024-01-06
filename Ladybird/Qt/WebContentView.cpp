@@ -33,6 +33,7 @@
 #include <LibMain/Main.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Loader/ContentFilter.h>
+#include <LibWeb/Worker/WebWorkerClient.h>
 #include <LibWebView/WebContentClient.h>
 #include <QApplication>
 #include <QCursor>
@@ -112,6 +113,11 @@ WebContentView::WebContentView(WebContentOptions const& web_content_options, Str
 
     on_leave_tooltip_area = []() {
         QToolTip::hideText();
+    };
+
+    on_request_worker_agent = []() {
+        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
+        return worker_client->dup_sockets();
     };
 }
 

@@ -8,6 +8,7 @@ set(SOURCES
     InspectorClient.cpp
     RequestServerAdapter.cpp
     SearchEngine.cpp
+    SocketPair.cpp
     SourceHighlighter.cpp
     URL.cpp
     UserAgent.cpp

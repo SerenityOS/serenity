@@ -34,6 +34,7 @@
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/PixelUnits.h>
+#include <LibWebView/SocketPair.h>
 
 namespace Web {
 
@@ -283,6 +284,8 @@ public:
     virtual void page_did_change_theme_color(Gfx::Color) { }
 
     virtual void page_did_insert_clipboard_entry([[maybe_unused]] String data, [[maybe_unused]] String presentation_style, [[maybe_unused]] String mime_type) { }
+
+    virtual WebView::SocketPair request_worker_agent() { return { -1, -1 }; }
 
     virtual void inspector_did_load() { }
     virtual void inspector_did_select_dom_node([[maybe_unused]] i32 node_id, [[maybe_unused]] Optional<CSS::Selector::PseudoElement::Type> const& pseudo_element) { }

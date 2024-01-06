@@ -98,6 +98,7 @@ private:
     virtual void inspector_did_replace_dom_node_attribute(i32 node_id, String const& name, Vector<Attribute> const& replacement_attributes) override;
     virtual void inspector_did_request_dom_tree_context_menu(i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag, Optional<Attribute> const& attribute) override;
     virtual void inspector_did_execute_console_script(String const& script) override;
+    virtual Messages::WebContentClient::RequestWorkerAgentResponse request_worker_agent() override;
 
     ViewImplementation& m_view;
 };

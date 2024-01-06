@@ -478,4 +478,12 @@ void WebContentClient::inspector_did_execute_console_script(String const& script
         m_view.on_inspector_executed_console_script(script);
 }
 
+Messages::WebContentClient::RequestWorkerAgentResponse WebContentClient::request_worker_agent()
+{
+    if (m_view.on_request_worker_agent)
+        return m_view.on_request_worker_agent();
+
+    return Messages::WebContentClient::RequestWorkerAgentResponse { WebView::SocketPair { -1, -1 } };
+}
+
 }

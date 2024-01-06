@@ -6,12 +6,8 @@
 
 #pragma once
 
-#include <LibCore/Socket.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/MessagePort.h>
-#include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Worker/WebWorkerClient.h>
 
 namespace Web::HTML {
@@ -22,13 +18,11 @@ struct WorkerOptions {
     String name { String {} };
 };
 
-struct WorkerAgent : JS::Cell {
+class WorkerAgent : public JS::Cell {
     JS_CELL(Agent, JS::Cell);
     JS_DECLARE_ALLOCATOR(WorkerAgent);
 
     WorkerAgent(AK::URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port);
-
-    RefPtr<Web::HTML::WebWorkerClient> m_worker_ipc;
 
 private:
     virtual void initialize(JS::Realm&) override;
@@ -39,6 +33,8 @@ private:
 
     JS::GCPtr<MessagePort> m_message_port;
     JS::GCPtr<MessagePort> m_outside_port;
+
+    RefPtr<Web::HTML::WebWorkerClient> m_worker_ipc;
 };
 
 }

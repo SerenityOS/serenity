@@ -152,6 +152,11 @@ ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(
     return launch_generic_server_process<ImageDecoderClient::Client>(candidate_image_decoder_paths, ""sv, "ImageDecoder"sv);
 }
 
+ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<String> candidate_web_worker_paths)
+{
+    return launch_generic_server_process<Web::HTML::WebWorkerClient>(candidate_web_worker_paths, ""sv, "WebWorker"sv);
+}
+
 ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root)
 {
     return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, "RequestServer"sv);

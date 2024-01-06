@@ -33,9 +33,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     AK::set_rich_debug_enabled(true);
 
     int fd_passing_socket { -1 };
+    StringView serenity_resource_root;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(fd_passing_socket, "File descriptor of the fd passing socket", "fd-passing-socket", 'c', "fd-passing-socket");
+    args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
     args_parser.parse(arguments);
 
     platform_init();

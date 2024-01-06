@@ -457,6 +457,7 @@ class Window;
 class WindowEnvironmentSettingsObject;
 class WindowProxy;
 class Worker;
+class WorkerAgent;
 class WorkerDebugConsoleClient;
 class WorkerEnvironmentSettingsObject;
 class WorkerGlobalScope;
