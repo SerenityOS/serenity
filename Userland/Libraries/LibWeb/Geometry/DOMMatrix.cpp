@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -15,20 +16,63 @@ namespace Web::Geometry {
 
 JS_DEFINE_ALLOCATOR(DOMMatrix);
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-dommatrix
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::construct_impl(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
 {
     auto& vm = realm.vm();
 
-    // https://drafts.fxtf.org/geometry/#dom-dommatrix-dommatrix
-    if (init.has_value()) {
-        // -> Otherwise
-        //        Throw a TypeError exception.
-        // The only condition where this can be met is with a sequence type which doesn't have exactly 6 or 16 elements.
-        if (auto* double_sequence = init.value().get_pointer<Vector<double>>(); double_sequence && (double_sequence->size() != 6 && double_sequence->size() != 16))
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size())) };
+    // -> If init is omitted
+    if (!init.has_value()) {
+        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence [1, 0, 0, 1, 0, 0].
+        return realm.heap().allocate<DOMMatrix>(realm, realm, 1, 0, 0, 1, 0, 0);
     }
 
-    return realm.heap().allocate<DOMMatrix>(realm, realm, init);
+    auto const& init_value = init.value();
+
+    // -> If init is a DOMString
+    if (init_value.has<String>()) {
+        // 1. If current global object is not a Window object, then throw a TypeError exception.
+        if (!is<HTML::Window>(realm.global_object()))
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "This can only be used in a Window context"_string };
+
+        // 2. Parse init into an abstract matrix, and let matrix and 2dTransform be the result. If the result is failure, then throw a "SyntaxError" DOMException.
+        auto result = TRY(parse_dom_matrix_init_string(realm, init_value.get<String>()));
+        auto* elements = result.matrix.elements();
+
+        // If 2dTransform is true
+        if (result.is_2d_transform) {
+            // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the elements m11, m12, m21, m22, m41 and m42 of matrix.
+            return realm.heap().allocate<DOMMatrix>(realm, realm, elements[0][0], elements[1][0], elements[0][1], elements[1][1], elements[0][3], elements[1][3]);
+        }
+
+        // Otherwise, return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 16 elements of matrix.
+        return realm.heap().allocate<DOMMatrix>(realm, realm,
+            elements[0][0], elements[1][0], elements[2][0], elements[3][0],
+            elements[0][1], elements[1][1], elements[2][1], elements[3][1],
+            elements[0][2], elements[1][2], elements[2][2], elements[3][2],
+            elements[0][3], elements[1][3], elements[2][3], elements[3][3]);
+    }
+
+    auto const& double_sequence = init_value.get<Vector<double>>();
+
+    // -> If init is a sequence with 6 elements
+    if (double_sequence.size() == 6) {
+        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence init.
+        return realm.heap().allocate<DOMMatrix>(realm, realm, double_sequence[0], double_sequence[1], double_sequence[2], double_sequence[3], double_sequence[4], double_sequence[5]);
+    }
+
+    // -> If init is a sequence with 16 elements
+    if (double_sequence.size() == 16) {
+        // Return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence init.
+        return realm.heap().allocate<DOMMatrix>(realm, realm,
+            double_sequence[0], double_sequence[1], double_sequence[2], double_sequence[3],
+            double_sequence[4], double_sequence[5], double_sequence[6], double_sequence[7],
+            double_sequence[8], double_sequence[9], double_sequence[10], double_sequence[11],
+            double_sequence[12], double_sequence[13], double_sequence[14], double_sequence[15]);
+    }
+
+    // -> Otherwise, throw a TypeError exception.
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence.size())) };
 }
 
 // https://drafts.fxtf.org/geometry/#create-a-dommatrix-from-the-2d-dictionary
@@ -81,11 +125,6 @@ DOMMatrix::DOMMatrix(JS::Realm& realm, double m11, double m12, double m21, doubl
 
 DOMMatrix::DOMMatrix(JS::Realm& realm, double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44)
     : DOMMatrixReadOnly(realm, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44)
-{
-}
-
-DOMMatrix::DOMMatrix(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
-    : DOMMatrixReadOnly(realm, init)
 {
 }
 
@@ -538,6 +577,22 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::invert_self()
 
     // 3. Return the current matrix.
     return *this;
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-setmatrixvalue
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::set_matrix_value(String const& transform_list)
+{
+    // 1. Parse transformList into an abstract matrix, and let matrix and 2dTransform be the result. If the result is failure, then throw a "SyntaxError" DOMException.
+    auto result = TRY(parse_dom_matrix_init_string(realm(), transform_list));
+
+    // 2. Set is 2D to the value of 2dTransform.
+    m_is_2d = result.is_2d_transform;
+
+    // 3. Set m11 element through m44 element to the element values of matrix in column-major order.
+    m_matrix = result.matrix;
+
+    // 4. Return the current matrix.
+    return JS::NonnullGCPtr<DOMMatrix>(*this);
 }
 
 }

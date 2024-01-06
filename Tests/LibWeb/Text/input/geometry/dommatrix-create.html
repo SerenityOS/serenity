@@ -40,5 +40,29 @@
 
         // 10. Creating a DOMMatrix with fromFloat64Array wrong amount
         testPart(() => DOMMatrix.fromFloat64Array(new Float64Array([10, 20, 30, 40])));
+
+        // 11. Creating a DOMMatrix with CSS transform string
+        testPart(() => new DOMMatrix('translate(10px, 10px)'));
+
+        // 12. Creating a DOMMatrix with CSS transform string
+        testPart(() => new DOMMatrix('scale(10) translate(10px, 10px)'));
+
+        // 13. Creating a DOMMatrix with CSS transform string
+        testPart(() => new DOMMatrix('scale(2)'));
+
+        // 14. Creating a DOMMatrix with CSS transform string
+        testPart(() => new DOMMatrix('rotate(20deg) translate(10px, 10px)'));
+
+        // 15. Creating a DOMMatrix with CSS transform string with error
+        testPart(() => new DOMMatrix('translate(2)'));
+
+        // 16. Creating a DOMMatrix with CSS transform string with error
+        testPart(() => new DOMMatrix('rotate(20)'));
+
+        // 17. Creating a DOMMatrix with CSS transform string with error
+        testPart(() => new DOMMatrix('rotate(20px)'));
+
+        // 18. Creating a DOMMatrix with CSS transform string with error
+        testPart(() => new DOMMatrix('matrix(1.0, 2.0deg, 3.0, 4.0, 5.0, 6.0)'));
     });
 </script>

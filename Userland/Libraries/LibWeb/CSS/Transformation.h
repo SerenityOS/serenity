@@ -20,7 +20,10 @@ using TransformValue = Variant<AngleOrCalculated, LengthPercentage, double>;
 class Transformation {
 public:
     Transformation(TransformFunction function, Vector<TransformValue>&& values);
-    Gfx::FloatMatrix4x4 to_matrix(Painting::PaintableBox const&) const;
+
+    TransformFunction function() const { return m_function; }
+
+    ErrorOr<Gfx::FloatMatrix4x4> to_matrix(Optional<Painting::PaintableBox const&>) const;
 
 private:
     TransformFunction m_function;

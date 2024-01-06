@@ -112,7 +112,6 @@ public:
 protected:
     DOMMatrixReadOnly(JS::Realm&, double m11, double m12, double m21, double m22, double m41, double m42);
     DOMMatrixReadOnly(JS::Realm&, double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44);
-    DOMMatrixReadOnly(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);
     DOMMatrixReadOnly(JS::Realm&, DOMMatrixReadOnly const& other);
 
     // NOTE: The matrix used in the spec is column-major (https://drafts.fxtf.org/geometry/#4x4-abstract-matrix) but Gfx::Matrix4x4 is row-major so we need to transpose the values.
@@ -129,5 +128,12 @@ private:
 
 WebIDL::ExceptionOr<void> validate_and_fixup_dom_matrix_2d_init(DOMMatrix2DInit& init);
 WebIDL::ExceptionOr<void> validate_and_fixup_dom_matrix_init(DOMMatrixInit& init);
+
+struct ParsedMatrix {
+    Gfx::DoubleMatrix4x4 matrix;
+    bool is_2d_transform;
+};
+
+WebIDL::ExceptionOr<ParsedMatrix> parse_dom_matrix_init_string(JS::Realm& realm, StringView transform_list);
 
 }

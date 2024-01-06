@@ -6,7 +6,6 @@
  */
 
 #include "Transformation.h"
-#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::CSS {
@@ -17,62 +16,74 @@ Transformation::Transformation(TransformFunction function, Vector<TransformValue
 {
 }
 
-Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& paintable_box) const
+ErrorOr<Gfx::FloatMatrix4x4> Transformation::to_matrix(Optional<Painting::PaintableBox const&> paintable_box) const
 {
     auto count = m_values.size();
-    auto value = [&](size_t index, CSSPixels const& reference_length = 0) -> float {
+    auto value = [&](size_t index, CSSPixels const& reference_length = 0) -> ErrorOr<float> {
         return m_values[index].visit(
-            [&](CSS::LengthPercentage const& value) -> double {
-                return value.resolved(paintable_box.layout_node(), reference_length).to_px(paintable_box.layout_node()).to_float();
+            [&](CSS::LengthPercentage const& value) -> ErrorOr<float> {
+                if (paintable_box.has_value())
+                    return value.resolved(paintable_box->layout_node(), reference_length).to_px(paintable_box->layout_node()).to_float();
+                if (value.is_length())
+                    return value.length().absolute_length_to_px().to_float();
+                return Error::from_string_literal("Transform contains non absolute units");
             },
-            [&](CSS::AngleOrCalculated const& value) {
-                return AK::to_radians(value.resolved(paintable_box.layout_node()).to_degrees());
+            [&](CSS::AngleOrCalculated const& value) -> ErrorOr<float> {
+                if (paintable_box.has_value())
+                    return value.resolved(paintable_box->layout_node()).to_radians();
+                if (!value.is_calculated())
+                    return value.value().to_radians();
+                return Error::from_string_literal("Transform contains non absolute units");
             },
-            [](double value) {
+            [](double value) -> ErrorOr<float> {
                 return value;
             });
     };
 
-    auto reference_box = paintable_box.absolute_rect();
-    auto width = reference_box.width();
-    auto height = reference_box.height();
+    CSSPixels width = 1;
+    CSSPixels height = 1;
+    if (paintable_box.has_value()) {
+        auto reference_box = paintable_box->absolute_rect();
+        width = reference_box.width();
+        height = reference_box.height();
+    }
 
     switch (m_function) {
     case CSS::TransformFunction::Matrix:
         if (count == 6)
-            return Gfx::FloatMatrix4x4(value(0), value(2), 0, value(4),
-                value(1), value(3), 0, value(5),
+            return Gfx::FloatMatrix4x4(TRY(value(0)), TRY(value(2)), 0, TRY(value(4)),
+                TRY(value(1)), TRY(value(3)), 0, TRY(value(5)),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::Matrix3d:
         if (count == 16)
-            return Gfx::FloatMatrix4x4(value(0), value(4), value(8), value(12),
-                value(1), value(5), value(9), value(13),
-                value(2), value(6), value(10), value(14),
-                value(3), value(7), value(11), value(15));
+            return Gfx::FloatMatrix4x4(TRY(value(0)), TRY(value(4)), TRY(value(8)), TRY(value(12)),
+                TRY(value(1)), TRY(value(5)), TRY(value(9)), TRY(value(13)),
+                TRY(value(2)), TRY(value(6)), TRY(value(10)), TRY(value(14)),
+                TRY(value(3)), TRY(value(7)), TRY(value(11)), TRY(value(15)));
         break;
     case CSS::TransformFunction::Translate:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
+            return Gfx::FloatMatrix4x4(1, 0, 0, TRY(value(0, width)),
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         if (count == 2)
-            return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
-                0, 1, 0, value(1, height),
+            return Gfx::FloatMatrix4x4(1, 0, 0, TRY(value(0, width)),
+                0, 1, 0, TRY(value(1, height)),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::Translate3d:
-        return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
-            0, 1, 0, value(1, height),
-            0, 0, 1, value(2),
+        return Gfx::FloatMatrix4x4(1, 0, 0, TRY(value(0, width)),
+            0, 1, 0, TRY(value(1, height)),
+            0, 0, 1, TRY(value(2)),
             0, 0, 0, 1);
         break;
     case CSS::TransformFunction::TranslateX:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
+            return Gfx::FloatMatrix4x4(1, 0, 0, TRY(value(0, width)),
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
@@ -80,7 +91,7 @@ Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& pain
     case CSS::TransformFunction::TranslateY:
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                0, 1, 0, value(0, height),
+                0, 1, 0, TRY(value(0, height)),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
@@ -88,24 +99,24 @@ Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& pain
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
                 0, 1, 0, 0,
-                0, 0, 1, value(0),
+                0, 0, 1, TRY(value(0)),
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::Scale:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
-                0, value(0), 0, 0,
+            return Gfx::FloatMatrix4x4(TRY(value(0)), 0, 0, 0,
+                0, TRY(value(0)), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         if (count == 2)
-            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
-                0, value(1), 0, 0,
+            return Gfx::FloatMatrix4x4(TRY(value(0)), 0, 0, 0,
+                0, TRY(value(1)), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::ScaleX:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
+            return Gfx::FloatMatrix4x4(TRY(value(0)), 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
@@ -113,38 +124,38 @@ Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& pain
     case CSS::TransformFunction::ScaleY:
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                0, value(0), 0, 0,
+                0, TRY(value(0)), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::RotateX:
         if (count == 1)
-            return Gfx::rotation_matrix({ 1.0f, 0.0f, 0.0f }, value(0));
+            return Gfx::rotation_matrix({ 1.0f, 0.0f, 0.0f }, TRY(value(0)));
         break;
     case CSS::TransformFunction::RotateY:
         if (count == 1)
-            return Gfx::rotation_matrix({ 0.0f, 1.0f, 0.0f }, value(0));
+            return Gfx::rotation_matrix({ 0.0f, 1.0f, 0.0f }, TRY(value(0)));
         break;
     case CSS::TransformFunction::Rotate:
     case CSS::TransformFunction::RotateZ:
         if (count == 1)
-            return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, value(0));
+            return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, TRY(value(0)));
         break;
     case CSS::TransformFunction::Skew:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(1, tanf(value(0)), 0, 0,
+            return Gfx::FloatMatrix4x4(1, tanf(TRY(value(0))), 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         if (count == 2)
-            return Gfx::FloatMatrix4x4(1, tanf(value(0)), 0, 0,
-                tanf(value(1)), 1, 0, 0,
+            return Gfx::FloatMatrix4x4(1, tanf(TRY(value(0))), 0, 0,
+                tanf(TRY(value(1))), 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::SkewX:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(1, tanf(value(0)), 0, 0,
+            return Gfx::FloatMatrix4x4(1, tanf(TRY(value(0))), 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
@@ -152,7 +163,7 @@ Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& pain
     case CSS::TransformFunction::SkewY:
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                tanf(value(0)), 1, 0, 0,
+                tanf(TRY(value(0))), 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
