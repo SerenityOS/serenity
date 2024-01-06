@@ -2067,7 +2067,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     dbgln("LibLine: Unhandled completion kind: {}", kind);
                 }
             } else {
-                suggestions.append(parsed.to_byte_string());
+                suggestions.append(parsed.deprecated_to_byte_string());
             }
 
             return IterationDecision::Continue;

@@ -292,7 +292,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     HashMap<FlatPtr, ByteString> profile_strings;
     for (FlatPtr string_id = 0; string_id < strings.size(); ++string_id) {
         auto const& value = strings.at(string_id);
-        profile_strings.set(string_id, value.to_byte_string());
+        profile_strings.set(string_id, value.as_string());
     }
 
     auto events_value = object.get_array("events"sv);

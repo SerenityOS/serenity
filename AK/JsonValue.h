@@ -85,7 +85,7 @@ public:
         return alternative;
     }
 
-    ByteString to_byte_string() const
+    ByteString deprecated_to_byte_string() const
     {
         if (is_string())
             return as_string();
@@ -290,7 +290,7 @@ template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JsonValue const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_byte_string());
+        return Formatter<StringView>::format(builder, value.serialized<StringBuilder>());
     }
 };
 

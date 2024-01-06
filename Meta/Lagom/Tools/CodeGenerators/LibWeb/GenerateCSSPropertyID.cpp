@@ -73,7 +73,7 @@ void replace_logical_aliases(JsonObject& properties)
         if (logical_alias_for.has_value()) {
             auto const& aliased_properties = logical_alias_for.value();
             for (auto const& aliased_property : aliased_properties.values()) {
-                logical_aliases.set(name, aliased_property.to_byte_string());
+                logical_aliases.set(name, aliased_property.as_string());
             }
         }
     });
@@ -768,7 +768,7 @@ size_t property_maximum_value_count(PropertyID property_id)
             VERIFY(max_values.has_value() && max_values->is_number() && !max_values->is_double());
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
-            property_generator.set("max_values", max_values->to_byte_string());
+            property_generator.set("max_values", max_values->template serialized<StringBuilder>());
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return @max_values@;
@@ -834,7 +834,7 @@ Vector<PropertyID> longhands_for_shorthand(PropertyID property_id)
                     first = false;
                 else
                     builder.append(", "sv);
-                builder.appendff("PropertyID::{}", title_casify(longhand.to_byte_string()));
+                builder.appendff("PropertyID::{}", title_casify(longhand.as_string()));
                 return IterationDecision::Continue;
             });
             property_generator.set("longhands", builder.to_byte_string());

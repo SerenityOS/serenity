@@ -57,7 +57,7 @@ enum class ValueID {
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name.to_byte_string()));
+        member_generator.set("name:titlecase", title_casify(name.as_string()));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
@@ -105,8 +105,8 @@ HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringv
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name", name.to_byte_string());
-        member_generator.set("name:titlecase", title_casify(name.to_byte_string()));
+        member_generator.set("name", name.as_string());
+        member_generator.set("name:titlecase", title_casify(name.as_string()));
         member_generator.append(R"~~~(
     {"@name@"sv, ValueID::@name:titlecase@},
 )~~~");
@@ -126,8 +126,8 @@ StringView string_from_value_id(ValueID value_id) {
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name", name.to_byte_string());
-        member_generator.set("name:titlecase", title_casify(name.to_byte_string()));
+        member_generator.set("name", name.as_string());
+        member_generator.set("name:titlecase", title_casify(name.as_string()));
         member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
         return "@name@"sv;

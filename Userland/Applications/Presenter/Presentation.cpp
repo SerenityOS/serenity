@@ -133,7 +133,8 @@ HashMap<ByteString, ByteString> Presentation::parse_metadata(JsonObject const& m
     HashMap<ByteString, ByteString> metadata;
 
     metadata_object.for_each_member([&](auto const& key, auto const& value) {
-        metadata.set(key, value.to_byte_string());
+        // FIXME: Do not serialize values here just to convert them back to proper types later.
+        metadata.set(key, value.deprecated_to_byte_string());
     });
 
     return metadata;

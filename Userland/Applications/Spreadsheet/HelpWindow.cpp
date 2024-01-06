@@ -166,7 +166,7 @@ ByteString HelpWindow::render(StringView key)
         markdown_builder.append("No required arguments.\n"sv);
 
     for (size_t i = 0; i < argc; ++i)
-        markdown_builder.appendff("- `{}`\n", argnames.at(i).to_byte_string());
+        markdown_builder.appendff("- `{}`\n", argnames.at(i).as_string());
 
     if (argc > 0)
         markdown_builder.append("\n"sv);
@@ -175,7 +175,7 @@ ByteString HelpWindow::render(StringView key)
         auto opt_count = argnames.size() - argc;
         markdown_builder.appendff("{} optional argument(s):\n", opt_count);
         for (size_t i = argc; i < (size_t)argnames.size(); ++i)
-            markdown_builder.appendff("- `{}`\n", argnames.at(i).to_byte_string());
+            markdown_builder.appendff("- `{}`\n", argnames.at(i).as_string());
         markdown_builder.append("\n"sv);
     }
 
@@ -188,8 +188,8 @@ ByteString HelpWindow::render(StringView key)
         VERIFY(examples.has_value());
         markdown_builder.append("# EXAMPLES\n"sv);
         examples->for_each_member([&](auto& text, auto& description_value) {
-            dbgln("```js\n{}\n```\n\n- {}\n", text, description_value.to_byte_string());
-            markdown_builder.appendff("```js\n{}\n```\n\n- {}\n", text, description_value.to_byte_string());
+            dbgln("```js\n{}\n```\n\n- {}\n", text, description_value.as_string());
+            markdown_builder.appendff("```js\n{}\n```\n\n- {}\n", text, description_value.as_string());
         });
     }
 
