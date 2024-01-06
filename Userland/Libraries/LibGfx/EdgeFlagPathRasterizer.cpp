@@ -167,7 +167,7 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
     auto for_each_sample = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent, auto callback) {
         for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
             auto xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
-            if (xi < 0 || size_t(xi) >= m_scanline.size()) {
+            if (xi < 0 || size_t(xi) >= m_scanline.size()) [[unlikely]] {
                 // FIXME: For very low dxdy values, floating point error can push the sample outside the scanline.
                 // This does not seem to make a visible difference most of the time (and is more likely from generated
                 // paths, such as this 3D canvas demo: https://www.kevs3d.co.uk/dev/html5logo/).
@@ -241,7 +241,7 @@ Color EdgeFlagPathRasterizer<SamplesPerPixel>::scanline_color(int scanline, int 
 }
 
 template<unsigned SamplesPerPixel>
-Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent& edge_extent, Detail::Edge* active_edges)
+__attribute__((hot)) Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent& edge_extent, Detail::Edge* active_edges)
 {
     auto y_subpixel = [](int y) {
         return y & (SamplesPerPixel - 1);
@@ -368,7 +368,7 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fast_fill_solid_color_span(ARGB32*
 
 template<unsigned SamplesPerPixel>
 template<Painter::WindingRule WindingRule>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::write_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
+FLATTEN __attribute__((hot)) void EdgeFlagPathRasterizer<SamplesPerPixel>::write_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
 {
     // Handle scanline clipping.
     auto left_clip = m_clip.left() - m_blit_origin.x();

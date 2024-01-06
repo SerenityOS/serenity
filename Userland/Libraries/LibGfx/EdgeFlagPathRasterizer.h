@@ -176,7 +176,7 @@ private:
     Detail::Edge* plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent&, Detail::Edge* active_edges = nullptr);
 
     template<Painter::WindingRule>
-    void write_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
+    FLATTEN void write_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
     Color scanline_color(int scanline, int offset, u8 alpha, auto& color_or_function);
     void write_pixel(BitmapFormat format, ARGB32* scanline_ptr, int scanline, int offset, SampleType sample, auto& color_or_function);
     void fast_fill_solid_color_span(ARGB32* scanline_ptr, int start, int end, Color color);
