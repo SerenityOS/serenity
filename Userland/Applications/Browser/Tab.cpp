@@ -23,6 +23,7 @@
 #include <Applications/Browser/URLBox.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -655,22 +656,33 @@ Tab::Tab(BrowserWindow& window)
         },
         this);
 
-    auto take_visible_screenshot_action = GUI::Action::create(
-        "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
-            view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible)->when_rejected([this](auto const& error) {
+    auto take_screenshot = [this](auto type) {
+        auto& view = this->view();
+
+        view.take_screenshot(type)
+            ->when_resolved([this](auto const& path) {
+                auto message = MUST(String::formatted("Screenshot saved to: {}", path));
+                auto response = GUI::MessageBox::show(&this->window(), message, "Ladybird"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OKReveal);
+
+                if (response == GUI::MessageBox::ExecResult::Reveal)
+                    Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname()));
+            })
+            .when_rejected([this](auto const& error) {
                 auto error_message = MUST(String::formatted("{}", error));
                 GUI::MessageBox::show_error(&this->window(), error_message);
             });
+    };
+
+    auto take_visible_screenshot_action = GUI::Action::create(
+        "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [take_screenshot](auto&) {
+            take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible);
         },
         this);
     take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"_string);
 
     auto take_full_screenshot_action = GUI::Action::create(
-        "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
-            view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full)->when_rejected([this](auto const& error) {
-                auto error_message = MUST(String::formatted("{}", error));
-                GUI::MessageBox::show_error(&this->window(), error_message);
-            });
+        "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [take_screenshot](auto&) {
+            take_screenshot(WebView::ViewImplementation::ScreenshotType::Full);
         },
         this);
     take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"_string);
