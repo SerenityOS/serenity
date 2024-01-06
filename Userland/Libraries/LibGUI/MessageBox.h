@@ -32,6 +32,7 @@ public:
     enum class InputType {
         OK,
         OKCancel,
+        OKReveal,
         YesNo,
         YesNoCancel,
     };
@@ -58,6 +59,7 @@ private:
     bool should_include_cancel_button() const;
     bool should_include_yes_button() const;
     bool should_include_no_button() const;
+    bool should_include_reveal_button() const;
 
     ErrorOr<void> build();
     ErrorOr<RefPtr<Gfx::Bitmap>> icon() const;
@@ -69,6 +71,7 @@ private:
     RefPtr<GUI::Button> m_yes_button;
     RefPtr<GUI::Button> m_no_button;
     RefPtr<GUI::Button> m_cancel_button;
+    RefPtr<GUI::Button> m_reveal_button;
     RefPtr<Label> m_text_label;
 };
 
