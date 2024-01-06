@@ -4,6 +4,7 @@
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -2803,84 +2804,78 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
     };
 
     // The extra 3-value syntax that's allowed for background-position:
-    // [
-    //   [ [ left | right ] <length-percentage> ] &&
-    //   [ top | bottom ]
-    // |
-    //   [ left | right ] &&
-    //   [ [ top | bottom ] <length-percentage> ]
-    // ]
+    // [ center | [ left | right ] <length-percentage>? ] &&
+    // [ center | [ top | bottom ] <length-percentage>? ]
     auto alternative_5_for_background_position = [&]() -> RefPtr<PositionStyleValue> {
         auto transaction = tokens.begin_transaction();
-        tokens.skip_whitespace();
-        Optional<PositionEdge> horizontal_edge;
-        Optional<LengthPercentage> horizontal_offset;
-        Optional<PositionEdge> vertical_edge;
-        Optional<LengthPercentage> vertical_offset;
 
-        auto matches = [&]() {
-            return horizontal_edge.has_value() && vertical_edge.has_value()
-                && horizontal_offset.has_value() != vertical_offset.has_value();
+        struct PositionAndMaybeLength {
+            PositionEdge position;
+            Optional<LengthPercentage> length;
         };
 
-        auto parse_horizontal = [&] {
-            // [ left | right ] <length-percentage>?
-            auto transaction = tokens.begin_transaction();
+        // [ <position> <length-percentage>? ]
+        auto parse_position_and_maybe_length = [&]() -> Optional<PositionAndMaybeLength> {
             tokens.skip_whitespace();
-            auto edge = parse_position_edge(tokens.next_token());
-            if (!edge.has_value() || !is_horizontal(*edge, false))
-                return false;
-            horizontal_edge = move(edge);
+
+            auto maybe_position = parse_position_edge(tokens.next_token());
+            if (!maybe_position.has_value())
+                return {};
 
             tokens.skip_whitespace();
-            auto length_percentage = parse_length_percentage(tokens.peek_token());
-            if (length_percentage.has_value()) {
-                (void)tokens.next_token(); // offset
-                horizontal_offset = move(length_percentage);
+
+            auto maybe_length = parse_length_percentage(tokens.peek_token());
+            if (maybe_length.has_value()) {
+                // 'center' cannot be followed by a <length-percentage>
+                if (maybe_position.value() == PositionEdge::Center && maybe_length.has_value())
+                    return {};
+                tokens.next_token();
             }
-            transaction.commit();
-            return true;
+
+            return PositionAndMaybeLength {
+                .position = maybe_position.release_value(),
+                .length = move(maybe_length),
+            };
         };
 
-        auto parse_vertical = [&] {
-            // [ top | bottom ] <length-percentage>?
-            auto transaction = tokens.begin_transaction();
-            tokens.skip_whitespace();
-            auto edge = parse_position_edge(tokens.next_token());
-            if (!edge.has_value() || !is_vertical(*edge, false))
-                return false;
-            vertical_edge = move(edge);
+        auto maybe_group1 = parse_position_and_maybe_length();
+        if (!maybe_group1.has_value())
+            return nullptr;
 
-            tokens.skip_whitespace();
-            auto length_percentage = parse_length_percentage(tokens.peek_token());
-            if (length_percentage.has_value()) {
-                (void)tokens.next_token(); // offset
-                vertical_offset = move(length_percentage);
-            }
-            transaction.commit();
-            return true;
+        auto maybe_group2 = parse_position_and_maybe_length();
+        if (!maybe_group2.has_value())
+            return nullptr;
+
+        auto group1 = maybe_group1.release_value();
+        auto group2 = maybe_group2.release_value();
+
+        // 2-value or 4-value if both <length-percentage>s are present or missing.
+        if (group1.length.has_value() == group2.length.has_value())
+            return nullptr;
+
+        // If 'left' or 'right' is given, that position is X and the other is Y.
+        // Conversely -
+        // If 'top' or 'bottom' is given, that position is Y and the other is X.
+        if (is_vertical(group1.position, false) || is_horizontal(group2.position, false))
+            swap(group1, group2);
+
+        // [ center | [ left | right ] ]
+        if (!is_horizontal(group1.position, true))
+            return nullptr;
+
+        // [ center | [ top | bottom ] ]
+        if (!is_vertical(group2.position, true))
+            return nullptr;
+
+        auto to_style_value = [&](PositionAndMaybeLength const& group, bool is_horizontal) -> NonnullRefPtr<EdgeStyleValue> {
+            if (group.position == PositionEdge::Center)
+                return EdgeStyleValue::create(is_horizontal ? PositionEdge::Left : PositionEdge::Top, Percentage { 50 });
+
+            return EdgeStyleValue::create(group.position, group.length.value_or(Length::make_px(0)));
         };
 
-        if (parse_horizontal() && parse_vertical() && matches()) {
-            transaction.commit();
-            return PositionStyleValue::create(
-                EdgeStyleValue::create(*horizontal_edge, horizontal_offset.value_or(Length::make_px(0))),
-                EdgeStyleValue::create(*vertical_edge, vertical_offset.value_or(Length::make_px(0))));
-        }
-
-        horizontal_edge.clear();
-        horizontal_offset.clear();
-        vertical_edge.clear();
-        vertical_offset.clear();
-
-        if (parse_vertical() && parse_horizontal() && matches()) {
-            transaction.commit();
-            return PositionStyleValue::create(
-                EdgeStyleValue::create(*horizontal_edge, horizontal_offset.value_or(Length::make_px(0))),
-                EdgeStyleValue::create(*vertical_edge, vertical_offset.value_or(Length::make_px(0))));
-        }
-
-        return nullptr;
+        transaction.commit();
+        return PositionStyleValue::create(to_style_value(group1, true), to_style_value(group2, false));
     };
 
     // Note: The alternatives must be attempted in this order since shorter alternatives can match a prefix of longer ones.
