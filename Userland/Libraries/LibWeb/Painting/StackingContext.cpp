@@ -300,7 +300,7 @@ Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transfo
     auto matrix = Gfx::FloatMatrix4x4::identity();
     if (paintable().is_paintable_box()) {
         for (auto const& transform : transformations)
-            matrix = matrix * transform.to_matrix(paintable_box());
+            matrix = matrix * transform.to_matrix(paintable_box()).release_value();
 
         return matrix;
     }

@@ -117,6 +117,7 @@ public:
     CSS::PositionStyleValue const& object_position() const;
     Optional<CSS::TableLayout> table_layout() const;
 
+    static Vector<CSS::Transformation> transformations_for_style_value(StyleValue const& value);
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;
 

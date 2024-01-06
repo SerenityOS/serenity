@@ -47,5 +47,5 @@ interface DOMMatrix : DOMMatrixReadOnly {
     DOMMatrix skewYSelf(optional unrestricted double sy = 0);
     DOMMatrix invertSelf();
 
-    // FIXME: [Exposed=Window] DOMMatrix setMatrixValue(DOMString transformList);
+    [Exposed=Window] DOMMatrix setMatrixValue(DOMString transformList);
 };

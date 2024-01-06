@@ -357,7 +357,7 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         VERIFY(layout_node.paintable());
         auto const& paintable_box = verify_cast<Painting::PaintableBox const>(*layout_node.paintable());
         for (auto transformation : transformations) {
-            transform = transform * transformation.to_matrix(paintable_box);
+            transform = transform * transformation.to_matrix(paintable_box).release_value();
         }
 
         // https://drafts.csswg.org/css-transforms-1/#2d-matrix

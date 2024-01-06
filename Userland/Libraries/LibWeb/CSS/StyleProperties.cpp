@@ -405,17 +405,15 @@ Optional<CSS::JustifySelf> StyleProperties::justify_self() const
     return value_id_to_justify_self(value->to_identifier());
 }
 
-Vector<CSS::Transformation> StyleProperties::transformations() const
+Vector<CSS::Transformation> StyleProperties::transformations_for_style_value(StyleValue const& value)
 {
-    auto value = property(CSS::PropertyID::Transform);
-
-    if (value->is_identifier() && value->to_identifier() == CSS::ValueID::None)
+    if (value.is_identifier() && value.to_identifier() == CSS::ValueID::None)
         return {};
 
-    if (!value->is_value_list())
+    if (!value.is_value_list())
         return {};
 
-    auto& list = value->as_value_list();
+    auto& list = value.as_value_list();
 
     Vector<CSS::Transformation> transformations;
 
@@ -454,6 +452,11 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         transformations.empend(function, move(values));
     }
     return transformations;
+}
+
+Vector<CSS::Transformation> StyleProperties::transformations() const
+{
+    return transformations_for_style_value(property(CSS::PropertyID::Transform));
 }
 
 static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue const& value)

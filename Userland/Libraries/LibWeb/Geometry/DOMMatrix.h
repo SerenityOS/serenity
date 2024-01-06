@@ -65,10 +65,11 @@ public:
     JS::NonnullGCPtr<DOMMatrix> skew_y_self(double sy = 0);
     JS::NonnullGCPtr<DOMMatrix> invert_self();
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> set_matrix_value(String const& transform_list);
+
 private:
     DOMMatrix(JS::Realm&, double m11, double m12, double m21, double m22, double m41, double m42);
     DOMMatrix(JS::Realm&, double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44);
-    DOMMatrix(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);
     DOMMatrix(JS::Realm&, DOMMatrixReadOnly const& read_only_matrix);
 
     virtual void initialize(JS::Realm&) override;

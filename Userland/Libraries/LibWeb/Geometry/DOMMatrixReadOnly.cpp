@@ -6,29 +6,75 @@
  */
 
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
 #include <LibWeb/Geometry/DOMPoint.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Geometry {
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-dommatrixreadonly
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::construct_impl(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
 {
     auto& vm = realm.vm();
 
-    // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-dommatrixreadonly
-    if (init.has_value()) {
-        // -> Otherwise
-        //        Throw a TypeError exception.
-        // The only condition where this can be met is with a sequence type which doesn't have exactly 6 or 16 elements.
-        if (auto* double_sequence = init.value().get_pointer<Vector<double>>(); double_sequence && (double_sequence->size() != 6 && double_sequence->size() != 16))
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size())) };
+    // -> If init is omitted
+    if (!init.has_value()) {
+        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence [1, 0, 0, 1, 0, 0].
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, 1, 0, 0, 1, 0, 0);
     }
 
-    return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init);
+    auto const& init_value = init.value();
+
+    // -> If init is a DOMString
+    if (init_value.has<String>()) {
+        // 1. If current global object is not a Window object, then throw a TypeError exception.
+        if (!is<HTML::Window>(realm.global_object()))
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "This can only be used in a Window context"_string };
+
+        // 2. Parse init into an abstract matrix, and let matrix and 2dTransform be the result. If the result is failure, then throw a "SyntaxError" DOMException.
+        auto result = TRY(parse_dom_matrix_init_string(realm, init_value.get<String>()));
+        auto* elements = result.matrix.elements();
+
+        // If 2dTransform is true
+        if (result.is_2d_transform) {
+            // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the elements m11, m12, m21, m22, m41 and m42 of matrix.
+            return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, elements[0][0], elements[1][0], elements[0][1], elements[1][1], elements[0][3], elements[1][3]);
+        }
+
+        // Otherwise, return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 16 elements of matrix.
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm,
+            elements[0][0], elements[1][0], elements[2][0], elements[3][0],
+            elements[0][1], elements[1][1], elements[2][1], elements[3][1],
+            elements[0][2], elements[1][2], elements[2][2], elements[3][2],
+            elements[0][3], elements[1][3], elements[2][3], elements[3][3]);
+    }
+
+    auto const& double_sequence = init_value.get<Vector<double>>();
+
+    // -> If init is a sequence with 6 elements
+    if (double_sequence.size() == 6) {
+        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence init.
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, double_sequence[0], double_sequence[1], double_sequence[2], double_sequence[3], double_sequence[4], double_sequence[5]);
+    }
+
+    // -> If init is a sequence with 16 elements
+    if (double_sequence.size() == 16) {
+        // Return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence init.
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm,
+            double_sequence[0], double_sequence[1], double_sequence[2], double_sequence[3],
+            double_sequence[4], double_sequence[5], double_sequence[6], double_sequence[7],
+            double_sequence[8], double_sequence[9], double_sequence[10], double_sequence[11],
+            double_sequence[12], double_sequence[13], double_sequence[14], double_sequence[15]);
+    }
+
+    // -> Otherwise, throw a TypeError exception.
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence.size())) };
 }
 
 // https://drafts.fxtf.org/geometry/#create-a-dommatrixreadonly-from-the-2d-dictionary
@@ -59,11 +105,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::crea
     // 2. If the is2D dictionary member of other is true.
     if (init.is2d.has_value() && init.is2d.value()) {
         // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 6 elements m11, m12, m21, m22, m41 and m42 of other in the given order.
-        return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
     }
 
     // Otherwise, Return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 16 elements m11, m12, m13, ..., m44 of other in the given order.
-    return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m13, init.m14,
+    return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init.m11.value(), init.m12.value(), init.m13, init.m14,
         init.m21.value(), init.m22.value(), init.m23, init.m24,
         init.m31, init.m32, init.m33, init.m34,
         init.m41.value(), init.m42.value(), init.m43, init.m44);
@@ -79,46 +125,6 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(JS::Realm& realm, double m11, double m12, d
     : Bindings::PlatformObject(realm)
 {
     initialize_from_create_3d_matrix(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44);
-}
-
-DOMMatrixReadOnly::DOMMatrixReadOnly(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
-    : Bindings::PlatformObject(realm)
-{
-    // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-dommatrixreadonly
-    // -> If init is omitted
-    if (!init.has_value()) {
-        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence [1, 0, 0, 1, 0, 0].
-        initialize_from_create_2d_matrix(1, 0, 0, 1, 0, 0);
-        return;
-    }
-    auto const& init_value = init.value();
-
-    // -> If init is a DOMString
-    if (init_value.has<String>()) {
-        dbgln("FIXME: Implement initializing DOMMatrix(ReadOnly) from DOMString: '{}'", init_value.get<String>());
-        // NOTE: This will result in an identity matrix for now.
-        return;
-    }
-
-    auto const& double_sequence = init_value.get<Vector<double>>();
-
-    // -> If init is a sequence with 6 elements
-    if (double_sequence.size() == 6) {
-        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence init.
-        initialize_from_create_2d_matrix(double_sequence[0], double_sequence[1], double_sequence[2], double_sequence[3], double_sequence[4], double_sequence[5]);
-        return;
-    }
-
-    // -> If init is a sequence with 16 elements
-    // NOTE: The "otherwise" case should be handled in construct_impl, leaving the only other possible condition here to be 16 elements.
-    VERIFY(double_sequence.size() == 16);
-
-    // Return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with the sequence init.
-    initialize_from_create_3d_matrix(
-        double_sequence[0], double_sequence[1], double_sequence[2], double_sequence[3],
-        double_sequence[4], double_sequence[5], double_sequence[6], double_sequence[7],
-        double_sequence[8], double_sequence[9], double_sequence[10], double_sequence[11],
-        double_sequence[12], double_sequence[13], double_sequence[14], double_sequence[15]);
 }
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(JS::Realm& realm, DOMMatrixReadOnly const& other)
@@ -220,11 +226,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::from
 
     // If array32 has 6 elements, return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array32 in the provided order.
     if (elements.size() == 6)
-        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3), elements.at(4), elements.at(5));
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3), elements.at(4), elements.at(5));
 
     // If array32 has 16 elements, return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array32 in the provided order.
     if (elements.size() == 16)
-        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3),
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3),
             elements.at(4), elements.at(5), elements.at(6), elements.at(7),
             elements.at(8), elements.at(9), elements.at(10), elements.at(11),
             elements.at(12), elements.at(13), elements.at(14), elements.at(15));
@@ -245,11 +251,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::from
 
     // If array64 has 6 elements, return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array64 in the provided order.
     if (elements.size() == 6)
-        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3), elements.at(4), elements.at(5));
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3), elements.at(4), elements.at(5));
 
     // If array64 has 16 elements, return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array64 in the provided order.
     if (elements.size() == 16)
-        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3),
+        return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3),
             elements.at(4), elements.at(5), elements.at(6), elements.at(7),
             elements.at(8), elements.at(9), elements.at(10), elements.at(11),
             elements.at(12), elements.at(13), elements.at(14), elements.at(15));
@@ -779,6 +785,66 @@ WebIDL::ExceptionOr<void> validate_and_fixup_dom_matrix_init(DOMMatrixInit& init
         init.is2d = true;
 
     return {};
+}
+
+// https://drafts.fxtf.org/geometry/#parse-a-string-into-an-abstract-matrix
+WebIDL::ExceptionOr<ParsedMatrix> parse_dom_matrix_init_string(JS::Realm& realm, StringView transform_list)
+{
+    // 1. If transformList is the empty string, set it to the string "matrix(1, 0, 0, 1, 0, 0)".
+    if (transform_list.is_empty())
+        transform_list = "matrix(1, 0, 0, 1, 0, 0)"sv;
+
+    // 2. Parse transformList into parsedValue given the grammar for the CSS transform property.
+    // The result will be a <transform-list>, the keyword none, or failure.
+    // If parsedValue is failure, or any <transform-function> has <length> values without absolute length units, or any keyword other than none is used, then return failure. [CSS3-SYNTAX] [CSS3-TRANSFORMS]
+    auto parsing_context = CSS::Parser::ParsingContext { realm };
+    auto transform_style_value = parse_css_value(parsing_context, transform_list, CSS::PropertyID::Transform);
+    if (!transform_style_value)
+        return WebIDL::SyntaxError::create(realm, "Failed to parse CSS transform string."_fly_string);
+    auto parsed_value = CSS::StyleProperties::transformations_for_style_value(*transform_style_value);
+
+    // 3. If parsedValue is none, set parsedValue to a <transform-list> containing a single identity matrix.
+    // NOTE: parsed_value is empty on none so for loop in 6 won't modify matrix
+    auto matrix = Gfx::FloatMatrix4x4::identity();
+
+    // 4. Let 2dTransform track the 2D/3D dimension status of parsedValue.
+    // -> If parsedValue consists of any three-dimensional transform functions, set 2dTransform to false.
+    // -> Otherwise, set 2dTransform to true.
+    bool is_2d_transform = true;
+    for (auto const& transform : parsed_value) {
+        // https://www.w3.org/TR/css-transforms-1/#two-d-transform-functions
+        if (transform.function() != CSS::TransformFunction::Matrix
+            && transform.function() != CSS::TransformFunction::Translate
+            && transform.function() != CSS::TransformFunction::TranslateX
+            && transform.function() != CSS::TransformFunction::TranslateY
+            && transform.function() != CSS::TransformFunction::Scale
+            && transform.function() != CSS::TransformFunction::ScaleX
+            && transform.function() != CSS::TransformFunction::ScaleY
+            && transform.function() != CSS::TransformFunction::Rotate
+            && transform.function() != CSS::TransformFunction::Skew
+            && transform.function() != CSS::TransformFunction::SkewX
+            && transform.function() != CSS::TransformFunction::SkewY)
+            is_2d_transform = false;
+    }
+
+    // 5. Transform all <transform-function>s to 4x4 abstract matrices by following the “Mathematical Description of Transform Functions”. [CSS3-TRANSFORMS]
+    // 6. Let matrix be a 4x4 abstract matrix as shown in the initial figure of this section. Post-multiply all matrices from left to right and set matrix to this product.
+    for (auto const& transform : parsed_value) {
+        auto const& transform_matrix = transform.to_matrix({});
+        if (transform_matrix.is_error())
+            return WebIDL::SyntaxError::create(realm, "Failed to parse CSS transform string."_fly_string);
+        matrix = matrix * transform_matrix.value();
+    }
+
+    // 7. Return matrix and 2dTransform.
+    auto* elements = matrix.elements();
+    Gfx::DoubleMatrix4x4 double_matrix {
+        static_cast<double>(elements[0][0]), static_cast<double>(elements[0][1]), static_cast<double>(elements[0][2]), static_cast<double>(elements[0][3]),
+        static_cast<double>(elements[1][0]), static_cast<double>(elements[1][1]), static_cast<double>(elements[1][2]), static_cast<double>(elements[1][3]),
+        static_cast<double>(elements[2][0]), static_cast<double>(elements[2][1]), static_cast<double>(elements[2][2]), static_cast<double>(elements[2][3]),
+        static_cast<double>(elements[3][0]), static_cast<double>(elements[3][1]), static_cast<double>(elements[3][2]), static_cast<float>(elements[3][3])
+    };
+    return ParsedMatrix { double_matrix, is_2d_transform };
 }
 
 }
