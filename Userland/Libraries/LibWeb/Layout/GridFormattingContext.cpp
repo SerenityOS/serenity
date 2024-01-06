@@ -1823,9 +1823,8 @@ void GridFormattingContext::resolve_items_box_metrics(GridDimension const dimens
         auto& box_state = m_state.get_mutable(item.box);
         auto& computed_values = item.box->computed_values();
 
+        CSSPixels containing_block_width = containing_block_size_for_item(item, GridDimension::Column);
         if (dimension == GridDimension::Column) {
-            CSSPixels containing_block_width = containing_block_size_for_item(item, GridDimension::Column);
-
             box_state.padding_right = computed_values.padding().right().to_px(grid_container(), containing_block_width);
             box_state.padding_left = computed_values.padding().left().to_px(grid_container(), containing_block_width);
 
@@ -1835,13 +1834,11 @@ void GridFormattingContext::resolve_items_box_metrics(GridDimension const dimens
             box_state.border_right = computed_values.border_right().width;
             box_state.border_left = computed_values.border_left().width;
         } else {
-            CSSPixels containing_block_height = containing_block_size_for_item(item, GridDimension::Row);
+            box_state.padding_top = computed_values.padding().top().to_px(grid_container(), containing_block_width);
+            box_state.padding_bottom = computed_values.padding().bottom().to_px(grid_container(), containing_block_width);
 
-            box_state.padding_top = computed_values.padding().top().to_px(grid_container(), containing_block_height);
-            box_state.padding_bottom = computed_values.padding().bottom().to_px(grid_container(), containing_block_height);
-
-            box_state.margin_top = computed_values.margin().top().to_px(grid_container(), containing_block_height);
-            box_state.margin_bottom = computed_values.margin().bottom().to_px(grid_container(), containing_block_height);
+            box_state.margin_top = computed_values.margin().top().to_px(grid_container(), containing_block_width);
+            box_state.margin_bottom = computed_values.margin().bottom().to_px(grid_container(), containing_block_width);
 
             box_state.border_top = computed_values.border_top().width;
             box_state.border_bottom = computed_values.border_bottom().width;
