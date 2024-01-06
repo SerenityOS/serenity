@@ -41,7 +41,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/websocket", "rw"));
-    TRY(Core::System::unveil("/tmp/session/%sid/portal/webworker", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);

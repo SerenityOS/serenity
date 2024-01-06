@@ -17,6 +17,7 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Crypto/Crypto.h>
+#include <LibWeb/Worker/WebWorkerClient.h>
 
 REGISTER_WIDGET(WebView, OutOfProcessWebView)
 
@@ -70,6 +71,11 @@ OutOfProcessWebView::OutOfProcessWebView()
 
     on_finish_handling_input_event = [this](auto event_was_accepted) {
         did_finish_handling_input_event(event_was_accepted);
+    };
+
+    on_request_worker_agent = []() {
+        auto worker_client = MUST(Web::HTML::WebWorkerClient::try_create());
+        return worker_client->dup_sockets();
     };
 }
 

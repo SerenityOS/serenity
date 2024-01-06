@@ -9,6 +9,7 @@
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWebView/Attribute.h>
+#include <LibWebView/SocketPair.h>
 
 endpoint WebContentClient
 {
@@ -77,6 +78,8 @@ endpoint WebContentClient
     did_get_js_console_messages(i32 start_index, Vector<ByteString> message_types, Vector<ByteString> messages) =|
 
     did_finish_text_test() =|
+
+    request_worker_agent() => (WebView::SocketPair sockets) // FIXME: Add required attributes to select a SharedWorker Agent
 
     inspector_did_load() =|
     inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) =|

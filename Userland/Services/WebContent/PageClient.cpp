@@ -21,6 +21,7 @@
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWebView/Attribute.h>
+#include <LibWebView/SocketPair.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageClient.h>
 #include <WebContent/PageHost.h>
@@ -559,6 +560,17 @@ void PageClient::page_did_change_theme_color(Gfx::Color color)
 void PageClient::page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type)
 {
     client().async_did_insert_clipboard_entry(move(data), move(presentation_style), move(mime_type));
+}
+
+WebView::SocketPair PageClient::request_worker_agent()
+{
+    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::RequestWorkerAgent>();
+    if (!response) {
+        dbgln("WebContent client disconnected during RequestWorkerAgent. Exiting peacefully.");
+        exit(0);
+    }
+
+    return response->take_sockets();
 }
 
 void PageClient::inspector_did_load()

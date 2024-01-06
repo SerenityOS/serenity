@@ -51,6 +51,11 @@ WebViewBridge::WebViewBridge(Vector<Web::DevicePixelRect> screen_rects, float de
         if (on_scroll)
             on_scroll(to_widget_position(position));
     };
+
+    on_request_worker_agent = []() {
+        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
+        return worker_client->dup_sockets();
+    };
 }
 
 WebViewBridge::~WebViewBridge() = default;

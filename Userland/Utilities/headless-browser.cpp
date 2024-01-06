@@ -44,6 +44,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/Worker/WebWorkerClient.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
 #include <LibWebView/URL.h>
@@ -168,6 +169,15 @@ private:
 
         on_set_cookie = [this](auto const& url, auto const& cookie, auto source) {
             m_cookie_jar.set_cookie(url, cookie, source);
+        };
+
+        on_request_worker_agent = []() {
+#if defined(AK_OS_SERENITY)
+            auto worker_client = MUST(Web::HTML::WebWorkerClient::try_create());
+#else
+            auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
+#endif
+            return worker_client->dup_sockets();
         };
     }
 
