@@ -21,6 +21,7 @@ public:
         Aborted = 2,
         Yes = 3,
         No = 4,
+        Reveal = 5,
     };
 
     enum class ScreenPosition {

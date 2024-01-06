@@ -130,7 +130,7 @@ ErrorOr<RefPtr<Gfx::Bitmap>> MessageBox::icon() const
 
 bool MessageBox::should_include_ok_button() const
 {
-    return m_input_type == InputType::OK || m_input_type == InputType::OKCancel;
+    return m_input_type == InputType::OK || m_input_type == InputType::OKCancel || m_input_type == InputType::OKReveal;
 }
 
 bool MessageBox::should_include_cancel_button() const
@@ -146,6 +146,11 @@ bool MessageBox::should_include_yes_button() const
 bool MessageBox::should_include_no_button() const
 {
     return should_include_yes_button();
+}
+
+bool MessageBox::should_include_reveal_button() const
+{
+    return m_input_type == InputType::OKReveal;
 }
 
 ErrorOr<void> MessageBox::build()
@@ -188,6 +193,8 @@ ErrorOr<void> MessageBox::build()
         m_no_button = add_button("No"_string, ExecResult::No);
     if (should_include_cancel_button())
         m_cancel_button = add_button("Cancel"_string, ExecResult::Cancel);
+    if (should_include_reveal_button())
+        m_reveal_button = add_button("Open folder"_string, ExecResult::Reveal);
     button_container.add_spacer();
 
     return {};
