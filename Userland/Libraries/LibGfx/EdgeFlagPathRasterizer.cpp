@@ -235,6 +235,8 @@ Color EdgeFlagPathRasterizer<SamplesPerPixel>::scanline_color(int scanline, int 
         [&](auto& function) {
             return function({ offset, scanline });
         });
+    if (color.alpha() == 255)
+        return color.with_alpha(alpha);
     return color.with_alpha(color.alpha() * alpha / 255);
 }
 
@@ -298,21 +300,21 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(EdgeExtent edge_extent, auto sample_callback)
+auto EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(EdgeExtent edge_extent, auto init, auto sample_callback)
 {
-    SampleType sample = 0;
+    SampleType sample = init;
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
         sample ^= m_scanline[x];
         sample_callback(x, sample);
         m_scanline[x] = 0;
     }
+    return sample;
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeExtent edge_extent, auto sample_callback)
+auto EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeExtent edge_extent, auto init, auto sample_callback)
 {
-    SampleType sample = 0;
-    WindingCounts sum_winding = {};
+    NonZeroAcc acc = init;
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
         if (auto edges = m_scanline[x]) {
             // We only need to process the windings when we hit some edges.
@@ -320,64 +322,81 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeE
                 auto subpixel_bit = 1 << y_sub;
                 if (edges & subpixel_bit) {
                     auto winding = m_windings[x].counts[y_sub];
-                    auto previous_winding_count = sum_winding.counts[y_sub];
-                    sum_winding.counts[y_sub] += winding;
+                    auto previous_winding_count = acc.winding.counts[y_sub];
+                    acc.winding.counts[y_sub] += winding;
                     // Toggle fill on change to/from zero.
-                    if (bool(previous_winding_count) ^ bool(sum_winding.counts[y_sub]))
-                        sample ^= subpixel_bit;
+                    if (bool(previous_winding_count) ^ bool(acc.winding.counts[y_sub]))
+                        acc.sample ^= subpixel_bit;
                 }
             }
         }
-        sample_callback(x, sample);
+        sample_callback(x, acc.sample);
         m_scanline[x] = 0;
         m_windings[x] = {};
     }
+    return acc;
 }
 
 template<unsigned SamplesPerPixel>
 template<Painter::WindingRule WindingRule, typename Callback>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_scanline(EdgeExtent edge_extent, Callback callback)
+auto EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_scanline(EdgeExtent edge_extent, auto init, Callback callback)
 {
     if constexpr (WindingRule == Painter::WindingRule::EvenOdd)
-        accumulate_even_odd_scanline(edge_extent, callback);
+        return accumulate_even_odd_scanline(edge_extent, init, callback);
     else
-        accumulate_non_zero_scanline(edge_extent, callback);
+        return accumulate_non_zero_scanline(edge_extent, init, callback);
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::write_pixel(Painter& painter, int scanline, int offset, SampleType sample, auto& color_or_function)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::write_pixel(BitmapFormat format, ARGB32* scanline_ptr, int scanline, int offset, SampleType sample, auto& color_or_function)
 {
     if (!sample)
         return;
-    auto dest = IntPoint { offset, scanline } + m_blit_origin;
-    if (!m_clip.contains_horizontally(dest.x()))
-        return;
+    auto dest_x = offset + m_blit_origin.x();
     auto coverage = SubpixelSample::compute_coverage(sample);
     auto paint_color = scanline_color(scanline, offset, coverage_to_alpha(coverage), color_or_function);
-    painter.set_physical_pixel(dest, paint_color, true);
+    scanline_ptr[dest_x] = color_for_format(format, scanline_ptr[dest_x]).blend(paint_color).value();
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::fast_fill_solid_color_span(Painter& painter, int scanline, int start, int end, Color color)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::fast_fill_solid_color_span(ARGB32* scanline_ptr, int start, int end, Color color)
 {
-    auto dest_y = scanline + m_blit_origin.y();
-    auto start_x = max(m_clip.left(), start + m_blit_origin.x());
-    auto end_x = min(m_clip.right() - 1, end + m_blit_origin.x());
-    if (start_x > end_x)
-        return;
-    auto* dest_ptr = painter.target()->scanline(dest_y) + start_x;
-    fast_u32_fill(dest_ptr, color.value(), end_x - start_x + 1);
+    auto start_x = start + m_blit_origin.x();
+    auto end_x = end + m_blit_origin.x();
+    fast_u32_fill(scanline_ptr + start_x, color.value(), end_x - start_x + 1);
 }
 
 template<unsigned SamplesPerPixel>
 template<Painter::WindingRule WindingRule>
 void EdgeFlagPathRasterizer<SamplesPerPixel>::write_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
 {
+    // Handle scanline clipping.
+    auto left_clip = m_clip.left() - m_blit_origin.x();
+    auto right_clip = m_clip.right() - m_blit_origin.x() - 1;
+    EdgeExtent clipped_extent { max(left_clip, edge_extent.min_x), min(right_clip, edge_extent.max_x) };
+    if (clipped_extent.min_x > clipped_extent.max_x) {
+        // Fully clipped. Unfortunately we still need to zero the scanline data (before the right clip).
+        EdgeExtent zero_extent { edge_extent.min_x, clipped_extent.max_x };
+        zero_extent.memset_extent(m_scanline.data(), 0);
+        if constexpr (WindingRule == Painter::WindingRule::Nonzero)
+            zero_extent.memset_extent(m_windings.data(), 0);
+        return;
+    }
+
+    // Accumulate non-visible section (without plotting pixels).
+    auto acc = accumulate_scanline<WindingRule>(EdgeExtent { edge_extent.min_x, left_clip - 1 }, initial_acc<WindingRule>(), [](int, SampleType) {
+        // Do nothing!
+    });
+
+    // Get pointer to current scanline pixels.
+    auto dest_format = painter.target()->format();
+    auto dest_ptr = painter.target()->scanline(scanline + m_blit_origin.y());
+
     // Simple case: Handle each pixel individually.
     // Used for PaintStyle fills and semi-transparent colors.
     auto write_scanline_pixelwise = [&](auto& color_or_function) {
-        accumulate_scanline<WindingRule>(edge_extent, [&](int x, SampleType sample) {
-            write_pixel(painter, scanline, x, sample, color_or_function);
+        accumulate_scanline<WindingRule>(clipped_extent, acc, [&](int x, SampleType sample) {
+            write_pixel(dest_format, dest_ptr, scanline, x, sample, color_or_function);
         });
     };
     // Fast fill case: Track spans of solid color and set the entire span via a fast_u32_fill().
@@ -387,20 +406,20 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::write_scanline(Painter& painter, i
             return write_scanline_pixelwise(color);
         constexpr SampleType full_converage = NumericLimits<SampleType>::max();
         int full_converage_count = 0;
-        accumulate_scanline<WindingRule>(edge_extent, [&](int x, SampleType sample) {
+        accumulate_scanline<WindingRule>(clipped_extent, acc, [&](int x, SampleType sample) {
             if (sample == full_converage) {
                 full_converage_count++;
                 return;
             } else {
-                write_pixel(painter, scanline, x, sample, color);
+                write_pixel(dest_format, dest_ptr, scanline, x, sample, color);
             }
             if (full_converage_count > 0) {
-                fast_fill_solid_color_span(painter, scanline, x - full_converage_count, x - 1, color);
+                fast_fill_solid_color_span(dest_ptr, x - full_converage_count, x - 1, color);
                 full_converage_count = 0;
             }
         });
         if (full_converage_count > 0)
-            fast_fill_solid_color_span(painter, scanline, edge_extent.max_x - full_converage_count + 1, edge_extent.max_x, color);
+            fast_fill_solid_color_span(dest_ptr, clipped_extent.max_x - full_converage_count + 1, clipped_extent.max_x, color);
     };
     switch_on_color_or_function(
         color_or_function, write_scanline_with_fast_fills, write_scanline_pixelwise);
