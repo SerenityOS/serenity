@@ -21,6 +21,7 @@
 #include <QColorDialog>
 #include <QCoreApplication>
 #include <QCursor>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QFont>
 #include <QFontMetrics>
@@ -32,6 +33,7 @@
 #include <QMimeData>
 #include <QPainter>
 #include <QPoint>
+#include <QPushButton>
 #include <QResizeEvent>
 
 namespace Ladybird {
@@ -310,22 +312,41 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_window->new_tab(qstring_from_ak_string(url), Web::HTML::ActivateTab::Yes);
     });
 
+    auto take_screenshot = [this](auto type) {
+        auto& view = this->view();
+
+        view.take_screenshot(type)
+            ->when_resolved([this](auto const& path) {
+                auto message = MUST(String::formatted("Screenshot saved to: {}", path));
+
+                QMessageBox dialog(this);
+                dialog.setWindowTitle("Ladybird");
+                dialog.setIcon(QMessageBox::Information);
+                dialog.setText(qstring_from_ak_string(message));
+                dialog.addButton(QMessageBox::Ok);
+                dialog.addButton(QMessageBox::Open)->setText("Open folder");
+
+                if (dialog.exec() == QMessageBox::Open) {
+                    auto path_url = QUrl::fromLocalFile(qstring_from_ak_string(path.dirname()));
+                    QDesktopServices::openUrl(path_url);
+                }
+            })
+            .when_rejected([this](auto const& error) {
+                auto error_message = MUST(String::formatted("{}", error));
+                QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error_message));
+            });
+    };
+
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
     take_visible_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
-    QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
-        view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible)->when_rejected([this](auto const& error) {
-            auto error_message = MUST(String::formatted("{}", error));
-            QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error_message));
-        });
+    QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [take_screenshot]() {
+        take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible);
     });
 
     auto* take_full_screenshot_action = new QAction("Take &Full Screenshot", this);
     take_full_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
-    QObject::connect(take_full_screenshot_action, &QAction::triggered, this, [this]() {
-        view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full)->when_rejected([this](auto const& error) {
-            auto error_message = MUST(String::formatted("{}", error));
-            QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error_message));
-        });
+    QObject::connect(take_full_screenshot_action, &QAction::triggered, this, [take_screenshot]() {
+        take_screenshot(WebView::ViewImplementation::ScreenshotType::Full);
     });
 
     m_page_context_menu = new QMenu("Context menu", this);
