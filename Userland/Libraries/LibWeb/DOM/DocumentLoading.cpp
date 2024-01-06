@@ -335,6 +335,24 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_media_document(
         return {};
     };
 
+    auto style_element = TRY(DOM::create_element(document, HTML::TagNames::style, Namespace::HTML));
+    style_element->set_text_content(R"~~~(
+        :root {
+            background-color: #222;
+        }
+        img, video, audio {
+            position: absolute;
+            inset: 0;
+            max-width: 100vw;
+            max-height: 100vh;
+            margin: auto;
+        }
+        img {
+            background-color: #fff;
+        }
+    )~~~"_string);
+    TRY(document->head()->append_child(style_element));
+
     auto url_string = document->url_string();
     if (type.is_image()) {
         auto img_element = TRY(DOM::create_element(document, HTML::TagNames::img, Namespace::HTML));
