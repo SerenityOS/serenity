@@ -61,7 +61,7 @@
                 name: "copyright"
                 text_alignment: "CenterLeft"
                 fixed_height: 14
-                text: "Copyright © the SerenityOS developers, 2018-2023"
+                text: "Copyright © the SerenityOS developers, 2018-2024"
             }
 
             @GUI::Layout::Spacer {}
