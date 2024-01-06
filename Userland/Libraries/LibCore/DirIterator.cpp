@@ -82,7 +82,9 @@ bool DirIterator::advance_next()
         if constexpr (dirent_has_d_type) {
             // dirent structures from readdir aren't guaranteed to contain valid file types,
             // as it is possible that the underlying filesystem doesn't keep track of those.
-            if (m_next->type == DirectoryEntry::Type::Unknown) {
+            // However, if we were requested to not do stat on the entries of this directory,
+            // the calling code will be given the raw unknown type.
+            if ((m_flags & Flags::NoStat) == 0 && m_next->type == DirectoryEntry::Type::Unknown) {
                 struct stat statbuf;
                 if (fstatat(dirfd(m_dir), de->d_name, &statbuf, AT_SYMLINK_NOFOLLOW) < 0) {
                     m_error = Error::from_errno(errno);

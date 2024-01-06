@@ -20,6 +20,7 @@ public:
         NoFlags = 0x0,
         SkipDots = 0x1,
         SkipParentAndBaseDir = 0x2,
+        NoStat = 0x4,
     };
 
     explicit DirIterator(ByteString path, Flags = Flags::NoFlags);
