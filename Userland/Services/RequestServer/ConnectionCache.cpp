@@ -13,6 +13,7 @@ namespace RequestServer::ConnectionCache {
 
 HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache {};
 HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache {};
+HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
 
 void request_did_finish(URL const& url, Core::Socket const* socket)
 {
@@ -37,6 +38,10 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
         }
 
         auto& connection = *connection_it;
+        auto& properties = g_inferred_server_properties.ensure(partial_key.hostname);
+        if (!connection->socket->is_open())
+            properties.requests_served_per_connection = min(properties.requests_served_per_connection, connection->max_queue_length + 1);
+
         if (connection->request_queue.is_empty()) {
             // Immediately mark the connection as finished, as new jobs will never be run if they are queued
             // before the deferred_invoke() below runs otherwise.
