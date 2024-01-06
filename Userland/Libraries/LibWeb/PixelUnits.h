@@ -288,14 +288,6 @@ constexpr CSSPixels operator*(T left, CSSPixels right) { return CSSPixels(left) 
 inline float operator*(float left, CSSPixels right) { return right.to_float() * left; }
 inline double operator*(double left, CSSPixels right) { return right.to_double() * left; }
 
-template<Integral T>
-constexpr static T rounding_divide(T dividend, T divisor)
-{
-    if ((dividend < 0) == (divisor < 0))
-        return (dividend + (divisor / 2)) / divisor;
-    return (dividend - (divisor / 2)) / divisor;
-}
-
 class CSSPixelFraction {
 public:
     constexpr CSSPixelFraction(CSSPixels numerator, CSSPixels denominator)
@@ -321,7 +313,7 @@ public:
     {
         i64 wide_value = m_numerator.raw_value();
         wide_value <<= CSSPixels::fractional_bits;
-        wide_value = rounding_divide<i64>(wide_value, m_denominator.raw_value());
+        wide_value /= m_denominator.raw_value();
         return CSSPixels::from_raw(AK::clamp_to<int>(wide_value));
     }
 
@@ -373,7 +365,7 @@ constexpr CSSPixels CSSPixels::operator*(CSSPixelFraction const& other) const
 {
     i64 wide_value = raw_value();
     wide_value *= other.numerator().raw_value();
-    wide_value = rounding_divide<i64>(wide_value, other.denominator().raw_value());
+    wide_value /= other.denominator().raw_value();
     return CSSPixels::from_raw(AK::clamp_to<int>(wide_value));
 }
 
@@ -385,7 +377,7 @@ constexpr CSSPixels CSSPixels::operator/(CSSPixelFraction const& other) const
 {
     i64 wide_value = raw_value();
     wide_value *= other.denominator().raw_value();
-    wide_value = rounding_divide<i64>(wide_value, other.numerator().raw_value());
+    wide_value /= other.numerator().raw_value();
     return CSSPixels::from_raw(AK::clamp_to<int>(wide_value));
 }
 
