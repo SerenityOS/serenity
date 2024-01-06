@@ -798,16 +798,43 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 
 - (void)takeVisibleScreenshot:(id)sender
 {
-    m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible)->when_rejected([](auto const& error) {
-        (void)error; // FIXME: Display the error.
-    });
+    [self takeScreenshot:WebView::ViewImplementation::ScreenshotType::Visible];
 }
 
 - (void)takeFullScreenshot:(id)sender
 {
-    m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Full)->when_rejected([](auto const& error) {
-        (void)error; // FIXME: Display the error.
-    });
+    [self takeScreenshot:WebView::ViewImplementation::ScreenshotType::Full];
+}
+
+- (void)takeScreenshot:(WebView::ViewImplementation::ScreenshotType)type
+{
+    m_web_view_bridge->take_screenshot(type)
+        ->when_resolved([self](auto const& path) {
+            auto message = MUST(String::formatted("Screenshot saved to: {}", path));
+
+            auto* dialog = [[NSAlert alloc] init];
+            [dialog setMessageText:Ladybird::string_to_ns_string(message)];
+            [[dialog addButtonWithTitle:@"OK"] setTag:NSModalResponseOK];
+            [[dialog addButtonWithTitle:@"Open folder"] setTag:NSModalResponseContinue];
+
+            __block auto* ns_path = Ladybird::string_to_ns_string(path.string());
+
+            [dialog beginSheetModalForWindow:[self window]
+                           completionHandler:^(NSModalResponse response) {
+                               if (response == NSModalResponseContinue) {
+                                   [[NSWorkspace sharedWorkspace] selectFile:ns_path inFileViewerRootedAtPath:@""];
+                               }
+                           }];
+        })
+        .when_rejected([self](auto const& error) {
+            auto error_message = MUST(String::formatted("{}", error));
+
+            auto* dialog = [[NSAlert alloc] init];
+            [dialog setMessageText:Ladybird::string_to_ns_string(error_message)];
+
+            [dialog beginSheetModalForWindow:[self window]
+                           completionHandler:nil];
+        });
 }
 
 - (void)openLink:(id)sender
