@@ -134,9 +134,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Date>> parse_date_string(JS::Realm& rea
     // FIXME: Implement spec compliant date string parsing
     auto parts = value.split_view('-');
     if (parts.size() >= 3) {
-        if (auto year = parts.at(0).to_uint(); year.has_value()) {
-            if (auto month = parts.at(1).to_uint(); month.has_value()) {
-                if (auto day_of_month = parts.at(2).to_uint(); day_of_month.has_value())
+        if (auto year = parts.at(0).to_number<u32>(); year.has_value()) {
+            if (auto month = parts.at(1).to_number<u32>(); month.has_value()) {
+                if (auto day_of_month = parts.at(2).to_number<u32>(); day_of_month.has_value())
                     return JS::Date::create(realm, JS::make_date(JS::make_day(*year, *month - 1, *day_of_month), 0));
             }
         }
@@ -219,10 +219,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Date>> parse_time_string(JS::Realm& rea
     // FIXME: Implement spec compliant time string parsing
     auto parts = value.split_view(':');
     if (parts.size() >= 2) {
-        if (auto hours = parts.at(0).to_uint(); hours.has_value()) {
-            if (auto minutes = parts.at(1).to_uint(); minutes.has_value()) {
+        if (auto hours = parts.at(0).to_number<u32>(); hours.has_value()) {
+            if (auto minutes = parts.at(1).to_number<u32>(); minutes.has_value()) {
                 if (parts.size() >= 3) {
-                    if (auto seconds = parts.at(2).to_uint(); seconds.has_value())
+                    if (auto seconds = parts.at(2).to_number<u32>(); seconds.has_value())
                         return JS::Date::create(realm, JS::make_time(*hours, *minutes, *seconds, 0));
                 }
                 return JS::Date::create(realm, JS::make_date(0, JS::make_time(*hours, *minutes, 0, 0)));

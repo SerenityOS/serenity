@@ -704,7 +704,7 @@ void HTMLInputElement::update_slider_thumb_element()
     if (maximum < minimum)
         default_value = minimum;
 
-    double value = MUST(value_as_number());
+    double value = value_as_number();
     if (!isfinite(value))
         value = default_value;
 
