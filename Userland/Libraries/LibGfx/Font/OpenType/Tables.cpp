@@ -266,7 +266,7 @@ ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
         auto subtable_format = (subtable_header.coverage & 0xFF00) >> 8;
         if (subtable_format == 0) {
             auto const& format0_header = *TRY(stream.read_in_place<Format0 const>());
-            auto pairs = TRY(stream.read_in_place<Format0Pair const>(5));
+            auto pairs = TRY(stream.read_in_place<Format0Pair const>(format0_header.n_pairs));
 
             subtables.append(Subtable {
                 .header = subtable_header,
