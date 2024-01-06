@@ -163,6 +163,13 @@ private:
     struct EdgeExtent {
         int min_x;
         int max_x;
+
+        template<typename T>
+        void memset_extent(T* data, int value)
+        {
+            if (min_x <= max_x)
+                memset(data + min_x, value, (max_x - min_x + 1) * sizeof(T));
+        }
     };
 
     void fill_internal(Painter&, Path const&, auto color_or_function, Painter::WindingRule, FloatPoint offset);
@@ -171,18 +178,32 @@ private:
     template<Painter::WindingRule>
     void write_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
     Color scanline_color(int scanline, int offset, u8 alpha, auto& color_or_function);
-    void write_pixel(Painter&, int scanline, int offset, SampleType sample, auto& color_or_function);
-    void fast_fill_solid_color_span(Painter&, int scanline, int start, int end, Color color);
+    void write_pixel(BitmapFormat format, ARGB32* scanline_ptr, int scanline, int offset, SampleType sample, auto& color_or_function);
+    void fast_fill_solid_color_span(ARGB32* scanline_ptr, int start, int end, Color color);
 
     template<Painter::WindingRule, typename Callback>
-    void accumulate_scanline(EdgeExtent, Callback);
-    void accumulate_even_odd_scanline(EdgeExtent, auto sample_callback);
-    void accumulate_non_zero_scanline(EdgeExtent, auto sample_callback);
+    auto accumulate_scanline(EdgeExtent, auto, Callback);
+    auto accumulate_even_odd_scanline(EdgeExtent, auto, auto sample_callback);
+    auto accumulate_non_zero_scanline(EdgeExtent, auto, auto sample_callback);
 
     struct WindingCounts {
         // NOTE: This only allows up to 256 winding levels. Increase this if required (i.e. to an i16).
         i8 counts[SamplesPerPixel];
     };
+
+    struct NonZeroAcc {
+        SampleType sample;
+        WindingCounts winding;
+    };
+
+    template<Painter::WindingRule WindingRule>
+    constexpr auto initial_acc() const
+    {
+        if constexpr (WindingRule == Painter::WindingRule::EvenOdd)
+            return SampleType {};
+        else
+            return NonZeroAcc {};
+    }
 
     IntSize m_size;
     IntPoint m_blit_origin;
