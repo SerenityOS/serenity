@@ -133,7 +133,8 @@ UNMAP_AFTER_INIT bool CommandLine::is_early_boot_console_disabled() const
 
 UNMAP_AFTER_INIT bool CommandLine::i8042_enable_first_port_translation() const
 {
-    auto value = lookup("i8042_first_port_translation"sv).value_or("off"sv);
+    // FIXME: Disable first port translation when the keyboard works OK.
+    auto value = lookup("i8042_first_port_translation"sv).value_or("on"sv);
     if (value == "off"sv)
         return false;
     if (value == "on"sv)
