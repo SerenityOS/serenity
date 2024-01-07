@@ -9,7 +9,7 @@ import re
 from enum import Enum
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Type
+from typing import Any, List, Type
 
 
 class EnumWithExportName(Enum):
@@ -251,6 +251,12 @@ def pascal_case_to_snake_case(name: str) -> str:
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 
 
+def default_value_to_cpp(value: Any) -> str:
+    if isinstance(value, EnumWithExportName):
+        return f'TIFF::{value.export_name()}::{value.name}'
+    return str(value)
+
+
 def generate_getter(tag: Tag) -> str:
     biggest_type = retrieve_biggest_type(tag.types)
     variant_inner_type = tiff_type_to_cpp(biggest_type)
@@ -262,7 +268,8 @@ def generate_getter(tag: Tag) -> str:
         tag_final_type = f"TIFF::{tag.associated_enum.__name__}"
         extracted_value_template = f"static_cast<{tag_final_type}>({extracted_value_template})"
 
-    if len(tag.counts) == 1 and tag.counts[0] == 1 or is_container(biggest_type):
+    single_count = len(tag.counts) == 1 and tag.counts[0] == 1 or is_container(biggest_type)
+    if single_count:
         return_type = tag_final_type
         if is_container(biggest_type):
             return_type += ' const&'
@@ -289,11 +296,16 @@ def generate_getter(tag: Tag) -> str:
 
     signature = fR"    Optional<{return_type}> {pascal_case_to_snake_case(tag.name)}() const"
 
+    if tag.default and single_count:
+        return_if_empty = f'{default_value_to_cpp(tag.default)}'
+    else:
+        return_if_empty = 'OptionalNone {}'
+
     body = fR"""
     {{
         auto const& possible_value = m_data.get("{tag.name}"sv);
         if (!possible_value.has_value())
-            return OptionalNone {{}};
+            return {return_if_empty};
         {unpacked_if_needed}
     }}
 """
