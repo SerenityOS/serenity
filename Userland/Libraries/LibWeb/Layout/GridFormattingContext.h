@@ -244,7 +244,7 @@ private:
 
     Optional<int> get_line_index_by_line_name(GridDimension dimension, String const&);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);
-    int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list);
+    int count_of_repeated_auto_fill_or_fit_tracks(GridDimension);
 
     void build_grid_areas();
 
