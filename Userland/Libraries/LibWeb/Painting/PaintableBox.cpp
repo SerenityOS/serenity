@@ -509,7 +509,7 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
     auto line_color = text_node.computed_values().text_decoration_color();
 
     CSSPixels css_line_thickness = [&] {
-        CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em));
+        CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em).to_px(text_node));
         if (computed_thickness.is_auto())
             return max(glyph_height.scaled(0.1), 1);
 

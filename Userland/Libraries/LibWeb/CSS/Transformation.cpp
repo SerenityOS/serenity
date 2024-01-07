@@ -20,7 +20,7 @@ Transformation::Transformation(TransformFunction function, Vector<TransformValue
 Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& paintable_box) const
 {
     auto count = m_values.size();
-    auto value = [&](size_t index, CSS::Length const& reference_length = CSS::Length::make_px(0)) -> float {
+    auto value = [&](size_t index, CSSPixels const& reference_length = 0) -> float {
         return m_values[index].visit(
             [&](CSS::LengthPercentage const& value) -> double {
                 return value.resolved(paintable_box.layout_node(), reference_length).to_px(paintable_box.layout_node()).to_float();
@@ -34,8 +34,8 @@ Gfx::FloatMatrix4x4 Transformation::to_matrix(Painting::PaintableBox const& pain
     };
 
     auto reference_box = paintable_box.absolute_rect();
-    auto width = CSS::Length::make_px(reference_box.width());
-    auto height = CSS::Length::make_px(reference_box.height());
+    auto width = reference_box.width();
+    auto height = reference_box.height();
 
     switch (m_function) {
     case CSS::TransformFunction::Matrix:
