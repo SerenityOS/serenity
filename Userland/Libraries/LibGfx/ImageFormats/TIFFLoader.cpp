@@ -13,6 +13,7 @@
 #include <LibCompress/PackBitsDecoder.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
+#include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
 
 namespace Gfx {
@@ -69,7 +70,7 @@ public:
 
     IntSize size() const
     {
-        return { *m_metadata.image_width(), *m_metadata.image_height() };
+        return ExifOrientedBitmap::oriented_size({ *m_metadata.image_width(), *m_metadata.image_height() }, *m_metadata.orientation());
     }
 
     Metadata const& metadata() const
@@ -207,6 +208,8 @@ private:
         auto const strips_offset = *m_metadata.strip_offsets();
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
 
+        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(BitmapFormat::BGRA8888, { *metadata().image_width(), *metadata().image_height() }, *metadata().orientation()));
+
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
 
@@ -231,20 +234,20 @@ private:
                     }
 
                     last_color = color;
-                    m_bitmap->set_pixel(column, scanline, color);
+                    oriented_bitmap.set_pixel(column, scanline, color);
                 }
 
                 decoded_stream->align_to_byte_boundary();
             }
         }
 
+        m_bitmap = oriented_bitmap.bitmap();
+
         return {};
     }
 
     ErrorOr<void> decode_frame_impl()
     {
-        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, size()));
-
         switch (*m_metadata.compression()) {
         case Compression::NoCompression: {
             auto identity = [&](u32 num_bytes) {
