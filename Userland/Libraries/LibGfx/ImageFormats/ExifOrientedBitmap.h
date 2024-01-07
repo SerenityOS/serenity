@@ -8,24 +8,13 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
 
 namespace Gfx {
 class ExifOrientedBitmap {
 public:
-    // In the EXIF 3.0 specification, 4.6.5.1.6. Orientation
-    enum class Orientation {
-        None = 1,
-        FlipHorizontally = 2,
-        Rotate180 = 3,
-        FlipVertically = 4,
-        Rotate90ClockwiseThenFlipHorizontally = 5,
-        Rotate90Clockwise = 6,
-        FlipHorizontallyThenRotate90Clockwise = 7,
-        Rotate90CounterClockwise = 8,
-    };
-
     template<typename... Args>
-    static ErrorOr<ExifOrientedBitmap> create(BitmapFormat format, IntSize size, Orientation orientation)
+    static ErrorOr<ExifOrientedBitmap> create(BitmapFormat format, IntSize size, TIFF::Orientation orientation)
     {
         auto bitmap = TRY(Bitmap::create(format, oriented_size(size, orientation)));
         return ExifOrientedBitmap(move(bitmap), size, orientation);
@@ -43,6 +32,8 @@ public:
     }
 
 private:
+    using Orientation = TIFF::Orientation;
+
     ExifOrientedBitmap(NonnullRefPtr<Bitmap> bitmap, IntSize size, Orientation orientation)
         : m_bitmap(move(bitmap))
         , m_orientation(orientation)
@@ -54,8 +45,7 @@ private:
     static IntSize oriented_size(IntSize size, Orientation orientation)
     {
         switch (orientation) {
-
-        case Orientation::None:
+        case Orientation::Default:
         case Orientation::FlipHorizontally:
         case Orientation::Rotate180:
         case Orientation::FlipVertically:
@@ -80,7 +70,7 @@ private:
         };
 
         switch (m_orientation) {
-        case Orientation::None:
+        case Orientation::Default:
             return point;
         case Orientation::FlipHorizontally:
             return flip_horizontally(point);
