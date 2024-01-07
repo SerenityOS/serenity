@@ -148,6 +148,11 @@ void ConnectionFromClient::add_backing_store(i32 front_bitmap_id, Gfx::Shareable
     m_backing_stores.back_bitmap = *const_cast<Gfx::ShareableBitmap&>(back_bitmap).bitmap();
 }
 
+void ConnectionFromClient::ready_to_paint()
+{
+    page().ready_to_paint();
+}
+
 void ConnectionFromClient::process_next_input_event()
 {
     if (m_input_event_queue.is_empty())

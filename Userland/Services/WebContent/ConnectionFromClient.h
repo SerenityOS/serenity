@@ -69,6 +69,7 @@ private:
     virtual void key_down(i32, unsigned, u32) override;
     virtual void key_up(i32, unsigned, u32) override;
     virtual void add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
+    virtual void ready_to_paint() override;
     virtual void debug_request(ByteString const&, ByteString const&) override;
     virtual void get_source() override;
     virtual void inspect_dom_tree() override;

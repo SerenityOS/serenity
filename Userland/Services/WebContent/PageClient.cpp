@@ -64,7 +64,9 @@ PageClient::PageClient(PageHost& owner, u64 id)
         auto& backing_stores = client().backing_stores();
         swap(backing_stores.front_bitmap, backing_stores.back_bitmap);
         swap(backing_stores.front_bitmap_id, backing_stores.back_bitmap_id);
-        client().did_paint(viewport_rect.to_type<int>(), backing_stores.front_bitmap_id);
+
+        m_paint_state = PaintState::WaitingForClient;
+        client().async_did_paint(viewport_rect.to_type<int>(), backing_stores.front_bitmap_id);
     });
 
 #ifdef HAS_ACCELERATED_GRAPHICS
@@ -76,8 +78,21 @@ PageClient::PageClient(PageHost& owner, u64 id)
 
 void PageClient::schedule_repaint()
 {
+    if (m_paint_state != PaintState::Ready) {
+        m_paint_state = PaintState::PaintWhenReady;
+        return;
+    }
+
     if (!m_repaint_timer->is_active())
         m_repaint_timer->start();
+}
+
+void PageClient::ready_to_paint()
+{
+    auto old_paint_state = exchange(m_paint_state, PaintState::Ready);
+
+    if (old_paint_state == PaintState::PaintWhenReady)
+        schedule_repaint();
 }
 
 void PageClient::visit_edges(JS::Cell::Visitor& visitor)

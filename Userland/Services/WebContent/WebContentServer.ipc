@@ -24,6 +24,7 @@ endpoint WebContentServer
     load_html(ByteString html) =|
 
     add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap back_bitmap) =|
+    ready_to_paint() =|
 
     set_viewport_rect(Web::DevicePixelRect rect) =|
 

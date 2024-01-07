@@ -65,6 +65,8 @@ public:
 
     void set_user_style(String source);
 
+    void ready_to_paint();
+
 private:
     PageClient(PageHost&, u64 id);
 
@@ -149,6 +151,13 @@ private:
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };
 
+    enum class PaintState {
+        Ready,
+        WaitingForClient,
+        PaintWhenReady,
+    };
+
+    PaintState m_paint_state { PaintState::Ready };
     RefPtr<Web::Platform::Timer> m_repaint_timer;
 
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };

@@ -17,7 +17,7 @@ endpoint WebContentClient
     did_request_navigate_back() =|
     did_request_navigate_forward() =|
     did_request_refresh() =|
-    did_paint(Gfx::IntRect content_rect, i32 bitmap_id) => ()
+    did_paint(Gfx::IntRect content_rect, i32 bitmap_id) =|
     did_request_cursor_change(i32 cursor_type) =|
     did_layout(Gfx::IntSize content_size) =|
     did_change_title(ByteString title) =|
