@@ -615,8 +615,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
             return;
         case TCPFlags::ACK:
             if (payload_size) {
-                if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() + 1 }, packet_timestamp)) {
-                    socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
+                if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp)) {
+                    socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
                     dbgln_if(TCP_DEBUG, "Got packet with ack_no={}, seq_no={}, payload_size={}, acking it with new ack_no={}, seq_no={}",
                         tcp_packet.ack_number(), tcp_packet.sequence_number(), payload_size, socket->ack_number(), socket->sequence_number());
                     send_delayed_tcp_ack(*socket);
