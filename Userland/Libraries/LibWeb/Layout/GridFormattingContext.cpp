@@ -1991,7 +1991,9 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
     auto const& containing_block_state = m_state.get(*grid_container().containing_block());
     auto height_of_containing_block = containing_block_state.content_height();
     auto height_of_container_block_as_available_size = AvailableSize::make_definite(height_of_containing_block);
-    auto min_height = calculate_inner_height(grid_container(), height_of_container_block_as_available_size, grid_computed_values.min_height()).to_px(grid_container());
+    CSSPixels min_height = 0;
+    if (!grid_computed_values.min_height().is_auto())
+        min_height = calculate_inner_height(grid_container(), height_of_container_block_as_available_size, grid_computed_values.min_height());
 
     // If automatic grid container height is less than min-height, we need to re-run the track sizing algorithm
     if (m_automatic_content_height < min_height) {
@@ -2331,7 +2333,7 @@ CSSPixels GridFormattingContext::calculate_grid_container_maximum_size(GridDimen
     auto const& computed_values = grid_container().computed_values();
     if (dimension == GridDimension::Column)
         return calculate_inner_width(grid_container(), m_available_space->width, computed_values.max_width());
-    return calculate_inner_height(grid_container(), m_available_space->height, computed_values.max_height()).to_px(grid_container());
+    return calculate_inner_height(grid_container(), m_available_space->height, computed_values.max_height());
 }
 
 CSS::Size const& GridFormattingContext::get_item_preferred_size(GridItem const& item, GridDimension const dimension) const
