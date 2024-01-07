@@ -29,7 +29,7 @@ template<typename T>
 
 CSSPixels FlexFormattingContext::get_pixel_width(Box const& box, CSS::Size const& size) const
 {
-    return calculate_inner_width(box, containing_block_width_as_available_size(box), size).to_px(box);
+    return calculate_inner_width(box, containing_block_width_as_available_size(box), size);
 }
 
 CSSPixels FlexFormattingContext::get_pixel_height(Box const& box, CSS::Size const& size) const

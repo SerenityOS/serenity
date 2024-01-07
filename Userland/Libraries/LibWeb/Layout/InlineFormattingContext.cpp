@@ -154,19 +154,19 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             // NOTE: We can't resolve percentages yet. We'll have to wait until after inner layout.
         } else {
             auto inner_width = calculate_inner_width(box, m_available_space->width, width_value);
-            unconstrained_width = inner_width.to_px(box);
+            unconstrained_width = inner_width;
         }
     }
 
     CSSPixels width = unconstrained_width;
     if (!should_treat_max_width_as_none(box, m_available_space->width)) {
-        auto max_width = calculate_inner_width(box, m_available_space->width, box.computed_values().max_width()).to_px(box);
+        auto max_width = calculate_inner_width(box, m_available_space->width, box.computed_values().max_width());
         width = min(width, max_width);
     }
 
     auto computed_min_width = box.computed_values().min_width();
     if (!computed_min_width.is_auto()) {
-        auto min_width = calculate_inner_width(box, m_available_space->width, computed_min_width).to_px(box);
+        auto min_width = calculate_inner_width(box, m_available_space->width, computed_min_width);
         width = max(width, min_width);
     }
 
