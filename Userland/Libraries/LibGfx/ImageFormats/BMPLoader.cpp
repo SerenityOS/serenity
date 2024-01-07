@@ -1429,7 +1429,7 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
             TRY(process_row(row));
         }
 
-        if (context.is_included_in_ico) {
+        if (context.is_included_in_ico && !streamer.at_end()) {
             for (u32 row = 0; row < height; ++row) {
                 TRY(process_mask_row(row));
             }
@@ -1440,7 +1440,7 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
             TRY(process_row(row));
         }
 
-        if (context.is_included_in_ico) {
+        if (context.is_included_in_ico && !streamer.at_end()) {
             for (i32 row = height - 1; row >= 0; --row) {
                 TRY(process_mask_row(row));
             }
