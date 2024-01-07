@@ -66,7 +66,7 @@ public:
     CSSPixels calculate_fit_content_width(Layout::Box const&, AvailableSpace const&) const;
 
     CSSPixels calculate_inner_width(Layout::Box const&, AvailableSize const&, CSS::Size const& width) const;
-    CSS::Length calculate_inner_height(Layout::Box const&, AvailableSize const&, CSS::Size const& height) const;
+    CSSPixels calculate_inner_height(Layout::Box const&, AvailableSize const&, CSS::Size const& height) const;
 
     virtual CSSPixels greatest_child_width(Box const&) const;
 

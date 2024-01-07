@@ -180,7 +180,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         parent().compute_height(box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
     } else {
         auto inner_height = calculate_inner_height(box, AvailableSize::make_definite(m_containing_block_state.content_height()), height_value);
-        box_state.set_content_height(inner_height.to_px(box));
+        box_state.set_content_height(inner_height);
     }
 
     if (independent_formatting_context)

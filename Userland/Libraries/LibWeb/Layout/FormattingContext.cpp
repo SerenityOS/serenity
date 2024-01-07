@@ -515,7 +515,7 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(Box const& bo
         return 150;
 
     // FIXME: Handle cases when available_space is not definite.
-    return calculate_inner_height(box, available_space.height, computed_height).to_px(box);
+    return calculate_inner_height(box, available_space.height, computed_height);
 }
 
 CSSPixels FormattingContext::compute_height_for_replaced_element(Box const& box, AvailableSpace const& available_space) const
@@ -837,11 +837,11 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         auto constrained_height = unconstrained_height;
         if (!computed_max_height.is_none()) {
             auto inner_max_height = calculate_inner_height(box, available_space.height, computed_max_height);
-            constrained_height = min(constrained_height, inner_max_height.to_px(box));
+            constrained_height = min(constrained_height, inner_max_height);
         }
         if (!computed_min_height.is_auto()) {
             auto inner_min_height = calculate_inner_height(box, available_space.height, computed_min_height);
-            constrained_height = max(constrained_height, inner_min_height.to_px(box));
+            constrained_height = max(constrained_height, inner_min_height);
         }
         return constrained_height;
     };
@@ -1022,7 +1022,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     if (should_treat_height_as_auto(box, available_space)) {
         used_height = height.to_px(box, height_of_containing_block);
     } else {
-        used_height = calculate_inner_height(box, available_space.height, height).to_px(box);
+        used_height = calculate_inner_height(box, available_space.height, height);
     }
 
     used_height = apply_min_max_height_constraints(used_height);
@@ -1494,8 +1494,10 @@ CSSPixels FormattingContext::calculate_inner_width(Layout::Box const& box, Avail
     return width.resolved(box, width_of_containing_block).to_px(box);
 }
 
-CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const&, CSS::Size const& height) const
+CSSPixels FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const&, CSS::Size const& height) const
 {
+    VERIFY(!height.is_auto());
+
     auto const* containing_block = box.non_anonymous_containing_block();
     auto const& containing_block_state = m_state.get(*containing_block);
     auto height_of_containing_block = containing_block_state.content_height();
@@ -1503,9 +1505,6 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
         // https://www.w3.org/TR/css-position-3/#def-cb
         // If the box has position: absolute, then the containing block is formed by the padding edge of the ancestor
         height_of_containing_block += containing_block_state.padding_top + containing_block_state.padding_bottom;
-    }
-    if (height.is_auto()) {
-        return height.resolved(box, height_of_containing_block);
     }
 
     auto& computed_values = box.computed_values();
@@ -1520,10 +1519,10 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
             - padding_top.to_px(box)
             - computed_values.border_bottom().width
             - padding_bottom.to_px(box);
-        return CSS::Length::make_px(max(inner_height, 0));
+        return max(inner_height, 0);
     }
 
-    return height.resolved(box, height_of_containing_block);
+    return height.resolved(box, height_of_containing_block).to_px(box);
 }
 
 CSSPixels FormattingContext::containing_block_width_for(NodeWithStyleAndBoxModelMetrics const& node) const

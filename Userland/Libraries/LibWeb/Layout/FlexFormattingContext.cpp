@@ -34,7 +34,7 @@ CSSPixels FlexFormattingContext::get_pixel_width(Box const& box, CSS::Size const
 
 CSSPixels FlexFormattingContext::get_pixel_height(Box const& box, CSS::Size const& size) const
 {
-    return calculate_inner_height(box, containing_block_height_as_available_size(box), size).to_px(box);
+    return calculate_inner_height(box, containing_block_height_as_available_size(box), size);
 }
 
 FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex_container, FormattingContext* parent)
