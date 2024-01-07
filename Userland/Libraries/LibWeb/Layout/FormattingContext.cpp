@@ -388,7 +388,12 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(Box const& box
 
     auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
-    CSSPixels used_width = calculate_inner_width(box, available_space.width, computed_width).to_px(box);
+    CSSPixels used_width = 0;
+    if (computed_width.is_auto()) {
+        used_width = computed_width.to_px(box, available_space.width.to_px_or_zero());
+    } else {
+        used_width = calculate_inner_width(box, available_space.width, computed_width);
+    }
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
     // then that intrinsic width is the used value of 'width'.
@@ -577,7 +582,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
     auto right = computed_values.inset().right().to_px(box, width_of_containing_block);
 
-    auto try_compute_width = [&](auto const& a_width) {
+    auto try_compute_width = [&](CSS::Length const& a_width) {
         margin_left = computed_values.margin().left().resolved(box, width_of_containing_block);
         margin_right = computed_values.margin().right().resolved(box, width_of_containing_block);
 
@@ -697,14 +702,18 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     };
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
-    auto used_width = try_compute_width(calculate_inner_width(box, available_space.width, computed_values.width()));
+    auto used_width = try_compute_width([&] {
+        if (computed_values.width().is_auto())
+            return CSS::Length::make_auto();
+        return CSS::Length::make_px(calculate_inner_width(box, available_space.width, computed_values.width()));
+    }());
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
     if (!should_treat_max_width_as_none(box, available_space.width)) {
         auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
-        if (used_width.to_px(box) > max_width.to_px(box)) {
-            used_width = try_compute_width(max_width);
+        if (used_width.to_px(box) > max_width) {
+            used_width = try_compute_width(CSS::Length::make_px(max_width));
         }
     }
 
@@ -712,8 +721,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     //    but this time using the value of 'min-width' as the computed value for 'width'.
     if (!computed_values.min_width().is_auto()) {
         auto min_width = calculate_inner_width(box, available_space.width, computed_values.min_width());
-        if (used_width.to_px(box) < min_width.to_px(box)) {
-            used_width = try_compute_width(min_width);
+        if (used_width.to_px(box) < min_width) {
+            used_width = try_compute_width(CSS::Length::make_px(min_width));
         }
     }
 
@@ -1454,20 +1463,19 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
     return max_content_height;
 }
 
-CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, AvailableSize const& available_width, CSS::Size const& width) const
+CSSPixels FormattingContext::calculate_inner_width(Layout::Box const& box, AvailableSize const& available_width, CSS::Size const& width) const
 {
+    VERIFY(!width.is_auto());
+
     auto width_of_containing_block = available_width.to_px_or_zero();
-    if (width.is_auto()) {
-        return width.resolved(box, width_of_containing_block);
-    }
     if (width.is_fit_content()) {
-        return CSS::Length::make_px(calculate_fit_content_width(box, AvailableSpace { available_width, AvailableSize::make_indefinite() }));
+        return calculate_fit_content_width(box, AvailableSpace { available_width, AvailableSize::make_indefinite() });
     }
     if (width.is_max_content()) {
-        return CSS::Length::make_px(calculate_max_content_width(box));
+        return calculate_max_content_width(box);
     }
     if (width.is_min_content()) {
-        return CSS::Length::make_px(calculate_min_content_width(box));
+        return calculate_min_content_width(box);
     }
 
     auto& computed_values = box.computed_values();
@@ -1480,10 +1488,10 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
             - padding_left.to_px(box)
             - computed_values.border_right().width
             - padding_right.to_px(box);
-        return CSS::Length::make_px(max(inner_width, 0));
+        return max(inner_width, 0);
     }
 
-    return width.resolved(box, width_of_containing_block);
+    return width.resolved(box, width_of_containing_block).to_px(box);
 }
 
 CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const&, CSS::Size const& height) const

@@ -1694,12 +1694,12 @@ void GridFormattingContext::resolve_grid_item_widths()
         } else if (computed_width.is_fit_content()) {
             used_alignment = try_compute_width(calculate_fit_content_width(item.box, available_space));
         } else {
-            auto width_px = calculate_inner_width(item.box, available_space.width, computed_width).to_px(item.box);
+            auto width_px = calculate_inner_width(item.box, available_space.width, computed_width);
             used_alignment = try_compute_width(width_px);
         }
 
         if (!should_treat_max_width_as_none(item.box, m_available_space->width)) {
-            auto max_width_px = calculate_inner_width(item.box, available_space.width, computed_values.max_width()).to_px(item.box);
+            auto max_width_px = calculate_inner_width(item.box, available_space.width, computed_values.max_width());
             auto max_width_alignment = try_compute_width(max_width_px);
             if (used_alignment.width > max_width_alignment.width) {
                 used_alignment = max_width_alignment;
@@ -1707,7 +1707,7 @@ void GridFormattingContext::resolve_grid_item_widths()
         }
 
         if (!computed_values.min_width().is_auto()) {
-            auto min_width_px = calculate_inner_width(item.box, available_space.width, computed_values.min_width()).to_px(item.box);
+            auto min_width_px = calculate_inner_width(item.box, available_space.width, computed_values.min_width());
             auto min_width_alignment = try_compute_width(min_width_px);
             if (used_alignment.width < min_width_alignment.width) {
                 used_alignment = min_width_alignment;
@@ -2330,7 +2330,7 @@ CSSPixels GridFormattingContext::calculate_grid_container_maximum_size(GridDimen
 {
     auto const& computed_values = grid_container().computed_values();
     if (dimension == GridDimension::Column)
-        return calculate_inner_width(grid_container(), m_available_space->width, computed_values.max_width()).to_px(grid_container());
+        return calculate_inner_width(grid_container(), m_available_space->width, computed_values.max_width());
     return calculate_inner_height(grid_container(), m_available_space->height, computed_values.max_height()).to_px(grid_container());
 }
 
