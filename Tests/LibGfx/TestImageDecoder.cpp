@@ -521,7 +521,7 @@ TEST_CASE(test_tiff_lzw)
     EXPECT_EQ(frame.image->get_pixel(60, 75), Gfx::Color::NamedColor::Red);
 }
 
-TEST_CASE(test_tiff_defalte)
+TEST_CASE(test_tiff_deflate)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("tiff/deflate.tiff"sv)));
     EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
