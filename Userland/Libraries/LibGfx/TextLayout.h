@@ -105,7 +105,8 @@ Variant<DrawGlyph, DrawEmoji> prepare_draw_glyph_or_emoji(FloatPoint point, Utf8
 template<typename Callback>
 void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, FontCascadeList const& font_list, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No, Optional<float&> width = {})
 {
-    float space_width = font_list.first().glyph_width(' ') + font_list.first().glyph_spacing();
+    auto const& space_glyph_font = font_list.font_for_code_point(' ');
+    float space_width = space_glyph_font.glyph_width(' ') + space_glyph_font.glyph_spacing();
 
     u32 last_code_point = 0;
 
