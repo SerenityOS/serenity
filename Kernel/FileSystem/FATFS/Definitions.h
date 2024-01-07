@@ -45,7 +45,7 @@ struct [[gnu::packed]] DOS3BIOSParameterBlock {
     u32 sector_count_32bit; // 0x020 -- end of DOS 3.31 BPB.
 };
 // 11 is the boot jump/OEM identifier prefix prior to the official BPB.
-static_assert(sizeof(DOS3BIOSParameterBlock) == 11 + 25);
+static_assert(AssertSize<DOS3BIOSParameterBlock, 11 + 25>());
 
 struct [[gnu::packed]] DOS4BIOSParameterBlock {
     // Begins at sector offset 0x024.
@@ -56,7 +56,7 @@ struct [[gnu::packed]] DOS4BIOSParameterBlock {
     char volume_label_string[11];
     char file_system_type[8];
 };
-static_assert(sizeof(DOS4BIOSParameterBlock) == 26);
+static_assert(AssertSize<DOS4BIOSParameterBlock, 26>());
 
 struct [[gnu::packed]] DOS7BIOSParameterBlock {
     // Begins at sector offset 0x024.
@@ -74,7 +74,7 @@ struct [[gnu::packed]] DOS7BIOSParameterBlock {
     char volume_label_string[11];
     char file_system_type[8];
 };
-static_assert(sizeof(DOS7BIOSParameterBlock) == 54);
+static_assert(AssertSize<DOS7BIOSParameterBlock, 54>());
 
 enum DOSBIOSParameterBlockVersion {
     DOS_BPB_UNKNOWN,
@@ -116,7 +116,7 @@ struct [[gnu::packed]] FATEntry {
     u16 first_cluster_low;
     u32 file_size;
 };
-static_assert(sizeof(FATEntry) == 32);
+static_assert(AssertSize<FATEntry, 32>());
 
 struct [[gnu::packed]] FATLongFileNameEntry {
     u8 entry_index;
@@ -128,6 +128,6 @@ struct [[gnu::packed]] FATLongFileNameEntry {
     u16 zero;
     u16 characters3[2];
 };
-static_assert(sizeof(FATLongFileNameEntry) == 32);
+static_assert(AssertSize<FATLongFileNameEntry, 32>());
 
 }
