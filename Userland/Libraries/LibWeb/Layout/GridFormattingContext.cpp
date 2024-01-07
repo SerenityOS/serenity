@@ -71,25 +71,6 @@ CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const
     return 0;
 }
 
-int GridFormattingContext::get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const& track_list)
-{
-    auto track_count = 0;
-    for (auto const& explicit_grid_track : track_list) {
-        if (explicit_grid_track.is_repeat() && explicit_grid_track.repeat().is_default())
-            track_count += explicit_grid_track.repeat().repeat_count() * explicit_grid_track.repeat().grid_track_size_list().track_list().size();
-        else
-            track_count += 1;
-    }
-
-    if (track_list.size() == 1
-        && track_list.first().is_repeat()
-        && (track_list.first().repeat().is_auto_fill() || track_list.first().repeat().is_auto_fit())) {
-        track_count = count_of_repeated_auto_fill_or_fit_tracks(track_list);
-    }
-
-    return track_count;
-}
-
 int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list)
 {
     // https://www.w3.org/TR/css-grid-2/#auto-repeat
@@ -628,14 +609,18 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
         .column_span = column_span });
 }
 
-void GridFormattingContext::initialize_grid_tracks_from_definition(Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<GridTrack>& tracks)
+void GridFormattingContext::initialize_grid_tracks_from_definition(GridDimension dimension)
 {
-    auto track_count = get_count_of_tracks(tracks_definition);
+    auto const& grid_computed_values = grid_container().computed_values();
+    auto const& tracks_definition = dimension == GridDimension::Column ? grid_computed_values.grid_template_columns().track_list() : grid_computed_values.grid_template_rows().track_list();
+    auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     for (auto const& track_definition : tracks_definition) {
-        auto repeat_count = (track_definition.is_repeat() && track_definition.repeat().is_default()) ? track_definition.repeat().repeat_count() : 1;
+        int repeat_count = 1;
         if (track_definition.is_repeat()) {
             if (track_definition.repeat().is_auto_fill() || track_definition.repeat().is_auto_fit())
-                repeat_count = track_count;
+                repeat_count = count_of_repeated_auto_fill_or_fit_tracks(tracks_definition);
+            else
+                repeat_count = track_definition.repeat().repeat_count();
         }
         for (auto _ = 0; _ < repeat_count; _++) {
             switch (track_definition.type()) {
@@ -672,7 +657,7 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows()
         }
         implicit_column_index++;
     }
-    initialize_grid_tracks_from_definition(grid_computed_values.grid_template_columns().track_list(), m_grid_columns);
+    initialize_grid_tracks_from_definition(GridDimension::Column);
     for (size_t column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++) {
         if (grid_auto_columns.size() > 0) {
             auto definition = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
@@ -696,7 +681,7 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows()
         }
         implicit_row_index++;
     }
-    initialize_grid_tracks_from_definition(grid_computed_values.grid_template_rows().track_list(), m_grid_rows);
+    initialize_grid_tracks_from_definition(GridDimension::Row);
     for (size_t row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++) {
         if (grid_auto_rows.size() > 0) {
             auto definition = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
@@ -1413,8 +1398,8 @@ void GridFormattingContext::place_grid_items()
 {
     auto grid_template_columns = grid_container().computed_values().grid_template_columns();
     auto grid_template_rows = grid_container().computed_values().grid_template_rows();
-    auto column_count = get_count_of_tracks(grid_template_columns.track_list());
-    auto row_count = get_count_of_tracks(grid_template_rows.track_list());
+    auto column_count = m_column_lines.size();
+    auto row_count = m_row_lines.size();
 
     // https://drafts.csswg.org/css-grid/#overview-placement
     // 2.2. Placing Items
@@ -1931,8 +1916,8 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
     auto const& grid_computed_values = grid_container().computed_values();
 
     // NOTE: We store explicit grid sizes to later use in determining the position of items with negative index.
-    m_explicit_columns_line_count = get_count_of_tracks(grid_computed_values.grid_template_columns().track_list()) + 1;
-    m_explicit_rows_line_count = get_count_of_tracks(grid_computed_values.grid_template_rows().track_list()) + 1;
+    m_explicit_columns_line_count = m_column_lines.size() + 1;
+    m_explicit_rows_line_count = m_row_lines.size() + 1;
 
     place_grid_items();
 
