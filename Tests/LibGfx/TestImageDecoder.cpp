@@ -168,11 +168,13 @@ TEST_CASE(test_not_ico)
 
 TEST_CASE(test_bmp_embedded_in_ico)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("serenity.ico"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("ico/serenity.ico"sv)));
     EXPECT(Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = TRY_OR_FAIL(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
 
-    TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 16, 16 }));
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color::NamedColor::Transparent);
+    EXPECT_EQ(frame.image->get_pixel(7, 4), Gfx::Color(161, 0, 0));
 }
 
 TEST_CASE(test_ilbm)
