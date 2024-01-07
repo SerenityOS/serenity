@@ -6648,7 +6648,8 @@ LengthOrCalculated Parser::Parser::parse_as_sizes_attribute()
         //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
         TokenStream<ComponentValue> token_stream { unparsed_size };
         auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
-        if (media_condition && media_condition->evaluate(*m_context.window()) == MatchResult::True) {
+        auto context_window = m_context.window();
+        if (context_window && media_condition && media_condition->evaluate(*context_window) == MatchResult::True) {
             return size.value();
         } else {
             continue;
