@@ -100,7 +100,8 @@ public:
         return resolved(layout_node, reference_value).to_px(layout_node);
     }
 
-    Angle resolved(Layout::Node const& layout_node, Angle reference_value) const
+    T resolved(Layout::Node const& layout_node, T reference_value) const
+    requires(!IsSame<T, Length>)
     {
         return m_value.visit(
             [&](T const& t) {
