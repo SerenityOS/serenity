@@ -216,10 +216,39 @@ void DynamicObject::parse()
         m_size_of_relocation_table -= m_size_of_plt_relocation_entry_list;
     }
 
-    auto hash_section_address = hash_section().address().as_ptr();
-    // TODO: consider base address - it might not be zero
-    auto num_hash_chains = ((u32*)hash_section_address)[1];
-    m_symbol_count = num_hash_chains;
+    u32 const* hash_table_begin = reinterpret_cast<u32 const*>(hash_section().address().as_ptr());
+
+    if (m_hash_type == HashType::SYSV) {
+        u32 n_chain = hash_table_begin[1];
+        m_symbol_count = n_chain;
+        return;
+    }
+
+    // Determine amount of symbols by finding the chain with the highest
+    // starting index and walking this chain until the end to find the
+    // maximum index = amount of symbols.
+    using BloomWord = FlatPtr;
+    size_t const num_buckets = hash_table_begin[0];
+    size_t const num_omitted_symbols = hash_table_begin[1];
+    u32 const num_maskwords = hash_table_begin[2];
+    BloomWord const* bloom_words = reinterpret_cast<BloomWord const*>(&hash_table_begin[4]);
+    u32 const* const buckets = reinterpret_cast<u32 const*>(&bloom_words[num_maskwords]);
+    u32 const* const chains = &buckets[num_buckets];
+
+    size_t highest_chain_idx = 0;
+    for (size_t i = 0; i < num_buckets; i++) {
+        if (buckets[i] > highest_chain_idx) {
+            highest_chain_idx = buckets[i];
+        }
+    }
+
+    size_t amount_symbols = highest_chain_idx;
+    u32 const* last_chain = &chains[highest_chain_idx - num_omitted_symbols];
+    while ((*(last_chain++) & 1) == 0) {
+        amount_symbols++;
+    }
+
+    m_symbol_count = amount_symbols + 1;
 }
 
 DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const

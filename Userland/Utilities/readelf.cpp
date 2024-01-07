@@ -565,7 +565,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             });
 
             if (object->symbol_count()) {
-                // FIXME: Add support for init/fini/start/main sections
                 outln("   Num: Value{}      Size{}       Type     Bind     Name", addr_padding, addr_padding);
                 object->for_each_symbol([](const ELF::DynamicObject::Symbol& sym) {
                     out("  {:>4}: ", sym.index());
