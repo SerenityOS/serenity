@@ -71,7 +71,7 @@ CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const
     return 0;
 }
 
-int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list)
+int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(GridDimension dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#auto-repeat
     // 7.2.3.2. Repeat-to-fill: auto-fill and auto-fit repetitions
@@ -84,6 +84,8 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
     // repetitions is the largest possible positive integer that does not cause the grid to overflow the
     // content box of its grid container
 
+    auto const& grid_computed_values = grid_container().computed_values();
+    auto const& track_list = dimension == GridDimension::Row ? grid_computed_values.grid_template_rows().track_list() : grid_computed_values.grid_template_columns().track_list();
     CSSPixels sum_of_grid_track_sizes = 0;
     // (treating each track as its max track sizing function if that is definite or its minimum track sizing
     // function otherwise, flooring the max track sizing function by the min track sizing function if both
@@ -103,12 +105,24 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
         }
     }
 
-    auto free_space = get_free_space(*m_available_space, GridDimension::Column).to_px_or_zero();
-    auto const& column_gap = grid_container().computed_values().column_gap();
-    free_space -= repeat_track_list.size() * column_gap.to_px(grid_container(), m_available_space->width.to_px_or_zero());
-    if (free_space <= 0 || sum_of_grid_track_sizes == 0)
+    if (sum_of_grid_track_sizes == 0)
         return 0;
-    return (free_space / sum_of_grid_track_sizes).to_int();
+
+    auto const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
+    auto free_space = get_free_space(*m_available_space, dimension).to_px_or_zero();
+    auto const& gap = dimension == GridDimension::Column ? grid_computed_values.column_gap() : grid_computed_values.row_gap();
+    free_space -= repeat_track_list.size() * gap.to_px(grid_container(), available_size.to_px_or_zero());
+    // If any number of repetitions would overflow, then 1 repetition.
+    if (free_space <= sum_of_grid_track_sizes) {
+        return 1;
+    }
+    // Otherwise, if the grid container has a definite min size in the relevant axis, the number of repetitions is the
+    // smallest possible positive integer that fulfills that minimum requirement
+    else if (available_size.is_definite()) {
+        return max(1, (free_space / sum_of_grid_track_sizes).to_int());
+    }
+    // Otherwise, the specified track list repeats only once.
+    return 1;
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
     // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -618,7 +632,7 @@ void GridFormattingContext::initialize_grid_tracks_from_definition(GridDimension
         int repeat_count = 1;
         if (track_definition.is_repeat()) {
             if (track_definition.repeat().is_auto_fill() || track_definition.repeat().is_auto_fit())
-                repeat_count = count_of_repeated_auto_fill_or_fit_tracks(tracks_definition);
+                repeat_count = count_of_repeated_auto_fill_or_fit_tracks(dimension);
             else
                 repeat_count = track_definition.repeat().repeat_count();
         }
@@ -2266,7 +2280,7 @@ void GridFormattingContext::init_grid_lines(GridDimension dimension)
                 } else if (explicit_track.is_repeat()) {
                     int repeat_count = 0;
                     if (explicit_track.repeat().is_auto_fill() || explicit_track.repeat().is_auto_fit())
-                        repeat_count = count_of_repeated_auto_fill_or_fit_tracks(lines_definition.track_list());
+                        repeat_count = count_of_repeated_auto_fill_or_fit_tracks(dimension);
                     else
                         repeat_count = explicit_track.repeat().repeat_count();
                     auto const& repeat_track = explicit_track.repeat();
