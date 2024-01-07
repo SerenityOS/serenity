@@ -97,10 +97,10 @@ public:
 
     CSSPixels to_px(Layout::Node const& layout_node, CSSPixels reference_value) const
     {
-        return resolved(layout_node, Length::make_px(reference_value)).to_px(layout_node);
+        return resolved(layout_node, reference_value).to_px(layout_node);
     }
 
-    T resolved(Layout::Node const& layout_node, T const& reference_value) const
+    Angle resolved(Layout::Node const& layout_node, Angle reference_value) const
     {
         return m_value.visit(
             [&](T const& t) {
