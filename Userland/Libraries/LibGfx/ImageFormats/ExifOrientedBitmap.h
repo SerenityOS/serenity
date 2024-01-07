@@ -31,18 +31,7 @@ public:
         return m_bitmap;
     }
 
-private:
-    using Orientation = TIFF::Orientation;
-
-    ExifOrientedBitmap(NonnullRefPtr<Bitmap> bitmap, IntSize size, Orientation orientation)
-        : m_bitmap(move(bitmap))
-        , m_orientation(orientation)
-        , m_width(size.width())
-        , m_height(size.height())
-    {
-    }
-
-    static IntSize oriented_size(IntSize size, Orientation orientation)
+    static IntSize oriented_size(IntSize size, TIFF::Orientation orientation)
     {
         switch (orientation) {
         case Orientation::Default:
@@ -57,6 +46,17 @@ private:
             return { size.height(), size.width() };
         }
         VERIFY_NOT_REACHED();
+    }
+
+private:
+    using Orientation = TIFF::Orientation;
+
+    ExifOrientedBitmap(NonnullRefPtr<Bitmap> bitmap, IntSize size, Orientation orientation)
+        : m_bitmap(move(bitmap))
+        , m_orientation(orientation)
+        , m_width(size.width())
+        , m_height(size.height())
+    {
     }
 
     IntPoint oriented_position(IntPoint point)
