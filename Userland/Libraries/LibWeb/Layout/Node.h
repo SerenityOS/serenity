@@ -237,6 +237,7 @@ protected:
 
 private:
     void reset_table_box_computed_values_used_by_wrapper_to_init_values();
+    void propagate_style_to_anonymous_wrappers();
 
     CSS::ComputedValues m_computed_values;
     RefPtr<Gfx::FontCascadeList const> m_font_list;

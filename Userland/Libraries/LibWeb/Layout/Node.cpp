@@ -846,10 +846,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     } else if (aspect_ratio->is_ratio()) {
         computed_values.set_aspect_ratio({ false, aspect_ratio->as_ratio().ratio() });
     }
-    if (display().is_table_inside() && is<TableWrapper>(parent())) {
-        auto& wrapper_computed_values = static_cast<TableWrapper*>(parent())->m_computed_values;
-        transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
-    }
 
     auto math_shift_value = computed_style.property(CSS::PropertyID::MathShift);
     if (auto math_shift = value_id_to_math_shift(math_shift_value->to_identifier()); math_shift.has_value())
@@ -862,13 +858,31 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_math_depth(computed_style.math_depth());
     computed_values.set_quotes(computed_style.quotes());
 
-    // Update any anonymous children that inherit from this node.
+    propagate_style_to_anonymous_wrappers();
+}
+
+void NodeWithStyle::propagate_style_to_anonymous_wrappers()
+{
+    // Update the style of any anonymous wrappers that inherit from this node.
     // FIXME: This is pretty hackish. It would be nicer if they shared the inherited style
     //        data structure somehow, so this wasn't necessary.
-    for_each_child([&](auto& child) {
-        if (child.is_anonymous()) {
+
+    // If this is a `display:table` box with an anonymous wrapper parent,
+    // the parent inherits style from *this* node, not the other way around.
+    if (display().is_table_inside() && is<TableWrapper>(parent())) {
+        auto& table_wrapper = *static_cast<TableWrapper*>(parent());
+        transfer_table_box_computed_values_to_wrapper_computed_values(table_wrapper.m_computed_values);
+        table_wrapper.set_font_list(*m_font_list);
+        table_wrapper.set_line_height(m_line_height);
+    }
+
+    // Propagate style to all anonymous children (except table wrappers!)
+    for_each_child_of_type<NodeWithStyle>([&](NodeWithStyle& child) {
+        if (child.is_anonymous() && !is<TableWrapper>(child)) {
             auto& child_computed_values = static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(child.computed_values())));
-            child_computed_values.inherit_from(computed_values);
+            child_computed_values.inherit_from(m_computed_values);
+            child.set_font_list(*m_font_list);
+            child.set_line_height(m_line_height);
         }
     });
 }
