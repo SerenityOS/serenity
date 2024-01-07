@@ -107,8 +107,8 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
     // (treating each track as its max track sizing function if that is definite or its minimum track sizing
     // function otherwise, flooring the max track sizing function by the min track sizing function if both
     // are definite, and taking gap into account)
-    auto const& column_gap = grid_container().computed_values().column_gap();
-    for (auto& explicit_grid_track : track_list.first().repeat().grid_track_size_list().track_list()) {
+    auto const& repeat_track_list = track_list.first().repeat().grid_track_size_list().track_list();
+    for (auto& explicit_grid_track : repeat_track_list) {
         auto track_sizing_function = explicit_grid_track;
         if (track_sizing_function.is_minmax()) {
             if (track_sizing_function.minmax().max_grid_size().is_definite() && !track_sizing_function.minmax().min_grid_size().is_definite())
@@ -120,14 +120,14 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
         } else {
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space));
         }
-
-        if (!column_gap.is_auto())
-            sum_of_grid_track_sizes += column_gap.to_px(grid_container(), m_available_space->width.to_px_or_zero());
     }
 
-    if (sum_of_grid_track_sizes == 0)
+    auto free_space = get_free_space(*m_available_space, GridDimension::Column).to_px_or_zero();
+    auto const& column_gap = grid_container().computed_values().column_gap();
+    free_space -= repeat_track_list.size() * column_gap.to_px(grid_container(), m_available_space->width.to_px_or_zero());
+    if (free_space <= 0 || sum_of_grid_track_sizes == 0)
         return 0;
-    return max(1, (get_free_space(*m_available_space, GridDimension::Column).to_px_or_zero() / sum_of_grid_track_sizes).to_int());
+    return (free_space / sum_of_grid_track_sizes).to_int();
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
     // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
