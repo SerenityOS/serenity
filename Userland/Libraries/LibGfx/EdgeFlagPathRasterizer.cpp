@@ -96,8 +96,6 @@ template<unsigned SamplesPerPixel>
 EdgeFlagPathRasterizer<SamplesPerPixel>::EdgeFlagPathRasterizer(IntSize size)
     : m_size(size.width() + 1, size.height() + 1)
 {
-    // FIXME: Clip the scanline width to the visible section (tricky).
-    m_scanline.resize(m_size.width());
 }
 
 template<unsigned SamplesPerPixel>
@@ -135,6 +133,14 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
     m_blit_origin = dest_rect.top_left();
     m_clip = dest_rect.intersected(painter.clip_rect());
 
+    // Only allocate enough to plot the parts of the scanline that could be visible.
+    // Note: This can't clip the LHS.
+    auto scanline_length = min(m_size.width(), m_clip.right() - m_blit_origin.x());
+    if (scanline_length <= 0)
+        return;
+
+    m_scanline.resize(scanline_length);
+
     if (m_clip.is_empty())
         return;
 
@@ -167,15 +173,15 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
     auto for_each_sample = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent, auto callback) {
         for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
             auto xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
-            if (xi < 0 || size_t(xi) >= m_scanline.size()) [[unlikely]] {
-                // FIXME: For very low dxdy values, floating point error can push the sample outside the scanline.
-                // This does not seem to make a visible difference most of the time (and is more likely from generated
-                // paths, such as this 3D canvas demo: https://www.kevs3d.co.uk/dev/html5logo/).
-                dbgln_if(FILL_PATH_DEBUG, "fill_path: Sample out of bounds: {} not  in [0, {})", xi, m_scanline.size());
-                return;
+            if (xi >= 0 && size_t(xi) < m_scanline.size()) [[likely]] {
+                SampleType sample = 1 << y;
+                callback(xi, y, sample);
+            } else if (xi < 0) {
+                if (edge.dxdy <= 0)
+                    return;
+            } else {
+                xi = m_scanline.size() - 1;
             }
-            SampleType sample = 1 << y;
-            callback(xi, y, sample);
             edge.x += edge.dxdy;
             edge_extent.min_x = min(edge_extent.min_x, xi);
             edge_extent.max_x = max(edge_extent.max_x, xi);
@@ -200,7 +206,7 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
         // Only allocate the winding buffer if needed.
         // NOTE: non-zero fills are a fair bit less efficient. So if you can do an even-odd fill do that :^)
         if (m_windings.is_empty())
-            m_windings.resize(m_size.width());
+            m_windings.resize(m_scanline.size());
 
         auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent) {
             for_each_sample(edge, start_subpixel_y, end_subpixel_y, edge_extent, [&](int xi, int y, SampleType sample) {
@@ -372,14 +378,12 @@ FLATTEN __attribute__((hot)) void EdgeFlagPathRasterizer<SamplesPerPixel>::write
 {
     // Handle scanline clipping.
     auto left_clip = m_clip.left() - m_blit_origin.x();
-    auto right_clip = m_clip.right() - m_blit_origin.x() - 1;
-    EdgeExtent clipped_extent { max(left_clip, edge_extent.min_x), min(right_clip, edge_extent.max_x) };
+    EdgeExtent clipped_extent { max(left_clip, edge_extent.min_x), edge_extent.max_x };
     if (clipped_extent.min_x > clipped_extent.max_x) {
-        // Fully clipped. Unfortunately we still need to zero the scanline data (before the right clip).
-        EdgeExtent zero_extent { edge_extent.min_x, clipped_extent.max_x };
-        zero_extent.memset_extent(m_scanline.data(), 0);
+        // Fully clipped. Unfortunately we still need to zero the scanline data.
+        edge_extent.memset_extent(m_scanline.data(), 0);
         if constexpr (WindingRule == Painter::WindingRule::Nonzero)
-            zero_extent.memset_extent(m_windings.data(), 0);
+            edge_extent.memset_extent(m_windings.data(), 0);
         return;
     }
 
