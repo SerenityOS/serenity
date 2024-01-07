@@ -50,9 +50,10 @@ ErrorOr<void> WavWriter::write_samples(ReadonlySpan<Sample> samples)
             u8 left = static_cast<u8>((sample.left + 1) * scale);
             u8 right = static_cast<u8>((sample.right + 1) * scale);
             TRY(m_file->write_value(left));
-            TRY(m_file->write_value(right));
+            if (m_num_channels >= 2)
+                TRY(m_file->write_value(right));
         }
-        m_data_sz += samples.size() * 2 * sizeof(u8);
+        m_data_sz += samples.size() * m_num_channels * sizeof(u8);
         break;
     }
     case PcmSampleFormat::Int16: {
@@ -61,9 +62,10 @@ ErrorOr<void> WavWriter::write_samples(ReadonlySpan<Sample> samples)
             u16 left = AK::convert_between_host_and_little_endian(static_cast<i16>(sample.left * scale));
             u16 right = AK::convert_between_host_and_little_endian(static_cast<i16>(sample.right * scale));
             TRY(m_file->write_value(left));
-            TRY(m_file->write_value(right));
+            if (m_num_channels >= 2)
+                TRY(m_file->write_value(right));
         }
-        m_data_sz += samples.size() * 2 * sizeof(u16);
+        m_data_sz += samples.size() * m_num_channels * sizeof(u16);
         break;
     }
     default:
