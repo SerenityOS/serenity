@@ -285,8 +285,7 @@ void LayoutState::resolve_border_radii()
         if (paintable && is<Painting::PaintableBox>(*paintable)) {
             auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
 
-            CSSPixelRect const content_rect { 0, 0, used_values.content_width(), used_values.content_height() };
-            auto border_rect = content_rect.inflated(used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left);
+            CSSPixelRect const border_rect { 0, 0, used_values.border_box_width(), used_values.border_box_height() };
 
             auto const& border_top_left_radius = node.computed_values().border_top_left_radius();
             auto const& border_top_right_radius = node.computed_values().border_top_right_radius();
