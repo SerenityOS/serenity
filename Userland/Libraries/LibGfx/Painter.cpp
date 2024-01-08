@@ -2086,7 +2086,8 @@ void Painter::draw_triangle_wave(IntPoint a_p1, IntPoint a_p2, Color color, int 
 
 static bool can_approximate_bezier_curve(FloatPoint p1, FloatPoint p2, FloatPoint control)
 {
-    constexpr float tolerance = 0.015f;
+    // TODO: Somehow calculate the required number of splits based on the curve (and its size).
+    constexpr float tolerance = 0.5f;
 
     auto p1x = 3 * control.x() - 2 * p1.x() - p2.x();
     auto p1y = 3 * control.y() - 2 * p1.y() - p2.y();
@@ -2163,7 +2164,8 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_poi
 
 static bool can_approximate_cubic_bezier_curve(FloatPoint p1, FloatPoint p2, FloatPoint control_0, FloatPoint control_1)
 {
-    constexpr float tolerance = 0.015f;
+    // TODO: Somehow calculate the required number of splits based on the curve (and its size).
+    constexpr float tolerance = 0.5f;
 
     auto ax = 3 * control_0.x() - 2 * p1.x() - p2.x();
     auto ay = 3 * control_0.y() - 2 * p1.y() - p2.y();
