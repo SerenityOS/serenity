@@ -514,9 +514,10 @@ Path Path::stroke_to_fill(float thickness) const
     }
 
     // Note: This is the same as the tolerance from bezier curve splitting.
-    constexpr auto flatness = 0.015f;
-    auto pen_vertex_count = max(
-        static_cast<int>(ceilf(AK::Pi<float> / acosf(1 - (2 * flatness) / thickness))), 4);
+    constexpr auto flatness = 0.5f;
+    auto pen_vertex_count = (thickness >= 2 * flatness) ? max(
+                                static_cast<int>(ceilf(AK::Pi<float> / acosf(1 - (2 * flatness) / thickness))), 4)
+                                                        : 4;
     if (pen_vertex_count % 2 == 1)
         pen_vertex_count += 1;
 
