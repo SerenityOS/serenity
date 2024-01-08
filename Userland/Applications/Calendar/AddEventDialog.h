@@ -34,6 +34,7 @@ private:
 
     void update_start_date();
     void update_end_date();
+    void update_duration();
 
     Core::DateTime m_start_date_time;
     Core::DateTime m_end_date_time;
@@ -45,6 +46,8 @@ private:
     RefPtr<GUI::SpinBox> m_start_minute_box;
     RefPtr<GUI::SpinBox> m_end_hour_box;
     RefPtr<GUI::SpinBox> m_end_minute_box;
+    RefPtr<GUI::SpinBox> m_duration_hour_box;
+    RefPtr<GUI::SpinBox> m_duration_minute_box;
 };
 
 }
