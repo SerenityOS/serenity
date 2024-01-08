@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "NumericInput.h"
 #include "PDFViewer.h"
 #include "SidebarWidget.h"
 #include <AK/NonnullRefPtr.h>
@@ -14,6 +13,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/NumericInput.h>
 #include <LibGUI/Widget.h>
 
 class PDFViewer;
@@ -40,7 +40,7 @@ private:
     RefPtr<SidebarWidget> m_sidebar;
     NonnullRefPtr<PagedErrorsModel> m_paged_errors_model;
     RefPtr<GUI::TreeView> m_errors_tree_view;
-    RefPtr<NumericInput> m_page_text_box;
+    RefPtr<GUI::NumericInput> m_page_text_box;
     RefPtr<GUI::Label> m_total_page_label;
     RefPtr<GUI::Action> m_go_to_prev_page_action;
     RefPtr<GUI::Action> m_go_to_next_page_action;

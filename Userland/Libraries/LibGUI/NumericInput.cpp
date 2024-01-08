@@ -7,6 +7,8 @@
 #include "NumericInput.h"
 #include <ctype.h>
 
+namespace GUI {
+
 NumericInput::NumericInput()
 {
     set_text("0"sv);
@@ -86,4 +88,6 @@ void NumericInput::set_current_number(i32 number, GUI::AllowCallback allow_callb
     set_text(ByteString::number(m_current_number));
     if (on_number_changed && allow_callback == GUI::AllowCallback::Yes)
         on_number_changed(m_current_number);
+}
+
 }
