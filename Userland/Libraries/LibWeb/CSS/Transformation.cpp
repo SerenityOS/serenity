@@ -51,6 +51,23 @@ ErrorOr<Gfx::FloatMatrix4x4> Transformation::to_matrix(Optional<Painting::Painta
     }
 
     switch (m_function) {
+    case CSS::TransformFunction::Perspective:
+        // https://drafts.csswg.org/css-transforms-2/#perspective
+        // Count is zero when null parameter
+        if (count == 1) {
+            // FIXME: Add support for the 'perspective-origin' CSS property.
+            auto distance = TRY(value(0));
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, -1 / (distance <= 0 ? 1 : distance), 1);
+        } else {
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        }
+        break;
     case CSS::TransformFunction::Matrix:
         if (count == 6)
             return Gfx::FloatMatrix4x4(TRY(value(0)), TRY(value(2)), 0, TRY(value(4)),
@@ -116,6 +133,13 @@ ErrorOr<Gfx::FloatMatrix4x4> Transformation::to_matrix(Optional<Painting::Painta
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
+    case CSS::TransformFunction::Scale3d:
+        if (count == 3)
+            return Gfx::FloatMatrix4x4(TRY(value(0)), 0, 0, 0,
+                0, TRY(value(1)), 0, 0,
+                0, 0, TRY(value(2)), 0,
+                0, 0, 0, 1);
+        break;
     case CSS::TransformFunction::ScaleX:
         if (count == 1)
             return Gfx::FloatMatrix4x4(TRY(value(0)), 0, 0, 0,
@@ -129,6 +153,17 @@ ErrorOr<Gfx::FloatMatrix4x4> Transformation::to_matrix(Optional<Painting::Painta
                 0, TRY(value(0)), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::ScaleZ:
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, TRY(value(0)), 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::Rotate3d:
+        if (count == 4)
+            return Gfx::rotation_matrix({ TRY(value(0)), TRY(value(1)), TRY(value(2)) }, TRY(value(3)));
         break;
     case CSS::TransformFunction::RotateX:
         if (count == 1)
