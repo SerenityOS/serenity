@@ -248,6 +248,8 @@ private:
     // FIXME: The color conversion stuff should be in some other class.
     ErrorOr<FloatVector3> to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const;
     ErrorOr<void> from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const;
+    bool is_matrix_matrix_conversion(Profile const& source_profile) const;
+    ErrorOr<void> convert_image_matrix_matrix(Gfx::Bitmap& bitmap, Profile const& source_profile) const;
 
     // Cached values.
     bool m_cached_has_any_a_to_b_tag { false };
