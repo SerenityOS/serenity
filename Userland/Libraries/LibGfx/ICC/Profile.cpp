@@ -1505,7 +1505,7 @@ ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs,
             // inverted."
 
             // Convert from XYZ to linear rgb.
-            // FIXME: Inverting matrix and curve on every call to this function is very inefficient.
+            // FIXME: Inverting curves on every call to this function is very inefficient.
             FloatVector3 linear_rgb = TRY(xyz_to_rgb_matrix()) * pcs;
 
             auto evaluate_curve_inverse = [this](TagSignature curve_tag, float f) {
@@ -1619,10 +1619,13 @@ Optional<String> Profile::tag_string_data(TagSignature signature) const
 
 ErrorOr<FloatMatrix3x3> Profile::xyz_to_rgb_matrix() const
 {
-    FloatMatrix3x3 forward_matrix = rgb_to_xyz_matrix();
-    if (!forward_matrix.is_invertible())
-        return Error::from_string_literal("ICC::Profile::from_pcs: matrix not invertible");
-    return forward_matrix.inverse();
+    if (!m_cached_xyz_to_rgb_matrix.has_value()) {
+        FloatMatrix3x3 forward_matrix = rgb_to_xyz_matrix();
+        if (!forward_matrix.is_invertible())
+            return Error::from_string_literal("ICC::Profile::from_pcs: matrix not invertible");
+        m_cached_xyz_to_rgb_matrix = forward_matrix.inverse();
+    }
+    return m_cached_xyz_to_rgb_matrix.value();
 }
 
 FloatMatrix3x3 Profile::rgb_to_xyz_matrix() const
