@@ -316,4 +316,25 @@ auto modulo(Crypto::BigInteger auto const& x, Crypto::BigInteger auto const& y)
     return result;
 }
 
+// remainder(x, y), https://tc39.es/proposal-temporal/#eqn-remainder
+template<Arithmetic T, Arithmetic U>
+auto remainder(T x, U y)
+{
+    // The mathematical function remainder(x, y) produces the mathematical value whose sign is the sign of x and whose magnitude is abs(x) modulo y.
+    VERIFY(y != 0);
+    if constexpr (IsFloatingPoint<T> || IsFloatingPoint<U>) {
+        if constexpr (IsFloatingPoint<U>)
+            VERIFY(isfinite(y));
+        return fmod(x, y);
+    } else {
+        return x % y;
+    }
+}
+
+auto remainder(Crypto::BigInteger auto const& x, Crypto::BigInteger auto const& y)
+{
+    VERIFY(!y.is_zero());
+    return x.divided_by(y).remainder;
+}
+
 }
