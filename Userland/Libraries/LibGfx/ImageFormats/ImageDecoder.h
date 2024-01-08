@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/VectorGraphic.h>
 
@@ -30,6 +31,7 @@ struct VectorImageFrameDescriptor {
 
 enum class NaturalFrameFormat {
     RGB,
+    CMYK,
     Vector,
 };
 
@@ -59,6 +61,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
 
     virtual NaturalFrameFormat natural_frame_format() const { return NaturalFrameFormat::RGB; }
+    virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() { VERIFY_NOT_REACHED(); }
     virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t) { VERIFY_NOT_REACHED(); }
 
 protected:
@@ -81,6 +84,9 @@ public:
     ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
 
     NaturalFrameFormat natural_frame_format() { return m_plugin->natural_frame_format(); }
+
+    // Call only if natural_frame_format() == NaturalFrameFormat::CMYK.
+    ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame(size_t) { return m_plugin->cmyk_frame(); }
 
     // Call only if natural_frame_format() == NaturalFrameFormat::Vector.
     ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t index) { return m_plugin->vector_frame(index); }
