@@ -1406,6 +1406,32 @@ void GridFormattingContext::build_grid_areas()
             find_area_rectangle(x, y, name);
         }
     }
+
+    size_t max_column_line_index_of_area = 0;
+    size_t max_row_line_index_of_area = 0;
+    for (auto const& grid_area : m_grid_areas) {
+        max_column_line_index_of_area = max(max_column_line_index_of_area, grid_area.value.column_end);
+        max_row_line_index_of_area = max(max_row_line_index_of_area, grid_area.value.row_end);
+    }
+
+    if (max_column_line_index_of_area >= m_column_lines.size())
+        m_column_lines.resize(max_column_line_index_of_area + 1);
+    if (max_row_line_index_of_area >= m_row_lines.size())
+        m_row_lines.resize(max_row_line_index_of_area + 1);
+
+    // https://www.w3.org/TR/css-grid-2/#implicitly-assigned-line-name
+    // 7.3.2. Implicitly-Assigned Line Names
+    // The grid-template-areas property generates implicitly-assigned line names from the named grid areas in the
+    // template. For each named grid area foo, four implicitly-assigned line names are created: two named foo-start,
+    // naming the row-start and column-start lines of the named grid area, and two named foo-end, naming the row-end
+    // and column-end lines of the named grid area.
+    for (auto const& it : m_grid_areas) {
+        auto const& grid_area = it.value;
+        m_column_lines[grid_area.column_start].names.append(MUST(String::formatted("{}-start", grid_area.name)));
+        m_column_lines[grid_area.column_end].names.append(MUST(String::formatted("{}-end", grid_area.name)));
+        m_row_lines[grid_area.row_start].names.append(MUST(String::formatted("{}-start", grid_area.name)));
+        m_row_lines[grid_area.row_end].names.append(MUST(String::formatted("{}-end", grid_area.name)));
+    }
 }
 
 void GridFormattingContext::place_grid_items()
@@ -1438,8 +1464,6 @@ void GridFormattingContext::place_grid_items()
     });
 
     m_occupation_grid = OccupationGrid(column_tracks_count, row_tracks_count);
-
-    build_grid_areas();
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
@@ -1926,6 +1950,8 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
 
     init_grid_lines(GridDimension::Column);
     init_grid_lines(GridDimension::Row);
+
+    build_grid_areas();
 
     auto const& grid_computed_values = grid_container().computed_values();
 
