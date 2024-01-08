@@ -226,12 +226,38 @@ PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
-    if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
-        auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create_with_options({ bytes.data(), bytes.size() }, { .cmyk = Gfx::JPEGDecoderOptions::CMYK::PDF }));
-        auto frame = TRY(decoder->frame(0));
-        return TRY(frame.image->serialize_to_byte_buffer());
+    if (!Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() }))
+        return AK::Error::from_string_literal("Not a JPEG image!");
+
+    auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create_with_options({ bytes.data(), bytes.size() }, { .cmyk = Gfx::JPEGDecoderOptions::CMYK::PDF }));
+    auto internal_format = decoder->natural_frame_format();
+
+    if (internal_format == Gfx::NaturalFrameFormat::CMYK) {
+        auto bitmap = TRY(decoder->cmyk_frame());
+        // FIXME: Could give CMYKBitmap a method to steal its internal ByteBuffer.
+        auto size = bitmap->size().width() * bitmap->size().height() * 4;
+        auto buffer = TRY(ByteBuffer::create_uninitialized(size));
+        buffer.overwrite(0, bitmap->scanline(0), size);
+        return buffer;
     }
-    return AK::Error::from_string_literal("Not a JPEG image!");
+
+    auto bitmap = TRY(decoder->frame(0)).image;
+    auto size = bitmap->size().width() * bitmap->size().height() * (internal_format == Gfx::NaturalFrameFormat::Grayscale ? 1 : 3);
+    ByteBuffer buffer;
+    TRY(buffer.try_ensure_capacity(size));
+
+    for (auto& pixel : *bitmap) {
+        Color color = Color::from_argb(pixel);
+        if (internal_format == Gfx::NaturalFrameFormat::Grayscale) {
+            // Either channel is fine, they're all the same.
+            buffer.append(color.red());
+        } else {
+            buffer.append(color.red());
+            buffer.append(color.green());
+            buffer.append(color.blue());
+        }
+    }
+    return buffer;
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)
