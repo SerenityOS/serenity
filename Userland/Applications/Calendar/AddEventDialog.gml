@@ -102,6 +102,35 @@
         }
     }
 
+    @GUI::Widget {
+        fill_with_background_color: true
+        fixed_height: 25
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 4
+        }
+
+        @GUI::Label {
+            text: "Duration:"
+            text_alignment: "CenterLeft"
+            fixed_height: 14
+            font_weight: "Bold"
+        }
+
+        @GUI::SpinBox {
+            name: "duration_hour"
+            fixed_size: [50, 20]
+            min: 0
+            max: 999999
+        }
+
+        @GUI::SpinBox {
+            name: "duration_minute"
+            fixed_size: [40, 20]
+            min: 0
+            max: 59
+        }
+    }
+
     @GUI::Layout::Spacer {}
 
     @GUI::Widget {

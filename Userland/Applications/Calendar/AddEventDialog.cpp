@@ -60,6 +60,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
                 m_end_date_time.set_date(new_date.value());
                 update_end_date();
             }
+            update_duration();
 
             m_start_date_box->set_text(MUST(m_start_date_time.to_string(DATE_FORMAT)));
         }
@@ -79,6 +80,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
                 m_start_date_time.set_date(new_date.value());
                 update_start_date();
             }
+            update_duration();
 
             m_end_date_box->set_text(MUST(m_end_date_time.to_string(DATE_FORMAT)));
         }
@@ -86,6 +88,9 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 
     m_end_hour_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_hour");
     m_end_minute_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_minute");
+
+    m_duration_hour_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("duration_hour");
+    m_duration_minute_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("duration_minute");
 
     auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [&](auto) {
@@ -106,6 +111,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
             m_end_date_time.set_time_only(hour, minute);
             update_end_date();
         }
+        update_duration();
     };
     auto update_ending_input_values = [&, this]() {
         auto hour = m_end_hour_box->value();
@@ -115,15 +121,25 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
             m_start_date_time.set_time_only(hour, minute);
             update_start_date();
         }
+        update_duration();
+    };
+    auto update_duration_input_values = [&, this]() {
+        auto hour = m_duration_hour_box->value();
+        auto minute = m_duration_minute_box->value();
+        m_end_date_time = Core::DateTime::from_timestamp(m_start_date_time.timestamp() + (hour * 60 + minute) * 60);
+        update_end_date();
     };
 
     m_start_hour_box->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
     m_start_minute_box->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
     m_end_hour_box->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
     m_end_minute_box->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
+    m_duration_hour_box->on_change = [update_duration_input_values](auto) { update_duration_input_values(); };
+    m_duration_minute_box->on_change = [update_duration_input_values](auto) { update_duration_input_values(); };
 
     update_start_date();
     update_end_date();
+    update_duration();
 }
 
 ErrorOr<bool> AddEventDialog::add_event_to_calendar()
@@ -155,6 +171,16 @@ void AddEventDialog::update_end_date()
     m_end_date_box->set_text(MUST(m_end_date_time.to_string(DATE_FORMAT)));
     m_end_hour_box->set_value(m_end_date_time.hour(), GUI::AllowCallback::No);
     m_end_minute_box->set_value(m_end_date_time.minute(), GUI::AllowCallback::No);
+}
+
+void AddEventDialog::update_duration()
+{
+    auto difference_in_seconds = m_end_date_time.timestamp() - m_start_date_time.timestamp();
+    auto hours = difference_in_seconds / (60 * 60);
+    auto minutes = (difference_in_seconds - hours * (60 * 60)) / 60;
+
+    m_duration_hour_box->set_value(hours, GUI::AllowCallback::No);
+    m_duration_minute_box->set_value(minutes, GUI::AllowCallback::No);
 }
 
 }
