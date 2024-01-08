@@ -68,6 +68,9 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
         return x;
 
     using Extractor = FloatExtractor<decltype(x)>;
+    // Most component types are larger than int.
+    constexpr auto zero = static_cast<Extractor::ComponentType>(0);
+    constexpr auto one = static_cast<Extractor::ComponentType>(1);
     Extractor extractor;
     extractor.d = x;
 
@@ -90,7 +93,8 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
             return x;
 
         auto dead_bitcount = Extractor::mantissa_bits - unbiased_exponent;
-        auto dead_mask = (1ull << dead_bitcount) - 1;
+        // Avoid shifting by the integer type's size since that's UB.
+        auto dead_mask = dead_bitcount == sizeof(typename Extractor::ComponentType) * 8 ? ~zero : (one << dead_bitcount) - 1;
         auto dead_bits = extractor.mantissa & dead_mask;
         extractor.mantissa &= ~dead_mask;
 
