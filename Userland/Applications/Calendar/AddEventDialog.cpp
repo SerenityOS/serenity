@@ -29,8 +29,8 @@ static constexpr StringView DATE_FORMAT = "%Y-%m-%d"sv;
 
 AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
     : Dialog(parent_window)
-    , m_start_date_time(date_time)
-    , m_end_date_time(Core::DateTime::from_timestamp(date_time.timestamp() + (15 * 60)))
+    , m_start_date_time(Core::DateTime::create(date_time.year(), date_time.month(), date_time.day(), 12, 0))
+    , m_end_date_time(Core::DateTime::from_timestamp(m_start_date_time.timestamp() + (15 * 60)))
     , m_event_manager(event_manager)
 {
     resize(360, 140);
@@ -40,8 +40,6 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 
     dbgln("start time: {}", m_start_date_time.to_string().release_value_but_fixme_should_propagate_errors());
     dbgln("end time: {}", m_end_date_time.to_string().release_value_but_fixme_should_propagate_errors());
-
-    m_start_date_time = Core::DateTime::create(m_start_date_time.year(), m_start_date_time.month(), m_start_date_time.day(), 12, 0);
 
     auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(add_event_dialog_gml).release_value_but_fixme_should_propagate_errors();
