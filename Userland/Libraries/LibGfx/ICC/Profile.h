@@ -149,6 +149,29 @@ struct ProfileHeader {
     Optional<Crypto::Hash::MD5::DigestType> id;
 };
 
+// FIXME: This doesn't belong here.
+class MatrixMatrixConversion {
+public:
+    MatrixMatrixConversion(LutCurveType source_red_TRC,
+        LutCurveType source_green_TRC,
+        LutCurveType source_blue_TRC,
+        FloatMatrix3x3 matrix,
+        LutCurveType destination_red_TRC,
+        LutCurveType destination_green_TRC,
+        LutCurveType destination_blue_TRC);
+
+    Color map(FloatVector3) const;
+
+private:
+    LutCurveType m_source_red_TRC;
+    LutCurveType m_source_green_TRC;
+    LutCurveType m_source_blue_TRC;
+    FloatMatrix3x3 m_matrix;
+    LutCurveType m_destination_red_TRC;
+    LutCurveType m_destination_green_TRC;
+    LutCurveType m_destination_blue_TRC;
+};
+
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
@@ -225,6 +248,8 @@ public:
     XYZ const& green_matrix_column() const;
     XYZ const& blue_matrix_column() const;
 
+    Optional<MatrixMatrixConversion> matrix_matrix_conversion(Profile const& source_profile) const;
+
 private:
     Profile(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
         : m_header(header)
@@ -248,8 +273,7 @@ private:
     // FIXME: The color conversion stuff should be in some other class.
     ErrorOr<FloatVector3> to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const;
     ErrorOr<void> from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const;
-    bool is_matrix_matrix_conversion(Profile const& source_profile) const;
-    ErrorOr<void> convert_image_matrix_matrix(Gfx::Bitmap& bitmap, Profile const& source_profile) const;
+    ErrorOr<void> convert_image_matrix_matrix(Gfx::Bitmap&, MatrixMatrixConversion const&) const;
 
     // Cached values.
     bool m_cached_has_any_a_to_b_tag { false };
