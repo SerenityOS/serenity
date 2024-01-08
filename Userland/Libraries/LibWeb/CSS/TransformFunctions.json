@@ -95,6 +95,14 @@
       }
     ]
   },
+  "perspective": {
+    "parameters": [
+      {
+        "type": "<length-none>",
+        "required": true
+      }
+    ]
+  },
   "translate": {
     "parameters": [
       {
@@ -159,6 +167,22 @@
       }
     ]
   },
+  "scale3d": {
+    "parameters": [
+      {
+        "type": "<number-percentage>",
+        "required": true
+      },
+      {
+        "type": "<number-percentage>",
+        "required": true
+      },
+      {
+        "type": "<number-percentage>",
+        "required": true
+      }
+    ]
+  },
   "scaleX": {
     "parameters": [
       {
@@ -175,8 +199,36 @@
       }
     ]
   },
+  "scaleZ": {
+    "parameters": [
+      {
+        "type": "<number-percentage>",
+        "required": true
+      }
+    ]
+  },
   "rotate": {
     "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  },
+  "rotate3d": {
+    "parameters": [
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
       {
         "type": "<angle>",
         "required": true

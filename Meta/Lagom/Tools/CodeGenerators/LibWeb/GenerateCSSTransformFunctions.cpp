@@ -79,6 +79,7 @@ namespace Web::CSS {
 enum class TransformFunctionParameterType {
     Angle,
     Length,
+    LengthNone,
     LengthPercentage,
     Number,
     NumberPercentage
@@ -180,6 +181,8 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
                 parameter_type = "Angle"sv;
             else if (parameter_type_name == "length"sv)
                 parameter_type = "Length"sv;
+            else if (parameter_type_name == "length-none"sv)
+                parameter_type = "LengthNone"sv;
             else if (parameter_type_name == "length-percentage"sv)
                 parameter_type = "LengthPercentage"sv;
             else if (parameter_type_name == "number"sv)

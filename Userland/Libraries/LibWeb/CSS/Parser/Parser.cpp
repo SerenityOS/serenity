@@ -5094,10 +5094,20 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                 }
                 break;
             }
-            case TransformFunctionParameterType::Length: {
+            case TransformFunctionParameterType::Length:
+            case TransformFunctionParameterType::LengthNone: {
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
+                    if (function_metadata.parameters[argument_index].type == TransformFunctionParameterType::LengthNone) {
+                        auto identifier_value = parse_identifier_value(value);
+                        if (identifier_value && identifier_value->to_identifier() == ValueID::None) {
+                            values.append(identifier_value.release_nonnull());
+                            argument_index++;
+                            continue;
+                        }
+                    }
+
                     auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value)
                         return nullptr;
