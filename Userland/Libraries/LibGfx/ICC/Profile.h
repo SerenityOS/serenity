@@ -18,6 +18,7 @@
 #include <LibGfx/CIELAB.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
 #include <LibGfx/ICC/TagTypes.h>
+#include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Vector3.h>
 
 namespace Gfx::ICC {
@@ -247,6 +248,10 @@ private:
     // FIXME: The color conversion stuff should be in some other class.
     ErrorOr<FloatVector3> to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const;
     ErrorOr<void> from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const;
+
+    // Only valid for RGB matrix-based profiles.
+    ErrorOr<FloatMatrix3x3> xyz_to_rgb_matrix() const;
+    FloatMatrix3x3 rgb_to_xyz_matrix() const;
 };
 
 }

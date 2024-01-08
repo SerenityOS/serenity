@@ -1304,19 +1304,13 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
             //  [connection_X] = [redMatrixColumn_X greenMatrixColumn_X blueMatrixColumn_X]   [ linear_r ]
             //  [connection_Y] = [redMatrixColumn_Y greenMatrixColumn_Y blueMatrixColumn_Y] * [ linear_g ]
             //  [connection_Z] = [redMatrixColumn_Z greenMatrixColumn_Z blueMatrixColumn_Z]   [ linear_b ]"
-            float linear_r = evaluate_curve(redTRCTag, color[0] / 255.f);
-            float linear_g = evaluate_curve(greenTRCTag, color[1] / 255.f);
-            float linear_b = evaluate_curve(blueTRCTag, color[2] / 255.f);
+            FloatVector3 linear_rgb {
+                evaluate_curve(redTRCTag, color[0] / 255.f),
+                evaluate_curve(greenTRCTag, color[1] / 255.f),
+                evaluate_curve(blueTRCTag, color[2] / 255.f),
+            };
 
-            auto const& red_matrix_column = this->red_matrix_column();
-            auto const& green_matrix_column = this->green_matrix_column();
-            auto const& blue_matrix_column = this->blue_matrix_column();
-
-            float X = red_matrix_column.X * linear_r + green_matrix_column.X * linear_g + blue_matrix_column.X * linear_b;
-            float Y = red_matrix_column.Y * linear_r + green_matrix_column.Y * linear_g + blue_matrix_column.Y * linear_b;
-            float Z = red_matrix_column.Z * linear_r + green_matrix_column.Z * linear_g + blue_matrix_column.Z * linear_b;
-
-            return FloatVector3 { X, Y, Z };
+            return rgb_to_xyz_matrix() * linear_rgb;
         }
 
         return Error::from_string_literal("ICC::Profile::to_pcs: What happened?!");
@@ -1512,19 +1506,7 @@ ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs,
 
             // Convert from XYZ to linear rgb.
             // FIXME: Inverting matrix and curve on every call to this function is very inefficient.
-            auto const& red_matrix_column = this->red_matrix_column();
-            auto const& green_matrix_column = this->green_matrix_column();
-            auto const& blue_matrix_column = this->blue_matrix_column();
-
-            FloatMatrix3x3 forward_matrix {
-                red_matrix_column.X, green_matrix_column.X, blue_matrix_column.X,
-                red_matrix_column.Y, green_matrix_column.Y, blue_matrix_column.Y,
-                red_matrix_column.Z, green_matrix_column.Z, blue_matrix_column.Z
-            };
-            if (!forward_matrix.is_invertible())
-                return Error::from_string_literal("ICC::Profile::from_pcs: matrix not invertible");
-            auto matrix = forward_matrix.inverse();
-            FloatVector3 linear_rgb = matrix * pcs;
+            FloatVector3 linear_rgb = TRY(xyz_to_rgb_matrix()) * pcs;
 
             auto evaluate_curve_inverse = [this](TagSignature curve_tag, float f) {
                 auto const& trc = *m_tag_table.get(curve_tag).value();
@@ -1633,6 +1615,27 @@ Optional<String> Profile::tag_string_data(TagSignature signature) const
         return text.text();
     }
     return {};
+}
+
+ErrorOr<FloatMatrix3x3> Profile::xyz_to_rgb_matrix() const
+{
+    FloatMatrix3x3 forward_matrix = rgb_to_xyz_matrix();
+    if (!forward_matrix.is_invertible())
+        return Error::from_string_literal("ICC::Profile::from_pcs: matrix not invertible");
+    return forward_matrix.inverse();
+}
+
+FloatMatrix3x3 Profile::rgb_to_xyz_matrix() const
+{
+    auto const& red_matrix_column = this->red_matrix_column();
+    auto const& green_matrix_column = this->green_matrix_column();
+    auto const& blue_matrix_column = this->blue_matrix_column();
+
+    return FloatMatrix3x3 {
+        red_matrix_column.X, green_matrix_column.X, blue_matrix_column.X,
+        red_matrix_column.Y, green_matrix_column.Y, blue_matrix_column.Y,
+        red_matrix_column.Z, green_matrix_column.Z, blue_matrix_column.Z
+    };
 }
 
 }
