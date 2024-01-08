@@ -281,7 +281,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_text_box->set_fixed_width(30);
     m_page_text_box->set_min_number(1);
 
-    m_page_text_box->on_number_changed = [&](i32 number) {
+    m_page_text_box->on_number_changed = [&](i64 number) {
         auto page_count = m_viewer->document()->get_page_count();
         auto new_page_number = static_cast<u32>(number);
         VERIFY(new_page_number >= 1 && new_page_number <= page_count);

@@ -55,14 +55,14 @@ NumericInput::NumericInput()
     on_escape_pressed = [&] { on_focus_lost(); };
 }
 
-void NumericInput::set_min_number(i32 number)
+void NumericInput::set_min_number(i64 number)
 {
     m_min_number = number;
     if (m_current_number < number)
         set_current_number(number);
 }
 
-void NumericInput::set_max_number(i32 number)
+void NumericInput::set_max_number(i64 number)
 {
     m_max_number = number;
     if (m_current_number > number)
@@ -79,7 +79,7 @@ void NumericInput::on_focus_lost()
         on_number_changed(m_current_number);
 }
 
-void NumericInput::set_current_number(i32 number, GUI::AllowCallback allow_callback)
+void NumericInput::set_current_number(i64 number, GUI::AllowCallback allow_callback)
 {
     if (number == m_current_number)
         return;
