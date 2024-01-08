@@ -276,7 +276,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*m_go_to_prev_page_action);
     toolbar.add_action(*m_go_to_next_page_action);
 
-    m_page_text_box = toolbar.add<NumericInput>();
+    m_page_text_box = toolbar.add<GUI::NumericInput>();
     m_page_text_box->set_enabled(false);
     m_page_text_box->set_fixed_width(30);
     m_page_text_box->set_min_number(1);

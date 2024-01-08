@@ -86,6 +86,7 @@ set(SOURCES
     MouseTracker.cpp
     MultiView.cpp
     Notification.cpp
+    NumericInput.cpp
     Object.cpp
     OpacitySlider.cpp
     Painter.cpp

@@ -9,6 +9,8 @@
 #include <AK/NumericLimits.h>
 #include <LibGUI/TextBox.h>
 
+namespace GUI {
+
 class NumericInput final : public GUI::TextBox {
     C_OBJECT(NumericInput)
 public:
@@ -29,3 +31,5 @@ private:
     i32 m_min_number { NumericLimits<i32>::min() };
     i32 m_max_number { NumericLimits<i32>::max() };
 };
+
+}
