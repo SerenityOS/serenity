@@ -50,8 +50,8 @@
         @GUI::SpinBox {
             name: "start_hour"
             fixed_size: [50, 20]
-            min: 1
-            max: 24
+            min: 0
+            max: 23
         }
 
         @GUI::SpinBox {
@@ -90,8 +90,8 @@
         @GUI::SpinBox {
             name: "end_hour"
             fixed_size: [50, 20]
-            min: 1
-            max: 24
+            min: 0
+            max: 23
         }
 
         @GUI::SpinBox {
