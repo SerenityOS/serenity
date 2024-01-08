@@ -452,7 +452,10 @@ struct JPEGLoadingContext {
     Optional<Scan> current_scan {};
 
     Vector<Component, 4> components;
+
     RefPtr<Gfx::Bitmap> bitmap;
+    RefPtr<Gfx::CMYKBitmap> cmyk_bitmap;
+
     u16 dc_restart_interval { 0 };
     HashMap<u8, HuffmanTable> dc_tables;
     HashMap<u8, HuffmanTable> ac_tables;
@@ -1649,43 +1652,26 @@ static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Ve
     }
 }
 
-static void cmyk_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static ErrorOr<void> cmyk_to_rgb(JPEGLoadingContext& context)
 {
-    if (context.options.cmyk == JPEGDecoderOptions::CMYK::Normal)
-        invert_colors_for_adobe_images(context, macroblocks);
+    VERIFY(context.cmyk_bitmap);
+    VERIFY(!context.bitmap);
 
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            for (u8 vfactor_i = context.sampling_factors.vertical - 1; vfactor_i < context.sampling_factors.vertical; --vfactor_i) {
-                for (u8 hfactor_i = context.sampling_factors.horizontal - 1; hfactor_i < context.sampling_factors.horizontal; --hfactor_i) {
-                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    auto* c = macroblocks[mb_index].y;
-                    auto* m = macroblocks[mb_index].cb;
-                    auto* y = macroblocks[mb_index].cr;
-                    auto* k = macroblocks[mb_index].k;
-                    for (u8 i = 0; i < 8; ++i) {
-                        for (u8 j = 0; j < 8; ++j) {
-                            u8 const pixel = i * 8 + j;
+    context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
 
-                            static constexpr auto max_value = NumericLimits<u8>::max();
-
-                            auto const black_component = max_value - k[pixel];
-                            int const r = ((max_value - c[pixel]) * black_component) / max_value;
-                            int const g = ((max_value - m[pixel]) * black_component) / max_value;
-                            int const b = ((max_value - y[pixel]) * black_component) / max_value;
-
-                            c[pixel] = clamp(r, 0, max_value);
-                            m[pixel] = clamp(g, 0, max_value);
-                            y[pixel] = clamp(b, 0, max_value);
-                        }
-                    }
-                }
-            }
+    for (int y = 0; y < context.frame.height; ++y) {
+        for (int x = 0; x < context.frame.width; ++x) {
+            auto const& cmyk = context.cmyk_bitmap->scanline(y)[x];
+            u8 k = 255 - cmyk.k;
+            context.bitmap->scanline(y)[x] = Color((255 - cmyk.c) * k / 255, (255 - cmyk.m) * k / 255, (255 - cmyk.y) * k / 255).value();
         }
     }
+
+    context.cmyk_bitmap = nullptr;
+    return {};
 }
 
-static void ycck_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void ycck_to_cmyk(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     // 7 - Conversions between colour encodings
     // YCCK is obtained from CMYK by converting the CMY channels to YCC channel.
@@ -1693,7 +1679,7 @@ static void ycck_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& m
     // To convert back into RGB, we only need the 3 first components, which are baseline YCbCr
     ycbcr_to_rgb(context, macroblocks);
 
-    // RGB to CMYK, as mentioned in https://www.smcm.iqfr.csic.es/docs/intel/ipp/ipp_manual/IPPI/ippi_ch15/functn_YCCKToCMYK_JPEG.htm#functn_YCCKToCMYK_JPEG
+    // RGB to CMY, as mentioned in https://www.smcm.iqfr.csic.es/docs/intel/ipp/ipp_manual/IPPI/ippi_ch15/functn_YCCKToCMYK_JPEG.htm#functn_YCCKToCMYK_JPEG
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
@@ -1710,8 +1696,6 @@ static void ycck_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& m
             }
         }
     }
-
-    cmyk_to_rgb(context, macroblocks);
 }
 
 static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
@@ -1725,7 +1709,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
         switch (*context.color_transform) {
         case ColorTransform::CmykOrRgb:
             if (context.components.size() == 4) {
-                cmyk_to_rgb(context, macroblocks);
+                // Nothing to do here.
             } else if (context.components.size() == 3) {
                 // Note: components.size() == 3 means that we have an RGB image, so no color transformation is needed.
             } else {
@@ -1736,7 +1720,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
             ycbcr_to_rgb(context, macroblocks);
             break;
         case ColorTransform::YCCK:
-            ycck_to_rgb(context, macroblocks);
+            ycck_to_cmyk(context, macroblocks);
             break;
         }
 
@@ -1746,9 +1730,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
     // No App14 segment is present, assuming :
     //      - 1 components means grayscale
     //      - 3 components means YCbCr
-    //      - 4 components means CMYK
-    if (context.components.size() == 4)
-        cmyk_to_rgb(context, macroblocks);
+    //      - 4 components means CMYK (Nothing to do here).
     if (context.components.size() == 3)
         ycbcr_to_rgb(context, macroblocks);
 
@@ -1776,6 +1758,28 @@ static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblo
             u32 const pixel_index = pixel_row * 8 + pixel_column;
             Color const color { (u8)block.y[pixel_index], (u8)block.cb[pixel_index], (u8)block.cr[pixel_index] };
             context.bitmap->set_pixel(x, y, color);
+        }
+    }
+
+    return {};
+}
+
+static ErrorOr<void> compose_cmyk_bitmap(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+{
+    if (context.options.cmyk == JPEGDecoderOptions::CMYK::Normal)
+        invert_colors_for_adobe_images(context, macroblocks);
+
+    context.cmyk_bitmap = TRY(Gfx::CMYKBitmap::create_with_size({ context.frame.width, context.frame.height }));
+
+    for (u32 y = context.frame.height - 1; y < context.frame.height; y--) {
+        u32 const block_row = y / 8;
+        u32 const pixel_row = y % 8;
+        for (u32 x = 0; x < context.frame.width; x++) {
+            u32 const block_column = x / 8;
+            auto& block = macroblocks[block_row * context.mblock_meta.hpadded_count + block_column];
+            u32 const pixel_column = x % 8;
+            u32 const pixel_index = pixel_row * 8 + pixel_column;
+            context.cmyk_bitmap->scanline(y)[x] = { (u8)block.y[pixel_index], (u8)block.cb[pixel_index], (u8)block.cr[pixel_index], (u8)block.k[pixel_index] };
         }
     }
 
@@ -1931,7 +1935,10 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     TRY(dequantize(context, macroblocks));
     inverse_dct(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
-    TRY(compose_bitmap(context, macroblocks));
+    if (context.components.size() == 4)
+        TRY(compose_cmyk_bitmap(context, macroblocks));
+    else
+        TRY(compose_bitmap(context, macroblocks));
     return {};
 }
 
@@ -1985,6 +1992,9 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
         m_context->state = JPEGLoadingContext::State::BitmapDecoded;
     }
 
+    if (m_context->cmyk_bitmap)
+        TRY(cmyk_to_rgb(*m_context));
+
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
@@ -1993,6 +2003,29 @@ ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
     if (m_context->icc_data.has_value())
         return *m_context->icc_data;
     return OptionalNone {};
+}
+
+NaturalFrameFormat JPEGImageDecoderPlugin::natural_frame_format() const
+{
+    if (m_context->state == JPEGLoadingContext::State::Error)
+        return NaturalFrameFormat::RGB;
+    VERIFY(m_context->state >= JPEGLoadingContext::State::HeaderDecoded);
+    return m_context->components.size() == 4 ? NaturalFrameFormat::CMYK : NaturalFrameFormat::RGB;
+}
+
+ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEGImageDecoderPlugin::cmyk_frame()
+{
+    VERIFY(natural_frame_format() == NaturalFrameFormat::CMYK);
+
+    if (m_context->state < JPEGLoadingContext::State::BitmapDecoded) {
+        if (auto result = decode_jpeg(*m_context); result.is_error()) {
+            m_context->state = JPEGLoadingContext::State::Error;
+            return result.release_error();
+        }
+        m_context->state = JPEGLoadingContext::State::BitmapDecoded;
+    }
+
+    return *m_context->cmyk_bitmap;
 }
 
 }
