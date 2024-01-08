@@ -217,8 +217,18 @@ bool NumericCalculationNode::contains_percentage() const
     return m_value.has<Percentage>();
 }
 
-CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const
+CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
+    if (m_value.has<Percentage>()) {
+        return percentage_basis.visit(
+            [&](Empty const&) -> CalculatedStyleValue::CalculationResult {
+                VERIFY_NOT_REACHED();
+            },
+            [&](auto const& value) {
+                return CalculatedStyleValue::CalculationResult(value.percentage_of(m_value.get<Percentage>()));
+            });
+    }
+
     return m_value;
 }
 
