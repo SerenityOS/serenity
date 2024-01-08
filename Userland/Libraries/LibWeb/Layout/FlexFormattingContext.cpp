@@ -1319,10 +1319,10 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         if (auto_margins == 0 && number_of_items > 0) {
             switch (flex_container().computed_values().justify_content()) {
             case CSS::JustifyContent::Start:
-            case CSS::JustifyContent::Stretch:
-            case CSS::JustifyContent::Normal:
                 initial_offset = 0;
                 break;
+            case CSS::JustifyContent::Stretch:
+            case CSS::JustifyContent::Normal:
             case CSS::JustifyContent::FlexStart:
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(flex_container());
@@ -2225,10 +2225,10 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels main_offset = 0;
     switch (flex_container().computed_values().justify_content()) {
     case CSS::JustifyContent::Start:
-    case CSS::JustifyContent::Stretch:
-    case CSS::JustifyContent::Normal:
         pack_from_end = false;
         break;
+    case CSS::JustifyContent::Stretch:
+    case CSS::JustifyContent::Normal:
     case CSS::JustifyContent::FlexStart:
     case CSS::JustifyContent::SpaceBetween:
         pack_from_end = is_direction_reverse();
