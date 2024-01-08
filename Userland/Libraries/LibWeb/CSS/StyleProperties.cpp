@@ -422,16 +422,23 @@ Vector<CSS::Transformation> StyleProperties::transformations_for_style_value(Sty
             return {};
         auto& transformation_style_value = it->as_transformation();
         auto function = transformation_style_value.transform_function();
+        auto function_metadata = transform_function_metadata(function);
         Vector<TransformValue> values;
+        size_t argument_index = 0;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value->is_calculated()) {
                 auto& calculated = transformation_value->as_calculated();
                 if (calculated.resolves_to_length_percentage()) {
                     values.append(CSS::LengthPercentage { calculated });
                 } else if (calculated.resolves_to_percentage()) {
-                    values.append({ calculated.resolve_percentage().value() });
+                    // FIXME: Maybe transform this for loop to always check the metadata for the correct types
+                    if (function_metadata.parameters[argument_index].type == TransformFunctionParameterType::NumberPercentage) {
+                        values.append(NumberPercentage { calculated.resolve_percentage().value() });
+                    } else {
+                        values.append(LengthPercentage { calculated.resolve_percentage().value() });
+                    }
                 } else if (calculated.resolves_to_number()) {
-                    values.append({ calculated.resolve_number().value() });
+                    values.append({ Number(Number::Type::Number, calculated.resolve_number().value()) });
                 } else if (calculated.resolves_to_angle()) {
                     values.append({ calculated.resolve_angle().value() });
                 } else {
@@ -440,14 +447,19 @@ Vector<CSS::Transformation> StyleProperties::transformations_for_style_value(Sty
             } else if (transformation_value->is_length()) {
                 values.append({ transformation_value->as_length().length() });
             } else if (transformation_value->is_percentage()) {
-                values.append({ transformation_value->as_percentage().percentage() });
+                if (function_metadata.parameters[argument_index].type == TransformFunctionParameterType::NumberPercentage) {
+                    values.append(NumberPercentage { transformation_value->as_percentage().percentage() });
+                } else {
+                    values.append(LengthPercentage { transformation_value->as_percentage().percentage() });
+                }
             } else if (transformation_value->is_number()) {
-                values.append({ transformation_value->as_number().number() });
+                values.append({ Number(Number::Type::Number, transformation_value->as_number().number()) });
             } else if (transformation_value->is_angle()) {
                 values.append({ transformation_value->as_angle().angle() });
             } else {
                 dbgln("FIXME: Unsupported value in transform! {}", transformation_value->to_string());
             }
+            argument_index++;
         }
         transformations.empend(function, move(values));
     }

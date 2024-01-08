@@ -2175,6 +2175,21 @@ RefPtr<StyleValue> Parser::parse_number_value(TokenStream<ComponentValue>& token
     return nullptr;
 }
 
+RefPtr<StyleValue> Parser::parse_number_or_percentage_value(TokenStream<ComponentValue>& tokens)
+{
+    auto peek_token = tokens.peek_token();
+    if (peek_token.is(Token::Type::Number)) {
+        (void)tokens.next_token();
+        return NumberStyleValue::create(peek_token.token().number().value());
+    }
+    if (peek_token.is(Token::Type::Percentage)) {
+        (void)tokens.next_token();
+        return PercentageStyleValue::create(Percentage(peek_token.token().percentage()));
+    }
+
+    return nullptr;
+}
+
 RefPtr<StyleValue> Parser::parse_identifier_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
@@ -5155,6 +5170,19 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                     if (!number)
                         return nullptr;
                     values.append(number.release_nonnull());
+                }
+                break;
+            }
+            case TransformFunctionParameterType::NumberPercentage: {
+                if (maybe_calc_value && maybe_calc_value->resolves_to_number()) {
+                    values.append(maybe_calc_value.release_nonnull());
+                } else {
+                    // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
+                    argument_tokens.reconsume_current_input_token();
+                    auto number_or_percentage = parse_number_or_percentage_value(argument_tokens);
+                    if (!number_or_percentage)
+                        return nullptr;
+                    values.append(number_or_percentage.release_nonnull());
                 }
                 break;
             }

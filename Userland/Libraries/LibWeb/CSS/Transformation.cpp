@@ -35,8 +35,10 @@ ErrorOr<Gfx::FloatMatrix4x4> Transformation::to_matrix(Optional<Painting::Painta
                     return value.value().to_radians();
                 return Error::from_string_literal("Transform contains non absolute units");
             },
-            [](double value) -> ErrorOr<float> {
-                return value;
+            [&](CSS::NumberPercentage const& value) -> ErrorOr<float> {
+                if (value.is_percentage())
+                    return value.percentage().as_fraction();
+                return value.number().value();
             });
     };
 
