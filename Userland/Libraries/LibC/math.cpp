@@ -99,6 +99,13 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
         auto dead_mask = dead_bitcount == sizeof(typename Extractor::ComponentType) * 8 ? ~zero : (one << dead_bitcount) - 1;
         auto dead_bits = extractor.mantissa & dead_mask;
         extractor.mantissa &= ~dead_mask;
+#ifdef AK_HAS_FLOAT_80
+        if constexpr (IsSame<f80, FloatType>) {
+            // x86 80-bit extended floating point requires the top mantissa bit to always be 1, or we get a special Intel NaN.
+            if (extractor.mantissa == 0)
+                extractor.mantissa = one << (Extractor::mantissa_bits - 1);
+        }
+#endif
 
         auto nonhalf_fraction_mask = dead_mask >> 1;
         has_nonhalf_fraction = (dead_bits & nonhalf_fraction_mask) != 0;
