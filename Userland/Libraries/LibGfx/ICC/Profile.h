@@ -241,12 +241,12 @@ private:
     ErrorOr<void> check_required_tags();
     ErrorOr<void> check_tag_types();
 
+    ProfileHeader m_header;
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> m_tag_table;
+
     // FIXME: The color conversion stuff should be in some other class.
     ErrorOr<FloatVector3> to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const;
     ErrorOr<void> from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const;
-
-    ProfileHeader m_header;
-    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> m_tag_table;
 };
 
 }
