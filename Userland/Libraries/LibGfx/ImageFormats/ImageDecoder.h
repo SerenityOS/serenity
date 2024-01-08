@@ -28,6 +28,11 @@ struct VectorImageFrameDescriptor {
     int duration { 0 };
 };
 
+enum class NaturalFrameFormat {
+    RGB,
+    Vector,
+};
+
 class ImageDecoderPlugin {
 public:
     virtual ~ImageDecoderPlugin() = default;
@@ -53,7 +58,7 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
 
-    virtual bool is_vector() { return false; }
+    virtual NaturalFrameFormat natural_frame_format() const { return NaturalFrameFormat::RGB; }
     virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t) { VERIFY_NOT_REACHED(); }
 
 protected:
@@ -75,7 +80,9 @@ public:
     ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) const { return m_plugin->frame(index, ideal_size); }
     ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
 
-    bool is_vector() { return m_plugin->is_vector(); }
+    NaturalFrameFormat natural_frame_format() { return m_plugin->natural_frame_format(); }
+
+    // Call only if natural_frame_format() == NaturalFrameFormat::Vector.
     ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t index) { return m_plugin->vector_frame(index); }
 
 private:
