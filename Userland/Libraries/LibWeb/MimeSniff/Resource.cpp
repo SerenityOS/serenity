@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Kemal Zebari <kemalzebra@gmail.com>.
+ * Copyright (c) 2023-2024, Kemal Zebari <kemalzebra@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -136,6 +136,53 @@ ErrorOr<Optional<MimeType>> match_an_image_type_pattern(ReadonlyBytes input)
     return OptionalNone {};
 }
 
+// https://mimesniff.spec.whatwg.org/#signature-for-mp4
+bool matches_mp4_signature(ReadonlyBytes sequence)
+{
+    // 1. Let sequence be the byte sequence to be matched, where sequence[s] is byte s in sequence and sequence[0] is the first byte in sequence.
+
+    // 2. Let length be the number of bytes in sequence.
+    auto length = sequence.size();
+
+    // 3. If length is less than 12, return false.
+    if (length < 12)
+        return false;
+
+    // 4. Let box-size be the four bytes from sequence[0] to sequence[3], interpreted as a 32-bit unsigned big-endian integer.
+    u32 box_size = 0;
+    box_size |= static_cast<u32>(sequence[0] << 24);
+    box_size |= box_size + static_cast<u32>(sequence[1] << 16);
+    box_size |= box_size + static_cast<u32>(sequence[2] << 8);
+    box_size |= box_size + sequence[3];
+
+    // 5. If length is less than box-size or if box-size modulo 4 is not equal to 0, return false.
+    if ((length < box_size) || (box_size % 4 != 0))
+        return false;
+
+    // 6. If the four bytes from sequence[4] to sequence[7] are not equal to 0x66 0x74 0x79 0x70 ("ftyp"), return false.
+    if (sequence.slice(4, 4) != "\x66\x74\x79\x70"sv.bytes())
+        return false;
+
+    // 7. If the three bytes from sequence[8] to sequence[10] are equal to 0x6D 0x70 0x34 ("mp4"), return true.
+    if (sequence.slice(8, 3) == "\x6D\x70\x34"sv.bytes())
+        return true;
+
+    // 8. Let bytes-read be 16.
+    u32 bytes_read = 16;
+
+    // 9. While bytes-read is less than box-size, continuously loop through these steps:
+    //      1. If the three bytes from sequence[bytes-read] to sequence[bytes-read + 2] are equal to 0x6D 0x70 0x34 ("mp4"), return true.
+    //      2. Increment bytes-read by 4.
+    while (bytes_read < box_size) {
+        if (sequence.slice(bytes_read, 3) == "\x6D\x70\x34"sv.bytes())
+            return true;
+        bytes_read += 4;
+    }
+
+    // 10. Return false.
+    return false;
+}
+
 // https://mimesniff.spec.whatwg.org/#matching-an-audio-or-video-type-pattern
 ErrorOr<Optional<MimeType>> match_an_audio_or_video_type_pattern(ReadonlyBytes input)
 {
@@ -174,7 +221,10 @@ ErrorOr<Optional<MimeType>> match_an_audio_or_video_type_pattern(ReadonlyBytes i
             return MimeType::parse(row.mime_type);
     }
 
-    // FIXME: 2. If input matches the signature for MP4, return "video/mp4".
+    // 2. If input matches the signature for MP4, return "video/mp4".
+    if (matches_mp4_signature(input))
+        return MimeType::create("video"_string, "mp4"_string);
+
     // FIXME: 3. If input matches the signature for WebM, return "video/webm".
     // FIXME: 4. If input matches the signature for MP3 without ID3, return "audio/mpeg".
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Kemal Zebari <kemalzebra@gmail.com>.
+ * Copyright (c) 2023-2024, Kemal Zebari <kemalzebra@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -245,6 +245,39 @@ TEST_CASE(determine_computed_mime_type_in_audio_or_video_sniffing_context)
                                                                             }));
 
     EXPECT_EQ(mime_type, computed_mime_type.essence());
+}
+
+TEST_CASE(determine_computed_mime_type_when_trying_to_match_mp4_signature)
+{
+    HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
+
+    mime_type_to_headers_map.set("application/octet-stream"sv, {
+                                                                   // Payload length < 12.
+                                                                   "!= 12"sv,
+                                                                   // Payload length < box size.
+                                                                   "\x00\x00\x00\x1F\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A"sv,
+                                                                   // Box size % 4 != 0.
+                                                                   "\x00\x00\x00\x0D\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"sv,
+                                                                   // 4 bytes after box size header != "ftyp".
+                                                                   "\x00\x00\x00\x0C\x00\x00\x00\x00\x00\x00\x00\x00"sv,
+                                                                   // Sequence "mp4" couldn't be found in ftyp box.
+                                                                   "\x00\x00\x00\x18\x66\x74\x79\x70isom\x00\x00\x00\x00\x61\x76\x63\x31\x00\x00\x00\x00"sv,
+                                                               });
+    mime_type_to_headers_map.set("video/mp4"sv, {
+                                                    // 3 bytes after "ftyp" sequence == "mp4".
+                                                    "\x00\x00\x00\x0C\x66\x74\x79\x70mp42"sv,
+                                                    // "mp4" sequence found while executing while loop (this input covers entire loop)
+                                                    "\x00\x00\x00\x18\x66\x74\x79\x70isom\x00\x00\x00\x00\x61\x76\x63\x31mp41"sv,
+                                                });
+
+    for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
+        auto mime_type = mime_type_to_headers.key;
+
+        for (auto const& header : mime_type_to_headers.value) {
+            auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff(header.bytes(), Web::MimeSniff::SniffingConfiguration { .sniffing_context = Web::MimeSniff::SniffingContext::AudioOrVideo }));
+            EXPECT_EQ(mime_type, MUST(computed_mime_type.serialized()));
+        }
+    }
 }
 
 TEST_CASE(determine_computed_mime_type_in_a_font_context)
