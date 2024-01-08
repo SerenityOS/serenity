@@ -90,4 +90,13 @@ void NumericInput::set_current_number(i64 number, GUI::AllowCallback allow_callb
         on_number_changed(m_current_number);
 }
 
+void NumericInput::mousewheel_event(GUI::MouseEvent& event)
+{
+    auto wheel_delta = event.wheel_delta_y() / abs(event.wheel_delta_y());
+    if (event.modifiers() == KeyModifier::Mod_Ctrl)
+        wheel_delta *= 6;
+    set_current_number(m_current_number - wheel_delta);
+    event.accept();
+}
+
 }
