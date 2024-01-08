@@ -97,6 +97,8 @@ void RecordingPainter::stroke_path(StrokePathUsingColorParams params)
 {
     auto aa_translation = state().translation.map(params.translation.value_or(Gfx::FloatPoint {}));
     auto path_bounding_rect = params.path.bounding_box().translated(aa_translation).to_type<int>();
+    // Increase path bounding box by `thickness` to account for stroke.
+    path_bounding_rect.inflate(params.thickness, params.thickness);
     push_command(StrokePathUsingColor {
         .path_bounding_rect = path_bounding_rect,
         .path = params.path,
@@ -110,6 +112,8 @@ void RecordingPainter::stroke_path(StrokePathUsingPaintStyleParams params)
 {
     auto aa_translation = state().translation.map(params.translation.value_or(Gfx::FloatPoint {}));
     auto path_bounding_rect = params.path.bounding_box().translated(aa_translation).to_type<int>();
+    // Increase path bounding box by `thickness` to account for stroke.
+    path_bounding_rect.inflate(params.thickness, params.thickness);
     push_command(StrokePathUsingPaintStyle {
         .path_bounding_rect = path_bounding_rect,
         .path = params.path,
