@@ -1412,8 +1412,8 @@ void GridFormattingContext::place_grid_items()
 {
     auto grid_template_columns = grid_container().computed_values().grid_template_columns();
     auto grid_template_rows = grid_container().computed_values().grid_template_rows();
-    auto column_count = m_column_lines.size();
-    auto row_count = m_row_lines.size();
+    auto column_tracks_count = m_column_lines.size() - 1;
+    auto row_tracks_count = m_row_lines.size() - 1;
 
     // https://drafts.csswg.org/css-grid/#overview-placement
     // 2.2. Placing Items
@@ -1437,7 +1437,7 @@ void GridFormattingContext::place_grid_items()
         return IterationDecision::Continue;
     });
 
-    m_occupation_grid = OccupationGrid(column_count, row_count);
+    m_occupation_grid = OccupationGrid(column_tracks_count, row_tracks_count);
 
     build_grid_areas();
 
@@ -1930,8 +1930,8 @@ void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& av
     auto const& grid_computed_values = grid_container().computed_values();
 
     // NOTE: We store explicit grid sizes to later use in determining the position of items with negative index.
-    m_explicit_columns_line_count = m_column_lines.size() + 1;
-    m_explicit_rows_line_count = m_row_lines.size() + 1;
+    m_explicit_columns_line_count = m_column_lines.size();
+    m_explicit_rows_line_count = m_row_lines.size();
 
     place_grid_items();
 
@@ -2294,8 +2294,7 @@ void GridFormattingContext::init_grid_lines(GridDimension dimension)
     };
 
     expand_lines_definition(lines_definition);
-    if (line_names.size() > 0)
-        lines.append({ .names = line_names });
+    lines.append({ .names = line_names });
 }
 
 void OccupationGrid::set_occupied(int column_start, int column_end, int row_start, int row_end)
