@@ -39,6 +39,9 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
+    virtual NaturalFrameFormat natural_frame_format() const override;
+    virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() override;
+
 private:
     JPEGImageDecoderPlugin(NonnullOwnPtr<JPEGLoadingContext>);
 
