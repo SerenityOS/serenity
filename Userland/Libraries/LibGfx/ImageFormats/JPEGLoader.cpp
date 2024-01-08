@@ -2010,7 +2010,11 @@ NaturalFrameFormat JPEGImageDecoderPlugin::natural_frame_format() const
     if (m_context->state == JPEGLoadingContext::State::Error)
         return NaturalFrameFormat::RGB;
     VERIFY(m_context->state >= JPEGLoadingContext::State::HeaderDecoded);
-    return m_context->components.size() == 4 ? NaturalFrameFormat::CMYK : NaturalFrameFormat::RGB;
+    if (m_context->components.size() == 1)
+        return NaturalFrameFormat::Grayscale;
+    if (m_context->components.size() == 4)
+        return NaturalFrameFormat::CMYK;
+    return NaturalFrameFormat::RGB;
 }
 
 ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEGImageDecoderPlugin::cmyk_frame()

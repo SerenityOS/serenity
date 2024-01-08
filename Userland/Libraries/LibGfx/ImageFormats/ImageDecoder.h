@@ -31,6 +31,7 @@ struct VectorImageFrameDescriptor {
 
 enum class NaturalFrameFormat {
     RGB,
+    Grayscale,
     CMYK,
     Vector,
 };
