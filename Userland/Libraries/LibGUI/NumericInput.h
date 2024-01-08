@@ -22,6 +22,8 @@ public:
     void set_max_number(i64 number);
     void set_current_number(i64 number, GUI::AllowCallback allow_callback = GUI::AllowCallback::Yes);
 
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
+
 private:
     NumericInput();
     void on_focus_lost();
