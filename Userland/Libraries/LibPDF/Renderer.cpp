@@ -1124,11 +1124,6 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         component_value_decoders.empend(0.0f, 255.0f, dmin, dmax);
     }
 
-    if (TRY(is_filter(CommonNames::DCTDecode))) {
-        // TODO: stream objects could store Variant<bytes/Bitmap> to avoid serialisation/deserialisation here
-        return LoadedImage { TRY(Gfx::Bitmap::create_from_serialized_bytes(image->bytes())), is_image_mask };
-    }
-
     auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }));
     int x = 0;
     int y = 0;
