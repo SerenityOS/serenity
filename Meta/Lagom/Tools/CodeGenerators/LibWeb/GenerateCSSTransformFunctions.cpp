@@ -81,6 +81,7 @@ enum class TransformFunctionParameterType {
     Length,
     LengthPercentage,
     Number,
+    NumberPercentage
 };
 
 struct TransformFunctionParameter {
@@ -183,6 +184,8 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
                 parameter_type = "LengthPercentage"sv;
             else if (parameter_type_name == "number"sv)
                 parameter_type = "Number"sv;
+            else if (parameter_type_name == "number-percentage"sv)
+                parameter_type = "NumberPercentage"sv;
             else
                 VERIFY_NOT_REACHED();
 

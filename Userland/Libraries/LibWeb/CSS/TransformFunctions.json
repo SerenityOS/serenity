@@ -150,11 +150,11 @@
   "scale": {
     "parameters": [
       {
-        "type": "<number>",
+        "type": "<number-percentage>",
         "required": true
       },
       {
-        "type": "<number>",
+        "type": "<number-percentage>",
         "required": false
       }
     ]
@@ -162,7 +162,7 @@
   "scaleX": {
     "parameters": [
       {
-        "type": "<number>",
+        "type": "<number-percentage>",
         "required": true
       }
     ]
@@ -170,7 +170,7 @@
   "scaleY": {
     "parameters": [
       {
-        "type": "<number>",
+        "type": "<number-percentage>",
         "required": true
       }
     ]

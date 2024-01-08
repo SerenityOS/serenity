@@ -15,7 +15,7 @@
 
 namespace Web::CSS {
 
-using TransformValue = Variant<AngleOrCalculated, LengthPercentage, double>;
+using TransformValue = Variant<AngleOrCalculated, LengthPercentage, NumberPercentage>;
 
 class Transformation {
 public:
