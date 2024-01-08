@@ -1571,8 +1571,84 @@ ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color) const
     return CIELAB { lab[0], lab[1], lab[2] };
 }
 
+bool Profile::is_matrix_matrix_conversion(Profile const& source_profile) const
+{
+    auto has_normal_device_class = [](DeviceClass device) {
+        return device == DeviceClass::InputDevice
+            || device == DeviceClass::DisplayDevice
+            || device == DeviceClass::OutputDevice
+            || device == DeviceClass::ColorSpace;
+    };
+
+    return has_normal_device_class(device_class())
+        && has_normal_device_class(source_profile.device_class())
+        && connection_space() == ColorSpace::PCSXYZ
+        && source_profile.connection_space() == ColorSpace::PCSXYZ
+        && data_color_space() == ColorSpace::RGB
+        && source_profile.data_color_space() == ColorSpace::RGB
+        && !m_cached_has_any_a_to_b_tag
+        && !source_profile.m_cached_has_any_a_to_b_tag
+        && m_cached_has_all_rgb_matrix_tags
+        && source_profile.m_cached_has_all_rgb_matrix_tags;
+}
+
+ErrorOr<void> Profile::convert_image_matrix_matrix(Gfx::Bitmap& bitmap, Profile const& source_profile) const
+{
+    auto const& sourceRedTRC = *source_profile.m_tag_table.get(redTRCTag).value();
+    auto const& sourceGreenTRC = *source_profile.m_tag_table.get(greenTRCTag).value();
+    auto const& sourceBlueTRC = *source_profile.m_tag_table.get(blueTRCTag).value();
+
+    auto evaluate_curve = [](TagData const& trc, float f) {
+        VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
+        if (trc.type() == CurveTagData::Type)
+            return static_cast<CurveTagData const&>(trc).evaluate(f);
+        return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
+    };
+
+    FloatMatrix3x3 matrix = source_profile.rgb_to_xyz_matrix() * TRY(xyz_to_rgb_matrix());
+
+    auto const& destinationRedTRC = *m_tag_table.get(redTRCTag).value();
+    auto const& destinationGreenTRC = *m_tag_table.get(greenTRCTag).value();
+    auto const& destinationBlueTRC = *m_tag_table.get(blueTRCTag).value();
+
+    auto evaluate_curve_inverse = [](TagData const& trc, float f) {
+        VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
+        if (trc.type() == CurveTagData::Type)
+            return static_cast<CurveTagData const&>(trc).evaluate_inverse(f);
+        return static_cast<ParametricCurveTagData const&>(trc).evaluate_inverse(f);
+    };
+
+    for (auto& pixel : bitmap) {
+        FloatVector3 rgb { (float)Color::from_argb(pixel).red(), (float)Color::from_argb(pixel).green(), (float)Color::from_argb(pixel).blue() };
+        rgb = rgb / 255.0f;
+
+        FloatVector3 linear_rgb = {
+            evaluate_curve(sourceRedTRC, rgb[0]),
+            evaluate_curve(sourceGreenTRC, rgb[1]),
+            evaluate_curve(sourceBlueTRC, rgb[2]),
+        };
+        linear_rgb = matrix * linear_rgb;
+
+        linear_rgb.clamp(0.f, 1.f);
+        float device_r = evaluate_curve_inverse(destinationRedTRC, linear_rgb[0]);
+        float device_g = evaluate_curve_inverse(destinationGreenTRC, linear_rgb[1]);
+        float device_b = evaluate_curve_inverse(destinationBlueTRC, linear_rgb[2]);
+
+        u8 out_r = round(255 * device_r);
+        u8 out_g = round(255 * device_g);
+        u8 out_b = round(255 * device_b);
+
+        pixel = Color(out_r, out_g, out_b, Color::from_argb(pixel).alpha()).value();
+    }
+
+    return {};
+}
+
 ErrorOr<void> Profile::convert_image(Gfx::Bitmap& bitmap, Profile const& source_profile) const
 {
+    if (is_matrix_matrix_conversion(source_profile))
+        return convert_image_matrix_matrix(bitmap, source_profile);
+
     for (auto& pixel : bitmap) {
         u8 rgb[] = { Color::from_argb(pixel).red(), Color::from_argb(pixel).green(), Color::from_argb(pixel).blue() };
         auto pcs = TRY(source_profile.to_pcs(rgb));
