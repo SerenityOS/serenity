@@ -224,7 +224,7 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
     Vector<Animation::Frame> frames;
     // Note: Doing this check only requires reading the header of images
     // (so if the image is not vector graphics it can be still be decoded OOP).
-    if (auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file_data); decoder && decoder->is_vector()) {
+    if (auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file_data); decoder && decoder->natural_frame_format() == Gfx::NaturalFrameFormat::Vector) {
         // Use in-process decoding for vector graphics.
         is_animated = decoder->is_animated();
         loop_count = decoder->loop_count();
