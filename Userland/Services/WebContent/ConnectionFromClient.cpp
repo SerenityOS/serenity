@@ -213,7 +213,7 @@ void ConnectionFromClient::process_next_input_event()
         m_input_event_queue_timer->start();
 }
 
-void ConnectionFromClient::mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -226,7 +226,7 @@ void ConnectionFromClient::mouse_down(Web::DevicePixelPoint position, Web::Devic
         });
 }
 
-void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, [[maybe_unused]] u32 button, u32 buttons, u32 modifiers)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseMove,
@@ -249,7 +249,7 @@ void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::Devic
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -262,7 +262,7 @@ void ConnectionFromClient::mouse_up(Web::DevicePixelPoint position, Web::DeviceP
         });
 }
 
-void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y)
+void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseWheel,
@@ -290,7 +290,7 @@ void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::Devi
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -303,7 +303,7 @@ void ConnectionFromClient::doubleclick(Web::DevicePixelPoint position, Web::Devi
         });
 }
 
-void ConnectionFromClient::key_down(i32 key, unsigned int modifiers, u32 code_point)
+void ConnectionFromClient::key_down(i32 key, u32 modifiers, u32 code_point)
 {
     enqueue_input_event(
         QueuedKeyboardEvent {
@@ -314,7 +314,7 @@ void ConnectionFromClient::key_down(i32 key, unsigned int modifiers, u32 code_po
         });
 }
 
-void ConnectionFromClient::key_up(i32 key, unsigned int modifiers, u32 code_point)
+void ConnectionFromClient::key_up(i32 key, u32 modifiers, u32 code_point)
 {
     enqueue_input_event(
         QueuedKeyboardEvent {

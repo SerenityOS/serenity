@@ -61,13 +61,13 @@ private:
     virtual void load_url(URL const&) override;
     virtual void load_html(ByteString const&) override;
     virtual void set_viewport_rect(Web::DevicePixelRect const&) override;
-    virtual void mouse_down(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
-    virtual void mouse_move(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
-    virtual void mouse_up(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
-    virtual void mouse_wheel(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned, Web::DevicePixels, Web::DevicePixels) override;
-    virtual void doubleclick(Web::DevicePixelPoint, Web::DevicePixelPoint, unsigned, unsigned, unsigned) override;
-    virtual void key_down(i32, unsigned, u32) override;
-    virtual void key_up(i32, unsigned, u32) override;
+    virtual void mouse_down(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void mouse_move(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void mouse_up(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void mouse_wheel(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32, Web::DevicePixels, Web::DevicePixels) override;
+    virtual void doubleclick(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void key_down(i32, u32, u32) override;
+    virtual void key_up(i32, u32, u32) override;
     virtual void add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
     virtual void ready_to_paint() override;
     virtual void debug_request(ByteString const&, ByteString const&) override;
@@ -164,9 +164,9 @@ private:
         Type type {};
         Web::DevicePixelPoint position {};
         Web::DevicePixelPoint screen_position {};
-        unsigned button {};
-        unsigned buttons {};
-        unsigned modifiers {};
+        u32 button {};
+        u32 buttons {};
+        u32 modifiers {};
         Web::DevicePixels wheel_delta_x {};
         Web::DevicePixels wheel_delta_y {};
         size_t coalesced_event_count { 0 };
@@ -179,7 +179,7 @@ private:
         };
         Type type {};
         i32 key {};
-        unsigned int modifiers {};
+        u32 modifiers {};
         u32 code_point {};
     };
 

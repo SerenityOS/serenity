@@ -28,14 +28,14 @@ endpoint WebContentServer
 
     set_viewport_rect(Web::DevicePixelRect rect) =|
 
-    mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
-    mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
-    mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
-    mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y) =|
-    doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y) =|
+    doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
 
-    key_down(i32 key, unsigned modifiers, u32 code_point) =|
-    key_up(i32 key, unsigned modifiers, u32 code_point) =|
+    key_down(i32 key, u32 modifiers, u32 code_point) =|
+    key_up(i32 key, u32 modifiers, u32 code_point) =|
 
     debug_request(ByteString request, ByteString argument) =|
     get_source() =|

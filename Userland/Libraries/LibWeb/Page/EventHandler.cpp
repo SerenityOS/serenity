@@ -145,7 +145,7 @@ Painting::PaintableBox const* EventHandler::paint_root() const
     return m_browsing_context->active_document()->paintable_box();
 }
 
-bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
+bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     if (!m_browsing_context->active_document())
         return false;
@@ -207,7 +207,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
     return handled_event;
 }
 
-bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     if (!m_browsing_context->active_document())
         return false;
@@ -321,7 +321,7 @@ after_node_use:
     return handled_event;
 }
 
-bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     if (!m_browsing_context->active_document())
         return false;
@@ -419,7 +419,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen
     return true;
 }
 
-bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen_position, u32 buttons, u32 modifiers)
 {
     if (!m_browsing_context->active_document())
         return false;
@@ -545,7 +545,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
     return true;
 }
 
-bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     if (!m_browsing_context->active_document())
         return false;
@@ -695,7 +695,7 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
     return code_point == 0 || code_point == 27;
 }
 
-bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
+bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, u32 modifiers, u32 code_point)
 {
     JS::GCPtr<DOM::Document> document = browsing_context.active_document();
     if (!document)
@@ -723,7 +723,7 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
     return document->root().dispatch_event(event);
 }
 
-bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
+bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
 {
     if (!m_browsing_context->active_document())
         return false;
@@ -831,7 +831,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     return fire_keyboard_event(UIEvents::EventNames::keypress, m_browsing_context, key, modifiers, code_point);
 }
 
-bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
+bool EventHandler::handle_keyup(KeyCode key, u32 modifiers, u32 code_point)
 {
     return fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
 }
