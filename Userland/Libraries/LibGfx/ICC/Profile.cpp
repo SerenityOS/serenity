@@ -1586,6 +1586,15 @@ MatrixMatrixConversion::MatrixMatrixConversion(LutCurveType source_red_TRC,
     , m_destination_green_TRC(move(destination_green_TRC))
     , m_destination_blue_TRC(move(destination_blue_TRC))
 {
+    auto check = [](auto const& trc) {
+        VERIFY(trc->type() == CurveTagData::Type || trc->type() == ParametricCurveTagData::Type);
+    };
+    check(m_source_red_TRC);
+    check(m_source_green_TRC);
+    check(m_source_blue_TRC);
+    check(m_destination_red_TRC);
+    check(m_destination_green_TRC);
+    check(m_destination_blue_TRC);
 }
 
 Optional<MatrixMatrixConversion> Profile::matrix_matrix_conversion(Profile const& source_profile) const

@@ -175,14 +175,12 @@ private:
 inline Color MatrixMatrixConversion::map(FloatVector3 in_rgb) const
 {
     auto evaluate_curve = [](TagData const& trc, float f) {
-        VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
         if (trc.type() == CurveTagData::Type)
             return static_cast<CurveTagData const&>(trc).evaluate(f);
         return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
     };
 
     auto evaluate_curve_inverse = [](TagData const& trc, float f) {
-        VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
         if (trc.type() == CurveTagData::Type)
             return static_cast<CurveTagData const&>(trc).evaluate_inverse(f);
         return static_cast<ParametricCurveTagData const&>(trc).evaluate_inverse(f);
