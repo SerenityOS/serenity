@@ -189,6 +189,9 @@ private:
 
             auto const color_map = *m_metadata.color_map();
 
+            if (blue_offset + index >= color_map.size())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Color index is out of range");
+
             // FIXME: ColorMap's values are always 16-bits, stop truncating them when we support 16 bits bitmaps
             return Color(
                 color_map[red_offset + index] >> 8,
