@@ -1588,41 +1588,6 @@ MatrixMatrixConversion::MatrixMatrixConversion(LutCurveType source_red_TRC,
 {
 }
 
-Color MatrixMatrixConversion::map(FloatVector3 in_rgb) const
-{
-    auto evaluate_curve = [](TagData const& trc, float f) {
-        VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
-        if (trc.type() == CurveTagData::Type)
-            return static_cast<CurveTagData const&>(trc).evaluate(f);
-        return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
-    };
-
-    auto evaluate_curve_inverse = [](TagData const& trc, float f) {
-        VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
-        if (trc.type() == CurveTagData::Type)
-            return static_cast<CurveTagData const&>(trc).evaluate_inverse(f);
-        return static_cast<ParametricCurveTagData const&>(trc).evaluate_inverse(f);
-    };
-
-    FloatVector3 linear_rgb = {
-        evaluate_curve(m_source_red_TRC, in_rgb[0]),
-        evaluate_curve(m_source_green_TRC, in_rgb[1]),
-        evaluate_curve(m_source_blue_TRC, in_rgb[2]),
-    };
-    linear_rgb = m_matrix * linear_rgb;
-
-    linear_rgb.clamp(0.f, 1.f);
-    float device_r = evaluate_curve_inverse(m_destination_red_TRC, linear_rgb[0]);
-    float device_g = evaluate_curve_inverse(m_destination_green_TRC, linear_rgb[1]);
-    float device_b = evaluate_curve_inverse(m_destination_blue_TRC, linear_rgb[2]);
-
-    u8 out_r = round(255 * device_r);
-    u8 out_g = round(255 * device_g);
-    u8 out_b = round(255 * device_b);
-
-    return Color(out_r, out_g, out_b);
-}
-
 Optional<MatrixMatrixConversion> Profile::matrix_matrix_conversion(Profile const& source_profile) const
 {
     auto has_normal_device_class = [](DeviceClass device) {
