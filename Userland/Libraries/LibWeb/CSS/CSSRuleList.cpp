@@ -29,8 +29,9 @@ JS::NonnullGCPtr<CSSRuleList> CSSRuleList::create(JS::Realm& realm, JS::MarkedVe
 }
 
 CSSRuleList::CSSRuleList(JS::Realm& realm)
-    : Bindings::LegacyPlatformObject(realm)
+    : Bindings::PlatformObject(realm)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = 1 };
 }
 
 JS::NonnullGCPtr<CSSRuleList> CSSRuleList::create_empty(JS::Realm& realm)

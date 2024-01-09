@@ -21,11 +21,16 @@ JS::NonnullGCPtr<HTMLCollection> HTMLCollection::create(ParentNode& root, Scope 
 }
 
 HTMLCollection::HTMLCollection(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
-    : LegacyPlatformObject(root.realm())
+    : PlatformObject(root.realm())
     , m_root(root)
     , m_filter(move(filter))
     , m_scope(scope)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_indexed_properties = true,
+        .supports_named_properties = true,
+        .has_legacy_unenumerable_named_properties_interface_extended_attribute = true,
+    };
 }
 
 HTMLCollection::~HTMLCollection() = default;

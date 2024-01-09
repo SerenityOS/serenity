@@ -13,15 +13,15 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/LegacyPlatformObject.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#domtokenlist
-class DOMTokenList final : public Bindings::LegacyPlatformObject {
-    WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
+class DOMTokenList final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(DOMTokenList);
 
 public:
@@ -49,19 +49,6 @@ private:
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
-
-    // ^Bindings::LegacyPlatformObject
-    virtual bool supports_indexed_properties() const override { return true; }
-    virtual bool supports_named_properties() const override { return false; }
-    virtual bool has_indexed_property_setter() const override { return false; }
-    virtual bool has_named_property_setter() const override { return false; }
-    virtual bool has_named_property_deleter() const override { return false; }
-    virtual bool has_legacy_override_built_ins_interface_extended_attribute() const override { return false; }
-    virtual bool has_legacy_unenumerable_named_properties_interface_extended_attribute() const override { return false; }
-    virtual bool has_global_interface_extended_attribute() const override { return false; }
-    virtual bool indexed_property_setter_has_identifier() const override { return false; }
-    virtual bool named_property_setter_has_identifier() const override { return false; }
-    virtual bool named_property_deleter_has_identifier() const override { return false; }
 
     WebIDL::ExceptionOr<void> validate_token(StringView token) const;
     void run_update_steps();

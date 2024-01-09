@@ -23,9 +23,10 @@ JS::NonnullGCPtr<DOMRectList> DOMRectList::create(JS::Realm& realm, Vector<JS::H
 }
 
 DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rects)
-    : Bindings::LegacyPlatformObject(realm)
+    : Bindings::PlatformObject(realm)
     , m_rects(move(rects))
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = 1 };
 }
 
 DOMRectList::~DOMRectList() = default;

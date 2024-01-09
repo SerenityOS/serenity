@@ -23,9 +23,14 @@ JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)
-    : Bindings::LegacyPlatformObject(element.realm())
+    : Bindings::PlatformObject(element.realm())
     , m_element(element)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_indexed_properties = true,
+        .supports_named_properties = true,
+        .has_legacy_unenumerable_named_properties_interface_extended_attribute = true,
+    };
 }
 
 void NamedNodeMap::initialize(JS::Realm& realm)

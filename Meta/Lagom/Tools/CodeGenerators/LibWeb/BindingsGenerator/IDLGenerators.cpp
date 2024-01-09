@@ -2647,7 +2647,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @named_properties_class@
     auto& object = verify_cast<A>(realm.global_object());
 
     // 4. If the result of running the named property visibility algorithm with property name P and object object is true, then:
-    if (TRY(is_named_property_exposed_on_object({ &object }, property_name))) {
+    if (TRY(object.is_named_property_exposed_on_object(property_name))) {
         auto property_name_string = MUST(FlyString::from_deprecated_fly_string(property_name.to_string()));
 
         // 1. Let operation be the operation used to declare the named property getter.

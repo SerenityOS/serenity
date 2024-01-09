@@ -15,8 +15,13 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(MimeTypeArray);
 
 MimeTypeArray::MimeTypeArray(JS::Realm& realm)
-    : Bindings::LegacyPlatformObject(realm)
+    : Bindings::PlatformObject(realm)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_indexed_properties = true,
+        .supports_named_properties = true,
+        .has_legacy_unenumerable_named_properties_interface_extended_attribute = true,
+    };
 }
 
 MimeTypeArray::~MimeTypeArray() = default;
