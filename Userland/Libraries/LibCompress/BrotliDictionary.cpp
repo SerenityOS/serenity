@@ -22,7 +22,7 @@ asm(".section .rodata\n"
     ".global brotli_dictionary_data\n"
     "brotli_dictionary_data:\n");
 #endif
-asm(".incbin \"LibCompress/BrotliDictionaryData.bin\"\n"
+asm(".incbin \"" __FILE__ ".dict.bin\"\n"
 #if (!defined(AK_OS_WINDOWS) && !defined(AK_OS_EMSCRIPTEN))
     ".previous\n");
 #else
