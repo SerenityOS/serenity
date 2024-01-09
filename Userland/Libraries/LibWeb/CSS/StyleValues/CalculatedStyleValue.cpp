@@ -237,6 +237,15 @@ void NumericCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}NUMERIC({})\n", "", indent, m_value.visit([](auto& it) { return it.to_string(); }));
 }
 
+bool NumericCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value == static_cast<NumericCalculationNode const&>(other).m_value;
+}
+
 NonnullOwnPtr<SumCalculationNode> SumCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)
 {
     return adopt_own(*new (nothrow) SumCalculationNode(move(values)));
@@ -353,6 +362,19 @@ void SumCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}SUM:\n", "", indent);
     for (auto const& item : m_values)
         item->dump(builder, indent + 2);
+}
+
+bool SumCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i]->equals(*static_cast<SumCalculationNode const&>(other).m_values[i]))
+            return false;
+    }
+    return true;
 }
 
 NonnullOwnPtr<ProductCalculationNode> ProductCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)
@@ -478,6 +500,19 @@ void ProductCalculationNode::dump(StringBuilder& builder, int indent) const
         item->dump(builder, indent + 2);
 }
 
+bool ProductCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i]->equals(*static_cast<ProductCalculationNode const&>(other).m_values[i]))
+            return false;
+    }
+    return true;
+}
+
 NonnullOwnPtr<NegateCalculationNode> NegateCalculationNode::create(NonnullOwnPtr<Web::CSS::CalculationNode> value)
 {
     return adopt_own(*new (nothrow) NegateCalculationNode(move(value)));
@@ -530,6 +565,15 @@ void NegateCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}NEGATE:\n", "", indent);
     m_value->dump(builder, indent + 2);
+}
+
+bool NegateCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<NegateCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<InvertCalculationNode> InvertCalculationNode::create(NonnullOwnPtr<Web::CSS::CalculationNode> value)
@@ -591,6 +635,15 @@ void InvertCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}INVERT:\n", "", indent);
     m_value->dump(builder, indent + 2);
+}
+
+bool InvertCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<InvertCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<MinCalculationNode> MinCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
@@ -675,6 +728,19 @@ void MinCalculationNode::dump(StringBuilder& builder, int indent) const
         value->dump(builder, indent + 2);
 }
 
+bool MinCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i]->equals(*static_cast<MinCalculationNode const&>(other).m_values[i]))
+            return false;
+    }
+    return true;
+}
+
 NonnullOwnPtr<MaxCalculationNode> MaxCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
 {
     return adopt_own(*new (nothrow) MaxCalculationNode(move(values)));
@@ -755,6 +821,19 @@ void MaxCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}MAX:\n", "", indent);
     for (auto const& value : m_values)
         value->dump(builder, indent + 2);
+}
+
+bool MaxCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i]->equals(*static_cast<MaxCalculationNode const&>(other).m_values[i]))
+            return false;
+    }
+    return true;
 }
 
 NonnullOwnPtr<ClampCalculationNode> ClampCalculationNode::create(NonnullOwnPtr<CalculationNode> min, NonnullOwnPtr<CalculationNode> center, NonnullOwnPtr<CalculationNode> max)
@@ -853,6 +932,17 @@ void ClampCalculationNode::dump(StringBuilder& builder, int indent) const
     m_max_value->dump(builder, indent + 2);
 }
 
+bool ClampCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_min_value->equals(*static_cast<ClampCalculationNode const&>(other).m_min_value)
+        && m_center_value->equals(*static_cast<ClampCalculationNode const&>(other).m_center_value)
+        && m_max_value->equals(*static_cast<ClampCalculationNode const&>(other).m_max_value);
+}
+
 NonnullOwnPtr<AbsCalculationNode> AbsCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) AbsCalculationNode(move(value)));
@@ -913,6 +1003,15 @@ void AbsCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 void AbsCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ABS: {}\n", "", indent, to_string());
+}
+
+bool AbsCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<AbsCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<SignCalculationNode> SignCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -977,6 +1076,15 @@ void SignCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 void SignCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SIGN: {}\n", "", indent, to_string());
+}
+
+bool SignCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<SignCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<ConstantCalculationNode> ConstantCalculationNode::create(ConstantType constant)
@@ -1047,6 +1155,15 @@ void ConstantCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}CONSTANT: {}\n", "", indent, to_string());
 }
 
+bool ConstantCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_constant == static_cast<ConstantCalculationNode const&>(other).m_constant;
+}
+
 NonnullOwnPtr<SinCalculationNode> SinCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) SinCalculationNode(move(value)));
@@ -1104,6 +1221,15 @@ void SinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 void SinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SIN: {}\n", "", indent, to_string());
+}
+
+bool SinCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<SinCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<CosCalculationNode> CosCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1165,6 +1291,15 @@ void CosCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}COS: {}\n", "", indent, to_string());
 }
 
+bool CosCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<CosCalculationNode const&>(other).m_value);
+}
+
 NonnullOwnPtr<TanCalculationNode> TanCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) TanCalculationNode(move(value)));
@@ -1222,6 +1357,15 @@ void TanCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 void TanCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}TAN: {}\n", "", indent, to_string());
+}
+
+bool TanCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<TanCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<AsinCalculationNode> AsinCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1283,6 +1427,15 @@ void AsinCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}ASIN: {}\n", "", indent, to_string());
 }
 
+bool AsinCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<AsinCalculationNode const&>(other).m_value);
+}
+
 NonnullOwnPtr<AcosCalculationNode> AcosCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) AcosCalculationNode(move(value)));
@@ -1342,6 +1495,15 @@ void AcosCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}ACOS: {}\n", "", indent, to_string());
 }
 
+bool AcosCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<AcosCalculationNode const&>(other).m_value);
+}
+
 NonnullOwnPtr<AtanCalculationNode> AtanCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) AtanCalculationNode(move(value)));
@@ -1399,6 +1561,15 @@ void AtanCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 void AtanCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ATAN: {}\n", "", indent, to_string());
+}
+
+bool AtanCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<AtanCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<Atan2CalculationNode> Atan2CalculationNode::create(NonnullOwnPtr<CalculationNode> y, NonnullOwnPtr<CalculationNode> x)
@@ -1469,6 +1640,16 @@ void Atan2CalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}ATAN2: {}\n", "", indent, to_string());
 }
 
+bool Atan2CalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_x->equals(*static_cast<Atan2CalculationNode const&>(other).m_x)
+        && m_y->equals(*static_cast<Atan2CalculationNode const&>(other).m_y);
+}
+
 NonnullOwnPtr<PowCalculationNode> PowCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
 {
     return adopt_own(*new (nothrow) PowCalculationNode(move(x), move(y)));
@@ -1532,6 +1713,16 @@ void PowCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}POW: {}\n", "", indent, to_string());
 }
 
+bool PowCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_x->equals(*static_cast<PowCalculationNode const&>(other).m_x)
+        && m_y->equals(*static_cast<PowCalculationNode const&>(other).m_y);
+}
+
 NonnullOwnPtr<SqrtCalculationNode> SqrtCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) SqrtCalculationNode(move(value)));
@@ -1584,6 +1775,15 @@ void SqrtCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 void SqrtCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SQRT: {}\n", "", indent, to_string());
+}
+
+bool SqrtCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<SqrtCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<HypotCalculationNode> HypotCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
@@ -1666,6 +1866,19 @@ void HypotCalculationNode::dump(StringBuilder& builder, int indent) const
         value->dump(builder, indent + 2);
 }
 
+bool HypotCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i]->equals(*static_cast<HypotCalculationNode const&>(other).m_values[i]))
+            return false;
+    }
+    return true;
+}
+
 NonnullOwnPtr<LogCalculationNode> LogCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
 {
     return adopt_own(*new (nothrow) LogCalculationNode(move(x), move(y)));
@@ -1729,6 +1942,16 @@ void LogCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}LOG: {}\n", "", indent, to_string());
 }
 
+bool LogCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_x->equals(*static_cast<LogCalculationNode const&>(other).m_x)
+        && m_y->equals(*static_cast<LogCalculationNode const&>(other).m_y);
+}
+
 NonnullOwnPtr<ExpCalculationNode> ExpCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
 {
     return adopt_own(*new (nothrow) ExpCalculationNode(move(value)));
@@ -1781,6 +2004,15 @@ void ExpCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 void ExpCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}EXP: {}\n", "", indent, to_string());
+}
+
+bool ExpCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_value->equals(*static_cast<ExpCalculationNode const&>(other).m_value);
 }
 
 NonnullOwnPtr<RoundCalculationNode> RoundCalculationNode::create(RoundingStrategy strategy, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
@@ -1885,6 +2117,17 @@ void RoundCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}ROUND: {}\n", "", indent, to_string());
 }
 
+bool RoundCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_strategy == static_cast<RoundCalculationNode const&>(other).m_strategy
+        && m_x->equals(*static_cast<RoundCalculationNode const&>(other).m_x)
+        && m_y->equals(*static_cast<RoundCalculationNode const&>(other).m_y);
+}
+
 NonnullOwnPtr<ModCalculationNode> ModCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
 {
     return adopt_own(*new (nothrow) ModCalculationNode(move(x), move(y)));
@@ -1961,6 +2204,16 @@ void ModCalculationNode::dump(StringBuilder& builder, int indent) const
     builder.appendff("{: >{}}MOD: {}\n", "", indent, to_string());
 }
 
+bool ModCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_x->equals(*static_cast<ModCalculationNode const&>(other).m_x)
+        && m_y->equals(*static_cast<ModCalculationNode const&>(other).m_y);
+}
+
 NonnullOwnPtr<RemCalculationNode> RemCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
 {
     return adopt_own(*new (nothrow) RemCalculationNode(move(x), move(y)));
@@ -2034,6 +2287,16 @@ void RemCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 void RemCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}REM: {}\n", "", indent, to_string());
+}
+
+bool RemCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    return m_x->equals(*static_cast<RemCalculationNode const&>(other).m_x)
+        && m_y->equals(*static_cast<RemCalculationNode const&>(other).m_y);
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
@@ -2331,8 +2594,8 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
-    // This is a case where comparing the strings actually makes sense.
-    return to_string() == other.to_string();
+
+    return m_calculation->equals(*static_cast<CalculatedStyleValue const&>(other).m_calculation);
 }
 
 Optional<Angle> CalculatedStyleValue::resolve_angle() const
