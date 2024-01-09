@@ -215,7 +215,6 @@ void HTMLScriptElement::prepare_script()
     // 12. Otherwise, return. (No script is executed, and el's type is left as null.)
     else {
         VERIFY(m_script_type == ScriptType::Null);
-        dbgln("HTMLScriptElement: Refusing to run script because the type '{}' is not recognized.", script_block_type);
         return;
     }
 
