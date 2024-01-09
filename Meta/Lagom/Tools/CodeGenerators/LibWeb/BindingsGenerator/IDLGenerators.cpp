@@ -509,7 +509,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
         // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(convert_to_int<WebIDL::UnsignedLong>(vm, @js_name@@js_suffix@));
+    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::UnsignedLong>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -534,7 +534,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
         // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(convert_to_int<WebIDL::UnsignedShort>(vm, @js_name@@js_suffix@));
+    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::UnsignedShort>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -559,7 +559,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
         // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(convert_to_int<WebIDL::Long>(vm, @js_name@@js_suffix@));
+    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::Long>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -584,7 +584,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
         // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(convert_to_int<WebIDL::LongLong>(vm, @js_name@@js_suffix@));
+    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::LongLong>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -609,7 +609,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
         // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(convert_to_int<WebIDL::UnsignedLongLong>(vm, @js_name@@js_suffix@));
+    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::UnsignedLongLong>(vm, @js_name@@js_suffix@));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -4083,6 +4083,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
 #include <LibWeb/WebIDL/Types.h>
@@ -4409,6 +4410,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
 #include <LibWeb/WebIDL/Types.h>
 
