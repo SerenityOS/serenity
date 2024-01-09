@@ -1129,7 +1129,7 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
     int x = 0;
     int y = 0;
     auto const bytes_per_component = bits_per_component / 8;
-    Vector<Value> component_values;
+    Vector<float> component_values;
     component_values.resize(n_components);
     while (!content.is_empty() && y < height) {
         auto sample = content.slice(0, bytes_per_component * n_components);
@@ -1137,7 +1137,7 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         for (int i = 0; i < n_components; ++i) {
             auto component = sample.slice(0, bytes_per_component);
             sample = sample.slice(bytes_per_component);
-            component_values[i] = Value { component_value_decoders[i].interpolate(component[0]) };
+            component_values[i] = component_value_decoders[i].interpolate(component[0]);
         }
         auto color = TRY(color_space->style(component_values)).get<Color>();
         bitmap->set_pixel(x, y, color);
