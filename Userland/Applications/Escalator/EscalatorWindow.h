@@ -17,6 +17,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
+namespace Escalator {
 class EscalatorWindow final : public GUI::Window {
     C_OBJECT(EscalatorWindow)
 public:
@@ -49,3 +50,4 @@ private:
     RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::PasswordBox> m_password_input;
 };
+}

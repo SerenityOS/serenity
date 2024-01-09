@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto current_user = TRY(Core::Account::self());
-    auto window = TRY(EscalatorWindow::try_create(executable_path.value(), command, EscalatorWindow::Options { description, current_user, preserve_env, forward_stdin, forward_stdout }));
+    auto window = TRY(Escalator::EscalatorWindow::try_create(executable_path.value(), command, Escalator::EscalatorWindow::Options { description, current_user, preserve_env, forward_stdin, forward_stdout }));
 
     if (current_user.uid() != 0) {
         window->show();

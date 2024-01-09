@@ -4,15 +4,12 @@ serenity_component(
     TARGETS Escalator
 )
 
-stringify_gml(Escalator.gml EscalatorGML.h escalator_gml)
+compile_gml(Escalator.gml EscalatorGML.cpp)
 
 set(SOURCES
+    EscalatorGML.cpp
     main.cpp
     EscalatorWindow.cpp
-)
-
-set(GENERATED_SOURCES
-    EscalatorGML.h
 )
 
 serenity_app(Escalator ICON app-escalator)
