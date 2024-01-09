@@ -18,54 +18,33 @@
 # but this doesn't use the same approach - that would require a fair amount of patching
 # which is not worth it, unless we plan to add LibJS support to Fuzzilli upstream.
 
-FROM fedora:33 AS serenity-build
+FROM fedora:39 AS serenity-build
 
 WORKDIR /home
 RUN dnf install -y clang cmake git-core ninja-build
 RUN git clone --depth=1 https://github.com/SerenityOS/serenity
-RUN mkdir /home/serenity/Build
 
-WORKDIR /home/serenity/Build
-RUN sed -i 's/-Wmissing-declarations //' ../CMakeLists.txt
+RUN cd serenity/Meta/Lagom && ./BuildFuzzers.sh
 
-# In file included from ../Libraries/LibGfx/Font.cpp:37:
-# ../Libraries/LibCore/FileStream.h:96:5: error: explicitly defaulted default constructor is implicitly deleted [-Werror,-Wdefaulted-function-deleted]
-#     InputFileStream() = default;
-#     ^
-# -------------------------------------------------------------------
-# I have no idea how to fix this, so I'll allow it. It's not relevant
-# as LibJS doesn't use LibGfx; but I suppose Lagom builds it anyway.
-# ¯\_(ツ)_/¯
-RUN CXXFLAGS="-Wno-defaulted-function-deleted" \
-    cmake -GNinja \
-          -DBUILD_LAGOM=ON \
-          -DENABLE_FUZZERS_LIBFUZZER=ON \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          ..
-RUN ninja FuzzilliJs
-
-
-FROM fedora:33 AS fuzzilli-build
+FROM fedora:39 AS fuzzilli-build
 
 WORKDIR /home
 RUN dnf install -y git-core patch swift-lang
 RUN git clone --depth=1 https://github.com/googleprojectzero/fuzzilli
 
 WORKDIR /home/fuzzilli
-COPY --from=serenity-build /home/serenity/Meta/Lagom/Fuzzers/add-serenity-support-to-fuzzilli.patch .
-RUN patch -p1 < add-serenity-support-to-fuzzilli.patch
 RUN swift build -c release
 
 
-FROM fedora:33
+FROM fedora:39
 
 WORKDIR /home
 # This is unfortunate, but we need libswiftCore.so (and possibly other files) from the
-# Swift runtime. The "swift-lang-runtime" package doesn't seem to exist in Fedora 33 :/
-RUN dnf install -y swift-lang
-COPY --from=serenity-build /home/serenity/Build/Meta/Lagom/Fuzzers/FuzzilliJs .
+# Swift runtime. The "swift-lang-runtime" package doesn't seem to exist in Fedora :/
+RUN dnf install -y swift-lang procps-ng
+COPY --from=serenity-build /home/serenity/Meta/Lagom/Build/lagom-fuzzers/bin ./bin
+COPY --from=serenity-build /home/serenity/Meta/Lagom/Build/lagom-fuzzers/lib64 ./lib64
 COPY --from=fuzzilli-build /home/fuzzilli/.build/x86_64-unknown-linux-gnu/release/FuzzilliCli .
 RUN mkdir fuzzilli-storage
 ENV FUZZILLI_CLI_OPTIONS ""
-CMD [ "sh", "-c", "./FuzzilliCli --profile=serenity --storagePath=fuzzilli-storage ${FUZZILLI_CLI_OPTIONS} ./FuzzilliJs" ]
+CMD [ "sh", "-c", "./FuzzilliCli --profile=serenity --storagePath=fuzzilli-storage ${FUZZILLI_CLI_OPTIONS} ./bin/FuzzilliJs" ]
