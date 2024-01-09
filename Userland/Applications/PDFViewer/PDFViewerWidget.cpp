@@ -187,7 +187,7 @@ PDFViewerWidget::PDFViewerWidget()
 
     m_viewer = v_splitter.add<PDFViewer>();
     m_viewer->on_page_change = [&](auto new_page) {
-        m_page_text_box->set_current_number(new_page + 1, GUI::AllowCallback::No);
+        m_page_text_box->set_value(new_page + 1, GUI::AllowCallback::No);
         m_go_to_prev_page_action->set_enabled(new_page > 0);
         m_go_to_next_page_action->set_enabled(new_page < m_viewer->document()->get_page_count() - 1);
     };
@@ -263,13 +263,13 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 
     m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() > 0);
-        m_page_text_box->set_current_number(m_viewer->current_page());
+        m_page_text_box->set_value(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
     m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
-        m_page_text_box->set_current_number(m_viewer->current_page() + 2);
+        m_page_text_box->set_value(m_viewer->current_page() + 2);
     });
     m_go_to_next_page_action->set_enabled(false);
 
@@ -279,7 +279,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_text_box = toolbar.add<GUI::NumericInput>();
     m_page_text_box->set_enabled(false);
     m_page_text_box->set_fixed_width(30);
-    m_page_text_box->set_min_number(1);
+    m_page_text_box->set_min(1);
 
     m_page_text_box->on_number_changed = [&](i64 number) {
         auto page_count = m_viewer->document()->get_page_count();
@@ -396,8 +396,8 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
     m_total_page_label->set_text(TRY(String::formatted("of {}", document->get_page_count())));
 
     m_page_text_box->set_enabled(true);
-    m_page_text_box->set_current_number(1, GUI::AllowCallback::No);
-    m_page_text_box->set_max_number(document->get_page_count());
+    m_page_text_box->set_value(1, GUI::AllowCallback::No);
+    m_page_text_box->set_max(document->get_page_count());
     m_go_to_prev_page_action->set_enabled(false);
     m_go_to_next_page_action->set_enabled(document->get_page_count() > 1);
     m_toggle_sidebar_action->set_enabled(true);
