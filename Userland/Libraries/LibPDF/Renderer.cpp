@@ -1139,16 +1139,8 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
             sample = sample.slice(bytes_per_component);
             component_values[i] = Value { component_value_decoders[i].interpolate(component[0]) };
         }
-        auto color = TRY(color_space->style(component_values));
-        if (color.has<Color>()) {
-            auto c = color.get<Color>();
-            bitmap->set_pixel(x, y, c);
-        } else {
-            auto paint_style = color.get<NonnullRefPtr<Gfx::PaintStyle>>();
-            paint_style->paint(bitmap->rect(), [&](auto sample) {
-                bitmap->set_pixel(x, y, sample(Gfx::IntPoint(x, y)));
-            });
-        }
+        auto color = TRY(color_space->style(component_values)).get<Color>();
+        bitmap->set_pixel(x, y, color);
         ++x;
         if (x == width) {
             x = 0;
