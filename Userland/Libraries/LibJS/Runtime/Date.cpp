@@ -36,6 +36,8 @@ Date::Date(double date_value, Object& prototype)
 {
 }
 
+Date::~Date() = default;
+
 ErrorOr<String> Date::iso_date_string() const
 {
     int year = year_from_time(m_date_value);

@@ -19,7 +19,8 @@ class Date final : public Object {
 public:
     static NonnullGCPtr<Date> create(Realm&, double date_value);
 
-    virtual ~Date() override = default;
+    // Out of line to ensure we have a key function
+    virtual ~Date() override;
 
     double date_value() const { return m_date_value; }
     void set_date_value(double value) { m_date_value = value; }
