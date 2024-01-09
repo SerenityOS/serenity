@@ -43,7 +43,6 @@ enum class StateAndProperties;
 
 namespace Web::Bindings {
 class Intrinsics;
-class LegacyPlatformObject;
 class OptionConstructor;
 
 enum class AudioContextLatencyCategory;

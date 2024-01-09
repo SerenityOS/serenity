@@ -71,9 +71,10 @@ JS::NonnullGCPtr<StyleSheetList> StyleSheetList::create(DOM::Document& document)
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)
-    : Bindings::LegacyPlatformObject(document.realm())
+    : Bindings::PlatformObject(document.realm())
     , m_document(document)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = true };
 }
 
 void StyleSheetList::initialize(JS::Realm& realm)

@@ -11,8 +11,9 @@
 namespace Web::DOM {
 
 NodeList::NodeList(JS::Realm& realm)
-    : LegacyPlatformObject(realm)
+    : PlatformObject(realm)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = true };
 }
 
 NodeList::~NodeList() = default;

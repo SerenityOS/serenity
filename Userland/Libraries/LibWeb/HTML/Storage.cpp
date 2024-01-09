@@ -19,8 +19,16 @@ JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
 }
 
 Storage::Storage(JS::Realm& realm)
-    : Bindings::LegacyPlatformObject(realm)
+    : Bindings::PlatformObject(realm)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_named_properties = true,
+        .has_named_property_setter = true,
+        .has_named_property_deleter = true,
+        .has_legacy_override_built_ins_interface_extended_attribute = true,
+        .named_property_setter_has_identifier = true,
+        .named_property_deleter_has_identifier = true,
+    };
 }
 
 Storage::~Storage() = default;
@@ -167,7 +175,7 @@ WebIDL::ExceptionOr<JS::Value> Storage::named_item_value(FlyString const& name) 
     return JS::PrimitiveString::create(vm(), value.release_value());
 }
 
-WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> Storage::delete_value(String const& name)
+WebIDL::ExceptionOr<Bindings::PlatformObject::DidDeletionFail> Storage::delete_value(String const& name)
 {
     remove_item(name);
     return DidDeletionFail::NotRelevant;
@@ -175,7 +183,7 @@ WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> Storage::de
 
 WebIDL::ExceptionOr<void> Storage::set_value_of_named_property(String const& key, JS::Value unconverted_value)
 {
-    // NOTE: Since LegacyPlatformObject does not know the type of value, we must convert it ourselves.
+    // NOTE: Since PlatformObject does not know the type of value, we must convert it ourselves.
     //       The type of `value` is `DOMString`.
     auto value = TRY(unconverted_value.to_string(vm()));
     return set_item(key, value);

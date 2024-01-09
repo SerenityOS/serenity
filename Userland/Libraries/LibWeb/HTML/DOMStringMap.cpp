@@ -21,9 +21,15 @@ JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)
-    : LegacyPlatformObject(element.realm())
+    : PlatformObject(element.realm())
     , m_associated_element(element)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_named_properties = true,
+        .has_named_property_setter = true,
+        .has_named_property_deleter = true,
+        .has_legacy_override_built_ins_interface_extended_attribute = true,
+    };
 }
 
 DOMStringMap::~DOMStringMap() = default;
@@ -121,7 +127,7 @@ String DOMStringMap::determine_value_of_named_property(FlyString const& name) co
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
 WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String const& name, JS::Value unconverted_value)
 {
-    // NOTE: Since LegacyPlatformObject does not know the type of value, we must convert it ourselves.
+    // NOTE: Since PlatformObject does not know the type of value, we must convert it ourselves.
     //       The type of `value` is `DOMString`.
     auto value = TRY(unconverted_value.to_string(vm()));
 
@@ -170,7 +176,7 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(Str
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-removeitem
-WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMap::delete_value(String const& name)
+WebIDL::ExceptionOr<Bindings::PlatformObject::DidDeletionFail> DOMStringMap::delete_value(String const& name)
 {
     StringBuilder builder;
 

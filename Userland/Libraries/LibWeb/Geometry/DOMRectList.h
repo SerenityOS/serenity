@@ -8,14 +8,14 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/LegacyPlatformObject.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Geometry/DOMRect.h>
 
 namespace Web::Geometry {
 
 // https://drafts.fxtf.org/geometry-1/#DOMRectList
-class DOMRectList final : public Bindings::LegacyPlatformObject {
-    WEB_PLATFORM_OBJECT(DOMRectList, Bindings::LegacyPlatformObject);
+class DOMRectList final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMRectList, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(DOMRectList);
 
 public:
@@ -34,19 +34,6 @@ private:
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
-
-    // ^Bindings::LegacyPlatformObject
-    virtual bool supports_indexed_properties() const override { return true; }
-    virtual bool supports_named_properties() const override { return false; }
-    virtual bool has_indexed_property_setter() const override { return false; }
-    virtual bool has_named_property_setter() const override { return false; }
-    virtual bool has_named_property_deleter() const override { return false; }
-    virtual bool has_legacy_override_built_ins_interface_extended_attribute() const override { return false; }
-    virtual bool has_legacy_unenumerable_named_properties_interface_extended_attribute() const override { return false; }
-    virtual bool has_global_interface_extended_attribute() const override { return false; }
-    virtual bool indexed_property_setter_has_identifier() const override { return false; }
-    virtual bool named_property_setter_has_identifier() const override { return false; }
-    virtual bool named_property_deleter_has_identifier() const override { return false; }
 
     Vector<JS::NonnullGCPtr<DOMRect>> m_rects;
 };

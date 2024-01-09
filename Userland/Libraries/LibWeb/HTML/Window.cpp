@@ -106,6 +106,11 @@ JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
 Window::Window(JS::Realm& realm)
     : DOM::EventTarget(realm)
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_named_properties = true,
+        .has_legacy_unenumerable_named_properties_interface_extended_attribute = true,
+        .has_global_interface_extended_attribute = true,
+    };
 }
 
 void Window::visit_edges(JS::Cell::Visitor& visitor)
@@ -1560,8 +1565,11 @@ OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> Window::document_tree_chi
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
-Vector<FlyString> Window::supported_property_names()
+Vector<FlyString> Window::supported_property_names() const
 {
+    // FIXME: Make the const-correctness of the methods this method calls less cowboy.
+    auto& mutable_this = const_cast<Window&>(*this);
+
     // The Window object supports named properties.
     // The supported property names of a Window object window at any moment consist of the following,
     // in tree order according to the element that contributed them, ignoring later duplicates:
@@ -1569,7 +1577,7 @@ Vector<FlyString> Window::supported_property_names()
     HashTable<FlyString> property_names;
 
     // - window's document-tree child navigable target name property set;
-    auto child_navigable_property_set = document_tree_child_navigable_target_name_property_set();
+    auto child_navigable_property_set = mutable_this.document_tree_child_navigable_target_name_property_set();
     for (auto& entry : child_navigable_property_set)
         property_names.set(entry.key, AK::HashSetExistingEntryBehavior::Keep);
 
@@ -1591,19 +1599,22 @@ Vector<FlyString> Window::supported_property_names()
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
-WebIDL::ExceptionOr<JS::Value> Window::named_item_value(FlyString const& name)
+WebIDL::ExceptionOr<JS::Value> Window::named_item_value(FlyString const& name) const
 {
+    // FIXME: Make the const-correctness of the methods this method calls less cowboy.
+    auto& mutable_this = const_cast<Window&>(*this);
+
     // To determine the value of a named property name in a Window object window, the user agent must return the value obtained using the following steps:
 
     // 1. Let objects be the list of named objects of window with the name name.
     // NOTE: There will be at least one such object, since the algorithm would otherwise not have been invoked by Web IDL.
-    auto objects = named_objects(name);
+    auto objects = mutable_this.named_objects(name);
 
     // 2. If objects contains a navigable, then:
     if (!objects.navigables.is_empty()) {
         // 1. Let container be the first navigable container in window's associated Document's descendants whose content navigable is in objects.
         JS::GCPtr<NavigableContainer> container = nullptr;
-        associated_document().for_each_in_subtree_of_type<HTML::NavigableContainer>([&](HTML::NavigableContainer& navigable_container) {
+        mutable_this.associated_document().for_each_in_subtree_of_type<HTML::NavigableContainer>([&](HTML::NavigableContainer& navigable_container) {
             if (!navigable_container.content_navigable())
                 return IterationDecision::Continue;
             if (objects.navigables.contains_slow(JS::NonnullGCPtr { *navigable_container.content_navigable() })) {
@@ -1623,7 +1634,7 @@ WebIDL::ExceptionOr<JS::Value> Window::named_item_value(FlyString const& name)
 
     // 4. Otherwise return an HTMLCollection rooted at window's associated Document,
     //    whose filter matches only named objects of window with the name name. (By definition, these will all be elements.)
-    return DOM::HTMLCollection::create(associated_document(), DOM::HTMLCollection::Scope::Descendants, [name](auto& element) -> bool {
+    return DOM::HTMLCollection::create(mutable_this.associated_document(), DOM::HTMLCollection::Scope::Descendants, [name](auto& element) -> bool {
         if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
             && (element.attribute(AttributeNames::name) == name))
             return true;

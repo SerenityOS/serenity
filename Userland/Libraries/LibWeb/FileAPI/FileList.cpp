@@ -6,7 +6,7 @@
 
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/Bindings/LegacyPlatformObject.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/FileAPI/FileList.h>
 
 namespace Web::FileAPI {
@@ -19,9 +19,10 @@ JS::NonnullGCPtr<FileList> FileList::create(JS::Realm& realm, Vector<JS::Nonnull
 }
 
 FileList::FileList(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
-    : Bindings::LegacyPlatformObject(realm)
+    : Bindings::PlatformObject(realm)
     , m_files(move(files))
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = 1 };
 }
 
 FileList::~FileList() = default;

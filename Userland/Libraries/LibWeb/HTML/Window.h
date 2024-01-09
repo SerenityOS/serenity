@@ -203,8 +203,8 @@ public:
 
     [[nodiscard]] OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();
 
-    [[nodiscard]] Vector<FlyString> supported_property_names();
-    [[nodiscard]] WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const&);
+    [[nodiscard]] Vector<FlyString> supported_property_names() const override;
+    [[nodiscard]] WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const&) const override;
 
 private:
     explicit Window(JS::Realm&);

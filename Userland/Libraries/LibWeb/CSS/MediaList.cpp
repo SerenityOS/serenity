@@ -21,9 +21,10 @@ JS::NonnullGCPtr<MediaList> MediaList::create(JS::Realm& realm, Vector<NonnullRe
 }
 
 MediaList::MediaList(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media)
-    : Bindings::LegacyPlatformObject(realm)
+    : Bindings::PlatformObject(realm)
     , m_media(move(media))
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = true };
 }
 
 void MediaList::initialize(JS::Realm& realm)

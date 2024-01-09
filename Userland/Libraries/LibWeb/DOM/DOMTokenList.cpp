@@ -62,10 +62,12 @@ JS::NonnullGCPtr<DOMTokenList> DOMTokenList::create(Element& associated_element,
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2
 DOMTokenList::DOMTokenList(Element& associated_element, FlyString associated_attribute)
-    : Bindings::LegacyPlatformObject(associated_element.realm())
+    : Bindings::PlatformObject(associated_element.realm())
     , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = 1 };
+
     auto value = associated_element.deprecated_get_attribute(m_associated_attribute);
     associated_attribute_changed(value);
 }

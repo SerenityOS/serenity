@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/LegacyPlatformObject.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#nodelist
-class NodeList : public Bindings::LegacyPlatformObject {
-    WEB_PLATFORM_OBJECT(NodeList, Bindings::LegacyPlatformObject);
+class NodeList : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(NodeList, Bindings::PlatformObject);
 
 public:
     virtual ~NodeList() override;
@@ -28,19 +28,6 @@ protected:
     explicit NodeList(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
-
-    // ^Bindings::LegacyPlatformObject
-    virtual bool supports_indexed_properties() const final override { return true; }
-    virtual bool supports_named_properties() const final override { return false; }
-    virtual bool has_indexed_property_setter() const final override { return false; }
-    virtual bool has_named_property_setter() const final override { return false; }
-    virtual bool has_named_property_deleter() const final override { return false; }
-    virtual bool has_legacy_override_built_ins_interface_extended_attribute() const final override { return false; }
-    virtual bool has_legacy_unenumerable_named_properties_interface_extended_attribute() const final override { return false; }
-    virtual bool has_global_interface_extended_attribute() const final override { return false; }
-    virtual bool indexed_property_setter_has_identifier() const final override { return false; }
-    virtual bool named_property_setter_has_identifier() const final override { return false; }
-    virtual bool named_property_deleter_has_identifier() const final override { return false; }
 };
 
 }
