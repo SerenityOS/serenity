@@ -64,12 +64,12 @@ ErrorOr<void> HexEditorWidget::setup()
         m_editor->update();
     };
 
-    m_editor->on_status_change = [this](int position, HexEditor::HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
+    m_editor->on_status_change = [this](int position, HexEditor::HexEditor::EditMode edit_mode, auto selection) {
         m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position).release_value_but_fixme_should_propagate_errors());
         m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::HexEditor::EditMode::Hex ? "Hex" : "Text").release_value_but_fixme_should_propagate_errors());
-        m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start).release_value_but_fixme_should_propagate_errors());
-        m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end).release_value_but_fixme_should_propagate_errors());
-        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", m_editor->selection_size()).release_value_but_fixme_should_propagate_errors());
+        m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection.start).release_value_but_fixme_should_propagate_errors());
+        m_statusbar->set_text(3, String::formatted("Selection End: {}", selection.end).release_value_but_fixme_should_propagate_errors());
+        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", selection.size()).release_value_but_fixme_should_propagate_errors());
 
         bool has_selection = m_editor->has_selection();
         m_copy_hex_action->set_enabled(has_selection);
@@ -78,7 +78,7 @@ ErrorOr<void> HexEditorWidget::setup()
         m_fill_selection_action->set_enabled(has_selection);
 
         if (m_value_inspector_container->is_visible() && !m_selecting_from_inspector) {
-            update_inspector_values(selection_start);
+            update_inspector_values(selection.start);
         }
         m_selecting_from_inspector = false;
     };
