@@ -6552,6 +6552,7 @@ public:
     {
         builder.appendff("{: >{}}UNPARSED({})\n", "", indent, m_component_value.to_debug_string());
     }
+    virtual bool equals(CalculationNode const&) const override { return false; }
 
 private:
     UnparsedCalculationNode(ComponentValue component_value)

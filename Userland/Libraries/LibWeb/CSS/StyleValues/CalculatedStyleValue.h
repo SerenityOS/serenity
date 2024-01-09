@@ -65,6 +65,8 @@ public:
 
         Value const& value() const { return m_value; }
 
+        [[nodiscard]] bool operator==(CalculationResult const&) const = default;
+
     private:
         void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Optional<Length::ResolutionContext const&>, PercentageBasis const& percentage_basis);
         Value m_value;
@@ -253,6 +255,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) = 0;
 
     virtual void dump(StringBuilder&, int indent) const = 0;
+    virtual bool equals(CalculationNode const&) const = 0;
 
 protected:
     explicit CalculationNode(Type);
@@ -274,6 +277,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override { }
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit NumericCalculationNode(NumericValue);
@@ -293,6 +297,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit SumCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -312,6 +317,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit ProductCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -331,6 +337,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit NegateCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -350,6 +357,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit InvertCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -369,6 +377,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -388,6 +397,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit MaxCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -407,6 +417,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit ClampCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -428,6 +439,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     AbsCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -447,6 +459,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     SignCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -466,6 +479,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override { }
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     ConstantCalculationNode(ConstantType);
@@ -485,6 +499,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     SinCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -504,6 +519,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     CosCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -523,6 +539,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     TanCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -542,6 +559,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     AsinCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -561,6 +579,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     AcosCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -580,6 +599,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     AtanCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -599,6 +619,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     Atan2CalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -619,6 +640,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit PowCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -639,6 +661,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     SqrtCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -658,6 +681,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     explicit HypotCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -677,6 +701,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     LogCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -697,6 +722,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     ExpCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -716,6 +742,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     RoundCalculationNode(RoundingStrategy, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -737,6 +764,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     ModCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -757,6 +785,7 @@ public:
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
 
 private:
     RemCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
