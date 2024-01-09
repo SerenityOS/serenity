@@ -19,8 +19,6 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 
-REGISTER_WIDGET(Hearts, Game);
-
 namespace Hearts {
 
 Game::Game()
@@ -598,7 +596,7 @@ void Game::play_card(Player& player, size_t card_index)
     card->set_upside_down(false);
     m_trick.append(*card);
 
-    const Gfx::IntPoint trick_card_positions[] = {
+    Gfx::IntPoint const trick_card_positions[] = {
         { width / 2 - Card::width / 2, height / 2 - 30 },
         { width / 2 - Card::width + 15, height / 2 - Card::height / 2 - 15 },
         { width / 2 - Card::width / 2 + 15, height / 2 - Card::height + 15 },

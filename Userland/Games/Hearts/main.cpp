@@ -8,9 +8,9 @@
  */
 
 #include "Game.h"
+#include "MainWidget.h"
 #include "SettingsDialog.h"
 #include <AK/URL.h>
-#include <Games/Hearts/HeartsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -25,7 +25,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -50,8 +49,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     window->set_title("Hearts");
 
-    auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(hearts_gml));
+    auto widget = TRY(Hearts::MainWidget::try_create());
+    window->set_main_widget(widget);
 
     auto& game = *widget->find_descendant_of_type_named<Hearts::Game>("game");
     game.set_focus(true);
