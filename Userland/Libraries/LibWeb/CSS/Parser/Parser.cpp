@@ -5095,7 +5095,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                 break;
             }
             case TransformFunctionParameterType::LengthPercentage: {
-                if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
+                if (maybe_calc_value && maybe_calc_value->resolves_to_length_percentage()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
                     auto dimension_value = parse_dimension_value(value);

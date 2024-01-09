@@ -426,7 +426,7 @@ Vector<CSS::Transformation> StyleProperties::transformations_for_style_value(Sty
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value->is_calculated()) {
                 auto& calculated = transformation_value->as_calculated();
-                if (calculated.resolves_to_length()) {
+                if (calculated.resolves_to_length_percentage()) {
                     values.append(CSS::LengthPercentage { calculated });
                 } else if (calculated.resolves_to_percentage()) {
                     values.append({ calculated.resolve_percentage().value() });
