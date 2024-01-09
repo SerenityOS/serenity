@@ -270,8 +270,12 @@ private:
             break;
         }
         case Compression::CCITT: {
+            // Section 8: Baseline Field Reference Guide
+            // BitsPerSample must be 1, since this type of compression is defined only for bilevel images.
             if (m_metadata.bits_per_sample()->size() > 1)
-                return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT image with BitsPerSample greater than one, aborting...");
+                return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT image with BitsPerSample greater than one");
+            if (m_metadata.photometric_interpretation() != PhotometricInterpretation::WhiteIsZero && m_metadata.photometric_interpretation() != PhotometricInterpretation::BlackIsZero)
+                return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT compression is used on a non bilevel image");
 
             ByteBuffer decoded_bytes {};
             auto decode_ccitt_1D_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
