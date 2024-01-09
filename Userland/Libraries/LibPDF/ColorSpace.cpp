@@ -500,7 +500,7 @@ ICCBasedColorSpace::ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile> profile)
 
 PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<Value> arguments) const
 {
-    Vector<float, 4> components;
+    m_components.resize(arguments.size());
     for (size_t i = 0; i < arguments.size(); ++i) {
         auto const& arg = arguments[i];
         VERIFY(arg.has_number());
@@ -515,17 +515,17 @@ PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<Value> arguments
                 number = (number + 128.0f) / 255.0f;
         }
 
-        components.append(number);
+        m_components[i] = number;
     }
 
     if (m_map.has_value())
-        return m_map->map(FloatVector3 { components[0], components[1], components[2] });
+        return m_map->map(FloatVector3 { m_components[0], m_components[1], m_components[2] });
 
-    Vector<u8, 4> bytes;
-    for (auto component : components)
-        bytes.append(static_cast<u8>(component * 255.0f));
+    m_bytes.resize(arguments.size());
+    for (size_t i = 0; i < arguments.size(); ++i)
+        m_bytes[i] = static_cast<u8>(m_components[i] * 255.0f);
 
-    auto pcs = TRY(m_profile->to_pcs(bytes));
+    auto pcs = TRY(m_profile->to_pcs(m_bytes));
     Array<u8, 3> output;
     TRY(sRGB()->from_pcs(m_profile, pcs, output.span()));
 

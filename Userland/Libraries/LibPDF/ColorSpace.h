@@ -195,6 +195,8 @@ private:
 
     static RefPtr<Gfx::ICC::Profile> s_srgb_profile;
     NonnullRefPtr<Gfx::ICC::Profile> m_profile;
+    mutable Vector<float, 4> m_components;
+    mutable Vector<u8, 4> m_bytes;
     Optional<Gfx::ICC::MatrixMatrixConversion> m_map;
 };
 
