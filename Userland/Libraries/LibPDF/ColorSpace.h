@@ -195,6 +195,7 @@ private:
 
     static RefPtr<Gfx::ICC::Profile> s_srgb_profile;
     NonnullRefPtr<Gfx::ICC::Profile> m_profile;
+    Optional<Gfx::ICC::MatrixMatrixConversion> m_map;
 };
 
 class LabColorSpace final : public ColorSpace {
