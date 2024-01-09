@@ -7,8 +7,8 @@
  */
 
 #include "EscalatorWindow.h"
+#include "MainWidget.h"
 #include <AK/Assertions.h>
-#include <Applications/Escalator/EscalatorGML.h>
 #include <LibCore/File.h>
 #include <LibCore/SecretString.h>
 #include <LibCore/System.h>
@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+namespace Escalator {
 EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> arguments, EscalatorWindow::Options const& options)
     : m_arguments(move(arguments))
     , m_executable(executable)
@@ -36,8 +37,8 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     set_resizable(false);
     set_minimizable(false);
 
-    auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(escalator_gml).release_value_but_fixme_should_propagate_errors();
+    auto main_widget = Escalator::MainWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    set_main_widget(main_widget);
 
     RefPtr<GUI::Label> app_label = *main_widget->find_descendant_of_type_named<GUI::Label>("description");
 
@@ -143,4 +144,5 @@ ErrorOr<void> EscalatorWindow::execute_command()
     }
 
     return {};
+}
 }
