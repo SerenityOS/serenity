@@ -699,6 +699,12 @@ ErrorOr<void> Profile::check_required_tags()
         break;
     }
 
+    m_cached_has_any_a_to_b_tag = has_tag(AToB0Tag) || has_tag(AToB1Tag) || has_tag(AToB2Tag);
+    m_cached_has_a_to_b0_tag = has_tag(AToB0Tag);
+    m_cached_has_any_b_to_a_tag = has_tag(BToA0Tag) || has_tag(BToA1Tag) || has_tag(BToA2Tag);
+    m_cached_has_b_to_a0_tag = has_tag(BToA0Tag);
+    m_cached_has_all_rgb_matrix_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
+
     return {};
 }
 
@@ -1241,8 +1247,6 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
         return Error::from_string_literal("ICC::Profile: input color doesn't match color space size");
 
     auto get_tag = [&](auto tag) { return m_tag_table.get(tag); };
-    auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
-    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
 
     switch (device_class()) {
     case DeviceClass::InputDevice:
@@ -1262,13 +1266,15 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 
         // "b) Use the BToA0Tag, BToA1Tag, BToA2Tag, AToB0Tag, AToB1Tag, or AToB2Tag designated for the
         //     rendering intent if present, when the tag in a) is not used."
-        if (auto tag = get_tag(forward_transform_tag_for_rendering_intent(rendering_intent())); tag.has_value())
-            return to_pcs_a_to_b(*tag.value(), color);
+        if (m_cached_has_any_a_to_b_tag)
+            if (auto tag = get_tag(forward_transform_tag_for_rendering_intent(rendering_intent())); tag.has_value())
+                return to_pcs_a_to_b(*tag.value(), color);
 
         // "c) Use the BToA0Tag or AToB0Tag if present, when the tags in a) and b) are not used."
         // AToB0Tag is for the conversion _to_ PCS (BToA0Tag is for conversion _from_ PCS, so not needed in this function).
-        if (auto tag = get_tag(AToB0Tag); tag.has_value())
-            return to_pcs_a_to_b(*tag.value(), color);
+        if (m_cached_has_a_to_b0_tag)
+            if (auto tag = get_tag(AToB0Tag); tag.has_value())
+                return to_pcs_a_to_b(*tag.value(), color);
 
         // "d) Use TRCs (redTRCTag, greenTRCTag, blueTRCTag, or grayTRCTag) and colorants
         //     (redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag) when tags in a), b), and c) are not
@@ -1293,7 +1299,7 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 
         // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
         if (data_color_space() == ColorSpace::RGB) {
-            if (!has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag }))
+            if (!m_cached_has_all_rgb_matrix_tags)
                 return Error::from_string_literal("ICC::Profile::to_pcs: RGB color space but neither LUT-based nor matrix-based tags present");
             VERIFY(color.size() == 3); // True because of color.size() check further up.
 
@@ -1453,8 +1459,6 @@ ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs,
         return Error::from_string_literal("ICC::Profile: output color doesn't match color space size");
 
     auto get_tag = [&](auto tag) { return m_tag_table.get(tag); };
-    auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
-    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
 
     switch (device_class()) {
     case DeviceClass::InputDevice:
@@ -1463,11 +1467,13 @@ ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs,
     case DeviceClass::ColorSpace: {
         // FIXME: Implement multiProcessElementsType one day.
 
-        if (auto tag = get_tag(backward_transform_tag_for_rendering_intent(rendering_intent())); tag.has_value())
-            return from_pcs_b_to_a(*tag.value(), pcs, color);
+        if (m_cached_has_any_b_to_a_tag)
+            if (auto tag = get_tag(backward_transform_tag_for_rendering_intent(rendering_intent())); tag.has_value())
+                return from_pcs_b_to_a(*tag.value(), pcs, color);
 
-        if (auto tag = get_tag(BToA0Tag); tag.has_value())
-            return from_pcs_b_to_a(*tag.value(), pcs, color);
+        if (m_cached_has_b_to_a0_tag)
+            if (auto tag = get_tag(BToA0Tag); tag.has_value())
+                return from_pcs_b_to_a(*tag.value(), pcs, color);
 
         if (data_color_space() == ColorSpace::Gray) {
             // FIXME
@@ -1476,7 +1482,7 @@ ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs,
 
         // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
         if (data_color_space() == ColorSpace::RGB) {
-            if (!has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag }))
+            if (!m_cached_has_all_rgb_matrix_tags)
                 return Error::from_string_literal("ICC::Profile::from_pcs: RGB color space but neither LUT-based nor matrix-based tags present");
             VERIFY(color.size() == 3); // True because of color.size() check further up.
 

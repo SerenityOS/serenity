@@ -249,6 +249,13 @@ private:
     ErrorOr<FloatVector3> to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const;
     ErrorOr<void> from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const;
 
+    // Cached values.
+    bool m_cached_has_any_a_to_b_tag { false };
+    bool m_cached_has_a_to_b0_tag { false };
+    bool m_cached_has_any_b_to_a_tag { false };
+    bool m_cached_has_b_to_a0_tag { false };
+    bool m_cached_has_all_rgb_matrix_tags { false };
+
     // Only valid for RGB matrix-based profiles.
     ErrorOr<FloatMatrix3x3> xyz_to_rgb_matrix() const;
     FloatMatrix3x3 rgb_to_xyz_matrix() const;
