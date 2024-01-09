@@ -11,6 +11,7 @@
 
 #include "HexDocument.h"
 #include "SearchResultsModel.h"
+#include "Selection.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -47,9 +48,9 @@ public:
     GUI::UndoStack& undo_stack();
 
     void select_all();
-    bool has_selection() const { return m_selection_start < m_selection_end && m_document->size() > 0; }
-    size_t selection_size() const;
-    size_t selection_start_offset() const { return m_selection_start; }
+    Selection const& selection() const { return m_selection; }
+    bool has_selection() const { return !m_selection.is_empty() && m_document->size() > 0; }
+    size_t selection_start_offset() const { return m_selection.start; }
     bool copy_selected_text_to_clipboard();
     bool copy_selected_hex_to_clipboard();
     bool copy_selected_hex_to_clipboard_as_c_code();
@@ -64,7 +65,7 @@ public:
     Optional<size_t> find_and_highlight(ByteBuffer& needle, size_t start = 0);
     Vector<Match> find_all(ByteBuffer& needle, size_t start = 0);
     Vector<Match> find_all_strings(size_t min_length = 4);
-    Function<void(size_t, EditMode, size_t, size_t)> on_status_change; // position, edit mode, selection start, selection end
+    Function<void(size_t position, EditMode, Selection)> on_status_change;
     Function<void(bool is_document_dirty)> on_change;
 
 protected:
@@ -81,8 +82,7 @@ private:
     size_t m_content_length { 0 };
     size_t m_bytes_per_row { 16 };
     bool m_in_drag_select { false };
-    size_t m_selection_start { 0 };
-    size_t m_selection_end { 0 };
+    Selection m_selection;
     size_t m_position { 0 };
     bool m_cursor_at_low_nibble { false };
     EditMode m_edit_mode { Hex };

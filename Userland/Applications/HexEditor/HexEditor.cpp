@@ -50,8 +50,7 @@ ErrorOr<void> HexEditor::open_new_file(size_t size)
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
-    m_selection_start = 0;
-    m_selection_end = 0;
+    m_selection.clear();
     scroll_position_into_view(m_position);
     update();
     update_status();
@@ -65,8 +64,7 @@ void HexEditor::open_file(NonnullOwnPtr<Core::File> file)
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
-    m_selection_start = 0;
-    m_selection_end = 0;
+    m_selection.clear();
     scroll_position_into_view(m_position);
     update();
     update_status();
@@ -80,22 +78,22 @@ ErrorOr<void> HexEditor::fill_selection(u8 fill_byte)
     ByteBuffer old_values;
     ByteBuffer new_values;
 
-    size_t length = m_selection_end - m_selection_start;
+    size_t length = m_selection.size();
 
     new_values.resize(length);
     old_values.resize(length);
 
     for (size_t i = 0; i < length; i++) {
-        size_t position = m_selection_start + i;
+        size_t position = m_selection.start + i;
         old_values[i] = m_document->get(position).value;
         new_values[i] = fill_byte;
         m_document->set(position, fill_byte);
     }
 
-    auto result = did_complete_action(m_selection_start, move(old_values), move(new_values));
+    auto result = did_complete_action(m_selection.start, move(old_values), move(new_values));
     if (result.is_error()) {
         for (size_t i = 0; i < length; i++) {
-            size_t position = m_selection_start + i;
+            size_t position = m_selection.start + i;
             m_document->set(position, old_values[i]);
         }
         return result;
@@ -117,6 +115,7 @@ void HexEditor::set_position(size_t position)
     scroll_position_into_view(position);
     update_status();
 }
+
 void HexEditor::set_selection(size_t position, size_t length)
 {
     if (position > m_document->size() || position + length > m_document->size())
@@ -124,8 +123,8 @@ void HexEditor::set_selection(size_t position, size_t length)
 
     m_position = position;
     m_cursor_at_low_nibble = false;
-    m_selection_start = position;
-    m_selection_end = position + length;
+    m_selection.start = position;
+    m_selection.end = position + length;
     scroll_position_into_view(position);
     update_status();
 }
@@ -156,20 +155,13 @@ ErrorOr<void> HexEditor::save()
     return {};
 }
 
-size_t HexEditor::selection_size() const
-{
-    if (!has_selection())
-        return 0;
-    return m_selection_end - m_selection_start;
-}
-
 bool HexEditor::copy_selected_hex_to_clipboard()
 {
     if (!has_selection())
         return false;
 
     StringBuilder output_string_builder;
-    for (size_t i = m_selection_start; i < m_selection_end; i++)
+    for (size_t i = m_selection.start; i < m_selection.end; i++)
         output_string_builder.appendff("{:02X} ", m_document->get(i).value);
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_byte_string());
@@ -182,7 +174,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (size_t i = m_selection_start; i < m_selection_end; i++)
+    for (size_t i = m_selection.start; i < m_selection.end; i++)
         output_string_builder.append(isprint(m_document->get(i).value) ? m_document->get(i).value : '.');
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_byte_string());
@@ -195,11 +187,11 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
         return false;
 
     StringBuilder output_string_builder;
-    output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", m_selection_end - m_selection_start);
+    output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", m_selection.end - m_selection.start);
     output_string_builder.append("    "sv);
-    for (size_t i = m_selection_start, j = 1; i < m_selection_end; i++, j++) {
+    for (size_t i = m_selection.start, j = 1; i < m_selection.end; i++, j++) {
         output_string_builder.appendff("{:#02X}", m_document->get(i).value);
-        if (i >= m_selection_end - 1)
+        if (i >= m_selection.end - 1)
             continue;
         if ((j % 12) == 0)
             output_string_builder.append(",\n    "sv);
@@ -241,11 +233,11 @@ Optional<u8> HexEditor::get_byte(size_t position)
 
 ByteBuffer HexEditor::get_selected_bytes()
 {
-    auto num_selected_bytes = m_selection_end - m_selection_start;
+    auto num_selected_bytes = m_selection.size();
     ByteBuffer data;
     data.ensure_capacity(num_selected_bytes);
 
-    for (size_t i = m_selection_start; i < m_selection_end; i++)
+    for (size_t i = m_selection.start; i < m_selection.end; i++)
         data.append(m_document->get(i).value);
 
     return data;
@@ -287,8 +279,8 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         m_cursor_at_low_nibble = false;
         m_position = offset;
         m_in_drag_select = true;
-        m_selection_start = offset;
-        m_selection_end = offset;
+        m_selection.start = offset;
+        m_selection.end = offset;
         update();
         update_status();
     }
@@ -309,8 +301,8 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         m_position = offset;
         m_cursor_at_low_nibble = false;
         m_in_drag_select = true;
-        m_selection_start = offset;
-        m_selection_end = offset;
+        m_selection.start = offset;
+        m_selection.end = offset;
         m_edit_mode = EditMode::Text;
         update();
         update_status();
@@ -353,8 +345,8 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
             if (offset > m_document->size())
                 return;
 
-            m_selection_end = offset;
-            m_position = (m_selection_end <= m_selection_start) ? offset : offset - 1;
+            m_selection.end = offset;
+            m_position = (m_selection.end <= m_selection.start) ? offset : offset - 1;
             scroll_position_into_view(offset);
         }
 
@@ -368,8 +360,8 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
             if (offset > m_document->size())
                 return;
 
-            m_selection_end = offset;
-            m_position = (m_selection_end <= m_selection_start) ? offset : offset - 1;
+            m_selection.end = offset;
+            m_position = (m_selection.end <= m_selection.start) ? offset : offset - 1;
             scroll_position_into_view(offset);
         }
         update_status();
@@ -382,11 +374,9 @@ void HexEditor::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Primary) {
         if (m_in_drag_select) {
-            if (m_selection_end < m_selection_start) {
+            if (m_selection.end < m_selection.start) {
                 // lets flip these around
-                auto start = m_selection_end;
-                m_selection_end = m_selection_start;
-                m_selection_start = start;
+                swap(m_selection.start, m_selection.end);
             }
             m_in_drag_select = false;
         }
@@ -415,14 +405,15 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     auto move_and_update_cursor_by = [&](i64 cursor_location_change) {
         size_t new_position = m_position + cursor_location_change;
         if (event.modifiers() & Mod_Shift) {
-            size_t selection_pivot = m_position == m_selection_end ? m_selection_start : m_selection_end;
+            size_t selection_pivot = m_position == m_selection.end ? m_selection.start : m_selection.end;
             m_position = new_position;
-            m_selection_start = selection_pivot;
-            m_selection_end = m_position;
-            if (m_selection_start > m_selection_end)
-                swap(m_selection_start, m_selection_end);
-        } else
-            m_selection_start = m_selection_end = m_position = new_position;
+            m_selection.start = selection_pivot;
+            m_selection.end = m_position;
+            if (m_selection.start > m_selection.end)
+                swap(m_selection.start, m_selection.end);
+        } else {
+            m_selection.start = m_selection.end = m_position = new_position;
+        }
         m_cursor_at_low_nibble = false;
         scroll_position_into_view(m_position);
         update();
@@ -565,7 +556,7 @@ ErrorOr<void> HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
 void HexEditor::update_status()
 {
     if (on_status_change)
-        on_status_change(m_position, m_edit_mode, m_selection_start, m_selection_end);
+        on_status_change(m_position, m_edit_mode, m_selection);
 }
 
 void HexEditor::did_change()
@@ -659,8 +650,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             auto high_nibble = line.substring_from_byte_offset(0, 1).release_value_but_fixme_should_propagate_errors();
             auto low_nibble = line.substring_from_byte_offset(1).release_value_but_fixme_should_propagate_errors();
 
-            bool const selected = min(m_selection_start, m_selection_end) <= byte_position
-                && byte_position < max(m_selection_start, m_selection_end);
+            bool const selected = m_selection.contains(byte_position);
 
             // Styling priorities are as follows, with smaller numbers beating larger ones:
             // 1. Modified bytes
@@ -754,8 +744,8 @@ void HexEditor::select_all()
 
 void HexEditor::highlight(size_t start, size_t end)
 {
-    m_selection_start = start;
-    m_selection_end = end;
+    m_selection.start = start;
+    m_selection.end = end;
     set_position(start);
 }
 
