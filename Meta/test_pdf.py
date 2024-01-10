@@ -92,7 +92,7 @@ def main():
                     issue.filenames.append(r.filename)
                     issue.filename_to_issues[r.filename] = j['issues'][diag]
                     issue.num_pages += len(j['issues'][diag])
-                    issue.count += sum(a * b for (a, b) in j['issues'][diag])
+                    issue.count += sum(count for (page, count) in j['issues'][diag])
             continue
         if r.returncode == 1:
             failed_files.append(r.filename)
