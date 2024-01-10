@@ -333,11 +333,26 @@ def generate_getter(tag: Tag) -> str:
 def generate_metadata_class(tags: List[Tag]) -> str:
     getters = '\n'.join([generate_getter(tag) for tag in tags])
 
-    output = fR"""class ExifMetadata {{
+    output = fR"""class ExifMetadata : public Metadata {{
 public:
+    virtual ~ExifMetadata() = default;
+
 {getters}
 private:
     friend {HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE};
+
+    virtual void fill_main_tags() const override {{
+        if (model().has_value())
+            m_main_tags.set("Model"sv, model().value());
+        if (make().has_value())
+            m_main_tags.set("Manufacturer"sv, make().value());
+        if (software().has_value())
+            m_main_tags.set("Software"sv, software().value());
+        if (date_time().has_value())
+            m_main_tags.set("Creation Time"sv, date_time().value());
+        if (artist().has_value())
+            m_main_tags.set("Author"sv, artist().value());
+    }}
 
     void add_entry(StringView key, Vector<TIFF::Value>&& value) {{
         m_data.set(key, move(value));
@@ -359,6 +374,7 @@ def generate_metadata_file(tags: List[Tag]) -> str:
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/Size.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {{
 
