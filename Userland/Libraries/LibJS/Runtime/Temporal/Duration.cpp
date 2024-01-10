@@ -458,6 +458,24 @@ ThrowCompletionOr<double> calculate_offset_shift(VM& vm, Value relative_to_value
     return offset_after - offset_before;
 }
 
+// 7.5.17 BalanceTimeDuration ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-balancetimeduration
+ThrowCompletionOr<TimeDurationRecord> balance_time_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit)
+{
+    // 1. Let balanceResult be BalancePossiblyInfiniteTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit).
+    auto balance_result = balance_possibly_infinite_time_duration(vm, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largest_unit);
+
+    // 2. If balanceResult is positive overflow or negative overflow, then
+    if (balance_result.has<Overflow>()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
+    }
+    // 3. Else,
+    else {
+        // a. Return balanceResult.
+        return balance_result.get<TimeDurationRecord>();
+    }
+}
+
 // 7.5.17 TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, offsetShift ), https://tc39.es/proposal-temporal/#sec-temporal-totaldurationnanoseconds
 Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, double offset_shift)
 {

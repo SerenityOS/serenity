@@ -133,6 +133,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(VM&, double years, double 
 Duration* create_negated_temporal_duration(VM&, Duration const& duration);
 ThrowCompletionOr<double> calculate_offset_shift(VM&, Value relative_to_value, double years, double months, double weeks, double days);
 Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, double offset_shift);
+ThrowCompletionOr<TimeDurationRecord> balance_time_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit);
 ThrowCompletionOr<TimeDurationRecord> balance_duration(VM&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit, Object* relative_to = nullptr);
 
 enum class Overflow {
