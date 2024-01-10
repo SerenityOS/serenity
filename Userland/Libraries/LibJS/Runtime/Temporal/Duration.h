@@ -134,6 +134,14 @@ Duration* create_negated_temporal_duration(VM&, Duration const& duration);
 ThrowCompletionOr<double> calculate_offset_shift(VM&, Value relative_to_value, double years, double months, double weeks, double days);
 Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, double offset_shift);
 ThrowCompletionOr<TimeDurationRecord> balance_duration(VM&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit, Object* relative_to = nullptr);
+
+enum class Overflow {
+    Positive,
+    Negative,
+};
+
+Variant<TimeDurationRecord, Overflow> balance_possibly_infinite_time_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit);
+
 ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM&, double years, double months, double weeks, double days, StringView largest_unit, Value relative_to);
 ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM&, double years, double months, double weeks, double days, StringView largest_unit, Value relative_to);
 ThrowCompletionOr<DurationRecord> add_duration(VM&, double years1, double months1, double weeks1, double days1, double hours1, double minutes1, double seconds1, double milliseconds1, double microseconds1, double nanoseconds1, double years2, double months2, double weeks2, double days2, double hours2, double minutes2, double seconds2, double milliseconds2, double microseconds2, double nanoseconds2, Value relative_to_value);
