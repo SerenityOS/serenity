@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -56,27 +56,9 @@ CSSPixels FlexFormattingContext::automatic_content_height() const
     return m_flex_container_state.content_height();
 }
 
-void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace const& available_content_space)
+void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace const& available_space)
 {
     VERIFY(&run_box == &flex_container());
-
-    // NOTE: The available space provided by the parent context is basically our *content box*.
-    //       FFC is currently written in a way that expects that to include padding and border as well,
-    //       so we pad out the available space here to accommodate that.
-    // FIXME: Refactor the necessary parts of FFC so we don't need this hack!
-
-    auto available_width = available_content_space.width;
-    if (available_width.is_definite())
-        available_width = AvailableSize::make_definite(available_width.to_px_or_zero() + m_flex_container_state.border_box_left() + m_flex_container_state.border_box_right());
-    auto available_height = available_content_space.height;
-    if (available_height.is_definite())
-        available_height = AvailableSize::make_definite(available_height.to_px_or_zero() + m_flex_container_state.border_box_top() + m_flex_container_state.border_box_bottom());
-
-    m_available_space_for_flex_container = AxisAgnosticAvailableSpace {
-        .main = is_row_layout() ? available_width : available_height,
-        .cross = !is_row_layout() ? available_width : available_height,
-        .space = { available_width, available_height },
-    };
 
     // This implements https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 
@@ -84,7 +66,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     generate_anonymous_flex_items();
 
     // 2. Determine the available main and cross space for the flex items
-    determine_available_space_for_items(AvailableSpace(available_width, available_height));
+    determine_available_space_for_items(available_space);
 
     {
         // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
@@ -114,12 +96,16 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
         determine_flex_base_size_and_hypothetical_main_size(item);
     }
 
-    if (available_width.is_intrinsic_sizing_constraint() || available_height.is_intrinsic_sizing_constraint()) {
+    if (available_space.width.is_intrinsic_sizing_constraint() || available_space.height.is_intrinsic_sizing_constraint()) {
         // We're computing intrinsic size for the flex container. This happens at the end of run().
     } else {
-
         // 4. Determine the main size of the flex container
-        determine_main_size_of_flex_container();
+        // Determine the main size of the flex container using the rules of the formatting context in which it participates.
+        // NOTE: The automatic block size of a block-level flex container is its max-content size.
+
+        // NOTE: We've already handled this in the parent formatting context.
+        //       Specifically, all formatting contexts will have assigned width & height to the flex container
+        //       before this formatting context runs.
     }
 
     // 5. Collect flex items into flex lines:
@@ -186,7 +172,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     // 16. Align all flex lines (per align-content)
     align_all_flex_lines();
 
-    if (available_width.is_intrinsic_sizing_constraint() || available_height.is_intrinsic_sizing_constraint()) {
+    if (available_space.width.is_intrinsic_sizing_constraint() || available_space.height.is_intrinsic_sizing_constraint()) {
         // We're computing intrinsic size for the flex container.
         determine_intrinsic_size_of_flex_container();
     } else {
@@ -195,7 +181,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
         copy_dimensions_from_flex_items_to_boxes();
         for (auto& item : m_flex_items) {
             auto& box_state = m_state.get(item.box);
-            if (auto independent_formatting_context = layout_inside(item.box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(m_available_space_for_flex_container->space)))
+            if (auto independent_formatting_context = layout_inside(item.box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(m_available_space_for_items->space)))
                 independent_formatting_context->parent_context_did_dimension_child_root_box();
 
             compute_inset(item.box);
@@ -443,66 +429,17 @@ void FlexFormattingContext::set_main_axis_second_margin(FlexItem& item, CSSPixel
 // https://drafts.csswg.org/css-flexbox-1/#algo-available
 void FlexFormattingContext::determine_available_space_for_items(AvailableSpace const& available_space)
 {
-    // For each dimension, if that dimension of the flex container’s content box is a definite size, use that;
-    // if that dimension of the flex container is being sized under a min or max-content constraint, the available space in that dimension is that constraint;
-    // otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value.
-    // This might result in an infinite value.
-
-    Optional<AvailableSize> available_width_for_items;
-    if (m_flex_container_state.has_definite_width()) {
-        available_width_for_items = AvailableSize::make_definite(m_flex_container_state.content_width());
-    } else {
-        if (available_space.width.is_intrinsic_sizing_constraint()) {
-            available_width_for_items = available_space.width;
-        } else {
-            if (available_space.width.is_definite()) {
-                auto remaining = available_space.width.to_px_or_zero()
-                    - m_flex_container_state.margin_left
-                    - m_flex_container_state.margin_right
-                    - m_flex_container_state.border_left
-                    - m_flex_container_state.padding_right
-                    - m_flex_container_state.padding_left
-                    - m_flex_container_state.padding_right;
-                available_width_for_items = AvailableSize::make_definite(remaining);
-            } else {
-                available_width_for_items = AvailableSize::make_indefinite();
-            }
-        }
-    }
-
-    Optional<AvailableSize> available_height_for_items;
-    if (m_flex_container_state.has_definite_height()) {
-        available_height_for_items = AvailableSize::make_definite(m_flex_container_state.content_height());
-    } else {
-        if (available_space.height.is_intrinsic_sizing_constraint()) {
-            available_height_for_items = available_space.height;
-        } else {
-            if (available_space.height.is_definite()) {
-                auto remaining = available_space.height.to_px_or_zero()
-                    - m_flex_container_state.margin_top
-                    - m_flex_container_state.margin_bottom
-                    - m_flex_container_state.border_top
-                    - m_flex_container_state.padding_bottom
-                    - m_flex_container_state.padding_top
-                    - m_flex_container_state.padding_bottom;
-                available_height_for_items = AvailableSize::make_definite(remaining);
-            } else {
-                available_height_for_items = AvailableSize::make_indefinite();
-            }
-        }
-    }
-
     if (is_row_layout()) {
         m_available_space_for_items = AxisAgnosticAvailableSpace {
-            .main = *available_width_for_items,
-            .cross = *available_height_for_items,
-            .space = { *available_width_for_items, *available_height_for_items },
+            .main = available_space.width,
+            .cross = available_space.height,
+            .space = { available_space.width, available_space.height },
         };
     } else {
         m_available_space_for_items = AxisAgnosticAvailableSpace {
-            .main = *available_height_for_items,
-            .cross = *available_width_for_items,
-            .space = { *available_width_for_items, *available_height_for_items },
+            .main = available_space.height,
+            .cross = available_space.width,
+            .space = { available_space.width, available_space.height },
         };
     }
 }
@@ -783,59 +720,6 @@ CSSPixels FlexFormattingContext::content_based_minimum_size(FlexItem const& item
         return min(unclamped_size, specified_main_max_size(item.box));
     }
     return unclamped_size;
-}
-
-bool FlexFormattingContext::can_determine_size_of_child() const
-{
-    return true;
-}
-
-void FlexFormattingContext::determine_width_of_child(Box const&, AvailableSpace const&)
-{
-    // NOTE: For now, we simply do nothing here. If a child context is calling up to us
-    //       and asking us to determine its width, we've already done so as part of the
-    //       flex layout algorithm.
-}
-
-void FlexFormattingContext::determine_height_of_child(Box const&, AvailableSpace const&)
-{
-    // NOTE: For now, we simply do nothing here. If a child context is calling up to us
-    //       and asking us to determine its height, we've already done so as part of the
-    //       flex layout algorithm.
-}
-
-// https://drafts.csswg.org/css-flexbox-1/#algo-main-container
-void FlexFormattingContext::determine_main_size_of_flex_container()
-{
-    // Determine the main size of the flex container using the rules of the formatting context in which it participates.
-    // NOTE: The automatic block size of a block-level flex container is its max-content size.
-
-    // FIXME: The code below doesn't know how to size absolutely positioned flex containers at all.
-    //        We just leave it alone for now and let the parent context deal with it.
-    if (flex_container().is_absolutely_positioned())
-        return;
-
-    // FIXME: Once all parent contexts now how to size a given child, we can remove
-    //        `can_determine_size_of_child()`.
-    if (parent()->can_determine_size_of_child()) {
-        if (is_row_layout()) {
-            parent()->determine_width_of_child(flex_container(), m_available_space_for_flex_container->space);
-        } else {
-            parent()->determine_height_of_child(flex_container(), m_available_space_for_flex_container->space);
-        }
-        return;
-    }
-
-    if (is_row_layout()) {
-        if (!flex_container().is_out_of_flow(*parent()) && m_state.get(*flex_container().containing_block()).has_definite_width()) {
-            set_main_size(flex_container(), calculate_stretch_fit_width(flex_container(), m_available_space_for_flex_container->space.width));
-        } else {
-            set_main_size(flex_container(), calculate_max_content_width(flex_container()));
-        }
-    } else {
-        if (!has_definite_main_size(flex_container()))
-            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width.to_px_or_zero()));
-    }
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-break
@@ -1229,7 +1113,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line()
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
     // AD-HOC: We don't do this when the flex container is being sized under a min-content or max-content constraint.
-    if (is_single_line() && !m_available_space_for_flex_container->cross.is_intrinsic_sizing_constraint()) {
+    if (is_single_line() && !m_available_space_for_items->cross.is_intrinsic_sizing_constraint()) {
         auto const& computed_min_size = this->computed_cross_min_size(flex_container());
         auto const& computed_max_size = this->computed_cross_max_size(flex_container());
         auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
@@ -1553,7 +1437,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size()
     }
 
     // AD-HOC: We don't apply min/max cross size constraints when sizing the flex container under an intrinsic sizing constraint.
-    if (!m_available_space_for_flex_container->cross.is_intrinsic_sizing_constraint()) {
+    if (!m_available_space_for_items->cross.is_intrinsic_sizing_constraint()) {
         auto const& computed_min_size = this->computed_cross_min_size(flex_container());
         auto const& computed_max_size = this->computed_cross_max_size(flex_container());
         auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
@@ -1689,7 +1573,7 @@ void FlexFormattingContext::copy_dimensions_from_flex_items_to_boxes()
 // https://drafts.csswg.org/css-flexbox-1/#intrinsic-sizes
 void FlexFormattingContext::determine_intrinsic_size_of_flex_container()
 {
-    if (m_available_space_for_flex_container->main.is_intrinsic_sizing_constraint()) {
+    if (m_available_space_for_items->main.is_intrinsic_sizing_constraint()) {
         CSSPixels main_size = calculate_intrinsic_main_size_of_flex_container();
         set_main_size(flex_container(), main_size);
     }
@@ -2051,7 +1935,7 @@ CSSPixels FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const
 CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
-        auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
+        auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space);
         if (available_space.width.is_indefinite()) {
             available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
         }
@@ -2063,7 +1947,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const
 CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
-        auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
+        auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space);
         if (available_space.width.is_indefinite()) {
             available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
         }
