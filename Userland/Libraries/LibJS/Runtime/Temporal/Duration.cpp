@@ -1331,16 +1331,11 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
 
     // 11. If largestUnit is not one of "year", "month", "week", or "day", then
     if (!largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
-        // a. Let diffNs be ! DifferenceInstant(relativeTo.[[Nanoseconds]], endNs, 1, "nanosecond", "halfExpand").
-        auto* diff_ns = difference_instant(vm, relative_to.nanoseconds(), *end_ns, 1, "nanosecond"sv, "halfExpand"sv);
+        // a. Let result be DifferenceInstant(zonedRelativeTo.[[Nanoseconds]], endNs, 1, "nanosecond", largestUnit, "halfExpand").
+        auto result = difference_instant(vm, relative_to.nanoseconds(), *end_ns, 1, "nanosecond"sv, largest_unit, "halfExpand"sv);
 
-        // b. Assert: The following steps cannot fail due to overflow in the Number domain because abs(diffNs) ≤ 2 × nsMaxInstant.
-
-        // c. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, diffNs, largestUnit).
-        auto result = MUST(balance_duration(vm, 0, 0, 0, 0, 0, 0, diff_ns->big_integer(), largest_unit));
-
-        // d. Return ? CreateDurationRecord(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-        return create_duration_record(vm, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
+        // b. Return ! CreateDurationRecord(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+        return create_duration_record(0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
     }
 
     // 12. Return ? DifferenceZonedDateTime(relativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit, OrdinaryObjectCreate(null)).
