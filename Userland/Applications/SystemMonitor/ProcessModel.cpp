@@ -453,8 +453,10 @@ void ProcessModel::update()
 
     HashTable<int> live_tids;
     u64 total_time_scheduled_diff = 0;
+    size_t process_count = 0;
     if (!all_processes_or_error.is_error()) {
         auto all_processes = all_processes_or_error.value();
+        process_count = all_processes.processes.size();
         if (m_has_total_scheduled_time)
             total_time_scheduled_diff = all_processes.total_time_scheduled - m_total_time_scheduled;
 
@@ -463,6 +465,13 @@ void ProcessModel::update()
         m_has_total_scheduled_time = true;
 
         for (auto const& process : all_processes.processes) {
+            // Don't include the Idle Task in process statistics.
+            static constexpr pid_t IDLE_TASK_PID = 0;
+            if (process.pid == IDLE_TASK_PID) {
+                process_count--;
+                continue;
+            }
+
             NonnullOwnPtr<Process>* process_state = nullptr;
             for (size_t i = 0; i < m_processes.size(); ++i) {
                 auto* other_process = &m_processes[i];
@@ -607,7 +616,7 @@ void ProcessModel::update()
         on_cpu_info_change(m_cpus);
 
     if (on_state_update)
-        on_state_update(!all_processes_or_error.is_error() ? all_processes_or_error.value().processes.size() : 0, m_threads.size());
+        on_state_update(process_count, m_threads.size());
 
     // FIXME: This is a rather hackish way of invalidating indices.
     //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indices.
