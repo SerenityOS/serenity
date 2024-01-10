@@ -643,7 +643,7 @@ void CookieJar::purge_expired_cookies()
 
     m_storage.visit(
         [&](PersistedStorage& storage) {
-            storage.database.execute_statement(storage.statements.expire_cookie, {}, {}, {}, now);
+            storage.database.execute_statement(storage.statements.expire_cookie, {}, {}, {}, now.seconds_since_epoch());
         },
         [&](TransientStorage& storage) {
             Vector<CookieStorageKey> keys_to_evict;
