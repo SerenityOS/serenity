@@ -447,22 +447,22 @@ void ProcessModel::update()
         return;
     }
 
-    auto all_processes = Core::ProcessStatisticsReader::get_all(*m_process_statistics_file, true);
+    auto all_processes_or_error = Core::ProcessStatisticsReader::get_all(*m_process_statistics_file, true);
 
     auto previous_tid_count = m_threads.size();
 
     HashTable<int> live_tids;
     u64 total_time_scheduled_diff = 0;
-    if (!all_processes.is_error()) {
+    if (!all_processes_or_error.is_error()) {
+        auto all_processes = all_processes_or_error.value();
         if (m_has_total_scheduled_time)
-            total_time_scheduled_diff = all_processes.value().total_time_scheduled - m_total_time_scheduled;
+            total_time_scheduled_diff = all_processes.total_time_scheduled - m_total_time_scheduled;
 
-        m_total_time_scheduled = all_processes.value().total_time_scheduled;
-        m_total_time_scheduled_kernel = all_processes.value().total_time_scheduled_kernel;
+        m_total_time_scheduled = all_processes.total_time_scheduled;
+        m_total_time_scheduled_kernel = all_processes.total_time_scheduled_kernel;
         m_has_total_scheduled_time = true;
 
-        for (size_t i = 0; i < all_processes.value().processes.size(); ++i) {
-            auto const& process = all_processes.value().processes[i];
+        for (auto const& process : all_processes.processes) {
             NonnullOwnPtr<Process>* process_state = nullptr;
             for (size_t i = 0; i < m_processes.size(); ++i) {
                 auto* other_process = &m_processes[i];
@@ -607,7 +607,7 @@ void ProcessModel::update()
         on_cpu_info_change(m_cpus);
 
     if (on_state_update)
-        on_state_update(!all_processes.is_error() ? all_processes.value().processes.size() : 0, m_threads.size());
+        on_state_update(!all_processes_or_error.is_error() ? all_processes_or_error.value().processes.size() : 0, m_threads.size());
 
     // FIXME: This is a rather hackish way of invalidating indices.
     //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indices.
