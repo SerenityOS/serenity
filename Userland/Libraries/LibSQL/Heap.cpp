@@ -49,6 +49,7 @@ ErrorOr<void> Heap::open()
     } else {
         file_size = stat_buffer.st_size;
     }
+
     if (file_size > 0) {
         m_next_block = file_size / Block::SIZE;
         m_highest_block_written = m_next_block - 1;
@@ -357,6 +358,7 @@ ErrorOr<void> Heap::initialize_zero_block()
     m_tables_root = 0;
     m_table_columns_root = 0;
     m_next_block = 1;
+    m_highest_block_written = 0;
     for (auto& user : m_user_values)
         user = 0u;
     return update_zero_block();
