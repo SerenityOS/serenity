@@ -66,7 +66,7 @@ private:
  */
 class Heap : public RefCounted<Heap> {
 public:
-    static constexpr u32 VERSION = 4;
+    static constexpr u32 VERSION = 5;
 
     static ErrorOr<NonnullRefPtr<Heap>> create(ByteString);
     virtual ~Heap();

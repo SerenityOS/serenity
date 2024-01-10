@@ -484,8 +484,7 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
         if (value.type() != SQL::SQLType::Integer)
             return Error::from_string_view(name);
 
-        auto time = value.to_int<i64>().value();
-        field = UnixDateTime::from_seconds_since_epoch(time);
+        field = value.to_unix_date_time().value();
         return {};
     };
 
@@ -528,9 +527,9 @@ void CookieJar::insert_cookie_into_database(Web::Cookie::Cookie const& cookie)
                 cookie.name.to_byte_string(),
                 cookie.value.to_byte_string(),
                 to_underlying(cookie.same_site),
-                cookie.creation_time.seconds_since_epoch(),
-                cookie.last_access_time.seconds_since_epoch(),
-                cookie.expiry_time.seconds_since_epoch(),
+                cookie.creation_time,
+                cookie.last_access_time,
+                cookie.expiry_time,
                 cookie.domain.to_byte_string(),
                 cookie.path.to_byte_string(),
                 cookie.secure,
@@ -552,9 +551,9 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
                 storage.statements.update_cookie, {}, [this]() { purge_expired_cookies(); }, {},
                 cookie.value.to_byte_string(),
                 to_underlying(cookie.same_site),
-                cookie.creation_time.seconds_since_epoch(),
-                cookie.last_access_time.seconds_since_epoch(),
-                cookie.expiry_time.seconds_since_epoch(),
+                cookie.creation_time,
+                cookie.last_access_time,
+                cookie.expiry_time,
                 cookie.secure,
                 cookie.http_only,
                 cookie.host_only,
