@@ -504,7 +504,11 @@ ByteString PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Sour
 
 void PageClient::page_did_set_cookie(const URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
-    client().async_did_set_cookie(url, cookie, static_cast<u8>(source));
+    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidSetCookie>(url, cookie, static_cast<u8>(source));
+    if (!response) {
+        dbgln("WebContent client disconnected during DidSetCookie. Exiting peacefully.");
+        exit(0);
+    }
 }
 
 void PageClient::page_did_update_cookie(Web::Cookie::Cookie cookie)

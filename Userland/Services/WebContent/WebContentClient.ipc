@@ -54,7 +54,7 @@ endpoint WebContentClient
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
     did_request_named_cookie(URL url, ByteString name) => (Optional<Web::Cookie::Cookie> cookie)
     did_request_cookie(URL url, u8 source) => (ByteString cookie)
-    did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
+    did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) => ()
     did_update_cookie(Web::Cookie::Cookie cookie) =|
     did_update_resource_count(i32 count_waiting) =|
     did_request_new_tab(Web::HTML::ActivateTab activate_tab) => (String handle)
