@@ -29,7 +29,10 @@ RefPtr<Request> RequestClient::start_request(ByteString const& method, URL const
     if (body_result.is_error())
         return nullptr;
 
-    auto response = IPCProxy::start_request(method, url, headers_or_error.release_value(), body_result.release_value(), proxy_data);
+    auto maybe_response = IPCProxy::try_start_request(method, url, headers_or_error.release_value(), body_result.release_value(), proxy_data);
+    if (maybe_response.is_error())
+        return nullptr;
+    auto response = maybe_response.release_value();
     auto request_id = response.request_id();
     if (request_id < 0 || !response.response_fd().has_value())
         return nullptr;
