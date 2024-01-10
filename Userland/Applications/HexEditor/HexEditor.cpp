@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -243,14 +244,10 @@ ByteBuffer HexEditor::get_selected_bytes()
     return data;
 }
 
-void HexEditor::mousedown_event(GUI::MouseEvent& event)
+Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) const
 {
-    if (event.button() != GUI::MouseButton::Primary) {
-        return;
-    }
-
-    auto absolute_x = horizontal_scrollbar().value() + event.x();
-    auto absolute_y = vertical_scrollbar().value() + event.y();
+    auto absolute_x = horizontal_scrollbar().value() + position.x();
+    auto absolute_y = vertical_scrollbar().value() + position.y();
 
     auto hex_start_x = frame_thickness() + m_address_bar_width;
     auto hex_start_y = frame_thickness() + m_padding;
@@ -262,111 +259,81 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
     auto text_end_x = static_cast<int>(text_start_x + bytes_per_row() * character_width());
     auto text_end_y = static_cast<int>(text_start_y + m_padding + total_rows() * line_height());
 
+    // Hexadecimal display
     if (absolute_x >= hex_start_x && absolute_x <= hex_end_x && absolute_y >= hex_start_y && absolute_y <= hex_end_y) {
         if (absolute_x < hex_start_x || absolute_y < hex_start_y)
-            return;
+            return {};
 
         auto byte_x = (absolute_x - hex_start_x) / cell_width();
         auto byte_y = (absolute_y - hex_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
         if (offset >= m_document->size())
-            return;
+            return {};
 
-        dbgln_if(HEX_DEBUG, "Editor::mousedown_event(hex): offset={}", offset);
-
-        m_edit_mode = EditMode::Hex;
-        m_cursor_at_low_nibble = false;
-        m_position = offset;
-        m_in_drag_select = true;
-        m_selection.start = offset;
-        m_selection.end = offset;
-        update();
-        update_status();
+        return OffsetData { offset, EditMode::Hex };
     }
 
+    // Text display
     if (absolute_x >= text_start_x && absolute_x <= text_end_x && absolute_y >= text_start_y && absolute_y <= text_end_y) {
         if (absolute_x < hex_start_x || absolute_y < hex_start_y)
-            return;
+            return {};
 
         auto byte_x = (absolute_x - text_start_x) / character_width();
         auto byte_y = (absolute_y - text_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
         if (offset >= m_document->size())
-            return;
+            return {};
 
-        dbgln_if(HEX_DEBUG, "Editor::mousedown_event(text): offset={}", offset);
-
-        m_position = offset;
-        m_cursor_at_low_nibble = false;
-        m_in_drag_select = true;
-        m_selection.start = offset;
-        m_selection.end = offset;
-        m_edit_mode = EditMode::Text;
-        update();
-        update_status();
+        return OffsetData { offset, EditMode::Text };
     }
+
+    return {};
+}
+
+void HexEditor::mousedown_event(GUI::MouseEvent& event)
+{
+    if (event.button() != GUI::MouseButton::Primary) {
+        return;
+    }
+
+    auto maybe_offset_data = offset_at(event.position());
+    if (!maybe_offset_data.has_value())
+        return;
+    auto offset_data = maybe_offset_data.release_value();
+
+    dbgln_if(HEX_DEBUG, "Editor::mousedown_event({}): offset={}", offset_data.panel == EditMode::Hex ? "hex"sv : "text"sv, offset_data.offset);
+    m_edit_mode = offset_data.panel;
+    m_cursor_at_low_nibble = false;
+    m_position = offset_data.offset;
+    m_in_drag_select = true;
+    m_selection.start = offset_data.offset;
+    m_selection.end = offset_data.offset;
+    update();
+    update_status();
 }
 
 void HexEditor::mousemove_event(GUI::MouseEvent& event)
 {
-    auto absolute_x = horizontal_scrollbar().value() + event.x();
-    auto absolute_y = vertical_scrollbar().value() + event.y();
+    auto maybe_offset_data = offset_at(event.position());
 
-    auto hex_start_x = frame_thickness() + m_address_bar_width;
-    auto hex_start_y = frame_thickness() + m_padding;
-    auto hex_end_x = static_cast<int>(hex_start_x + bytes_per_row() * cell_width());
-    auto hex_end_y = static_cast<int>(hex_start_y + m_padding + total_rows() * line_height());
-
-    auto text_start_x = static_cast<int>(frame_thickness() + m_address_bar_width + 2 * m_padding + bytes_per_row() * cell_width());
-    auto text_start_y = frame_thickness() + m_padding;
-    auto text_end_x = static_cast<int>(text_start_x + bytes_per_row() * character_width());
-    auto text_end_y = static_cast<int>(text_start_y + m_padding + total_rows() * line_height());
-
-    if ((absolute_x >= hex_start_x && absolute_x <= hex_end_x
-            && absolute_y >= hex_start_y && absolute_y <= hex_end_y)
-        || (absolute_x >= text_start_x && absolute_x <= text_end_x
-            && absolute_y >= text_start_y && absolute_y <= text_end_y)) {
+    if (maybe_offset_data.has_value()) {
         set_override_cursor(Gfx::StandardCursor::IBeam);
     } else {
         set_override_cursor(Gfx::StandardCursor::None);
     }
 
     if (m_in_drag_select) {
-        if (absolute_x >= hex_start_x && absolute_x <= hex_end_x && absolute_y >= hex_start_y && absolute_y <= hex_end_y) {
-            if (absolute_x < hex_start_x || absolute_y < hex_start_y)
-                return;
-
-            auto byte_x = (absolute_x - hex_start_x) / cell_width();
-            auto byte_y = (absolute_y - hex_start_y) / line_height();
-            auto offset = (byte_y * m_bytes_per_row) + byte_x;
-
-            if (offset > m_document->size())
-                return;
-
-            m_selection.end = offset;
-            m_position = (m_selection.end <= m_selection.start) ? offset : offset - 1;
-            scroll_position_into_view(offset);
+        if (maybe_offset_data.has_value()) {
+            auto offset_data = maybe_offset_data.release_value();
+            m_selection.end = offset_data.offset;
+            m_position = (m_selection.end <= m_selection.start) ? offset_data.offset : offset_data.offset - 1;
+            scroll_position_into_view(offset_data.offset);
         }
 
-        if (absolute_x >= text_start_x && absolute_x <= text_end_x && absolute_y >= text_start_y && absolute_y <= text_end_y) {
-            if (absolute_x < hex_start_x || absolute_y < hex_start_y)
-                return;
-
-            auto byte_x = (absolute_x - text_start_x) / character_width();
-            auto byte_y = (absolute_y - text_start_y) / line_height();
-            auto offset = (byte_y * m_bytes_per_row) + byte_x;
-            if (offset > m_document->size())
-                return;
-
-            m_selection.end = offset;
-            m_position = (m_selection.end <= m_selection.start) ? offset : offset - 1;
-            scroll_position_into_view(offset);
-        }
-        update_status();
         update();
-        return;
+        update_status();
     }
 }
 

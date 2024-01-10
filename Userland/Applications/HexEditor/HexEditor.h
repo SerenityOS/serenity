@@ -100,6 +100,12 @@ private:
     size_t cell_width() const { return character_width() * 3; }
     size_t offset_margin_width() const { return 80; }
 
+    struct OffsetData {
+        size_t offset;
+        EditMode panel;
+    };
+    Optional<OffsetData> offset_at(Gfx::IntPoint position) const;
+
     ErrorOr<void> hex_mode_keydown_event(GUI::KeyEvent&);
     ErrorOr<void> text_mode_keydown_event(GUI::KeyEvent&);
 
