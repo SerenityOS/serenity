@@ -416,6 +416,7 @@ RENDERER_HANDLER(text_begin)
 {
     m_text_matrix = Gfx::AffineTransform();
     m_text_line_matrix = Gfx::AffineTransform();
+    m_text_rendering_matrix_is_dirty = true;
     return {};
 }
 
