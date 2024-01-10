@@ -484,6 +484,8 @@ Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, d
     return result_nanoseconds.plus(total_microseconds.multiplied_by(Crypto::UnsignedBigInteger(1000)));
 }
 
+// FIXME: This function does not exist in newer versions of the spec. It does not properly support as an example a roundingMode of 'ceil'
+//        Update all callers of this function to spec as required.
 // 7.5.18 BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-balanceduration
 ThrowCompletionOr<TimeDurationRecord> balance_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit, Object* relative_to)
 {
