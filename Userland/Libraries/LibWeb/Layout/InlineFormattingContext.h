@@ -34,10 +34,6 @@ public:
     bool any_floats_intrude_at_y(CSSPixels y) const;
     bool can_fit_new_line_at_y(CSSPixels y) const;
 
-    virtual bool can_determine_size_of_child() const override;
-    virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
-    virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
-
     CSSPixels vertical_float_clearance() const;
     void set_vertical_float_clearance(CSSPixels);
 

@@ -89,10 +89,6 @@ public:
     [[nodiscard]] CSSPixels calculate_stretch_fit_width(Box const&, AvailableSize const&) const;
     [[nodiscard]] CSSPixels calculate_stretch_fit_height(Box const&, AvailableSize const&) const;
 
-    virtual bool can_determine_size_of_child() const { return false; }
-    virtual void determine_width_of_child(Box const&, AvailableSpace const&) { }
-    virtual void determine_height_of_child(Box const&, AvailableSpace const&) { }
-
     virtual CSSPixelPoint calculate_static_position(Box const&) const;
     bool can_skip_is_anonymous_text_run(Box&);
 

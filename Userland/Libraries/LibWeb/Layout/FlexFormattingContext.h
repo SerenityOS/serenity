@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +23,6 @@ public:
     virtual CSSPixels automatic_content_height() const override;
 
     Box const& flex_container() const { return context_box(); }
-
-    virtual bool can_determine_size_of_child() const override;
-    virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
-    virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
     virtual CSSPixelPoint calculate_static_position(Box const&) const override;
 
@@ -162,8 +158,6 @@ private:
 
     void determine_flex_base_size_and_hypothetical_main_size(FlexItem&);
 
-    void determine_main_size_of_flex_container();
-
     void collect_flex_items_into_flex_lines();
 
     void resolve_flexible_lengths();
@@ -229,7 +223,6 @@ private:
         AvailableSpace space;
     };
     Optional<AxisAgnosticAvailableSpace> m_available_space_for_items;
-    Optional<AxisAgnosticAvailableSpace> m_available_space_for_flex_container;
 };
 
 }

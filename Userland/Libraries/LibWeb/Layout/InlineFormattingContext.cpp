@@ -172,6 +172,10 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
 
     box_state.set_content_width(width);
 
+    // NOTE: Flex containers with `auto` height are treated as `max-content`, so we can compute their height early.
+    if (box_state.has_definite_height() || box.display().is_flex_inside())
+        parent().compute_height(box, AvailableSpace(AvailableSize::make_definite(width), AvailableSize::make_definite(m_containing_block_state.content_height())));
+
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
 
     auto const& height_value = box.computed_values().height();
@@ -387,21 +391,6 @@ bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
     if (bottom_left_edge > top_right_edge)
         return false;
     return true;
-}
-
-bool InlineFormattingContext::can_determine_size_of_child() const
-{
-    return parent().can_determine_size_of_child();
-}
-
-void InlineFormattingContext::determine_width_of_child(Box const& box, AvailableSpace const& available_space)
-{
-    return parent().determine_width_of_child(box, available_space);
-}
-
-void InlineFormattingContext::determine_height_of_child(Box const& box, AvailableSpace const& available_space)
-{
-    return parent().determine_height_of_child(box, available_space);
 }
 
 CSSPixels InlineFormattingContext::vertical_float_clearance() const

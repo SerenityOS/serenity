@@ -680,7 +680,8 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
-    if (box.is_replaced_box())
+    // NOTE: Flex containers with `auto` height are treated as `max-content`, so we can compute their height early.
+    if (box.is_replaced_box() || box.display().is_flex_inside())
         compute_height(box, available_space);
 
     if (independent_formatting_context) {
@@ -1245,17 +1246,6 @@ CSSPixels BlockFormattingContext::greatest_child_width(Box const& box) const
         });
     }
     return max_width;
-}
-
-void BlockFormattingContext::determine_width_of_child(Box const&, AvailableSpace const&)
-{
-    // NOTE: We don't do anything here, since we'll have already determined the width of the child
-    //       before recursing into nested layout within the child.
-}
-
-void BlockFormattingContext::determine_height_of_child(Box const& box, AvailableSpace const& available_space)
-{
-    compute_height(box, available_space);
 }
 
 }

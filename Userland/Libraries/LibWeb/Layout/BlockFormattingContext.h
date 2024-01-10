@@ -50,10 +50,6 @@ public:
 
     void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const&);
 
-    virtual bool can_determine_size_of_child() const override { return true; }
-    virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
-    virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
-
     void resolve_vertical_box_model_metrics(Box const&);
 
     enum class DidIntroduceClearance {
