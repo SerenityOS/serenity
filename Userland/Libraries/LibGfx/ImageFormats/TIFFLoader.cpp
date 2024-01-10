@@ -564,6 +564,11 @@ ErrorOr<ImageFrameDescriptor> TIFFImageDecoderPlugin::frame(size_t index, Option
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
 }
 
+Optional<Metadata const&> TIFFImageDecoderPlugin::metadata()
+{
+    return m_context->metadata();
+}
+
 ErrorOr<Optional<ReadonlyBytes>> TIFFImageDecoderPlugin::icc_data()
 {
     return m_context->metadata().icc_profile().map([](auto const& buffer) -> ReadonlyBytes { return buffer.bytes(); });
