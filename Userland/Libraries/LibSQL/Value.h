@@ -77,6 +77,7 @@ public:
     [[nodiscard]] ByteString to_byte_string() const;
     [[nodiscard]] Optional<double> to_double() const;
     [[nodiscard]] Optional<bool> to_bool() const;
+    [[nodiscard]] Optional<UnixDateTime> to_unix_date_time() const;
     [[nodiscard]] Optional<Vector<Value>> to_vector() const;
 
     template<Integer T>
