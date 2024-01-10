@@ -6,6 +6,7 @@
  */
 
 #include <AK/ByteString.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <LibSQL/SQLClient.h>
 
@@ -202,6 +203,8 @@ void SQLClient::execution_error(u64 statement_id, u64 execution_id, SQLErrorCode
 
 void SQLClient::next_result(u64 statement_id, u64 execution_id, Vector<Value> const& row)
 {
+    ScopeGuard guard { [&]() { async_ready_for_next_result(statement_id, execution_id); } };
+
     if (!on_next_result) {
         StringBuilder builder;
         builder.join(", "sv, row, "\"{}\""sv);
