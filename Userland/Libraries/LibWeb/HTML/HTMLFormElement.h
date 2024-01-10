@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Time.h>
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/AbstractBrowsingContext.h>
 #include <LibWeb/HTML/HTMLElement.h>
@@ -95,6 +96,12 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
+    // ^PlatformObject
+    virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
+    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const override;
+    virtual Vector<FlyString> supported_property_names() const override;
+    virtual bool is_supported_property_index(u32) const override;
+
     ErrorOr<void> populate_vector_with_submittable_elements_in_tree_order(JS::NonnullGCPtr<DOM::Element> element, Vector<JS::NonnullGCPtr<DOM::Element>>& elements);
 
     ErrorOr<String> pick_an_encoding() const;
@@ -112,6 +119,13 @@ private:
     bool m_locked_for_reset { false };
 
     Vector<JS::GCPtr<HTMLElement>> m_associated_elements;
+
+    // https://html.spec.whatwg.org/multipage/forms.html#past-names-map
+    struct PastNameEntry {
+        JS::GCPtr<DOM::Node const> node;
+        MonotonicTime insertion_time;
+    };
+    HashMap<FlyString, PastNameEntry> mutable m_past_names_map;
 
     JS::GCPtr<DOM::HTMLFormControlsCollection> mutable m_elements;
 

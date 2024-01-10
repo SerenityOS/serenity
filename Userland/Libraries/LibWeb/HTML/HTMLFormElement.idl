@@ -2,7 +2,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlformelement
-[Exposed=Window]
+[Exposed=Window, LegacyOverrideBuiltIns, LegacyUnenumerableNamedProperties]
 interface HTMLFormElement : HTMLElement {
 
     [HTMLConstructor] constructor();
@@ -21,8 +21,8 @@ interface HTMLFormElement : HTMLElement {
 
     [SameObject] readonly attribute HTMLFormControlsCollection elements;
     readonly attribute unsigned long length;
-    // FIXME: getter Element (unsigned long index);
-    // FIXME: getter (RadioNodeList or Element) (DOMString name);
+    getter Element (unsigned long index);
+    getter (RadioNodeList or Element) (DOMString name);
 
     undefined submit();
     // FIXME: undefined requestSubmit(optional HTMLElement? submitter = null);
