@@ -277,6 +277,15 @@ Optional<bool> Value::to_bool() const
         });
 }
 
+Optional<UnixDateTime> Value::to_unix_date_time() const
+{
+    auto time = to_int<i64>();
+    if (!time.has_value())
+        return {};
+
+    return UnixDateTime::from_milliseconds_since_epoch(*time);
+}
+
 Optional<Vector<Value>> Value::to_vector() const
 {
     if (is_null() || (type() != SQLType::Tuple))

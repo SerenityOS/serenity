@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 
+#include <AK/Time.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Row.h>
 #include <LibSQL/Tuple.h>
@@ -469,6 +470,39 @@ TEST_CASE(serialize_boolean_value)
     EXPECT_EQ(v2.type(), SQL::SQLType::Boolean);
     EXPECT_EQ(v2.to_bool(), true);
     EXPECT_EQ(v, v2);
+}
+
+TEST_CASE(unix_date_time_value)
+{
+    auto now = UnixDateTime::now();
+    {
+        SQL::Value value(now);
+        EXPECT_EQ(value.type(), SQL::SQLType::Integer);
+
+        auto result = value.to_unix_date_time();
+        VERIFY(result.has_value());
+        EXPECT_EQ(result->milliseconds_since_epoch(), now.milliseconds_since_epoch());
+    }
+    {
+        auto now_plus_10s = now + Duration::from_seconds(10);
+
+        SQL::Value value(now_plus_10s);
+        EXPECT_EQ(value.type(), SQL::SQLType::Integer);
+
+        auto result = value.to_unix_date_time();
+        VERIFY(result.has_value());
+        EXPECT_EQ(result->milliseconds_since_epoch(), now_plus_10s.milliseconds_since_epoch());
+    }
+    {
+        auto now_minus_10s = now - Duration::from_seconds(10);
+
+        SQL::Value value(now_minus_10s);
+        EXPECT_EQ(value.type(), SQL::SQLType::Integer);
+
+        auto result = value.to_unix_date_time();
+        VERIFY(result.has_value());
+        EXPECT_EQ(result->milliseconds_since_epoch(), now_minus_10s.milliseconds_since_epoch());
+    }
 }
 
 TEST_CASE(tuple_value)
