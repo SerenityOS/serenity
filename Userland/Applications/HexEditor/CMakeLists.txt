@@ -4,11 +4,14 @@ serenity_component(
     TARGETS HexEditor
 )
 
-compile_gml(HexEditorWidget.gml HexEditorWidgetGML.cpp)
-compile_gml(GoToOffsetWidget.gml GoToOffsetWidgetGML.cpp)
+compile_gml(EditAnnotationWidget.gml EditAnnotationWidgetGML.cpp)
 compile_gml(FindWidget.gml FindWidgetGML.cpp)
+compile_gml(GoToOffsetWidget.gml GoToOffsetWidgetGML.cpp)
+compile_gml(HexEditorWidget.gml HexEditorWidgetGML.cpp)
 
 set(SOURCES
+    EditAnnotationDialog.cpp
+    EditAnnotationWidgetGML.cpp
     FindDialog.cpp
     FindWidgetGML.cpp
     GoToOffsetDialog.cpp
