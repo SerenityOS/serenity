@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
@@ -18,6 +19,7 @@
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/HTML/HTMLOutputElement.h>
@@ -36,6 +38,12 @@ JS_DEFINE_ALLOCATOR(HTMLFormElement);
 HTMLFormElement::HTMLFormElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    m_legacy_platform_object_flags = LegacyPlatformObjectFlags {
+        .supports_indexed_properties = true,
+        .supports_named_properties = true,
+        .has_legacy_unenumerable_named_properties_interface_extended_attribute = true,
+        .has_legacy_override_built_ins_interface_extended_attribute = true,
+    };
 }
 
 HTMLFormElement::~HTMLFormElement() = default;
@@ -299,6 +307,9 @@ void HTMLFormElement::add_associated_element(Badge<FormAssociatedElement>, HTMLE
 void HTMLFormElement::remove_associated_element(Badge<FormAssociatedElement>, HTMLElement& element)
 {
     m_associated_elements.remove_first_matching([&](auto& entry) { return entry.ptr() == &element; });
+
+    // If an element listed in a form element's past names map changes form owner, then its entries must be removed from that map.
+    m_past_names_map.remove_all_matching([&](auto&, auto const& entry) { return entry.node == &element; });
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fs-action
@@ -382,19 +393,21 @@ HTMLFormElement::EncodingTypeAttributeState HTMLFormElement::encoding_type_state
     return encoding_type_attribute_to_encoding_type_state(this->deprecated_attribute(AttributeNames::enctype));
 }
 
-static bool is_form_control(DOM::Element const& element)
+// https://html.spec.whatwg.org/multipage/forms.html#category-listed
+static bool is_listed_element(DOM::Element const& element)
 {
+    // Denotes elements that are listed in the form.elements and fieldset.elements APIs.
+    // These elements also have a form content attribute, and a matching form IDL attribute,
+    // that allow authors to specify an explicit form owner.
+    // => button, fieldset, input, object, output, select, textarea, form-associated custom elements
+
     if (is<HTMLButtonElement>(element)
         || is<HTMLFieldSetElement>(element)
+        || is<HTMLInputElement>(element)
         || is<HTMLObjectElement>(element)
         || is<HTMLOutputElement>(element)
         || is<HTMLSelectElement>(element)
         || is<HTMLTextAreaElement>(element)) {
-        return true;
-    }
-
-    if (is<HTMLInputElement>(element)
-        && !element.deprecated_get_attribute(HTML::AttributeNames::type).equals_ignoring_ascii_case("image"sv)) {
         return true;
     }
 
@@ -403,12 +416,35 @@ static bool is_form_control(DOM::Element const& element)
     return false;
 }
 
+static bool is_form_control(DOM::Element const& element, HTMLFormElement const& form)
+{
+    // The elements IDL attribute must return an HTMLFormControlsCollection rooted at the form element's root,
+    // whose filter matches listed elements whose form owner is the form element,
+    // with the exception of input elements whose type attribute is in the Image Button state, which must,
+    // for historical reasons, be excluded from this particular collection.
+
+    if (!is_listed_element(element))
+        return false;
+
+    if (is<HTMLInputElement>(element)
+        && static_cast<HTMLInputElement const&>(element).type_state() == HTMLInputElement::TypeAttributeState::ImageButton) {
+        return false;
+    }
+
+    auto const& form_associated_element = dynamic_cast<FormAssociatedElement const&>(element);
+    if (form_associated_element.form() != &form)
+        return false;
+
+    return true;
+}
+
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-elements
 JS::NonnullGCPtr<DOM::HTMLFormControlsCollection> HTMLFormElement::elements() const
 {
     if (!m_elements) {
-        m_elements = DOM::HTMLFormControlsCollection::create(const_cast<HTMLFormElement&>(*this), DOM::HTMLCollection::Scope::Descendants, [](Element const& element) {
-            return is_form_control(element);
+        auto& root = verify_cast<ParentNode>(const_cast<HTMLFormElement*>(this)->root());
+        m_elements = DOM::HTMLFormControlsCollection::create(root, DOM::HTMLCollection::Scope::Descendants, [this](Element const& element) {
+            return is_form_control(element, *this);
         });
     }
     return *m_elements;
@@ -813,6 +849,178 @@ void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, PO
     // 5. Set the form's planned navigation to the just-queued task.
     m_planned_navigation = HTML::main_thread_event_loop().task_queue().last_added_task();
     VERIFY(m_planned_navigation);
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#the-form-element:supported-property-indices
+bool HTMLFormElement::is_supported_property_index(u32 index) const
+{
+    // The supported property indices at any instant are the indices supported by the object returned by the elements attribute at that instant.
+    return index < elements()->length();
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-item
+WebIDL::ExceptionOr<JS::Value> HTMLFormElement::item_value(size_t index) const
+{
+    // To determine the value of an indexed property for a form element, the user agent must return the value returned by
+    // the item method on the elements collection, when invoked with the given index as its argument.
+    return elements()->item(index);
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#the-form-element:supported-property-names
+Vector<FlyString> HTMLFormElement::supported_property_names() const
+{
+    // The supported property names consist of the names obtained from the following algorithm, in the order obtained from this algorithm:
+
+    // 1. Let sourced names be an initially empty ordered list of tuples consisting of a string, an element, a source,
+    //    where the source is either id, name, or past, and, if the source is past, an age.
+    struct SourcedName {
+        FlyString name;
+        JS::GCPtr<DOM::Element const> element;
+        enum class Source {
+            Id,
+            Name,
+            Past,
+        } source;
+        Duration age;
+    };
+    Vector<SourcedName> sourced_names;
+
+    // 2. For each listed element candidate whose form owner is the form element, with the exception of any
+    //    input elements whose type attribute is in the Image Button state:
+    for (auto const& candidate : m_associated_elements) {
+        if (!is_form_control(*candidate, *this))
+            continue;
+
+        // 1. If candidate has an id attribute, add an entry to sourced names with that id attribute's value as the
+        //    string, candidate as the element, and id as the source.
+        if (candidate->has_attribute(HTML::AttributeNames::id))
+            sourced_names.append(SourcedName { candidate->id().value(), candidate, SourcedName::Source::Id, {} });
+
+        // 2. If candidate has a name attribute, add an entry to sourced names with that name attribute's value as the
+        //    string, candidate as the element, and name as the source.
+        if (candidate->has_attribute(HTML::AttributeNames::name))
+            sourced_names.append(SourcedName { candidate->attribute(HTML::AttributeNames::name).value(), candidate, SourcedName::Source::Name, {} });
+    }
+
+    // 3. For each img element candidate whose form owner is the form element:
+    for (auto const& candidate : m_associated_elements) {
+        if (!is<HTMLImageElement>(*candidate))
+            continue;
+
+        // Every element in m_associated_elements has this as the form owner.
+
+        // 1. If candidate has an id attribute, add an entry to sourced names with that id attribute's value as the
+        //    string, candidate as the element, and id as the source.
+        if (candidate->has_attribute(HTML::AttributeNames::id))
+            sourced_names.append(SourcedName { candidate->id().value(), candidate, SourcedName::Source::Id, {} });
+
+        // 2. If candidate has a name attribute, add an entry to sourced names with that name attribute's value as the
+        //    string, candidate as the element, and name as the source.
+        if (candidate->has_attribute(HTML::AttributeNames::name))
+            sourced_names.append(SourcedName { candidate->attribute(HTML::AttributeNames::name).value(), candidate, SourcedName::Source::Name, {} });
+    }
+
+    // 4. For each entry past entry in the past names map add an entry to sourced names with the past entry's name as
+    //    the string, past entry's element as the element, past as the source, and the length of time past entry has
+    //    been in the past names map as the age.
+    auto const now = MonotonicTime::now();
+    for (auto const& entry : m_past_names_map)
+        sourced_names.append(SourcedName { entry.key, static_cast<DOM::Element const*>(entry.value.node.ptr()), SourcedName::Source::Past, now - entry.value.insertion_time });
+
+    // 5. Sort sourced names by tree order of the element entry of each tuple, sorting entries with the same element by
+    //    putting entries whose source is id first, then entries whose source is name, and finally entries whose source
+    //    is past, and sorting entries with the same element and source by their age, oldest first.
+    // FIXME: Require less const casts here by changing the signature of DOM::Node::compare_document_position
+    quick_sort(sourced_names, [](auto const& lhs, auto const& rhs) -> bool {
+        if (lhs.element != rhs.element)
+            return const_cast<DOM::Element*>(lhs.element.ptr())->compare_document_position(const_cast<DOM::Element*>(rhs.element.ptr())) & DOM::Node::DOCUMENT_POSITION_FOLLOWING;
+        if (lhs.source != rhs.source)
+            return lhs.source < rhs.source;
+        return lhs.age < rhs.age;
+    });
+
+    // FIXME: Surely there's a more efficient way to do this without so many FlyStrings and collections?
+    // 6. Remove any entries in sourced names that have the empty string as their name.
+    // 7. Remove any entries in sourced names that have the same name as an earlier entry in the map.
+    // 8. Return the list of names from sourced names, maintaining their relative order.
+    OrderedHashTable<FlyString> names;
+    names.ensure_capacity(sourced_names.size());
+    for (auto const& entry : sourced_names) {
+        if (entry.name.is_empty())
+            continue;
+        names.set(entry.name, AK::HashSetExistingEntryBehavior::Keep);
+    }
+
+    Vector<FlyString> result;
+    result.ensure_capacity(names.size());
+    for (auto const& name : names)
+        result.unchecked_append(name);
+
+    return result;
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-nameditem
+WebIDL::ExceptionOr<JS::Value> HTMLFormElement::named_item_value(FlyString const& name) const
+{
+    auto& realm = this->realm();
+    auto& root = verify_cast<ParentNode>(this->root());
+
+    // To determine the value of a named property name for a form element, the user agent must run the following steps:
+
+    // 1. Let candidates be a live RadioNodeList object containing all the listed elements, whose form owner is the form
+    //    element, that have either an id attribute or a name attribute equal to name, with the exception of input
+    //    elements whose type attribute is in the Image Button state, in tree order.
+    auto candidates = DOM::RadioNodeList::create(realm, root, DOM::LiveNodeList::Scope::Descendants, [this, name](auto& node) -> bool {
+        if (!is<DOM::Element>(node))
+            return false;
+        auto const& element = static_cast<DOM::Element const&>(node);
+
+        // Form controls are defined as listed elements, with the exception of input elements in the Image Button state,
+        // whose form owner is the form element.
+        if (!is_form_control(element, *this))
+            return false;
+
+        // FIXME: DOM::Element::name() isn't cached
+        return name == element.id() || name == element.attribute(HTML::AttributeNames::name);
+    });
+
+    // 2. If candidates is empty, let candidates be a live RadioNodeList object containing all the img elements,
+    //    whose form owner is the form element, that have either an id attribute or a name attribute equal to name,
+    //    in tree order.
+    if (candidates->length() == 0) {
+        candidates = DOM::RadioNodeList::create(realm, root, DOM::LiveNodeList::Scope::Descendants, [this, name](auto& node) -> bool {
+            if (!is<HTMLImageElement>(node))
+                return false;
+
+            auto const& element = static_cast<HTMLImageElement const&>(node);
+            if (element.form() != this)
+                return false;
+
+            // FIXME: DOM::Element::name() isn't cached
+            return name == element.id() || name == element.attribute(HTML::AttributeNames::name);
+        });
+    }
+
+    auto length = candidates->length();
+
+    // 3. If candidates is empty, name is the name of one of the entries in the form element's past names map: return the object associated with name in that map.
+    if (length == 0) {
+        auto it = m_past_names_map.find(name);
+        if (it != m_past_names_map.end())
+            return it->value.node;
+    }
+
+    // 4. If candidates contains more than one node, return candidates.
+    if (length > 1)
+        return candidates;
+
+    // 5. Otherwise, candidates contains exactly one node. Add a mapping from name to the node in candidates in the form
+    //    element's past names map, replacing the previous entry with the same name, if any.
+    auto const* node = candidates->item(0);
+    m_past_names_map.set(name, HTMLFormElement::PastNameEntry { .node = node, .insertion_time = MonotonicTime::now() });
+
+    // 6. Return the node in candidates.
+    return node;
 }
 
 }
