@@ -2489,7 +2489,10 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
             for (int x = 0; x < clipped_bounding_rect.width(); ++x) {
                 auto point = Gfx::IntPoint { x, y };
                 auto sample_point = point + start_offset;
-                auto source_point = sample_transform.map(sample_point).to_rounded<int>();
+
+                // AffineTransform::map(IntPoint) rounds internally, which is wrong here. So explicitly call the FloatPoint version, and then truncate the result.
+                auto source_point = Gfx::IntPoint { sample_transform.map(Gfx::FloatPoint { sample_point }) };
+
                 if (!source_rect.contains(source_point))
                     continue;
                 auto source_color = bitmap.get_pixel(source_point);
