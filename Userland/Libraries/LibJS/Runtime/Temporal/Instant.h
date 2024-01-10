@@ -49,7 +49,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM&, Value item);
 ThrowCompletionOr<BigInt*> parse_temporal_instant(VM&, StringView iso_string);
 i32 compare_epoch_nanoseconds(BigInt const&, BigInt const&);
 ThrowCompletionOr<BigInt*> add_instant(VM&, BigInt const& epoch_nanoseconds, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
-BigInt* difference_instant(VM&, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView rounding_mode);
+TimeDurationRecord difference_instant(VM&, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView largest_unit, StringView rounding_mode);
 BigInt* round_temporal_instant(VM&, BigInt const& nanoseconds, u64 increment, StringView unit, StringView rounding_mode);
 ThrowCompletionOr<String> temporal_instant_to_string(VM&, Instant&, Value time_zone, Variant<StringView, u8> const& precision);
 ThrowCompletionOr<Duration*> difference_temporal_instant(VM&, DifferenceOperation, Instant const&, Value other, Value options);
