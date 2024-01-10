@@ -182,10 +182,10 @@ private:
             // From description of PhotometricInterpretation in Section 8: Baseline Field Reference Guide
             // "In a TIFF ColorMap, all the Red values come first, followed by the Green values,
             //  then the Blue values."
-            auto const size = 1 << (*m_metadata.bits_per_sample())[0];
-            auto const red_offset = 0 * size;
-            auto const green_offset = 1 * size;
-            auto const blue_offset = 2 * size;
+            u64 const size = 1ul << (*m_metadata.bits_per_sample())[0];
+            u64 const red_offset = 0 * size;
+            u64 const green_offset = 1 * size;
+            u64 const blue_offset = 2 * size;
 
             auto const color_map = *m_metadata.color_map();
 
