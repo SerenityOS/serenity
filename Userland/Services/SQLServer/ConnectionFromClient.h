@@ -37,6 +37,7 @@ private:
     virtual Messages::SQLServer::ConnectResponse connect(ByteString const&) override;
     virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(SQL::ConnectionID, ByteString const&) override;
     virtual Messages::SQLServer::ExecuteStatementResponse execute_statement(SQL::StatementID, Vector<SQL::Value> const& placeholder_values) override;
+    virtual void ready_for_next_result(SQL::StatementID, SQL::ExecutionID) override;
     virtual void disconnect(SQL::ConnectionID) override;
 
     ByteString m_database_path;

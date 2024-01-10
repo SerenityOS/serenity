@@ -68,11 +68,9 @@ Optional<SQL::ExecutionID> SQLStatement::execute(Vector<SQL::Value> placeholder_
     }
 
     auto execution_id = m_next_execution_id++;
-    m_ongoing_executions.set(execution_id);
 
     Core::deferred_invoke([this, strong_this = NonnullRefPtr(*this), placeholder_values = move(placeholder_values), execution_id] {
         auto execution_result = m_statement->execute(connection().database(), placeholder_values);
-        m_ongoing_executions.remove(execution_id);
 
         if (execution_result.is_error()) {
             report_error(execution_result.release_error(), execution_id);
@@ -86,25 +84,49 @@ Optional<SQL::ExecutionID> SQLStatement::execute(Vector<SQL::Value> placeholder_
         }
 
         auto result = execution_result.release_value();
+        auto result_size = result.size();
 
         if (should_send_result_rows(result)) {
             client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), true, 0, 0, 0);
 
-            auto result_size = result.size();
-            next(execution_id, move(result), result_size);
+            m_ongoing_executions.set(execution_id, { move(result), result_size });
+            ready_for_next_result(execution_id);
         } else {
             if (result.command() == SQL::SQLCommand::Insert)
-                client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, result.size(), 0, 0);
+                client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, result_size, 0, 0);
             else if (result.command() == SQL::SQLCommand::Update)
-                client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, 0, result.size(), 0);
+                client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, 0, result_size, 0);
             else if (result.command() == SQL::SQLCommand::Delete)
-                client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, 0, 0, result.size());
+                client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, 0, 0, result_size);
             else
                 client_connection->async_execution_success(statement_id(), execution_id, result.column_names(), false, 0, 0, 0);
         }
     });
 
     return execution_id;
+}
+
+void SQLStatement::ready_for_next_result(SQL::ExecutionID execution_id)
+{
+    auto client_connection = ConnectionFromClient::client_connection_for(connection().client_id());
+    if (!client_connection) {
+        warnln("Cannot yield next result. Client disconnected");
+        return;
+    }
+
+    auto execution = m_ongoing_executions.get(execution_id);
+    if (!execution.has_value()) {
+        return;
+    }
+
+    if (execution->result.is_empty()) {
+        client_connection->async_results_exhausted(statement_id(), execution_id, execution->result_size);
+        m_ongoing_executions.remove(execution_id);
+        return;
+    }
+
+    auto result_row = execution->result.take_first();
+    client_connection->async_next_result(statement_id(), execution_id, result_row.row.take_data());
 }
 
 bool SQLStatement::should_send_result_rows(SQL::ResultSet const& result) const
@@ -118,26 +140,6 @@ bool SQLStatement::should_send_result_rows(SQL::ResultSet const& result) const
         return true;
     default:
         return false;
-    }
-}
-
-void SQLStatement::next(SQL::ExecutionID execution_id, SQL::ResultSet result, size_t result_size)
-{
-    auto client_connection = ConnectionFromClient::client_connection_for(connection().client_id());
-    if (!client_connection) {
-        warnln("Cannot yield next result. Client disconnected");
-        return;
-    }
-
-    if (!result.is_empty()) {
-        auto result_row = result.take_first();
-        client_connection->async_next_result(statement_id(), execution_id, result_row.row.take_data());
-
-        Core::deferred_invoke([this, strong_this = NonnullRefPtr(*this), execution_id, result = move(result), result_size]() mutable {
-            next(execution_id, move(result), result_size);
-        });
-    } else {
-        client_connection->async_results_exhausted(statement_id(), execution_id, result_size);
     }
 }
 

@@ -26,18 +26,22 @@ public:
     SQL::StatementID statement_id() const { return m_statement_id; }
     DatabaseConnection& connection() { return m_connection; }
     Optional<SQL::ExecutionID> execute(Vector<SQL::Value> placeholder_values);
+    void ready_for_next_result(SQL::ExecutionID);
 
 private:
     SQLStatement(DatabaseConnection&, NonnullRefPtr<SQL::AST::Statement> statement);
 
     bool should_send_result_rows(SQL::ResultSet const& result) const;
-    void next(SQL::ExecutionID execution_id, SQL::ResultSet result, size_t result_size);
     void report_error(SQL::Result, SQL::ExecutionID execution_id);
 
     DatabaseConnection& m_connection;
     SQL::StatementID m_statement_id { 0 };
 
-    HashTable<SQL::ExecutionID> m_ongoing_executions;
+    struct Execution {
+        SQL::ResultSet result;
+        size_t result_size { 0 };
+    };
+    HashMap<SQL::ExecutionID, Execution> m_ongoing_executions;
     SQL::ExecutionID m_next_execution_id { 0 };
 
     NonnullRefPtr<SQL::AST::Statement> m_statement;

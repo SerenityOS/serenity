@@ -97,4 +97,18 @@ Messages::SQLServer::ExecuteStatementResponse ConnectionFromClient::execute_stat
     return Optional<SQL::ExecutionID> {};
 }
 
+void ConnectionFromClient::ready_for_next_result(SQL::StatementID statement_id, SQL::ExecutionID execution_id)
+{
+    dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::ready_for_next_result(statement_id: {}, execution_id: {})", statement_id, execution_id);
+    auto statement = SQLStatement::statement_for(statement_id);
+
+    if (statement && statement->connection().client_id() == client_id()) {
+        statement->ready_for_next_result(execution_id);
+        return;
+    }
+
+    dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
+    async_execution_error(statement_id, execution_id, SQL::SQLErrorCode::StatementUnavailable, ByteString::formatted("{}", statement_id));
+}
+
 }
