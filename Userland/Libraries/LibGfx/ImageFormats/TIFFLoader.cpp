@@ -43,6 +43,14 @@ public:
         return {};
     }
 
+    ErrorOr<void> ensure_conditional_tags_are_present() const
+    {
+        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGBPalette && !m_metadata.color_map().has_value())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: RGBPalette image doesn't contain a color map");
+
+        return {};
+    }
+
     ErrorOr<void> ensure_baseline_tags_are_correct() const
     {
         if (m_metadata.strip_offsets()->size() != m_metadata.strip_byte_counts()->size())
@@ -58,6 +66,7 @@ public:
     {
         TRY(ensure_baseline_tags_are_present(m_metadata));
         TRY(ensure_baseline_tags_are_correct());
+        TRY(ensure_conditional_tags_are_present());
         auto maybe_error = decode_frame_impl();
 
         if (maybe_error.is_error()) {
