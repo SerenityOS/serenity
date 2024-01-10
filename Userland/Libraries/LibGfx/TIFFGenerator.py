@@ -135,7 +135,7 @@ HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(Metadata& 
 HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
 
-ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_presence(Metadata const& metadata)"
+ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_are_present(Metadata const& metadata)"
 
 LICENSE = R"""/*
  * Copyright (c) 2023, Lucas Chollet <lucas.chollet@serenityos.org>
@@ -455,7 +455,7 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
                 name_for_enum_tag_value(static_cast<{tag.associated_enum.export_name()}>(v.get<u32>()))));"""
                                              for tag in tags if tag.associated_enum])
 
-    ensure_tag_presence = '\n'.join([fR"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
+    ensure_tags_are_present = '\n'.join([fR"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
         return Error::from_string_literal("Unable to decode image, missing required tag {tag.name}.");
 """ for tag in filter(lambda tag: tag.is_required, known_tags)])
 
@@ -494,7 +494,7 @@ static String value_formatter(u32 tag_id, Value const& v) {{
 
 {ENSURE_BASELINE_TAG_PRESENCE}
 {{
-{ensure_tag_presence}
+{ensure_tags_are_present}
     return {{}};
 }}
 
