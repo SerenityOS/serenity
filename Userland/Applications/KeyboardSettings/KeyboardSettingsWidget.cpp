@@ -8,10 +8,9 @@
  */
 
 #include "KeyboardSettingsWidget.h"
+#include "KeymapDialog.h"
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <Applications/KeyboardSettings/KeyboardWidgetGML.h>
-#include <Applications/KeyboardSettings/KeymapDialogGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Directory.h>
 #include <LibFileSystem/FileSystem.h>
@@ -29,6 +28,7 @@
 #include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
 
+namespace KeyboardSettings {
 class KeymapSelectionDialog final : public GUI::Dialog {
     C_OBJECT(KeymapSelectionDialog)
 public:
@@ -36,7 +36,13 @@ public:
 
     static ByteString select_keymap(Window* parent_window, Vector<ByteString> const& selected_keymaps)
     {
-        auto dialog = KeymapSelectionDialog::construct(parent_window, selected_keymaps);
+        auto dialog_or_error = KeymapSelectionDialog::create(parent_window, selected_keymaps);
+        if (dialog_or_error.is_error()) {
+            GUI::MessageBox::show(parent_window, "Couldn't load \"add keymap\" dialog"sv, "Error while opening \"add keymap\" dialog"sv, GUI::MessageBox::Type::Error);
+            return ByteString::empty();
+        }
+
+        auto dialog = dialog_or_error.release_value();
         dialog->set_title("Add a keymap");
 
         if (dialog->exec() == ExecResult::OK) {
@@ -49,11 +55,17 @@ public:
     ByteString selected_keymap() { return m_selected_keymap; }
 
 private:
-    KeymapSelectionDialog(Window* parent_window, Vector<ByteString> const& selected_keymaps)
+    static ErrorOr<NonnullRefPtr<KeymapSelectionDialog>> create(Window* parent_window, Vector<ByteString> const& selected_keymaps)
+    {
+        auto widget = TRY(KeyboardSettings::KeymapDialog::try_create());
+        auto dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) KeymapSelectionDialog(parent_window, selected_keymaps, widget)));
+        return dialog;
+    }
+
+    KeymapSelectionDialog(Window* parent_window, Vector<ByteString> const& selected_keymaps, NonnullRefPtr<KeymapDialog> widget)
         : Dialog(parent_window)
     {
-        auto widget = set_main_widget<GUI::Widget>();
-        widget->load_from_gml(keymap_dialog_gml).release_value_but_fixme_should_propagate_errors();
+        set_main_widget(widget);
 
         set_resizable(false);
         resize(190, 54);
@@ -149,16 +161,15 @@ private:
     ByteString m_active_keymap;
 };
 
-ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> KeyboardSettingsWidget::try_create()
+ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> KeyboardSettingsWidget::create()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) KeyboardSettingsWidget()));
+    auto widget = TRY(try_create());
     TRY(widget->setup());
     return widget;
 }
 
 ErrorOr<void> KeyboardSettingsWidget::setup()
 {
-    TRY(load_from_gml(keyboard_widget_gml));
     auto proc_keymap = TRY(Core::File::open("/sys/kernel/keymap"sv, Core::File::OpenMode::Read));
 
     auto keymap = TRY(proc_keymap->read_until_eof());
@@ -326,4 +337,6 @@ ErrorOr<bool> KeyboardSettingsWidget::read_caps_lock_to_ctrl_sys_variable()
     auto buffer = TRY(file->read_until_eof());
     StringView contents_string((char const*)buffer.data(), min(1, buffer.size()));
     return contents_string == "1";
+}
+
 }

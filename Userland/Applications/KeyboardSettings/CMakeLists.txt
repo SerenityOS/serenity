@@ -4,17 +4,14 @@ serenity_component(
     TARGETS KeyboardSettings
 )
 
-stringify_gml(Keyboard.gml KeyboardWidgetGML.h keyboard_widget_gml)
-stringify_gml(KeymapDialog.gml KeymapDialogGML.h keymap_dialog_gml)
+compile_gml(Keyboard.gml KeyboardWidgetGML.cpp)
+compile_gml(KeymapDialog.gml KeymapDialogGML.cpp)
 
 set(SOURCES
     KeyboardSettingsWidget.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    KeyboardWidgetGML.h
-    KeymapDialogGML.h
+    KeyboardWidgetGML.cpp
+    KeymapDialogGML.cpp
 )
 
 serenity_app(KeyboardSettings ICON app-keyboard-settings)
