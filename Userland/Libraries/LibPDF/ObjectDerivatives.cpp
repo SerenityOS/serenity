@@ -137,11 +137,17 @@ ByteString StreamObject::to_byte_string(int indent) const
     bool is_mostly_text = percentage_ascii > 95;
 
     if (is_mostly_text) {
-        for (auto c : bytes()) {
-            if (c < 128)
-                builder.append(c);
-            else
+        for (size_t i = 0; i < bytes().size(); ++i) {
+            auto c = bytes()[i];
+            if (c < 128) {
+                bool next_is_newline = i + 1 < bytes().size() && bytes()[i + 1] == '\n';
+                if (c == '\r' && !next_is_newline)
+                    builder.append('\n');
+                else
+                    builder.append(c);
+            } else {
                 builder.appendff("\\{:03o}", c);
+            }
         }
     } else {
         auto string = encode_hex(bytes());
