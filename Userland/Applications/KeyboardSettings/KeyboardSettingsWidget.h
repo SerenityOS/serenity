@@ -15,17 +15,20 @@
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/TextEditor.h>
 
+namespace KeyboardSettings {
+
 class KeyboardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(KeyboardSettingsWidget)
 public:
-    static ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> try_create();
     virtual ~KeyboardSettingsWidget() override;
 
     virtual void apply_settings() override;
 
     void window_activated(bool is_active_window);
+    static ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> create();
 
 private:
+    static ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> try_create();
     KeyboardSettingsWidget() = default;
     ErrorOr<void> setup();
 
@@ -50,3 +53,5 @@ private:
 
     Function<void()> m_activate_keymap_event;
 };
+
+}
