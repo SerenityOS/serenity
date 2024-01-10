@@ -43,7 +43,7 @@ public:
         return {};
     }
 
-    ErrorOr<void> ensure_baseline_tags_correctness() const
+    ErrorOr<void> ensure_baseline_tags_are_correct() const
     {
         if (m_metadata.strip_offsets()->size() != m_metadata.strip_byte_counts()->size())
             return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes");
@@ -56,8 +56,8 @@ public:
 
     ErrorOr<void> decode_frame()
     {
-        TRY(ensure_baseline_tags_presence(m_metadata));
-        TRY(ensure_baseline_tags_correctness());
+        TRY(ensure_baseline_tags_are_present(m_metadata));
+        TRY(ensure_baseline_tags_are_correct());
         auto maybe_error = decode_frame_impl();
 
         if (maybe_error.is_error()) {
