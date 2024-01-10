@@ -632,6 +632,167 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(VM& vm, double days, doub
     return create_time_duration_record(vm, days, hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, result_nanoseconds * sign);
 }
 
+// 7.5.18 BalancePossiblyInfiniteTimeDuration ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-balancepossiblyinfinitetimeduration
+Variant<TimeDurationRecord, Overflow> balance_possibly_infinite_time_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, StringView largest_unit)
+{
+    // 1. Set hours to hours + days × 24.
+    hours += days * 24.;
+
+    // 2. Set nanoseconds to TotalDurationNanoseconds(hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    // FIXME: We shouldn't be passing through 0 days and 0 offset digit
+    auto nanoseconds_bigint = total_duration_nanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, Crypto::SignedBigInteger { nanoseconds }, 0);
+    double result_nanoseconds = 0;
+
+    // 3. Set days, hours, minutes, seconds, milliseconds, and microseconds to 0.
+    days = 0;
+    hours = 0;
+    minutes = 0;
+    seconds = 0;
+    milliseconds = 0;
+    microseconds = 0;
+
+    // 4. If nanoseconds < 0, let sign be -1; else, let sign be 1.
+    auto sign = nanoseconds_bigint.is_negative() ? -1 : 1;
+
+    // 5. Set nanoseconds to abs(nanoseconds).
+    auto total_nanoseconds = Crypto::SignedBigInteger { nanoseconds_bigint.unsigned_value() };
+
+    // 6. If largestUnit is "year", "month", "week", or "day", then
+    if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
+        // a. Set microseconds to floor(nanoseconds / 1000).
+        auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
+        // b. Set nanoseconds to nanoseconds modulo 1000.
+        result_nanoseconds = nanoseconds_division_result.remainder.to_double();
+        // c. Set milliseconds to floor(microseconds / 1000).
+        auto microseconds_division_result = nanoseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // d. Set microseconds to microseconds modulo 1000.
+        microseconds = microseconds_division_result.remainder.to_double();
+        // e. Set seconds to floor(milliseconds / 1000).
+        auto milliseconds_division_result = microseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // f. Set milliseconds to milliseconds modulo 1000.
+        milliseconds = milliseconds_division_result.remainder.to_double();
+        // g. Set minutes to floor(seconds / 60).
+        auto seconds_division_result = milliseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
+        // h. Set seconds to seconds modulo 60.
+        seconds = seconds_division_result.remainder.to_double();
+        // i. Set hours to floor(minutes / 60).
+        auto minutes_division_result = seconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
+        // j. Set minutes to minutes modulo 60.
+        minutes = minutes_division_result.remainder.to_double();
+        // k. Set days to floor(hours / 24).
+        auto hours_division_result = minutes_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(24));
+        days = hours_division_result.quotient.to_double();
+        // l. Set hours to hours modulo 24.
+        hours = hours_division_result.remainder.to_double();
+    }
+    // 7. Else if largestUnit is "hour", then
+    else if (largest_unit == "hour"sv) {
+        // a. Set microseconds to floor(nanoseconds / 1000).
+        auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
+        // b. Set nanoseconds to nanoseconds modulo 1000.
+        result_nanoseconds = nanoseconds_division_result.remainder.to_double();
+        // c. Set milliseconds to floor(microseconds / 1000).
+        auto microseconds_division_result = nanoseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // d. Set microseconds to microseconds modulo 1000.
+        microseconds = microseconds_division_result.remainder.to_double();
+        // e. Set seconds to floor(milliseconds / 1000).
+        auto milliseconds_division_result = microseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // f. Set milliseconds to milliseconds modulo 1000.
+        milliseconds = milliseconds_division_result.remainder.to_double();
+        // g. Set minutes to floor(seconds / 60).
+        auto seconds_division_result = milliseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
+        // h. Set seconds to seconds modulo 60.
+        seconds = seconds_division_result.remainder.to_double();
+        // i. Set hours to floor(minutes / 60).
+        auto minutes_division_result = seconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
+        hours = minutes_division_result.quotient.to_double();
+        // j. Set minutes to minutes modulo 60.
+        minutes = minutes_division_result.remainder.to_double();
+    }
+    // 8. Else if largestUnit is "minute", then
+    else if (largest_unit == "minute"sv) {
+        // a. Set microseconds to floor(nanoseconds / 1000).
+        auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
+        // b. Set nanoseconds to nanoseconds modulo 1000.
+        result_nanoseconds = nanoseconds_division_result.remainder.to_double();
+        // c. Set milliseconds to floor(microseconds / 1000).
+        auto microseconds_division_result = nanoseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // d. Set microseconds to microseconds modulo 1000.
+        microseconds = microseconds_division_result.remainder.to_double();
+        // e. Set seconds to floor(milliseconds / 1000).
+        auto milliseconds_division_result = microseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // f. Set milliseconds to milliseconds modulo 1000.
+        milliseconds = milliseconds_division_result.remainder.to_double();
+        // g. Set minutes to floor(seconds / 60).
+        auto seconds_division_result = milliseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
+        minutes = seconds_division_result.quotient.to_double();
+        // h. Set seconds to seconds modulo 60.
+        seconds = seconds_division_result.remainder.to_double();
+    }
+    // 9. Else if largestUnit is "second", then
+    else if (largest_unit == "second"sv) {
+        // a. Set microseconds to floor(nanoseconds / 1000).
+        auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
+        // b. Set nanoseconds to nanoseconds modulo 1000.
+        result_nanoseconds = nanoseconds_division_result.remainder.to_double();
+        // c. Set milliseconds to floor(microseconds / 1000).
+        auto microseconds_division_result = nanoseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        // d. Set microseconds to microseconds modulo 1000.
+        microseconds = microseconds_division_result.remainder.to_double();
+        // e. Set seconds to floor(milliseconds / 1000).
+        auto milliseconds_division_result = microseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        seconds = milliseconds_division_result.quotient.to_double();
+        // f. Set milliseconds to milliseconds modulo 1000.
+        milliseconds = milliseconds_division_result.remainder.to_double();
+    }
+    // 10. Else if largestUnit is "millisecond", then
+    else if (largest_unit == "millisecond"sv) {
+        // a. Set microseconds to floor(nanoseconds / 1000).
+        auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
+        // b. Set nanoseconds to nanoseconds modulo 1000.
+        result_nanoseconds = nanoseconds_division_result.remainder.to_double();
+        // c. Set milliseconds to floor(microseconds / 1000).
+        auto microseconds_division_result = nanoseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(1000));
+        milliseconds = microseconds_division_result.quotient.to_double();
+        // d. Set microseconds to microseconds modulo 1000.
+        microseconds = microseconds_division_result.remainder.to_double();
+    }
+    // 11. Else if largestUnit is "microsecond", then
+    else if (largest_unit == "microsecond"sv) {
+        // a. Set microseconds to floor(nanoseconds / 1000).
+        auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
+        microseconds = nanoseconds_division_result.quotient.to_double();
+        // b. Set nanoseconds to nanoseconds modulo 1000.
+        result_nanoseconds = nanoseconds_division_result.remainder.to_double();
+    }
+    // 12. Else,
+    else {
+        // a. Assert: largestUnit is "nanosecond".
+        VERIFY(largest_unit == "nanosecond"sv);
+        result_nanoseconds = total_nanoseconds.to_double();
+    }
+
+    // 13. For each value v of « days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds », do
+    for (double v : { days, hours, minutes, seconds, milliseconds, microseconds, microseconds, result_nanoseconds }) {
+        // a. If 𝔽(v) is not finite, then
+        if (!isfinite(v)) {
+            // i. If sign = 1, then
+            if (sign == 1) {
+                // 1. Return positive overflow.
+                return Overflow::Positive;
+            }
+            // ii. Else if sign = -1, then
+            else {
+                // 1. Return negative overflow.
+                return Overflow::Negative;
+            }
+        }
+    }
+
+    // 14. Return ! CreateTimeDurationRecord(days × sign, hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
+    return MUST(create_time_duration_record(vm, days * sign, hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, result_nanoseconds * sign));
+}
+
 // 7.5.19 UnbalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-unbalancedurationrelative
 ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double years, double months, double weeks, double days, StringView largest_unit, Value relative_to)
 {
