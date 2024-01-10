@@ -9,6 +9,7 @@
  */
 
 #include "HexEditor.h"
+#include "EditAnnotationDialog.h"
 #include "SearchResultsModel.h"
 #include <AK/ByteString.h>
 #include <AK/Debug.h>
@@ -43,6 +44,32 @@ HexEditor::HexEditor()
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     vertical_scrollbar().set_step(line_height());
+
+    m_context_menu = GUI::Menu::construct();
+    m_add_annotation_action = GUI::Action::create(
+        "&Add Annotation",
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv).release_value_but_fixme_should_propagate_errors(),
+        [this](GUI::Action&) { show_create_annotation_dialog(); },
+        this);
+    m_context_menu->add_action(*m_add_annotation_action);
+    m_edit_annotation_action = GUI::Action::create(
+        "&Edit Annotation",
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation.png"sv).release_value_but_fixme_should_propagate_errors(),
+        [this](GUI::Action&) {
+            VERIFY(m_hovered_annotation.has_value());
+            show_edit_annotation_dialog(*m_hovered_annotation);
+        },
+        this);
+    m_context_menu->add_action(*m_edit_annotation_action);
+    m_delete_annotation_action = GUI::Action::create(
+        "&Delete Annotation",
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-remove.png"sv).release_value_but_fixme_should_propagate_errors(),
+        [this](GUI::Action&) {
+            VERIFY(m_hovered_annotation.has_value());
+            show_delete_annotation_dialog(*m_hovered_annotation);
+        },
+        this);
+    m_context_menu->add_action(*m_delete_annotation_action);
 }
 
 ErrorOr<void> HexEditor::open_new_file(size_t size)
@@ -320,8 +347,10 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
 
     if (maybe_offset_data.has_value()) {
         set_override_cursor(Gfx::StandardCursor::IBeam);
+        m_hovered_annotation = m_document->closest_annotation_at(maybe_offset_data->offset);
     } else {
         set_override_cursor(Gfx::StandardCursor::None);
+        m_hovered_annotation.clear();
     }
 
     if (m_in_drag_select) {
@@ -520,6 +549,13 @@ ErrorOr<void> HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
     return {};
 }
 
+void HexEditor::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    m_edit_annotation_action->set_visible(m_hovered_annotation.has_value());
+    m_delete_annotation_action->set_visible(m_hovered_annotation.has_value());
+    m_context_menu->popup(event.screen_position());
+}
+
 void HexEditor::update_status()
 {
     if (on_status_change)
@@ -591,6 +627,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 return;
 
             auto const cell = m_document->get(byte_position);
+            auto const annotation = m_document->closest_annotation_at(byte_position);
 
             Gfx::IntRect hex_display_rect_high_nibble {
                 frame_thickness() + offset_margin_width() + j * cell_width() + 2 * m_padding,
@@ -623,13 +660,16 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             // 1. Modified bytes
             // 2. The cursor position
             // 3. The selection
-            // 4. Null bytes
-            // 5. Regular formatting
+            // 4. Annotations
+            // 5. Null bytes
+            // 6. Regular formatting
             auto determine_background_color = [&](EditMode edit_mode) -> Gfx::Color {
                 if (selected)
                     return cell.modified ? palette().selection().inverted() : palette().selection();
                 if (byte_position == m_position && m_edit_mode != edit_mode)
                     return palette().inactive_selection();
+                if (annotation.has_value())
+                    return annotation->background_color;
                 return palette().color(background_role());
             };
             auto determine_text_color = [&](EditMode edit_mode) -> Gfx::Color {
@@ -639,6 +679,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                     return palette().selection_text();
                 if (byte_position == m_position)
                     return (m_edit_mode == edit_mode) ? palette().color(foreground_role()) : palette().inactive_selection_text();
+                if (annotation.has_value())
+                    return annotation->background_color.suggested_foreground_color();
                 if (cell.value == 0x00)
                     return palette().color(ColorRole::PlaceholderText);
                 return palette().color(foreground_role());
@@ -867,6 +909,29 @@ bool HexEditor::redo()
 GUI::UndoStack& HexEditor::undo_stack()
 {
     return m_undo_stack;
+}
+
+void HexEditor::show_create_annotation_dialog()
+{
+    auto result = EditAnnotationDialog::show_create_dialog(window(), *m_document, selection());
+    if (result == GUI::Dialog::ExecResult::OK)
+        update();
+}
+
+void HexEditor::show_edit_annotation_dialog(Annotation& annotation)
+{
+    auto result = EditAnnotationDialog::show_edit_dialog(window(), *m_document, annotation);
+    if (result == GUI::Dialog::ExecResult::OK)
+        update();
+}
+
+void HexEditor::show_delete_annotation_dialog(Annotation& annotation)
+{
+    auto result = GUI::MessageBox::show(window(), "Delete this annotation?"sv, "Delete annotation?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+    if (result == GUI::Dialog::ExecResult::Yes) {
+        m_document->delete_annotation(annotation);
+        update();
+    }
 }
 
 }

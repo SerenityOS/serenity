@@ -68,6 +68,10 @@ public:
     Function<void(size_t position, EditMode, Selection)> on_status_change;
     Function<void(bool is_document_dirty)> on_change;
 
+    void show_create_annotation_dialog();
+    void show_edit_annotation_dialog(Annotation&);
+    void show_delete_annotation_dialog(Annotation&);
+
 protected:
     HexEditor();
 
@@ -76,6 +80,7 @@ protected:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
 
 private:
     size_t m_line_spacing { 4 };
@@ -88,6 +93,12 @@ private:
     EditMode m_edit_mode { Hex };
     NonnullOwnPtr<HexDocument> m_document;
     GUI::UndoStack m_undo_stack;
+    Optional<Annotation&> m_hovered_annotation;
+
+    RefPtr<GUI::Menu> m_context_menu;
+    RefPtr<GUI::Action> m_add_annotation_action;
+    RefPtr<GUI::Action> m_edit_annotation_action;
+    RefPtr<GUI::Action> m_delete_annotation_action;
 
     static constexpr int m_address_bar_width = 90;
     static constexpr int m_padding = 5;

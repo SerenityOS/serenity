@@ -451,6 +451,12 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     }));
     edit_menu->add_action(*m_fill_selection_action);
     edit_menu->add_separator();
+    edit_menu->add_action(GUI::Action::create(
+        "Add Annotation",
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv).release_value_but_fixme_should_propagate_errors(),
+        [this](GUI::Action&) { m_editor->show_create_annotation_dialog(); },
+        this));
+    edit_menu->add_separator();
     edit_menu->add_action(*m_copy_hex_action);
     edit_menu->add_action(*m_copy_text_action);
     edit_menu->add_action(*m_copy_as_c_code_action);
