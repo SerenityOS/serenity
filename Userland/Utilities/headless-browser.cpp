@@ -44,6 +44,8 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/CookieJar.h>
+#include <LibWebView/Database.h>
 #include <LibWebView/URL.h>
 #include <LibWebView/ViewImplementation.h>
 #include <LibWebView/WebContentClient.h>
@@ -61,7 +63,16 @@ class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
     static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No)
     {
-        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView));
+#if defined(AK_OS_SERENITY)
+        auto database = TRY(WebView::Database::create());
+#else
+        auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
+        auto database = TRY(WebView::Database::create(move(sql_server_paths)));
+#endif
+
+        auto cookie_jar = TRY(WebView::CookieJar::create(*database));
+
+        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView(move(database), move(cookie_jar))));
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
@@ -134,7 +145,9 @@ public:
     }
 
 private:
-    HeadlessWebContentView()
+    HeadlessWebContentView(NonnullRefPtr<WebView::Database> database, WebView::CookieJar cookie_jar)
+        : m_database(move(database))
+        , m_cookie_jar(move(cookie_jar))
     {
         on_scroll_to_point = [this](auto position) {
             m_viewport_rect.set_location(position);
@@ -148,6 +161,14 @@ private:
             if (on_scroll_to_point)
                 on_scroll_to_point(position);
         };
+
+        on_get_cookie = [this](auto const& url, auto source) -> ByteString {
+            return m_cookie_jar.get_cookie(url, source);
+        };
+
+        on_set_cookie = [this](auto const& url, auto const& cookie, auto source) {
+            m_cookie_jar.set_cookie(url, cookie, source);
+        };
     }
 
     void update_zoom() override { }
@@ -160,6 +181,9 @@ private:
 private:
     Gfx::IntRect m_viewport_rect;
     RefPtr<Core::Promise<RefPtr<Gfx::Bitmap>>> m_pending_screenshot;
+
+    NonnullRefPtr<WebView::Database> m_database;
+    WebView::CookieJar m_cookie_jar;
 };
 
 static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, int screenshot_timeout)
