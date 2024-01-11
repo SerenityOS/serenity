@@ -1129,6 +1129,9 @@ void Document::update_style()
     if (m_created_for_appropriate_template_contents)
         return;
 
+    // Fetch the viewport rect once, instead of repeatedly, during style computation.
+    style_computer().set_viewport_rect({}, viewport_rect());
+
     evaluate_media_rules();
 
     auto invalidation = update_style_recursively(*this);
