@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <AK/Try.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
@@ -69,7 +70,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers(
 {
     auto framebuffer_size = read_io_register(VMWareDisplayRegistersOffset::FB_SIZE);
     auto fifo_size = read_io_register(VMWareDisplayRegistersOffset::MEM_SIZE);
-    auto fifo_physical_address = PhysicalAddress(PCI::get_BAR2(device_identifier()) & PCI::bar_address_mask);
+    auto fifo_physical_address = TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR2));
 
     dbgln("VMWare SVGA @ {}: framebuffer size {} bytes, FIFO size {} bytes @ {}", device_identifier().address(), framebuffer_size, fifo_size, fifo_physical_address);
     if (framebuffer_size < 0x100000 || fifo_size < 0x10000) {
@@ -77,7 +78,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers(
         return Error::from_errno(ENOTSUP);
     }
 
-    m_fifo_registers = TRY(Memory::map_typed<VMWareDisplayFIFORegisters volatile>(fifo_physical_address, fifo_size, Memory::Region::Access::ReadWrite));
+    m_fifo_registers = TRY(PCI::map_bar<VMWareDisplayFIFORegisters volatile>(device_identifier(), PCI::HeaderType0BaseRegister::BAR2, fifo_size));
     m_fifo_registers->start = 16;
     m_fifo_registers->size = 16 + (10 * 1024);
     m_fifo_registers->next_command = 16;
@@ -185,7 +186,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
 
     auto bar1_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR1);
 
-    m_display_connector = VMWareDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR1(device_identifier()) & PCI::bar_address_mask), bar1_space_size);
+    m_display_connector = VMWareDisplayConnector::must_create(*this, TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR1)), bar1_space_size);
     TRY(m_display_connector->set_safe_mode_setting());
     return {};
 }

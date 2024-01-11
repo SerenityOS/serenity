@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/USB/EHCI/EHCIController.h>
 
 namespace Kernel::USB::EHCI {
@@ -13,14 +14,9 @@ ErrorOr<NonnullLockRefPtr<EHCIController>> EHCIController::try_to_initialize(con
 {
 
     // FIXME: This assumes the BIOS left us a physical region for the controller
-    u64 pci_bar_value = PCI::get_BAR(pci_device_identifier, SpaceBaseAddressRegister);
-    auto pci_bar_space_type = PCI::get_BAR_space_type(pci_bar_value);
-    if (pci_bar_space_type == PCI::BARSpaceType::Memory64BitSpace) {
-        u64 next_pci_bar_value = PCI::get_BAR(pci_device_identifier, static_cast<PCI::HeaderType0BaseRegister>(to_underlying(SpaceBaseAddressRegister) + 1));
-        pci_bar_value |= next_pci_bar_value << 32;
-    }
+    auto pci_bar_address = TRY(PCI::get_bar_address(pci_device_identifier, SpaceBaseAddressRegister));
     auto pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, SpaceBaseAddressRegister);
-    auto register_region = TRY(MM.allocate_kernel_region(PhysicalAddress { pci_bar_value }, pci_bar_space_size, {}, Memory::Region::Access::ReadWrite));
+    auto register_region = TRY(MM.allocate_kernel_region(pci_bar_address, pci_bar_space_size, {}, Memory::Region::Access::ReadWrite));
 
     PCI::enable_bus_mastering(pci_device_identifier);
     PCI::enable_memory_space(pci_device_identifier);

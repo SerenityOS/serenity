@@ -11,6 +11,7 @@
 #    include <Kernel/Arch/x86_64/Hypervisor/BochsDisplayConnector.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
 #include <Kernel/Devices/GPU/Bochs/GraphicsAdapter.h>
@@ -56,16 +57,16 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
 #if ARCH(X86_64)
     bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
     if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
-        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier) & PCI::bar_address_mask), bar0_space_size, virtual_box_hardware);
+        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0))), bar0_space_size, virtual_box_hardware);
     } else {
-        auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(PCI::get_BAR2(pci_device_identifier) & PCI::bar_address_mask)));
+        auto registers_mapping = TRY(PCI::map_bar<BochsDisplayMMIORegisters volatile>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
         VERIFY(registers_mapping.region);
-        m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier) & PCI::bar_address_mask), bar0_space_size, move(registers_mapping));
+        m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0))), bar0_space_size, move(registers_mapping));
     }
 #else
-    auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(PCI::get_BAR2(pci_device_identifier) & PCI::bar_address_mask)));
+    auto registers_mapping = TRY(PCI::map_bar<BochsDisplayMMIORegisters volatile>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
     VERIFY(registers_mapping.region);
-    m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier) & PCI::bar_address_mask), bar0_space_size, move(registers_mapping));
+    m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0))), bar0_space_size, move(registers_mapping));
 #endif
 
     // Note: According to Gerd Hoffmann - "The linux driver simply does
