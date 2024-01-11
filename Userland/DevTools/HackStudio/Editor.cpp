@@ -593,11 +593,6 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
 }
 
-void Editor::set_cursor(const GUI::TextPosition& a_position)
-{
-    TextEditor::set_cursor(a_position);
-}
-
 void Editor::set_syntax_highlighter_for(CodeDocument const& document)
 {
     if (!document.language().has_value()) {

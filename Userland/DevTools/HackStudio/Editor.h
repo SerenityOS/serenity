@@ -59,7 +59,6 @@ public:
         VERIFY(m_language_client);
         return *m_language_client;
     }
-    virtual void set_cursor(const GUI::TextPosition& a_position) override;
     void set_semantic_syntax_highlighting(bool value);
 
 private:
