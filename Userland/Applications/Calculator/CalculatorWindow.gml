@@ -308,6 +308,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_role: "SyntaxPreprocessorValue"
+                    focus_policy: "NoFocus"
                 }
             }
         }
