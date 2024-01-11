@@ -220,9 +220,11 @@ bool NumericCalculationNode::contains_percentage() const
 CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     if (m_value.has<Percentage>()) {
+        // NOTE: Depending on whether percentage_basis is set, the caller of resolve() is expecting a raw percentage or
+        //       resolved length.
         return percentage_basis.visit(
             [&](Empty const&) -> CalculatedStyleValue::CalculationResult {
-                VERIFY_NOT_REACHED();
+                return m_value;
             },
             [&](auto const& value) {
                 return CalculatedStyleValue::CalculationResult(value.percentage_of(m_value.get<Percentage>()));
