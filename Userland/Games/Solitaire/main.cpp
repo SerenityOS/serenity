@@ -100,6 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         game.start_solving();
         solve_button.set_enabled(false);
     };
+    solve_button.set_enabled(false);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0"_string);
@@ -126,8 +127,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     game.on_game_start = [&]() {
-        solve_button.set_enabled(false);
-        action_bar.set_visible(false);
         seconds_elapsed = 0;
         timer->start();
         statusbar.set_text(2, "Time: 00:00"_string);
@@ -141,6 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             timer->stop();
 
         solve_button.set_enabled(false);
+        action_bar.set_visible(false);
 
         if (reason == Solitaire::GameOverReason::Victory) {
             if (seconds_elapsed >= 30) {
