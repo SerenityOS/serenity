@@ -50,7 +50,7 @@ public:
                 }
                 return m_target.column_name(index.row()).release_value_but_fixme_should_propagate_errors();
             }
-            return m_target_index.sibling_at_column(index.row()).data();
+            return m_target_index.sibling_at_column(index.row()).data(ProcessModel::DISPLAY_VERBOSE);
         }
 
         if (role == GUI::ModelRole::Font) {
