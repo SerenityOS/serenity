@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <fcntl.h>
 #include <spawn.h>
@@ -61,27 +63,22 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(ByteString const& ma
     return adopt_ref(*new ProjectTemplate(id, name, description, icon, priority));
 }
 
-Result<void, ByteString> ProjectTemplate::create_project(ByteString const& name, ByteString const& path)
+ErrorOr<void> ProjectTemplate::create_project(ByteString const& name, ByteString const& path)
 {
     // Check if a file or directory already exists at the project path
     if (FileSystem::exists(path))
-        return ByteString("File or directory already exists at specified location.");
+        return Error::from_string_literal("File or directory already exists at specified location.");
 
     dbgln("Creating project at path '{}' with name '{}'", path, name);
 
     // Verify that the template content directory exists. If it does, copy it's contents.
     // Otherwise, create an empty directory at the project path.
     if (FileSystem::is_directory(content_path())) {
-        auto result = FileSystem::copy_file_or_directory(path, content_path());
         dbgln("Copying {} -> {}", content_path(), path);
-        if (result.is_error())
-            return ByteString::formatted("Failed to copy template contents. Error code: {}", static_cast<Error const&>(result.error()));
+        TRY(FileSystem::copy_file_or_directory(path, content_path()));
     } else {
         dbgln("No template content directory found for '{}', creating an empty directory for the project.", m_id);
-        int rc;
-        if ((rc = mkdir(path.characters(), 0755)) < 0) {
-            return ByteString::formatted("Failed to mkdir empty project directory, error: {}, rc: {}.", strerror(errno), rc);
-        }
+        TRY(Core::System::mkdir(path, 0755));
     }
 
     // Check for an executable post-create script in $TEMPLATES_DIR/$ID.postcreate,
@@ -96,24 +93,17 @@ Result<void, ByteString> ProjectTemplate::create_project(ByteString const& name,
         // Generate a namespace-safe project name (replace hyphens with underscores)
         auto namespace_safe = name.replace("-"sv, "_"sv, ReplaceMode::All);
 
-        pid_t child_pid;
         char const* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };
 
-        if ((errno = posix_spawn(&child_pid, postcreate_script_path.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-            return ByteString("Failed to spawn project post-create script.");
-        }
+        pid_t child_pid = TRY(Core::System::posix_spawn(postcreate_script_path, nullptr, nullptr, const_cast<char**>(argv), environ));
 
         // Command spawned, wait for exit.
-        int status;
-        if (waitpid(child_pid, &status, 0) < 0)
-            return ByteString("Failed to spawn project post-create script.");
-
-        int child_error = WEXITSTATUS(status);
+        auto waitpid_result = TRY(Core::System::waitpid(child_pid, 0));
+        int child_error = WEXITSTATUS(waitpid_result.status);
         dbgln("Post-create script exited with code {}", child_error);
 
         if (child_error != 0)
-            return ByteString("Project post-creation script exited with non-zero error code.");
+            return Error::from_string_literal("Project post-creation script exited with non-zero error code.");
     }
 
     return {};

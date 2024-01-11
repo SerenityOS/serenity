@@ -10,7 +10,6 @@
 #include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/RefCounted.h>
-#include <AK/Result.h>
 #include <AK/Weakable.h>
 #include <LibGUI/Icon.h>
 
@@ -24,7 +23,7 @@ public:
 
     explicit ProjectTemplate(ByteString const& id, ByteString const& name, ByteString const& description, const GUI::Icon& icon, int priority);
 
-    Result<void, ByteString> create_project(ByteString const& name, ByteString const& path);
+    ErrorOr<void> create_project(ByteString const& name, ByteString const& path);
 
     ByteString const& id() const { return m_id; }
     ByteString const& name() const { return m_name; }
