@@ -260,11 +260,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     bool hide_tooltip = (m_tooltip_role == TooltipRole::Documentation);
     bool is_over_clickable = false;
 
-    auto ruler_line_rect = ruler_content_rect(text_position.line());
-    auto hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
-    if (hovering_lines_ruler && !is_in_drag_select())
-        set_override_cursor(Gfx::StandardCursor::Arrow);
-    else if (m_hovering_editor)
+    if (m_hovering_editor && event.position().x() > fixed_elements_width())
         set_override_cursor(m_hovering_clickable && event.ctrl() ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
 
     for (auto& span : document().spans()) {
@@ -471,8 +467,6 @@ void Editor::set_document(GUI::TextDocument& doc)
 
     VERIFY(is<CodeDocument>(doc));
     GUI::TextEditor::set_document(doc);
-
-    set_override_cursor(Gfx::StandardCursor::IBeam);
 
     auto& code_document = static_cast<CodeDocument&>(doc);
 
