@@ -71,13 +71,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (move_alpha_to_rgb) {
         switch (frame->format()) {
         case Gfx::BitmapFormat::Invalid:
-            warnln("Can't --strip-alpha with invalid bitmaps");
+            warnln("Can't --move-alpha-to-rgb with invalid bitmaps");
             return 1;
         case Gfx::BitmapFormat::RGBA8888:
             // No image decoder currently produces bitmaps with this format.
             // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
             // If there's a good reason for not doing that, implement support for this, I suppose.
-            warnln("Can't --strip-alpha not implemented for RGBA8888");
+            warnln("--move-alpha-to-rgb not implemented for RGBA8888");
             return 1;
         case Gfx::BitmapFormat::BGRA8888:
         case Gfx::BitmapFormat::BGRx8888:
@@ -98,7 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // No image decoder currently produces bitmaps with this format.
             // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
             // If there's a good reason for not doing that, implement support for this, I suppose.
-            warnln("Can't --strip-alpha not implemented for RGBA8888");
+            warnln("--strip-alpha not implemented for RGBA8888");
             return 1;
         case Gfx::BitmapFormat::BGRA8888:
         case Gfx::BitmapFormat::BGRx8888:
