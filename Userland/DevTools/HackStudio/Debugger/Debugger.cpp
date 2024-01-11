@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,36 +49,44 @@ Debugger::Debugger(
     pthread_cond_init(&m_ui_action_cond, nullptr);
 }
 
-void Debugger::on_breakpoint_change(ByteString const& file, size_t line, BreakpointChange change_type)
+bool Debugger::change_breakpoint(ByteString const& file, size_t line, BreakpointChange change_type)
 {
     auto position = create_source_position(file, line);
-
-    if (change_type == BreakpointChange::Added) {
-        m_breakpoints.append(position);
-    } else {
-        m_breakpoints.remove_all_matching([&](Debug::DebugInfo::SourcePosition const& val) { return val == position; });
-    }
-
     auto session = Debugger::the().session();
-    if (!session)
-        return;
+    if (session) {
+        auto address = session->get_address_from_source_position(position.file_path, position.line_number);
+        if (!address.has_value()) {
+            dbgln("Warning: couldn't get instruction address from source");
+            return false;
+        }
 
-    auto address = session->get_address_from_source_position(position.file_path, position.line_number);
-    if (!address.has_value()) {
-        dbgln("Warning: couldn't get instruction address from source");
-        // TODO: Currently, the GUI will indicate that a breakpoint was inserted/removed at this line,
-        // regardless of whether we actually succeeded to insert it. (For example a breakpoint on a comment, or an include statement).
-        // We should indicate failure via a return value from this function, and not update the breakpoint GUI if we fail.
-        return;
+        switch (change_type) {
+        case BreakpointChange::Added:
+            if (session->insert_breakpoint(address.value().address)) {
+                m_breakpoints.append(position);
+                return true;
+            }
+            break;
+        case BreakpointChange::Removed:
+            if (session->remove_breakpoint(address.value().address)) {
+                m_breakpoints.remove_all_matching([&](Debug::DebugInfo::SourcePosition const& val) { return val == position; });
+                return true;
+            }
+            break;
+        }
+        return false;
     }
 
-    if (change_type == BreakpointChange::Added) {
-        bool success = session->insert_breakpoint(address.value().address);
-        VERIFY(success);
-    } else {
-        bool success = session->remove_breakpoint(address.value().address);
-        VERIFY(success);
+    // No active session, so just modify our internal list of breakpoints
+    switch (change_type) {
+    case BreakpointChange::Added:
+        m_breakpoints.append(position);
+        return true;
+    case BreakpointChange::Removed:
+        m_breakpoints.remove_all_matching([&](Debug::DebugInfo::SourcePosition const& val) { return val == position; });
+        return true;
     }
+    VERIFY_NOT_REACHED();
 }
 
 bool Debugger::set_execution_position(ByteString const& file, size_t line)
@@ -125,6 +134,7 @@ void Debugger::start()
             bool success = m_debug_session->insert_breakpoint(address.value().address);
             VERIFY(success);
         } else {
+            // FIXME: Report the invalid breakpoint to the GUI somehow.
             dbgln("couldn't insert breakpoint");
         }
     }

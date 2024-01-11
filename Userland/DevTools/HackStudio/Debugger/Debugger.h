@@ -34,7 +34,7 @@ public:
 
     static bool is_initialized();
 
-    void on_breakpoint_change(ByteString const& file, size_t line, BreakpointChange change_type);
+    [[nodiscard]] bool change_breakpoint(ByteString const& file, size_t line, BreakpointChange change_type);
     bool set_execution_position(ByteString const& file, size_t line);
 
     void set_executable_path(ByteString const& path) { m_executable_path = path; }

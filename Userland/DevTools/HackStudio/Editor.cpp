@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2018-2022, the SerenityOS developers.
+ * Copyright (c) 2023-2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -774,9 +775,10 @@ void Editor::set_semantic_syntax_highlighting(bool value)
 ErrorOr<void> Editor::add_breakpoint(size_t line_number)
 {
     if (!breakpoint_lines().contains_slow(line_number)) {
-        add_gutter_indicator(m_breakpoint_indicator_id, line_number);
-        TRY(breakpoint_lines().try_append(line_number));
-        Debugger::the().on_breakpoint_change(wrapper().filename_title(), line_number, BreakpointChange::Added);
+        if (Debugger::the().change_breakpoint(wrapper().filename_title(), line_number, BreakpointChange::Added)) {
+            add_gutter_indicator(m_breakpoint_indicator_id, line_number);
+            TRY(breakpoint_lines().try_append(line_number));
+        }
     }
 
     return {};
@@ -784,9 +786,10 @@ ErrorOr<void> Editor::add_breakpoint(size_t line_number)
 
 void Editor::remove_breakpoint(size_t line_number)
 {
-    remove_gutter_indicator(m_breakpoint_indicator_id, line_number);
-    breakpoint_lines().remove_first_matching([&](size_t line) { return line == line_number; });
-    Debugger::the().on_breakpoint_change(wrapper().filename_title(), line_number, BreakpointChange::Removed);
+    if (Debugger::the().change_breakpoint(wrapper().filename_title(), line_number, BreakpointChange::Removed)) {
+        remove_gutter_indicator(m_breakpoint_indicator_id, line_number);
+        breakpoint_lines().remove_first_matching([&](size_t line) { return line == line_number; });
+    }
 }
 
 ErrorOr<void> Editor::update_git_diff_indicators()
