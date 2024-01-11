@@ -55,6 +55,8 @@ public:
         __Count
     };
 
+    static constexpr GUI::ModelRole DISPLAY_VERBOSE = static_cast<GUI::ModelRole>(0x101);
+
     static ErrorOr<String> read_command_line(pid_t pid);
 
     static ProcessModel& the();
