@@ -29,12 +29,12 @@ void ConnectionFromClient::die()
 void ConnectionFromClient::greet(ByteString const& project_root)
 {
     m_filedb.set_project_root(project_root);
-    if (unveil(project_root.characters(), "r") < 0) {
-        perror("unveil");
+    if (auto result = Core::System::unveil(project_root, "r"sv); result.is_error()) {
+        warnln("Failed to unveil `{}`: {}", project_root, result.error());
         exit(1);
     }
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
+    if (auto result = Core::System::unveil(nullptr, nullptr); result.is_error()) {
+        warnln("Failed to lock the veil: {}", result.error());
         exit(1);
     }
 }

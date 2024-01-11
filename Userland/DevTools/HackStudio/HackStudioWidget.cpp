@@ -239,8 +239,8 @@ void HackStudioWidget::open_project(ByteString const& root_path)
 {
     if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
         return;
-    if (chdir(root_path.characters()) < 0) {
-        perror("chdir");
+    if (auto result = Core::System::chdir(root_path); result.is_error()) {
+        warnln("Failed to open project: {}", result.release_error());
         exit(1);
     }
     if (m_project) {
@@ -1024,7 +1024,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_debug_action()
         // The debugger calls wait() on the debuggee, so the TerminalWrapper can't do that.
         auto ptm_res = m_terminal_wrapper->setup_master_pseudoterminal(TerminalWrapper::WaitForChildOnExit::No);
         if (ptm_res.is_error()) {
-            perror("setup_master_pseudoterminal");
+            warnln("Failed to set up master pseudoterminal: {}", ptm_res.release_error());
             return;
         }
 

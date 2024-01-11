@@ -486,11 +486,12 @@ void Editor::set_document(GUI::TextDocument& doc)
         // Otherwise, if the file has already been opened before in some Editor instance, it should exist in the LanguageServer's
         // FileDB, and the LanguageServer should already have its up-to-date content.
         // So it's OK to just pass an fd here (rather than the TextDocument's content).
-        int fd = open(code_document.file_path().characters(), O_RDONLY | O_NOCTTY);
-        if (fd < 0) {
-            perror("open");
+        auto maybe_fd = Core::System::open(code_document.file_path(), O_RDONLY | O_NOCTTY);
+        if (maybe_fd.is_error()) {
+            warnln("Failed to open `{}`: {}", code_document.file_path(), maybe_fd.release_error());
             return;
         }
+        auto fd = maybe_fd.release_value();
         m_language_client->open_file(code_document.file_path(), fd);
         close(fd);
     } else {

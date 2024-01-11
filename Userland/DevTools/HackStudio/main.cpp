@@ -93,18 +93,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static bool make_is_available()
 {
-    pid_t pid;
     char const* argv[] = { "make", "--version", nullptr };
     posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);
     posix_spawn_file_actions_addopen(&action, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
 
-    if ((errno = posix_spawnp(&pid, "make", &action, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
+    auto maybe_pid = Core::System::posix_spawnp("make"sv, &action, nullptr, const_cast<char**>(argv), environ);
+    if (maybe_pid.is_error()) {
+        warnln("Failed to posix_spawn make: {}", maybe_pid.release_error());
         return false;
     }
-    int wstatus;
-    waitpid(pid, &wstatus, 0);
+    pid_t pid = maybe_pid.release_value();
+
+    auto waitpid_result = Core::System::waitpid(pid, 0);
+    if (waitpid_result.is_error()) {
+        warnln("Failed to waitpid for make: {}", waitpid_result.release_error());
+        return false;
+    }
+
+    int wstatus = waitpid_result.value().status;
     posix_spawn_file_actions_destroy(&action);
     return WEXITSTATUS(wstatus) == 0;
 }
