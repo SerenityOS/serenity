@@ -426,6 +426,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
         bool active { false };
         bool is_conjunction { false };
         bool fail { false };
+        bool inverse_matched { false };
         size_t initial_position;
         size_t initial_code_unit_position;
         Optional<size_t> last_accepted_position {};
@@ -623,8 +624,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
         case CharacterCompareType::And:
             disjunction_states.append({
                 .active = true,
-                .is_conjunction = false,
-                .fail = false,
+                .is_conjunction = current_inversion_state(),
+                .fail = current_inversion_state(),
+                .inverse_matched = current_inversion_state(),
                 .initial_position = state.string_position,
                 .initial_code_unit_position = state.string_position_in_code_units,
             });
@@ -632,8 +634,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
         case CharacterCompareType::Or:
             disjunction_states.append({
                 .active = true,
-                .is_conjunction = true,
-                .fail = true,
+                .is_conjunction = !current_inversion_state(),
+                .fail = !current_inversion_state(),
+                .inverse_matched = !current_inversion_state(),
                 .initial_position = state.string_position,
                 .initial_code_unit_position = state.string_position_in_code_units,
             });
@@ -644,6 +647,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 state.string_position = disjunction_state.last_accepted_position.value_or(disjunction_state.initial_position);
                 state.string_position_in_code_units = disjunction_state.last_accepted_code_unit_position.value_or(disjunction_state.initial_code_unit_position);
             }
+            inverse_matched = disjunction_state.inverse_matched || disjunction_state.fail;
             break;
         }
         default:
@@ -664,6 +668,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             if (!failed) {
                 new_disjunction_state.last_accepted_position = state.string_position;
                 new_disjunction_state.last_accepted_code_unit_position = state.string_position_in_code_units;
+                new_disjunction_state.inverse_matched |= inverse_matched;
             }
 
             if (new_disjunction_state.is_conjunction)
@@ -673,6 +678,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
             state.string_position = new_disjunction_state.initial_position;
             state.string_position_in_code_units = new_disjunction_state.initial_code_unit_position;
+            inverse_matched = false;
         }
     }
 

@@ -648,7 +648,7 @@ TEST_CASE(ECMA262_match)
         { "^[\\0-\\x1f]$"sv, "\n"sv },
         { .pattern = "\\bhello\\B"sv, .subject = "hello1"sv, .options = ECMAScriptFlags::Global },
         { "\\b.*\\b"sv, "hello1"sv },
-        { "[^\\D\\S]{2}"sv, "1 "sv },
+        { "[^\\D\\S]{2}"sv, "1 "sv, false },
         { "bar(?=f.)foo"sv, "barfoo"sv },
         { "bar(?=foo)bar"sv, "barbar"sv, false },
         { "bar(?!foo)bar"sv, "barbar"sv, true },
@@ -1173,6 +1173,14 @@ TEST_CASE(inversion_state_in_char_class)
         EXPECT_EQ(result.matches.first().view.to_byte_string(), "slideNumbers"sv);
         EXPECT_EQ(result.capture_group_matches.first()[0].view.to_byte_string(), "slideNumbers"sv);
         EXPECT_EQ(result.capture_group_matches.first()[1].view.to_byte_string(), "}"sv);
+    }
+    {
+        // #21786, /[^\S\n]/.exec("\n") should be null, not [ "\n" ].
+        // This was a general confusion between the inversion state and the negation state (temp inverse).
+        Regex<ECMA262> re("[^\\S\\n]", ECMAScriptFlags::Global | (ECMAScriptFlags)regex::AllFlags::SingleMatch);
+
+        auto result = re.match("\n"sv);
+        EXPECT_EQ(result.success, false);
     }
 }
 

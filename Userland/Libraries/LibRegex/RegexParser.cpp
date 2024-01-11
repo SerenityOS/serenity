@@ -1777,10 +1777,12 @@ bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_
 
     Vector<CompareTypeAndValuePair> compares;
 
+    auto uses_explicit_or_semantics = false;
     if (match(TokenType::Circumflex)) {
         // Negated charclass
         consume();
         compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
+        uses_explicit_or_semantics = true;
     }
 
     // ClassContents :: [empty]
@@ -1799,6 +1801,11 @@ bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_
     // ClassContents :: [+UnicodeSetsMode] ClassSetExpression
     if (flags.unicode_sets && !parse_class_set_expression(compares))
         return false;
+
+    if (uses_explicit_or_semantics && compares.size() > 2) {
+        compares.insert(1, CompareTypeAndValuePair { CharacterCompareType::Or, 0 });
+        compares.empend(CompareTypeAndValuePair { CharacterCompareType::EndAndOr, 0 });
+    }
 
     match_length_minimum += 1;
     stack.insert_bytecode_compare_values(move(compares));
@@ -2466,9 +2473,9 @@ DeprecatedFlyString ECMA262Parser::read_capture_group_specifier(bool take_starti
 {
     static auto id_start_category = Unicode::property_from_string("ID_Start"sv);
     static auto id_continue_category = Unicode::property_from_string("ID_Continue"sv);
-    static constexpr const u32 REPLACEMENT_CHARACTER = 0xFFFD;
-    constexpr const u32 ZERO_WIDTH_NON_JOINER { 0x200C };
-    constexpr const u32 ZERO_WIDTH_JOINER { 0x200D };
+    static constexpr u32 const REPLACEMENT_CHARACTER = 0xFFFD;
+    constexpr u32 const ZERO_WIDTH_NON_JOINER { 0x200C };
+    constexpr u32 const ZERO_WIDTH_JOINER { 0x200D };
 
     if (take_starting_angle_bracket && !consume("<"))
         return {};
