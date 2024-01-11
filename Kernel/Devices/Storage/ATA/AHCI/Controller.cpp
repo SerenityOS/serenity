@@ -11,6 +11,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/InterruptHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
@@ -154,7 +155,7 @@ UNMAP_AFTER_INIT AHCI::HBADefinedCapabilities AHCIController::capabilities() con
 
 UNMAP_AFTER_INIT ErrorOr<Memory::TypedMapping<AHCI::HBA volatile>> AHCIController::map_default_hba_region(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return Memory::map_typed_writable<AHCI::HBA volatile>(PhysicalAddress(PCI::get_BAR5(pci_device_identifier)));
+    return PCI::map_bar<AHCI::HBA volatile>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR5);
 }
 
 AHCIController::~AHCIController() = default;

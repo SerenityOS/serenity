@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
 
 namespace Kernel::PCI {
@@ -36,7 +37,7 @@ NonnullOwnPtr<VolumeManagementDevice> VolumeManagementDevice::must_create(PCI::D
     // resource size of BAR0.
     dbgln("VMD Host bridge @ {}: Start bus at {}, end bus {}", device_identifier.address(), start_bus, 0xff);
     PCI::Domain domain { s_vmd_pci_domain_number++, start_bus, 0xff };
-    auto start_address = PhysicalAddress(PCI::get_BAR0(device_identifier)).page_base();
+    auto start_address = PCI::get_bar_address(device_identifier, PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
     return adopt_own_if_nonnull(new (nothrow) VolumeManagementDevice(domain, start_address)).release_nonnull();
 }
 

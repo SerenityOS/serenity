@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Definitions.h>
 #include <Kernel/Devices/GPU/Intel/NativeGraphicsAdapter.h>
@@ -42,13 +43,15 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 {
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", device_identifier().address());
     auto bar0_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR0);
+    auto bar0_space_address = TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
     auto bar2_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR2);
-    dmesgln_pci(*this, "MMIO @ {}, space size is {:x} bytes", PhysicalAddress(PCI::get_BAR0(device_identifier())), bar0_space_size);
-    dmesgln_pci(*this, "framebuffer @ {}", PhysicalAddress(PCI::get_BAR2(device_identifier())));
+    auto bar2_space_address = TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR2));
+    dmesgln_pci(*this, "MMIO @ {}, space size is {:x} bytes", bar0_space_address, bar0_space_size);
+    dmesgln_pci(*this, "framebuffer @ {}", bar2_space_address);
 
     using MMIORegion = IntelDisplayConnectorGroup::MMIORegion;
-    MMIORegion first_region { MMIORegion::BARAssigned::BAR0, PhysicalAddress(PCI::get_BAR0(device_identifier()) & PCI::bar_address_mask), bar0_space_size };
-    MMIORegion second_region { MMIORegion::BARAssigned::BAR2, PhysicalAddress(PCI::get_BAR2(device_identifier()) & PCI::bar_address_mask), bar2_space_size };
+    MMIORegion first_region { MMIORegion::BARAssigned::BAR0, bar0_space_address, bar0_space_size };
+    MMIORegion second_region { MMIORegion::BARAssigned::BAR2, bar2_space_address, bar2_space_size };
 
     PCI::enable_bus_mastering(device_identifier());
     PCI::enable_io_space(device_identifier());
