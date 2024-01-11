@@ -295,8 +295,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             PhysicalAddress upper;
         };
 
-        Vector<ContiguousPhysicalVirtualRange> contiguous_physical_ranges;
-
+        Optional<ContiguousPhysicalVirtualRange> last_contiguous_physical_range;
         for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
             // We have to copy these onto the stack, because we take a reference to these when printing them out,
             // and doing so on a packed struct field is UB.
@@ -364,6 +363,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                 continue;
             }
 
+            // FIXME: This might have a nicer solution than slicing the ranges apart,
+            //        to just put them back together when we dont find a used range in them
             for (PhysicalSize page_base = address; page_base <= (address + length); page_base += PAGE_SIZE) {
                 auto addr = PhysicalAddress(page_base);
 
@@ -372,24 +373,30 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                 for (auto& used_range : global_data.used_memory_ranges) {
                     if (addr.get() >= used_range.start.get() && addr.get() <= used_range.end.get()) {
                         should_skip = true;
+                        page_base = used_range.end.get();
                         break;
                     }
                 }
                 if (should_skip)
                     continue;
 
-                if (contiguous_physical_ranges.is_empty() || contiguous_physical_ranges.last().upper.offset(PAGE_SIZE) != addr) {
-                    contiguous_physical_ranges.append(ContiguousPhysicalVirtualRange {
-                        .lower = addr,
-                        .upper = addr,
-                    });
+                if (!last_contiguous_physical_range.has_value() || last_contiguous_physical_range->upper.offset(PAGE_SIZE) != addr) {
+                    if (last_contiguous_physical_range.has_value()) {
+                        auto range = last_contiguous_physical_range.release_value();
+                        // FIXME: OOM?
+                        global_data.physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
+                    }
+                    last_contiguous_physical_range = ContiguousPhysicalVirtualRange { .lower = addr, .upper = addr };
                 } else {
-                    contiguous_physical_ranges.last().upper = addr;
+                    last_contiguous_physical_range->upper = addr;
                 }
             }
         }
 
-        for (auto& range : contiguous_physical_ranges) {
+        // FIXME: If this is ever false, theres a good chance that all physical memory is already spent
+        if (last_contiguous_physical_range.has_value()) {
+            auto range = last_contiguous_physical_range.release_value();
+            // FIXME: OOM?
             global_data.physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
         }
 
