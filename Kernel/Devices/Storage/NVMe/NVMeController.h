@@ -78,7 +78,7 @@ private:
     bool m_admin_queue_ready { false };
     size_t m_device_count { 0 };
     AK::Duration m_ready_timeout;
-    u32 m_bar { 0 };
+    PhysicalAddress m_bar { 0 };
     u8 m_dbl_stride { 0 };
     PCI::InterruptType m_irq_type;
     QueueType m_queue_type { QueueType::IRQ };
