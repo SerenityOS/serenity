@@ -1616,14 +1616,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
         // d. Set final to min(final, len).
         final = min(final, length);
 
-        // FIXME: Spec issue: If the TypedArray length changed, the count must also be updated.
-        //        https://github.com/tc39/ecma262/issues/3248
+        // e. Set count to max(final - k, 0).
         count = max(final - k, 0);
 
-        // e. Let srcType be TypedArrayElementType(O).
-        // f. Let targetType be TypedArrayElementType(A).
+        // f. Let srcType be TypedArrayElementType(O).
+        // g. Let targetType be TypedArrayElementType(A).
 
-        // g. If srcType is targetType, then
+        // h. If srcType is targetType, then
         if (typed_array->element_name() == array->element_name()) {
             // i. NOTE: The transfer must be performed in a manner that preserves the bit-level encoding of the source data.
 
@@ -1651,8 +1650,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
             // vii. Let targetByteIndex be A.[[ByteOffset]].
             auto target_byte_index = array->byte_offset();
 
-            // viii. Let limit be targetByteIndex + min(count, len) × elementSize.
-            Checked<u32> limit = min(count, length);
+            // viii. Let limit be targetByteIndex + (count × elementSize).
+            Checked<u32> limit = count;
             limit *= element_size;
             limit += target_byte_index;
             if (limit.has_overflow()) {
@@ -1675,7 +1674,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
                 ++target_byte_index;
             }
         }
-        // h. Else,
+        // i. Else,
         else {
             // i. Let n be 0.
             u32 n = 0;
