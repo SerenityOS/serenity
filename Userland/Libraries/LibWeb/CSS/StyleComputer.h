@@ -109,6 +109,8 @@ public:
         Variant<Linear, CubicBezier, Steps> timing_function;
     };
 
+    void set_viewport_rect(Badge<DOM::Document>, CSSPixelRect const& viewport_rect) { m_viewport_rect = viewport_rect; }
+
 private:
     enum class ComputeStyleMode {
         Normal,
@@ -136,7 +138,8 @@ private:
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 
-    CSSPixelRect viewport_rect() const;
+    [[nodiscard]] CSSPixelRect viewport_rect() const { return m_viewport_rect; }
+
     [[nodiscard]] Length::FontMetrics calculate_root_element_font_metrics(StyleProperties const&) const;
     CSSPixels parent_or_root_element_line_height(DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>) const;
 
@@ -241,6 +244,8 @@ private:
     mutable HashMap<AnimationKey, NonnullOwnPtr<Animation>> m_active_animations;
     mutable HashMap<AnimationKey, OwnPtr<AnimationStateSnapshot>> m_finished_animations; // If fill-mode is forward/both, this is non-null and contains the final state.
     mutable RefPtr<Platform::Timer> m_animation_driver_timer;
+
+    CSSPixelRect m_viewport_rect;
 };
 
 }

@@ -2356,13 +2356,6 @@ void StyleComputer::invalidate_rule_cache()
     m_user_agent_rule_cache = nullptr;
 }
 
-CSSPixelRect StyleComputer::viewport_rect() const
-{
-    if (auto const navigable = document().navigable())
-        return navigable->viewport_rect();
-    return {};
-}
-
 void StyleComputer::did_load_font(FlyString const&)
 {
     document().invalidate_style();
