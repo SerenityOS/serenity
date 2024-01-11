@@ -12,6 +12,7 @@
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
@@ -41,13 +42,13 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 
     PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
-    m_bar = PCI::get_BAR0(device_identifier()) & PCI::bar_address_mask;
+    m_bar = TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
     static_assert(sizeof(ControllerRegister) == REG_SQ0TDBL_START);
     static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 
     // Map only until doorbell register for the controller
     // Queues will individually map the doorbell register respectively
-    m_controller_regs = TRY(Memory::map_typed_writable<ControllerRegister volatile>(PhysicalAddress(m_bar)));
+    m_controller_regs = TRY(Memory::map_typed_writable<ControllerRegister volatile>(m_bar));
 
     auto caps = m_controller_regs->cap;
     m_ready_timeout = Duration::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
@@ -340,7 +341,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
         auto buffer = TRY(MM.allocate_dma_buffer_pages(sq_size, "Admin SQ queue"sv, Memory::Region::Access::ReadWrite, sq_dma_pages));
         sq_dma_region = move(buffer);
     }
-    auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + REG_SQ0TDBL_START)));
+    auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(m_bar.offset(REG_SQ0TDBL_START)));
     Doorbell doorbell = {
         .mmio_reg = move(doorbell_regs),
         .dbbuf_shadow = {},
@@ -415,7 +416,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
     }
 
     auto queue_doorbell_offset = (2 * qid) * (4 << m_dbl_stride);
-    auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + REG_SQ0TDBL_START + queue_doorbell_offset)));
+    auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(m_bar.offset(REG_SQ0TDBL_START + queue_doorbell_offset)));
     Memory::TypedMapping<DoorbellRegister> shadow_doorbell_regs {};
     Memory::TypedMapping<DoorbellRegister> eventidx_doorbell_regs {};
 
