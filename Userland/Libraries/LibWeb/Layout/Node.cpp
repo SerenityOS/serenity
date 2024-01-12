@@ -352,7 +352,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     m_font_list = computed_style.computed_font_list();
     computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this));
     computed_values.set_font_weight(round_to<int>(computed_style.property(CSS::PropertyID::FontWeight)->as_number().number()));
-    m_line_height = computed_style.line_height();
+    computed_values.set_line_height(computed_style.line_height());
 
     computed_values.set_vertical_align(computed_style.vertical_align());
 
@@ -871,9 +871,9 @@ void NodeWithStyle::propagate_style_to_anonymous_wrappers()
     // the parent inherits style from *this* node, not the other way around.
     if (display().is_table_inside() && is<TableWrapper>(parent())) {
         auto& table_wrapper = *static_cast<TableWrapper*>(parent());
+        static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(table_wrapper.computed_values()))).inherit_from(m_computed_values);
         transfer_table_box_computed_values_to_wrapper_computed_values(table_wrapper.m_computed_values);
         table_wrapper.set_font_list(*m_font_list);
-        table_wrapper.set_line_height(m_line_height);
     }
 
     // Propagate style to all anonymous children (except table wrappers!)
@@ -882,7 +882,6 @@ void NodeWithStyle::propagate_style_to_anonymous_wrappers()
             auto& child_computed_values = static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(child.computed_values())));
             child_computed_values.inherit_from(m_computed_values);
             child.set_font_list(*m_font_list);
-            child.set_line_height(m_line_height);
         }
     });
 }
@@ -945,7 +944,6 @@ JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
     auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());
     static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::DisplayOutside::Block, CSS::DisplayInside::Flow));
     wrapper->m_font_list = m_font_list;
-    wrapper->m_line_height = m_line_height;
     return *wrapper;
 }
 

@@ -246,7 +246,7 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto line_height = static_cast<DOM::Element const&>(*layout_node.dom_node()).computed_css_values()->property(property_id);
         if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
             return line_height;
-        return LengthStyleValue::create(Length::make_px(layout_node.line_height()));
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().line_height()));
     }
 
         // FIXME: -> block-size
