@@ -296,7 +296,7 @@ if (current_os == "mac") {
     sources = [
       "//Base/res/ladybird/inspector.css",
       "//Base/res/ladybird/inspector.js",
-      "//Base/res/ladybird/new-tab.html",
+      "//Base/res/ladybird/newtab.html",
       "//Base/res/ladybird/templates/directory.html",
       "//Base/res/ladybird/templates/error.html",
     ]
