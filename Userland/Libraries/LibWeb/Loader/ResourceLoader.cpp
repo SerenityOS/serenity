@@ -230,6 +230,14 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
         response_headers.set("Content-Type", "text/html; charset=UTF-8");
 
+        // Other about static HTML pages
+        auto resource = Core::Resource::load_from_uri(MUST(String::formatted("resource://ladybird/{}.html", url.path_segment_at_index(0))));
+        if (!resource.is_error()) {
+            auto data = resource.value()->data();
+            success_callback(data, response_headers, {});
+            return;
+        }
+
         Platform::EventLoopPlugin::the().deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
             success_callback(ByteString::empty().to_byte_buffer(), response_headers, {});
         });
