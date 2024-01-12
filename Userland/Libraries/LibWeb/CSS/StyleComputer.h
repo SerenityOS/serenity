@@ -128,7 +128,7 @@ private:
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>) const;
     void compute_math_depth(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>) const;
     void compute_defaulted_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>) const;
-    void absolutize_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>) const;
+    void absolutize_values(StyleProperties&) const;
     void transform_box_type_if_needed(StyleProperties&, DOM::Element const&, Optional<CSS::Selector::PseudoElement::Type>) const;
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement::Type>) const;
@@ -141,7 +141,6 @@ private:
     [[nodiscard]] CSSPixelRect viewport_rect() const { return m_viewport_rect; }
 
     [[nodiscard]] Length::FontMetrics calculate_root_element_font_metrics(StyleProperties const&) const;
-    CSSPixels parent_or_root_element_line_height(DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>) const;
 
     struct MatchingRuleSet {
         Vector<MatchingRule> user_agent_rules;

@@ -72,7 +72,7 @@ public:
     };
 
     struct FontMetrics {
-        FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const&, CSSPixels line_height);
+        FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const&);
 
         CSSPixels font_size;
         CSSPixels x_height;

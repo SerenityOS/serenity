@@ -154,8 +154,8 @@ NonnullRefPtr<Gfx::Font const> StyleProperties::font_fallback(bool monospace, bo
     return Platform::FontPlugin::the().default_font();
 }
 
-// FIXME: This implementation is almost identical to line_height(Layout::Node) below. Maybe they can be combined somehow.
-CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const
+// FIXME: This implementation is almost identical to compute_line_height(Layout::Node) below. Maybe they can be combined somehow.
+CSSPixels StyleProperties::compute_line_height(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const
 {
     auto line_height = property(CSS::PropertyID::LineHeight);
 
@@ -178,14 +178,27 @@ CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Length
     }
 
     if (line_height->is_calculated()) {
-        // FIXME: Handle `line-height: calc(...)` despite not having a LayoutNode here.
-        return font_metrics.line_height;
+        if (line_height->as_calculated().resolves_to_number()) {
+            auto resolved = line_height->as_calculated().resolve_number();
+            if (!resolved.has_value()) {
+                dbgln("FIXME: Failed to resolve calc() line-height (number): {}", line_height->as_calculated().to_string());
+                return CSSPixels::nearest_value_for(m_font_list->first().pixel_metrics().line_spacing());
+            }
+            return Length(resolved.value(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
+        }
+
+        auto resolved = line_height->as_calculated().resolve_length(Length::ResolutionContext { viewport_rect, font_metrics, root_font_metrics });
+        if (!resolved.has_value()) {
+            dbgln("FIXME: Failed to resolve calc() line-height: {}", line_height->as_calculated().to_string());
+            return CSSPixels::nearest_value_for(m_font_list->first().pixel_metrics().line_spacing());
+        }
+        return resolved->to_px(viewport_rect, font_metrics, root_font_metrics);
     }
 
     return font_metrics.line_height;
 }
 
-CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
+CSSPixels StyleProperties::compute_line_height(Layout::Node const& layout_node) const
 {
     auto line_height = property(CSS::PropertyID::LineHeight);
 

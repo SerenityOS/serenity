@@ -1,17 +1,17 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x105.21875 children: not-inline
-      BlockContainer <div.test> at (8,8) content-size 784x105.21875 children: inline
-        line 0 width: 500.8125, height: 52.40625, bottom: 52.40625, baseline: 40.59375
-          frag 0 from TextNode start: 0, length: 20, rect: [8,8 500.8125x52.40625]
+    BlockContainer <body> at (8,8) content-size 784x104 children: not-inline
+      BlockContainer <div.test> at (8,8) content-size 784x104 children: inline
+        line 0 width: 500.8125, height: 52, bottom: 52, baseline: 40.390625
+          frag 0 from TextNode start: 0, length: 20, rect: [8,8 500.8125x52]
             "i resolved enough of"
-        line 1 width: 406.40625, height: 52.8125, bottom: 105.21875, baseline: 40.59375
-          frag 0 from TextNode start: 21, length: 16, rect: [8,60 406.40625x52.40625]
+        line 1 width: 406.40625, height: 52, bottom: 104, baseline: 40.390625
+          frag 0 from TextNode start: 21, length: 16, rect: [8,60 406.40625x52]
             "percentages, no?"
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x105.21875]
-      PaintableWithLines (BlockContainer<DIV>.test) [8,8 784x105.21875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x104]
+      PaintableWithLines (BlockContainer<DIV>.test) [8,8 784x104]
         TextPaintable (TextNode<#text>)

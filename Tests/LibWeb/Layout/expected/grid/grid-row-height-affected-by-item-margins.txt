@@ -1,14 +1,14 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x97.8125 [BFC] children: not-inline
-    Box <body> at (10,10) content-size 780x79.8125 [GFC] children: not-inline
-      BlockContainer <h1> at (55.5,32.4375) content-size 689x34.9375 [BFC] children: inline
-        line 0 width: 492.96875, height: 34.9375, bottom: 34.9375, baseline: 27.0625
-          frag 0 from TextNode start: 0, length: 31, rect: [55.5,32.4375 492.96875x34.9375]
+  BlockContainer <html> at (1,1) content-size 798x97.875 [BFC] children: not-inline
+    Box <body> at (10,10) content-size 780x79.875 [GFC] children: not-inline
+      BlockContainer <h1> at (55.5,32.4375) content-size 689x35 [BFC] children: inline
+        line 0 width: 492.96875, height: 35, bottom: 35, baseline: 27.09375
+          frag 0 from TextNode start: 0, length: 31, rect: [55.5,32.4375 492.96875x35]
             "Null publishes fine indie games"
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x99.8125]
-    PaintableBox (Box<BODY>) [9,9 782x81.8125]
-      PaintableWithLines (BlockContainer<H1>) [54.5,31.4375 691x36.9375]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x99.875]
+    PaintableBox (Box<BODY>) [9,9 782x81.875]
+      PaintableWithLines (BlockContainer<H1>) [54.5,31.4375 691x37]
         TextPaintable (TextNode<#text>)

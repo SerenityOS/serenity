@@ -5,72 +5,72 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       Box <div.outer.normal> at (38,38) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (48,48) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 54.578125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 6, rect: [48,48 54.578125x17.46875]
+          line 0 width: 54.578125, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 6, rect: [48,48 54.578125x17]
               "normal"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.stretch> at (208,38) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (218,48) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 58.796875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 7, rect: [218,48 58.796875x17.46875]
+          line 0 width: 58.796875, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 7, rect: [218,48 58.796875x17]
               "stretch"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.start> at (378,38) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (388,48) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 41.234375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 5, rect: [388,48 41.234375x17.46875]
+          line 0 width: 41.234375, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 5, rect: [388,48 41.234375x17]
               "start"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.flex-start> at (548,38) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (558,48) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 76.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 10, rect: [558,48 76.8125x17.46875]
+          line 0 width: 76.8125, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 10, rect: [558,48 76.8125x17]
               "flex-start"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.end> at (38,208) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (48,308) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 26.1875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 3, rect: [48,308 26.1875x17.46875]
+          line 0 width: 26.1875, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 3, rect: [48,308 26.1875x17]
               "end"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.flex-end> at (208,208) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (218,308) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 61.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 8, rect: [218,308 61.765625x17.46875]
+          line 0 width: 61.765625, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 8, rect: [218,308 61.765625x17]
               "flex-end"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.center> at (378,208) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (388,258) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 51.625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 6, rect: [388,258 51.625x17.46875]
+          line 0 width: 51.625, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 6, rect: [388,258 51.625x17]
               "center"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.self-start> at (548,208) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (558,218) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 76.453125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 10, rect: [558,218 76.453125x17.46875]
+          line 0 width: 76.453125, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 10, rect: [558,218 76.453125x17]
               "self-start"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.self-end> at (38,378) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
         BlockContainer <div> at (48,478) content-size 150x50 positioned [BFC] children: inline
-          line 0 width: 61.40625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 8, rect: [48,478 61.40625x17.46875]
+          line 0 width: 61.40625, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 8, rect: [48,478 61.40625x17]
               "self-end"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline

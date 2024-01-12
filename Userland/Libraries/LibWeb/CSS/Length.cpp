@@ -19,14 +19,14 @@
 
 namespace Web::CSS {
 
-Length::FontMetrics::FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const& pixel_metrics, CSSPixels line_height)
+Length::FontMetrics::FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const& pixel_metrics)
     : font_size(font_size)
     , x_height(pixel_metrics.x_height)
     // FIXME: This is only approximately the cap height. The spec suggests measuring the "O" glyph:
     //        https://www.w3.org/TR/css-values-4/#cap
     , cap_height(pixel_metrics.ascent)
     , zero_advance(pixel_metrics.advance_of_ascii_zero + pixel_metrics.glyph_spacing)
-    , line_height(line_height)
+    , line_height(round(pixel_metrics.line_spacing()))
 {
 }
 
@@ -138,8 +138,8 @@ Length::ResolutionContext Length::ResolutionContext::for_layout_node(Layout::Nod
     VERIFY(root_element->layout_node());
     return Length::ResolutionContext {
         .viewport_rect = node.navigable()->viewport_rect(),
-        .font_metrics = { node.computed_values().font_size(), node.first_available_font().pixel_metrics(), node.line_height() },
-        .root_font_metrics = { root_element->layout_node()->computed_values().font_size(), root_element->layout_node()->first_available_font().pixel_metrics(), root_element->layout_node()->line_height() },
+        .font_metrics = { node.computed_values().font_size(), node.first_available_font().pixel_metrics() },
+        .root_font_metrics = { root_element->layout_node()->computed_values().font_size(), root_element->layout_node()->first_available_font().pixel_metrics() },
     };
 }
 
@@ -170,12 +170,10 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
         FontMetrics font_metrics {
             layout_node.computed_values().font_size(),
             layout_node.first_available_font().pixel_metrics(),
-            layout_node.line_height()
         };
         FontMetrics root_font_metrics {
             root_element->layout_node()->computed_values().font_size(),
             root_element->layout_node()->first_available_font().pixel_metrics(),
-            root_element->layout_node()->line_height()
         };
 
         return font_relative_length_to_px(font_metrics, root_font_metrics);

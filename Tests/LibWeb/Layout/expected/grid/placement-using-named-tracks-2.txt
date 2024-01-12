@@ -3,23 +3,23 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (10,10) content-size 780x77 children: not-inline
       Box <div.grid-container> at (11,11) content-size 778x75 [GFC] children: not-inline
         BlockContainer <div.grid-item.a> at (12,12) content-size 257.328125x73 [BFC] children: inline
-          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [12,12 6.34375x17.46875]
+          line 0 width: 6.34375, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 1, rect: [12,12 6.34375x17]
               "1"
           TextNode <#text>
         BlockContainer <div.grid-item.b> at (530.65625,12) content-size 257.328125x48 [BFC] children: inline
-          line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [530.65625,12 8.8125x17.46875]
+          line 0 width: 8.8125, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 1, rect: [530.65625,12 8.8125x17]
               "2"
           TextNode <#text>
         BlockContainer <div.grid-item.c> at (271.328125,12) content-size 257.328125x23 [BFC] children: inline
-          line 0 width: 9.09375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [271.328125,12 9.09375x17.46875]
+          line 0 width: 9.09375, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 1, rect: [271.328125,12 9.09375x17]
               "3"
           TextNode <#text>
         BlockContainer <div.grid-item.d> at (271.328125,62) content-size 516.65625x23 [BFC] children: inline
-          line 0 width: 7.75, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [271.328125,62 7.75x17.46875]
+          line 0 width: 7.75, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 1, rect: [271.328125,62 7.75x17]
               "4"
           TextNode <#text>
 

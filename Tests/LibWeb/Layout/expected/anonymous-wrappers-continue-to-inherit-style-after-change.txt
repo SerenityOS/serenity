@@ -1,21 +1,21 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x89.84375 [BFC] children: not-inline
-    BlockContainer <body> at (8,21.4375) content-size 784x73.84375 children: not-inline
-      BlockContainer <h1> at (8,21.4375) content-size 784x34.9375 children: inline
-        line 0 width: 105.53125, height: 34.9375, bottom: 34.9375, baseline: 27.0625
-          frag 0 from TextNode start: 0, length: 6, rect: [8,21.4375 105.53125x34.9375]
+  BlockContainer <html> at (0,0) content-size 800x89.4375 [BFC] children: not-inline
+    BlockContainer <body> at (8,21.4375) content-size 784x73.4375 children: not-inline
+      BlockContainer <h1> at (8,21.4375) content-size 784x35 children: inline
+        line 0 width: 105.53125, height: 35, bottom: 35, baseline: 27.09375
+          frag 0 from TextNode start: 0, length: 6, rect: [8,21.4375 105.53125x35]
             "header"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (8,77.8125) content-size 784x17.46875 children: inline
-        line 0 width: 212.125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 24, rect: [8,77.8125 212.125x17.46875]
+      BlockContainer <(anonymous)> at (8,77.875) content-size 784x17 children: inline
+        line 0 width: 212.125, height: 17, bottom: 17, baseline: 13.296875
+          frag 0 from TextNode start: 0, length: 24, rect: [8,77.875 212.125x17]
             "anonymously wrapped text"
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x89.84375] overflow: [0,0 800x95.28125]
-    PaintableWithLines (BlockContainer<BODY>) [8,21.4375 784x73.84375]
-      PaintableWithLines (BlockContainer<H1>) [8,21.4375 784x34.9375]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x89.4375] overflow: [0,0 800x94.875]
+    PaintableWithLines (BlockContainer<BODY>) [8,21.4375 784x73.4375]
+      PaintableWithLines (BlockContainer<H1>) [8,21.4375 784x35]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [8,77.8125 784x17.46875]
+      PaintableWithLines (BlockContainer(anonymous)) [8,77.875 784x17]
         TextPaintable (TextNode<#text>)
