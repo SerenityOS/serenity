@@ -301,6 +301,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TreeView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
+    process_table_view.column_header().set_section_selectable(ProcessModel::Icon, false);
 
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column) {
         process_table_view.set_column_visible(column,
