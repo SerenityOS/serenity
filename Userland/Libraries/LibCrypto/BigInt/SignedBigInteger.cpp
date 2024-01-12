@@ -35,7 +35,7 @@ size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) cons
     return m_unsigned_data.export_data(bytes_view, remove_leading_zeros) + 1;
 }
 
-SignedBigInteger SignedBigInteger::from_base(u16 N, StringView str)
+ErrorOr<SignedBigInteger> SignedBigInteger::from_base(u16 N, StringView str)
 {
     auto sign = false;
     if (str.length() > 1) {
@@ -47,8 +47,8 @@ SignedBigInteger SignedBigInteger::from_base(u16 N, StringView str)
         if (maybe_sign == '+')
             str = str.substring_view(1);
     }
-    auto unsigned_data = UnsignedBigInteger::from_base(N, str);
-    return { move(unsigned_data), sign };
+    auto unsigned_data = TRY(UnsignedBigInteger::from_base(N, str));
+    return SignedBigInteger { move(unsigned_data), sign };
 }
 
 ErrorOr<String> SignedBigInteger::to_base(u16 N) const

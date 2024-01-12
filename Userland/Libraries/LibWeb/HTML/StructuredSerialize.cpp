@@ -936,7 +936,8 @@ private:
         auto string_view = TRY(Bindings::throw_dom_exception_if_needed(vm, [&string]() {
             return string->utf8_string_view();
         }));
-        return JS::BigInt::create(vm, ::Crypto::SignedBigInteger::from_base(10, string_view.substring_view(0, string_view.length() - 1)));
+        auto bigint = MUST(::Crypto::SignedBigInteger::from_base(10, string_view.substring_view(0, string_view.length() - 1)));
+        return JS::BigInt::create(vm, bigint);
     }
 };
 

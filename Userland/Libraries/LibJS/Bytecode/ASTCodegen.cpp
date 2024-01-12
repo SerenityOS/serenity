@@ -273,12 +273,12 @@ Bytecode::CodeGenerationErrorOr<void> BigIntLiteral::generate_bytecode(Bytecode:
     auto integer = [&] {
         if (m_value[0] == '0' && m_value.length() >= 3)
             if (m_value[1] == 'x' || m_value[1] == 'X')
-                return Crypto::SignedBigInteger::from_base(16, m_value.substring(2, m_value.length() - 3));
+                return MUST(Crypto::SignedBigInteger::from_base(16, m_value.substring(2, m_value.length() - 3)));
         if (m_value[1] == 'o' || m_value[1] == 'O')
-            return Crypto::SignedBigInteger::from_base(8, m_value.substring(2, m_value.length() - 3));
+            return MUST(Crypto::SignedBigInteger::from_base(8, m_value.substring(2, m_value.length() - 3)));
         if (m_value[1] == 'b' || m_value[1] == 'B')
-            return Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3));
-        return Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1));
+            return MUST(Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3)));
+        return MUST(Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1)));
     }();
 
     generator.emit<Bytecode::Op::NewBigInt>(integer);

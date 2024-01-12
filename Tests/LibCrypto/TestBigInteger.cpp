@@ -234,9 +234,13 @@ TEST_CASE(test_unsigned_bigint_division_combined_test)
 
 TEST_CASE(test_unsigned_bigint_base10_from_string)
 {
-    auto result = Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793"sv);
+    auto result = TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793"sv));
     Vector<u32> expected_result { 3806301393, 954919431, 3879607298, 721 };
     EXPECT_EQ(result.words(), expected_result);
+
+    Vector<StringView> invalid_base10_number_strings { "1A"sv, "1:"sv, "Z1"sv, "1/"sv };
+    for (auto invalid_base10_number_string : invalid_base10_number_strings)
+        EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(10, invalid_base10_number_string).is_error(), true);
 }
 
 TEST_CASE(test_unsigned_bigint_base10_to_string)
@@ -701,11 +705,11 @@ EXPECT_EQUAL_TO(zero, -0.0);
     double double_below_max_value = nextafter(double_max_value, 0.0);
     VERIFY(double_below_max_value < double_max_value);
     VERIFY(double_below_max_value < (double_max_value - 1.0));
-    auto max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto max_value_in_bigint = TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv));
     auto max_value_plus_one = max_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
     auto max_value_minus_one = max_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
 
-    auto below_max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto below_max_value_in_bigint = TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv));
 
     EXPECT_EQUAL_TO(max_value_in_bigint, double_max_value);
     EXPECT_LESS_THAN(max_value_minus_one, double_max_value);
@@ -723,11 +727,11 @@ EXPECT_EQUAL_TO(zero, -0.0);
     double double_above_min_value = nextafter(double_min_value, 0.0);
     VERIFY(double_above_min_value > double_min_value);
     VERIFY(double_above_min_value > (double_min_value + 1.0));
-    auto min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto min_value_in_bigint = TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv));
     auto min_value_plus_one = min_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
     auto min_value_minus_one = min_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
 
-    auto above_min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto above_min_value_in_bigint = TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "-fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv));
 
     EXPECT_EQUAL_TO(min_value_in_bigint, double_min_value);
     EXPECT_LESS_THAN(min_value_minus_one, double_min_value);
@@ -785,89 +789,89 @@ TEST_CASE(to_double)
     double infinity = INFINITY;
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv)),
         double_max_value);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv)),
         double_max_value);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"sv)),
         double_max_value);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv)),
         infinity);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv)),
         -double_max_value);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::SignedBigInteger::from_base(16, "-ffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "-ffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv)),
         -double_max_value);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::SignedBigInteger::from_base(16, "-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"sv),
+        TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"sv)),
         -double_max_value);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::SignedBigInteger::from_base(16, "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(16, "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv)),
         -infinity);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffffff"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffffff"sv)),
         18446744073709549568.0);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800"sv)),
         18446744073709549568.0);
 
     EXPECT_TO_EQUAL_DOUBLE(
-        Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff8ff"sv),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff8ff"sv)),
         18446744073709549568.0);
 
-    EXPECT_TO_EQUAL_DOUBLE(Crypto::SignedBigInteger::from_base(10, "1234567890123456789"sv),
+    EXPECT_TO_EQUAL_DOUBLE(TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(10, "1234567890123456789"sv)),
         1234567890123456800.0);
 
-    EXPECT_TO_EQUAL_DOUBLE(Crypto::SignedBigInteger::from_base(10, "2345678901234567890"sv),
+    EXPECT_TO_EQUAL_DOUBLE(TRY_OR_FAIL(Crypto::SignedBigInteger::from_base(10, "2345678901234567890"sv)),
         2345678901234567680.0);
 
     EXPECT_EQ(
-        Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff00"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff00"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         2305843009213693696.0);
 
     EXPECT_EQ(
-        Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff00"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::RoundTowardZero),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff00"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::RoundTowardZero),
         2305843009213693696.0);
 
     EXPECT_EQ(
-        Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff80"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff80"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         2305843009213693952.0);
 
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000001"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "20000000000001"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         9007199254740992.0);
 
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000002"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "20000000000002"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         9007199254740994.0);
 
     // 2^53 = 20000000000000, +3 Rounds up because of tiesRoundToEven
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000003"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "20000000000003"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         9007199254740996.0);
 
     // +4 is exactly 9007199254740996
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000004"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "20000000000004"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         9007199254740996.0);
 
     // +5 rounds down because of tiesRoundToEven
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000005"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "20000000000005"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         9007199254740996.0);
 
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000006"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "20000000000006"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         9007199254740998.0);
 
-    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(10, "98382635059784269824"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+    EXPECT_EQ(TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(10, "98382635059784269824"sv)).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
         bit_cast<double>(0x4415555555555555ULL));
 
 #undef EXPECT_TO_EQUAL_DOUBLE
@@ -982,11 +986,11 @@ TEST_CASE(unsigned_bigint_double_comparisons)
         double double_below_max_value = nextafter(double_max_value, 0.0);
         VERIFY(double_below_max_value < double_max_value);
         VERIFY(double_below_max_value < (double_max_value - 1.0));
-        auto max_value_in_bigint = Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+        auto max_value_in_bigint = TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv));
         auto max_value_plus_one = max_value_in_bigint.plus(Crypto::UnsignedBigInteger { 1 });
         auto max_value_minus_one = max_value_in_bigint.minus(Crypto::UnsignedBigInteger { 1 });
 
-        auto below_max_value_in_bigint = Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+        auto below_max_value_in_bigint = TRY_OR_FAIL(Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv));
 
         EXPECT_EQUAL_TO(max_value_in_bigint, double_max_value);
         EXPECT_LESS_THAN(max_value_minus_one, double_max_value);

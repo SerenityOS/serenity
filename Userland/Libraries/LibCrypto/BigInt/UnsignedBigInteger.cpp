@@ -132,16 +132,22 @@ size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) co
     return out;
 }
 
-UnsignedBigInteger UnsignedBigInteger::from_base(u16 N, StringView str)
+ErrorOr<UnsignedBigInteger> UnsignedBigInteger::from_base(u16 N, StringView str)
 {
     VERIFY(N <= 36);
     UnsignedBigInteger result;
     UnsignedBigInteger base { N };
 
-    for (auto& c : str) {
+    for (auto const& c : str) {
         if (c == '_')
             continue;
-        result = result.multiplied_by(base).plus(parse_ascii_base36_digit(c));
+        if (!is_ascii_base36_digit(c))
+            return Error::from_string_literal("Invalid Base36 digit");
+        auto digit = parse_ascii_base36_digit(c);
+        if (digit >= N)
+            return Error::from_string_literal("Base36 digit out of range");
+
+        result = result.multiplied_by(base).plus(digit);
     }
     return result;
 }
