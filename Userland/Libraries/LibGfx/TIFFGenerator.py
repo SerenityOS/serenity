@@ -136,6 +136,7 @@ known_tags: List[Tag] = [
     Tag('317', [TIFFType.UnsignedShort], [1], Predictor.NoPrediction, "Predictor", Predictor),
     Tag('320', [TIFFType.UnsignedShort], [], None, "ColorMap"),
     Tag('338', [TIFFType.UnsignedShort], [], None, "ExtraSamples", ExtraSample),
+    Tag('34665', [TIFFType.UnsignedLong, TIFFType.IFD], [1], None, "ExifIFD"),
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
 
