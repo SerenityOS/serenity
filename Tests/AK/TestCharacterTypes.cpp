@@ -132,6 +132,40 @@ TEST_CASE(to_ascii_uppercase)
     compare_value_output_over(ASCII, toupper, to_ascii_uppercase);
 }
 
+TEST_CASE(parse_ascii_base36_digit)
+{
+    EXPECT_EQ(parse_ascii_base36_digit('0'), 0u);
+    EXPECT_EQ(parse_ascii_base36_digit('9'), 9u);
+    EXPECT_EQ(parse_ascii_base36_digit('A'), 10u);
+    EXPECT_EQ(parse_ascii_base36_digit('Z'), 35u);
+    EXPECT_EQ(parse_ascii_base36_digit('a'), 10u);
+    EXPECT_EQ(parse_ascii_base36_digit('z'), 35u);
+    EXPECT_CRASH("parsing Base36 digit before valid numeric range", [] {
+        parse_ascii_base36_digit('/');
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_CRASH("parsing Base36 digit after valid numeric range", [] {
+        parse_ascii_base36_digit(':');
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_CRASH("parsing Base36 digit before valid uppercase range", [] {
+        parse_ascii_base36_digit('@');
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_CRASH("parsing Base36 digit after valid uppercase range", [] {
+        parse_ascii_base36_digit('[');
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_CRASH("parsing Base36 digit before valid lowercase range", [] {
+        parse_ascii_base36_digit('`');
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_CRASH("parsing Base36 digit after valid lowercase range", [] {
+        parse_ascii_base36_digit('{');
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}
+
 TEST_CASE(parse_ascii_digit)
 {
     EXPECT_EQ(parse_ascii_digit('0'), 0u);
