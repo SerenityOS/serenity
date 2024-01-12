@@ -342,6 +342,16 @@ void HeaderView::set_section_visible(int section, bool visible)
     update();
 }
 
+void HeaderView::set_section_selectable(int section, bool selectable)
+{
+    auto& data = section_data(section);
+    if (data.selectable == selectable)
+        return;
+    data.selectable = selectable;
+    if (m_context_menu)
+        m_context_menu = nullptr;
+}
+
 Menu& HeaderView::ensure_context_menu()
 {
     // FIXME: This menu needs to be rebuilt if the model is swapped out,
@@ -358,6 +368,8 @@ Menu& HeaderView::ensure_context_menu()
         int section_count = this->section_count();
         for (int section = 0; section < section_count; ++section) {
             auto& column_data = this->section_data(section);
+            if (!column_data.selectable)
+                continue;
             auto name = model()->column_name(section).release_value_but_fixme_should_propagate_errors().to_byte_string();
             column_data.visibility_action = Action::create_checkable(name, [this, section](auto& action) {
                 set_section_visible(section, action.is_checked());

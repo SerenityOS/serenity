@@ -36,6 +36,8 @@ public:
     bool is_section_visible(int section) const;
     void set_section_visible(int section, bool);
 
+    void set_section_selectable(int section, bool);
+
     int section_count() const;
     Gfx::IntRect section_rect(int section) const;
 
@@ -92,6 +94,7 @@ private:
         bool has_initialized_size { false };
         bool has_initialized_default_size { false };
         bool visibility { true };
+        bool selectable { true };
         RefPtr<Action> visibility_action;
         Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterLeft };
     };
