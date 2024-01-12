@@ -217,7 +217,7 @@ bool is_probably_prime(UnsignedBigInteger const& p)
 UnsignedBigInteger random_big_prime(size_t bits)
 {
     VERIFY(bits >= 33);
-    UnsignedBigInteger min = UnsignedBigInteger::from_base(10, "6074001000"sv).shift_left(bits - 33);
+    UnsignedBigInteger min = "6074001000"_bigint.shift_left(bits - 33);
     UnsignedBigInteger max = UnsignedBigInteger { 1 }.shift_left(bits).minus(1);
     for (;;) {
         auto p = random_number(min, max);
