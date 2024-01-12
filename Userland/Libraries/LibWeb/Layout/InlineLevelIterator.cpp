@@ -190,7 +190,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next_without_lookahead(
         Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
         float glyph_run_width = 0;
         Gfx::for_each_glyph_position(
-            { 0, 0 }, chunk.view, text_node.font_list(), [&](Gfx::DrawGlyphOrEmoji const& glyph_or_emoji) {
+            { 0, 0 }, chunk.view, text_node.computed_values().font_list(), [&](Gfx::DrawGlyphOrEmoji const& glyph_or_emoji) {
                 glyph_run.append(glyph_or_emoji);
                 return IterationDecision::Continue;
             },
