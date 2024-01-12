@@ -673,7 +673,7 @@ double string_to_number(StringView string)
 
     // 4. Return StringNumericValue of literal.
     if (result->base != 10) {
-        auto bigint = Crypto::UnsignedBigInteger::from_base(result->base, result->literal);
+        auto bigint = MUST(Crypto::UnsignedBigInteger::from_base(result->base, result->literal));
         return bigint.to_double();
     }
 
@@ -842,7 +842,7 @@ static Optional<BigInt*> string_to_bigint(VM& vm, StringView string)
 
     // 4. Let mv be the MV of literal.
     // 5. Assert: mv is an integer.
-    auto bigint = Crypto::SignedBigInteger::from_base(result->base, result->literal);
+    auto bigint = MUST(Crypto::SignedBigInteger::from_base(result->base, result->literal));
     if (result->is_negative && (bigint != BIGINT_ZERO))
         bigint.negate();
 

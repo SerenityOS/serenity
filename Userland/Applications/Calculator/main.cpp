@@ -59,8 +59,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
-                auto const number = StringView(clipboard.data);
-                widget->set_typed_entry(Crypto::BigFraction(number));
+                auto number_or_error = Crypto::BigFraction::from_string(StringView(clipboard.data));
+                if (!number_or_error.is_error())
+                    widget->set_typed_entry(number_or_error.release_value());
             }
         }
     }));

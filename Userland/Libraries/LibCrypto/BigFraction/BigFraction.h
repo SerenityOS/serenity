@@ -14,7 +14,7 @@ namespace Crypto {
 class BigFraction {
     // FIXME Make the whole API more error-friendly. This includes:
     //   - Propagating errors from BigIntegers
-    //   - Returns errors from both BigFraction(StringView) and BigFraction(numerator, denominator);
+    //   - Returns errors from BigFraction(numerator, denominator);
     //   - Duplicate fallible operators with a error-friendly version
 
 public:
@@ -27,8 +27,9 @@ public:
     BigFraction& operator=(Crypto::BigFraction const&) = default;
     BigFraction& operator=(Crypto::BigFraction&&) = default;
 
-    explicit BigFraction(StringView);
     explicit BigFraction(double);
+
+    static ErrorOr<BigFraction> from_string(StringView);
 
     BigFraction operator+(BigFraction const&) const;
     BigFraction operator-(BigFraction const&) const;
