@@ -136,6 +136,7 @@ HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
 
 ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_are_present(Metadata const& metadata)"
+TIFF_TYPE_FROM_U16 = "ErrorOr<Type> tiff_type_from_u16(u16 type)"
 
 LICENSE = R"""/*
  * Copyright (c) 2023, Lucas Chollet <lucas.chollet@serenityos.org>
@@ -369,6 +370,7 @@ using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>
 
 {HANDLE_TAG_SIGNATURE};
 {ENSURE_BASELINE_TAG_PRESENCE};
+{TIFF_TYPE_FROM_U16};
 
 }}
 
@@ -459,6 +461,9 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
         return Error::from_string_literal("Unable to decode image, missing required tag {tag.name}.");
 """ for tag in filter(lambda tag: tag.is_required, known_tags)])
 
+    tiff_type_from_u16_cases = '\n'.join([fR"""    case to_underlying(Type::{t.name}):
+        return Type::{t.name};""" for t in TIFFType])
+
     output = fR"""{LICENSE}
 
 #include <AK/Debug.h>
@@ -496,6 +501,15 @@ static String value_formatter(u32 tag_id, Value const& v) {{
 {{
 {ensure_tags_are_present}
     return {{}};
+}}
+
+{TIFF_TYPE_FROM_U16}
+{{
+    switch (type) {{
+{tiff_type_from_u16_cases}
+    default:
+        return Error::from_string_literal("TIFFImageDecoderPlugin: Unknown type");
+    }}
 }}
 
 
