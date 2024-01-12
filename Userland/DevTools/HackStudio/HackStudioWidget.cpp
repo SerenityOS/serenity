@@ -801,6 +801,7 @@ void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
 
     wrapper.on_tab_close_request = [this, &parent](auto& tab) {
         parent.deferred_invoke([this, &parent, &tab] {
+            tab.editor().document().unregister_client(tab.editor());
             set_current_editor_wrapper(tab);
             parent.remove_tab(tab);
             m_all_editor_wrappers.remove_first_matching([&tab](auto& entry) { return entry == &tab; });
