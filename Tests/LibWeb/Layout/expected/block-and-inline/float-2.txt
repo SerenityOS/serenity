@@ -2,25 +2,25 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x60 [BFC] children: not-inline
     BlockContainer <(anonymous)> at (0,0) content-size 800x0 children: inline
       TextNode <#text>
-    BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x17 children: not-inline
       BlockContainer <div#b> at (9,9) content-size 50x50 floating [BFC] children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x0 children: inline
         TextNode <#text>
         TextNode <#text>
-      BlockContainer <div#a> at (8,8) content-size 784x17.46875 children: inline
-        line 0 width: 37.578125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 4, rect: [60,8 37.578125x17.46875]
+      BlockContainer <div#a> at (8,8) content-size 784x17 children: inline
+        line 0 width: 37.578125, height: 17, bottom: 17, baseline: 13.296875
+          frag 0 from TextNode start: 0, length: 4, rect: [60,8 37.578125x17]
             "Text"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (8,25.46875) content-size 784x0 children: inline
+      BlockContainer <(anonymous)> at (8,25) content-size 784x0 children: inline
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x60]
     PaintableWithLines (BlockContainer(anonymous)) [0,0 800x0]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875] overflow: [8,8 784x52]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17] overflow: [8,8 784x52]
       PaintableWithLines (BlockContainer<DIV>#b) [8,8 52x52]
       PaintableWithLines (BlockContainer(anonymous)) [8,8 784x0]
-      PaintableWithLines (BlockContainer<DIV>#a) [8,8 784x17.46875]
+      PaintableWithLines (BlockContainer<DIV>#a) [8,8 784x17]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [8,25.46875 784x0]
+      PaintableWithLines (BlockContainer(anonymous)) [8,25 784x0]

@@ -2,34 +2,34 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x20 [BFC] children: not-inline
     BlockContainer <body> at (10,10) content-size 780x2 children: not-inline
       BlockContainer <div> at (11,11) content-size 500x0 positioned children: not-inline
-        BlockContainer <h1> at (12,45.5) content-size 498x330.53125 positioned [BFC] children: inline
-          line 0 width: 498, height: 330.53125, bottom: 330.53125, baseline: 43.28125
-            frag 0 from BlockContainer start: 0, length: 0, rect: [13,46.5 496x328.53125]
-          BlockContainer <span> at (13,46.5) content-size 496x328.53125 inline-block [BFC] children: inline
-            line 0 width: 246.484375, height: 54.59375, bottom: 54.59375, baseline: 42.28125
-              frag 0 from TextNode start: 0, length: 9, rect: [13,46.5 246.484375x54.59375]
+        BlockContainer <h1> at (12,45.5) content-size 498x332 positioned [BFC] children: inline
+          line 0 width: 498, height: 332, bottom: 332, baseline: 43.484375
+            frag 0 from BlockContainer start: 0, length: 0, rect: [13,46.5 496x330]
+          BlockContainer <span> at (13,46.5) content-size 496x330 inline-block [BFC] children: inline
+            line 0 width: 246.484375, height: 55, bottom: 55, baseline: 42.484375
+              frag 0 from TextNode start: 0, length: 9, rect: [13,46.5 246.484375x55]
                 "Skew is a"
-            line 1 width: 240.53125, height: 55.1875, bottom: 109.78125, baseline: 42.28125
-              frag 0 from TextNode start: 10, length: 10, rect: [13,100.5 240.53125x54.59375]
+            line 1 width: 240.53125, height: 55, bottom: 110, baseline: 42.484375
+              frag 0 from TextNode start: 10, length: 10, rect: [13,101.5 240.53125x55]
                 "web-first,"
-            line 2 width: 377.9375, height: 54.78125, bottom: 163.96875, baseline: 42.28125
-              frag 0 from TextNode start: 21, length: 14, rect: [13,155.5 377.9375x54.59375]
+            line 2 width: 377.9375, height: 55, bottom: 165, baseline: 42.484375
+              frag 0 from TextNode start: 21, length: 14, rect: [13,156.5 377.9375x55]
                 "cross-platform"
-            line 3 width: 314.015625, height: 55.375, bottom: 219.15625, baseline: 42.28125
-              frag 0 from TextNode start: 36, length: 11, rect: [13,209.5 314.015625x54.59375]
+            line 3 width: 314.015625, height: 55, bottom: 220, baseline: 42.484375
+              frag 0 from TextNode start: 36, length: 11, rect: [13,211.5 314.015625x55]
                 "programming"
-            line 4 width: 415.734375, height: 54.96875, bottom: 273.34375, baseline: 42.28125
-              frag 0 from TextNode start: 48, length: 16, rect: [13,264.5 415.734375x54.59375]
+            line 4 width: 415.734375, height: 55, bottom: 275, baseline: 42.484375
+              frag 0 from TextNode start: 48, length: 16, rect: [13,266.5 415.734375x55]
                 "language with an"
-            line 5 width: 492.671875, height: 55.5625, bottom: 328.53125, baseline: 42.28125
-              frag 0 from TextNode start: 65, length: 20, rect: [13,318.5 492.671875x54.59375]
+            line 5 width: 492.671875, height: 55, bottom: 330, baseline: 42.484375
+              frag 0 from TextNode start: 65, length: 20, rect: [13,321.5 492.671875x55]
                 "optimizing compiler."
             TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x22] overflow: [1,1 798x376.03125]
-    PaintableWithLines (BlockContainer<BODY>) [9,9 782x4] overflow: [10,10 780x367.03125]
-      PaintableWithLines (BlockContainer<DIV>) [10,10 502x2] overflow: [11,44.5 500x332.53125]
-        PaintableWithLines (BlockContainer<H1>) [11,44.5 500x332.53125]
-          PaintableWithLines (BlockContainer<SPAN>) [12,45.5 498x330.53125]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x22] overflow: [1,1 798x377.5]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x4] overflow: [10,10 780x368.5]
+      PaintableWithLines (BlockContainer<DIV>) [10,10 502x2] overflow: [11,44.5 500x334]
+        PaintableWithLines (BlockContainer<H1>) [11,44.5 500x334]
+          PaintableWithLines (BlockContainer<SPAN>) [12,45.5 498x332]
             TextPaintable (TextNode<#text>)

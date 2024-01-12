@@ -2,15 +2,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (100,8) content-size 200x200 children: not-inline
       BlockContainer <div.row> at (50,8) content-size 250x200 children: inline
-        BlockContainer <div.item> at (50,8) content-size 125x17.46875 floating [BFC] children: inline
-          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 1, length: 1, rect: [50,8 9.34375x17.46875]
+        BlockContainer <div.item> at (50,8) content-size 125x17 floating [BFC] children: inline
+          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 1, length: 1, rect: [50,8 9.34375x17]
               "a"
           TextNode <#text>
         TextNode <#text>
-        BlockContainer <div.item> at (175,8) content-size 125x17.46875 floating [BFC] children: inline
-          line 0 width: 9.46875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 1, length: 1, rect: [175,8 9.46875x17.46875]
+        BlockContainer <div.item> at (175,8) content-size 125x17 floating [BFC] children: inline
+          line 0 width: 9.46875, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 1, length: 1, rect: [175,8 9.46875x17]
               "b"
           TextNode <#text>
         TextNode <#text>
@@ -19,7 +19,7 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [100,8 200x200] overflow: [50,8 250x200]
       PaintableWithLines (BlockContainer<DIV>.row) [50,8 250x200]
-        PaintableWithLines (BlockContainer<DIV>.item) [50,8 125x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.item) [50,8 125x17]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.item) [175,8 125x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.item) [175,8 125x17]
           TextPaintable (TextNode<#text>)

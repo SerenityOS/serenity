@@ -1,30 +1,30 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
-      Box <div.foo> at (8,8) content-size 784x17.46875 flex-container(row) [FFC] children: not-inline
-        BlockContainer <(anonymous)> at (8,8) content-size 28.40625x17.46875 flex-item [BFC] children: inline
-          line 0 width: 28.40625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 4, rect: [8,8 28.40625x17.46875]
+    BlockContainer <body> at (8,8) content-size 784x17 children: not-inline
+      Box <div.foo> at (8,8) content-size 784x17 flex-container(row) [FFC] children: not-inline
+        BlockContainer <(anonymous)> at (8,8) content-size 28.40625x17 flex-item [BFC] children: inline
+          line 0 width: 28.40625, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 4, rect: [8,8 28.40625x17]
               "well"
           TextNode <#text>
-        BlockContainer <(anonymous)> at (46,8) content-size 36.84375x17.46875 flex-item [BFC] children: inline
-          line 0 width: 36.84375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 5, rect: [46,8 36.84375x17.46875]
+        BlockContainer <(anonymous)> at (46,8) content-size 36.84375x17 flex-item [BFC] children: inline
+          line 0 width: 36.84375, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 5, rect: [46,8 36.84375x17]
               "hello"
           TextNode <#text>
-        BlockContainer <(anonymous)> at (92.4375,8) content-size 55.359375x17.46875 flex-item [BFC] children: inline
-          line 0 width: 55.359375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 7, rect: [92.4375,8 55.359375x17.46875]
+        BlockContainer <(anonymous)> at (92.4375,8) content-size 55.359375x17 flex-item [BFC] children: inline
+          line 0 width: 55.359375, height: 17, bottom: 17, baseline: 13.296875
+            frag 0 from TextNode start: 0, length: 7, rect: [92.4375,8 55.359375x17]
               "friends"
           TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
-      PaintableBox (Box<DIV>.foo) [8,8 784x17.46875]
-        PaintableWithLines (BlockContainer(anonymous)) [8,8 28.40625x17.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17]
+      PaintableBox (Box<DIV>.foo) [8,8 784x17]
+        PaintableWithLines (BlockContainer(anonymous)) [8,8 28.40625x17]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer(anonymous)) [46,8 36.84375x17.46875]
+        PaintableWithLines (BlockContainer(anonymous)) [46,8 36.84375x17]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer(anonymous)) [92.4375,8 55.359375x17.46875]
+        PaintableWithLines (BlockContainer(anonymous)) [92.4375,8 55.359375x17]
           TextPaintable (TextNode<#text>)

@@ -81,7 +81,7 @@ static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_valu
 
 StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
-    , m_default_font_metrics(16, Gfx::FontDatabase::default_font().pixel_metrics(), 16)
+    , m_default_font_metrics(16, Gfx::FontDatabase::default_font().pixel_metrics())
     , m_root_element_font_metrics(m_default_font_metrics)
 {
 }
@@ -1529,9 +1529,9 @@ Length::FontMetrics StyleComputer::calculate_root_element_font_metrics(StyleProp
     auto root_value = style.property(CSS::PropertyID::FontSize);
 
     auto font_pixel_metrics = style.first_available_computed_font().pixel_metrics();
-    Length::FontMetrics font_metrics { m_default_font_metrics.font_size, font_pixel_metrics, CSSPixels::nearest_value_for(font_pixel_metrics.line_spacing()) };
+    Length::FontMetrics font_metrics { m_default_font_metrics.font_size, font_pixel_metrics };
     font_metrics.font_size = root_value->as_length().length().to_px(viewport_rect(), font_metrics, font_metrics);
-    font_metrics.line_height = style.line_height(viewport_rect(), font_metrics, font_metrics);
+    font_metrics.line_height = style.compute_line_height(viewport_rect(), font_metrics, font_metrics);
 
     return font_metrics;
 }
@@ -1645,7 +1645,6 @@ RefPtr<Gfx::FontCascadeList const> StyleComputer::compute_font_for_style_values(
     // FIXME: Should be based on "user's default font size"
     CSSPixels font_size_in_px = 16;
 
-    auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
     Gfx::FontPixelMetrics font_pixel_metrics;
     if (parent_element && parent_element->computed_css_values())
         font_pixel_metrics = parent_element->computed_css_values()->first_available_computed_font().pixel_metrics();
@@ -1657,15 +1656,14 @@ RefPtr<Gfx::FontCascadeList const> StyleComputer::compute_font_for_style_values(
         auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
         if (value->is_length()) {
             auto length = value->as_length().length();
-            auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
             if (length.is_absolute() || length.is_relative()) {
-                Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics, parent_line_height };
+                Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics };
                 return length.to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
             }
         }
         return font_size_in_px;
     };
-    Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics, parent_line_height };
+    Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics };
 
     if (font_size.is_identifier()) {
         // https://w3c.github.io/csswg-drafts/css-fonts/#absolute-size-mapping
@@ -1924,30 +1922,12 @@ Gfx::Font const& StyleComputer::initial_font() const
     return StyleProperties::font_fallback(false, false);
 }
 
-CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
+void StyleComputer::absolutize_values(StyleProperties& style) const
 {
-    auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
-    if (!parent_element)
-        return m_root_element_font_metrics.line_height;
-    auto const* computed_values = parent_element->computed_css_values();
-    if (!computed_values)
-        return m_root_element_font_metrics.line_height;
-    auto parent_font_pixel_metrics = computed_values->first_available_computed_font().pixel_metrics();
-    auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->as_length().length();
-    // FIXME: Can the parent font size be non-absolute here?
-    auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : m_root_element_font_metrics.font_size;
-    auto parent_parent_line_height = parent_or_root_element_line_height(parent_element, {});
-    Length::FontMetrics parent_font_metrics { parent_font_size_value, parent_font_pixel_metrics, parent_parent_line_height };
-    return computed_values->line_height(viewport_rect(), parent_font_metrics, m_root_element_font_metrics);
-}
-
-void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
-{
-    auto parent_or_root_line_height = parent_or_root_element_line_height(element, pseudo_element);
-
-    auto font_pixel_metrics = style.first_available_computed_font().pixel_metrics();
-
-    Length::FontMetrics font_metrics { m_root_element_font_metrics.font_size, font_pixel_metrics, parent_or_root_line_height };
+    Length::FontMetrics font_metrics {
+        m_root_element_font_metrics.font_size,
+        style.first_available_computed_font().pixel_metrics()
+    };
 
     auto font_size = style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.font_size = font_size;
@@ -1962,7 +1942,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
             Length::make_px(CSSPixels::nearest_value_for(font_size * static_cast<double>((*line_height_value_slot)->as_percentage().percentage().as_fraction()))));
     }
 
-    auto line_height = style.line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);
+    auto line_height = style.compute_line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.line_height = line_height;
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
@@ -1975,6 +1955,8 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
             continue;
         value_slot->style = value_slot->style->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics);
     }
+
+    style.set_line_height({}, line_height);
 }
 
 enum class BoxTypeTransformation {
@@ -2098,7 +2080,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     compute_math_depth(style, nullptr, {});
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
-    absolutize_values(style, nullptr, {});
+    absolutize_values(style);
     style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())), nullptr);
     style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())), nullptr);
     style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)), nullptr);
@@ -2149,7 +2131,7 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
     compute_font(style, &element, pseudo_element);
 
     // 4. Absolutize values, turning font/viewport relative lengths into absolute lengths
-    absolutize_values(style, &element, pseudo_element);
+    absolutize_values(style);
 
     // 5. Default the values, applying inheritance and 'initial' as needed
     compute_defaulted_values(style, &element, pseudo_element);

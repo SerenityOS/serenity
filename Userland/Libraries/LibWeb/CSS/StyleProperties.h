@@ -141,8 +141,11 @@ public:
         m_font_list = move(font_list);
     }
 
-    CSSPixels line_height(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
-    CSSPixels line_height(Layout::Node const&) const;
+    [[nodiscard]] CSSPixels compute_line_height(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
+    [[nodiscard]] CSSPixels compute_line_height(Layout::Node const&) const;
+
+    [[nodiscard]] CSSPixels line_height() const { return *m_line_height; }
+    void set_line_height(Badge<StyleComputer> const&, CSSPixels line_height) { m_line_height = line_height; }
 
     bool operator==(StyleProperties const&) const;
 
@@ -165,6 +168,8 @@ private:
 
     int m_math_depth { InitialValues::math_depth() };
     mutable RefPtr<Gfx::FontCascadeList> m_font_list;
+
+    Optional<CSSPixels> m_line_height;
 };
 
 }

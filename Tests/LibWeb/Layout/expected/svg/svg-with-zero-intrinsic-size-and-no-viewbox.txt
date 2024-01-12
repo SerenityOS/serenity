@@ -1,9 +1,9 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x17.46875 children: inline
-      line 0 width: 8, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+    BlockContainer <body> at (8,8) content-size 784x17 children: inline
+      line 0 width: 8, height: 17, bottom: 17, baseline: 13.296875
         frag 0 from ImageBox start: 0, length: 0, rect: [8,21 0x0]
-        frag 1 from TextNode start: 0, length: 1, rect: [8,8 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [8,8 8x17]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [16,21 0x0]
       ImageBox <img> at (8,21) content-size 0x0 children: not-inline
@@ -22,7 +22,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17]
       ImagePaintable (ImageBox<IMG>) [8,21 0x0]
       TextPaintable (TextNode<#text>)
       SVGSVGPaintable (SVGSVGBox<svg>) [16,21 0x0]

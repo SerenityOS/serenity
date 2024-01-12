@@ -1,18 +1,18 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x133.46875 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x117.46875 children: not-inline
-      Box <div.cta-banner> at (8,8) content-size 784x117.46875 flex-container(row) [FFC] children: not-inline
-        Box <div.w-layout-grid> at (8,8) content-size 470.4375x117.46875 flex-item [GFC] children: not-inline
-          BlockContainer <div.button> at (58,58) content-size 135.21875x17.46875 [BFC] children: inline
-            line 0 width: 135.21875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-              frag 0 from TextNode start: 0, length: 16, rect: [58,58 135.21875x17.46875]
+  BlockContainer <html> at (0,0) content-size 800x133 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x117 children: not-inline
+      Box <div.cta-banner> at (8,8) content-size 784x117 flex-container(row) [FFC] children: not-inline
+        Box <div.w-layout-grid> at (8,8) content-size 470.4375x117 flex-item [GFC] children: not-inline
+          BlockContainer <div.button> at (58,58) content-size 135.21875x17 [BFC] children: inline
+            line 0 width: 135.21875, height: 17, bottom: 17, baseline: 13.296875
+              frag 0 from TextNode start: 0, length: 16, rect: [58,58 135.21875x17]
                 "Sign up for free"
             TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x133.46875]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x117.46875]
-      PaintableBox (Box<DIV>.cta-banner) [8,8 784x117.46875]
-        PaintableBox (Box<DIV>.w-layout-grid) [8,8 470.4375x117.46875]
-          PaintableWithLines (BlockContainer<DIV>.button) [8,8 235.21875x117.46875]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x133]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x117]
+      PaintableBox (Box<DIV>.cta-banner) [8,8 784x117]
+        PaintableBox (Box<DIV>.w-layout-grid) [8,8 470.4375x117]
+          PaintableWithLines (BlockContainer<DIV>.button) [8,8 235.21875x117]
             TextPaintable (TextNode<#text>)

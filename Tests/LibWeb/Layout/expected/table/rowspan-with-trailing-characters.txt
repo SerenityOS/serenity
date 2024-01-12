@@ -1,204 +1,204 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x146.8125 [BFC] children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x144 [BFC] children: not-inline
     BlockContainer <(anonymous)> at (0,0) content-size 800x0 children: inline
       TextNode <#text>
-    BlockContainer <body> at (8,8) content-size 784x130.8125 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x128 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x0 children: inline
         TextNode <#text>
-      TableWrapper <(anonymous)> at (8,8) content-size 229.359375x130.8125 [BFC] children: not-inline
-        Box <table> at (9,9) content-size 227.359375x128.8125 table-box [TFC] children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 229.359375x128 [BFC] children: not-inline
+        Box <table> at (9,9) content-size 227.359375x126 table-box [TFC] children: not-inline
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
-          Box <tbody> at (9,9) content-size 227.359375x128.8125 table-row-group children: not-inline
-            Box <tr> at (9,9) content-size 227.359375x21.46875 table-row children: not-inline
+          Box <tbody> at (9,9) content-size 227.359375x126 table-row-group children: not-inline
+            Box <tr> at (9,9) content-size 227.359375x21 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <th> at (11,11) content-size 70.046875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 70.046875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 8, rect: [11,11 70.046875x17.46875]
+              BlockContainer <th> at (11,11) content-size 70.046875x17 table-cell [BFC] children: inline
+                line 0 width: 70.046875, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 8, rect: [11,11 70.046875x17]
                     "Header 1"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <th> at (85.046875,11) content-size 72.515625x17.46875 table-cell [BFC] children: inline
-                line 0 width: 72.515625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 8, rect: [85.046875,11 72.515625x17.46875]
+              BlockContainer <th> at (85.046875,11) content-size 72.515625x17 table-cell [BFC] children: inline
+                line 0 width: 72.515625, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 8, rect: [85.046875,11 72.515625x17]
                     "Header 2"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <th> at (161.5625,11) content-size 72.796875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 72.796875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 8, rect: [161.5625,11 72.796875x17.46875]
+              BlockContainer <th> at (161.5625,11) content-size 72.796875x17 table-cell [BFC] children: inline
+                line 0 width: 72.796875, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 8, rect: [161.5625,11 72.796875x17]
                     "Header 3"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (9,30.46875) content-size 227.359375x21.46875 table-row children: not-inline
+            Box <tr> at (9,30) content-size 227.359375x21 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,32.46875) content-size 70.046875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 41.84375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [25,32.46875 41.84375x17.46875]
+              BlockContainer <td> at (11,32) content-size 70.046875x17 table-cell [BFC] children: inline
+                line 0 width: 41.84375, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [25,32 41.84375x17]
                     "Cell 1"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (85.046875,32.46875) content-size 72.515625x17.46875 table-cell [BFC] children: inline
-                line 0 width: 44.3125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [99.046875,32.46875 44.3125x17.46875]
+              BlockContainer <td> at (85.046875,32) content-size 72.515625x17 table-cell [BFC] children: inline
+                line 0 width: 44.3125, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [99.046875,32 44.3125x17]
                     "Cell 2"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (161.5625,43.203125) content-size 72.796875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 44.59375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [175.5625,43.203125 44.59375x17.46875]
+              BlockContainer <td> at (161.5625,42.5) content-size 72.796875x17 table-cell [BFC] children: inline
+                line 0 width: 44.59375, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [175.5625,42.5 44.59375x17]
                     "Cell 3"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (9,51.9375) content-size 227.359375x21.46875 table-row children: not-inline
+            Box <tr> at (9,51) content-size 227.359375x21 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,53.9375) content-size 70.046875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 43.25, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [24,53.9375 43.25x17.46875]
+              BlockContainer <td> at (11,53) content-size 70.046875x17 table-cell [BFC] children: inline
+                line 0 width: 43.25, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [24,53 43.25x17]
                     "Cell 4"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (85.046875,53.9375) content-size 72.515625x17.46875 table-cell [BFC] children: inline
-                line 0 width: 43.953125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [99.046875,53.9375 43.953125x17.46875]
+              BlockContainer <td> at (85.046875,53) content-size 72.515625x17 table-cell [BFC] children: inline
+                line 0 width: 43.953125, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [99.046875,53 43.953125x17]
                     "Cell 5"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (9,73.40625) content-size 227.359375x21.46875 table-row children: not-inline
+            Box <tr> at (9,72) content-size 227.359375x21 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,75.40625) content-size 70.046875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 44.234375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [24,75.40625 44.234375x17.46875]
+              BlockContainer <td> at (11,74) content-size 70.046875x17 table-cell [BFC] children: inline
+                line 0 width: 44.234375, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [24,74 44.234375x17]
                     "Cell 6"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (85.046875,75.40625) content-size 72.515625x17.46875 table-cell [BFC] children: inline
-                line 0 width: 44.21875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [99.046875,75.40625 44.21875x17.46875]
+              BlockContainer <td> at (85.046875,74) content-size 72.515625x17 table-cell [BFC] children: inline
+                line 0 width: 44.21875, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [99.046875,74 44.21875x17]
                     "Cell 7"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (161.5625,75.40625) content-size 72.796875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 44.984375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [175.5625,75.40625 44.984375x17.46875]
+              BlockContainer <td> at (161.5625,74) content-size 72.796875x17 table-cell [BFC] children: inline
+                line 0 width: 44.984375, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [175.5625,74 44.984375x17]
                     "Cell 8"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (9,94.875) content-size 227.359375x21.46875 table-row children: not-inline
+            Box <tr> at (9,93) content-size 227.359375x21 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,96.875) content-size 70.046875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 44.328125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 6, rect: [24,96.875 44.328125x17.46875]
+              BlockContainer <td> at (11,95) content-size 70.046875x17 table-cell [BFC] children: inline
+                line 0 width: 44.328125, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 6, rect: [24,95 44.328125x17]
                     "Cell 9"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (85.046875,96.875) content-size 72.515625x17.46875 table-cell [BFC] children: inline
-                line 0 width: 51.4375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 7, rect: [96.046875,96.875 51.4375x17.46875]
+              BlockContainer <td> at (85.046875,95) content-size 72.515625x17 table-cell [BFC] children: inline
+                line 0 width: 51.4375, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 7, rect: [96.046875,95 51.4375x17]
                     "Cell 10"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (161.5625,107.609375) content-size 72.796875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 48.1875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 7, rect: [173.5625,107.609375 48.1875x17.46875]
+              BlockContainer <td> at (161.5625,105.5) content-size 72.796875x17 table-cell [BFC] children: inline
+                line 0 width: 48.1875, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 7, rect: [173.5625,105.5 48.1875x17]
                     "Cell 11"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (9,116.34375) content-size 227.359375x21.46875 table-row children: not-inline
+            Box <tr> at (9,114) content-size 227.359375x21 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,118.34375) content-size 70.046875x17.46875 table-cell [BFC] children: inline
-                line 0 width: 50.65625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 7, rect: [21,118.34375 50.65625x17.46875]
+              BlockContainer <td> at (11,116) content-size 70.046875x17 table-cell [BFC] children: inline
+                line 0 width: 50.65625, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 7, rect: [21,116 50.65625x17]
                     "Cell 12"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (85.046875,118.34375) content-size 72.515625x17.46875 table-cell [BFC] children: inline
-                line 0 width: 50.9375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 7, rect: [96.046875,118.34375 50.9375x17.46875]
+              BlockContainer <td> at (85.046875,116) content-size 72.515625x17 table-cell [BFC] children: inline
+                line 0 width: 50.9375, height: 17, bottom: 17, baseline: 13.296875
+                  frag 0 from TextNode start: 0, length: 7, rect: [96.046875,116 50.9375x17]
                     "Cell 13"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-      BlockContainer <(anonymous)> at (8,138.8125) content-size 784x0 children: inline
+      BlockContainer <(anonymous)> at (8,136) content-size 784x0 children: inline
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x146.8125]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x144]
     PaintableWithLines (BlockContainer(anonymous)) [0,0 800x0]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x130.8125]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x128]
       PaintableWithLines (BlockContainer(anonymous)) [8,8 784x0]
-      PaintableWithLines (TableWrapper(anonymous)) [8,8 229.359375x130.8125]
-        PaintableBox (Box<TABLE>) [8,8 229.359375x130.8125]
-          PaintableBox (Box<TBODY>) [9,9 227.359375x128.8125]
-            PaintableBox (Box<TR>) [9,9 227.359375x21.46875]
-              PaintableWithLines (BlockContainer<TH>) [9,9 74.046875x21.46875]
+      PaintableWithLines (TableWrapper(anonymous)) [8,8 229.359375x128]
+        PaintableBox (Box<TABLE>) [8,8 229.359375x128]
+          PaintableBox (Box<TBODY>) [9,9 227.359375x126]
+            PaintableBox (Box<TR>) [9,9 227.359375x21]
+              PaintableWithLines (BlockContainer<TH>) [9,9 74.046875x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TH>) [83.046875,9 76.515625x21.46875]
+              PaintableWithLines (BlockContainer<TH>) [83.046875,9 76.515625x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TH>) [159.5625,9 76.796875x21.46875]
+              PaintableWithLines (BlockContainer<TH>) [159.5625,9 76.796875x21]
                 TextPaintable (TextNode<#text>)
-            PaintableBox (Box<TR>) [9,30.46875 227.359375x21.46875] overflow: [9,30.46875 227.359375x42.9375]
-              PaintableWithLines (BlockContainer<TD>) [9,30.46875 74.046875x21.46875]
+            PaintableBox (Box<TR>) [9,30 227.359375x21] overflow: [9,30 227.359375x42]
+              PaintableWithLines (BlockContainer<TD>) [9,30 74.046875x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [83.046875,30.46875 76.515625x21.46875]
+              PaintableWithLines (BlockContainer<TD>) [83.046875,30 76.515625x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [159.5625,30.46875 76.796875x42.9375]
+              PaintableWithLines (BlockContainer<TD>) [159.5625,30 76.796875x42]
                 TextPaintable (TextNode<#text>)
-            PaintableBox (Box<TR>) [9,51.9375 227.359375x21.46875]
-              PaintableWithLines (BlockContainer<TD>) [9,51.9375 74.046875x21.46875]
+            PaintableBox (Box<TR>) [9,51 227.359375x21]
+              PaintableWithLines (BlockContainer<TD>) [9,51 74.046875x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [83.046875,51.9375 76.515625x21.46875]
+              PaintableWithLines (BlockContainer<TD>) [83.046875,51 76.515625x21]
                 TextPaintable (TextNode<#text>)
-            PaintableBox (Box<TR>) [9,73.40625 227.359375x21.46875]
-              PaintableWithLines (BlockContainer<TD>) [9,73.40625 74.046875x21.46875]
+            PaintableBox (Box<TR>) [9,72 227.359375x21]
+              PaintableWithLines (BlockContainer<TD>) [9,72 74.046875x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [83.046875,73.40625 76.515625x21.46875]
+              PaintableWithLines (BlockContainer<TD>) [83.046875,72 76.515625x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [159.5625,73.40625 76.796875x21.46875]
+              PaintableWithLines (BlockContainer<TD>) [159.5625,72 76.796875x21]
                 TextPaintable (TextNode<#text>)
-            PaintableBox (Box<TR>) [9,94.875 227.359375x21.46875] overflow: [9,94.875 227.359375x42.9375]
-              PaintableWithLines (BlockContainer<TD>) [9,94.875 74.046875x21.46875]
+            PaintableBox (Box<TR>) [9,93 227.359375x21] overflow: [9,93 227.359375x42]
+              PaintableWithLines (BlockContainer<TD>) [9,93 74.046875x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [83.046875,94.875 76.515625x21.46875]
+              PaintableWithLines (BlockContainer<TD>) [83.046875,93 76.515625x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [159.5625,94.875 76.796875x42.9375]
+              PaintableWithLines (BlockContainer<TD>) [159.5625,93 76.796875x42]
                 TextPaintable (TextNode<#text>)
-            PaintableBox (Box<TR>) [9,116.34375 227.359375x21.46875]
-              PaintableWithLines (BlockContainer<TD>) [9,116.34375 74.046875x21.46875]
+            PaintableBox (Box<TR>) [9,114 227.359375x21]
+              PaintableWithLines (BlockContainer<TD>) [9,114 74.046875x21]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer<TD>) [83.046875,116.34375 76.515625x21.46875]
+              PaintableWithLines (BlockContainer<TD>) [83.046875,114 76.515625x21]
                 TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [8,138.8125 784x0]
+      PaintableWithLines (BlockContainer(anonymous)) [8,136 784x0]

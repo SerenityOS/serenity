@@ -1,11 +1,11 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x178.46875 children: inline
-      line 0 width: 210.828125, height: 178.46875, bottom: 178.46875, baseline: 175
-        frag 0 from TextNode start: 0, length: 6, rect: [8,169 43.125x17.46875]
+    BlockContainer <body> at (8,8) content-size 784x178 children: inline
+      line 0 width: 210.828125, height: 178, bottom: 178, baseline: 175
+        frag 0 from TextNode start: 0, length: 6, rect: [8,169 43.125x17]
           "Well, "
         frag 1 from BlockContainer start: 0, length: 0, rect: [51,58 100x100]
-        frag 2 from TextNode start: 0, length: 9, rect: [151,169 67.703125x17.46875]
+        frag 2 from TextNode start: 0, length: 9, rect: [151,169 67.703125x17]
           " friends."
       TextNode <#text>
       BlockContainer <div#inline-box> at (51,58) content-size 100x100 inline-block [BFC] children: not-inline
@@ -13,7 +13,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x178.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x178]
       TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer<DIV>#inline-box) [51,58 100x100]
       TextPaintable (TextNode<#text>)

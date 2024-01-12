@@ -1,13 +1,13 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x19.46875 children: not-inline
-      BlockContainer <div.fixed_width> at (9,9) content-size 50x17.46875 children: inline
-        line 0 width: 79.40625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 3, rect: [9,9 33.921875x17.46875]
+    BlockContainer <body> at (8,8) content-size 784x19 children: not-inline
+      BlockContainer <div.fixed_width> at (9,9) content-size 50x17 children: inline
+        line 0 width: 79.40625, height: 17, bottom: 17, baseline: 13.296875
+          frag 0 from TextNode start: 0, length: 3, rect: [9,9 33.921875x17]
             "ABC"
-          frag 1 from TextNode start: 0, length: 1, rect: [43,9 11.5625x17.46875]
+          frag 1 from TextNode start: 0, length: 1, rect: [43,9 11.5625x17]
             "X"
-          frag 2 from TextNode start: 0, length: 3, rect: [54,9 33.921875x17.46875]
+          frag 2 from TextNode start: 0, length: 3, rect: [54,9 33.921875x17]
             "ABC"
         TextNode <#text>
         InlineNode <span.nowrap>
@@ -20,8 +20,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x19.46875]
-      PaintableWithLines (BlockContainer<DIV>.fixed_width) [8,8 52x19.46875] overflow: [9,9 78.921875x17.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x19]
+      PaintableWithLines (BlockContainer<DIV>.fixed_width) [8,8 52x19] overflow: [9,9 78.921875x17]
         InlinePaintable (InlineNode<SPAN>.nowrap)
           TextPaintable (TextNode<#text>)
         InlinePaintable (InlineNode<SPAN>)
