@@ -19,13 +19,11 @@ ErrorOr<String> load_error_page(AK::URL const& url)
 {
     // Generate HTML error page from error template file
     // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
-    auto template_path = TRY(Core::Resource::load_from_uri("resource://ladybird/error.html"sv))->filesystem_path();
-    auto template_file = TRY(Core::File::open(template_path, Core::File::OpenMode::Read));
-    auto template_contents = TRY(template_file->read_until_eof());
+    auto template_file = TRY(Core::Resource::load_from_uri("resource://ladybird/templates/error.html"sv));
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("failed_url", url.to_byte_string());
-    generator.append(template_contents);
+    generator.append(template_file->data());
     return TRY(String::from_utf8(generator.as_string_view()));
 }
 
@@ -60,15 +58,13 @@ ErrorOr<String> load_file_directory_page(AK::URL const& url)
 
     // Generate HTML directory page from directory template file
     // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
-    auto template_path = TRY(Core::Resource::load_from_uri("resource://ladybird/directory.html"sv))->filesystem_path();
-    auto template_file = TRY(Core::File::open(template_path, Core::File::OpenMode::Read));
-    auto template_contents = TRY(template_file->read_until_eof());
+    auto template_file = TRY(Core::Resource::load_from_uri("resource://ladybird/templates/directory.html"sv));
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("path", escape_html_entities(lexical_path.string()));
     generator.set("parent_url", TRY(String::formatted("file://{}", escape_html_entities(lexical_path.parent().string()))));
     generator.set("contents", contents.to_byte_string());
-    generator.append(template_contents);
+    generator.append(template_file->data());
     return TRY(String::from_utf8(generator.as_string_view()));
 }
 
