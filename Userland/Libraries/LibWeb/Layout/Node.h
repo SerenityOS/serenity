@@ -219,8 +219,6 @@ public:
 
     Gfx::Font const& first_available_font() const;
     Gfx::FontCascadeList const& font_list() const { return *m_font_list; }
-    CSSPixels line_height() const { return m_line_height; }
-    void set_line_height(CSSPixels line_height) { m_line_height = line_height; }
     void set_font_list(Gfx::FontCascadeList const& font_list) { m_font_list = font_list; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }

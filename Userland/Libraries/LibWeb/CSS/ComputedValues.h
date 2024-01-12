@@ -81,6 +81,7 @@ public:
     static CSSPixels font_size() { return 16; }
     static int font_weight() { return 400; }
     static CSS::FontVariant font_variant() { return CSS::FontVariant::Normal; }
+    static CSSPixels line_height() { return 0; }
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Length border_spacing() { return CSS::Length::make_px(0); }
     static CSS::CaptionSide caption_side() { return CSS::CaptionSide::Top; }
@@ -390,6 +391,7 @@ public:
     CSSPixels font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
     CSS::FontVariant font_variant() const { return m_inherited.font_variant; }
+    CSSPixels line_height() const { return m_inherited.line_height; }
     CSS::Time transition_delay() const { return m_noninherited.transition_delay; }
 
     Color outline_color() const { return m_noninherited.outline_color; }
@@ -417,6 +419,7 @@ protected:
         CSSPixels font_size { InitialValues::font_size() };
         int font_weight { InitialValues::font_weight() };
         CSS::FontVariant font_variant { InitialValues::font_variant() };
+        CSSPixels line_height { InitialValues::line_height() };
         CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
         CSS::Length border_spacing_horizontal { InitialValues::border_spacing() };
         CSS::Length border_spacing_vertical { InitialValues::border_spacing() };
@@ -547,6 +550,7 @@ public:
     void set_font_size(CSSPixels font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }
+    void set_line_height(CSSPixels line_height) { m_inherited.line_height = line_height; }
     void set_border_spacing_horizontal(CSS::Length border_spacing_horizontal) { m_inherited.border_spacing_horizontal = border_spacing_horizontal; }
     void set_border_spacing_vertical(CSS::Length border_spacing_vertical) { m_inherited.border_spacing_vertical = border_spacing_vertical; }
     void set_caption_side(CSS::CaptionSide caption_side) { m_inherited.caption_side = caption_side; }

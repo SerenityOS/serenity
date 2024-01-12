@@ -50,7 +50,7 @@ void LineBuilder::begin_new_line(bool increment_y, bool is_first_break_in_sequen
     if (increment_y) {
         if (is_first_break_in_sequence) {
             // First break is simple, just go to the start of the next line.
-            m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
+            m_current_y += max(m_max_height_on_current_line, m_context.containing_block().computed_values().line_height());
         } else {
             // We're doing more than one break in a row.
             // This means we're trying to squeeze past intruding floats.
@@ -145,7 +145,7 @@ bool LineBuilder::should_break(CSSPixels next_item_width)
         // at this Y coordinate, we don't need to break before inserting anything.
         if (!m_context.any_floats_intrude_at_y(m_current_y))
             return false;
-        if (!m_context.any_floats_intrude_at_y(m_current_y + m_context.containing_block().line_height()))
+        if (!m_context.any_floats_intrude_at_y(m_current_y + m_context.containing_block().computed_values().line_height()))
             return false;
     }
     auto current_line_width = ensure_last_line_box().width();
@@ -164,7 +164,7 @@ void LineBuilder::update_last_line()
 
     auto text_align = m_context.containing_block().computed_values().text_align();
 
-    auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
+    auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().computed_values().line_height());
     CSSPixels x_offset_top = m_context.leftmost_x_offset_at(m_current_y);
     CSSPixels x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
     CSSPixels x_offset = max(x_offset_top, x_offset_bottom);
@@ -193,7 +193,7 @@ void LineBuilder::update_last_line()
 
     auto strut_baseline = [&] {
         auto& font = m_context.containing_block().first_available_font();
-        auto const line_height = m_context.containing_block().line_height();
+        auto const line_height = m_context.containing_block().computed_values().line_height();
         auto const font_metrics = font.pixel_metrics();
         auto const typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
         auto const leading = line_height - typographic_height;
@@ -205,7 +205,7 @@ void LineBuilder::update_last_line()
         CSSPixels line_box_baseline = strut_baseline;
         for (auto& fragment : line_box.fragments()) {
             auto const& font = fragment.layout_node().first_available_font();
-            auto const line_height = fragment.layout_node().line_height();
+            auto const line_height = fragment.layout_node().computed_values().line_height();
             auto const font_metrics = font.pixel_metrics();
             auto const typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
             auto const leading = line_height - typographic_height;
@@ -240,7 +240,7 @@ void LineBuilder::update_last_line()
 
     // Start with the "strut", an imaginary zero-width box at the start of each line box.
     auto strut_top = m_current_y;
-    auto strut_bottom = m_current_y + m_context.containing_block().line_height();
+    auto strut_bottom = m_current_y + m_context.containing_block().computed_values().line_height();
 
     CSSPixels uppermost_box_top = strut_top;
     CSSPixels lowermost_box_bottom = strut_bottom;
@@ -284,7 +284,7 @@ void LineBuilder::update_last_line()
                     auto vertical_align_amount = length_percentage->length().to_px(fragment.layout_node());
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 } else if (length_percentage->is_percentage()) {
-                    auto vertical_align_amount = m_context.containing_block().line_height().scaled(length_percentage->percentage().as_fraction());
+                    auto vertical_align_amount = m_context.containing_block().computed_values().line_height().scaled(length_percentage->percentage().as_fraction());
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 }
             }
@@ -303,7 +303,7 @@ void LineBuilder::update_last_line()
             } else {
                 auto font_metrics = fragment.layout_node().first_available_font().pixel_metrics();
                 auto typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
-                auto leading = fragment.layout_node().line_height() - typographic_height;
+                auto leading = fragment.layout_node().computed_values().line_height() - typographic_height;
                 auto half_leading = leading / 2;
                 top_of_inline_box = (fragment.offset().y() + fragment.baseline() - CSSPixels::nearest_value_for(font_metrics.ascent) - half_leading);
                 bottom_of_inline_box = (fragment.offset().y() + fragment.baseline() + CSSPixels::nearest_value_for(font_metrics.descent) + half_leading);
@@ -312,7 +312,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     bottom_of_inline_box += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    bottom_of_inline_box += m_context.containing_block().line_height().scaled(length_percentage->percentage().as_fraction());
+                    bottom_of_inline_box += m_context.containing_block().computed_values().line_height().scaled(length_percentage->percentage().as_fraction());
             }
         }
 
@@ -339,7 +339,7 @@ void LineBuilder::remove_last_line_if_empty()
 
 void LineBuilder::recalculate_available_space()
 {
-    auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
+    auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().computed_values().line_height());
     auto available_at_top_of_line_box = m_context.available_space_for_line(m_current_y);
     auto available_at_bottom_of_line_box = m_context.available_space_for_line(m_current_y + current_line_height - 1);
     m_available_width_for_current_line = min(available_at_bottom_of_line_box, available_at_top_of_line_box);
