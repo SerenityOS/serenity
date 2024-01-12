@@ -67,6 +67,17 @@ TEST_CASE(is_ascii_alphanumeric)
     compare_bool_output_over(ASCII, isalnum, is_ascii_alphanumeric);
 }
 
+TEST_CASE(is_ascii_base36_digit)
+{
+    constexpr Array valid_base36_digits { '0', '9', 'A', 'Z', 'a', 'z' };
+    for (auto valid_base36_digit : valid_base36_digits)
+        EXPECT_EQ(is_ascii_base36_digit(valid_base36_digit), true);
+
+    constexpr Array invalid_base36_digits { '/', ':', '@', '[', '`', '{' };
+    for (auto invalid_base36_digit : invalid_base36_digits)
+        EXPECT_EQ(is_ascii_base36_digit(invalid_base36_digit), false);
+}
+
 TEST_CASE(is_ascii_blank)
 {
     compare_bool_output_over(ASCII, isblank, is_ascii_blank);
