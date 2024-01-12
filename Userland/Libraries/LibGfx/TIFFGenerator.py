@@ -40,6 +40,7 @@ class TIFFType(EnumWithExportName):
     SignedRational = 10, 8
     Float = 11, 4
     Double = 12, 8
+    IFD = 13, 4
     UTF8 = 129, 1
 
 
@@ -218,7 +219,7 @@ def tiff_type_to_cpp(t: TIFFType, with_promotion: bool = True) -> str:
         return 'ByteBuffer'
     if t == TIFFType.UnsignedShort:
         return 'u16'
-    if t == TIFFType.UnsignedLong:
+    if t == TIFFType.UnsignedLong or t == TIFFType.IFD:
         return 'u32'
     if t == TIFFType.UnsignedRational:
         return 'TIFF::Rational<u32>'

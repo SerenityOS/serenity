@@ -11,7 +11,11 @@
 
 namespace Gfx {
 
+// This is a link to the main TIFF specification from 1992
 // https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf
+
+// First TIFF Technical notes from 1995
+// https://www.awaresystems.be/imaging/tiff/specification/TIFFPM6.pdf
 
 namespace TIFF {
 class TIFFLoadingContext;

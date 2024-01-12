@@ -468,6 +468,7 @@ private:
         }
         case Type::UnsignedShort:
             return read_every_values.template operator()<u16>();
+        case Type::IFD:
         case Type::UnsignedLong:
             return read_every_values.template operator()<u32>();
         case Type::UnsignedRational:
