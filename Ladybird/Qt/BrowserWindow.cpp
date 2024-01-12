@@ -74,6 +74,11 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* menu = menuBar()->addMenu("&File");
 
+    auto* about_action = new QAction("&About Ladybird", this);
+    menu->addAction(about_action);
+
+    menu->addSeparator();
+
     auto* new_tab_action = new QAction("New &Tab", this);
     new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
     new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
@@ -375,6 +380,9 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
         debug_request("same-origin-policy", state ? "on" : "off");
     });
 
+    QObject::connect(about_action, &QAction::triggered, this, [this] {
+        new_tab("about:version", Web::HTML::ActivateTab::Yes);
+    });
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
         new_tab(Settings::the()->new_tab_page(), Web::HTML::ActivateTab::Yes);
     });

@@ -148,6 +148,18 @@
 
 #pragma mark - Private methods
 
+- (void)openAboutVersionPage:(id)sender
+{
+    auto* current_tab = [NSApp keyWindow];
+    if (![current_tab isKindOfClass:[Tab class]]) {
+        return;
+    }
+
+    [self createNewTab:URL("about:version"sv)
+               fromTab:(Tab*)current_tab
+           activateTab:Web::HTML::ActivateTab::Yes];
+}
+
 - (nonnull TabController*)createNewTab:(Web::HTML::ActivateTab)activate_tab
                                fromTab:(nullable Tab*)tab
 {
@@ -242,7 +254,7 @@
     auto* submenu = [[NSMenu alloc] initWithTitle:process_name];
 
     [submenu addItem:[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@", process_name]
-                                                action:@selector(orderFrontStandardAboutPanel:)
+                                                action:@selector(openAboutVersionPage:)
                                          keyEquivalent:@""]];
     [submenu addItem:[NSMenuItem separatorItem]];
 

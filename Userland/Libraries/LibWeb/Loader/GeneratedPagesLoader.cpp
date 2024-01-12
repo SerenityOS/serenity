@@ -12,6 +12,7 @@
 #include <LibCore/Resource.h>
 #include <LibCore/System.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 
@@ -64,6 +65,22 @@ ErrorOr<String> load_file_directory_page(AK::URL const& url)
     generator.set("path", escape_html_entities(lexical_path.string()));
     generator.set("parent_url", TRY(String::formatted("file://{}", escape_html_entities(lexical_path.parent().string()))));
     generator.set("contents", contents.to_byte_string());
+    generator.append(template_file->data());
+    return TRY(String::from_utf8(generator.as_string_view()));
+}
+
+ErrorOr<String> load_about_version_page()
+{
+    // Generate HTML about version page from template file
+    // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
+    auto template_file = TRY(Core::Resource::load_from_uri("resource://ladybird/templates/version.html"sv));
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+    generator.set("browser_name", BROWSER_NAME);
+    generator.set("browser_version", BROWSER_VERSION);
+    generator.set("arch_name", CPU_STRING);
+    generator.set("os_name", OS_STRING);
+    generator.set("user_agent", default_user_agent);
     generator.append(template_file->data());
     return TRY(String::from_utf8(generator.as_string_view()));
 }

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About @browser_name@</title>
+    <style>
+        img {
+            float: left;
+            image-rendering: pixelated;
+            margin-right: 10px;
+        }
+        th {
+            text-align: right;
+        }
+        td {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="resource://icons/32x32/app-browser.png">
+        <h1>About @browser_name@</h1>
+    </header>
+    <table>
+        <tr>
+            <th>Version:</th>
+            <td>@browser_version@ <!-- FIXME: Add build commit hash --></td>
+        </tr>
+        <tr>
+            <th>Arch:</th>
+            <td>@arch_name@</td>
+        </tr>
+        <tr>
+            <th>Operating System:</th>
+            <td>@os_name@</td>
+        </tr>
+        <tr>
+            <th>User Agent:</th>
+            <td>@user_agent@</td>
+        </tr>
+        <!-- FIXME: Add these fields
+        <tr>
+            <th>Command Line:</th>
+            <td></td>
+        </tr>
+        <tr>
+            <th>Executable Path:</th>
+            <td></td>
+        </tr> -->
+    </table>
+</body>
+</html>
