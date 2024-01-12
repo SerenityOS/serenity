@@ -2,11 +2,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x36 children: not-inline
       BlockContainer <div.fixed_width> at (9,9) content-size 50x34 children: inline
-        line 0 width: 33.921875, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 3, rect: [9,9 33.921875x17]
+        frag 0 from TextNode start: 0, length: 3, rect: [9,9 33.921875x17] baseline: 13.296875
             "ABC"
-        line 1 width: 33.921875, height: 17, bottom: 34, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 3, rect: [9,26 33.921875x17]
+        frag 1 from TextNode start: 0, length: 3, rect: [9,26 33.921875x17] baseline: 13.296875
             "ABC"
         TextNode <#text>
         InlineNode <span.nowrap>

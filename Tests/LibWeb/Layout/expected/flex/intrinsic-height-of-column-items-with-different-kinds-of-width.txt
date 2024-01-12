@@ -6,8 +6,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.px> at (11,11) content-size 200x19 flex-item [BFC] children: not-inline
         Box <div.inner> at (12,12) content-size 198x17 flex-container(row) [FFC] children: not-inline
           BlockContainer <(anonymous)> at (12,12) content-size 19.125x17 flex-item [BFC] children: inline
-            line 0 width: 19.125, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 2, rect: [12,12 19.125x17]
+            frag 0 from TextNode start: 0, length: 2, rect: [12,12 19.125x17] baseline: 13.296875
                 "px"
             TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -15,8 +14,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.percentage> at (11,32) content-size 50x19 flex-item [BFC] children: not-inline
         Box <div.inner> at (12,33) content-size 48x17 flex-container(row) [FFC] children: not-inline
           BlockContainer <(anonymous)> at (12,33) content-size 86.671875x17 flex-item [BFC] children: inline
-            line 0 width: 86.671875, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 10, rect: [12,33 86.671875x17]
+            frag 0 from TextNode start: 0, length: 10, rect: [12,33 86.671875x17] baseline: 13.296875
                 "percentage"
             TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -24,8 +22,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.fit-content> at (11,53) content-size 88.765625x19 flex-item [BFC] children: not-inline
         Box <div.inner> at (12,54) content-size 86.765625x17 flex-container(row) [FFC] children: not-inline
           BlockContainer <(anonymous)> at (12,54) content-size 86.765625x17 flex-item [BFC] children: inline
-            line 0 width: 86.765625, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 11, rect: [12,54 86.765625x17]
+            frag 0 from TextNode start: 0, length: 11, rect: [12,54 86.765625x17] baseline: 13.296875
                 "fit content"
             TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -33,8 +30,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.max-content> at (11,74) content-size 102.15625x19 flex-item [BFC] children: not-inline
         Box <div.inner> at (12,75) content-size 100.15625x17 flex-container(row) [FFC] children: not-inline
           BlockContainer <(anonymous)> at (12,75) content-size 100.15625x17 flex-item [BFC] children: inline
-            line 0 width: 100.15625, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 11, rect: [12,75 100.15625x17]
+            frag 0 from TextNode start: 0, length: 11, rect: [12,75 100.15625x17] baseline: 13.296875
                 "max content"
             TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -42,11 +38,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.min-content> at (11,95) content-size 62.90625x36 flex-item [BFC] children: not-inline
         Box <div.inner> at (12,96) content-size 60.90625x34 flex-container(row) [FFC] children: not-inline
           BlockContainer <(anonymous)> at (12,96) content-size 60.90625x34 flex-item [BFC] children: inline
-            line 0 width: 26.375, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 3, rect: [12,96 26.375x17]
+            frag 0 from TextNode start: 0, length: 3, rect: [12,96 26.375x17] baseline: 13.296875
                 "min"
-            line 1 width: 60.90625, height: 17, bottom: 34, baseline: 13.296875
-              frag 0 from TextNode start: 4, length: 7, rect: [12,113 60.90625x17]
+            frag 1 from TextNode start: 4, length: 7, rect: [12,113 60.90625x17] baseline: 13.296875
                 "content"
             TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline

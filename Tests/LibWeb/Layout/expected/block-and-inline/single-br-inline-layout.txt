@@ -3,7 +3,6 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x21 children: not-inline
       BlockContainer <div#begin> at (8,8) content-size 784x2 children: not-inline
       BlockContainer <(anonymous)> at (8,10) content-size 784x17 children: inline
-        line 0 width: 0, height: 17, bottom: 17, baseline: 13.296875
         BreakNode <br>
       BlockContainer <div#end> at (8,27) content-size 784x2 children: not-inline
 

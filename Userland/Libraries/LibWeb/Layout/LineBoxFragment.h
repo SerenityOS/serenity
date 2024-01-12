@@ -36,10 +36,7 @@ public:
     int length() const { return m_length; }
     CSSPixelRect const absolute_rect() const;
 
-    CSSPixelPoint offset() const
-    {
-        return m_offset;
-    }
+    CSSPixelPoint offset() const { return m_offset; }
     void set_offset(CSSPixelPoint offset) { m_offset = offset; }
 
     // The baseline of a fragment is the number of pixels from the top to the text baseline.
@@ -55,32 +52,15 @@ public:
     CSSPixels width() const { return m_size.width(); }
     CSSPixels height() const { return m_size.height(); }
 
-    CSSPixels border_box_height() const
-    {
-        return m_border_box_top + height() + m_border_box_bottom;
-    }
     CSSPixels border_box_top() const { return m_border_box_top; }
-    CSSPixels border_box_bottom() const { return m_border_box_bottom; }
-
-    CSSPixels absolute_x() const { return absolute_rect().x(); }
 
     bool ends_in_whitespace() const;
     bool is_justifiable_whitespace() const;
     StringView text() const;
 
-    int text_index_at(CSSPixels x) const;
-
-    CSSPixelRect selection_rect(Gfx::Font const&) const;
-
     bool is_atomic_inline() const;
 
     Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run() const { return m_glyph_run; }
-
-    Painting::BorderRadiiData const& border_radii_data() const { return m_border_radii_data; }
-    void set_border_radii_data(Painting::BorderRadiiData const& border_radii_data) { m_border_radii_data = border_radii_data; }
-
-    bool contained_by_inline_node() const { return m_contained_by_inline_node; }
-    void set_contained_by_inline_node() { m_contained_by_inline_node = true; }
 
 private:
     JS::NonnullGCPtr<Node const> m_layout_node;
@@ -92,8 +72,6 @@ private:
     CSSPixels m_border_box_bottom { 0 };
     CSSPixels m_baseline { 0 };
     Vector<Gfx::DrawGlyphOrEmoji> m_glyph_run;
-    Painting::BorderRadiiData m_border_radii_data;
-    bool m_contained_by_inline_node { false };
 };
 
 }

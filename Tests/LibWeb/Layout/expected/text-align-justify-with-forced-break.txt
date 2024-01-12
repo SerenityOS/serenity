@@ -2,71 +2,65 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x118 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x102 children: not-inline
       BlockContainer <div> at (9,9) content-size 100x100 children: inline
-        line 0 width: 98, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 1, length: 3, rect: [9,9 27.15625x17]
+        frag 0 from TextNode start: 1, length: 3, rect: [9,9 27.15625x17] baseline: 13.296875
             "foo"
-          frag 1 from TextNode start: 4, length: 1, rect: [36,9 9x17]
+        frag 1 from TextNode start: 4, length: 1, rect: [36,9 9x17] baseline: 13.296875
             " "
-          frag 2 from TextNode start: 5, length: 3, rect: [45,9 27.640625x17]
+        frag 2 from TextNode start: 5, length: 3, rect: [45,9 27.640625x17] baseline: 13.296875
             "bar"
-          frag 3 from TextNode start: 8, length: 1, rect: [73,9 9x17]
+        frag 3 from TextNode start: 8, length: 1, rect: [73,9 9x17] baseline: 13.296875
             " "
-          frag 4 from TextNode start: 9, length: 3, rect: [82,9 27.203125x17]
+        frag 4 from TextNode start: 9, length: 3, rect: [82,9 27.203125x17] baseline: 13.296875
             "baz"
-        line 1 width: 98, height: 17, bottom: 34, baseline: 13.296875
-          frag 0 from TextNode start: 13, length: 3, rect: [9,26 27.15625x17]
+        frag 5 from TextNode start: 13, length: 3, rect: [9,26 27.15625x17] baseline: 13.296875
             "foo"
-          frag 1 from TextNode start: 16, length: 1, rect: [36,26 8x17]
+        frag 6 from TextNode start: 16, length: 1, rect: [36,26 8x17] baseline: 13.296875
             " "
-          frag 2 from TextNode start: 17, length: 3, rect: [44,26 27.640625x17]
+        frag 7 from TextNode start: 17, length: 3, rect: [44,26 27.640625x17] baseline: 13.296875
             "bar"
-          frag 3 from TextNode start: 20, length: 1, rect: [72,26 8x17]
+        frag 8 from TextNode start: 20, length: 1, rect: [72,26 8x17] baseline: 13.296875
             " "
-          frag 4 from TextNode start: 21, length: 3, rect: [80,26 27.203125x17]
+        frag 9 from TextNode start: 21, length: 3, rect: [80,26 27.203125x17] baseline: 13.296875
             "baz"
-        line 2 width: 98, height: 17, bottom: 51, baseline: 13.296875
-          frag 0 from TextNode start: 1, length: 3, rect: [9,43 27.15625x17]
+        frag 10 from TextNode start: 1, length: 3, rect: [9,43 27.15625x17] baseline: 13.296875
             "foo"
-          frag 1 from TextNode start: 4, length: 1, rect: [36,43 9x17]
+        frag 11 from TextNode start: 4, length: 1, rect: [36,43 9x17] baseline: 13.296875
             " "
-          frag 2 from TextNode start: 5, length: 3, rect: [45,43 27.640625x17]
+        frag 12 from TextNode start: 5, length: 3, rect: [45,43 27.640625x17] baseline: 13.296875
             "bar"
-          frag 3 from TextNode start: 8, length: 1, rect: [73,43 9x17]
+        frag 13 from TextNode start: 8, length: 1, rect: [73,43 9x17] baseline: 13.296875
             " "
-          frag 4 from TextNode start: 9, length: 3, rect: [82,43 27.203125x17]
+        frag 14 from TextNode start: 9, length: 3, rect: [82,43 27.203125x17] baseline: 13.296875
             "baz"
-        line 3 width: 98, height: 17, bottom: 68, baseline: 13.296875
-          frag 0 from TextNode start: 13, length: 3, rect: [9,60 27.15625x17]
+        frag 15 from TextNode start: 13, length: 3, rect: [9,60 27.15625x17] baseline: 13.296875
             "foo"
-          frag 1 from TextNode start: 16, length: 1, rect: [36,60 9x17]
+        frag 16 from TextNode start: 16, length: 1, rect: [36,60 9x17] baseline: 13.296875
             " "
-          frag 2 from TextNode start: 17, length: 3, rect: [45,60 27.640625x17]
+        frag 17 from TextNode start: 17, length: 3, rect: [45,60 27.640625x17] baseline: 13.296875
             "bar"
-          frag 3 from TextNode start: 20, length: 1, rect: [73,60 9x17]
+        frag 18 from TextNode start: 20, length: 1, rect: [73,60 9x17] baseline: 13.296875
             " "
-          frag 4 from TextNode start: 21, length: 3, rect: [82,60 27.203125x17]
+        frag 19 from TextNode start: 21, length: 3, rect: [82,60 27.203125x17] baseline: 13.296875
             "baz"
-        line 4 width: 98, height: 17, bottom: 85, baseline: 13.296875
-          frag 0 from TextNode start: 25, length: 3, rect: [9,77 27.15625x17]
+        frag 20 from TextNode start: 25, length: 3, rect: [9,77 27.15625x17] baseline: 13.296875
             "foo"
-          frag 1 from TextNode start: 28, length: 1, rect: [36,77 8x17]
+        frag 21 from TextNode start: 28, length: 1, rect: [36,77 8x17] baseline: 13.296875
             " "
-          frag 2 from TextNode start: 29, length: 3, rect: [44,77 27.640625x17]
+        frag 22 from TextNode start: 29, length: 3, rect: [44,77 27.640625x17] baseline: 13.296875
             "bar"
-          frag 3 from TextNode start: 32, length: 1, rect: [72,77 8x17]
+        frag 23 from TextNode start: 32, length: 1, rect: [72,77 8x17] baseline: 13.296875
             " "
-          frag 4 from TextNode start: 33, length: 3, rect: [80,77 27.203125x17]
+        frag 24 from TextNode start: 33, length: 3, rect: [80,77 27.203125x17] baseline: 13.296875
             "baz"
-        line 5 width: 98, height: 17, bottom: 102, baseline: 13.296875
-          frag 0 from TextNode start: 1, length: 3, rect: [9,94 27.15625x17]
+        frag 25 from TextNode start: 1, length: 3, rect: [9,94 27.15625x17] baseline: 13.296875
             "foo"
-          frag 1 from TextNode start: 4, length: 1, rect: [36,94 8x17]
+        frag 26 from TextNode start: 4, length: 1, rect: [36,94 8x17] baseline: 13.296875
             " "
-          frag 2 from TextNode start: 5, length: 3, rect: [44,94 27.640625x17]
+        frag 27 from TextNode start: 5, length: 3, rect: [44,94 27.640625x17] baseline: 13.296875
             "bar"
-          frag 3 from TextNode start: 8, length: 1, rect: [72,94 8x17]
+        frag 28 from TextNode start: 8, length: 1, rect: [72,94 8x17] baseline: 13.296875
             " "
-          frag 4 from TextNode start: 9, length: 3, rect: [80,94 27.203125x17]
+        frag 29 from TextNode start: 9, length: 3, rect: [80,94 27.203125x17] baseline: 13.296875
             "baz"
         TextNode <#text>
         BreakNode <br>

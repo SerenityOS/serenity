@@ -1,9 +1,8 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x60 [BFC] children: not-inline
     BlockContainer <body> at (5,5) content-size 150x50 children: inline
-      line 0 width: 150, height: 50, bottom: 50, baseline: 50
-        frag 0 from BlockContainer start: 0, length: 0, rect: [5,5 100x50]
-        frag 1 from BlockContainer start: 0, length: 0, rect: [105,5 100x50]
+      frag 0 from BlockContainer start: 0, length: 0, rect: [5,5 100x50] baseline: 50
+      frag 1 from BlockContainer start: 0, length: 0, rect: [105,5 100x50] baseline: 50
       BlockContainer <div.foo> at (5,5) content-size 100x50 inline-block [BFC] children: not-inline
       BlockContainer <div.bar> at (105,5) content-size 100x50 inline-block [BFC] children: not-inline
 

@@ -8,19 +8,16 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           Box <tbody> at (9,9) content-size 75.4375x59 table-row-group children: not-inline
             Box <tr> at (11,11) content-size 75.4375x21 table-row children: not-inline
               BlockContainer <td> at (13,13) content-size 71.4375x17 table-cell [BFC] children: inline
-                line 0 width: 7.9375, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 1, rect: [13,13 7.9375x17]
+                frag 0 from TextNode start: 0, length: 1, rect: [13,13 7.9375x17] baseline: 13.296875
                     "*"
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
             Box <tr> at (11,34) content-size 75.4375x38 table-row children: not-inline
               BlockContainer <td> at (13,36) content-size 71.4375x34 table-cell [BFC] children: inline
-                line 0 width: 71.4375, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 9, rect: [13,36 71.4375x17]
+                frag 0 from TextNode start: 0, length: 9, rect: [13,36 71.4375x17] baseline: 13.296875
                     "*********"
-                line 1 width: 63.5625, height: 17, bottom: 34, baseline: 13.296875
-                  frag 0 from TextNode start: 10, length: 8, rect: [13,53 63.5625x17]
+                frag 1 from TextNode start: 10, length: 8, rect: [13,53 63.5625x17] baseline: 13.296875
                     "***** **"
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline

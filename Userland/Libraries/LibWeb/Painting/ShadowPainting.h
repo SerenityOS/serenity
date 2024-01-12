@@ -10,6 +10,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/PaintOuterBoxShadowParams.h>
+#include <LibWeb/Painting/PaintableFragment.h>
 #include <LibWeb/Painting/ShadowData.h>
 
 namespace Web::Painting {
@@ -26,6 +27,6 @@ void paint_box_shadow(
     BordersData const& borders_data,
     BorderRadiiData const&,
     Vector<ShadowData> const&);
-void paint_text_shadow(PaintContext&, Layout::LineBoxFragment const&, Vector<ShadowData> const&);
+void paint_text_shadow(PaintContext&, PaintableFragment const&, Vector<ShadowData> const&);
 
 }

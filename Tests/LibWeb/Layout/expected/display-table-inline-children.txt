@@ -9,8 +9,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <div.aligncenter.block-image> at (8,8) content-size 1200x600 table-box [TFC] children: inline
           Box <(anonymous)> at (8,8) content-size 1200x600 table-row children: inline
             BlockContainer <(anonymous)> at (8,8) content-size 1200x600 table-cell [BFC] children: inline
-              line 0 width: 1200, height: 600, bottom: 600, baseline: 600
-                frag 0 from ImageBox start: 0, length: 0, rect: [8,8 1200x600]
+              frag 0 from ImageBox start: 0, length: 0, rect: [8,8 1200x600] baseline: 600
               TextNode <#text>
               InlineNode <a>
                 TextNode <#text>

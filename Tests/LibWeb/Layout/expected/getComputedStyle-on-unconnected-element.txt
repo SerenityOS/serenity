@@ -1,8 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x38 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x22 children: inline
-      line 0 width: 362.609375, height: 22, bottom: 22, baseline: 17
-        frag 0 from TextNode start: 0, length: 35, rect: [8,8 362.609375x22]
+      frag 0 from TextNode start: 0, length: 35, rect: [8,8 362.609375x22] baseline: 17
           "This test passes if we don't crash."
       TextNode <#text>
 

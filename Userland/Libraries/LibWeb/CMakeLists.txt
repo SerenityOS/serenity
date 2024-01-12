@@ -500,6 +500,7 @@ set(SOURCES
     Painting/PaintContext.cpp
     Painting/Paintable.cpp
     Painting/PaintableBox.cpp
+    Painting/PaintableFragment.cpp
     Painting/PaintingCommandExecutorCPU.cpp
     Painting/RadioButtonPaintable.cpp
     Painting/RecordingPainter.cpp

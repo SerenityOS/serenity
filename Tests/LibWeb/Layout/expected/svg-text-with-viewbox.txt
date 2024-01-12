@@ -1,8 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x261.328125 children: inline
-      line 0 width: 784, height: 261.328125, bottom: 261.328125, baseline: 261.328125
-        frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 784x261.328125]
+      frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 784x261.328125] baseline: 261.328125
       SVGSVGBox <svg> at (8,8) content-size 784x261.328125 [SVG] children: inline
         TextNode <#text>
         TextNode <#text>

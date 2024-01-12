@@ -5,29 +5,25 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item> at (68,68) content-size 17.046875x33 [BFC] children: inline
-          line 0 width: 11.890625, height: 33, bottom: 33, baseline: 25.5
-            frag 0 from TextNode start: 0, length: 1, rect: [71,68 11.890625x33]
+          frag 0 from TextNode start: 0, length: 1, rect: [71,68 11.890625x33] baseline: 25.5
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item> at (255.046875,68) content-size 16.53125x33 [BFC] children: inline
-          line 0 width: 16.53125, height: 33, bottom: 33, baseline: 25.5
-            frag 0 from TextNode start: 0, length: 1, rect: [255.046875,68 16.53125x33]
+          frag 0 from TextNode start: 0, length: 1, rect: [255.046875,68 16.53125x33] baseline: 25.5
               "2"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item> at (68,271) content-size 17.046875x33 [BFC] children: inline
-          line 0 width: 17.046875, height: 33, bottom: 33, baseline: 25.5
-            frag 0 from TextNode start: 0, length: 1, rect: [68,271 17.046875x33]
+          frag 0 from TextNode start: 0, length: 1, rect: [68,271 17.046875x33] baseline: 25.5
               "3"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item> at (255.046875,271) content-size 16.53125x33 [BFC] children: inline
-          line 0 width: 14.53125, height: 33, bottom: 33, baseline: 25.5
-            frag 0 from TextNode start: 0, length: 1, rect: [256.046875,271 14.53125x33]
+          frag 0 from TextNode start: 0, length: 1, rect: [256.046875,271 14.53125x33] baseline: 25.5
               "4"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline

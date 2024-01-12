@@ -1,14 +1,13 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x17 children: inline
-      line 0 width: 98, height: 17, bottom: 17, baseline: 13.296875
-        frag 0 from TextNode start: 0, length: 4, rect: [8,8 35.15625x17]
+      frag 0 from TextNode start: 0, length: 4, rect: [8,8 35.15625x17] baseline: 13.296875
           "foo "
-        frag 1 from TextNode start: 0, length: 3, rect: [43,33 27.640625x17]
+      frag 1 from TextNode start: 0, length: 3, rect: [43,33 27.640625x17] baseline: 13.296875
           "bar"
-        frag 2 from TextNode start: 0, length: 1, rect: [71,8 8x17]
+      frag 2 from TextNode start: 0, length: 1, rect: [71,8 8x17] baseline: 13.296875
           " "
-        frag 3 from TextNode start: 0, length: 3, rect: [54,58 27.203125x17]
+      frag 3 from TextNode start: 0, length: 3, rect: [54,58 27.203125x17] baseline: 13.296875
           "baz"
       TextNode <#text>
       InlineNode <b>

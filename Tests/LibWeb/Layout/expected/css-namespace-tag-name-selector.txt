@@ -2,11 +2,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x201 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x155 children: inline
-        line 0 width: 312, height: 155, bottom: 155, baseline: 152
-          frag 0 from SVGSVGBox start: 0, length: 0, rect: [9,9 300x150]
-          frag 1 from TextNode start: 0, length: 1, rect: [310,146 8x17]
+        frag 0 from SVGSVGBox start: 0, length: 0, rect: [9,9 300x150] baseline: 152
+        frag 1 from TextNode start: 0, length: 1, rect: [310,146 8x17] baseline: 13.296875
             " "
-          frag 2 from Box start: 0, length: 0, rect: [319,51 0x108]
+        frag 2 from Box start: 0, length: 0, rect: [319,51 0x108] baseline: 110
         SVGSVGBox <svg> at (9,9) content-size 300x150 [SVG] children: inline
           InlineNode <a>
             SVGTextBox <text> at (29,25.015625) content-size 193.59375x67.578125 children: inline
@@ -17,8 +16,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             TextNode <#text>
         TextNode <#text>
       BlockContainer <div> at (9,164) content-size 782x44 children: inline
-        line 0 width: 101.453125, height: 44, bottom: 44, baseline: 34
-          frag 0 from TextNode start: 0, length: 5, rect: [10,164 99.453125x44]
+        frag 0 from TextNode start: 0, length: 5, rect: [10,164 99.453125x44] baseline: 34
             "Hello"
         InlineNode <a>
           TextNode <#text>

@@ -4,8 +4,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.flexrow> at (11,11) content-size 778x19 flex-container(row) [FFC] children: not-inline
         Box <div.project> at (12,12) content-size 44.03125x19 flex-container(column) flex-item [FFC] children: not-inline
           BlockContainer <(anonymous)> at (12,12) content-size 44.03125x17 flex-item [BFC] children: inline
-            line 0 width: 44.03125, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 6, rect: [12,12 44.03125x17]
+            frag 0 from TextNode start: 0, length: 6, rect: [12,12 44.03125x17] baseline: 13.296875
                 "pillow"
             TextNode <#text>
 

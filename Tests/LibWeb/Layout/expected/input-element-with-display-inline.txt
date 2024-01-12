@@ -1,8 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x46 [BFC] children: not-inline
     BlockContainer <body> at (10,10) content-size 780x28 children: inline
-      line 0 width: 202, height: 28, bottom: 28, baseline: 28
-        frag 0 from BlockContainer start: 0, length: 0, rect: [11,11 200x26]
+      frag 0 from BlockContainer start: 0, length: 0, rect: [11,11 200x26] baseline: 28
       BlockContainer <input> at (11,11) content-size 200x26 inline-block [BFC] children: not-inline
         Box <div> at (13,12) content-size 196x24 flex-container(row) [FFC] children: not-inline
           BlockContainer <div> at (14,13) content-size 194x22 flex-item [BFC] children: inline

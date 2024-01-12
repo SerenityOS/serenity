@@ -6,8 +6,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           Box <(anonymous)> at (11,11) content-size 41.78125x19 table-box [TFC] children: not-inline
             Box <(anonymous)> at (11,11) content-size 41.78125x19 table-row children: not-inline
               BlockContainer <div.cell> at (12,12) content-size 39.78125x17 table-cell [BFC] children: inline
-                line 0 width: 39.78125, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 5, rect: [12,12 39.78125x17]
+                frag 0 from TextNode start: 0, length: 5, rect: [12,12 39.78125x17] baseline: 13.296875
                     "Hello"
                 TextNode <#text>
 

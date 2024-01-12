@@ -3,59 +3,41 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x0 children: not-inline
       Box <div.container> at (8,8) content-size 200x306 floating [GFC] children: not-inline
         BlockContainer <div.item> at (8,8) content-size 100x306 [BFC] children: inline
-          line 0 width: 50.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 1, length: 5, rect: [8,8 50.96875x17]
+          frag 0 from TextNode start: 1, length: 5, rect: [8,8 50.96875x17] baseline: 13.296875
               "Lorem"
-          line 1 width: 94.9375, height: 17, bottom: 34, baseline: 13.296875
-            frag 0 from TextNode start: 7, length: 11, rect: [8,25 94.9375x17]
+          frag 1 from TextNode start: 7, length: 11, rect: [8,25 94.9375x17] baseline: 13.296875
               "ipsum dolor"
-          line 2 width: 70.9375, height: 17, bottom: 51, baseline: 13.296875
-            frag 0 from TextNode start: 19, length: 9, rect: [8,42 70.9375x17]
+          frag 2 from TextNode start: 19, length: 9, rect: [8,42 70.9375x17] baseline: 13.296875
               "sit amet,"
-          line 3 width: 96.84375, height: 17, bottom: 68, baseline: 13.296875
-            frag 0 from TextNode start: 29, length: 11, rect: [8,59 96.84375x17]
+          frag 3 from TextNode start: 29, length: 11, rect: [8,59 96.84375x17] baseline: 13.296875
               "consectetur"
-          line 4 width: 75.71875, height: 17, bottom: 85, baseline: 13.296875
-            frag 0 from TextNode start: 41, length: 10, rect: [8,76 75.71875x17]
+          frag 4 from TextNode start: 41, length: 10, rect: [8,76 75.71875x17] baseline: 13.296875
               "adipiscing"
-          line 5 width: 28.71875, height: 17, bottom: 102, baseline: 13.296875
-            frag 0 from TextNode start: 52, length: 5, rect: [8,93 28.71875x17]
+          frag 5 from TextNode start: 52, length: 5, rect: [8,93 28.71875x17] baseline: 13.296875
               "elit."
-          line 6 width: 65.40625, height: 17, bottom: 119, baseline: 13.296875
-            frag 0 from TextNode start: 58, length: 7, rect: [8,110 65.40625x17]
+          frag 6 from TextNode start: 58, length: 7, rect: [8,110 65.40625x17] baseline: 13.296875
               "Vivamus"
-          line 7 width: 88.640625, height: 17, bottom: 136, baseline: 13.296875
-            frag 0 from TextNode start: 66, length: 11, rect: [8,127 88.640625x17]
+          frag 7 from TextNode start: 66, length: 11, rect: [8,127 88.640625x17] baseline: 13.296875
               "eget turpis"
-          line 8 width: 77.40625, height: 17, bottom: 153, baseline: 13.296875
-            frag 0 from TextNode start: 78, length: 9, rect: [8,144 77.40625x17]
+          frag 8 from TextNode start: 78, length: 9, rect: [8,144 77.40625x17] baseline: 13.296875
               "eget urna"
-          line 9 width: 53.25, height: 17, bottom: 170, baseline: 13.296875
-            frag 0 from TextNode start: 88, length: 7, rect: [8,161 53.25x17]
+          frag 9 from TextNode start: 88, length: 7, rect: [8,161 53.25x17] baseline: 13.296875
               "feugiat"
-          line 10 width: 84.984375, height: 17, bottom: 187, baseline: 13.296875
-            frag 0 from TextNode start: 96, length: 10, rect: [8,178 84.984375x17]
+          frag 10 from TextNode start: 96, length: 10, rect: [8,178 84.984375x17] baseline: 13.296875
               "pretium ut"
-          line 11 width: 65.359375, height: 17, bottom: 204, baseline: 13.296875
-            frag 0 from TextNode start: 107, length: 8, rect: [8,195 65.359375x17]
+          frag 11 from TextNode start: 107, length: 8, rect: [8,195 65.359375x17] baseline: 13.296875
               "eu ante."
-          line 12 width: 72.46875, height: 17, bottom: 221, baseline: 13.296875
-            frag 0 from TextNode start: 116, length: 8, rect: [8,212 72.46875x17]
+          frag 12 from TextNode start: 116, length: 8, rect: [8,212 72.46875x17] baseline: 13.296875
               "Nunc sed"
-          line 13 width: 70.640625, height: 17, bottom: 238, baseline: 13.296875
-            frag 0 from TextNode start: 125, length: 8, rect: [8,229 70.640625x17]
+          frag 13 from TextNode start: 125, length: 8, rect: [8,229 70.640625x17] baseline: 13.296875
               "pharetra"
-          line 14 width: 39.015625, height: 17, bottom: 255, baseline: 13.296875
-            frag 0 from TextNode start: 134, length: 5, rect: [8,246 39.015625x17]
+          frag 14 from TextNode start: 134, length: 5, rect: [8,246 39.015625x17] baseline: 13.296875
               "diam,"
-          line 15 width: 56.25, height: 17, bottom: 272, baseline: 13.296875
-            frag 0 from TextNode start: 140, length: 6, rect: [8,263 56.25x17]
+          frag 15 from TextNode start: 140, length: 6, rect: [8,263 56.25x17] baseline: 13.296875
               "rutrum"
-          line 16 width: 50.546875, height: 17, bottom: 289, baseline: 13.296875
-            frag 0 from TextNode start: 147, length: 7, rect: [8,280 50.546875x17]
+          frag 16 from TextNode start: 147, length: 7, rect: [8,280 50.546875x17] baseline: 13.296875
               "lacinia"
-          line 17 width: 47.5, height: 17, bottom: 306, baseline: 13.296875
-            frag 0 from TextNode start: 155, length: 7, rect: [8,297 47.5x17]
+          frag 17 from TextNode start: 155, length: 7, rect: [8,297 47.5x17] baseline: 13.296875
               "tellus."
           TextNode <#text>
 

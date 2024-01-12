@@ -3,8 +3,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x60 children: not-inline
       BlockContainer <div.banner> at (8,8) content-size 200x30 children: not-inline
       BlockContainer <(anonymous)> at (8,38) content-size 784x30 children: inline
-        line 0 width: 200, height: 30, bottom: 30, baseline: 30
-          frag 0 from BlockContainer start: 0, length: 0, rect: [8,38 200x30]
+        frag 0 from BlockContainer start: 0, length: 0, rect: [8,38 200x30] baseline: 30
         BlockContainer <div.tab> at (8,38) content-size 200x30 inline-block [BFC] children: not-inline
         BlockContainer <div.timeline> at (592,38) content-size 200x30 floating [BFC] children: not-inline
 

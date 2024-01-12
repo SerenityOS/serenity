@@ -4,38 +4,32 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.box> at (18,26) content-size 200x100 floating [BFC] children: not-inline
       BlockContainer <ul> at (48,16) content-size 744x102 children: not-inline
         ListItemBox <li> at (48,16) content-size 744x17 children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [328,16 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [328,16 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
           ListItemMarkerBox <(anonymous)> at (304,16) content-size 12x17 children: not-inline
         ListItemBox <li> at (48,33) content-size 744x17 children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [328,33 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [328,33 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
           ListItemMarkerBox <(anonymous)> at (304,33) content-size 12x17 children: not-inline
         ListItemBox <li> at (48,50) content-size 744x17 children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [328,50 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [328,50 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
           ListItemMarkerBox <(anonymous)> at (304,50) content-size 12x17 children: not-inline
         ListItemBox <li> at (48,67) content-size 744x17 children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [328,67 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [328,67 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
           ListItemMarkerBox <(anonymous)> at (304,67) content-size 12x17 children: not-inline
         ListItemBox <li> at (48,84) content-size 744x17 children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [328,84 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [328,84 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
           ListItemMarkerBox <(anonymous)> at (304,84) content-size 12x17 children: not-inline
         ListItemBox <li> at (48,101) content-size 744x17 children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [328,101 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [328,101 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
           ListItemMarkerBox <(anonymous)> at (304,101) content-size 12x17 children: not-inline

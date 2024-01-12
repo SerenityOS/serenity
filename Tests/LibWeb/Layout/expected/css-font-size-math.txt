@@ -1,16 +1,15 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x79 children: inline
-      line 0 width: 78.9375, height: 79, bottom: 79, baseline: 61.09375
-        frag 0 from TextNode start: 0, length: 1, rect: [8,25 39.09375x56]
+      frag 0 from TextNode start: 0, length: 1, rect: [8,25 39.09375x56] baseline: 43.328125
           "H"
-        frag 1 from TextNode start: 0, length: 1, rect: [47,38 19.78125x40]
+      frag 1 from TextNode start: 0, length: 1, rect: [47,38 19.78125x40] baseline: 30.875
           "e"
-        frag 2 from TextNode start: 0, length: 1, rect: [67,47 6.8125x28]
+      frag 2 from TextNode start: 0, length: 1, rect: [67,47 6.8125x28] baseline: 21.71875
           "l"
-        frag 3 from TextNode start: 0, length: 1, rect: [74,53 4.84375x20]
+      frag 3 from TextNode start: 0, length: 1, rect: [74,53 4.84375x20] baseline: 15.484375
           "l"
-        frag 4 from TextNode start: 0, length: 1, rect: [79,58 8.40625x14]
+      frag 4 from TextNode start: 0, length: 1, rect: [79,58 8.40625x14] baseline: 10.890625
           "o"
       InlineNode <span>
         TextNode <#text>

@@ -7,10 +7,8 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/InlinePaintable.h>
-#include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
@@ -168,7 +166,7 @@ template<typename Callback>
 void InlinePaintable::for_each_fragment(Callback callback) const
 {
     // FIXME: This will be slow if the containing block has a lot of fragments!
-    Vector<Layout::LineBoxFragment const&> fragments;
+    Vector<PaintableFragment const&> fragments;
     verify_cast<PaintableWithLines>(*containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
         if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
             fragments.append(fragment);
@@ -184,7 +182,7 @@ void InlinePaintable::mark_contained_fragments()
 {
     verify_cast<PaintableWithLines>(*containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
         if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
-            const_cast<Layout::LineBoxFragment&>(fragment).set_contained_by_inline_node();
+            const_cast<PaintableFragment&>(fragment).set_contained_by_inline_node();
         return IterationDecision::Continue;
     });
 }

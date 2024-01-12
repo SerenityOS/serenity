@@ -2,13 +2,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (2,2) content-size 796x62 [BFC] children: not-inline
     Box <body> at (12,12) content-size 600x42 [GFC] children: not-inline
       BlockContainer <div.exekiller> at (14,14) content-size 200x17 positioned [BFC] children: inline
-        line 0 width: 65.4375, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 9, rect: [14,14 65.4375x17]
+        frag 0 from TextNode start: 0, length: 9, rect: [14,14 65.4375x17] baseline: 13.296875
             "exekiller"
         TextNode <#text>
       BlockContainer <div.athena> at (24,25) content-size 200x17 positioned [BFC] children: inline
-        line 0 width: 53.171875, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 6, rect: [24,25 53.171875x17]
+        frag 0 from TextNode start: 0, length: 6, rect: [24,25 53.171875x17] baseline: 13.296875
             "athena"
         TextNode <#text>
 

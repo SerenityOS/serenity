@@ -2,12 +2,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x152 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x17 children: inline
-        line 0 width: 136.609375, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 5, rect: [8,8 36.40625x17]
+        frag 0 from TextNode start: 0, length: 5, rect: [8,8 36.40625x17] baseline: 13.296875
             "well "
-          frag 1 from TextNode start: 0, length: 6, rect: [44,33 44.84375x17]
+        frag 1 from TextNode start: 0, length: 6, rect: [44,33 44.84375x17] baseline: 13.296875
             "hello "
-          frag 2 from TextNode start: 0, length: 7, rect: [89,58 55.359375x17]
+        frag 2 from TextNode start: 0, length: 7, rect: [89,58 55.359375x17] baseline: 13.296875
             "friends"
         InlineNode <span>
           TextNode <#text>
@@ -18,23 +17,16 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       BlockContainer <div> at (8,25) content-size 784x135 children: not-inline
         BlockContainer <(anonymous)> at (8,25) content-size 784x68 children: inline
-          line 0 width: 0, height: 17, bottom: 17, baseline: 13.296875
-          line 1 width: 0, height: 17, bottom: 34, baseline: 13.296875
-          line 2 width: 0, height: 17, bottom: 51, baseline: 13.296875
-          line 3 width: 0, height: 17, bottom: 68, baseline: 13.296875
           BreakNode <br>
           BreakNode <br>
           BreakNode <br>
           BreakNode <br>
         BlockContainer <pre#out> at (8,109) content-size 784x51 children: inline
-          line 0 width: 72.421875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 10, rect: [8,109 72.421875x17]
+          frag 0 from TextNode start: 0, length: 10, rect: [8,109 72.421875x17] baseline: 13.296875
               "well: 0, 0"
-          line 1 width: 96.765625, height: 17, bottom: 34, baseline: 13.296875
-            frag 0 from TextNode start: 11, length: 13, rect: [8,126 96.765625x17]
+          frag 1 from TextNode start: 11, length: 13, rect: [8,126 96.765625x17] baseline: 13.296875
               "hello: 36, 25"
-          line 2 width: 113.65625, height: 17, bottom: 51, baseline: 13.296875
-            frag 0 from TextNode start: 25, length: 15, rect: [8,143 113.65625x17]
+          frag 2 from TextNode start: 25, length: 15, rect: [8,143 113.65625x17] baseline: 13.296875
               "friends: 45, 25"
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,176) content-size 784x0 children: inline

@@ -2,18 +2,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x83 [BFC] children: not-inline
     BlockContainer <body> at (8,16) content-size 784x67 children: not-inline
       BlockContainer <p> at (8,16) content-size 784x17 children: inline
-        line 0 width: 310.625, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 1, rect: [8,16 10.625x17]
+        frag 0 from TextNode start: 0, length: 1, rect: [8,16 10.625x17] baseline: 13.296875
             "+"
-          frag 1 from TextNode start: 0, length: 36, rect: [19,16 300x17]
+        frag 1 from TextNode start: 0, length: 36, rect: [19,16 300x17] baseline: 13.296875
             "P should generate a ::before pseudo."
         InlineNode <(anonymous)>
           TextNode <#text>
         TextNode <#text>
       BlockContainer <(anonymous)> at (8,49) content-size 784x34 children: inline
-        line 0 width: 0, height: 17, bottom: 17, baseline: 13.296875
-        line 1 width: 120.578125, height: 17, bottom: 34, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 14, rect: [8,66 120.578125x17]
+        frag 0 from TextNode start: 0, length: 14, rect: [8,66 120.578125x17] baseline: 13.296875
             "BR should not!"
         BreakNode <br>
         TextNode <#text>

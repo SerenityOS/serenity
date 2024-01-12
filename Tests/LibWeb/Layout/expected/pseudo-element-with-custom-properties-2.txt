@@ -2,22 +2,17 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x470 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x454 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x22 children: inline
-        line 0 width: 391.65625, height: 22, bottom: 22, baseline: 17
-          frag 0 from TextNode start: 0, length: 40, rect: [8,8 391.65625x22]
+        frag 0 from TextNode start: 0, length: 40, rect: [8,8 391.65625x22] baseline: 17
             "Variable set by inline style of element:"
         TextNode <#text>
         BreakNode <br>
         TextNode <#text>
       BlockContainer <div.a> at (8,30) content-size 784x100 children: inline
-        line 0 width: 200, height: 100, bottom: 100, baseline: 100
-          frag 0 from BlockContainer start: 0, length: 0, rect: [8,30 200x100]
+        frag 0 from BlockContainer start: 0, length: 0, rect: [8,30 200x100] baseline: 100
         BlockContainer <(anonymous)> at (8,30) content-size 200x100 inline-block [BFC] children: inline
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,130) content-size 784x66 children: inline
-        line 0 width: 0, height: 22, bottom: 22, baseline: 17
-        line 1 width: 0, height: 22, bottom: 44, baseline: 17
-        line 2 width: 441.28125, height: 22, bottom: 66, baseline: 17
-          frag 0 from TextNode start: 1, length: 42, rect: [8,174 441.28125x22]
+        frag 0 from TextNode start: 1, length: 42, rect: [8,174 441.28125x22] baseline: 17
             "Variable set by CSS rule matching element:"
         TextNode <#text>
         BreakNode <br>
@@ -26,15 +21,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BreakNode <br>
         TextNode <#text>
       BlockContainer <div.b> at (8,196) content-size 784x100 children: inline
-        line 0 width: 200, height: 100, bottom: 100, baseline: 100
-          frag 0 from BlockContainer start: 0, length: 0, rect: [8,196 200x100]
+        frag 0 from BlockContainer start: 0, length: 0, rect: [8,196 200x100] baseline: 100
         BlockContainer <(anonymous)> at (8,196) content-size 200x100 inline-block [BFC] children: inline
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,296) content-size 784x66 children: inline
-        line 0 width: 0, height: 22, bottom: 22, baseline: 17
-        line 1 width: 0, height: 22, bottom: 44, baseline: 17
-        line 2 width: 520.625, height: 22, bottom: 66, baseline: 17
-          frag 0 from TextNode start: 1, length: 49, rect: [8,340 520.625x22]
+        frag 0 from TextNode start: 1, length: 49, rect: [8,340 520.625x22] baseline: 17
             "Variable set by CSS rule matching pseudo element:"
         TextNode <#text>
         BreakNode <br>
@@ -43,8 +34,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BreakNode <br>
         TextNode <#text>
       BlockContainer <div.c> at (8,362) content-size 784x100 children: inline
-        line 0 width: 200, height: 100, bottom: 100, baseline: 100
-          frag 0 from BlockContainer start: 0, length: 0, rect: [8,362 200x100]
+        frag 0 from BlockContainer start: 0, length: 0, rect: [8,362 200x100] baseline: 100
         BlockContainer <(anonymous)> at (8,362) content-size 200x100 inline-block [BFC] children: inline
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,462) content-size 784x0 children: inline

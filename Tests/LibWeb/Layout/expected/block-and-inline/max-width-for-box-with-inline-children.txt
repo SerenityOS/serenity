@@ -3,14 +3,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (10,10) content-size 204x169 children: not-inline
       BlockContainer <div.outer> at (11,11) content-size 202x167 children: not-inline
         BlockContainer <div.inner> at (12,12) content-size 200x165 children: inline
-          line 0 width: 88.765625, height: 55, bottom: 55, baseline: 42.484375
-            frag 0 from TextNode start: 0, length: 4, rect: [12,12 88.765625x55]
+          frag 0 from TextNode start: 0, length: 4, rect: [12,12 88.765625x55] baseline: 42.484375
               "well"
-          line 1 width: 115.140625, height: 55, bottom: 110, baseline: 42.484375
-            frag 0 from TextNode start: 5, length: 5, rect: [12,67 115.140625x55]
+          frag 1 from TextNode start: 5, length: 5, rect: [12,67 115.140625x55] baseline: 42.484375
               "hello"
-          line 2 width: 173, height: 55, bottom: 165, baseline: 42.484375
-            frag 0 from TextNode start: 11, length: 7, rect: [12,122 173x55]
+          frag 2 from TextNode start: 11, length: 7, rect: [12,122 173x55] baseline: 42.484375
               "friends"
           TextNode <#text>
 
