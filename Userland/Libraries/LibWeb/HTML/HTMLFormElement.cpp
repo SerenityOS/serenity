@@ -349,16 +349,20 @@ HTMLFormElement::MethodAttributeState HTMLFormElement::method_state_from_form_el
     // If the element is a submit button and has a formmethod attribute, then the element's method is that attribute's state;
     // otherwise, it is the form owner's method attribute's state.
     if (auto const* form_associated_element = dynamic_cast<FormAssociatedElement const*>(element.ptr());
-        form_associated_element && form_associated_element->is_submit_button() && element->has_attribute(AttributeNames::formmethod)) {
-        // NOTE: `formmethod` is the same as `method`, except that it has no missing value default.
-        //       This is handled by not calling `method_attribute_to_method_state` in the first place if there is no `formmethod` attribute.
-        return method_attribute_to_method_state(element->deprecated_attribute(AttributeNames::formmethod));
+        form_associated_element && form_associated_element->is_submit_button()) {
+
+        if (auto maybe_formmethod = element->attribute(AttributeNames::formmethod); maybe_formmethod.has_value()) {
+            // NOTE: `formmethod` is the same as `method`, except that it has no missing value default.
+            //       This is handled by not calling `method_attribute_to_method_state` in the first place if there is no `formmethod` attribute.
+            return method_attribute_to_method_state(maybe_formmethod.value());
+        }
     }
 
-    if (!this->has_attribute(AttributeNames::method))
-        return MethodAttributeState::GET;
+    if (auto maybe_method = attribute(AttributeNames::method); maybe_method.has_value()) {
+        return method_attribute_to_method_state(maybe_method.value());
+    }
 
-    return method_attribute_to_method_state(this->deprecated_attribute(AttributeNames::method));
+    return MethodAttributeState::GET;
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-submission-attributes:attr-fs-enctype-2
@@ -380,17 +384,19 @@ HTMLFormElement::EncodingTypeAttributeState HTMLFormElement::encoding_type_state
     // If the element is a submit button and has a formenctype attribute, then the element's enctype is that attribute's state;
     // otherwise, it is the form owner's enctype attribute's state.
     if (auto const* form_associated_element = dynamic_cast<FormAssociatedElement const*>(element.ptr());
-        form_associated_element && form_associated_element->is_submit_button() && element->has_attribute(AttributeNames::formenctype)) {
-        // NOTE: `formenctype` is the same as `enctype`, except that it has no missing value default.
-        //       This is handled by not calling `encoding_type_attribute_to_encoding_type_state` in the first place if there is no
-        //       `formenctype` attribute.
-        return encoding_type_attribute_to_encoding_type_state(element->deprecated_attribute(AttributeNames::formenctype));
+        form_associated_element && form_associated_element->is_submit_button()) {
+        if (auto formenctype = element->attribute(AttributeNames::formenctype); formenctype.has_value()) {
+            // NOTE: `formenctype` is the same as `enctype`, except that it has nomissing value default.
+            //       This is handled by not calling `encoding_type_attribute_to_encoding_type_state` in the first place if there is no
+            //       `formenctype` attribute.
+            return encoding_type_attribute_to_encoding_type_state(formenctype.value());
+        }
     }
 
-    if (!this->has_attribute(AttributeNames::enctype))
-        return EncodingTypeAttributeState::FormUrlEncoded;
+    if (auto maybe_enctype = attribute(AttributeNames::enctype); maybe_enctype.has_value())
+        return encoding_type_attribute_to_encoding_type_state(maybe_enctype.value());
 
-    return encoding_type_attribute_to_encoding_type_state(this->deprecated_attribute(AttributeNames::enctype));
+    return EncodingTypeAttributeState::FormUrlEncoded;
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#category-listed
@@ -527,14 +533,12 @@ String HTMLFormElement::action() const
     // The action IDL attribute must reflect the content attribute of the same name, except that on getting, when the
     // content attribute is missing or its value is the empty string, the element's node document's URL must be returned
     // instead.
-    if (!has_attribute(AttributeNames::action))
-        return MUST(document().url().to_string());
+    if (auto maybe_action = attribute(AttributeNames::action);
+        maybe_action.has_value() && !maybe_action.value().is_empty()) {
+        return maybe_action.value();
+    }
 
-    auto action_attribute = attribute(AttributeNames::action);
-    if (!action_attribute.has_value() || action_attribute->is_empty())
-        return MUST(document().url().to_string());
-
-    return action_attribute.value();
+    return MUST(document().url().to_string());
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-action
@@ -550,12 +554,12 @@ ErrorOr<String> HTMLFormElement::pick_an_encoding() const
     auto encoding = document().encoding_or_default();
 
     // 2. If the form element has an accept-charset attribute, set encoding to the return value of running these substeps:
-    if (has_attribute(AttributeNames::accept_charset)) {
+    if (auto maybe_input = attribute(AttributeNames::accept_charset); maybe_input.has_value()) {
         // 1. Let input be the value of the form element's accept-charset attribute.
-        auto input = deprecated_attribute(AttributeNames::accept_charset);
+        auto input = maybe_input.release_value();
 
         // 2. Let candidate encoding labels be the result of splitting input on ASCII whitespace.
-        auto candidate_encoding_labels = input.split_view(Infra::is_ascii_whitespace);
+        auto candidate_encoding_labels = input.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
 
         // 3. Let candidate encodings be an empty list of character encodings.
         Vector<StringView> candidate_encodings;
@@ -893,13 +897,13 @@ Vector<FlyString> HTMLFormElement::supported_property_names() const
 
         // 1. If candidate has an id attribute, add an entry to sourced names with that id attribute's value as the
         //    string, candidate as the element, and id as the source.
-        if (candidate->has_attribute(HTML::AttributeNames::id))
+        if (candidate->id().has_value())
             sourced_names.append(SourcedName { candidate->id().value(), candidate, SourcedName::Source::Id, {} });
 
         // 2. If candidate has a name attribute, add an entry to sourced names with that name attribute's value as the
         //    string, candidate as the element, and name as the source.
-        if (candidate->has_attribute(HTML::AttributeNames::name))
-            sourced_names.append(SourcedName { candidate->attribute(HTML::AttributeNames::name).value(), candidate, SourcedName::Source::Name, {} });
+        if (auto maybe_name = candidate->attribute(HTML::AttributeNames::name); maybe_name.has_value())
+            sourced_names.append(SourcedName { maybe_name.value(), candidate, SourcedName::Source::Name, {} });
     }
 
     // 3. For each img element candidate whose form owner is the form element:
@@ -911,13 +915,13 @@ Vector<FlyString> HTMLFormElement::supported_property_names() const
 
         // 1. If candidate has an id attribute, add an entry to sourced names with that id attribute's value as the
         //    string, candidate as the element, and id as the source.
-        if (candidate->has_attribute(HTML::AttributeNames::id))
+        if (candidate->id().has_value())
             sourced_names.append(SourcedName { candidate->id().value(), candidate, SourcedName::Source::Id, {} });
 
         // 2. If candidate has a name attribute, add an entry to sourced names with that name attribute's value as the
         //    string, candidate as the element, and name as the source.
-        if (candidate->has_attribute(HTML::AttributeNames::name))
-            sourced_names.append(SourcedName { candidate->attribute(HTML::AttributeNames::name).value(), candidate, SourcedName::Source::Name, {} });
+        if (auto maybe_name = candidate->attribute(HTML::AttributeNames::name); maybe_name.has_value())
+            sourced_names.append(SourcedName { maybe_name.value(), candidate, SourcedName::Source::Name, {} });
     }
 
     // 4. For each entry past entry in the past names map add an entry to sourced names with the past entry's name as
