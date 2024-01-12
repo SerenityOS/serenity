@@ -72,7 +72,7 @@ void Shell::setup_signals()
 
 void Shell::print_path(StringView path)
 {
-    if (s_disable_hyperlinks || !m_is_interactive) {
+    if (s_disable_hyperlinks || !m_is_interactive || !isatty(STDOUT_FILENO)) {
         out("{}", path);
         return;
     }
