@@ -343,38 +343,26 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
         auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
-        for (size_t line_box_index = 0; block.paintable_with_lines() && line_box_index < block.paintable_with_lines()->line_boxes().size(); ++line_box_index) {
-            auto& line_box = block.paintable_with_lines()->line_boxes()[line_box_index];
+        for (size_t fragment_index = 0; block.paintable_with_lines() && fragment_index < block.paintable_with_lines()->fragments().size(); ++fragment_index) {
+            auto const& fragment = block.paintable_with_lines()->fragments()[fragment_index];
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  "sv);
-            builder.appendff("  {}line {}{} width: {}, height: {}, bottom: {}, baseline: {}\n",
-                line_box_color_on,
-                line_box_index,
+            builder.appendff("  {}frag {}{} from {} ",
+                fragment_color_on,
+                fragment_index,
                 color_off,
-                line_box.width(),
-                line_box.height(),
-                line_box.bottom(),
-                line_box.baseline());
-            for (size_t fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
-                auto& fragment = line_box.fragments()[fragment_index];
+                fragment.layout_node().class_name());
+            builder.appendff("start: {}, length: {}, rect: {} baseline: {}\n",
+                fragment.start(),
+                fragment.length(),
+                fragment.absolute_rect(),
+                fragment.baseline());
+            if (is<Layout::TextNode>(fragment.layout_node())) {
                 for (size_t i = 0; i < indent; ++i)
                     builder.append("  "sv);
-                builder.appendff("    {}frag {}{} from {} ",
-                    fragment_color_on,
-                    fragment_index,
-                    color_off,
-                    fragment.layout_node().class_name());
-                builder.appendff("start: {}, length: {}, rect: {}\n",
-                    fragment.start(),
-                    fragment.length(),
-                    fragment.absolute_rect());
-                if (is<Layout::TextNode>(fragment.layout_node())) {
-                    for (size_t i = 0; i < indent; ++i)
-                        builder.append("  "sv);
-                    auto& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
-                    auto fragment_text = MUST(layout_text.text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
-                    builder.appendff("      \"{}\"\n", fragment_text);
-                }
+                auto const& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
+                auto fragment_text = MUST(layout_text.text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
+                builder.appendff("      \"{}\"\n", fragment_text);
             }
         }
     }

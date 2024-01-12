@@ -13,8 +13,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (16,12) content-size 37.21875x17 table-cell [BFC] children: inline
-                line 0 width: 37.21875, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 4, rect: [16,12 37.21875x17]
+                frag 0 from TextNode start: 0, length: 4, rect: [16,12 37.21875x17] baseline: 13.296875
                     "Test"
                 TextNode <#text>
                 InlineNode <a>

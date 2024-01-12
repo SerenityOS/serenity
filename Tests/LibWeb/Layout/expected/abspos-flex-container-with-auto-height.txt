@@ -2,8 +2,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x0 [BFC] children: not-inline
     Box <body> at (9,9) content-size 512.859375x19 positioned flex-container(column) [FFC] children: not-inline
       BlockContainer <div> at (10,10) content-size 510.859375x17 flex-item [BFC] children: inline
-        line 0 width: 510.859375, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 60, rect: [10,10 510.859375x17]
+        frag 0 from TextNode start: 0, length: 60, rect: [10,10 510.859375x17] baseline: 13.296875
             "Diese Website nutzt Cookies und vergleichbare Funktionen zur"
         TextNode <#text>
 

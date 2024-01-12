@@ -464,7 +464,7 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
     }
 }
 
-void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment)
+void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment)
 {
     auto const& browsing_context = text_node.browsing_context();
 
@@ -486,8 +486,9 @@ void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_
 
     auto fragment_rect = fragment.absolute_rect();
 
+    auto text = text_node.text_for_rendering().bytes_as_string_view().substring_view(fragment.start(), fragment.length());
     CSSPixelRect cursor_rect {
-        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.first_available_font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position()->offset() - fragment.start()))),
+        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.first_available_font().width(text.substring_view(0, text_node.browsing_context().cursor_position()->offset() - fragment.start()))),
         fragment_rect.top(),
         1,
         fragment_rect.height()
@@ -498,7 +499,7 @@ void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_
     context.recording_painter().draw_rect(cursor_device_rect, text_node.computed_values().color());
 }
 
-void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
+void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, PaintableFragment const& fragment)
 {
     auto& painter = context.recording_painter();
     auto& font = fragment.layout_node().first_available_font();
@@ -580,7 +581,7 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
     }
 }
 
-void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, PaintPhase phase)
+void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment, PaintPhase phase)
 {
     auto& painter = context.recording_painter();
 
@@ -625,7 +626,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
     PaintableBox::paint(context, phase);
 
-    if (m_line_boxes.is_empty())
+    if (fragments().is_empty())
         return;
 
     bool should_clip_overflow = computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
@@ -658,47 +659,43 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     // So, we paint the shadows before painting any text.
     // FIXME: Find a smarter way to do this?
     if (phase == PaintPhase::Foreground) {
-        for (auto& line_box : m_line_boxes) {
-            for (auto& fragment : line_box.fragments()) {
-                if (fragment.contained_by_inline_node())
-                    continue;
-                if (is<Layout::TextNode>(fragment.layout_node())) {
-                    auto& text_shadow = fragment.layout_node().computed_values().text_shadow();
-                    if (!text_shadow.is_empty()) {
-                        Vector<ShadowData> resolved_shadow_data;
-                        resolved_shadow_data.ensure_capacity(text_shadow.size());
-                        for (auto const& layer : text_shadow) {
-                            resolved_shadow_data.empend(
-                                layer.color,
-                                layer.offset_x.to_px(layout_box()),
-                                layer.offset_y.to_px(layout_box()),
-                                layer.blur_radius.to_px(layout_box()),
-                                layer.spread_distance.to_px(layout_box()),
-                                ShadowPlacement::Outer);
-                        }
-                        context.recording_painter().set_font(fragment.layout_node().first_available_font());
-                        paint_text_shadow(context, fragment, resolved_shadow_data);
+        for (auto& fragment : fragments()) {
+            if (fragment.contained_by_inline_node())
+                continue;
+            if (is<Layout::TextNode>(fragment.layout_node())) {
+                auto& text_shadow = fragment.layout_node().computed_values().text_shadow();
+                if (!text_shadow.is_empty()) {
+                    Vector<ShadowData> resolved_shadow_data;
+                    resolved_shadow_data.ensure_capacity(text_shadow.size());
+                    for (auto const& layer : text_shadow) {
+                        resolved_shadow_data.empend(
+                            layer.color,
+                            layer.offset_x.to_px(layout_box()),
+                            layer.offset_y.to_px(layout_box()),
+                            layer.blur_radius.to_px(layout_box()),
+                            layer.spread_distance.to_px(layout_box()),
+                            ShadowPlacement::Outer);
                     }
+                    context.recording_painter().set_font(fragment.layout_node().first_available_font());
+                    paint_text_shadow(context, fragment, resolved_shadow_data);
                 }
             }
         }
     }
 
-    for (auto& line_box : m_line_boxes) {
-        for (auto& fragment : line_box.fragments()) {
-            if (fragment.contained_by_inline_node())
-                continue;
-            auto fragment_absolute_rect = fragment.absolute_rect();
-            auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
-            if (context.should_show_line_box_borders()) {
-                context.recording_painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Green);
-                context.recording_painter().draw_line(
-                    context.rounded_device_point(fragment_absolute_rect.top_left().translated(0, fragment.baseline())).to_type<int>(),
-                    context.rounded_device_point(fragment_absolute_rect.top_right().translated(-1, fragment.baseline())).to_type<int>(), Color::Red);
-            }
-            if (is<Layout::TextNode>(fragment.layout_node()))
-                paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
+    for (auto const& fragment : m_fragments) {
+        if (fragment.contained_by_inline_node())
+            continue;
+        auto fragment_absolute_rect = fragment.absolute_rect();
+        auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
+        if (context.should_show_line_box_borders()) {
+            context.recording_painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Green);
+            context.recording_painter().draw_line(
+                context.rounded_device_point(fragment_absolute_rect.top_left().translated(0, fragment.baseline())).to_type<int>(),
+                context.rounded_device_point(fragment_absolute_rect.top_right().translated(-1, fragment.baseline())).to_type<int>(), Color::Red);
         }
+        if (is<Layout::TextNode>(fragment.layout_node()))
+            paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
     }
 
     if (should_clip_overflow) {
@@ -758,40 +755,38 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
 
 Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
 {
-    if (!layout_box().children_are_inline() || m_line_boxes.is_empty())
+    if (!layout_box().children_are_inline() || m_fragments.is_empty())
         return PaintableBox::hit_test(position, type);
 
     Optional<HitTestResult> last_good_candidate;
-    for (auto& line_box : m_line_boxes) {
-        for (auto& fragment : line_box.fragments()) {
-            if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
-                continue;
-            if (!fragment.layout_node().containing_block()) {
-                dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
-                continue;
-            }
-            auto fragment_absolute_rect = fragment.absolute_rect();
-            if (fragment_absolute_rect.contains(position)) {
-                if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
-                    return fragment.layout_node().paintable()->hit_test(position, type);
-                return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())), fragment.text_index_at(position.x()) };
-            }
+    for (auto const& fragment : fragments()) {
+        if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
+            continue;
+        if (!fragment.layout_node().containing_block()) {
+            dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
+            continue;
+        }
+        auto fragment_absolute_rect = fragment.absolute_rect();
+        if (fragment_absolute_rect.contains(position)) {
+            if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
+                return fragment.layout_node().paintable()->hit_test(position, type);
+            return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())), fragment.text_index_at(position.x()) };
+        }
 
-            // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
-            // This determines whether the fragment is a good candidate for the position. The last such good fragment is chosen.
-            // The best candidate is either the end of the line above, the beginning of the line below, or the beginning or end of the current line.
-            // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
-            // If we knew the direction of selection, we could make a better choice.
-            if (fragment_absolute_rect.bottom() - 1 <= position.y()) { // fully below the fragment
-                last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
-            } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
-                if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
-                    if (!last_good_candidate.has_value()) {            // first fragment of the line
-                        last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() };
-                    }
-                } else { // right of the fragment
-                    last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
+        // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
+        // This determines whether the fragment is a good candidate for the position. The last such good fragment is chosen.
+        // The best candidate is either the end of the line above, the beginning of the line below, or the beginning or end of the current line.
+        // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
+        // If we knew the direction of selection, we could make a better choice.
+        if (fragment_absolute_rect.bottom() - 1 <= position.y()) { // fully below the fragment
+            last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
+        } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
+            if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
+                if (!last_good_candidate.has_value()) {            // first fragment of the line
+                    last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() };
                 }
+            } else { // right of the fragment
+                last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
             }
         }
     }

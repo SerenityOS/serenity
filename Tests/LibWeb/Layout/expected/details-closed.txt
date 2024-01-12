@@ -4,8 +4,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x0 children: inline
         InlineNode <details>
       ListItemBox <summary> at (32,8) content-size 760x17 children: inline
-        line 0 width: 114.625, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 13, rect: [32,8 114.625x17]
+        frag 0 from TextNode start: 0, length: 13, rect: [32,8 114.625x17] baseline: 13.296875
             "I'm a summary"
         TextNode <#text>
         ListItemMarkerBox <(anonymous)> at (8,8) content-size 12x17 children: not-inline

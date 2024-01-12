@@ -4,8 +4,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.ipc-page-grid> at (8,8) content-size 784x17 flex-container(row) [FFC] children: not-inline
         Box <div.ipc-sub-grid> at (8,8) content-size 401.28125x17 flex-item [GFC] children: not-inline
           BlockContainer <(anonymous)> at (8,8) content-size 401.28125x17 [BFC] children: inline
-            line 0 width: 401.28125, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 45, rect: [8,8 401.28125x17]
+            frag 0 from TextNode start: 0, length: 45, rect: [8,8 401.28125x17] baseline: 13.296875
                 "The 10 Most Anticipated Summer Movies of 2023"
             TextNode <#text>
 

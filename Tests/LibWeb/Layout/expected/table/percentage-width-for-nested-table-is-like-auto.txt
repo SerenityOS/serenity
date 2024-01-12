@@ -13,8 +13,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                         Box <tbody> at (12,12) content-size 188x19 table-row-group children: not-inline
                           Box <tr> at (14,14) content-size 188x19 table-row children: not-inline
                             BlockContainer <td> at (15,15) content-size 186x17 table-cell [BFC] children: inline
-                              line 0 width: 36.53125, height: 17, bottom: 17, baseline: 13.296875
-                                frag 0 from TextNode start: 0, length: 3, rect: [15,15 36.53125x17]
+                              frag 0 from TextNode start: 0, length: 3, rect: [15,15 36.53125x17] baseline: 13.296875
                                   "A A"
                               TextNode <#text>
 

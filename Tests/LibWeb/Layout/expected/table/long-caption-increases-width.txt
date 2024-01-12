@@ -8,11 +8,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
           BlockContainer <caption> at (8,8) content-size 59.046875x34 [BFC] children: inline
-            line 0 width: 54.03125, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 1, length: 6, rect: [11,8 54.03125x17]
+            frag 0 from TextNode start: 1, length: 6, rect: [11,8 54.03125x17] baseline: 13.296875
                 "A long"
-            line 1 width: 59.046875, height: 17, bottom: 34, baseline: 13.296875
-              frag 0 from TextNode start: 8, length: 7, rect: [8,25 59.046875x17]
+            frag 1 from TextNode start: 8, length: 7, rect: [8,25 59.046875x17] baseline: 13.296875
                 "caption"
             TextNode <#text>
           BlockContainer <(anonymous)> (not painted) children: inline
@@ -24,15 +22,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (14,46) content-size 21.25x17 table-cell [BFC] children: inline
-                line 0 width: 20.609375, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 2, rect: [14,46 20.609375x17]
+                frag 0 from TextNode start: 0, length: 2, rect: [14,46 20.609375x17] baseline: 13.296875
                     "A1"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (41.25,46) content-size 23.796875x17 table-cell [BFC] children: inline
-                line 0 width: 23.078125, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 2, rect: [41.25,46 23.078125x17]
+                frag 0 from TextNode start: 0, length: 2, rect: [41.25,46 23.078125x17] baseline: 13.296875
                     "A2"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
@@ -48,15 +44,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (14,69) content-size 21.25x17 table-cell [BFC] children: inline
-                line 0 width: 15.6875, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 2, rect: [14,69 15.6875x17]
+                frag 0 from TextNode start: 0, length: 2, rect: [14,69 15.6875x17] baseline: 13.296875
                     "B1"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (41.25,69) content-size 23.796875x17 table-cell [BFC] children: inline
-                line 0 width: 18.15625, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 2, rect: [41.25,69 18.15625x17]
+                frag 0 from TextNode start: 0, length: 2, rect: [41.25,69 18.15625x17] baseline: 13.296875
                     "B2"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
@@ -72,15 +66,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (14,92) content-size 21.25x17 table-cell [BFC] children: inline
-                line 0 width: 18.890625, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 2, rect: [14,92 18.890625x17]
+                frag 0 from TextNode start: 0, length: 2, rect: [14,92 18.890625x17] baseline: 13.296875
                     "F1"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (41.25,92) content-size 23.796875x17 table-cell [BFC] children: inline
-                line 0 width: 21.359375, height: 17, bottom: 17, baseline: 13.296875
-                  frag 0 from TextNode start: 0, length: 2, rect: [41.25,92 21.359375x17]
+                frag 0 from TextNode start: 0, length: 2, rect: [41.25,92 21.359375x17] baseline: 13.296875
                     "F2"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline

@@ -1,8 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x216 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x200 children: inline
-      line 0 width: 200, height: 200, bottom: 200, baseline: 200
-        frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 200x200]
+      frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 200x200] baseline: 200
       SVGSVGBox <svg> at (8,8) content-size 200x200 [SVG] children: inline
         TextNode <#text>
         SVGGraphicsBox <mask#myMask> at (8,8) content-size 1x1 children: inline

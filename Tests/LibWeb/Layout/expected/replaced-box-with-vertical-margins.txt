@@ -1,11 +1,10 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x216 children: inline
-      line 0 width: 174.828125, height: 216, bottom: 216, baseline: 213
-        frag 0 from TextNode start: 0, length: 6, rect: [8,207 43.125x17]
+      frag 0 from TextNode start: 0, length: 6, rect: [8,207 43.125x17] baseline: 13.296875
           "Well, "
-        frag 1 from ImageBox start: 0, length: 0, rect: [51,33 64x138]
-        frag 2 from TextNode start: 0, length: 9, rect: [115,207 67.703125x17]
+      frag 1 from ImageBox start: 0, length: 0, rect: [51,33 64x138] baseline: 213
+      frag 2 from TextNode start: 0, length: 9, rect: [115,207 67.703125x17] baseline: 13.296875
           " friends."
       TextNode <#text>
       ImageBox <img#image> at (51,33) content-size 64x138 children: not-inline

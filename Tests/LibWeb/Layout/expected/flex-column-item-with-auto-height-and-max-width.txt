@@ -2,20 +2,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x89 [BFC] children: not-inline
     Box <body> at (2,2) content-size 796x87 flex-container(column) [FFC] children: not-inline
       BlockContainer <main> at (3,3) content-size 400x85 flex-item [BFC] children: inline
-        line 0 width: 346.984375, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 41, rect: [3,3 346.984375x17]
+        frag 0 from TextNode start: 0, length: 41, rect: [3,3 346.984375x17] baseline: 13.296875
             "For my day job I'm currently working as a"
-        line 1 width: 337.59375, height: 17, bottom: 34, baseline: 13.296875
-          frag 0 from TextNode start: 42, length: 39, rect: [3,20 337.59375x17]
+        frag 1 from TextNode start: 42, length: 39, rect: [3,20 337.59375x17] baseline: 13.296875
             "Software Engineer at For my day job I'm"
-        line 2 width: 368.203125, height: 17, bottom: 51, baseline: 13.296875
-          frag 0 from TextNode start: 82, length: 43, rect: [3,37 368.203125x17]
+        frag 2 from TextNode start: 82, length: 43, rect: [3,37 368.203125x17] baseline: 13.296875
             "currently working as a Software Engineer at"
-        line 3 width: 346.984375, height: 17, bottom: 68, baseline: 13.296875
-          frag 0 from TextNode start: 126, length: 41, rect: [3,54 346.984375x17]
+        frag 3 from TextNode start: 126, length: 41, rect: [3,54 346.984375x17] baseline: 13.296875
             "For my day job I'm currently working as a"
-        line 4 width: 175.40625, height: 17, bottom: 85, baseline: 13.296875
-          frag 0 from TextNode start: 168, length: 20, rect: [3,71 175.40625x17]
+        frag 4 from TextNode start: 168, length: 20, rect: [3,71 175.40625x17] baseline: 13.296875
             "Software Engineer at"
         TextNode <#text>
 

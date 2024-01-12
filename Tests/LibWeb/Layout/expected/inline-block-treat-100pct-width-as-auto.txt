@@ -3,11 +3,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (10,10) content-size 780x0 children: not-inline
       BlockContainer <div.outer> at (11,11) content-size 102.484375x71 floating [BFC] children: not-inline
         BlockContainer <(anonymous)> at (11,11) content-size 102.484375x19 children: inline
-          line 0 width: 104.484375, height: 19, bottom: 19, baseline: 14.296875
-            frag 0 from BlockContainer start: 0, length: 0, rect: [12,12 102.484375x17]
+          frag 0 from BlockContainer start: 0, length: 0, rect: [12,12 102.484375x17] baseline: 14.296875
           BlockContainer <div.first> at (12,12) content-size 102.484375x17 inline-block [BFC] children: inline
-            line 0 width: 100.484375, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 11, rect: [12,12 100.484375x17]
+            frag 0 from TextNode start: 0, length: 11, rect: [12,12 100.484375x17] baseline: 13.296875
                 "programming"
             TextNode <#text>
         BlockContainer <div.second> at (12,31) content-size 50x50 children: not-inline

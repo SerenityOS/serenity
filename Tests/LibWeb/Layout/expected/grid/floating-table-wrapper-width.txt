@@ -4,8 +4,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid> at (8,8) content-size 784x27 [GFC] children: not-inline
         BlockContainer <div> at (8,8) content-size 784x27 [BFC] children: not-inline
           BlockContainer <div.left> at (8,8) content-size 6.34375x17 floating [BFC] children: inline
-            line 0 width: 6.34375, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 1, rect: [8,8 6.34375x17]
+            frag 0 from TextNode start: 0, length: 1, rect: [8,8 6.34375x17] baseline: 13.296875
                 "1"
             TextNode <#text>
           TableWrapper <(anonymous)> at (14.34375,8) content-size 156.796875x27 floating [BFC] children: not-inline
@@ -13,18 +12,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               Box <tbody> at (15.34375,9) content-size 148.796875x21 table-row-group children: not-inline
                 Box <tr> at (17.34375,11) content-size 148.796875x21 table-row children: not-inline
                   BlockContainer <td> at (19.34375,13) content-size 69.59375x17 table-cell [BFC] children: inline
-                    line 0 width: 8.8125, height: 17, bottom: 17, baseline: 13.296875
-                      frag 0 from TextNode start: 0, length: 1, rect: [19.34375,13 8.8125x17]
+                    frag 0 from TextNode start: 0, length: 1, rect: [19.34375,13 8.8125x17] baseline: 13.296875
                         "2"
                     TextNode <#text>
                   BlockContainer <td> at (94.9375,13) content-size 71.203125x17 table-cell [BFC] children: inline
-                    line 0 width: 9.09375, height: 17, bottom: 17, baseline: 13.296875
-                      frag 0 from TextNode start: 0, length: 1, rect: [94.9375,13 9.09375x17]
+                    frag 0 from TextNode start: 0, length: 1, rect: [94.9375,13 9.09375x17] baseline: 13.296875
                         "3"
                     TextNode <#text>
           BlockContainer <div.right> at (171.140625,8) content-size 7.75x17 floating [BFC] children: inline
-            line 0 width: 7.75, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 0, length: 1, rect: [171.140625,8 7.75x17]
+            frag 0 from TextNode start: 0, length: 1, rect: [171.140625,8 7.75x17] baseline: 13.296875
                 "4"
             TextNode <#text>
       BlockContainer <(anonymous)> at (8,35) content-size 784x0 children: inline

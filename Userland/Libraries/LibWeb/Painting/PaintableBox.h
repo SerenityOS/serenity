@@ -9,6 +9,7 @@
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableFragment.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
@@ -228,17 +229,19 @@ public:
     Layout::BlockContainer const& layout_box() const;
     Layout::BlockContainer& layout_box();
 
-    Vector<Layout::LineBox> const& line_boxes() const { return m_line_boxes; }
-    void set_line_boxes(Vector<Layout::LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
+    Vector<PaintableFragment> const& fragments() const { return m_fragments; }
+
+    void add_fragment(Layout::LineBoxFragment const& fragment)
+    {
+        m_fragments.append(PaintableFragment { fragment });
+    }
 
     template<typename Callback>
     void for_each_fragment(Callback callback) const
     {
-        for (auto& line_box : line_boxes()) {
-            for (auto& fragment : line_box.fragments()) {
-                if (callback(fragment) == IterationDecision::Break)
-                    return;
-            }
+        for (auto& fragment : m_fragments) {
+            if (callback(fragment) == IterationDecision::Break)
+                return;
         }
     }
 
@@ -247,17 +250,24 @@ public:
 
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
+    virtual void visit_edges(Cell::Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        for (auto& fragment : m_fragments)
+            visitor.visit(JS::NonnullGCPtr { fragment.layout_node() });
+    }
+
 protected:
     PaintableWithLines(Layout::BlockContainer const&);
 
 private:
     [[nodiscard]] virtual bool is_paintable_with_lines() const final { return true; }
 
-    Vector<Layout::LineBox> m_line_boxes;
+    Vector<PaintableFragment> m_fragments;
 };
 
-void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment);
-void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment);
-void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, PaintPhase phase);
+void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, PaintableFragment const& fragment);
+void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment);
+void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment, PaintPhase phase);
 
 }

@@ -2,13 +2,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x36 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x20 children: not-inline
       BlockContainer <div> at (8,8) content-size 784x10 children: inline
-        line 0 width: 98, height: 10, bottom: 10, baseline: 9.796875
-          frag 0 from TextNode start: 0, length: 11, rect: [8,8 98x10]
+        frag 0 from TextNode start: 0, length: 11, rect: [8,8 98x10] baseline: 9.796875
             "foo bar baz"
         TextNode <#text>
       BlockContainer <(anonymous)> at (8,18) content-size 784x10 children: inline
-        line 0 width: 98, height: 10, bottom: 10, baseline: 9.796875
-          frag 0 from TextNode start: 0, length: 11, rect: [8,18 98x10]
+        frag 0 from TextNode start: 0, length: 11, rect: [8,18 98x10] baseline: 9.796875
             "foo bar baz"
         TextNode <#text>
 

@@ -17,6 +17,7 @@
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/PaintOuterBoxShadowParams.h>
+#include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
@@ -578,9 +579,9 @@ void paint_box_shadow(PaintContext& context,
     }
 }
 
-void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fragment, Vector<ShadowData> const& shadow_layers)
+void paint_text_shadow(PaintContext& context, PaintableFragment const& fragment, Vector<ShadowData> const& shadow_layers)
 {
-    if (shadow_layers.is_empty() || fragment.text().is_empty())
+    if (shadow_layers.is_empty() || fragment.glyph_run().is_empty())
         return;
 
     auto fragment_width = context.enclosing_device_pixels(fragment.width()).value();

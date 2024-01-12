@@ -2,11 +2,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x33 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x17 children: not-inline
       BlockContainer <div.pure-menu-list> at (8,8) content-size 784x17 children: inline
-        line 0 width: 36.453125, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from BlockContainer start: 0, length: 0, rect: [8,8 36.453125x17]
+        frag 0 from BlockContainer start: 0, length: 0, rect: [8,8 36.453125x17] baseline: 13.296875
         BlockContainer <div.pure-menu-item> at (8,8) content-size 36.453125x17 inline-block [BFC] children: inline
-          line 0 width: 36.453125, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 4, rect: [8,8 36.453125x17]
+          frag 0 from TextNode start: 0, length: 4, rect: [8,8 36.453125x17] baseline: 13.296875
               "docs"
           TextNode <#text>
 

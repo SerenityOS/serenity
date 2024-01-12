@@ -3,23 +3,19 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x34 children: not-inline
       Box <div.grid> at (8,8) content-size 784x34 [GFC] children: not-inline
         BlockContainer <div> at (8,8) content-size 261.328125x17 [BFC] children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [8,8 9.34375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [8,8 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
         BlockContainer <div> at (269.328125,8) content-size 261.328125x17 [BFC] children: inline
-          line 0 width: 9.46875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [269.328125,8 9.46875x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [269.328125,8 9.46875x17] baseline: 13.296875
               "b"
           TextNode <#text>
         BlockContainer <div> at (530.65625,8) content-size 261.328125x17 [BFC] children: inline
-          line 0 width: 8.890625, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [530.65625,8 8.890625x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [530.65625,8 8.890625x17] baseline: 13.296875
               "c"
           TextNode <#text>
         BlockContainer <div> at (8,25) content-size 261.328125x17 [BFC] children: inline
-          line 0 width: 7.859375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 1, rect: [8,25 7.859375x17]
+          frag 0 from TextNode start: 0, length: 1, rect: [8,25 7.859375x17] baseline: 13.296875
               "d"
           TextNode <#text>
 

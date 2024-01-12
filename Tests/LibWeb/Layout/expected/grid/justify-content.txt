@@ -3,65 +3,55 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x85 children: not-inline
       Box <div.container> at (8,8) content-size 784x17 [GFC] children: not-inline
         BlockContainer <div> at (8,8) content-size 392x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [8,8 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [8,8 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
         BlockContainer <div> at (400,8) content-size 392x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [400,8 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [400,8 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,25) content-size 784x0 children: inline
         TextNode <#text>
       Box <div.container> at (8,25) content-size 784x17 [GFC] children: not-inline
         BlockContainer <div> at (8,25) content-size 392x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [8,25 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [8,25 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
         BlockContainer <div> at (400,25) content-size 392x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [400,25 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [400,25 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,42) content-size 784x0 children: inline
         TextNode <#text>
       Box <div.container> at (8,42) content-size 784x17 [GFC] children: not-inline
         BlockContainer <div> at (8,42) content-size 67.96875x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [8,42 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [8,42 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
         BlockContainer <div> at (75.96875,42) content-size 67.96875x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [75.96875,42 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [75.96875,42 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,59) content-size 784x0 children: inline
         TextNode <#text>
       Box <div.container> at (8,59) content-size 784x17 [GFC] children: not-inline
         BlockContainer <div> at (332.03125,59) content-size 67.96875x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [332.03125,59 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [332.03125,59 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
         BlockContainer <div> at (400,59) content-size 67.96875x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [400,59 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [400,59 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,76) content-size 784x0 children: inline
         TextNode <#text>
       Box <div.container> at (8,76) content-size 784x17 [GFC] children: not-inline
         BlockContainer <div> at (656.0625,76) content-size 67.96875x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [656.0625,76 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [656.0625,76 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
         BlockContainer <div> at (724.03125,76) content-size 67.96875x17 [BFC] children: inline
-          line 0 width: 67.96875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 9, rect: [724.03125,76 67.96875x17]
+          frag 0 from TextNode start: 0, length: 9, rect: [724.03125,76 67.96875x17] baseline: 13.296875
               "wikipedia"
           TextNode <#text>
 

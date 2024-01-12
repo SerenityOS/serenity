@@ -3,8 +3,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x251 children: not-inline
       BlockContainer <div> at (8,8) content-size 784x251 children: not-inline
         BlockContainer <(anonymous)> at (8,8) content-size 784x17 children: inline
-          line 0 width: 447.484375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 0, length: 54, rect: [345,8 447.484375x17]
+          frag 0 from TextNode start: 0, length: 54, rect: [345,8 447.484375x17] baseline: 13.296875
               "This text and the green square are both right aligned:"
           TextNode <#text>
         BlockContainer <div.square> at (692,25) content-size 100x100 children: not-inline
@@ -12,11 +11,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <div> at (8,125) content-size 784x134 children: not-inline
           BlockContainer <(anonymous)> at (8,125) content-size 784x34 children: inline
-            line 0 width: 711.4375, height: 17, bottom: 17, baseline: 13.296875
-              frag 0 from TextNode start: 1, length: 87, rect: [8,125 711.4375x17]
+            frag 0 from TextNode start: 1, length: 87, rect: [8,125 711.4375x17] baseline: 13.296875
                 "This text and the green square are both left aligned despite being nested in a div with"
-            line 1 width: 94.296875, height: 17, bottom: 34, baseline: 13.296875
-              frag 0 from TextNode start: 89, length: 14, rect: [8,142 94.296875x17]
+            frag 1 from TextNode start: 89, length: 14, rect: [8,142 94.296875x17] baseline: 13.296875
                 "align="right":"
             TextNode <#text>
           BlockContainer <div.square> at (8,159) content-size 100x100 children: inline

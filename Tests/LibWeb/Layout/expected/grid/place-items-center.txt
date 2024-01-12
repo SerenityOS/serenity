@@ -2,8 +2,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x37 [BFC] children: not-inline
     Box <body> at (10,10) content-size 780x19 [GFC] children: not-inline
       BlockContainer <div> at (362.9375,11) content-size 74.125x17 [BFC] children: inline
-        line 0 width: 74.125, height: 17, bottom: 17, baseline: 13.296875
-          frag 0 from TextNode start: 0, length: 8, rect: [362.9375,11 74.125x17]
+        frag 0 from TextNode start: 0, length: 8, rect: [362.9375,11 74.125x17] baseline: 13.296875
             "Download"
         TextNode <#text>
 

@@ -3,14 +3,12 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (100,8) content-size 200x200 children: not-inline
       BlockContainer <div.row> at (50,8) content-size 250x200 children: inline
         BlockContainer <div.item> at (50,8) content-size 125x17 floating [BFC] children: inline
-          line 0 width: 9.34375, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 1, length: 1, rect: [50,8 9.34375x17]
+          frag 0 from TextNode start: 1, length: 1, rect: [50,8 9.34375x17] baseline: 13.296875
               "a"
           TextNode <#text>
         TextNode <#text>
         BlockContainer <div.item> at (175,8) content-size 125x17 floating [BFC] children: inline
-          line 0 width: 9.46875, height: 17, bottom: 17, baseline: 13.296875
-            frag 0 from TextNode start: 1, length: 1, rect: [175,8 9.46875x17]
+          frag 0 from TextNode start: 1, length: 1, rect: [175,8 9.46875x17] baseline: 13.296875
               "b"
           TextNode <#text>
         TextNode <#text>
