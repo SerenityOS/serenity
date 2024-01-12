@@ -294,11 +294,11 @@ if (current_os == "mac") {
 
   bundle_data("ladybird_web_resources") {
     sources = [
-      "//Base/res/ladybird/directory.html",
-      "//Base/res/ladybird/error.html",
       "//Base/res/ladybird/inspector.css",
       "//Base/res/ladybird/inspector.js",
       "//Base/res/ladybird/new-tab.html",
+      "//Base/res/ladybird/templates/directory.html",
+      "//Base/res/ladybird/templates/error.html",
     ]
     outputs = [ "{{bundle_resources_dir}}/res/ladybird/{{source_file_part}}" ]
   }
