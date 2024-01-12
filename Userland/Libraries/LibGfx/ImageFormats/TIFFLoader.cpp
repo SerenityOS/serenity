@@ -423,36 +423,6 @@ private:
         return {};
     }
 
-    static constexpr u8 size_of_type(Type type)
-    {
-        switch (type) {
-        case Type::Byte:
-            return 1;
-        case Type::ASCII:
-            return 1;
-        case Type::UnsignedShort:
-            return 2;
-        case Type::UnsignedLong:
-            return 4;
-        case Type::UnsignedRational:
-            return 8;
-        case Type::Undefined:
-            return 1;
-        case Type::SignedLong:
-            return 4;
-        case Type::SignedRational:
-            return 8;
-        case Type::Float:
-            return 4;
-        case Type::Double:
-            return 8;
-        case Type::UTF8:
-            return 1;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-
     ErrorOr<Vector<Value, 1>> read_tiff_value(Type type, u32 count, u32 offset)
     {
         auto const old_offset = TRY(m_stream->tell());

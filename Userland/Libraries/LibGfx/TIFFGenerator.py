@@ -22,17 +22,25 @@ class TIFFType(EnumWithExportName):
     @classmethod
     def export_name(cls) -> str:
         return "Type"
-    Byte = 1
-    ASCII = 2
-    UnsignedShort = 3
-    UnsignedLong = 4
-    UnsignedRational = 5
-    Undefined = 7
-    SignedLong = 9
-    SignedRational = 10
-    Float = 11
-    Double = 12
-    UTF8 = 129
+
+    def __new__(cls, *args):
+        obj = object.__new__(cls)
+        obj._value_ = args[0]
+        obj.size = args[1]
+        return obj
+
+    # First value is the underlying u16, second one is the size in bytes
+    Byte = 1, 1
+    ASCII = 2, 1
+    UnsignedShort = 3, 2
+    UnsignedLong = 4, 4
+    UnsignedRational = 5, 8
+    Undefined = 7, 1
+    SignedLong = 9, 4
+    SignedRational = 10, 8
+    Float = 11, 4
+    Double = 12, 8
+    UTF8 = 129, 1
 
 
 class Predictor(EnumWithExportName):
@@ -137,6 +145,7 @@ HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(names
 
 ENSURE_BASELINE_TAG_PRESENCE = "ErrorOr<void> ensure_baseline_tags_are_present(Metadata const& metadata)"
 TIFF_TYPE_FROM_U16 = "ErrorOr<Type> tiff_type_from_u16(u16 type)"
+SIZE_OF_TIFF_TYPE = "u8 size_of_type(Type type)"
 
 LICENSE = R"""/*
  * Copyright (c) 2023, Lucas Chollet <lucas.chollet@serenityos.org>
@@ -371,6 +380,7 @@ using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>
 {HANDLE_TAG_SIGNATURE};
 {ENSURE_BASELINE_TAG_PRESENCE};
 {TIFF_TYPE_FROM_U16};
+{SIZE_OF_TIFF_TYPE};
 
 }}
 
@@ -464,6 +474,9 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
     tiff_type_from_u16_cases = '\n'.join([fR"""    case to_underlying(Type::{t.name}):
         return Type::{t.name};""" for t in TIFFType])
 
+    size_of_tiff_type_cases = '\n'.join([fR"""    case Type::{t.name}:
+        return {t.size};""" for t in TIFFType])
+
     output = fR"""{LICENSE}
 
 #include <AK/Debug.h>
@@ -512,6 +525,14 @@ static String value_formatter(u32 tag_id, Value const& v) {{
     }}
 }}
 
+{SIZE_OF_TIFF_TYPE}
+{{
+    switch (type) {{
+{size_of_tiff_type_cases}
+    default:
+        VERIFY_NOT_REACHED();
+    }}
+}}
 
 {HANDLE_TAG_SIGNATURE}
 {{
