@@ -718,6 +718,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
             response->set_body(MUST(Infrastructure::byte_sequence_as_body(realm, ""sv.bytes())));
             return PendingResponse::create(vm, request, response);
         }
+
+        // FIXME: This is actually wrong, see note above.
+        return TRY(nonstandard_resource_loader_file_or_http_network_fetch(realm, fetch_params));
     }
     // -> "blob"
     else if (request->current_url().scheme() == "blob"sv) {

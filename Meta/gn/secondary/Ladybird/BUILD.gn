@@ -294,6 +294,7 @@ if (current_os == "mac") {
 
   bundle_data("ladybird_web_resources") {
     sources = [
+      "//Base/res/ladybird/about.html",
       "//Base/res/ladybird/inspector.css",
       "//Base/res/ladybird/inspector.js",
       "//Base/res/ladybird/newtab.html",
