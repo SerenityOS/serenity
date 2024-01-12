@@ -15,4 +15,6 @@ ErrorOr<String> load_error_page(AK::URL const&);
 
 ErrorOr<String> load_file_directory_page(AK::URL const&);
 
+ErrorOr<String> load_about_version_page();
+
 }

@@ -230,6 +230,12 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
         response_headers.set("Content-Type", "text/html; charset=UTF-8");
 
+        // About version page
+        if (url.path_segment_at_index(0) == "version") {
+            success_callback(MUST(load_about_version_page()).bytes(), response_headers, {});
+            return;
+        }
+
         // Other about static HTML pages
         auto resource = Core::Resource::load_from_uri(MUST(String::formatted("resource://ladybird/{}.html", url.path_segment_at_index(0))));
         if (!resource.is_error()) {
