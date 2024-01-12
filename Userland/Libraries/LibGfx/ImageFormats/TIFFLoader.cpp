@@ -423,32 +423,6 @@ private:
         return {};
     }
 
-    ErrorOr<Type> read_type()
-    {
-        switch (TRY(read_value<u16>())) {
-        case to_underlying(Type::Byte):
-            return Type::Byte;
-        case to_underlying(Type::ASCII):
-            return Type::ASCII;
-        case to_underlying(Type::UnsignedShort):
-            return Type::UnsignedShort;
-        case to_underlying(Type::UnsignedLong):
-            return Type::UnsignedLong;
-        case to_underlying(Type::UnsignedRational):
-            return Type::UnsignedRational;
-        case to_underlying(Type::Undefined):
-            return Type::Undefined;
-        case to_underlying(Type::SignedLong):
-            return Type::SignedLong;
-        case to_underlying(Type::SignedRational):
-            return Type::SignedRational;
-        case to_underlying(Type::UTF8):
-            return Type::UTF8;
-        default:
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Unknown type");
-        }
-    }
-
     static constexpr u8 size_of_type(Type type)
     {
         switch (type) {
@@ -541,7 +515,8 @@ private:
     ErrorOr<void> read_tag()
     {
         auto const tag = TRY(read_value<u16>());
-        auto const type = TRY(read_type());
+        auto const raw_type = TRY(read_value<u16>());
+        auto const type = TRY(tiff_type_from_u16(raw_type));
         auto const count = TRY(read_value<u32>());
 
         Checked<u32> checked_size = size_of_type(type);
