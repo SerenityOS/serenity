@@ -79,3 +79,20 @@ TEST_CASE(http_url)
     compare_url_parts("http://abc.def.com#anchor"sv, { "http://abc."sv, "def.com"sv, "#anchor"sv });
     compare_url_parts("http://abc.def.com?query"sv, { "http://abc."sv, "def.com"sv, "?query"sv });
 }
+
+TEST_CASE(about_url)
+{
+    auto is_sanitized_url_the_same = [](StringView url) {
+        auto sanitized_url = WebView::sanitize_url(url);
+        if (!sanitized_url.has_value())
+            return false;
+        return sanitized_url->to_string().value() == url;
+    };
+
+    EXPECT(!is_sanitized_url_the_same("about"sv));
+    EXPECT(!is_sanitized_url_the_same("about blabla:"sv));
+    EXPECT(!is_sanitized_url_the_same("blabla about:"sv));
+
+    EXPECT(is_sanitized_url_the_same("about:about"sv));
+    EXPECT(is_sanitized_url_the_same("about:version"sv));
+}

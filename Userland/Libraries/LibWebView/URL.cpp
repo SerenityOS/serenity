@@ -35,7 +35,7 @@ static Optional<URL> create_url_with_url_or_path(String const& url_or_path)
 static Optional<URL> query_public_suffix_list(StringView url_string)
 {
     auto out = MUST(String::from_utf8(url_string));
-    if (!out.contains("://"sv))
+    if (!out.starts_with_bytes("about:"sv) && !out.contains("://"sv))
         out = MUST(String::formatted("https://{}"sv, out));
 
     auto maybe_url = create_url_with_url_or_path(out);
