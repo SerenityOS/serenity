@@ -1092,23 +1092,32 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
 
     int const n_components = color_space->number_of_components();
 
-    Vector<u8> upsampled_storage;
+    Vector<u8> resampled_storage;
     if (bits_per_component < 8) {
         UpsampleMode mode = color_space->family() == ColorSpaceFamily::Indexed ? UpsampleMode::StoreValuesUnchanged : UpsampleMode::UpsampleTo8Bit;
-        upsampled_storage = upsample_to_8_bit(content, width * n_components, bits_per_component, mode);
-        content = upsampled_storage;
+        resampled_storage = upsample_to_8_bit(content, width * n_components, bits_per_component, mode);
+        content = resampled_storage;
         bits_per_component = 8;
 
         if (is_image_mask) {
             // "a sample value of 0 marks the page with the current color, and a 1 leaves the previous contents unchanged."
             // That's opposite of the normal alpha convention, and we're upsampling masks to 8 bit and use that as normal alpha.
-            for (u8& byte : upsampled_storage)
+            for (u8& byte : resampled_storage)
                 byte = ~byte;
         }
-    }
+    } else if (bits_per_component == 16) {
+        if (color_space->family() == ColorSpaceFamily::Indexed)
+            return Error(Error::Type::RenderingUnsupported, "16 bpp indexed images not yet supported");
 
-    if (bits_per_component == 16) {
-        return Error(Error::Type::RenderingUnsupported, "16 bpp images not yet supported");
+        // PDF 1.7 spec, 4.8.2 Sample Representation:
+        // "units of 16 bits are given with the most significant byte first"
+        // FIXME: Eventually use all 16 bits instead of throwing away the lower 8 bits.
+        resampled_storage.ensure_capacity(content.size() / 2);
+        for (size_t i = 0; i < content.size(); i += 2)
+            resampled_storage.append(content[i]);
+
+        content = resampled_storage;
+        bits_per_component = 8;
     }
 
     Vector<float> decode_array;
