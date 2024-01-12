@@ -46,7 +46,7 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(Optional<String> const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(Optional<FlyString> const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
     // 1. Let document be a new XMLDocument
     auto xml_document = XMLDocument::create(realm());
@@ -72,15 +72,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
     xml_document->set_origin(document().origin());
 
     // 7. document’s content type is determined by namespace:
-    // FIXME: This conversion is ugly
-    Optional<FlyString> namespace_to_use;
-    if (namespace_.has_value())
-        namespace_to_use = namespace_.value();
-
-    if (namespace_to_use == Namespace::HTML) {
+    if (namespace_ == Namespace::HTML) {
         // -> HTML namespace
         xml_document->set_content_type("application/xhtml+xml"_string);
-    } else if (namespace_to_use == Namespace::SVG) {
+    } else if (namespace_ == Namespace::SVG) {
         // -> SVG namespace
         xml_document->set_content_type("image/svg+xml"_string);
     } else {

@@ -5,7 +5,7 @@
 interface DOMImplementation {
 
     // FIXME: This should return XMLDocument instead of Document.
-    [NewObject] Document createDocument(DOMString? namespace, [LegacyNullToEmptyString] DOMString qualifiedName, optional DocumentType? doctype = null);
+    [NewObject] Document createDocument([FlyString] DOMString? namespace, [LegacyNullToEmptyString] DOMString qualifiedName, optional DocumentType? doctype = null);
     [NewObject] Document createHTMLDocument(optional DOMString title);
     [NewObject] DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId);
 
