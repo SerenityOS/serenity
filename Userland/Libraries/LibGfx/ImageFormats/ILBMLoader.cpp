@@ -220,7 +220,9 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
                 u8 bit = bitplanes[offset_base + i];
                 u8 rgb_shift = p / 8;
 
-                for (u8 b = 0; b < 8; b++) {
+                // Some encoders don't pad bytes rows with 0: make sure we stop
+                // when enough data for current bitplane row has been read
+                for (u8 b = 0; b < 8 && (i * 8) + b < width; b++) {
                     u8 mask = 1 << (7 - b);
                     // get current plane
                     if (bit & mask) {
