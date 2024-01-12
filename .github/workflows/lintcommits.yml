@@ -87,7 +87,7 @@ jobs:
 
       - name: Comment on PR
         if: ${{ failure() && !github.event.pull_request.draft }}
-        uses: IdanHo/comment-on-pr@dba728af7671011d7fd2c52acfc80f7217ae58b8
+        uses: IdanHo/comment-on-pr@63ea2bf352997c66e524b8b5be7a79163fb3a88a
         env:
           GITHUB_TOKEN: ${{ secrets.BUGGIEBOT_TOKEN }}
         with:
