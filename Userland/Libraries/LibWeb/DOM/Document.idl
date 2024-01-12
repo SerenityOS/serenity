@@ -76,14 +76,14 @@ interface Document : Node {
     readonly attribute HTMLCollection all;
 
     [CEReactions, NewObject] Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
-    [CEReactions, NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
+    [CEReactions, NewObject] Element createElementNS([FlyString] DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
     Comment createComment(DOMString data);
     [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
     [NewObject] Attr createAttribute(DOMString localName);
-    [NewObject] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
+    [NewObject] Attr createAttributeNS([FlyString] DOMString? namespace, DOMString qualifiedName);
 
     Range createRange();
     Event createEvent(DOMString interface);

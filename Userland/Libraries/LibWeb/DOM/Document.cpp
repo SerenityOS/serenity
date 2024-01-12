@@ -1426,15 +1426,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String c
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optional<String> const& namespace_, String const& qualified_name, Variant<String, ElementCreationOptions> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optional<FlyString> const& namespace_, String const& qualified_name, Variant<String, ElementCreationOptions> const& options)
 {
-    // FIXME: This conversion is ugly
-    Optional<FlyString> namespace_to_use;
-    if (namespace_.has_value())
-        namespace_to_use = namespace_.value();
-
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // 2. Let is be null.
     Optional<String> is_value;
@@ -3082,15 +3077,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String co
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createattributens
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Optional<String> const& namespace_, String const& qualified_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Optional<FlyString> const& namespace_, String const& qualified_name)
 {
-    // FIXME: This conversion is ugly
-    Optional<FlyString> namespace_to_use;
-    if (namespace_.has_value())
-        namespace_to_use = namespace_.value();
-
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
 
