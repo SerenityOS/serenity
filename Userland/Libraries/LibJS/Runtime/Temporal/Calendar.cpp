@@ -187,7 +187,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value 
 }
 
 // 12.2.7 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
-ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until)
+ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object const& calendar, Value one, Value two, Object const& options, FunctionObject const* date_until)
 {
     // 1. Assert: Type(calendar) is Object.
 
