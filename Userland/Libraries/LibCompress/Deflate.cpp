@@ -376,17 +376,7 @@ ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
     FixedMemoryStream memory_stream { bytes };
     LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
     auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<LittleEndianInputBitStream>(bit_stream)));
-    AllocatingMemoryStream output_stream;
-
-    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
-    while (!deflate_stream->is_eof()) {
-        auto const slice = TRY(deflate_stream->read_some(buffer));
-        TRY(output_stream.write_until_depleted(slice));
-    }
-
-    auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
-    TRY(output_stream.read_until_filled(output_buffer));
-    return output_buffer;
+    return deflate_stream->read_until_eof(4096);
 }
 
 ErrorOr<u32> DeflateDecompressor::decode_length(u32 symbol)
