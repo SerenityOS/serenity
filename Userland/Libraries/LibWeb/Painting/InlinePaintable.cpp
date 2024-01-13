@@ -51,18 +51,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto const& border_radii_data = fragment.border_radii_data();
             paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), computed_values().image_rendering(), &computed_values().background_layers(), border_radii_data);
 
-            if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
-                Vector<ShadowData> resolved_box_shadow_data;
-                resolved_box_shadow_data.ensure_capacity(computed_box_shadow.size());
-                for (auto const& layer : computed_box_shadow) {
-                    resolved_box_shadow_data.empend(
-                        layer.color,
-                        layer.offset_x.to_px(layout_node()),
-                        layer.offset_y.to_px(layout_node()),
-                        layer.blur_radius.to_px(layout_node()),
-                        layer.spread_distance.to_px(layout_node()),
-                        layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
-                }
+            if (!box_shadow_data().is_empty()) {
                 auto borders_data = BordersData {
                     .top = computed_values().border_top(),
                     .right = computed_values().border_right(),
@@ -73,7 +62,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                     borders_data.top.width, borders_data.right.width,
                     borders_data.bottom.width, borders_data.left.width);
                 paint_box_shadow(context, absolute_fragment_rect_bordered, absolute_fragment_rect,
-                    borders_data, border_radii_data, resolved_box_shadow_data);
+                    borders_data, border_radii_data, box_shadow_data());
             }
 
             return IterationDecision::Continue;
