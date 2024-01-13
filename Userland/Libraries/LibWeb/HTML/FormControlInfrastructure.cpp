@@ -125,8 +125,8 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
                 value = "on"_string;
 
             // 2. Create an entry with name and value, and append it to entry list.
-            auto checkbox_or_radio_element_name = TRY_OR_THROW_OOM(vm, String::from_byte_string(checkbox_or_radio_element->name()));
-            entry_list.append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(value) });
+            auto checkbox_or_radio_element_name = checkbox_or_radio_element->name();
+            entry_list.append(XHR::FormDataEntry { .name = checkbox_or_radio_element_name->to_string(), .value = move(value) });
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:
         else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
