@@ -65,7 +65,6 @@ public:
     WebIDL::ExceptionOr<void> set_type(String const&);
 
     ByteString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
-    ByteString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
     virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);

@@ -965,9 +965,9 @@ static bool is_in_same_radio_button_group(HTML::HTMLInputElement const& a, HTML:
         && a.form() == b.form()
         // - They both have a name attribute, their name attributes are not empty, and the
         // value of a's name attribute equals the value of b's name attribute.
-        && a.has_attribute(HTML::AttributeNames::name)
-        && b.has_attribute(HTML::AttributeNames::name)
-        && non_empty_equals(a.name(), b.name()));
+        && a.name().has_value()
+        && b.name().has_value()
+        && non_empty_equals(a.name().value(), b.name().value()));
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#radio-button-state-(type=radio)
@@ -979,8 +979,7 @@ void HTMLInputElement::set_checked_within_group()
     set_checked(true, ChangeSource::User);
 
     // No point iterating the tree if we have an empty name.
-    auto name = this->name();
-    if (name.is_empty())
+    if (!name().has_value() || name()->is_empty())
         return;
 
     document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
@@ -1010,8 +1009,6 @@ void HTMLInputElement::legacy_pre_activation_behavior()
     // has its checkedness set to true, if any, and then set this element's
     // checkedness to true.
     if (type_state() == TypeAttributeState::RadioButton) {
-        ByteString name = this->name();
-
         document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
             if (element.checked() && is_in_same_radio_button_group(*this, element)) {
                 m_legacy_pre_activation_behavior_checked_element_in_group = &element;
