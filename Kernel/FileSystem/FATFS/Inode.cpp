@@ -57,7 +57,7 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
 
         auto first_block_and_length = fs().first_block_of_cluster(cluster);
         for (u8 i = 0; i < first_block_and_length.number_of_sectors; i++)
-            block_list.append(BlockBasedFileSystem::BlockIndex { first_block_and_length.start_block.value() + i });
+            TRY(block_list.try_append(BlockBasedFileSystem::BlockIndex { first_block_and_length.start_block.value() + i }));
 
         // Clusters 0 and 1 are reserved in the FAT, and their entries in the FAT will
         // not point to another valid cluster in the chain (Cluster 0 typically holds
@@ -176,28 +176,28 @@ ErrorOr<NonnullOwnPtr<KString>> FATInode::compute_filename(FATEntry& entry, Vect
 {
     if (lfn_entries.is_empty()) {
         StringBuilder filename;
-        filename.append(byte_terminated_string(StringView(entry.filename, normal_filename_length), ' '));
+        TRY(filename.try_append(byte_terminated_string(StringView(entry.filename, normal_filename_length), ' ')));
         if (entry.extension[0] != ' ') {
-            filename.append('.');
-            filename.append(byte_terminated_string(StringView(entry.extension, normal_extension_length), ' '));
+            TRY(filename.try_append('.'));
+            TRY(filename.try_append(byte_terminated_string(StringView(entry.extension, normal_extension_length), ' ')));
         }
         return TRY(KString::try_create(filename.string_view()));
     } else {
         StringBuilder filename;
         for (auto& lfn_entry : lfn_entries) {
-            filename.append(lfn_entry.characters1[0]);
-            filename.append(lfn_entry.characters1[1]);
-            filename.append(lfn_entry.characters1[2]);
-            filename.append(lfn_entry.characters1[3]);
-            filename.append(lfn_entry.characters1[4]);
-            filename.append(lfn_entry.characters2[0]);
-            filename.append(lfn_entry.characters2[1]);
-            filename.append(lfn_entry.characters2[2]);
-            filename.append(lfn_entry.characters2[3]);
-            filename.append(lfn_entry.characters2[4]);
-            filename.append(lfn_entry.characters2[5]);
-            filename.append(lfn_entry.characters3[0]);
-            filename.append(lfn_entry.characters3[1]);
+            TRY(filename.try_append(lfn_entry.characters1[0]));
+            TRY(filename.try_append(lfn_entry.characters1[1]));
+            TRY(filename.try_append(lfn_entry.characters1[2]));
+            TRY(filename.try_append(lfn_entry.characters1[3]));
+            TRY(filename.try_append(lfn_entry.characters1[4]));
+            TRY(filename.try_append(lfn_entry.characters2[0]));
+            TRY(filename.try_append(lfn_entry.characters2[1]));
+            TRY(filename.try_append(lfn_entry.characters2[2]));
+            TRY(filename.try_append(lfn_entry.characters2[3]));
+            TRY(filename.try_append(lfn_entry.characters2[4]));
+            TRY(filename.try_append(lfn_entry.characters2[5]));
+            TRY(filename.try_append(lfn_entry.characters3[0]));
+            TRY(filename.try_append(lfn_entry.characters3[1]));
         }
 
         // Long Filenames have two terminators:
