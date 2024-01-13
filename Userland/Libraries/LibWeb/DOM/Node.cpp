@@ -43,6 +43,7 @@
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::DOM {
 
@@ -1521,20 +1522,16 @@ Painting::Paintable* Node::paintable()
 
 Painting::PaintableBox const* Node::paintable_box() const
 {
-    if (!layout_node())
-        return nullptr;
-    if (!layout_node()->is_box())
-        return nullptr;
-    return static_cast<Layout::Box const&>(*layout_node()).paintable_box();
+    if (paintable() && paintable()->is_paintable_box())
+        return static_cast<Painting::PaintableBox const*>(paintable());
+    return nullptr;
 }
 
 Painting::PaintableBox* Node::paintable_box()
 {
-    if (!layout_node())
-        return nullptr;
-    if (!layout_node()->is_box())
-        return nullptr;
-    return static_cast<Layout::Box&>(*layout_node()).paintable_box();
+    if (paintable() && paintable()->is_paintable_box())
+        return static_cast<Painting::PaintableBox*>(paintable());
+    return nullptr;
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
