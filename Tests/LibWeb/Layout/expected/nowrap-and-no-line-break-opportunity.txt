@@ -2,18 +2,18 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x19 children: not-inline
       BlockContainer <div.fixed_width> at (9,9) content-size 50x17 children: inline
-        frag 0 from TextNode start: 0, length: 3, rect: [9,9 33.921875x17] baseline: 13.296875
-            "ABC"
-        frag 1 from TextNode start: 0, length: 1, rect: [43,9 11.5625x17] baseline: 13.296875
-            "X"
-        frag 2 from TextNode start: 0, length: 3, rect: [54,9 33.921875x17] baseline: 13.296875
-            "ABC"
         TextNode <#text>
         InlineNode <span.nowrap>
+          frag 0 from TextNode start: 0, length: 3, rect: [9,9 33.921875x17] baseline: 13.296875
+              "ABC"
           TextNode <#text>
         InlineNode <span>
+          frag 0 from TextNode start: 0, length: 1, rect: [43,9 11.5625x17] baseline: 13.296875
+              "X"
           TextNode <#text>
         InlineNode <span.nowrap>
+          frag 0 from TextNode start: 0, length: 3, rect: [54,9 33.921875x17] baseline: 13.296875
+              "ABC"
           TextNode <#text>
         TextNode <#text>
 

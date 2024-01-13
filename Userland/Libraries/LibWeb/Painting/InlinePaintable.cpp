@@ -154,26 +154,26 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 template<typename Callback>
 void InlinePaintable::for_each_fragment(Callback callback) const
 {
-    // FIXME: This will be slow if the containing block has a lot of fragments!
-    Vector<PaintableFragment const&> fragments;
-    verify_cast<PaintableWithLines>(*containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
-        if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
-            fragments.append(fragment);
-        return IterationDecision::Continue;
-    });
-    for (size_t i = 0; i < fragments.size(); ++i) {
-        auto const& fragment = fragments[i];
-        callback(fragment, i == 0, i == fragments.size() - 1);
+    for (size_t i = 0; i < m_fragments.size(); ++i) {
+        auto const& fragment = m_fragments[i];
+        callback(fragment, i == 0, i == m_fragments.size() - 1);
     }
 }
 
-void InlinePaintable::mark_contained_fragments()
+Optional<HitTestResult> InlinePaintable::hit_test(CSSPixelPoint position, HitTestType type) const
 {
-    verify_cast<PaintableWithLines>(*containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
-        if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
-            const_cast<PaintableFragment&>(fragment).set_contained_by_inline_node();
-        return IterationDecision::Continue;
-    });
+    for (auto& fragment : m_fragments) {
+        if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
+            continue;
+        auto fragment_absolute_rect = fragment.absolute_rect();
+        if (fragment_absolute_rect.contains(position)) {
+            if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
+                return fragment.layout_node().paintable()->hit_test(position, type);
+            return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())),
+                fragment.text_index_at(position.x()) };
+        }
+    }
+    return {};
 }
 
 CSSPixelRect InlinePaintable::bounding_rect() const

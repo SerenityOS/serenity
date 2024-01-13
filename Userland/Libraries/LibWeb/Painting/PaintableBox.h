@@ -230,11 +230,14 @@ public:
     Layout::BlockContainer& layout_box();
 
     Vector<PaintableFragment> const& fragments() const { return m_fragments; }
+    Vector<PaintableFragment>& fragments() { return m_fragments; }
 
     void add_fragment(Layout::LineBoxFragment const& fragment)
     {
         m_fragments.append(PaintableFragment { fragment });
     }
+
+    void set_fragments(Vector<PaintableFragment>&& fragments) { m_fragments = move(fragments); }
 
     template<typename Callback>
     void for_each_fragment(Callback callback) const

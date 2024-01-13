@@ -31,10 +31,12 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
+#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/TextPaintable.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
@@ -340,29 +342,43 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         }
     }
 
+    auto dump_fragment = [&](auto& fragment, size_t fragment_index) {
+        for (size_t i = 0; i < indent; ++i)
+            builder.append("  "sv);
+        builder.appendff("  {}frag {}{} from {} ",
+            fragment_color_on,
+            fragment_index,
+            color_off,
+            fragment.layout_node().class_name());
+        builder.appendff("start: {}, length: {}, rect: {} baseline: {}\n",
+            fragment.start(),
+            fragment.length(),
+            fragment.absolute_rect(),
+            fragment.baseline());
+        if (is<Layout::TextNode>(fragment.layout_node())) {
+            for (size_t i = 0; i < indent; ++i)
+                builder.append("  "sv);
+            auto const& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
+            auto fragment_text = MUST(layout_text.text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
+            builder.appendff("      \"{}\"\n", fragment_text);
+        }
+    };
+
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
         auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
         for (size_t fragment_index = 0; block.paintable_with_lines() && fragment_index < block.paintable_with_lines()->fragments().size(); ++fragment_index) {
             auto const& fragment = block.paintable_with_lines()->fragments()[fragment_index];
-            for (size_t i = 0; i < indent; ++i)
-                builder.append("  "sv);
-            builder.appendff("  {}frag {}{} from {} ",
-                fragment_color_on,
-                fragment_index,
-                color_off,
-                fragment.layout_node().class_name());
-            builder.appendff("start: {}, length: {}, rect: {} baseline: {}\n",
-                fragment.start(),
-                fragment.length(),
-                fragment.absolute_rect(),
-                fragment.baseline());
-            if (is<Layout::TextNode>(fragment.layout_node())) {
-                for (size_t i = 0; i < indent; ++i)
-                    builder.append("  "sv);
-                auto const& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
-                auto fragment_text = MUST(layout_text.text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
-                builder.appendff("      \"{}\"\n", fragment_text);
-            }
+            dump_fragment(fragment, fragment_index);
+        }
+    }
+
+    if (is<Layout::InlineNode>(layout_node) && layout_node.paintable()) {
+        auto const& inline_node = static_cast<Layout::InlineNode const&>(layout_node);
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*inline_node.paintable());
+        auto const& fragments = inline_paintable.fragments();
+        for (size_t fragment_index = 0; fragment_index < fragments.size(); ++fragment_index) {
+            auto const& fragment = fragments[fragment_index];
+            dump_fragment(fragment, fragment_index);
         }
     }
 

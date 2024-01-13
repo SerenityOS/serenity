@@ -1,23 +1,23 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x39 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x23 children: inline
-      frag 0 from TextNode start: 0, length: 1, rect: [8,8 12.4375x22] baseline: 17.140625
-          "x"
-      frag 1 from TextNode start: 0, length: 1, rect: [20,12 8x17] baseline: 13.296875
+      frag 0 from TextNode start: 0, length: 1, rect: [20,12 8x17] baseline: 13.296875
           " "
-      frag 2 from TextNode start: 0, length: 1, rect: [28,8 12.734375x23] baseline: 17.796875
-          "x"
-      frag 3 from TextNode start: 0, length: 1, rect: [41,12 8x17] baseline: 13.296875
+      frag 1 from TextNode start: 0, length: 1, rect: [41,12 8x17] baseline: 13.296875
           " "
-      frag 4 from TextNode start: 0, length: 1, rect: [49,8 13.03125x23] baseline: 17.953125
-          "x"
       InlineNode <span.a>
+        frag 0 from TextNode start: 0, length: 1, rect: [8,8 12.4375x22] baseline: 17.140625
+            "x"
         TextNode <#text>
       TextNode <#text>
       InlineNode <span.b>
+        frag 0 from TextNode start: 0, length: 1, rect: [28,8 12.734375x23] baseline: 17.796875
+            "x"
         TextNode <#text>
       TextNode <#text>
       InlineNode <span.c>
+        frag 0 from TextNode start: 0, length: 1, rect: [49,8 13.03125x23] baseline: 17.953125
+            "x"
         TextNode <#text>
       TextNode <#text>
 
