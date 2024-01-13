@@ -120,6 +120,20 @@ Optional<String> Element::get_attribute(FlyString const& name) const
     return attribute->value();
 }
 
+// https://dom.spec.whatwg.org/#dom-element-getattributens
+Optional<String> Element::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name) const
+{
+    // 1. Let attr be the result of getting an attribute given namespace, localName, and this.
+    auto const* attribute = m_attributes->get_attribute_ns(namespace_, name);
+
+    // 2. If attr is null, return null.
+    if (!attribute)
+        return {};
+
+    // 3. Return attr’s value.
+    return attribute->value();
+}
+
 ByteString Element::deprecated_get_attribute(FlyString const& name) const
 {
     auto maybe_attribute = get_attribute(name);
