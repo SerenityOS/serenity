@@ -219,7 +219,7 @@ public:
     void schedule_style_update();
     void schedule_layout_update();
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(String const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(FlyString const&);
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
 
     JS::NonnullGCPtr<HTMLCollection> applets();
