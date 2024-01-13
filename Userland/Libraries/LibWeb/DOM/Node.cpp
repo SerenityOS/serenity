@@ -261,6 +261,11 @@ void Node::invalidate_style()
         return;
     }
 
+    // If the document is already marked for a full style update, there's no need to do anything here.
+    if (document().needs_full_style_update()) {
+        return;
+    }
+
     for_each_in_inclusive_subtree([&](Node& node) {
         node.m_needs_style_update = true;
         if (node.has_children())
