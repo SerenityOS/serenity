@@ -470,6 +470,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(make_frequency_action(5));
 
     auto view_menu = window->add_menu("&View"_string);
+    auto refresh_action = GUI::Action::create("&Refresh", { Mod_Ctrl, Key_R }, Key_F5, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&refresh_timer, &update_stats](auto&) {
+        if (refresh_timer.is_active())
+            refresh_timer.restart();
+        update_stats();
+    });
+    view_menu->add_action(*refresh_action);
+    view_menu->add_separator();
     view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
