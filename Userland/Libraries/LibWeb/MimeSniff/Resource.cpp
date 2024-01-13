@@ -151,9 +151,9 @@ bool matches_mp4_signature(ReadonlyBytes sequence)
     // 4. Let box-size be the four bytes from sequence[0] to sequence[3], interpreted as a 32-bit unsigned big-endian integer.
     u32 box_size = 0;
     box_size |= static_cast<u32>(sequence[0] << 24);
-    box_size |= box_size + static_cast<u32>(sequence[1] << 16);
-    box_size |= box_size + static_cast<u32>(sequence[2] << 8);
-    box_size |= box_size + sequence[3];
+    box_size |= static_cast<u32>(sequence[1] << 16);
+    box_size |= static_cast<u32>(sequence[2] << 8);
+    box_size |= sequence[3];
 
     // 5. If length is less than box-size or if box-size modulo 4 is not equal to 0, return false.
     if ((length < box_size) || (box_size % 4 != 0))
