@@ -203,7 +203,7 @@ void FlexFormattingContext::parent_context_did_dimension_child_root_box()
 
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
 {
-    auto width_of_containing_block = m_state.get(*item.box->containing_block()).content_width();
+    auto width_of_containing_block = m_flex_container_state.content_width();
     // FIXME: This should also take reverse-ness into account
     if (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse) {
         item.borders.main_before = item.box->computed_values().border_left().width;
