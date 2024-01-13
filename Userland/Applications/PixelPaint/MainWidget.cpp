@@ -1469,7 +1469,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             else
                 return;
 
-            image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value->to_number<float>()));
+            image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value->get_float_with_precision_loss().value_or(0)));
         });
     }
 

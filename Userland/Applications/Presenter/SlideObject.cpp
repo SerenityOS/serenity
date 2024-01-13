@@ -8,6 +8,7 @@
 #include "Presentation.h"
 #include <AK/JsonObject.h>
 #include <AK/URL.h>
+#include <LibGUI/PropertyDeserializer.h>
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Rect.h>
 
@@ -42,16 +43,8 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
 
 void SlideObject::set_property(StringView name, JsonValue value)
 {
-    if (name == "rect"sv) {
-        if (value.is_array() && value.as_array().size() == 4) {
-            Gfx::IntRect rect;
-            rect.set_x(value.as_array()[0].to_i32());
-            rect.set_y(value.as_array()[1].to_i32());
-            rect.set_width(value.as_array()[2].to_i32());
-            rect.set_height(value.as_array()[3].to_i32());
-            m_rect = rect;
-        }
-    }
+    if (name == "rect"sv)
+        m_rect = GUI::PropertyDeserializer<Gfx::IntRect> {}(value).release_value_but_fixme_should_propagate_errors();
     m_properties.set(name, move(value));
 }
 
@@ -74,7 +67,7 @@ void Text::set_property(StringView name, JsonValue value)
     } else if (name == "font-weight"sv) {
         m_font_weight = Gfx::name_to_weight(value.as_string());
     } else if (name == "font-size"sv) {
-        m_font_size_in_pt = value.to_float();
+        m_font_size_in_pt = value.get_float_with_precision_loss().value();
     } else if (name == "text-alignment"sv) {
         m_text_align = value.as_string();
     }

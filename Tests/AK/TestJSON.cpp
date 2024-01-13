@@ -133,28 +133,30 @@ TEST_CASE(json_parse_empty_string)
 TEST_CASE(json_parse_long_decimals)
 {
     auto value = JsonValue::from_string("1644452550.6489999294281"sv);
-    EXPECT_EQ(value.value().to_number<double>(), 1644452550.6489999294281);
+    EXPECT_EQ(value.value().get_double_with_precision_loss(), 1644452550.6489999294281);
 }
 
 TEST_CASE(json_parse_number_with_exponent)
 {
     auto value_without_fraction = JsonValue::from_string("10e5"sv);
-    EXPECT_EQ(value_without_fraction.value().to_number<double>(), 1000000.0);
+    EXPECT_EQ(value_without_fraction.value().get_double_with_precision_loss(), 1000000.0);
 
     auto value_with_fraction = JsonValue::from_string("10.5e5"sv);
-    EXPECT_EQ(value_with_fraction.value().to_number<double>(), 1050000.0);
+    EXPECT_EQ(value_with_fraction.value().get_double_with_precision_loss(), 1050000.0);
 }
 
 TEST_CASE(json_parse_special_numbers)
 {
-#define EXPECT_TO_MATCH_NUMBER_BIT_WISE(string_input, double_input)                                                           \
-    do {                                                                                                                      \
-        auto value_or_error = JsonValue::from_string(string_input##sv);                                                       \
-        VERIFY(!value_or_error.is_error());                                                                                   \
-        if (value_or_error.is_error())                                                                                        \
-            dbgln("got {}", value_or_error.error());                                                                          \
-        EXPECT(value_or_error.value().is_number());                                                                           \
-        EXPECT_EQ(bit_cast<u64>(value_or_error.value().to_double(4321.0)), bit_cast<u64>(static_cast<double>(double_input))); \
+#define EXPECT_TO_MATCH_NUMBER_BIT_WISE(string_input, double_input)                                  \
+    do {                                                                                             \
+        auto value_or_error = JsonValue::from_string(string_input##sv);                              \
+        VERIFY(!value_or_error.is_error());                                                          \
+        if (value_or_error.is_error())                                                               \
+            dbgln("got {}", value_or_error.error());                                                 \
+        auto value = value_or_error.release_value();                                                 \
+        EXPECT(value.is_number());                                                                   \
+        auto value_as_double = value.get_double_with_precision_loss().value();                       \
+        EXPECT_EQ(bit_cast<u64>(value_as_double), bit_cast<u64>(static_cast<double>(double_input))); \
     } while (false)
 
     EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0", -0.);

@@ -175,7 +175,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
         stack.ensure_capacity(json.value().as_array().size());
         for (auto& value : json.value().as_array().values()) {
-            stack.append(value.to_addr());
+            stack.append(value.get_addr().value());
         }
     }
 

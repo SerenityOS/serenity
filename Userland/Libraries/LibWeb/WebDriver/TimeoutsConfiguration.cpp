@@ -51,13 +51,24 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
         auto script_duration = value.as_object().get("script"sv);
 
         // 2. If script duration is a number and less than 0 or greater than maximum safe integer, or it is not null, return error with error code invalid argument.
-        if (script_duration.has_value() && script_duration->is_number() && (script_duration->to_i64() < 0 || script_duration->to_i64() > max_safe_integer))
-            return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
-        if (script_duration.has_value() && !script_duration->is_number() && !script_duration->is_null())
-            return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
+        Optional<u64> script_timeout;
+        if (script_duration.has_value()) {
+            bool is_valid;
+            if (auto duration = script_duration->get_double_with_precision_loss(); duration.has_value()) {
+                is_valid = *duration >= 0 && *duration <= max_safe_integer;
+                // FIXME: script_timeout should be double.
+                script_timeout = static_cast<u64>(*duration);
+            } else if (script_duration->is_null()) {
+                is_valid = true;
+            } else {
+                is_valid = false;
+            }
+            if (!is_valid)
+                return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
+        }
 
         // 3. Set timeouts’s script timeout to script duration.
-        timeouts.script_timeout = (!script_duration.has_value() || script_duration->is_null()) ? Optional<u64> {} : script_duration->to_u64();
+        timeouts.script_timeout = script_timeout;
     }
 
     // 4. If value has a property with the key "pageLoad":

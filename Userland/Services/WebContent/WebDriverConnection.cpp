@@ -247,9 +247,9 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not a Boolean", key));
         return property->as_bool();
     } else if constexpr (IsSame<PropertyType, u32>) {
-        if (!property->is_integer<u32>())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not a Number", key));
-        return property->to_u32();
+        if (auto maybe_u32 = property->get_u32(); maybe_u32.has_value())
+            return *maybe_u32;
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not a Number", key));
     } else if constexpr (IsSame<PropertyType, JsonArray const*>) {
         if (!property->is_array())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not an Array", key));
@@ -617,20 +617,18 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
 
     auto const& properties = payload.as_object();
 
-    auto resolve_property = [](auto name, auto const& property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
+    auto resolve_property = [](auto name, auto const& property, i32 min, i32 max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
         if (property.is_null())
             return Optional<i32> {};
-        if (!property.is_number())
+        auto value = property.template get_integer<i32>();
+        if (!value.has_value())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not a Number", name));
+        if (*value < min)
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, *value, min));
+        if (*value > max)
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, *value, max));
 
-        auto number = property.template to_number<i64>();
-
-        if (number < min)
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
-        if (number > max)
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, number, max));
-
-        return static_cast<i32>(number);
+        return value;
     };
 
     // 1. Let width be the result of getting a property named width from the parameters argument, else let it be null.

@@ -138,16 +138,16 @@ Optional<JsonArray const&> JsonObject::get_array(StringView key) const
 Optional<double> JsonObject::get_double_with_precision_loss(StringView key) const
 {
     auto maybe_value = get(key);
-    if (maybe_value.has_value() && maybe_value->is_number())
-        return maybe_value->to_number<double>();
+    if (maybe_value.has_value())
+        return maybe_value->get_double_with_precision_loss();
     return {};
 }
 
 Optional<float> JsonObject::get_float_with_precision_loss(StringView key) const
 {
     auto maybe_value = get(key);
-    if (maybe_value.has_value() && maybe_value->is_number())
-        return maybe_value->to_number<float>();
+    if (maybe_value.has_value())
+        return maybe_value->get_float_with_precision_loss();
     return {};
 }
 #endif
