@@ -335,24 +335,31 @@ void LayoutState::resolve_box_shadow_data()
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
         auto& node = const_cast<NodeWithStyle&>(used_values.node());
+
+        auto const& box_shadow_data = node.computed_values().box_shadow();
+        if (box_shadow_data.is_empty())
+            continue;
+        Vector<Painting::ShadowData> resolved_box_shadow_data;
+        resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
+        for (auto const& layer : box_shadow_data) {
+            resolved_box_shadow_data.empend(
+                layer.color,
+                layer.offset_x.to_px(node),
+                layer.offset_y.to_px(node),
+                layer.blur_radius.to_px(node),
+                layer.spread_distance.to_px(node),
+                layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
+        }
+
         auto* paintable = node.paintable();
         if (paintable && is<Painting::PaintableBox>(*paintable)) {
-            auto box_shadow_data = node.computed_values().box_shadow();
-            if (box_shadow_data.is_empty())
-                continue;
             auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
-            Vector<Painting::ShadowData> resolved_box_shadow_data;
-            resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
-            for (auto const& layer : box_shadow_data) {
-                resolved_box_shadow_data.empend(
-                    layer.color,
-                    layer.offset_x.to_px(node),
-                    layer.offset_y.to_px(node),
-                    layer.blur_radius.to_px(node),
-                    layer.spread_distance.to_px(node),
-                    layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
-            }
             paintable_box.set_box_shadow_data(move(resolved_box_shadow_data));
+        } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
+            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
+            inline_paintable.set_box_shadow_data(move(resolved_box_shadow_data));
+        } else {
+            VERIFY_NOT_REACHED();
         }
     }
 }

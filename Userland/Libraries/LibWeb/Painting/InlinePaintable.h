@@ -28,11 +28,16 @@ public:
 
     void mark_contained_fragments();
 
+    void set_box_shadow_data(Vector<ShadowData>&& box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
+    Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
+
 private:
     InlinePaintable(Layout::InlineNode const&);
 
     template<typename Callback>
     void for_each_fragment(Callback) const;
+
+    Vector<ShadowData> m_box_shadow_data;
 };
 
 }
