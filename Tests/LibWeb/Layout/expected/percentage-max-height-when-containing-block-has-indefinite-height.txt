@@ -9,9 +9,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (10,31) content-size 780x0 children: inline
         TextNode <#text>
       BlockContainer <div.inline.formatting-context> at (11,32) content-size 778x17 [BFC] children: inline
-        frag 0 from TextNode start: 0, length: 6, rect: [12,32 41.296875x17] baseline: 13.296875
-            "inline"
         InlineNode <div>
+          frag 0 from TextNode start: 0, length: 6, rect: [12,32 41.296875x17] baseline: 13.296875
+              "inline"
           TextNode <#text>
       BlockContainer <(anonymous)> at (10,50) content-size 780x0 children: inline
         TextNode <#text>

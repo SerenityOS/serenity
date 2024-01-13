@@ -95,23 +95,23 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "agents should be able to render the document elements above this paragraph"
         frag 2 from TextNode start: 167, length: 43, rect: [20,361 207.890625x13] baseline: 9.5
             "indistinguishably (to the pixel) from this "
-        frag 3 from TextNode start: 0, length: 20, rect: [228,361 103.015625x13] baseline: 9.5
-            "reference rendering,"
-        frag 4 from TextNode start: 0, length: 31, rect: [331,361 159.671875x13] baseline: 9.5
+        frag 3 from TextNode start: 0, length: 31, rect: [331,361 159.671875x13] baseline: 9.5
             " (except font rasterization and"
-        frag 5 from TextNode start: 32, length: 89, rect: [20,374 465.015625x13] baseline: 9.5
+        frag 4 from TextNode start: 32, length: 89, rect: [20,374 465.015625x13] baseline: 9.5
             "form widgets). All discrepancies should be traceable to CSS1 implementation shortcomings."
-        frag 6 from TextNode start: 122, length: 67, rect: [20,387 345.546875x13] baseline: 9.5
+        frag 5 from TextNode start: 122, length: 67, rect: [20,387 345.546875x13] baseline: 9.5
             "Once you have finished evaluating this test, you can return to the "
-        frag 7 from TextNode start: 0, length: 11, rect: [366,387 59.890625x13] baseline: 9.5
-            "parent page"
-        frag 8 from TextNode start: 0, length: 1, rect: [425,387 2.71875x13] baseline: 9.5
+        frag 6 from TextNode start: 0, length: 1, rect: [425,387 2.71875x13] baseline: 9.5
             "."
         TextNode <#text>
         InlineNode <a>
+          frag 0 from TextNode start: 0, length: 20, rect: [228,361 103.015625x13] baseline: 9.5
+              "reference rendering,"
           TextNode <#text>
         TextNode <#text>
         InlineNode <a>
+          frag 0 from TextNode start: 0, length: 11, rect: [366,387 59.890625x13] baseline: 9.5
+              "parent page"
           TextNode <#text>
         TextNode <#text>
       BlockContainer <(anonymous)> at (20,400) content-size 480x0 children: inline

@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <LibWeb/Layout/AvailableSpace.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/InlinePaintable.h>
@@ -115,6 +116,13 @@ static CSSPixelRect measure_scrollable_overflow(Box const& box)
             }
 
             return IterationDecision::Continue;
+        });
+    } else {
+        box.for_each_child([&scrollable_overflow_rect](Node const& child) {
+            if (child.paintable() && child.paintable()->is_inline_paintable()) {
+                for (auto const& fragment : static_cast<Painting::InlinePaintable const&>(*child.paintable()).fragments())
+                    scrollable_overflow_rect = scrollable_overflow_rect.united(fragment.absolute_rect());
+            }
         });
     }
 
@@ -293,12 +301,7 @@ void LayoutState::resolve_border_radii()
     }
 
     for (auto& inline_paintable : inline_paintables) {
-        Vector<Painting::PaintableFragment&> fragments;
-        verify_cast<Painting::PaintableWithLines>(*inline_paintable.containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
-            if (inline_paintable.layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
-                fragments.append(const_cast<Painting::PaintableFragment&>(fragment));
-            return IterationDecision::Continue;
-        });
+        auto& fragments = inline_paintable.fragments();
 
         auto const& top_left_border_radius = inline_paintable.computed_values().border_top_left_radius();
         auto const& top_right_border_radius = inline_paintable.computed_values().border_top_right_radius();
@@ -457,13 +460,29 @@ void LayoutState::commit(Box& root)
     resolve_relative_positions(paintables_with_lines);
 
     // Make a pass over all the line boxes to:
-    // - Measure absolute rect of each line box.
     // - Collect all text nodes, so we can create paintables for them later.
+    // - Relocate fragments into matching inline paintables
     for (auto& paintable_with_lines : paintables_with_lines) {
+        Vector<Painting::PaintableFragment> fragments_with_inline_paintables_removed;
         for (auto& fragment : paintable_with_lines.fragments()) {
             if (fragment.layout_node().is_text_node())
                 text_nodes.set(static_cast<Layout::TextNode*>(const_cast<Layout::Node*>(&fragment.layout_node())));
+
+            auto find_closest_inline_paintable = [&](auto& fragment) -> Painting::InlinePaintable const* {
+                for (auto const* parent = fragment.layout_node().parent(); parent; parent = parent->parent()) {
+                    if (is<InlineNode>(*parent))
+                        return static_cast<Painting::InlinePaintable const*>(parent->paintable());
+                }
+                return nullptr;
+            };
+
+            if (auto const* inline_paintable = find_closest_inline_paintable(fragment)) {
+                const_cast<Painting::InlinePaintable*>(inline_paintable)->fragments().append(fragment);
+            } else {
+                fragments_with_inline_paintables_removed.append(fragment);
+            }
         }
+        paintable_with_lines.set_fragments(move(fragments_with_inline_paintables_removed));
     }
 
     for (auto* text_node : text_nodes)
@@ -483,18 +502,6 @@ void LayoutState::commit(Box& root)
     resolve_border_radii();
     resolve_box_shadow_data();
     resolve_text_shadows(paintables_with_lines);
-
-    for (auto& it : used_values_per_layout_node) {
-        auto& used_values = *it.value;
-        auto& node = const_cast<NodeWithStyle&>(used_values.node());
-        auto* paintable = node.paintable();
-        if (paintable && is<Painting::InlinePaintable>(*paintable)) {
-            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
-            // FIXME: Marking fragments contained by inline node is a hack required to skip them while painting
-            //        PaintableWithLines content.
-            inline_paintable.mark_contained_fragments();
-        }
-    }
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)

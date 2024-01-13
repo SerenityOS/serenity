@@ -1,13 +1,13 @@
 Viewport <#document> at (0,0) content-size 800x600 children: inline
-  frag 0 from TextNode start: 1, length: 18, rect: [0,0 134.984375x17] baseline: 13.296875
-      "* { all: unset; } "
-  frag 1 from TextNode start: 0, length: 13, rect: [135,0 103.140625x17] baseline: 13.296875
-      "Hello friends"
   InlineNode <html>
     InlineNode <head>
       InlineNode <style>
+        frag 0 from TextNode start: 1, length: 18, rect: [0,0 134.984375x17] baseline: 13.296875
+            "* { all: unset; } "
         TextNode <#text>
     InlineNode <body>
+      frag 0 from TextNode start: 0, length: 13, rect: [135,0 103.140625x17] baseline: 13.296875
+          "Hello friends"
       TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]

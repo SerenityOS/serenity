@@ -1,9 +1,9 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x416 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x400 children: inline
-      frag 0 from ImageBox start: 0, length: 0, rect: [8,8 400x400] baseline: 400
       TextNode <#text>
       InlineNode <picture>
+        frag 0 from ImageBox start: 0, length: 0, rect: [8,8 400x400] baseline: 400
         TextNode <#text>
         InlineNode <source>
         TextNode <#text>

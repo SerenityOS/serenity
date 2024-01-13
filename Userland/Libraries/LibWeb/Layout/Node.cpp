@@ -32,6 +32,7 @@
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Layout {
@@ -232,13 +233,20 @@ void Node::set_needs_display()
         return;
     if (!containing_block->paintable_box())
         return;
+    auto navigable = this->navigable();
+    if (!navigable)
+        return;
+
+    if (this->paintable() && is<Painting::InlinePaintable>(this->paintable())) {
+        auto const& fragments = static_cast<Painting::InlinePaintable*>(this->paintable())->fragments();
+        for (auto const& fragment : fragments)
+            navigable->set_needs_display(fragment.absolute_rect());
+    }
+
     if (!is<Painting::PaintableWithLines>(*containing_block->paintable_box()))
         return;
     static_cast<Painting::PaintableWithLines const&>(*containing_block->paintable_box()).for_each_fragment([&](auto& fragment) {
-        if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-            if (navigable())
-                navigable()->set_needs_display(fragment.absolute_rect());
-        }
+        navigable->set_needs_display(fragment.absolute_rect());
         return IterationDecision::Continue;
     });
 }
@@ -248,14 +256,19 @@ CSSPixelPoint Node::box_type_agnostic_position() const
     if (is<Box>(*this))
         return verify_cast<Box>(*this).paintable_box()->absolute_position();
     VERIFY(is_inline());
+
+    if (paintable() && paintable()->is_inline_paintable()) {
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable());
+        if (!inline_paintable.fragments().is_empty())
+            return inline_paintable.fragments().first().absolute_rect().location();
+        VERIFY_NOT_REACHED();
+    }
+
     CSSPixelPoint position;
-    if (auto* block = containing_block(); block && block->paintable() && is<Painting::PaintableWithLines>(*block->paintable())) {
+    if (auto const* block = containing_block(); block && block->paintable() && is<Painting::PaintableWithLines>(*block->paintable())) {
         static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
-            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.absolute_rect().location();
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
+            position = fragment.absolute_rect().location();
+            return IterationDecision::Break;
         });
     }
     return position;

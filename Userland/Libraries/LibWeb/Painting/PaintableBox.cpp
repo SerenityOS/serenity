@@ -741,6 +741,15 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     if (!layout_box().children_are_inline() || m_fragments.is_empty())
         return PaintableBox::hit_test(position, type);
 
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        auto result = child->hit_test(position, type);
+        if (!result.has_value())
+            continue;
+        if (!result->paintable->visible_for_hit_testing())
+            continue;
+        return result;
+    }
+
     Optional<HitTestResult> last_good_candidate;
     for (auto const& fragment : fragments()) {
         if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
