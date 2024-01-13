@@ -313,7 +313,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     process_model->update();
 
     i32 frequency = Config::read_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, 3);
-    if (frequency != 1 && frequency != 3 && frequency != 5) {
+    if (frequency != 0 && frequency != 1 && frequency != 3 && frequency != 5) {
         frequency = 3;
         Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, frequency);
     }
@@ -334,7 +334,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     update_stats();
     auto& refresh_timer = window->add<Core::Timer>(frequency * 1000, move(update_stats));
-    refresh_timer.start();
+    if (frequency > 0)
+        refresh_timer.start();
 
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
@@ -472,6 +473,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
+
+    auto pause_action = GUI::Action::create_checkable("&Paused", [&refresh_timer](auto&) {
+        Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, 0);
+        refresh_timer.stop();
+    });
+    pause_action->set_status_tip("Pause updates"_string);
+    pause_action->set_checked(frequency == 0);
+    frequency_action_group.add_action(*pause_action);
+    frequency_menu->add_action(*pause_action);
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
