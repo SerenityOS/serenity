@@ -48,7 +48,7 @@ Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::
 
     auto collection = collect_matching_elements();
     for (auto const& element : collection) {
-        if (element->deprecated_attribute(HTML::AttributeNames::id) != deprecated_name && element->name() != deprecated_name)
+        if (element->id() != name && element->name() != deprecated_name)
             continue;
 
         if (matching_element) {
@@ -68,12 +68,12 @@ Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::
     // 4. Otherwise, create a new RadioNodeList object representing a live view of the HTMLFormControlsCollection object, further filtered so that the only nodes in the
     //    RadioNodeList object are those that have either an id attribute or a name attribute equal to name. The nodes in the RadioNodeList object must be sorted in tree
     //    order. Return that RadioNodeList object.
-    return JS::make_handle(RadioNodeList::create(realm(), root(), LiveNodeList::Scope::Descendants, [deprecated_name](Node const& node) {
+    return JS::make_handle(RadioNodeList::create(realm(), root(), LiveNodeList::Scope::Descendants, [name, deprecated_name](Node const& node) {
         if (!is<Element>(node))
             return false;
 
         auto const& element = verify_cast<Element>(node);
-        return element.deprecated_attribute(HTML::AttributeNames::id) == deprecated_name || element.name() == deprecated_name;
+        return element.id() == name || element.name() == deprecated_name;
     }));
 }
 
