@@ -120,7 +120,6 @@
             name: "duration_hour"
             fixed_size: [50, 20]
             min: 0
-            max: 999999
         }
 
         @GUI::SpinBox {

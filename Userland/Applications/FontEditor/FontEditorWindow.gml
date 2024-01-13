@@ -35,6 +35,7 @@
                 @GUI::SpinBox {
                     name: "glyph_editor_width_spinbox"
                     preferred_width: "fit"
+                    min: 0
                 }
 
                 @GUI::CheckBox {

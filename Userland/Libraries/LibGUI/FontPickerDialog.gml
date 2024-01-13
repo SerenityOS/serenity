@@ -48,6 +48,7 @@
 
             @GUI::SpinBox {
                 name: "size_spin_box"
+                min: 0
             }
 
             @GUI::ListView {
