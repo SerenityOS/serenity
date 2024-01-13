@@ -42,8 +42,8 @@ private:
     RefPtr<Button> m_increment_button;
     RefPtr<Button> m_decrement_button;
 
-    int m_min { 0 };
-    int m_max { 100 };
+    int m_min { NumericLimits<int>::min() };
+    int m_max { NumericLimits<int>::max() };
     int m_value { 0 };
 };
 
