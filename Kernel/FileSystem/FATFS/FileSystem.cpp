@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2024, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
+#include <AK/Endian.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FATFS/FileSystem.h>
 #include <Kernel/FileSystem/FATFS/Inode.h>
@@ -268,6 +270,116 @@ FatBlockSpan FATFS::first_block_of_cluster(u32 cluster) const
             ebpb_block->sectors_per_cluster
         };
     }
+}
+
+size_t FATFS::fat_offset_for_cluster(u32 cluster) const
+{
+    switch (m_fat_version) {
+    case FATVersion::FAT12: {
+        // In FAT12, a cluster entry is stored in a byte, plus
+        // the low/high nybble of an adjacent byte.
+        //
+        // CLSTR:   0 1      2 3      4 5
+        // INDEX: [0 1 2], [3 4 5], [6 7 8]
+
+        // Every 2 clusters are represented using 3 bytes.
+        return (cluster * 3) / 2;
+    } break;
+    case FATVersion::FAT16:
+        return cluster * 2; // Each cluster is stored in 2 bytes.
+    case FATVersion::FAT32:
+        return cluster * 4; // Each cluster is stored in 4 bytes.
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+u32 FATFS::cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const
+{
+    u32 cluster = 0;
+    switch (m_fat_version) {
+    case FATVersion::FAT12: {
+        u16 fat12_bytes_le = 0;
+        // Two FAT12 entries get stored in a total of 3 bytes, as follows:
+        // AB CD EF are grouped as [D AB] and [E FC] (little-endian).
+        // For a given cluster, we interpret the associated 2 bytes as a little-endian
+        // 16-bit value ({CD AB} or {EF CD}), and then shift/mask the extra high or low nybble.
+        ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), fat12_bytes_le);
+        cluster = LittleEndian { fat12_bytes_le };
+        if (entry_cluster_number % 2 == 0) {
+            // CD AB -> D AB
+            cluster &= 0x0FFF;
+        } else {
+            // EF CD -> E FC.
+            cluster = cluster >> 4;
+        }
+        break;
+    }
+    case FATVersion::FAT16: {
+        u16 cluster_u16_le = 0;
+        ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), cluster_u16_le);
+        cluster = LittleEndian { cluster_u16_le };
+        break;
+    }
+    case FATVersion::FAT32: {
+        u32 cluster_u32_le = 0;
+        ByteReader::load<u32>(fat_sector.bytes().offset(entry_offset), cluster_u32_le);
+        cluster = LittleEndian { cluster_u32_le };
+        // FAT32 entries use 28-bits to represent the cluster number. The top 4 bits
+        // may contain flags or other data and must be masked off.
+        cluster &= 0x0FFFFFFF;
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    return cluster;
+}
+
+ErrorOr<u32> FATFS::fat_read(u32 cluster)
+{
+    dbgln_if(FAT_DEBUG, "FATFS: Reading FAT entry for cluster {}", cluster);
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, m_device_block_size));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    u32 fat_offset = fat_offset_for_cluster(cluster);
+    u32 fat_sector_index = m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / m_device_block_size);
+    u32 entry_offset = fat_offset % m_device_block_size;
+
+    MutexLocker locker(m_lock);
+
+    TRY(raw_read(fat_sector_index, fat_sector_buffer));
+
+    // Look up the next cluster to read, or read End of Chain marker from table.
+    return cluster_number(*fat_sector, cluster, entry_offset);
+}
+
+ErrorOr<void> FATFS::fat_write(u32 cluster, u32 value)
+{
+    dbgln_if(FAT_DEBUG, "FATFS: Writing FAT entry for cluster {} with value {}", cluster, value);
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, m_device_block_size));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    u32 fat_offset = fat_offset_for_cluster(cluster);
+    u32 fat_sector_index = m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / m_device_block_size);
+    u32 entry_offset = fat_offset % m_device_block_size;
+
+    MutexLocker locker(m_lock);
+
+    TRY(raw_read(fat_sector_index, fat_sector_buffer));
+
+    if (m_fat_version == FATVersion::FAT32)
+        *bit_cast<u32*>(&fat_sector->data()[entry_offset]) = value & 0x0FFFFFFF;
+    else {
+        // TODO: implement FAT12/16 write.
+        VERIFY_NOT_REACHED();
+    }
+
+    TRY(raw_write(fat_sector_index, fat_sector_buffer));
+
+    return {};
 }
 
 u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const

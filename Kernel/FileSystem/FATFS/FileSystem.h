@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2024, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -81,6 +81,14 @@ private:
     static constexpr u32 first_data_cluster = 2;
 
     FatBlockSpan first_block_of_cluster(u32 cluster) const;
+
+    size_t fat_offset_for_cluster(u32 cluster) const;
+
+    // Reads the cluster number located at the offset within the table.
+    u32 cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const;
+
+    ErrorOr<u32> fat_read(u32 cluster);
+    ErrorOr<void> fat_write(u32 cluster, u32 value);
 
     OwnPtr<KBuffer> m_boot_record;
     OwnPtr<DOSBIOSParameterBlock> m_parameter_block;
