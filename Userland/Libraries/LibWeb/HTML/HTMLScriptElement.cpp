@@ -108,7 +108,7 @@ void HTMLScriptElement::execute_script()
             document->set_current_script({}, nullptr);
 
         if (m_from_an_external_file)
-            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", deprecated_attribute(HTML::AttributeNames::src));
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src).value_or(String {}));
         else
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
@@ -177,28 +177,28 @@ void HTMLScriptElement::prepare_script()
     //    - el has a type attribute whose value is the empty string;
     //    - el has no type attribute but it has a language attribute and that attribute's value is the empty string; or
     //    - el has neither a type attribute nor a language attribute
-    ByteString script_block_type;
-    bool has_type_attribute = has_attribute(HTML::AttributeNames::type);
-    bool has_language_attribute = has_attribute(HTML::AttributeNames::language);
-    if ((has_type_attribute && deprecated_attribute(HTML::AttributeNames::type).is_empty())
-        || (!has_type_attribute && has_language_attribute && deprecated_attribute(HTML::AttributeNames::language).is_empty())
-        || (!has_type_attribute && !has_language_attribute)) {
+    String script_block_type;
+    auto maybe_type_attribute = attribute(HTML::AttributeNames::type);
+    auto maybe_language_attribute = attribute(HTML::AttributeNames::language);
+    if ((maybe_type_attribute.has_value() && maybe_type_attribute->is_empty())
+        || (!maybe_type_attribute.has_value() && maybe_language_attribute.has_value() && maybe_language_attribute->is_empty())
+        || (!maybe_type_attribute.has_value() && !maybe_language_attribute.has_value())) {
         // then let the script block's type string for this script element be "text/javascript".
-        script_block_type = "text/javascript";
+        script_block_type = "text/javascript"_string;
     }
     // Otherwise, if el has a type attribute,
-    else if (has_type_attribute) {
+    else if (maybe_type_attribute.has_value()) {
         // then let the script block's type string be the value of that attribute with leading and trailing ASCII whitespace stripped.
-        script_block_type = deprecated_attribute(HTML::AttributeNames::type).trim(Infra::ASCII_WHITESPACE);
+        script_block_type = MUST(maybe_type_attribute->trim(Infra::ASCII_WHITESPACE));
     }
     // Otherwise, el has a non-empty language attribute;
-    else if (!deprecated_attribute(HTML::AttributeNames::language).is_empty()) {
+    else if (maybe_language_attribute.has_value() && !maybe_language_attribute->is_empty()) {
         // let the script block's type string be the concatenation of "text/" and the value of el's language attribute.
-        script_block_type = ByteString::formatted("text/{}", deprecated_attribute(HTML::AttributeNames::language));
+        script_block_type = MUST(String::formatted("text/{}", maybe_language_attribute.value()));
     }
 
     // 9. If the script block's type string is a JavaScript MIME type essence match,
-    if (MimeSniff::is_javascript_mime_type_essence_match(script_block_type.trim(Infra::ASCII_WHITESPACE))) {
+    if (MimeSniff::is_javascript_mime_type_essence_match(MUST(script_block_type.trim(Infra::ASCII_WHITESPACE)))) {
         // then set el's type to "classic".
         m_script_type = ScriptType::Classic;
     }
