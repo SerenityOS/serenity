@@ -587,14 +587,13 @@ void paint_text_shadow(PaintContext& context, PaintableFragment const& fragment,
     auto fragment_width = context.enclosing_device_pixels(fragment.width()).value();
     auto fragment_height = context.enclosing_device_pixels(fragment.height()).value();
     auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect()).to_type<int>();
-    auto const& scaled_font = fragment.layout_node().scaled_font(context);
     auto fragment_baseline = context.rounded_device_pixels(fragment.baseline()).value();
 
     Vector<Gfx::DrawGlyphOrEmoji> scaled_glyph_run;
     scaled_glyph_run.ensure_capacity(fragment.glyph_run().size());
     for (auto glyph : fragment.glyph_run()) {
         glyph.visit([&](auto& glyph) {
-            glyph.font = scaled_font;
+            glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
             glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
         });
         scaled_glyph_run.append(move(glyph));
