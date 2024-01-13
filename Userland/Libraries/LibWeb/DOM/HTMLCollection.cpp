@@ -84,17 +84,15 @@ Element* HTMLCollection::item(size_t index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem-key
-Element* HTMLCollection::named_item(FlyString const& name_) const
+Element* HTMLCollection::named_item(FlyString const& name) const
 {
-    auto name = name_.to_deprecated_fly_string();
-
     // 1. If key is the empty string, return null.
     if (name.is_empty())
         return nullptr;
     auto elements = collect_matching_elements();
     // 2. Return the first element in the collection for which at least one of the following is true:
     //      - it has an ID which is key;
-    if (auto it = elements.find_if([&](auto& entry) { return entry->id().has_value() && entry->id().value() == name_; }); it != elements.end())
+    if (auto it = elements.find_if([&](auto& entry) { return entry->id().has_value() && entry->id().value() == name; }); it != elements.end())
         return *it;
     //      - it is in the HTML namespace and has a name attribute whose value is key;
     if (auto it = elements.find_if([&](auto& entry) { return entry->namespace_uri() == Namespace::HTML && entry->name() == name; }); it != elements.end())

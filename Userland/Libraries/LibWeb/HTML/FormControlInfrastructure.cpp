@@ -103,19 +103,17 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
         // FIXME: 3. If the field is a form-associated custom element, then perform the entry construction algorithm given field and entry list, then continue.
 
         // 4. If either the field element does not have a name attribute specified, or its name attribute's value is the empty string, then continue.
-        if (control->name().is_empty())
+        if (!control->name().has_value() || control->name()->is_empty())
             continue;
 
         // 5. Let name be the value of the field element's name attribute.
-        auto name = TRY_OR_THROW_OOM(vm, String::from_byte_string(control->name()));
+        auto name = control->name().value();
 
         // 6. If the field element is a select element, then for each option element in the select element's list of options whose selectedness is true and that is not disabled, create an entry with name and the value of the option element, and append it to entry list.
         if (auto* select_element = dynamic_cast<HTML::HTMLSelectElement*>(control.ptr())) {
             for (auto const& option_element : select_element->list_of_options()) {
                 if (option_element->selected() && !option_element->disabled()) {
-                    auto option_name = TRY_OR_THROW_OOM(vm, String::from_byte_string(option_element->name()));
-                    auto option_value = option_element->value();
-                    TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(option_name), .value = move(option_value) }));
+                    entry_list.append(XHR::FormDataEntry { .name = name.to_string(), .value = option_element->value() });
                 }
             }
         }
@@ -128,7 +126,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
 
             // 2. Create an entry with name and value, and append it to entry list.
             auto checkbox_or_radio_element_name = TRY_OR_THROW_OOM(vm, String::from_byte_string(checkbox_or_radio_element->name()));
-            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(value) }));
+            entry_list.append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(value) });
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:
         else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
@@ -137,13 +135,13 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
                 FileAPI::FilePropertyBag options {};
                 options.type = "application/octet-stream"_string;
                 auto file = TRY(FileAPI::File::create(realm, {}, String {}, options));
-                TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = JS::make_handle(file) }));
+                entry_list.append(XHR::FormDataEntry { .name = name.to_string(), .value = JS::make_handle(file) });
             }
             // 2. Otherwise, for each file in selected files, create an entry with name and a File object representing the file, and append it to entry list.
             else {
                 for (size_t i = 0; i < file_element->files()->length(); i++) {
                     auto file = JS::NonnullGCPtr { *file_element->files()->item(i) };
-                    TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = JS::make_handle(file) }));
+                    entry_list.append(XHR::FormDataEntry { .name = name.to_string(), .value = JS::make_handle(file) });
                 }
             }
         }
@@ -153,11 +151,11 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             auto charset = encoding.has_value() ? encoding.value() : "UTF-8"_string;
 
             // 2. Create an entry with name and charset, and append it to entry list.
-            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = move(charset) }));
+            entry_list.append(XHR::FormDataEntry { .name = name.to_string(), .value = move(charset) });
         }
         // 10. Otherwise, create an entry with name and the value of the field element, and append it to entry list.
         else {
-            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = control_as_form_associated_element->value() }));
+            entry_list.append(XHR::FormDataEntry { .name = name.to_string(), .value = control_as_form_associated_element->value() });
         }
 
         // FIXME: 11. If the element has a dirname attribute, and that attribute's value is not the empty string, then:

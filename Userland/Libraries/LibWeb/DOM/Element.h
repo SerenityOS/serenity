@@ -174,8 +174,6 @@ public:
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;
 
-    ByteString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
-
     CSS::StyleProperties* computed_css_values() { return m_computed_css_values.ptr(); }
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
     void set_computed_css_values(RefPtr<CSS::StyleProperties>);
@@ -368,6 +366,7 @@ public:
     Directionality directionality() const;
 
     Optional<FlyString> const& id() const { return m_id; }
+    Optional<FlyString> const& name() const { return m_name; }
 
     virtual JS::GCPtr<JS::HeapFunction<void()>> take_lazy_load_resumption_steps(Badge<DOM::Document>)
     {
@@ -417,6 +416,7 @@ private:
     Optional<Dir> m_dir;
 
     Optional<FlyString> m_id;
+    Optional<FlyString> m_name;
 
     using PseudoElementLayoutNodes = Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount)>;
     OwnPtr<PseudoElementLayoutNodes> m_pseudo_element_nodes;

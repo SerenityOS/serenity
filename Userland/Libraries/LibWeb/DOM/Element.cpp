@@ -459,6 +459,11 @@ void Element::attribute_changed(FlyString const& name, Optional<String> const& v
             m_id = {};
         else
             m_id = value_or_empty;
+    } else if (name == HTML::AttributeNames::name) {
+        if (!value.has_value())
+            m_name = {};
+        else
+            m_name = value_or_empty;
     } else if (name == HTML::AttributeNames::class_) {
         auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
         m_classes.clear();
