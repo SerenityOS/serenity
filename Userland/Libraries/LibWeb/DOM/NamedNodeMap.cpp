@@ -188,7 +188,7 @@ Attr const* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_
 
     // 1. If namespace is the empty string, then set it to null.
     Optional<FlyString> normalized_namespace;
-    if (namespace_.has_value() && namespace_->is_empty())
+    if (namespace_ != String {})
         normalized_namespace = namespace_;
 
     // 2. Return the attribute in element’s attribute list whose namespace is namespace and local name is localName, if any; otherwise null.
