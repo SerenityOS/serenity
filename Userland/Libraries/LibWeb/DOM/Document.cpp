@@ -1252,9 +1252,8 @@ void Document::set_hovered_node(Node* node)
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
 {
-    auto deprecated_name = name.to_byte_string();
-    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [deprecated_name](Element const& element) {
-        return element.name() == deprecated_name;
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [name](Element const& element) {
+        return element.name() == name;
     });
 }
 
