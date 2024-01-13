@@ -99,6 +99,7 @@ public:
     Optional<String> attribute(FlyString const& name) const { return get_attribute(name); }
 
     Optional<String> get_attribute(FlyString const& name) const;
+    Optional<String> get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name) const;
     ByteString deprecated_get_attribute(FlyString const& name) const;
     String get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
 

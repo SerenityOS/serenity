@@ -29,6 +29,7 @@ interface Element : Node {
     readonly attribute DOMString tagName;
 
     DOMString? getAttribute(DOMString qualifiedName);
+    DOMString? getAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     [CEReactions] undefined setAttribute(DOMString qualifiedName, DOMString value);
     [CEReactions] undefined setAttributeNS([FlyString] DOMString? namespace , [FlyString] DOMString qualifiedName , DOMString value);
     [CEReactions] Attr? setAttributeNode(Attr attr);
