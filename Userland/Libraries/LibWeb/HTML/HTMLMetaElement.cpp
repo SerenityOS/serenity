@@ -54,9 +54,8 @@ void HTMLMetaElement::inserted()
     //     * The element is in a document tree
     //     * The element has a name attribute, whose value is an ASCII case-insensitive match for theme-color
     //     * The element has a content attribute
-    auto name = attribute(AttributeNames::name);
     auto content = attribute(AttributeNames::content);
-    if (name.has_value() && name->bytes_as_string_view().equals_ignoring_ascii_case("theme-color"sv) && content.has_value()) {
+    if (name().has_value() && name()->equals_ignoring_ascii_case("theme-color"sv) && content.has_value()) {
         auto context = CSS::Parser::ParsingContext { document() };
 
         // 2. For each element in candidate elements:

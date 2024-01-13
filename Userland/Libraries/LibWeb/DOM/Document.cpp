@@ -1285,7 +1285,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 {
     if (!m_anchors) {
         m_anchors = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
-            return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
+            return is<HTML::HTMLAnchorElement>(element) && element.name().has_value();
         });
     }
     return *m_anchors;
@@ -1833,7 +1833,7 @@ Element* Document::find_a_potential_indicated_element(FlyString const& fragment)
     //    whose value is equal to fragment, then return the first such element in tree order.
     Element* element_with_name = nullptr;
     root().for_each_in_subtree_of_type<Element>([&](Element const& element) {
-        if (element.attribute(HTML::AttributeNames::name) == fragment) {
+        if (element.name() == fragment) {
             element_with_name = const_cast<Element*>(&element);
             return IterationDecision::Break;
         }

@@ -1476,8 +1476,8 @@ String Node::debug_description() const
     builder.append(node_name().to_deprecated_fly_string().to_lowercase());
     if (is_element()) {
         auto const& element = static_cast<DOM::Element const&>(*this);
-        if (auto id = element.get_attribute(HTML::AttributeNames::id); id.has_value())
-            builder.appendff("#{}", id.value());
+        if (element.id().has_value())
+            builder.appendff("#{}", element.id().value());
         for (auto const& class_name : element.class_names())
             builder.appendff(".{}", class_name);
     }

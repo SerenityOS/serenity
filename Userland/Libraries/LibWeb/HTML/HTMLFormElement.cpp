@@ -902,8 +902,8 @@ Vector<FlyString> HTMLFormElement::supported_property_names() const
 
         // 2. If candidate has a name attribute, add an entry to sourced names with that name attribute's value as the
         //    string, candidate as the element, and name as the source.
-        if (auto maybe_name = candidate->attribute(HTML::AttributeNames::name); maybe_name.has_value())
-            sourced_names.append(SourcedName { maybe_name.value(), candidate, SourcedName::Source::Name, {} });
+        if (candidate->name().has_value())
+            sourced_names.append(SourcedName { candidate->name().value(), candidate, SourcedName::Source::Name, {} });
     }
 
     // 3. For each img element candidate whose form owner is the form element:
@@ -920,8 +920,8 @@ Vector<FlyString> HTMLFormElement::supported_property_names() const
 
         // 2. If candidate has a name attribute, add an entry to sourced names with that name attribute's value as the
         //    string, candidate as the element, and name as the source.
-        if (auto maybe_name = candidate->attribute(HTML::AttributeNames::name); maybe_name.has_value())
-            sourced_names.append(SourcedName { maybe_name.value(), candidate, SourcedName::Source::Name, {} });
+        if (candidate->name().has_value())
+            sourced_names.append(SourcedName { candidate->name().value(), candidate, SourcedName::Source::Name, {} });
     }
 
     // 4. For each entry past entry in the past names map add an entry to sourced names with the past entry's name as
@@ -984,8 +984,7 @@ WebIDL::ExceptionOr<JS::Value> HTMLFormElement::named_item_value(FlyString const
         if (!is_form_control(element, *this))
             return false;
 
-        // FIXME: DOM::Element::name() isn't cached
-        return name == element.id() || name == element.attribute(HTML::AttributeNames::name);
+        return name == element.id() || name == element.name();
     });
 
     // 2. If candidates is empty, let candidates be a live RadioNodeList object containing all the img elements,
@@ -1000,8 +999,7 @@ WebIDL::ExceptionOr<JS::Value> HTMLFormElement::named_item_value(FlyString const
             if (element.form() != this)
                 return false;
 
-            // FIXME: DOM::Element::name() isn't cached
-            return name == element.id() || name == element.attribute(HTML::AttributeNames::name);
+            return name == element.id() || name == element.name();
         });
     }
 
