@@ -479,7 +479,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         auto const& stack_array = stack.value();
         for (ssize_t i = stack_array.values().size() - 1; i >= 0; --i) {
             auto const& frame = stack_array.at(i);
-            auto ptr = frame.to_number<u64>();
+            auto ptr = frame.as_integer<u64>();
             u32 offset = 0;
             DeprecatedFlyString object_name;
             ByteString symbol;

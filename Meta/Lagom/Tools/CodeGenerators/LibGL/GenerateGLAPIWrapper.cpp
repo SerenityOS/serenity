@@ -170,7 +170,7 @@ Variants read_variants_settings(JsonObject const& variants_obj)
     if (variants_obj.has_array("argument_counts"sv)) {
         variants.argument_counts.clear_with_capacity();
         variants_obj.get_array("argument_counts"sv)->for_each([&](auto const& argument_count_value) {
-            variants.argument_counts.append(argument_count_value.to_u32());
+            variants.argument_counts.append(argument_count_value.get_u32().value());
         });
     }
     if (variants_obj.has_array("argument_defaults"sv)) {

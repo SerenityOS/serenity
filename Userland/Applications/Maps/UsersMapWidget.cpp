@@ -47,10 +47,11 @@ void UsersMapWidget::get_users()
         auto json_users = result.release_value().as_array();
         for (size_t i = 0; i < json_users.size(); i++) {
             auto const& json_user = json_users.at(i).as_object();
+            auto const& coordinates = json_user.get_array("coordinates"sv).release_value();
             User user {
                 MUST(String::from_byte_string(json_user.get_byte_string("nick"sv).release_value())),
-                { json_user.get_array("coordinates"sv).release_value().at(0).to_double(),
-                    json_user.get_array("coordinates"sv).release_value().at(1).to_double() },
+                { coordinates[0].get_double_with_precision_loss().value(),
+                    coordinates[1].get_double_with_precision_loss().value() },
                 json_user.has_bool("contributor"sv),
             };
             m_users.value().append(user);

@@ -23,7 +23,7 @@ struct PropertyDeserializer<T> {
     {
         if (!value.is_integer<T>())
             return Error::from_string_literal("Value is either not an integer or out of range for requested type");
-        return value.to_number<T>();
+        return value.as_integer<T>();
     }
 };
 

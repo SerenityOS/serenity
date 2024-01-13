@@ -92,29 +92,29 @@ public:
         return serialized<StringBuilder>();
     }
 
-    int to_int(int default_value = 0) const { return to_i32(default_value); }
-    i32 to_i32(i32 default_value = 0) const { return to_number<i32>(default_value); }
-    i64 to_i64(i64 default_value = 0) const { return to_number<i64>(default_value); }
+    Optional<int> get_int() const { return get_integer<int>(); }
+    Optional<i32> get_i32() const { return get_integer<i32>(); }
+    Optional<i64> get_i64() const { return get_integer<i64>(); }
 
-    unsigned to_uint(unsigned default_value = 0) const { return to_u32(default_value); }
-    u32 to_u32(u32 default_value = 0) const { return to_number<u32>(default_value); }
-    u64 to_u64(u64 default_value = 0) const { return to_number<u64>(default_value); }
-    float to_float(float default_value = 0) const { return to_number<float>(default_value); }
-    double to_double(double default_value = 0) const { return to_number<double>(default_value); }
+    Optional<unsigned> get_uint() const { return get_integer<unsigned>(); }
+    Optional<u32> get_u32() const { return get_integer<u32>(); }
+    Optional<u64> get_u64() const { return get_integer<u64>(); }
+    Optional<float> get_float_with_precision_loss() const { return get_number_with_precision_loss<float>(); }
+    Optional<double> get_double_with_precision_loss() const { return get_number_with_precision_loss<double>(); }
 
-    FlatPtr to_addr(FlatPtr default_value = 0) const
+    Optional<FlatPtr> get_addr() const
     {
 #ifdef __LP64__
-        return to_u64(default_value);
+        return get_u64();
 #else
-        return to_u32(default_value);
+        return get_u32();
 #endif
     }
 
-    bool to_bool(bool default_value = false) const
+    Optional<bool> get_bool() const
     {
         if (!is_bool())
-            return default_value;
+            return {};
         return as_bool();
     }
 
@@ -199,19 +199,22 @@ public:
     }
 
     template<typename T>
-    T to_number(T default_value = 0) const
+    Optional<T> get_number_with_precision_loss() const
     {
-        if (type() == Type::Double)
-            return (T)m_value.as_double;
-        if (type() == Type::Int32)
-            return (T)m_value.as_i32;
-        if (type() == Type::UnsignedInt32)
-            return (T)m_value.as_u32;
-        if (type() == Type::Int64)
-            return (T)m_value.as_i64;
-        if (type() == Type::UnsignedInt64)
-            return (T)m_value.as_u64;
-        return default_value;
+        switch (m_type) {
+        case Type::Double:
+            return static_cast<T>(m_value.as_double);
+        case Type::Int32:
+            return static_cast<T>(m_value.as_i32);
+        case Type::UnsignedInt32:
+            return static_cast<T>(m_value.as_u32);
+        case Type::Int64:
+            return static_cast<T>(m_value.as_i64);
+        case Type::UnsignedInt64:
+            return static_cast<T>(m_value.as_u64);
+        default:
+            return {};
+        }
     }
 
     template<Integral T>
@@ -248,6 +251,14 @@ public:
         default:
             VERIFY_NOT_REACHED();
         }
+    }
+
+    template<Integral T>
+    Optional<T> get_integer() const
+    {
+        if (!is_integer<T>())
+            return {};
+        return as_integer<T>();
     }
 
     bool equals(JsonValue const& other) const;

@@ -77,15 +77,31 @@ bool JsonValue::equals(JsonValue const& other) const
     if (is_string() && other.is_string() && as_string() == other.as_string())
         return true;
 
-#if !defined(KERNEL)
-    if (is_number() && other.is_number() && to_number<double>() == other.to_number<double>()) {
-        return true;
+    if (is_number() && other.is_number()) {
+        auto normalize = [](Variant<u64, i64, double> representation, bool& is_negative) {
+            return representation.visit(
+                [&](u64& value) -> Variant<u64, double> {
+                    is_negative = false;
+                    return value;
+                },
+                [&](i64& value) -> Variant<u64, double> {
+                    is_negative = value < 0;
+                    return static_cast<u64>(abs(value));
+                },
+                [&](double& value) -> Variant<u64, double> {
+                    is_negative = value < 0;
+                    value = abs(value);
+                    if (static_cast<double>(static_cast<u64>(value)) == value)
+                        return static_cast<u64>(value);
+                    return value;
+                });
+        };
+        bool is_this_negative;
+        auto normalized_this = normalize(as_number(), is_this_negative);
+        bool is_that_negative;
+        auto normalized_that = normalize(other.as_number(), is_that_negative);
+        return is_this_negative == is_that_negative && normalized_this == normalized_that;
     }
-#else
-    if (is_number() && other.is_number() && to_number<i64>() == other.to_number<i64>()) {
-        return true;
-    }
-#endif
 
     if (is_array() && other.is_array() && as_array().size() == other.as_array().size()) {
         bool result = true;

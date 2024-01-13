@@ -66,16 +66,10 @@ ErrorOr<Gfx::IntRect> PropertyDeserializer<Gfx::IntRect>::operator()(JsonValue c
     } else {
         auto const& array = value.as_array();
 
-        auto get_i32 = [](JsonValue const& value) -> Optional<int> {
-            if (value.is_integer<i32>())
-                return value.to_i32();
-            return {};
-        };
-
-        x = get_i32(array[0]);
-        y = get_i32(array[1]);
-        width = get_i32(array[2]);
-        height = get_i32(array[3]);
+        x = array[0].get_i32();
+        y = array[1].get_i32();
+        width = array[2].get_i32();
+        height = array[3].get_i32();
     }
 
     if (!x.has_value())
@@ -103,16 +97,16 @@ ErrorOr<Gfx::IntSize> PropertyDeserializer<Gfx::IntSize>::operator()(JsonValue c
 
     auto const& array = value.as_array();
 
-    auto const& width = array[0];
-    if (!width.is_integer<i32>())
+    auto const& width = array[0].get_i32();
+    if (!width.has_value())
         return Error::from_string_literal("Width must be an integer");
-    auto const& height = array[1];
-    if (!height.is_integer<i32>())
+    auto const& height = array[1].get_i32();
+    if (!height.has_value())
         return Error::from_string_literal("Height must be an integer");
 
     Gfx::IntSize size;
-    size.set_width(width.to_i32());
-    size.set_height(height.to_i32());
+    size.set_width(width.value());
+    size.set_height(height.value());
 
     return size;
 }
@@ -129,10 +123,10 @@ ErrorOr<GUI::Margins> PropertyDeserializer<GUI::Margins>::operator()(JsonValue c
     int m[4];
 
     for (size_t i = 0; i < size; ++i) {
-        auto const& margin = array[i];
-        if (!margin.is_integer<i32>())
+        auto const& margin = array[i].get_i32();
+        if (!margin.has_value())
             return Error::from_string_literal("Margin value should be an integer");
-        m[i] = margin.to_i32();
+        m[i] = margin.value();
     }
 
     if (size == 1)
