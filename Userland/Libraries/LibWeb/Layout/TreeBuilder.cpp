@@ -296,10 +296,11 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     ScopeGuard remove_stale_layout_node_guard = [&] {
         // If we didn't create a layout node for this DOM node,
-        // go through the DOM tree and remove any old layout nodes since they are now all stale.
+        // go through the DOM tree and remove any old layout & paint nodes since they are now all stale.
         if (!layout_node) {
             dom_node.for_each_in_inclusive_subtree([&](auto& node) {
                 node.detach_layout_node({});
+                node.set_paintable(nullptr);
                 if (is<DOM::Element>(node))
                     static_cast<DOM::Element&>(node).clear_pseudo_element_nodes({});
                 return IterationDecision::Continue;

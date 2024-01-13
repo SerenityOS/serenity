@@ -388,8 +388,8 @@ void LayoutState::commit(Box& root)
     // NOTE: In case this is a relayout of an existing tree, we start by detaching the old paint tree
     //       from the layout tree. This is done to ensure that we don't end up with any old-tree pointers
     //       when text paintables shift around in the tree.
-    root.for_each_in_inclusive_subtree_of_type<Layout::TextNode>([&](Layout::TextNode& text_node) {
-        text_node.set_paintable(nullptr);
+    root.for_each_in_inclusive_subtree([&](Layout::Node& node) {
+        node.set_paintable(nullptr);
         return IterationDecision::Continue;
     });
 
