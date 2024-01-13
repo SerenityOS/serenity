@@ -127,6 +127,7 @@ struct Configuration {
     M(insert_last_erased)                      \
     M(erase_alnum_word_backwards)              \
     M(erase_alnum_word_forwards)               \
+    M(erase_spaces)                            \
     M(capitalize_word)                         \
     M(lowercase_word)                          \
     M(uppercase_word)                          \

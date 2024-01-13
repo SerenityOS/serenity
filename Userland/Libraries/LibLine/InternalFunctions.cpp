@@ -579,6 +579,23 @@ void Editor::erase_alnum_word_forwards()
     }
 }
 
+void Editor::erase_spaces()
+{
+    while (m_cursor < m_buffer.size()) {
+        if (is_ascii_space(m_buffer[m_cursor]))
+            erase_character_forwards();
+        else
+            break;
+    }
+
+    while (m_cursor > 0) {
+        if (is_ascii_space(m_buffer[m_cursor - 1]))
+            erase_character_backwards();
+        else
+            break;
+    }
+}
+
 void Editor::case_change_word(Editor::CaseChangeOp change_op)
 {
     // A word here is contiguous alnums. `foo=bar baz` is three words.
