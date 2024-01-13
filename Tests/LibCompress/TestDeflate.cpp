@@ -172,3 +172,11 @@ TEST_CASE(ossfuzz_63183)
     auto decompressed = TRY_OR_FAIL(Compress::DeflateDecompressor::decompress_all(compressed));
     EXPECT(test_data == decompressed);
 }
+
+TEST_CASE(ossfuzz_58046)
+{
+    auto path = TEST_INPUT("clusterfuzz-testcase-minimized-FuzzDeflateDecompression-5523852259360768.fuzz"sv);
+    auto test_file = TRY_OR_FAIL(Core::File::open(path, Core::File::OpenMode::Read));
+    auto test_data = TRY_OR_FAIL(test_file->read_until_eof());
+    EXPECT(Compress::DeflateDecompressor::decompress_all(test_data).is_error());
+}
