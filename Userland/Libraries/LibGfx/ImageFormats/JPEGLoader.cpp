@@ -1595,15 +1595,14 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             u32 const chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
             Macroblock const& chroma = macroblocks[chroma_block_index];
-            // Overflows are intentional.
-            for (u8 vfactor_i = context.sampling_factors.vertical - 1; vfactor_i < context.sampling_factors.vertical; --vfactor_i) {
-                for (u8 hfactor_i = context.sampling_factors.horizontal - 1; hfactor_i < context.sampling_factors.horizontal; --hfactor_i) {
+            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
                     u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     auto* y = macroblocks[macroblock_index].y;
                     auto* cb = macroblocks[macroblock_index].cb;
                     auto* cr = macroblocks[macroblock_index].cr;
-                    for (u8 i = 7; i < 8; --i) {
-                        for (u8 j = 7; j < 8; --j) {
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
                             u8 const pixel = i * 8 + j;
                             u32 const chroma_pxrow = (i / context.sampling_factors.vertical) + 4 * vfactor_i;
                             u32 const chroma_pxcol = (j / context.sampling_factors.horizontal) + 4 * hfactor_i;
