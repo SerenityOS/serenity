@@ -51,8 +51,6 @@ CanonicalCode const& CanonicalCode::fixed_distance_codes()
 
 ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
 {
-    // FIXME: I can't quite follow the algorithm here, but it seems to work.
-
     CanonicalCode code;
 
     auto non_zero_symbols = 0;
@@ -381,8 +379,6 @@ ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 
 ErrorOr<u32> DeflateDecompressor::decode_length(u32 symbol)
 {
-    // FIXME: I can't quite follow the algorithm here, but it seems to work.
-
     if (symbol <= 264)
         return symbol - 254;
 
@@ -399,8 +395,6 @@ ErrorOr<u32> DeflateDecompressor::decode_length(u32 symbol)
 
 ErrorOr<u32> DeflateDecompressor::decode_distance(u32 symbol)
 {
-    // FIXME: I can't quite follow the algorithm here, but it seems to work.
-
     if (symbol <= 3)
         return symbol + 1;
 
