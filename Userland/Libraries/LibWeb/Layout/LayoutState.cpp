@@ -357,6 +357,29 @@ void LayoutState::resolve_box_shadow_data()
     }
 }
 
+void LayoutState::resolve_text_shadows(Vector<Painting::PaintableWithLines&> const& paintables_with_lines)
+{
+    for (auto const& paintable_with_lines : paintables_with_lines) {
+        for (auto const& fragment : paintable_with_lines.fragments()) {
+            auto const& text_shadow = fragment.m_layout_node->computed_values().text_shadow();
+            if (!text_shadow.is_empty()) {
+                Vector<Painting::ShadowData> resolved_shadow_data;
+                resolved_shadow_data.ensure_capacity(text_shadow.size());
+                for (auto const& layer : text_shadow) {
+                    resolved_shadow_data.empend(
+                        layer.color,
+                        layer.offset_x.to_px(paintable_with_lines.layout_node()),
+                        layer.offset_y.to_px(paintable_with_lines.layout_node()),
+                        layer.blur_radius.to_px(paintable_with_lines.layout_node()),
+                        layer.spread_distance.to_px(paintable_with_lines.layout_node()),
+                        Painting::ShadowPlacement::Outer);
+                }
+                const_cast<Painting::PaintableFragment&>(fragment).set_shadows(move(resolved_shadow_data));
+            }
+        }
+    }
+}
+
 void LayoutState::commit(Box& root)
 {
     // Only the top-level LayoutState should ever be committed.
@@ -452,6 +475,7 @@ void LayoutState::commit(Box& root)
 
     resolve_border_radii();
     resolve_box_shadow_data();
+    resolve_text_shadows(paintables_with_lines);
 
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;

@@ -14,6 +14,8 @@
 namespace Web::Painting {
 
 class PaintableFragment {
+    friend struct Layout::LayoutState;
+
 public:
     explicit PaintableFragment(Layout::LineBoxFragment const&);
 
@@ -29,6 +31,9 @@ public:
 
     BorderRadiiData const& border_radii_data() const { return m_border_radii_data; }
     void set_border_radii_data(BorderRadiiData const& border_radii_data) { m_border_radii_data = border_radii_data; }
+
+    Vector<ShadowData> const& shadows() const { return m_shadows; }
+    void set_shadows(Vector<ShadowData>&& shadows) { m_shadows = shadows; }
 
     CSSPixelRect const absolute_rect() const;
 
@@ -53,6 +58,7 @@ private:
     int m_length;
     Painting::BorderRadiiData m_border_radii_data;
     Vector<Gfx::DrawGlyphOrEmoji> m_glyph_run;
+    Vector<ShadowData> m_shadows;
     bool m_contained_by_inline_node { false };
 };
 
