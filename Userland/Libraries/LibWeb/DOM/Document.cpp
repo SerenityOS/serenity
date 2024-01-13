@@ -1250,7 +1250,7 @@ void Document::set_hovered_node(Node* node)
     }
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(FlyString const& name)
 {
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [name](Element const& element) {
         return element.name() == name;
