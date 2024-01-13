@@ -899,8 +899,8 @@ ByteString Node::debug_description() const
         builder.appendff("<{}>", dom_node()->node_name());
         if (dom_node()->is_element()) {
             auto& element = static_cast<DOM::Element const&>(*dom_node());
-            if (auto id = element.get_attribute(HTML::AttributeNames::id); id.has_value())
-                builder.appendff("#{}", id.value());
+            if (element.id().has_value())
+                builder.appendff("#{}", element.id().value());
             for (auto const& class_name : element.class_names())
                 builder.appendff(".{}", class_name);
         }

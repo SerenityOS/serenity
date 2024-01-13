@@ -1587,8 +1587,8 @@ Vector<FlyString> Window::supported_property_names() const
     //   and are in a document tree with window's associated Document as their root.
     associated_document().for_each_in_subtree_of_type<DOM::Element>([&property_names](auto& element) -> IterationDecision {
         if (is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element)) {
-            if (auto const& name = element.attribute(AttributeNames::name); name.has_value())
-                property_names.set(name.value(), AK::HashSetExistingEntryBehavior::Keep);
+            if (element.name().has_value())
+                property_names.set(element.name().value(), AK::HashSetExistingEntryBehavior::Keep);
         }
         if (auto const& name = element.id(); name.has_value())
             property_names.set(name.value().to_string(), AK::HashSetExistingEntryBehavior::Keep);
@@ -1636,9 +1636,9 @@ WebIDL::ExceptionOr<JS::Value> Window::named_item_value(FlyString const& name) c
     //    whose filter matches only named objects of window with the name name. (By definition, these will all be elements.)
     return DOM::HTMLCollection::create(mutable_this.associated_document(), DOM::HTMLCollection::Scope::Descendants, [name](auto& element) -> bool {
         if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
-            && (element.attribute(AttributeNames::name) == name))
+            && (element.name() == name))
             return true;
-        return element.attribute(AttributeNames::id) == name;
+        return element.id() == name;
     });
 }
 
@@ -1664,9 +1664,9 @@ Window::NamedObjects Window::named_objects(StringView name)
     // HTML elements that have an id content attribute whose value is name and are in a document tree with window's associated Document as their root.
     associated_document().for_each_in_subtree_of_type<DOM::Element>([&objects, &name](auto& element) -> IterationDecision {
         if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
-            && (element.attribute(AttributeNames::name) == name))
+            && (element.name() == name))
             objects.elements.append(element);
-        else if (element.attribute(AttributeNames::id) == name)
+        else if (element.id() == name)
             objects.elements.append(element);
         return IterationDecision::Continue;
     });

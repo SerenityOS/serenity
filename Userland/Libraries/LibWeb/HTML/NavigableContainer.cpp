@@ -76,8 +76,8 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     Optional<String> target_name;
 
     // 5. If element has a name content attribute, then set targetName to the value of that attribute.
-    if (auto value = attribute(HTML::AttributeNames::name); value.has_value())
-        target_name = move(value);
+    if (name().has_value())
+        target_name = name().value().to_string();
 
     // 6. Let documentState be a new document state, with
     //  - document: document

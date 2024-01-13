@@ -150,10 +150,9 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
         auto& element = verify_cast<DOM::Element>(*layout_node.dom_node());
         StringBuilder builder;
-        auto id = element.deprecated_attribute(HTML::AttributeNames::id);
-        if (!id.is_empty()) {
+        if (element.id().has_value() && !element.id()->is_empty()) {
             builder.append('#');
-            builder.append(id);
+            builder.append(*element.id());
         }
         for (auto& class_name : element.class_names()) {
             builder.append('.');

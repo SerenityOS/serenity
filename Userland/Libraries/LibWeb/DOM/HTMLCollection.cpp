@@ -118,12 +118,10 @@ Vector<FlyString> HTMLCollection::supported_property_names() const
         }
 
         // 2. If element is in the HTML namespace and has a name attribute whose value is neither the empty string nor is in result, append element’s name attribute value to result.
-        if (element->namespace_uri() == Namespace::HTML) {
-            if (auto maybe_name = element->attribute(HTML::AttributeNames::name); maybe_name.has_value()) {
-                auto name = maybe_name.release_value();
-                if (!name.is_empty() && !result.contains_slow(name))
-                    result.append(name);
-            }
+        if (element->namespace_uri() == Namespace::HTML && element->name().has_value()) {
+            auto name = element->name().value();
+            if (!name.is_empty() && !result.contains_slow(name))
+                result.append(move(name));
         }
     }
 
