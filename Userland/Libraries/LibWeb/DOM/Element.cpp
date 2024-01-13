@@ -1468,7 +1468,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
 }
 
 // https://dom.spec.whatwg.org/#insert-adjacent
-WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(ByteString const& where, JS::NonnullGCPtr<Node> node)
+WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(StringView where, JS::NonnullGCPtr<Node> node)
 {
     // To insert adjacent, given an element element, string where, and a node node, run the steps associated with the first ASCII case-insensitive match for where:
     if (Infra::is_ascii_case_insensitive_match(where, "beforebegin"sv)) {
@@ -1512,7 +1512,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(ByteString const& 
 WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element)
 {
     // The insertAdjacentElement(where, element) method steps are to return the result of running insert adjacent, give this, where, and element.
-    auto returned_node = TRY(insert_adjacent(where.to_byte_string(), move(element)));
+    auto returned_node = TRY(insert_adjacent(where, element));
     if (!returned_node)
         return JS::GCPtr<Element> { nullptr };
     return JS::GCPtr<Element> { verify_cast<Element>(*returned_node) };
@@ -1526,7 +1526,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_text(String const& where, Str
 
     // 2. Run insert adjacent, given this, where, and text.
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.
-    (void)TRY(insert_adjacent(where.to_byte_string(), text));
+    (void)TRY(insert_adjacent(where, text));
     return {};
 }
 

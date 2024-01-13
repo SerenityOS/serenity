@@ -391,7 +391,7 @@ private:
 
     void invalidate_style_after_attribute_change(FlyString const& attribute_name);
 
-    WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(ByteString const& where, JS::NonnullGCPtr<Node> node);
+    WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(StringView where, JS::NonnullGCPtr<Node> node);
 
     void enqueue_an_element_on_the_appropriate_element_queue();
 
