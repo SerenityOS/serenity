@@ -732,7 +732,7 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
     auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
 
     Painter painter(thumbnail);
-    painter.draw_scaled_bitmap(destination, *bitmap, bitmap->rect());
+    painter.draw_scaled_bitmap(destination, *bitmap, bitmap->rect(), 1.f, Painter::ScalingMode::BoxSampling);
     return thumbnail;
 }
 
