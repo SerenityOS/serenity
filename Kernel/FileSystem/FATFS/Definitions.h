@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2024, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -129,5 +129,16 @@ struct [[gnu::packed]] FATLongFileNameEntry {
     u16 characters3[2];
 };
 static_assert(AssertSize<FATLongFileNameEntry, 32>());
+
+struct [[gnu::packed]] FAT32FSInfo {
+    u32 signature1;
+    u8 unused1[480];
+    u32 signature2;
+    u32 last_known_free_cluster_count;
+    u32 free_cluster_lookup_hint;
+    u8 unused2[12];
+    u32 signature3;
+};
+static_assert(AssertSize<FAT32FSInfo, 512>());
 
 }

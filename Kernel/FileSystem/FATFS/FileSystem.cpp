@@ -239,6 +239,24 @@ ErrorOr<void> FATFS::initialize_while_locked()
     root_entry.attributes = FATAttributes::Directory;
     m_root_inode = TRY(FATInode::create(*this, root_entry, { 0, 1 }));
 
+    if (m_fat_version == FATVersion::FAT32) {
+        auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
+        // We know that there is a DOS7 BPB, because if it wasn't present
+        // we would have returned EINVAL above.
+        TRY(raw_read(ebpb.dos7_bpb()->fs_info_sector, fs_info_buffer));
+
+        if (m_fs_info.signature1 != fs_info_signature_1 || m_fs_info.signature2 != fs_info_signature_2 || m_fs_info.signature3 != fs_info_signature_3) {
+            dbgln("FATFS: Invalid FSInfo struct signature");
+            dbgln_if(FAT_DEBUG, "FATFS: FSInfo signature1: {}, expected: {}", m_fs_info.signature1, fs_info_signature_1);
+            dbgln_if(FAT_DEBUG, "FATFS: FSInfo signature2: {}, expected: {}", m_fs_info.signature2, fs_info_signature_2);
+            dbgln_if(FAT_DEBUG, "FATFS: FSInfo signature3: {}, expected: {}", m_fs_info.signature3, fs_info_signature_3);
+            return Error::from_errno(EINVAL);
+        }
+
+        dbgln_if(FAT_DEBUG, "FATFS: fs_info.last_known_free_cluster_count: {}", m_fs_info.last_known_free_cluster_count);
+        dbgln_if(FAT_DEBUG, "FATFS: fs_info.free_cluster_lookup_hint: {}", m_fs_info.free_cluster_lookup_hint);
+    }
+
     return {};
 }
 
