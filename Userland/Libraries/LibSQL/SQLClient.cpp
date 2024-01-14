@@ -39,7 +39,7 @@ static ErrorOr<int> create_database_socket(ByteString const& socket_path)
     TRY(Core::System::fcntl(socket_fd, F_SETFD, FD_CLOEXEC));
 #    endif
 
-#    if !defined(AK_OS_BSD_GENERIC)
+#    if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_GNU_HURD)
     TRY(Core::System::fchmod(socket_fd, 0600));
 #    endif
 
