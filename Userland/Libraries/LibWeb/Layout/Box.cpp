@@ -60,15 +60,6 @@ bool Box::is_user_scrollable() const
     return computed_values().overflow_y() == CSS::Overflow::Scroll || computed_values().overflow_y() == CSS::Overflow::Auto;
 }
 
-void Box::set_needs_display()
-{
-    if (!navigable())
-        return;
-
-    if (paintable_box())
-        navigable()->set_needs_display(paintable_box()->absolute_rect());
-}
-
 bool Box::is_body() const
 {
     return dom_node() && dom_node() == document().body();

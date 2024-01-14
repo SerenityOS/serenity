@@ -1990,8 +1990,8 @@ void Navigable::set_needs_display(CSSPixelRect const& rect)
         return;
     }
 
-    if (container() && container()->layout_node())
-        container()->layout_node()->set_needs_display();
+    if (container() && container()->paintable())
+        container()->paintable()->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/#rendering-opportunity

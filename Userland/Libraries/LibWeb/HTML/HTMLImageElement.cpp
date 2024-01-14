@@ -1005,8 +1005,8 @@ void HTMLImageElement::animate()
         }
     }
 
-    if (layout_node())
-        layout_node()->set_needs_display();
+    if (paintable())
+        paintable()->set_needs_display();
 }
 
 }

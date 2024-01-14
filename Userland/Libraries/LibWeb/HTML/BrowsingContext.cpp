@@ -273,9 +273,9 @@ BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page, HTML::NavigableCon
     m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
         if (!is_focused_context())
             return;
-        if (m_cursor_position && m_cursor_position->node()->layout_node()) {
+        if (m_cursor_position && m_cursor_position->node()->layout_node() && m_cursor_position->node()->layout_node()->paintable()) {
             m_cursor_blink_state = !m_cursor_blink_state;
-            m_cursor_position->node()->layout_node()->set_needs_display();
+            m_cursor_position->node()->paintable()->set_needs_display();
         }
     }).release_value_but_fixme_should_propagate_errors();
 }
@@ -327,8 +327,8 @@ void BrowsingContext::reset_cursor_blink_cycle()
 {
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
-    if (m_cursor_position && m_cursor_position->node()->layout_node())
-        m_cursor_position->node()->layout_node()->set_needs_display();
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context
@@ -404,13 +404,13 @@ void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> positi
     if (m_cursor_position && m_cursor_position->equals(position))
         return;
 
-    if (m_cursor_position && m_cursor_position->node()->layout_node())
-        m_cursor_position->node()->layout_node()->set_needs_display();
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
 
     m_cursor_position = position;
 
-    if (m_cursor_position && m_cursor_position->node()->layout_node())
-        m_cursor_position->node()->layout_node()->set_needs_display();
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
 
     reset_cursor_blink_cycle();
 }

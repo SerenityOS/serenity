@@ -226,31 +226,6 @@ Viewport& Node::root()
     return *document().layout_node();
 }
 
-void Node::set_needs_display()
-{
-    auto* containing_block = this->containing_block();
-    if (!containing_block)
-        return;
-    if (!containing_block->paintable_box())
-        return;
-    auto navigable = this->navigable();
-    if (!navigable)
-        return;
-
-    if (this->paintable() && is<Painting::InlinePaintable>(this->paintable())) {
-        auto const& fragments = static_cast<Painting::InlinePaintable*>(this->paintable())->fragments();
-        for (auto const& fragment : fragments)
-            navigable->set_needs_display(fragment.absolute_rect());
-    }
-
-    if (!is<Painting::PaintableWithLines>(*containing_block->paintable_box()))
-        return;
-    static_cast<Painting::PaintableWithLines const&>(*containing_block->paintable_box()).for_each_fragment([&](auto& fragment) {
-        navigable->set_needs_display(fragment.absolute_rect());
-        return IterationDecision::Continue;
-    });
-}
-
 bool Node::is_floating() const
 {
     if (!has_style())

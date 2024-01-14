@@ -155,8 +155,6 @@ public:
     void removed_from(Node&) { }
     void children_changed() { }
 
-    virtual void set_needs_display();
-
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
 

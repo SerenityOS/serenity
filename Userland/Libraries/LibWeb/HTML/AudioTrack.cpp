@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Platform/AudioCodecPlugin.h>
 
 namespace Web::HTML {
@@ -30,8 +31,8 @@ AudioTrack::AudioTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
     , m_audio_plugin(Platform::AudioCodecPlugin::create(move(loader)).release_value_but_fixme_should_propagate_errors())
 {
     m_audio_plugin->on_playback_position_updated = [this](auto position) {
-        if (auto* layout_node = m_media_element->layout_node())
-            layout_node->set_needs_display();
+        if (auto const* paintable = m_media_element->paintable())
+            paintable->set_needs_display();
 
         auto playback_position = static_cast<double>(position.to_milliseconds()) / 1000.0;
         m_media_element->set_current_playback_position(playback_position);

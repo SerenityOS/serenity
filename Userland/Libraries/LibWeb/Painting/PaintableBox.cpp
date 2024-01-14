@@ -80,7 +80,7 @@ void PaintableBox::set_scroll_offset(CSSPixelPoint offset)
         return;
     }
 
-    node.set_needs_display();
+    set_needs_display();
 }
 
 void PaintableBox::scroll_by(int delta_x, int delta_y)
@@ -788,6 +788,12 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
         return HitTestResult { const_cast<PaintableWithLines&>(*this) };
     return {};
+}
+
+void PaintableBox::set_needs_display() const
+{
+    if (auto navigable = this->navigable())
+        navigable->set_needs_display(absolute_rect());
 }
 
 }

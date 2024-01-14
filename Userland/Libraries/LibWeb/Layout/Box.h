@@ -25,8 +25,6 @@ public:
     Painting::PaintableBox const* paintable_box() const;
     Painting::PaintableBox* paintable_box();
 
-    virtual void set_needs_display() override;
-
     bool is_body() const;
 
     // https://www.w3.org/TR/css-images-3/#natural-dimensions

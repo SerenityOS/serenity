@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/TextMetrics.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -174,9 +175,9 @@ WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasIm
 void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.
-    if (!canvas_element().layout_node())
+    if (!canvas_element().paintable())
         return;
-    canvas_element().layout_node()->set_needs_display();
+    canvas_element().paintable()->set_needs_display();
 }
 
 Gfx::Painter* CanvasRenderingContext2D::painter()

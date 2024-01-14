@@ -124,6 +124,8 @@ public:
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
     DOM::Node* dom_node() { return layout_box().dom_node(); }
 
+    virtual void set_needs_display() const override;
+
     virtual void apply_scroll_offset(PaintContext&, PaintPhase) const override;
     virtual void reset_scroll_offset(PaintContext&, PaintPhase) const override;
 
