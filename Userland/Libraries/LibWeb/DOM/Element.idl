@@ -35,7 +35,8 @@ interface Element : Node {
     [CEReactions] Attr? setAttributeNode(Attr attr);
     [CEReactions] Attr? setAttributeNodeNS(Attr attr);
 
-    [CEReactions] undefined removeAttribute(DOMString qualifiedName);
+    [CEReactions] undefined removeAttribute([FlyString] DOMString qualifiedName);
+    [CEReactions] undefined removeAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);

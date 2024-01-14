@@ -305,6 +305,13 @@ void Element::remove_attribute(FlyString const& name)
     m_attributes->remove_attribute(name);
 }
 
+// https://dom.spec.whatwg.org/#dom-element-removeattributens
+void Element::remove_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name)
+{
+    // The removeAttributeNS(namespace, localName) method steps are to remove an attribute given namespace, localName, and this, and then return undefined.
+    m_attributes->remove_attribute_ns(namespace_, name);
+}
+
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
 bool Element::has_attribute(FlyString const& name) const
 {
