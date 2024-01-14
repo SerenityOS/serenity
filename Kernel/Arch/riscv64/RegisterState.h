@@ -21,7 +21,7 @@ struct RegisterState {
 
     RISCV64::CSR::SSTATUS sstatus;
     u64 sepc;
-    u64 scause;
+    RISCV64::CSR::SCAUSE scause;
     u64 stval;
 
     u64 user_sp;
