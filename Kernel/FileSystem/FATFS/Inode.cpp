@@ -332,12 +332,13 @@ ErrorOr<void> FATInode::remove_child(StringView)
 
 ErrorOr<void> FATInode::chmod(mode_t)
 {
-    return EROFS;
+    // TODO: Linux actually does do some stuff here, like setting the hidden attribute if the file starts with a dot.
+    return Error::from_errno(ENOTSUP);
 }
 
 ErrorOr<void> FATInode::chown(UserID, GroupID)
 {
-    return EROFS;
+    return Error::from_errno(ENOTSUP);
 }
 
 ErrorOr<void> FATInode::flush_metadata()
