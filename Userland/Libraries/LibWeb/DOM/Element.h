@@ -112,6 +112,7 @@ public:
 
     void append_attribute(Attr&);
     void remove_attribute(FlyString const& name);
+    void remove_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name);
 
     WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const;
