@@ -43,7 +43,8 @@ interface Element : Node {
     [SameObject] readonly attribute NamedNodeMap attributes;
     sequence<DOMString> getAttributeNames();
 
-    Attr? getAttributeNode(DOMString qualifiedName);
+    Attr? getAttributeNode([FlyString] DOMString qualifiedName);
+    Attr? getAttributeNodeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
 
     HTMLCollection getElementsByTagName(DOMString tagName);
     HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
