@@ -32,10 +32,9 @@ struct __jmp_buf {
     // FIXME: This is likely incorrect.
     uint64_t regs[22];
 #elif defined(__riscv) && __riscv_xlen == 64
-    // FIXME: This is likely incorrect.
     uint64_t s[12];
     uint64_t sp;
-    uint64_t pc;
+    uint64_t ra;
 #else
 #    error "Unknown architecture"
 #endif
