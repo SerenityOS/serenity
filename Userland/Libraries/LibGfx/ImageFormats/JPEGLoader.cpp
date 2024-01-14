@@ -1627,32 +1627,22 @@ static void undo_subsampling(JPEGLoadingContext const& context, Vector<Macrobloc
     }
 }
 
-static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void ycbcr_to_rgb(Vector<Macroblock>& macroblocks)
 {
     // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
     // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
     // 7 - Conversion to and from RGB
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
-                    u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    auto* y = macroblocks[macroblock_index].y;
-                    auto* cb = macroblocks[macroblock_index].cb;
-                    auto* cr = macroblocks[macroblock_index].cr;
-                    for (u8 i = 0; i < 8; ++i) {
-                        for (u8 j = 0; j < 8; ++j) {
-                            u8 const pixel = i * 8 + j;
-                            int r = y[pixel] + 1.402f * (cr[pixel] - 128);
-                            int g = y[pixel] - 0.3441f * (cb[pixel] - 128) - 0.7141f * (cr[pixel] - 128);
-                            int b = y[pixel] + 1.772f * (cb[pixel] - 128);
-                            y[pixel] = clamp(r, 0, 255);
-                            cb[pixel] = clamp(g, 0, 255);
-                            cr[pixel] = clamp(b, 0, 255);
-                        }
-                    }
-                }
-            }
+    for (auto& macroblock : macroblocks) {
+        auto* y = macroblock.y;
+        auto* cb = macroblock.cb;
+        auto* cr = macroblock.cr;
+        for (u8 i = 0; i < 64; ++i) {
+            int r = y[i] + 1.402f * (cr[i] - 128);
+            int g = y[i] - 0.3441f * (cb[i] - 128) - 0.7141f * (cr[i] - 128);
+            int b = y[i] + 1.772f * (cb[i] - 128);
+            y[i] = clamp(r, 0, 255);
+            cb[i] = clamp(g, 0, 255);
+            cr[i] = clamp(b, 0, 255);
         }
     }
 }
@@ -1668,21 +1658,12 @@ static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Ve
     // files: 0 represents 100% ink coverage, rather than 0% ink as you'd expect.
     // This is arguably a bug in Photoshop, but if you need to work with Photoshop
     // CMYK files, you will have to deal with it in your application.
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
-                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    for (u8 i = 0; i < 8; ++i) {
-                        for (u8 j = 0; j < 8; ++j) {
-                            macroblocks[mb_index].r[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].r[i * 8 + j];
-                            macroblocks[mb_index].g[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].g[i * 8 + j];
-                            macroblocks[mb_index].b[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].b[i * 8 + j];
-                            macroblocks[mb_index].k[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].k[i * 8 + j];
-                        }
-                    }
-                }
-            }
+    for (auto& macroblock : macroblocks) {
+        for (u8 i = 0; i < 64; ++i) {
+            macroblock.r[i] = 255 - macroblock.r[i];
+            macroblock.g[i] = 255 - macroblock.g[i];
+            macroblock.b[i] = 255 - macroblock.b[i];
+            macroblock.k[i] = 255 - macroblock.k[i];
         }
     }
 }
@@ -1706,29 +1687,20 @@ static ErrorOr<void> cmyk_to_rgb(JPEGLoadingContext& context)
     return {};
 }
 
-static void ycck_to_cmyk(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void ycck_to_cmyk(Vector<Macroblock>& macroblocks)
 {
     // 7 - Conversions between colour encodings
     // YCCK is obtained from CMYK by converting the CMY channels to YCC channel.
 
     // To convert back into RGB, we only need the 3 first components, which are baseline YCbCr
-    ycbcr_to_rgb(context, macroblocks);
+    ycbcr_to_rgb(macroblocks);
 
     // RGB to CMY, as mentioned in https://www.smcm.iqfr.csic.es/docs/intel/ipp/ipp_manual/IPPI/ippi_ch15/functn_YCCKToCMYK_JPEG.htm#functn_YCCKToCMYK_JPEG
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
-                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    for (u8 i = 0; i < 8; ++i) {
-                        for (u8 j = 0; j < 8; ++j) {
-                            macroblocks[mb_index].r[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].r[i * 8 + j];
-                            macroblocks[mb_index].g[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].g[i * 8 + j];
-                            macroblocks[mb_index].b[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].b[i * 8 + j];
-                        }
-                    }
-                }
-            }
+    for (auto& macroblock : macroblocks) {
+        for (u8 i = 0; i < 64; ++i) {
+            macroblock.r[i] = 255 - macroblock.r[i];
+            macroblock.g[i] = 255 - macroblock.g[i];
+            macroblock.b[i] = 255 - macroblock.b[i];
         }
     }
 }
@@ -1752,10 +1724,10 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
             }
             break;
         case ColorTransform::YCbCr:
-            ycbcr_to_rgb(context, macroblocks);
+            ycbcr_to_rgb(macroblocks);
             break;
         case ColorTransform::YCCK:
-            ycck_to_cmyk(context, macroblocks);
+            ycck_to_cmyk(macroblocks);
             break;
         }
 
@@ -1767,13 +1739,13 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
     //      - 3 components means YCbCr
     //      - 4 components means CMYK (Nothing to do here).
     if (context.components.size() == 3)
-        ycbcr_to_rgb(context, macroblocks);
+        ycbcr_to_rgb(macroblocks);
 
     if (context.components.size() == 1) {
         // With Cb and Cr being equal to zero, this function assign the Y
         // value (luminosity) to R, G and B. Providing a proper conversion
         // from grayscale to RGB.
-        ycbcr_to_rgb(context, macroblocks);
+        ycbcr_to_rgb(macroblocks);
     }
 
     return {};
