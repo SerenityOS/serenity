@@ -133,6 +133,7 @@ known_tags: List[Tag] = [
     Tag('283', [TIFFType.UnsignedRational], [1], None, "YResolution"),
     Tag('284', [TIFFType.UnsignedShort], [1], PlanarConfiguration.Chunky, "PlanarConfiguration", PlanarConfiguration),
     Tag('285', [TIFFType.ASCII], [], None, "PageName"),
+    Tag('292', [TIFFType.UnsignedLong], [1], 0, "T4Options"),
     Tag('296', [TIFFType.UnsignedShort], [1], ResolutionUnit.Inch, "ResolutionUnit", ResolutionUnit),
     Tag('305', [TIFFType.ASCII], [], None, "Software"),
     Tag('306', [TIFFType.ASCII], [20], None, "DateTime"),
