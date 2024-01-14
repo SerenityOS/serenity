@@ -215,7 +215,7 @@ int HTMLElement::offset_top() const
     //    ignoring any transforms that apply to the element and its ancestors, and terminate this algorithm.
     auto offset_parent = this->offset_parent();
     if (!offset_parent || !offset_parent->layout_node()) {
-        auto position = layout_node()->box_type_agnostic_position();
+        auto position = paintable()->box_type_agnostic_position();
         return position.y().to_int();
     }
 
@@ -224,8 +224,8 @@ int HTMLElement::offset_top() const
     //    from the y-coordinate of the top border edge of the first box associated with the element,
     //    relative to the initial containing block origin,
     //    ignoring any transforms that apply to the element and its ancestors.
-    auto offset_parent_position = offset_parent->layout_node()->box_type_agnostic_position();
-    auto position = layout_node()->box_type_agnostic_position();
+    auto offset_parent_position = offset_parent->paintable()->box_type_agnostic_position();
+    auto position = paintable()->box_type_agnostic_position();
     return position.y().to_int() - offset_parent_position.y().to_int();
 }
 
@@ -248,7 +248,7 @@ int HTMLElement::offset_left() const
     //    ignoring any transforms that apply to the element and its ancestors, and terminate this algorithm.
     auto offset_parent = this->offset_parent();
     if (!offset_parent || !offset_parent->layout_node()) {
-        auto position = layout_node()->box_type_agnostic_position();
+        auto position = paintable()->box_type_agnostic_position();
         return position.x().to_int();
     }
 
@@ -257,8 +257,8 @@ int HTMLElement::offset_left() const
     //    from the x-coordinate of the left border edge of the first CSS layout box associated with the element,
     //    relative to the initial containing block origin,
     //    ignoring any transforms that apply to the element and its ancestors.
-    auto offset_parent_position = offset_parent->layout_node()->box_type_agnostic_position();
-    auto position = layout_node()->box_type_agnostic_position();
+    auto offset_parent_position = offset_parent->paintable()->box_type_agnostic_position();
+    auto position = paintable()->box_type_agnostic_position();
     return position.x().to_int() - offset_parent_position.x().to_int();
 }
 

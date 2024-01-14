@@ -31,6 +31,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/XHR/FormData.h>
 
@@ -1920,9 +1921,9 @@ CSSPixelPoint Navigable::to_top_level_position(CSSPixelPoint a_position)
             break;
         if (!ancestor->container())
             return {};
-        if (!ancestor->container()->layout_node())
+        if (!ancestor->container()->paintable())
             return {};
-        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position());
+        position.translate_by(ancestor->container()->paintable()->box_type_agnostic_position());
     }
     return position;
 }
