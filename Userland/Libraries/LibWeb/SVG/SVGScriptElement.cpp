@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -55,6 +55,12 @@ void SVGScriptElement::process_the_script_element()
     // 4. If the script content is inline, or if it is external and was fetched successfully, then the
     //    script is executed. Note that at this point, these steps may be re-entrant if the execution
     //    of the script results in further 'script' elements being inserted into the document.
+
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-html
+    // Before any script execution occurs, the user agent must wait for scripts may run for the newly-created document to be true for document.
+    if (!m_document->ready_to_run_scripts())
+        HTML::main_thread_event_loop().spin_until([&] { return m_document->ready_to_run_scripts(); });
+
     // FIXME: Support non-inline scripts.
     auto& settings_object = document().relevant_settings_object();
     auto base_url = document().base_url();
