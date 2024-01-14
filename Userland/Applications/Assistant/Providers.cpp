@@ -66,9 +66,7 @@ void URLResult::activate() const
 AppProvider::AppProvider()
 {
     Desktop::AppFile::for_each([this](NonnullRefPtr<Desktop::AppFile> app_file) {
-        if (access(app_file->executable().characters(), X_OK) == 0) {
-            m_app_file_cache.append(move(app_file));
-        }
+        m_app_file_cache.append(move(app_file));
     });
 }
 
@@ -226,10 +224,6 @@ void FileProvider::build_filesystem_cache()
                         return IterationDecision::Continue;
 
                     auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
-
-                    if (access(full_path.characters(), X_OK) != 0)
-                        return IterationDecision::Continue;
-
                     m_full_path_cache.append(full_path);
 
                     if (S_ISDIR(st.st_mode)) {
