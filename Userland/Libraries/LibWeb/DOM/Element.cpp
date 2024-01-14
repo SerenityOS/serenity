@@ -164,6 +164,13 @@ JS::GCPtr<Attr> Element::get_attribute_node(FlyString const& name) const
     return m_attributes->get_attribute(name);
 }
 
+// https://dom.spec.whatwg.org/#dom-element-getattributenodens
+JS::GCPtr<Attr> Element::get_attribute_node_ns(Optional<FlyString> const& namespace_, FlyString const& name) const
+{
+    // The getAttributeNodeNS(namespace, localName) method steps are to return the result of getting an attribute given namespace, localName, and this.
+    return m_attributes->get_attribute_ns(namespace_, name);
+}
+
 // https://dom.spec.whatwg.org/#dom-element-setattribute
 WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {

@@ -119,6 +119,7 @@ public:
     Vector<String> get_attribute_names() const;
 
     JS::GCPtr<Attr> get_attribute_node(FlyString const& name) const;
+    JS::GCPtr<Attr> get_attribute_node_ns(Optional<FlyString> const& namespace_, FlyString const& name) const;
 
     DOMTokenList* class_list();
 
