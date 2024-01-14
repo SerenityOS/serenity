@@ -18,6 +18,25 @@
 
 namespace Gfx {
 
+namespace {
+
+CCITT::Group3Options parse_t4_options(u32 bit_field)
+{
+    // Section 11: CCITT Bilevel Encodings
+    CCITT::Group3Options options {};
+
+    if (bit_field & 0b001)
+        options.dimensions = CCITT::Group3Options::Mode::TwoDimensions;
+    if (bit_field & 0b010)
+        options.compression = CCITT::Group3Options::Compression::Uncompressed;
+    if (bit_field & 0b100)
+        options.use_fill_bits = CCITT::Group3Options::UseFillBits::Yes;
+
+    return options;
+}
+
+}
+
 namespace TIFF {
 
 class TIFFLoadingContext {
