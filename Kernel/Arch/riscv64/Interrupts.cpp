@@ -19,8 +19,17 @@ namespace Kernel {
 // FIXME: Share this array with x86_64/aarch64 somehow and consider if this really needs to use raw pointers and not OwnPtrs
 static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
 
-void dump_registers(RegisterState const&)
+void dump_registers(RegisterState const& regs)
 {
+    dbgln("scause:  {} ({:p})", regs.scause, to_underlying(regs.scause));
+    dbgln("sepc:    {:p}", regs.sepc);
+    dbgln("stval:   {:p}", regs.stval);
+    dbgln("sstatus: {}", regs.sstatus);
+
+    dbgln("ra={:p} sp={:p} gp={:p} tp={:p} fp={:p}", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[7]);
+    dbgln("a0={:p} a1={:p} a2={:p} a3={:p} a4={:p} a5={:p} a6={:p} a7={:p}", regs.x[9], regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14], regs.x[15], regs.x[16]);
+    dbgln("t0={:p} t1={:p} t2={:p} t3={:p} t4={:p} t5={:p} t6={:p}", regs.x[4], regs.x[5], regs.x[6], regs.x[27], regs.x[28], regs.x[29], regs.x[30]);
+    dbgln("s1={:p} s2={:p} s3={:p} s4={:p} s5={:p} s6={:p} s7={:p} s8={:p} s9={:p} s10={:p} s11={:p}", regs.x[8], regs.x[17], regs.x[18], regs.x[19], regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24], regs.x[25], regs.x[26]);
 }
 
 // FIXME: Share the code below with Arch/x86_64/Interrupts.cpp
