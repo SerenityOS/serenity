@@ -1287,12 +1287,9 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
                 return Error::from_string_literal("Unsupported luma subsampling factors");
             }
         } else {
-            // YCCK with just CC subsampled and K matching Y is fine.
             auto const& y_component = context.components[0];
-            bool channel_matches_y_factor = component.sampling_factors == y_component.sampling_factors;
-            bool k_channel_matches_y = context.color_transform == ColorTransform::YCCK && i == 3 && channel_matches_y_factor;
-
-            if (((component.sampling_factors != SamplingFactors { 1, 1 }) && !k_channel_matches_y) || (i == 3 && !channel_matches_y_factor)) {
+            if (y_component.sampling_factors.horizontal % component.sampling_factors.horizontal != 0
+                || y_component.sampling_factors.vertical % component.sampling_factors.vertical != 0) {
                 dbgln_if(JPEG_DEBUG, "Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
                     component.sampling_factors.horizontal,
                     component.sampling_factors.vertical);
@@ -1589,8 +1586,7 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
 static void undo_subsampling(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     // The first component has sampling factors of context.sampling_factors, while the others
-    // are either 1x1 or for the 4th component also context.sampling_factors. See
-    // read_start_of_frame() which currently enforces these restrictions.
+    // divide the first component's sampling factors. This is enforced by read_start_of_frame().
     // This function undoes the subsampling by duplicating the values of the smaller components.
     // See https://www.w3.org/Graphics/JPEG/itu-t81.pdf, A.2 Order of source image data encoding.
     //
