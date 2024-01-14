@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/DeltaE.h>
+#include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibMain/Main.h>
@@ -38,10 +41,23 @@ static ErrorOr<Fixpoint> compute_fixpoint(Gfx::Color start_color)
     return Fixpoint { last_color, number_of_iterations };
 }
 
+static ErrorOr<float> perceived_distance_in_sRGB(Gfx::Color a, Gfx::Color b)
+{
+    auto sRGB = TRY(Gfx::ICC::sRGB());
+
+    Array<u8, 3> array_a { a.red(), a.green(), a.blue() };
+    Array<u8, 3> array_b { b.red(), b.green(), b.blue() };
+
+    return DeltaE(TRY(sRGB->to_lab(array_a)), TRY(sRGB->to_lab(array_b)));
+}
+
 static ErrorOr<void> test(Gfx::Color color)
 {
     auto fixpoint = TRY(compute_fixpoint(color));
-    outln("color {} converges to {} after saving {} times", color, fixpoint.fixpoint, fixpoint.number_of_iterations);
+
+    float perceived_distance = TRY(perceived_distance_in_sRGB(color, fixpoint.fixpoint));
+
+    outln("color {} converges to {} after saving {} times, delta {}", color, fixpoint.fixpoint, fixpoint.number_of_iterations, perceived_distance);
     return {};
 }
 
