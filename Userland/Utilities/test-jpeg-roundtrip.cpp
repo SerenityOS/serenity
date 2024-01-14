@@ -51,32 +51,46 @@ static ErrorOr<float> perceived_distance_in_sRGB(Gfx::Color a, Gfx::Color b)
     return DeltaE(TRY(sRGB->to_lab(array_a)), TRY(sRGB->to_lab(array_b)));
 }
 
-static ErrorOr<void> test(Gfx::Color color)
+struct Stats {
+    float max_delta {};
+    int max_number_of_iterations {};
+};
+
+static ErrorOr<void> test(Gfx::Color color, Stats& stats)
 {
     auto fixpoint = TRY(compute_fixpoint(color));
 
     float perceived_distance = TRY(perceived_distance_in_sRGB(color, fixpoint.fixpoint));
 
     outln("color {} converges to {} after saving {} times, delta {}", color, fixpoint.fixpoint, fixpoint.number_of_iterations, perceived_distance);
+
+    stats.max_delta = max(stats.max_delta, perceived_distance);
+    stats.max_number_of_iterations = max(stats.max_number_of_iterations, fixpoint.number_of_iterations);
+
     return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(test(Gfx::Color::Red));
-    TRY(test(Gfx::Color::Green));
-    TRY(test(Gfx::Color::Blue));
+    Stats stats;
 
-    TRY(test(Gfx::Color::MidRed));
-    TRY(test(Gfx::Color::MidGreen));
-    TRY(test(Gfx::Color::MidBlue));
+    TRY(test(Gfx::Color::Red, stats));
+    TRY(test(Gfx::Color::Green, stats));
+    TRY(test(Gfx::Color::Blue, stats));
 
-    TRY(test(Gfx::Color::Cyan));
-    TRY(test(Gfx::Color::Magenta));
-    TRY(test(Gfx::Color::Yellow));
+    TRY(test(Gfx::Color::MidRed, stats));
+    TRY(test(Gfx::Color::MidGreen, stats));
+    TRY(test(Gfx::Color::MidBlue, stats));
 
-    TRY(test(Gfx::Color::Black));
-    TRY(test(Gfx::Color::White));
+    TRY(test(Gfx::Color::Cyan, stats));
+    TRY(test(Gfx::Color::Magenta, stats));
+    TRY(test(Gfx::Color::Yellow, stats));
+
+    TRY(test(Gfx::Color::Black, stats));
+    TRY(test(Gfx::Color::White, stats));
+
+    outln();
+    outln("max delta {}, max number of iterations {}", stats.max_delta, stats.max_number_of_iterations);
 
     return 0;
 }
