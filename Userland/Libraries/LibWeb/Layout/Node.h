@@ -160,8 +160,6 @@ public:
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
 
-    CSSPixelPoint box_type_agnostic_position() const;
-
     enum class SelectionState {
         None,        // No selection
         Start,       // Selection starts in this Node

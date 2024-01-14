@@ -186,6 +186,8 @@ public:
 
     PaintableBox const* nearest_scrollable_ancestor_within_stacking_context() const;
 
+    CSSPixelPoint box_type_agnostic_position() const;
+
 protected:
     explicit Paintable(Layout::Node const&);
 

@@ -131,4 +131,28 @@ PaintableBox const* Paintable::nearest_scrollable_ancestor_within_stacking_conte
     return nullptr;
 }
 
+CSSPixelPoint Paintable::box_type_agnostic_position() const
+{
+    if (is_paintable_box())
+        return static_cast<PaintableBox const*>(this)->absolute_position();
+
+    VERIFY(is_inline());
+    if (is_inline_paintable()) {
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*this);
+        if (!inline_paintable.fragments().is_empty())
+            return inline_paintable.fragments().first().absolute_rect().location();
+        VERIFY_NOT_REACHED();
+    }
+
+    CSSPixelPoint position;
+    if (auto const* block = containing_block(); block && block->paintable() && is<Painting::PaintableWithLines>(*block->paintable())) {
+        static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
+            position = fragment.absolute_rect().location();
+            return IterationDecision::Break;
+        });
+    }
+
+    return position;
+}
+
 }

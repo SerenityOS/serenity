@@ -251,29 +251,6 @@ void Node::set_needs_display()
     });
 }
 
-CSSPixelPoint Node::box_type_agnostic_position() const
-{
-    if (is<Box>(*this))
-        return verify_cast<Box>(*this).paintable_box()->absolute_position();
-    VERIFY(is_inline());
-
-    if (paintable() && paintable()->is_inline_paintable()) {
-        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable());
-        if (!inline_paintable.fragments().is_empty())
-            return inline_paintable.fragments().first().absolute_rect().location();
-        VERIFY_NOT_REACHED();
-    }
-
-    CSSPixelPoint position;
-    if (auto const* block = containing_block(); block && block->paintable() && is<Painting::PaintableWithLines>(*block->paintable())) {
-        static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
-            position = fragment.absolute_rect().location();
-            return IterationDecision::Break;
-        });
-    }
-    return position;
-}
-
 bool Node::is_floating() const
 {
     if (!has_style())
