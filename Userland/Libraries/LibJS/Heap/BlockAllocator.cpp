@@ -16,7 +16,7 @@
 #endif
 
 // FIXME: Implement MADV_FREE and/or MADV_DONTNEED on SerenityOS.
-#if defined(AK_OS_SERENITY) || (!defined(MADV_FREE) && !defined(MADV_DONTNEED))
+#if defined(AK_OS_SERENITY) || defined(AK_OS_GNU_HURD) || (!defined(MADV_FREE) && !defined(MADV_DONTNEED))
 #    define USE_FALLBACK_BLOCK_DEALLOCATION
 #endif
 
