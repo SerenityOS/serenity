@@ -11,15 +11,16 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, Vector<FATLongFileNameEntry> const& lfn_entries)
+ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& lfn_entries)
 {
     auto filename = TRY(compute_filename(entry, lfn_entries));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, move(filename)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename)));
 }
 
-FATInode::FATInode(FATFS& fs, FATEntry entry, NonnullOwnPtr<KString> filename)
+FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename)
     : Inode(fs, first_cluster(fs.m_fat_version))
     , m_entry(entry)
+    , m_inode_metadata_location(inode_metadata_location)
     , m_filename(move(filename))
 {
     dbgln_if(FAT_DEBUG, "FATFS: Creating inode {} with filename \"{}\"", index(), m_filename);
@@ -160,9 +161,15 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
             dbgln_if(FAT_DEBUG, "FATFS: Invalid cluster for entry");
             return EINVAL;
         } else {
-            dbgln_if(FAT_DEBUG, "FATFS: Found 8.3 entry");
+            auto entry_number_bytes = i * sizeof(FATEntry);
+            auto block = m_block_list[entry_number_bytes / fs().m_device_block_size];
+
+            auto entries_per_sector = fs().m_device_block_size / sizeof(FATEntry);
+            u32 block_entry = i % entries_per_sector;
+
+            dbgln_if(FAT_DEBUG, "FATFS: Found 8.3 entry at block {}, entry {}", block, block_entry);
             lfn_entries.reverse();
-            auto inode = TRY(FATInode::create(fs(), *entry, lfn_entries));
+            auto inode = TRY(FATInode::create(fs(), *entry, { block, block_entry }, lfn_entries));
             if (TRY(callback(inode)))
                 return inode;
             lfn_entries.clear();

@@ -237,7 +237,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
     }
 
     root_entry.attributes = FATAttributes::Directory;
-    m_root_inode = TRY(FATInode::create(*this, root_entry));
+    m_root_inode = TRY(FATInode::create(*this, root_entry, { 0, 1 }));
 
     return {};
 }
