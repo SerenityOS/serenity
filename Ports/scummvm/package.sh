@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='scummvm'
 useconfigure='true'
-version='2.7.1'
+version='2.8.0'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#d6bbf62e33154759a609d59f3034d71652ecdb64ed5c800156718ab1f1d5d063"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#d6e9fbee06a924706635dea225dfd560ff6770f35aa99d59570a3eb883795a72"
 )
 depends=(
     'freetype'
