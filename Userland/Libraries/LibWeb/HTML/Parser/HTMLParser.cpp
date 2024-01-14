@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -2729,12 +2729,6 @@ void HTMLParser::handle_text(HTMLToken& token)
 
     // -> An end tag whose tag name is "script"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::script) {
-        // https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-html
-        // Before any script execution occurs, the user agent must wait for scripts may run for the newly-created document to be true for document.
-        if (!m_document->ready_to_run_scripts()) {
-            main_thread_event_loop().spin_until([&] { return m_document->ready_to_run_scripts(); });
-        }
-
         // FIXME: If the active speculative HTML parser is null and the JavaScript execution context stack is empty, then perform a microtask checkpoint.
 
         // Non-standard: Make sure the <script> element has up-to-date text content before preparing the script.
