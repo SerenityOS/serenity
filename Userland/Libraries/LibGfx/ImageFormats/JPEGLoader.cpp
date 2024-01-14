@@ -447,7 +447,7 @@ struct JPEGLoadingContext {
     Array<Optional<Array<u16, 64>>, 4> quantization_tables {};
 
     StartOfFrame frame;
-    SamplingFactors sampling_factors { 0 };
+    SamplingFactors sampling_factors {};
 
     Optional<Scan> current_scan {};
 
