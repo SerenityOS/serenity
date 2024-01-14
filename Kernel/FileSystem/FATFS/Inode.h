@@ -16,19 +16,24 @@
 
 namespace Kernel {
 
+struct FATEntryLocation {
+    BlockBasedFileSystem::BlockIndex block;
+    u32 entry;
+};
+
 class FATInode final : public Inode {
     friend FATFS;
 
 public:
     virtual ~FATInode() override = default;
 
-    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, Vector<FATLongFileNameEntry> const& = {});
+    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, FATEntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& = {});
 
     FATFS& fs() { return static_cast<FATFS&>(Inode::fs()); }
     FATFS const& fs() const { return static_cast<FATFS const&>(Inode::fs()); }
 
 private:
-    FATInode(FATFS&, FATEntry, NonnullOwnPtr<KString> filename);
+    FATInode(FATFS&, FATEntry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename);
 
     // Returns cluster number value that indicates the end of the chain
     // has been reached. Any cluster value >= this value indicates this
@@ -73,6 +78,7 @@ private:
 
     Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
     FATEntry m_entry;
+    FATEntryLocation m_inode_metadata_location;
     NonnullOwnPtr<KString> m_filename;
     InodeMetadata m_metadata;
 };
