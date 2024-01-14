@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     TestAES.cpp
     TestASN1.cpp
+    TestBigFraction.cpp
     TestBigInteger.cpp
     TestChecksum.cpp
     TestChaCha20.cpp
