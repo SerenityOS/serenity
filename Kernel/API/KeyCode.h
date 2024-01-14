@@ -152,7 +152,7 @@ enum KeyCode : u8 {
         Key_Shift
     = Key_LeftShift,
 };
-int const key_code_count = Key_Menu;
+size_t const key_code_count = Key_Menu + 1;
 
 enum KeyModifier {
     Mod_None = 0x00,

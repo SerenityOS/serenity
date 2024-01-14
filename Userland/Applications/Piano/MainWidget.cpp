@@ -189,7 +189,7 @@ void MainWidget::turn_off_pressed_keys()
 {
     if (m_keys_widget->mouse_note() != -1)
         m_track_manager.keyboard()->set_keyboard_note_in_active_octave(m_keys_widget->mouse_note(), DSP::Keyboard::Switch::Off);
-    for (int i = 0; i < key_code_count; ++i) {
+    for (size_t i = 0u; i < key_code_count; ++i) {
         if (m_keys_pressed[i])
             note_key_action(i, DSP::Keyboard::Switch::Off);
     }
@@ -199,7 +199,7 @@ void MainWidget::turn_on_pressed_keys()
 {
     if (m_keys_widget->mouse_note() != -1)
         m_track_manager.keyboard()->set_keyboard_note_in_active_octave(m_keys_widget->mouse_note(), DSP::Keyboard::Switch::On);
-    for (int i = 0; i < key_code_count; ++i) {
+    for (size_t i = 0u; i < key_code_count; ++i) {
         if (m_keys_pressed[i])
             note_key_action(i, DSP::Keyboard::Switch::On);
     }
