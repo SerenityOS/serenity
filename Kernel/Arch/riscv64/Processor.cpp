@@ -116,10 +116,53 @@ FlatPtr ProcessorBase<T>::init_context(Thread&, bool)
     TODO_RISCV64();
 }
 
+// FIXME: Figure out if we can fully share this code with x86.
 template<typename T>
-void ProcessorBase<T>::exit_trap(TrapFrame&)
+void ProcessorBase<T>::exit_trap(TrapFrame& trap)
 {
-    TODO_RISCV64();
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
+
+    // Temporarily enter a critical section. This is to prevent critical
+    // sections entered and left within e.g. smp_process_pending_messages
+    // to trigger a context switch while we're executing this function
+    // See the comment at the end of the function why we don't use
+    // ScopedCritical here.
+    m_in_critical = m_in_critical + 1;
+
+    // FIXME: Figure out if we need prev_irq_level, see duplicated code in Kernel/Arch/x86/common/Processor.cpp
+    m_in_irq = 0;
+
+    // Process the deferred call queue. Among other things, this ensures
+    // that any pending thread unblocks happen before we enter the scheduler.
+    m_deferred_call_pool.execute_pending();
+
+    auto* current_thread = Processor::current_thread();
+    if (current_thread) {
+        auto& current_trap = current_thread->current_trap();
+        current_trap = trap.next_trap;
+        ExecutionMode new_previous_mode;
+        if (current_trap) {
+            VERIFY(current_trap->regs);
+            new_previous_mode = current_trap->regs->previous_mode();
+        } else {
+            // If we don't have a higher level trap then we're back in user mode.
+            // Which means that the previous mode prior to being back in user mode was kernel mode
+            new_previous_mode = ExecutionMode::Kernel;
+        }
+
+        if (current_thread->set_previous_mode(new_previous_mode))
+            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), true, false);
+    }
+
+    VERIFY_INTERRUPTS_DISABLED();
+
+    // Leave the critical section without actually enabling interrupts.
+    // We don't want context switches to happen until we're explicitly
+    // triggering a switch in check_invoke_scheduler.
+    m_in_critical = m_in_critical - 1;
+    if (!m_in_irq && !m_in_critical)
+        check_invoke_scheduler();
 }
 
 template<typename T>
