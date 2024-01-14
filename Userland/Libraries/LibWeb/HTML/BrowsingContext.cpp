@@ -297,6 +297,8 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_last_child);
     visitor.visit(m_next_sibling);
     visitor.visit(m_previous_sibling);
+
+    m_event_handler.visit_edges(visitor);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#bc-traversable

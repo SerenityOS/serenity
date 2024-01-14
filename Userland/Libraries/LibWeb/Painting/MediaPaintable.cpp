@@ -284,7 +284,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousedown(Badge<E
     }
 
     if (media_element.layout_mouse_tracking_component({}).has_value())
-        const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(&layout_node());
+        const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_paintable(this);
 
     return DispatchEventOfSameName::Yes;
 }
@@ -306,7 +306,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
             break;
         }
 
-        const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(nullptr);
+        const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_paintable(nullptr);
         media_element.set_layout_mouse_tracking_component({}, {});
 
         return DispatchEventOfSameName::Yes;

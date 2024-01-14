@@ -836,9 +836,9 @@ bool EventHandler::handle_keyup(KeyCode key, u32 modifiers, u32 code_point)
     return fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
 }
 
-void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
+void EventHandler::set_mouse_event_tracking_paintable(Painting::Paintable* paintable)
 {
-    m_mouse_event_tracking_layout_node = layout_node;
+    m_mouse_event_tracking_paintable = paintable;
 }
 
 CSSPixelPoint EventHandler::compute_mouse_event_client_offset(CSSPixelPoint event_page_position) const
@@ -880,17 +880,22 @@ CSSPixelPoint EventHandler::compute_mouse_event_movement(CSSPixelPoint screen_po
 
 Optional<EventHandler::Target> EventHandler::target_for_mouse_position(CSSPixelPoint position)
 {
-    if (m_mouse_event_tracking_layout_node) {
-        if (m_mouse_event_tracking_layout_node->paintable()->wants_mouse_events())
-            return Target { m_mouse_event_tracking_layout_node->paintable(), {} };
+    if (m_mouse_event_tracking_paintable) {
+        if (m_mouse_event_tracking_paintable->wants_mouse_events())
+            return Target { m_mouse_event_tracking_paintable, {} };
 
-        m_mouse_event_tracking_layout_node = nullptr;
+        m_mouse_event_tracking_paintable = nullptr;
     }
 
     if (auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact); result.has_value())
         return Target { result->paintable.ptr(), result->index_in_node };
 
     return {};
+}
+
+void EventHandler::visit_edges(JS::Cell::Visitor& visitor) const
+{
+    visitor.visit(m_mouse_event_tracking_paintable);
 }
 
 }

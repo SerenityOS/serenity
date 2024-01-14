@@ -42,7 +42,7 @@ LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousedown
 
     set_being_pressed(true);
     m_tracking_mouse = true;
-    browsing_context().event_handler().set_mouse_event_tracking_layout_node(&layout_box());
+    browsing_context().event_handler().set_mouse_event_tracking_paintable(this);
     return DispatchEventOfSameName::Yes;
 }
 
@@ -57,7 +57,7 @@ LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mouseup(B
 
     set_being_pressed(false);
     m_tracking_mouse = false;
-    browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
+    browsing_context().event_handler().set_mouse_event_tracking_paintable(nullptr);
     return DispatchEventOfSameName::Yes;
 }
 
