@@ -340,3 +340,47 @@ struct AK::Formatter<Kernel::RISCV64::CSR::SSTATUS> : AK::Formatter<FormatString
         return {};
     }
 };
+
+template<>
+struct AK::Formatter<Kernel::RISCV64::CSR::SCAUSE> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::RISCV64::CSR::SCAUSE value)
+    {
+        switch (value) {
+        case Kernel::RISCV64::CSR::SCAUSE::SupervisorSoftwareInterrupt:
+            return builder.put_string("Supervisor software interrupt"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::SupervisorTimerInterrupt:
+            return builder.put_string("Supervisor timer interrupt"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt:
+            return builder.put_string("Supervisor external interrupt"sv);
+
+        case Kernel::RISCV64::CSR::SCAUSE::InstructionAddressMisaligned:
+            return builder.put_string("Instruction address misaligned"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::InstructionAccessFault:
+            return builder.put_string("Instruction access fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::IllegalInstrction:
+            return builder.put_string("Illegal instruction"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::Breakpoint:
+            return builder.put_string("Breakpoint"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::LoadAddressMisaligned:
+            return builder.put_string("Load address misaligned"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::LoadAccessFault:
+            return builder.put_string("Load access fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOAddressMisaligned:
+            return builder.put_string("Store/AMO address misaligned"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOAccessFault:
+            return builder.put_string("Store/AMO access fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::EnvironmentCallFromUMode:
+            return builder.put_string("Environment call from U-mode"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::EnvironmentCallFromSMode:
+            return builder.put_string("Environment call from S-mode"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::InstructionPageFault:
+            return builder.put_string("Instruction page fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::LoadPageFault:
+            return builder.put_string("Load page fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOPageFault:
+            return builder.put_string("Store/AMO page fault"sv);
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
