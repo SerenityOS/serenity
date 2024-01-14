@@ -24,7 +24,8 @@ PaintableFragment::PaintableFragment(Layout::LineBoxFragment const& fragment)
 CSSPixelRect const PaintableFragment::absolute_rect() const
 {
     CSSPixelRect rect { {}, size() };
-    rect.set_location(m_layout_node->containing_block()->paintable_box()->absolute_position());
+    if (m_layout_node->containing_block() && m_layout_node->containing_block()->paintable_box())
+        rect.set_location(m_layout_node->containing_block()->paintable_box()->absolute_position());
     rect.translate_by(offset());
     return rect;
 }

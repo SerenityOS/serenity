@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/Layout/VideoBox.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 
 namespace Web::HTML {
@@ -102,8 +103,8 @@ void HTMLVideoElement::set_video_track(JS::GCPtr<HTML::VideoTrack> video_track)
 void HTMLVideoElement::set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame, double position)
 {
     m_current_frame = { move(frame), position };
-    if (layout_node())
-        layout_node()->set_needs_display();
+    if (paintable())
+        paintable()->set_needs_display();
 }
 
 void HTMLVideoElement::on_playing()

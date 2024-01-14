@@ -1177,14 +1177,14 @@ void Document::set_inspected_node(Node* node, Optional<CSS::Selector::PseudoElem
     if (m_inspected_node.ptr() == node && m_inspected_pseudo_element == pseudo_element)
         return;
 
-    if (auto layout_node = inspected_layout_node())
-        layout_node->set_needs_display();
+    if (auto layout_node = inspected_layout_node(); layout_node && layout_node->paintable())
+        layout_node->paintable()->set_needs_display();
 
     m_inspected_node = node;
     m_inspected_pseudo_element = pseudo_element;
 
-    if (auto layout_node = inspected_layout_node())
-        layout_node->set_needs_display();
+    if (auto layout_node = inspected_layout_node(); layout_node && layout_node->paintable())
+        layout_node->paintable()->set_needs_display();
 }
 
 Layout::Node* Document::inspected_layout_node()
@@ -1736,8 +1736,8 @@ void Document::set_focused_element(Element* element)
         m_focused_element->set_needs_style_update(true);
     }
 
-    if (m_layout_root)
-        m_layout_root->set_needs_display();
+    if (paintable())
+        paintable()->set_needs_display();
 
     // Scroll the viewport if necessary to make the newly focused element visible.
     if (m_focused_element) {
@@ -1755,8 +1755,8 @@ void Document::set_active_element(Element* element)
 
     m_active_element = element;
 
-    if (m_layout_root)
-        m_layout_root->set_needs_display();
+    if (paintable())
+        paintable()->set_needs_display();
 }
 
 void Document::set_target_element(Element* element)
@@ -1772,8 +1772,8 @@ void Document::set_target_element(Element* element)
     if (m_target_element)
         m_target_element->set_needs_style_update(true);
 
-    if (m_layout_root)
-        m_layout_root->set_needs_display();
+    if (paintable())
+        paintable()->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-indicated-part-of-the-document

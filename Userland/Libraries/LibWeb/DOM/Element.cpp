@@ -588,8 +588,8 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
     if (!invalidation.rebuild_layout_tree && layout_node()) {
         // If we're keeping the layout tree, we can just apply the new style to the existing layout tree.
         layout_node()->apply_style(*m_computed_css_values);
-        if (invalidation.repaint)
-            layout_node()->set_needs_display();
+        if (invalidation.repaint && paintable())
+            paintable()->set_needs_display();
     }
 
     return invalidation;

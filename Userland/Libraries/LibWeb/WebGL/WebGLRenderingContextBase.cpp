@@ -8,6 +8,7 @@
 #include <LibGL/GLContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/WebGL/WebGLRenderingContextBase.h>
 
 namespace Web::WebGL {
@@ -99,9 +100,9 @@ void WebGLRenderingContextBase::needs_to_present()
 {
     m_should_present = true;
 
-    if (!canvas_element().layout_node())
+    if (!canvas_element().paintable())
         return;
-    canvas_element().layout_node()->set_needs_display();
+    canvas_element().paintable()->set_needs_display();
 }
 
 void WebGLRenderingContextBase::set_error(GLenum error)

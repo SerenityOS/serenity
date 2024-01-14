@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::HTML {
 
@@ -78,8 +79,8 @@ void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<String> 
     } else if (name.equals_ignoring_ascii_case("background"sv)) {
         m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value.value_or(String {})));
         m_background_style_value->on_animate = [this] {
-            if (layout_node()) {
-                layout_node()->set_needs_display();
+            if (paintable()) {
+                paintable()->set_needs_display();
             }
         };
     }

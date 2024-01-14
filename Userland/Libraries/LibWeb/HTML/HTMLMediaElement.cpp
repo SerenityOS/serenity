@@ -35,6 +35,7 @@
 #include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::HTML {
@@ -325,8 +326,8 @@ void HTMLMediaElement::set_duration(double duration)
 
     m_duration = duration;
 
-    if (auto* layout_node = this->layout_node())
-        layout_node->set_needs_display();
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_display();
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
@@ -424,8 +425,8 @@ void HTMLMediaElement::volume_or_muted_attribute_changed()
 
     // FIXME: Then, if the media element is not allowed to play, the user agent must run the internal pause steps for the media element.
 
-    if (auto* layout_node = this->layout_node())
-        layout_node->set_needs_display();
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_display();
 
     on_volume_change();
 }
@@ -1586,8 +1587,8 @@ void HTMLMediaElement::set_show_poster(bool show_poster)
 
     m_show_poster = show_poster;
 
-    if (auto* layout_node = this->layout_node())
-        layout_node->set_needs_display();
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_display();
 }
 
 void HTMLMediaElement::set_paused(bool paused)
@@ -1600,8 +1601,8 @@ void HTMLMediaElement::set_paused(bool paused)
     if (m_paused)
         on_paused();
 
-    if (auto* layout_node = this->layout_node())
-        layout_node->set_needs_display();
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_display();
     set_needs_style_update(true);
 }
 
@@ -1928,8 +1929,8 @@ void HTMLMediaElement::set_layout_display_time(Badge<Painting::MediaPaintable>, 
 
     m_display_time = move(display_time);
 
-    if (auto* layout_node = this->layout_node())
-        layout_node->set_needs_display();
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_display();
 }
 
 double HTMLMediaElement::layout_display_time(Badge<Painting::MediaPaintable>) const

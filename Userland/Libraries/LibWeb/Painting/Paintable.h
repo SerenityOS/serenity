@@ -165,7 +165,9 @@ public:
     [[nodiscard]] HTML::BrowsingContext const& browsing_context() const;
     [[nodiscard]] HTML::BrowsingContext& browsing_context();
 
-    void set_needs_display() const { const_cast<Layout::Node&>(*m_layout_node).set_needs_display(); }
+    JS::GCPtr<HTML::Navigable> navigable() const;
+
+    virtual void set_needs_display() const;
 
     Layout::Box const* containing_block() const
     {
