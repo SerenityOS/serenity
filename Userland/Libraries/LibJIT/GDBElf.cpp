@@ -26,7 +26,7 @@ Optional<FixedArray<u8>> build_gdb_image(ReadonlyBytes code, StringView file_sym
     auto const text = sections.build_nobits([&](Elf64_Shdr& text) {
         text.sh_name = section_names.insert(".text"sv);
         text.sh_flags = SHF_EXECINSTR | SHF_ALLOC;
-        text.sh_addr = bit_cast<u64>(code.offset(0));
+        text.sh_addr = bit_cast<uintptr_t>(code.offset(0));
         text.sh_size = code.size();
         text.sh_link = 0;
         text.sh_info = 0;
