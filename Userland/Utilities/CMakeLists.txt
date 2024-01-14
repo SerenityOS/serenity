@@ -7,7 +7,7 @@ list(APPEND REQUIRED_TARGETS
     touch tr true umount uname uniq uptime w wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
-    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip init install keymap lsirq lsof lspci lzcat man mknod mktemp
+    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip init install keymap lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
     nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
@@ -120,6 +120,7 @@ target_link_libraries(man PRIVATE LibMarkdown LibManual)
 target_link_libraries(markdown-check PRIVATE LibFileSystem LibMarkdown LibManual)
 target_link_libraries(matroska PRIVATE LibVideo)
 target_link_libraries(md PRIVATE LibMarkdown)
+target_link_libraries(mkfs.fat PRIVATE LibFileSystem)
 target_link_libraries(mktemp PRIVATE LibFileSystem)
 target_link_libraries(mv PRIVATE LibFileSystem)
 target_link_libraries(notify PRIVATE LibGfx LibGUI)
