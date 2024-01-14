@@ -12,6 +12,7 @@
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Page/EditEventHandler.h>
@@ -33,9 +34,11 @@ public:
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
 
-    void set_mouse_event_tracking_layout_node(Layout::Node*);
+    void set_mouse_event_tracking_paintable(Painting::Paintable*);
 
     void set_edit_event_handler(NonnullOwnPtr<EditEventHandler> value) { m_edit_event_handler = move(value); }
+
+    void visit_edges(JS::Cell::Visitor& visitor) const;
 
 private:
     bool focus_next_element();
@@ -59,7 +62,7 @@ private:
 
     bool m_in_mouse_selection { false };
 
-    WeakPtr<Layout::Node> m_mouse_event_tracking_layout_node;
+    JS::GCPtr<Painting::Paintable> m_mouse_event_tracking_paintable;
 
     NonnullOwnPtr<EditEventHandler> m_edit_event_handler;
 
