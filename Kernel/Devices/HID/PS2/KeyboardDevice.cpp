@@ -50,7 +50,7 @@ static constexpr KeyCodeEntry unshifted_scan_code_set1_key_map[0x80] = {
 
 // clang-format off
 static constexpr KeyCodeEntry shifted_scan_code_set1_key_map[0x100] = {
-    { Key_Invalid, 0xFF },        { Key_Escape, 1 },                    { Key_Escape, 2 },                { Key_AtSign, 3 },
+    { Key_Invalid, 0xFF },        { Key_Escape, 1 },                    { Key_ExclamationPoint, 2 },      { Key_AtSign, 3 },
     { Key_Hashtag, 4 },           { Key_Dollar, 5 },                    { Key_Percent, 6 },               { Key_Circumflex, 7 },
     { Key_Ampersand, 8 },         { Key_Asterisk, 9 },                  { Key_LeftParen, 0x0A },          { Key_RightParen, 0x0B },
     { Key_Underscore, 0xC },      { Key_Plus, 0x4E },                   { Key_Backspace, 0x0E },          { Key_Tab, 0x0F },
