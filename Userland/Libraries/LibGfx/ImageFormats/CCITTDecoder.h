@@ -23,4 +23,26 @@ namespace Gfx::CCITT {
 // Section 10: Modified Huffman Compression
 ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height);
 
+// While this is named for a CCITT context, this struct holds data like TIFF's T4Options tag
+struct Group3Options {
+    enum class Mode : u8 {
+        OneDimension,
+        TwoDimensions,
+    };
+
+    enum class Compression : u8 {
+        Uncompressed,
+        Compressed,
+    };
+
+    enum class UseFillBits : u8 {
+        No = 0,
+        Yes = 1,
+    };
+
+    Mode dimensions = Mode::OneDimension;
+    Compression compression = Compression::Compressed;
+    UseFillBits use_fill_bits = UseFillBits::No;
+};
+
 }
