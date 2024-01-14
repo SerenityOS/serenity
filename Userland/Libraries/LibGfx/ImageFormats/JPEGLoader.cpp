@@ -1586,6 +1586,51 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
     }
 }
 
+static void undo_subsampling(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    // The first component has sampling factors of context.sampling_factors, while the others
+    // are either 1x1 or for the 4th component also context.sampling_factors. See
+    // read_start_of_frame() which currently enforces these restrictions.
+    // This function undoes the subsampling by duplicating the values of the smaller components.
+    // See https://www.w3.org/Graphics/JPEG/itu-t81.pdf, A.2 Order of source image data encoding.
+    //
+    // FIXME: Allow more combinations of sampling factors.
+    // See https://calendar.perfplanet.com/2015/why-arent-your-images-using-chroma-subsampling/ for
+    // subsampling factors visble on the web. In PDF files, YCCK 2111 and 2112 and CMYK 2111 and 2112 are also present.
+    for (u32 component_i = 0; component_i < context.components.size(); component_i++) {
+        auto& component = context.components[component_i];
+        if (component.sampling_factors == context.sampling_factors)
+            continue;
+
+        for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
+            for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
+                u32 const component_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
+                Macroblock& component_block = macroblocks[component_block_index];
+                auto* block_component_source = get_component(component_block, component_i);
+
+                // Overflows are intentional.
+                for (u8 vfactor_i = context.sampling_factors.vertical - 1; vfactor_i < context.sampling_factors.vertical; --vfactor_i) {
+                    for (u8 hfactor_i = context.sampling_factors.horizontal - 1; hfactor_i < context.sampling_factors.horizontal; --hfactor_i) {
+                        u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
+                        Macroblock& block = macroblocks[macroblock_index];
+                        auto* block_component_destination = get_component(block, component_i);
+                        for (u8 i = 7; i < 8; --i) {
+                            for (u8 j = 7; j < 8; --j) {
+                                u8 const pixel = i * 8 + j;
+                                // The component is 8x8 subsampled 2x2. Upsample its 2x2 4x4 tiles.
+                                u32 const component_pxrow = (i / context.sampling_factors.vertical) + 4 * vfactor_i;
+                                u32 const component_pxcol = (j / context.sampling_factors.horizontal) + 4 * hfactor_i;
+                                u32 const component_pixel = component_pxrow * 8 + component_pxcol;
+                                block_component_destination[pixel] = block_component_source[component_pixel];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
@@ -1593,24 +1638,18 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
     // 7 - Conversion to and from RGB
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            u32 const chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
-            Macroblock const& chroma = macroblocks[chroma_block_index];
-            // Overflows are intentional.
-            for (u8 vfactor_i = context.sampling_factors.vertical - 1; vfactor_i < context.sampling_factors.vertical; --vfactor_i) {
-                for (u8 hfactor_i = context.sampling_factors.horizontal - 1; hfactor_i < context.sampling_factors.horizontal; --hfactor_i) {
+            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
                     u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     auto* y = macroblocks[macroblock_index].y;
                     auto* cb = macroblocks[macroblock_index].cb;
                     auto* cr = macroblocks[macroblock_index].cr;
-                    for (u8 i = 7; i < 8; --i) {
-                        for (u8 j = 7; j < 8; --j) {
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
                             u8 const pixel = i * 8 + j;
-                            u32 const chroma_pxrow = (i / context.sampling_factors.vertical) + 4 * vfactor_i;
-                            u32 const chroma_pxcol = (j / context.sampling_factors.horizontal) + 4 * hfactor_i;
-                            u32 const chroma_pixel = chroma_pxrow * 8 + chroma_pxcol;
-                            int r = y[pixel] + 1.402f * (chroma.cr[chroma_pixel] - 128);
-                            int g = y[pixel] - 0.3441f * (chroma.cb[chroma_pixel] - 128) - 0.7141f * (chroma.cr[chroma_pixel] - 128);
-                            int b = y[pixel] + 1.772f * (chroma.cb[chroma_pixel] - 128);
+                            int r = y[pixel] + 1.402f * (cr[pixel] - 128);
+                            int g = y[pixel] - 0.3441f * (cb[pixel] - 128) - 0.7141f * (cr[pixel] - 128);
+                            int b = y[pixel] + 1.772f * (cb[pixel] - 128);
                             y[pixel] = clamp(r, 0, 255);
                             cb[pixel] = clamp(g, 0, 255);
                             cr[pixel] = clamp(b, 0, 255);
@@ -1934,6 +1973,7 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     auto macroblocks = TRY(construct_macroblocks(context));
     TRY(dequantize(context, macroblocks));
     inverse_dct(context, macroblocks);
+    undo_subsampling(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
     if (context.components.size() == 4)
         TRY(compose_cmyk_bitmap(context, macroblocks));
