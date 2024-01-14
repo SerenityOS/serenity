@@ -78,15 +78,24 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(test(Gfx::Color::Green, stats));
     TRY(test(Gfx::Color::Blue, stats));
 
+    TRY(test(Gfx::Color::LightBlue, stats));
+
     TRY(test(Gfx::Color::MidRed, stats));
     TRY(test(Gfx::Color::MidGreen, stats));
     TRY(test(Gfx::Color::MidBlue, stats));
+
+    TRY(test(Gfx::Color::DarkRed, stats));
+    TRY(test(Gfx::Color::DarkGreen, stats));
+    TRY(test(Gfx::Color::DarkBlue, stats));
 
     TRY(test(Gfx::Color::Cyan, stats));
     TRY(test(Gfx::Color::Magenta, stats));
     TRY(test(Gfx::Color::Yellow, stats));
 
     TRY(test(Gfx::Color::Black, stats));
+    TRY(test(Gfx::Color::DarkGray, stats));
+    TRY(test(Gfx::Color::MidGray, stats));
+    TRY(test(Gfx::Color::LightGray, stats));
     TRY(test(Gfx::Color::White, stats));
 
     outln();
