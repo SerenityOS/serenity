@@ -101,15 +101,77 @@ public:
             },
             .hide_mode = hide_mode });
     }
+
+    template<Integral I>
+    void add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None)
+    {
+        Option option {
+            OptionArgumentMode::Required,
+            help_string,
+            long_name,
+            short_name,
+            value_name,
+            [&value](StringView view) -> ErrorOr<bool> {
+                Optional<I> opt = view.to_number<I>();
+                value = opt.value_or(0);
+                return opt.has_value();
+            },
+            hide_mode,
+        };
+        add_option(move(option));
+    }
+
+    template<Integral I>
+    void add_option(Optional<I>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None)
+    {
+
+        Option option {
+            OptionArgumentMode::Required,
+            help_string,
+            long_name,
+            short_name,
+            value_name,
+            [&value](StringView view) -> ErrorOr<bool> {
+                value = view.to_number<I>();
+                return value.has_value();
+            },
+            hide_mode,
+        };
+        add_option(move(option));
+    }
+
+    template<Integral I>
+    void add_option(Vector<I>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None)
+    {
+
+        Option option {
+            OptionArgumentMode::Required,
+            help_string,
+            long_name,
+            short_name,
+            value_name,
+            [&values, separator](StringView s) -> ErrorOr<bool> {
+                bool parsed_all_values = true;
+
+                s.for_each_split_view(separator, SplitBehavior::Nothing, [&](auto value) {
+                    if (auto maybe_value = value.template to_number<I>(); maybe_value.has_value())
+                        values.append(*maybe_value);
+                    else
+                        parsed_all_values = false;
+                });
+
+                return parsed_all_values;
+            },
+            hide_mode
+        };
+
+        add_option(move(option));
+    }
     void add_option(ByteString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    template<Integral I>
-    void add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
     // Note: This option is being used when we expect the user to use the same option
     // multiple times (e.g. "program --option=example --option=anotherexample ...").
     void add_option(Vector<ByteString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
@@ -119,7 +181,21 @@ public:
     void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(String& value, char const* help_string, char const* name, Required required = Required::Yes);
     template<Integral I>
-    void add_positional_argument(I& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(I& value, char const* help_string, char const* name, Required required = Required::Yes)
+    {
+        Arg arg {
+            help_string,
+            name,
+            required == Required::Yes ? 1 : 0,
+            1,
+            [&value](StringView view) -> ErrorOr<bool> {
+                Optional<I> opt = view.to_number<I>();
+                value = opt.value_or(0);
+                return opt.has_value();
+            },
+        };
+        add_positional_argument(move(arg));
+    }
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<ByteString>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
