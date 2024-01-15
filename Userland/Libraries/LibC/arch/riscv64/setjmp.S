@@ -34,9 +34,9 @@ sigsetjmp:
     sd a0, 0(sp)
     sd ra, 8(sp)
 
-    li a0, 0                             // Set argument how
-    li a1, 0                             // Set argument set
     addi a2, a0, SAVED_SIGNAL_MASK_SLOT  // Set argument oldset
+    li a1, 0                             // Set argument set
+    li a0, 0                             // Set argument how
     call sigprocmask@plt
 
     ld ra, 8(sp)
