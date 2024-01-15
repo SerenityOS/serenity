@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     Optional<ByteString> final_file_template;
-    Optional<ByteString> final_target_directory;
+    ByteString final_target_directory = target_directory;
 
     if (target_directory.is_empty()) {
         if (!file_template.is_empty()) {
@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto target_path = LexicalPath::join(final_target_directory.value(), final_file_template.value()).string();
+    auto target_path = LexicalPath::join(final_target_directory, final_file_template.value()).string();
 
     auto final_path = TRY(make_temp(target_path, create_directory, dry_run));
     if (!final_path.has_value()) {
