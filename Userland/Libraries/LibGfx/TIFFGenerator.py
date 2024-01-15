@@ -51,7 +51,7 @@ class Predictor(EnumWithExportName):
 
 class Compression(EnumWithExportName):
     NoCompression = 1
-    CCITT = 2
+    CCITTRLE = 2
     Group3Fax = 3
     Group4Fax = 4
     LZW = 5

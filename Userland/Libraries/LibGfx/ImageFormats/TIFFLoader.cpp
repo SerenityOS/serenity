@@ -281,17 +281,17 @@ private:
             TRY(loop_over_pixels(move(identity)));
             break;
         }
-        case Compression::CCITT: {
+        case Compression::CCITTRLE: {
             TRY(ensure_tags_are_correct_for_ccitt());
 
             ByteBuffer decoded_bytes {};
-            auto decode_ccitt_1D_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+            auto decode_ccitt_rle_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
-                decoded_bytes = TRY(CCITT::decode_ccitt3_1d(encoded_bytes, *m_metadata.image_width(), *m_metadata.rows_per_strip()));
+                decoded_bytes = TRY(CCITT::decode_ccitt_rle(encoded_bytes, *m_metadata.image_width(), *m_metadata.rows_per_strip()));
                 return decoded_bytes;
             };
 
-            TRY(loop_over_pixels(move(decode_ccitt_1D_strip)));
+            TRY(loop_over_pixels(move(decode_ccitt_rle_strip)));
             break;
         }
         case Compression::LZW: {
