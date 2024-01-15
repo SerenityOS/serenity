@@ -71,33 +71,33 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(target_directory, "Create TEMPLATE relative to DIR", "tmpdir", 'p', "DIR");
     args_parser.parse(arguments);
 
-    Optional<String> final_file_template;
-    Optional<String> final_target_directory;
+    Optional<ByteString> final_file_template;
+    Optional<ByteString> final_target_directory;
 
     if (target_directory.is_empty()) {
         if (!file_template.is_empty()) {
             auto resolved_path = LexicalPath(TRY(FileSystem::absolute_path(file_template)));
-            final_target_directory = TRY(String::from_utf8(resolved_path.dirname()));
-            final_file_template = TRY(String::from_utf8(resolved_path.basename()));
+            final_target_directory = resolved_path.dirname();
+            final_file_template = resolved_path.basename();
         } else {
-            final_target_directory = "/tmp"_string;
+            final_target_directory = "/tmp";
             auto const* env_directory = getenv("TMPDIR");
             if (env_directory != nullptr && *env_directory != 0)
-                final_target_directory = TRY(String::from_utf8({ env_directory, strlen(env_directory) }));
+                final_target_directory = ByteString { env_directory, strlen(env_directory) };
         }
     }
 
     if (!final_file_template.has_value()) {
-        final_file_template = "tmp.XXXXXXXXXX"_string;
+        final_file_template = "tmp.XXXXXXXXXX";
     }
 
-    if (!final_file_template->find_byte_offset("XXX"sv).has_value()) {
+    if (!final_file_template->find("XXX"sv).has_value()) {
         if (!quiet)
             warnln("Too few X's in template {}", final_file_template);
         return 1;
     }
 
-    auto target_path = LexicalPath::join(final_target_directory->to_byte_string(), final_file_template->to_byte_string()).string();
+    auto target_path = LexicalPath::join(final_target_directory.value(), final_file_template.value()).string();
 
     auto final_path = TRY(make_temp(target_path, create_directory, dry_run));
     if (!final_path.has_value()) {
