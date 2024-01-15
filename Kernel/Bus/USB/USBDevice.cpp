@@ -83,7 +83,7 @@ ErrorOr<void> Device::enumerate_device()
 
     // Send 8-bytes to get at least the `max_packet_size` from the device
     constexpr u8 short_device_descriptor_length = 8;
-    auto transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor));
+    auto transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, to_underlying(DescriptorType::Device) << 8, 0, short_device_descriptor_length, &dev_descriptor));
 
     // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
     if (transfer_length < short_device_descriptor_length) {
@@ -94,7 +94,7 @@ ErrorOr<void> Device::enumerate_device()
     if constexpr (USB_DEBUG) {
         dbgln("USB Short Device Descriptor:");
         dbgln("Descriptor length: {}", dev_descriptor.descriptor_header.length);
-        dbgln("Descriptor type: {}", dev_descriptor.descriptor_header.descriptor_type);
+        dbgln("Descriptor type: {}", to_underlying(dev_descriptor.descriptor_header.descriptor_type));
 
         dbgln("Device Class: {:02x}", dev_descriptor.device_class);
         dbgln("Device Sub-Class: {:02x}", dev_descriptor.device_sub_class);
@@ -103,10 +103,10 @@ ErrorOr<void> Device::enumerate_device()
     }
 
     // Ensure that this is actually a valid device descriptor...
-    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DescriptorType::Device);
     m_default_pipe->set_max_packet_size(dev_descriptor.max_packet_size);
 
-    transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
+    transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, to_underlying(DescriptorType::Device) << 8, 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
 
     // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
     if (transfer_length < sizeof(USBDeviceDescriptor)) {
@@ -115,7 +115,7 @@ ErrorOr<void> Device::enumerate_device()
     }
 
     // Ensure that this is actually a valid device descriptor...
-    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DescriptorType::Device);
 
     if constexpr (USB_DEBUG) {
         dbgln("USB Device Descriptor for {:04x}:{:04x}", dev_descriptor.vendor_id, dev_descriptor.product_id);
@@ -144,7 +144,7 @@ ErrorOr<void> Device::enumerate_device()
     m_configurations.ensure_capacity(m_device_descriptor.num_configurations);
     for (auto configuration = 0u; configuration < m_device_descriptor.num_configurations; configuration++) {
         USBConfigurationDescriptor configuration_descriptor;
-        transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
+        transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, to_underlying(DescriptorType::Configuration) << 8u | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
 
         if constexpr (USB_DEBUG) {
             dbgln("USB Configuration Descriptor {}", configuration);

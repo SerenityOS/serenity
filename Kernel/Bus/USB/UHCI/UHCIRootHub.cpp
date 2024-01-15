@@ -17,7 +17,7 @@ namespace Kernel::USB {
 static USBDeviceDescriptor uhci_root_hub_device_descriptor = {
     {
         sizeof(USBDeviceDescriptor), // 18 bytes long
-        DESCRIPTOR_TYPE_DEVICE,
+        DescriptorType::Device,
     },
     0x0110, // USB 1.1
     (u8)USB_CLASS_HUB,
@@ -36,7 +36,7 @@ static USBDeviceDescriptor uhci_root_hub_device_descriptor = {
 static USBConfigurationDescriptor uhci_root_hub_configuration_descriptor = {
     {
         sizeof(USBConfigurationDescriptor), // 9 bytes long
-        DESCRIPTOR_TYPE_CONFIGURATION,
+        DescriptorType::Configuration,
     },
     sizeof(USBConfigurationDescriptor) + sizeof(USBInterfaceDescriptor) + sizeof(USBEndpointDescriptor), // Combined length of configuration, interface and endpoint and descriptors.
     1,                                                                                                   // One interface descriptor
@@ -49,7 +49,7 @@ static USBConfigurationDescriptor uhci_root_hub_configuration_descriptor = {
 static USBInterfaceDescriptor uhci_root_hub_interface_descriptor = {
     {
         sizeof(USBInterfaceDescriptor), // 9 bytes long
-        DESCRIPTOR_TYPE_INTERFACE,
+        DescriptorType::Interface,
     },
     0, // Interface #0
     0, // Alternate setting
@@ -63,7 +63,7 @@ static USBInterfaceDescriptor uhci_root_hub_interface_descriptor = {
 static USBEndpointDescriptor uhci_root_hub_endpoint_descriptor = {
     {
         sizeof(USBEndpointDescriptor), // 7 bytes long
-        DESCRIPTOR_TYPE_ENDPOINT,
+        DescriptorType::Endpoint,
     },
     USBEndpoint::ENDPOINT_ADDRESS_DIRECTION_IN | 1,           // IN Endpoint #1
     USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_INTERRUPT, // Interrupt endpoint
@@ -75,7 +75,7 @@ static USBEndpointDescriptor uhci_root_hub_endpoint_descriptor = {
 static USBHubDescriptor uhci_root_hub_hub_descriptor = {
     {
         sizeof(USBHubDescriptor), // 7 bytes long. FIXME: Add the size of the VLAs at the end once they're supported.
-        DESCRIPTOR_TYPE_HUB,
+        DescriptorType::Hub,
     },
     UHCIController::NUMBER_OF_ROOT_PORTS, // 2 ports
     0x0,                                  // Ganged power switching, not a compound device, global over-current protection.
@@ -148,12 +148,12 @@ ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
     case HubRequest::GET_DESCRIPTOR: {
         u8 descriptor_type = request.value >> 8;
         switch (descriptor_type) {
-        case DESCRIPTOR_TYPE_DEVICE:
+        case to_underlying(DescriptorType::Device):
             length = min(transfer.transfer_data_size(), sizeof(USBDeviceDescriptor));
             VERIFY(length <= sizeof(USBDeviceDescriptor));
             memcpy(request_data, (void*)&uhci_root_hub_device_descriptor, length);
             break;
-        case DESCRIPTOR_TYPE_CONFIGURATION: {
+        case to_underlying(DescriptorType::Configuration): {
             auto index = 0u;
 
             // Send over the whole descriptor chain
@@ -166,17 +166,17 @@ ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
             memcpy(request_data + index, (void*)&uhci_root_hub_endpoint_descriptor, sizeof(USBEndpointDescriptor));
             break;
         }
-        case DESCRIPTOR_TYPE_INTERFACE:
+        case to_underlying(DescriptorType::Interface):
             length = min(transfer.transfer_data_size(), sizeof(USBInterfaceDescriptor));
             VERIFY(length <= sizeof(USBInterfaceDescriptor));
             memcpy(request_data, (void*)&uhci_root_hub_interface_descriptor, length);
             break;
-        case DESCRIPTOR_TYPE_ENDPOINT:
+        case to_underlying(DescriptorType::Endpoint):
             length = min(transfer.transfer_data_size(), sizeof(USBEndpointDescriptor));
             VERIFY(length <= sizeof(USBEndpointDescriptor));
             memcpy(request_data, (void*)&uhci_root_hub_endpoint_descriptor, length);
             break;
-        case DESCRIPTOR_TYPE_HUB:
+        case to_underlying(DescriptorType::Hub):
             length = min(transfer.transfer_data_size(), sizeof(USBHubDescriptor));
             VERIFY(length <= sizeof(USBHubDescriptor));
             memcpy(request_data, (void*)&uhci_root_hub_hub_descriptor, length);

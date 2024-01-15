@@ -46,14 +46,14 @@ ErrorOr<void> SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
     TRY(obj.add("serial_number_descriptor_index"sv, m_device->device_descriptor().serial_number_descriptor_index));
     TRY(obj.add("num_configurations"sv, m_device->device_descriptor().num_configurations));
     TRY(obj.add("length"sv, m_device->device_descriptor().descriptor_header.length));
-    TRY(obj.add("descriptor_type"sv, m_device->device_descriptor().descriptor_header.descriptor_type));
+    TRY(obj.add("descriptor_type"sv, to_underlying(m_device->device_descriptor().descriptor_header.descriptor_type)));
 
     auto configuration_array = TRY(obj.add_array("configurations"sv));
     for (auto const& configuration : m_device->configurations()) {
         auto configuration_object = TRY(configuration_array.add_object());
         auto const& configuration_descriptor = configuration.descriptor();
         TRY(configuration_object.add("length"sv, configuration_descriptor.descriptor_header.length));
-        TRY(configuration_object.add("descriptor_type"sv, configuration_descriptor.descriptor_header.descriptor_type));
+        TRY(configuration_object.add("descriptor_type"sv, to_underlying(configuration_descriptor.descriptor_header.descriptor_type)));
         TRY(configuration_object.add("total_length"sv, configuration_descriptor.total_length));
         TRY(configuration_object.add("number_of_interfaces"sv, configuration_descriptor.number_of_interfaces));
         TRY(configuration_object.add("attributes_bitmap"sv, configuration_descriptor.attributes_bitmap));
@@ -64,7 +64,7 @@ ErrorOr<void> SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
             auto interface_object = TRY(interface_array.add_object());
             auto const& interface_descriptor = interface.descriptor();
             TRY(interface_object.add("length"sv, interface_descriptor.descriptor_header.length));
-            TRY(interface_object.add("descriptor_type"sv, interface_descriptor.descriptor_header.descriptor_type));
+            TRY(interface_object.add("descriptor_type"sv, to_underlying(interface_descriptor.descriptor_header.descriptor_type)));
             TRY(interface_object.add("interface_number"sv, interface_descriptor.interface_id));
             TRY(interface_object.add("alternate_setting"sv, interface_descriptor.alternate_setting));
             TRY(interface_object.add("num_endpoints"sv, interface_descriptor.number_of_endpoints));
@@ -77,7 +77,7 @@ ErrorOr<void> SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
             for (auto const& endpoint : interface.endpoints()) {
                 auto endpoint_object = TRY(endpoint_array.add_object());
                 TRY(endpoint_object.add("length"sv, endpoint.descriptor_header.length));
-                TRY(endpoint_object.add("descriptor_length"sv, endpoint.descriptor_header.descriptor_type));
+                TRY(endpoint_object.add("descriptor_length"sv, to_underlying(endpoint.descriptor_header.descriptor_type)));
                 TRY(endpoint_object.add("endpoint_address"sv, endpoint.endpoint_address));
                 TRY(endpoint_object.add("attribute_bitmap"sv, endpoint.endpoint_attributes_bitmap));
                 TRY(endpoint_object.add("max_packet_size"sv, endpoint.max_packet_size));

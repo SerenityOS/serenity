@@ -12,45 +12,62 @@
 namespace Kernel::USB {
 
 // USB 2.0 Specification Page 421 Table 11-16
+// USB 3.2 Specification Page 440 Table 10-8.  Hub Class Request Codes
 enum HubRequest : u8 {
     GET_STATUS = 0,
     CLEAR_FEATURE = 1,
-    // 2 is reserved.
+    // 2 is reserved. aka GET_STATE
     SET_FEATURE = 3,
     // 4-5 are reserved.
     GET_DESCRIPTOR = 6,
     SET_DESCRIPTOR = 7,
-    CLEAR_TT_BUFFER = 8,
-    RESET_TT = 9,
-    GET_TT_STATE = 10,
-    STOP_TT = 11,
+    CLEAR_TT_BUFFER = 8, // USB 2.0 only
+    RESET_TT = 9,        // USB 2.0 only
+    GET_TT_STATE = 10,   // USB 2.0 only
+    STOP_TT = 11,        // USB 2.0 only
+    // USB 3.2:
+    SET_HUB_DEPTH = 12,
+    GET_PORT_ERR_COUNT = 13
 };
 
 // USB 2.0 Specification Pages 421-422 Table 11-17
+// USB 3.2 Specification Page 441      Table 10-9.  Hub Class Feature Selectors
 enum HubFeatureSelector : u8 {
+    // Hub:
     C_HUB_LOCAL_POWER = 0,
     C_HUB_OVER_CURRENT = 1,
+    // Port:
     PORT_CONNECTION = 0,
-    PORT_ENABLE = 1,
-    PORT_SUSPEND = 2,
+    PORT_ENABLE = 1,  // Maybe USB 2.0 only
+    PORT_SUSPEND = 2, // Maybe USB 2.0 only
     PORT_OVER_CURRENT = 3,
     PORT_RESET = 4,
+    PORT_LINK_STATE = 5,
     PORT_POWER = 8,
-    PORT_LOW_SPEED = 9,
+    PORT_LOW_SPEED = 9, // Maybe USB 2.0 only
     C_PORT_CONNECTION = 16,
-    C_PORT_ENABLE = 17,
-    C_PORT_SUSPEND = 18,
+    C_PORT_ENABLE = 17,  // Maybe USB 2.0 only
+    C_PORT_SUSPEND = 18, // Maybe USB 2.0 only
     C_PORT_OVER_CURRENT = 19,
     C_PORT_RESET = 20,
-    PORT_TEST = 21,
-    PORT_INDICATOR = 22,
+    PORT_TEST = 21,      // USB 2.0 only
+    PORT_INDICATOR = 22, // Maybe USB 2.0 only
+    // USB 3.2:
+    PORT_U1_TIMEOUT = 23,
+    PORT_U2_TIMEOUT = 24,
+    C_PORT_LINK_STATE = 25,
+    C_PORT_CONFIG_ERROR = 26,
+    PORT_REMOTE_WAKE_MASK = 27,
+    BH_PORT_RESET = 28,
+    C_BH_PORT_RESET = 29,
+    FORCE_LINKPM_ACCEPT = 30,
 };
 
 // USB 2.0 Specification Section 11.24.2.{6,7}
 // This is used to store both the hub status and port status, as they have the same layout.
 struct [[gnu::packed]] HubStatus {
-    u16 status { 0 };
-    u16 change { 0 };
+    u16 status { 0 }; // wHubStatus
+    u16 change { 0 }; // wHubChange
 };
 static_assert(AssertSize<HubStatus, 4>());
 

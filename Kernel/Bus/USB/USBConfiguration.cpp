@@ -20,7 +20,7 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
     // The USB spec is a little bit janky here... Interface and Endpoint descriptors aren't fetched
     // through a `GET_DESCRIPTOR` request to the device. Instead, the _entire_ hierarchy is returned
     // to us in one go.
-    auto transfer_length = TRY(m_device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8), 0, m_descriptor.total_length, descriptor_hierarchy_buffer.data()));
+    auto transfer_length = TRY(m_device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, to_underlying(DescriptorType::Configuration) << 8, 0, m_descriptor.total_length, descriptor_hierarchy_buffer.data()));
 
     // FIXME: Why does transfer length return the actual size +8 bytes?
     if (transfer_length < m_descriptor.total_length)
