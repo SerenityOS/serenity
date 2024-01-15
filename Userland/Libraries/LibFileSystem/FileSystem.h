@@ -19,7 +19,7 @@ namespace FileSystem {
 #define DEFAULT_PATH_SV "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv
 
 ErrorOr<ByteString> current_working_directory();
-ErrorOr<String> absolute_path(StringView path);
+ErrorOr<ByteString> absolute_path(StringView path);
 ErrorOr<String> real_path(StringView path);
 
 bool exists(StringView path);

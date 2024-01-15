@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 
-    Optional<String> path = {};
+    Optional<ByteString> path = {};
 
     if (auto error_or_path = FileSystem::absolute_path(file_to_edit); !file_to_edit.is_empty() && !error_or_path.is_error())
         path = error_or_path.release_value();
@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // Note: This is deferred to ensure that the window has already popped and any error dialog boxes would show up correctly.
         app->event_loop().deferred_invoke(
             [&window, &path, &main_widget]() {
-                auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.value().to_byte_string());
+                auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.value());
                 if (!response.is_error()) {
                     auto load_from_file_result = main_widget->load_from_file(response.value().filename(), response.value().release_stream());
                     if (load_from_file_result.is_error())
