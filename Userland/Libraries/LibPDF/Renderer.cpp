@@ -503,6 +503,7 @@ RENDERER_HANDLER(text_next_line_offset)
     Gfx::AffineTransform transform(1.0f, 0.0f, 0.0f, 1.0f, args[0].to_float(), args[1].to_float());
     m_text_line_matrix.multiply(transform);
     m_text_matrix = m_text_line_matrix;
+    m_text_rendering_matrix_is_dirty = true;
     return {};
 }
 
