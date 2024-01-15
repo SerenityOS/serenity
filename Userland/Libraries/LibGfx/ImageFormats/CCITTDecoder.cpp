@@ -264,35 +264,21 @@ Optional<Code> get_terminal_code(Color color, u16 code_word, u8 code_size)
     return get_code_from_table(black_terminating_codes, code_word, code_size);
 }
 
-}
-
-ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height)
+ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width)
 {
-    auto strip_stream = make<FixedMemoryStream>(bytes);
-    auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
-
-    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8)));
-    auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
-    auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
     auto const ccitt_white = Color::NamedColor::White;
     auto const ccitt_black = Color::NamedColor::Black;
 
-    Color current_color { ccitt_black };
-    u32 run_length {};
-
+    Color current_color { ccitt_white };
+    u32 run_length = 0;
     u32 column = 0;
 
-    while (!bit_stream->is_eof() || run_length > 0) {
+    while (column < image_width) {
         if (run_length > 0) {
             run_length--;
-            TRY(decoded_bits->write_bits(current_color == ccitt_white ? 0u : 1u, 1));
+            TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
 
             ++column;
-            if (column == image_width) {
-                column = 0;
-                bit_stream->align_to_byte_boundary();
-                TRY(decoded_bits->align_to_byte_boundary());
-            }
             continue;
         }
 
@@ -306,7 +292,7 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
         u16 potential_code {};
         while (size < 14) {
             potential_code <<= 1;
-            potential_code |= TRY(bit_stream->read_bit());
+            potential_code |= TRY(input_bit_stream.read_bit());
             size++;
 
             if (auto const maybe_markup = get_markup_code(current_color, potential_code, size); maybe_markup.has_value()) {
@@ -325,6 +311,27 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
 
         if (column + run_length > image_width)
             return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT codes encode for more that a line");
+    }
+
+    return {};
+}
+
+}
+
+ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height)
+{
+    auto strip_stream = make<FixedMemoryStream>(bytes);
+    auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
+
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8)));
+    auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
+    auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
+
+    while (!bit_stream->is_eof()) {
+        TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
+
+        bit_stream->align_to_byte_boundary();
+        TRY(decoded_bits->align_to_byte_boundary());
     }
 
     return decoded_bytes;
