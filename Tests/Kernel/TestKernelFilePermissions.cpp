@@ -81,9 +81,7 @@ TEST_CASE(test_change_file_location)
     ftruncate(fd, 0);
     EXPECT(fchmod(fd, 06755) != -1);
 
-    auto suid_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-
-    auto suid_path = suid_path_string.to_byte_string();
+    auto suid_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
     EXPECT(suid_path.characters());
     auto new_path = ByteString::formatted("{}.renamed", suid_path);
 

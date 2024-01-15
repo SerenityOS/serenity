@@ -173,17 +173,17 @@ bool is_link(int fd)
     return S_ISLNK(st.st_mode);
 }
 
-static ErrorOr<String> get_duplicate_file_name(StringView path)
+static ErrorOr<ByteString> get_duplicate_file_name(StringView path)
 {
     int duplicate_count = 0;
     LexicalPath lexical_path(path);
     auto parent_path = LexicalPath::canonicalized_path(lexical_path.dirname());
     auto basename = lexical_path.basename();
-    auto current_name = TRY(String::from_byte_string(LexicalPath::join(parent_path, basename).string()));
+    auto current_name = LexicalPath::join(parent_path, basename).string();
 
     while (exists(current_name)) {
         ++duplicate_count;
-        current_name = TRY(String::from_byte_string(LexicalPath::join(parent_path, TRY(String::formatted("{} ({})", basename, duplicate_count))).string()));
+        current_name = LexicalPath::join(parent_path, ByteString::formatted("{} ({})", basename, duplicate_count)).string();
     }
 
     return current_name;
@@ -196,7 +196,7 @@ ErrorOr<void> copy_file(StringView destination_path, StringView source_path, str
         if (destination_or_error.error().code() != EISDIR)
             return destination_or_error.release_error();
 
-        auto destination_dir_path = TRY(String::formatted("{}/{}", destination_path, LexicalPath::basename(source_path)));
+        auto destination_dir_path = ByteString::formatted("{}/{}", destination_path, LexicalPath::basename(source_path));
         destination_or_error = TRY(Core::File::open(destination_dir_path, Core::File::OpenMode::Write, 0666));
     }
     auto destination = destination_or_error.release_value();
@@ -257,10 +257,10 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
         return di.error();
 
     while (di.has_next()) {
-        auto filename = TRY(String::from_byte_string(di.next_path()));
+        auto filename = di.next_path();
         TRY(copy_file_or_directory(
-            TRY(String::formatted("{}/{}", destination_path, filename)),
-            TRY(String::formatted("{}/{}", source_path, filename)),
+            ByteString::formatted("{}/{}", destination_path, filename),
+            ByteString::formatted("{}/{}", source_path, filename),
             RecursionMode::Allowed, link, AddDuplicateFileMarker::Yes, preserve_mode));
     }
 
@@ -290,11 +290,11 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
 
 ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView source_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)
 {
-    String final_destination_path;
+    ByteString final_destination_path;
     if (add_duplicate_file_marker == AddDuplicateFileMarker::Yes)
         final_destination_path = TRY(get_duplicate_file_name(destination_path));
     else
-        final_destination_path = TRY(String::from_utf8(destination_path));
+        final_destination_path = destination_path;
 
     auto source = TRY(Core::File::open(source_path, Core::File::OpenMode::Read));
 
@@ -383,9 +383,9 @@ bool can_delete_or_move(StringView path)
     return user_id == 0 || directory_stat.st_uid == user_id || stat_or_empty(path).st_uid == user_id;
 }
 
-ErrorOr<String> read_link(StringView link_path)
+ErrorOr<ByteString> read_link(StringView link_path)
 {
-    return TRY(String::from_byte_string(TRY(Core::System::readlink(link_path))));
+    return Core::System::readlink(link_path);
 }
 
 ErrorOr<void> link_file(StringView destination_path, StringView source_path)

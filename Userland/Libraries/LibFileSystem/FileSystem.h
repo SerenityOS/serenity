@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/Error.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/File.h>
 #include <sys/stat.h>
@@ -74,7 +74,7 @@ ErrorOr<void> remove(StringView path, RecursionMode);
 ErrorOr<size_t> size(StringView path);
 bool can_delete_or_move(StringView path);
 
-ErrorOr<String> read_link(StringView link_path);
+ErrorOr<ByteString> read_link(StringView link_path);
 ErrorOr<void> link_file(StringView destination_path, StringView source_path);
 
 bool looks_like_shared_library(StringView path);

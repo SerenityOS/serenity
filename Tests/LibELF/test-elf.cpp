@@ -58,8 +58,7 @@ TEST_CASE(test_interp_header_tiny_p_filesz)
     int nwritten = write(fd, buffer, sizeof(buffer));
     EXPECT(nwritten);
 
-    auto elf_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-    auto elf_path = elf_path_string.to_byte_string();
+    auto elf_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
     EXPECT(elf_path.characters());
 
     int rc = execl(elf_path.characters(), "test-elf", nullptr);
@@ -113,8 +112,7 @@ TEST_CASE(test_interp_header_p_filesz_larger_than_p_memsz)
     int nwritten = write(fd, buffer, sizeof(buffer));
     EXPECT(nwritten);
 
-    auto elf_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-    auto elf_path = elf_path_string.to_byte_string();
+    auto elf_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
     EXPECT(elf_path.characters());
 
     int rc = execl(elf_path.characters(), "test-elf", nullptr);
@@ -172,8 +170,7 @@ TEST_CASE(test_interp_header_p_filesz_plus_p_offset_overflow_p_memsz)
     int nwritten = write(fd, buffer, sizeof(buffer));
     EXPECT(nwritten);
 
-    auto elf_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-    auto elf_path = elf_path_string.to_byte_string();
+    auto elf_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
     EXPECT(elf_path.characters());
 
     int rc = execl(elf_path.characters(), "test-elf", nullptr);
@@ -228,8 +225,7 @@ TEST_CASE(test_load_header_p_memsz_zero)
     int nwritten = write(fd, buffer, sizeof(buffer));
     EXPECT(nwritten);
 
-    auto elf_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-    auto elf_path = elf_path_string.to_byte_string();
+    auto elf_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
     EXPECT(elf_path.characters());
 
     int rc = execl(elf_path.characters(), "test-elf", nullptr);
@@ -284,8 +280,7 @@ TEST_CASE(test_load_header_p_memsz_not_equal_to_p_align)
     int nwritten = write(fd, buffer, sizeof(buffer));
     EXPECT(nwritten);
 
-    auto elf_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-    auto elf_path = elf_path_string.to_byte_string();
+    auto elf_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
     EXPECT(elf_path.characters());
 
     int rc = execl(elf_path.characters(), "test-elf", nullptr);
