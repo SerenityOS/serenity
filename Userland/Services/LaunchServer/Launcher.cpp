@@ -309,7 +309,7 @@ void Launcher::for_each_handler_for_path(ByteString const& path, Function<bool(H
             return;
         }
 
-        auto link_target = LexicalPath { link_target_or_error.release_value().to_byte_string() };
+        auto link_target = LexicalPath { link_target_or_error.release_value() };
         LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path), link_target.string());
         auto real_path_or_error = FileSystem::real_path(absolute_link_target.string());
         if (real_path_or_error.is_error()) {

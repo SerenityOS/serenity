@@ -54,7 +54,7 @@ enum FollowSymlinks {
     No
 };
 
-static Vector<String> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No)
+static Vector<ByteString> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No)
 {
     // Edge cases in which there are guaranteed no solutions
     if (filename.is_empty() || filename.contains('/'))
@@ -65,10 +65,10 @@ static Vector<String> find_matching_executables_in_path(StringView filename, Fol
     if (path_str != nullptr) // maybe && *path_str
         path = { path_str, strlen(path_str) };
 
-    Vector<String> executables;
+    Vector<ByteString> executables;
     auto directories = path.split_view(':');
     for (auto directory : directories) {
-        auto file = String::formatted("{}/{}", directory, filename).release_value_but_fixme_should_propagate_errors();
+        auto file = ByteString::formatted("{}/{}", directory, filename);
 
         if (follow_symlinks == FollowSymlinks::Yes) {
             auto path_or_error = FileSystem::read_link(file);

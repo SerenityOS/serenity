@@ -86,8 +86,7 @@ TEST_CASE(test_mkstemp_unique_filename)
         auto fd = mkstemp(path);
         EXPECT_NE(fd, -1);
 
-        auto temp_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-        auto temp_path = temp_path_string.to_byte_string();
+        auto temp_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
         EXPECT(temp_path.characters());
 
         close(fd);
@@ -105,8 +104,7 @@ TEST_CASE(test_mkstemp_unique_filename)
         auto fd = mkstemp(path);
         EXPECT(fd != -1);
 
-        auto path2_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-        auto path2 = path2_string.to_byte_string();
+        auto path2 = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
         EXPECT(path2.characters());
 
         close(fd);
@@ -128,8 +126,7 @@ TEST_CASE(test_mkstemps_unique_filename)
         auto fd = mkstemps(path, 6);
         EXPECT_NE(fd, -1);
 
-        auto temp_path_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-        auto temp_path = temp_path_string.to_byte_string();
+        auto temp_path = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
         EXPECT(temp_path.characters());
 
         close(fd);
@@ -151,8 +148,7 @@ TEST_CASE(test_mkstemps_unique_filename)
         auto fd = mkstemps(path, 6);
         EXPECT(fd != -1);
 
-        auto path2_string = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
-        auto path2 = path2_string.to_byte_string();
+        auto path2 = TRY_OR_FAIL(FileSystem::read_link(ByteString::formatted("/proc/{}/fd/{}", getpid(), fd)));
         EXPECT(path2.characters());
 
         close(fd);

@@ -68,7 +68,7 @@ bool FileSystemModel::Node::fetch_data(ByteString const& full_path, bool is_root
         if (sym_link_target_or_error.is_error())
             perror("readlink");
         else {
-            symlink_target = sym_link_target_or_error.release_value().to_byte_string();
+            symlink_target = sym_link_target_or_error.release_value();
             if (symlink_target.is_empty())
                 perror("readlink");
         }

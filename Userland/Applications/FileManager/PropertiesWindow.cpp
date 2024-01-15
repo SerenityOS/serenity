@@ -170,9 +170,11 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
         } else {
             auto link_destination = link_destination_or_error.release_value();
             auto* link_location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("link_location");
-            link_location->set_text(link_destination);
+            // FIXME: How do we safely display some text that might not be utf8?
+            auto link_destination_string = TRY(String::from_byte_string(link_destination));
+            link_location->set_text(link_destination_string);
             link_location->on_click = [link_destination] {
-                auto link_directory = LexicalPath(link_destination.to_byte_string());
+                auto link_directory = LexicalPath(link_destination);
                 Desktop::Launcher::open(URL::create_with_file_scheme(link_directory.dirname(), link_directory.basename()));
             };
         }
