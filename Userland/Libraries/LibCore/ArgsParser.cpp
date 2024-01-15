@@ -490,33 +490,6 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
     add_option(move(option));
 }
 
-template<Integral I>
-void ArgsParser::add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        OptionArgumentMode::Required,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](StringView view) -> ErrorOr<bool> {
-            Optional<I> opt = view.to_number<I>();
-            value = opt.value_or(0);
-            return opt.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
-
-template void ArgsParser::add_option(i16&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(i32&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(i64&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(u8&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(u16&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(u32&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(u64&, char const*, char const*, char, char const*, OptionHideMode);
-
 void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
@@ -549,49 +522,6 @@ void ArgsParser::add_option(Optional<double>& value, char const* help_string, ch
         },
         hide_mode,
     };
-    add_option(move(option));
-}
-
-void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        OptionArgumentMode::Required,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](StringView s) -> ErrorOr<bool> {
-            value = s.to_number<size_t>();
-            return value.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
-
-void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator, OptionHideMode hide_mode)
-{
-    Option option {
-        OptionArgumentMode::Required,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&values, separator](StringView s) -> ErrorOr<bool> {
-            bool parsed_all_values = true;
-
-            s.for_each_split_view(separator, SplitBehavior::Nothing, [&](auto value) {
-                if (auto maybe_value = AK::StringUtils::convert_to_uint<size_t>(value); maybe_value.has_value())
-                    values.append(*maybe_value);
-                else
-                    parsed_all_values = false;
-            });
-
-            return parsed_all_values;
-        },
-        hide_mode
-    };
-
     add_option(move(option));
 }
 
@@ -662,32 +592,6 @@ void ArgsParser::add_positional_argument(String& value, char const* help_string,
     };
     add_positional_argument(move(arg));
 }
-
-template<Integral I>
-void ArgsParser::add_positional_argument(I& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](StringView view) -> ErrorOr<bool> {
-            Optional<I> opt = view.to_number<I>();
-            value = opt.value_or(0);
-            return opt.has_value();
-        },
-    };
-    add_positional_argument(move(arg));
-}
-
-template void ArgsParser::add_positional_argument(int&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(long&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(long long&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(short&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(unsigned&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(unsigned long&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(unsigned long long&, char const*, char const*, Required);
-template void ArgsParser::add_positional_argument(unsigned short&, char const*, char const*, Required);
 
 void ArgsParser::add_positional_argument(double& value, char const* help_string, char const* name, Required required)
 {
