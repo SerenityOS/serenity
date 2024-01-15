@@ -84,13 +84,12 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
 {
     auto const& descriptor = interface.descriptor();
     auto const& configuration = interface.configuration();
+    auto& controller = device.controller();
 
     if (descriptor.interface_sub_class_code != to_underlying(MassStorage::SubclassCode::SCSI_transparent))
         return ENOTSUP;
 
-    TRY(device.control_transfer(
-        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
-        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    TRY(controller.set_device_configuration(device, configuration));
 
     u8 max_luns;
     TRY(device.control_transfer(
@@ -128,8 +127,8 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         return ENOTSUP;
     }
 
-    auto in_pipe = TRY(BulkInPipe::create(device.controller(), in_pipe_address, in_max_packet_size, device.address()));
-    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), out_pipe_address, out_max_packet_size, device.address()));
+    auto in_pipe = TRY(BulkInPipe::create(controller, in_pipe_address, in_max_packet_size, device.address()));
+    auto out_pipe = TRY(BulkOutPipe::create(controller, out_pipe_address, out_max_packet_size, device.address()));
 
     CommandBlockWrapper command_block {};
     command_block.set_command(SCSI::ReadCapacity10 {});
@@ -152,7 +151,7 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
     dmesgln("    Total Size: {}MiB", (u64)capacity.block_size * capacity.block_count / MiB);
 
     StorageDevice::LUNAddress lun = {
-        device.controller().storage_controller_id(),
+        controller.storage_controller_id(),
         device.address(),
         // FIXME: Again, support multiple LUNs per device
         0

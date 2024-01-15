@@ -551,6 +551,14 @@ ErrorOr<void> UHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<
     return {};
 }
 
+ErrorOr<void> UHCIController::set_device_configuration(USB::Device& device, USBConfiguration const& configuration)
+{
+    TRY(device.control_transfer(
+        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    return {};
+}
+
 size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 {
     Transfer* transfer = transfer_queue.transfer();

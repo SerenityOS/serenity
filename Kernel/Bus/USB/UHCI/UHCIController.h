@@ -55,6 +55,8 @@ public:
     virtual ErrorOr<size_t> submit_bulk_transfer(Transfer& transfer) override;
     virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16 ms_interval) override;
 
+    virtual ErrorOr<void> set_device_configuration(USB::Device&, USBConfiguration const&) override;
+
     void get_port_status(Badge<UHCIRootHub>, u8, HubStatus&);
     ErrorOr<void> set_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
     ErrorOr<void> clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
