@@ -239,14 +239,15 @@ void HackStudioWidget::open_project(ByteString const& root_path)
 {
     if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
         return;
-    if (auto result = Core::System::chdir(root_path); result.is_error()) {
+    auto absolute_root_path = FileSystem::absolute_path(root_path).release_value_but_fixme_should_propagate_errors();
+    if (auto result = Core::System::chdir(absolute_root_path); result.is_error()) {
         warnln("Failed to open project: {}", result.release_error());
         exit(1);
     }
     if (m_project) {
         close_current_project();
     }
-    m_project = Project::open_with_root_path(root_path);
+    m_project = Project::open_with_root_path(absolute_root_path);
     VERIFY(m_project);
     m_project_builder = make<ProjectBuilder>(*m_terminal_wrapper, *m_project);
     if (m_project_tree_view) {
@@ -254,7 +255,7 @@ void HackStudioWidget::open_project(ByteString const& root_path)
         m_project_tree_view->update();
     }
     if (m_git_widget->initialized()) {
-        m_git_widget->change_repo(root_path);
+        m_git_widget->change_repo(absolute_root_path);
         m_git_widget->refresh();
     }
     if (Debugger::is_initialized()) {
@@ -275,8 +276,8 @@ void HackStudioWidget::open_project(ByteString const& root_path)
     };
 
     auto recent_projects = read_recent_projects();
-    recent_projects.remove_all_matching([&](auto& p) { return p == root_path; });
-    recent_projects.insert(0, root_path);
+    recent_projects.remove_all_matching([&](auto& p) { return p == absolute_root_path; });
+    recent_projects.insert(0, absolute_root_path);
     if (recent_projects.size() > recent_projects_history_size)
         recent_projects.shrink(recent_projects_history_size);
 
