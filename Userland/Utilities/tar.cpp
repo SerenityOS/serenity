@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("{}", filename);
 
             if (extract) {
-                ByteString absolute_path = TRY(FileSystem::absolute_path(filename)).to_byte_string();
+                auto absolute_path = TRY(FileSystem::absolute_path(filename));
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 

@@ -28,18 +28,16 @@ ErrorOr<ByteString> current_working_directory()
     return Core::System::getcwd();
 }
 
-ErrorOr<String> absolute_path(StringView path)
+ErrorOr<ByteString> absolute_path(StringView path)
 {
     if (exists(path))
-        return TRY(real_path(path));
+        return TRY(real_path(path)).to_byte_string();
 
     if (path.starts_with("/"sv))
-        return TRY(String::from_byte_string(LexicalPath::canonicalized_path(path)));
+        return LexicalPath::canonicalized_path(path);
 
     auto working_directory = TRY(current_working_directory());
-    auto full_path = LexicalPath::join(working_directory, path).string();
-
-    return TRY(String::from_byte_string(LexicalPath::canonicalized_path(full_path)));
+    return LexicalPath::absolute_path(working_directory, path);
 }
 
 ErrorOr<String> real_path(StringView path)

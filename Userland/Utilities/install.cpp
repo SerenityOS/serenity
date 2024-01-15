@@ -35,8 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ByteString destination_dir = (sources.size() > 1 ? ByteString { destination } : LexicalPath::dirname(destination));
 
     if (create_leading_dest_components) {
-        String destination_dir_absolute = TRY(FileSystem::absolute_path(destination_dir));
-        MUST(Core::Directory::create(destination_dir_absolute.to_byte_string(), Core::Directory::CreateDirectories::Yes));
+        auto destination_dir_absolute = TRY(FileSystem::absolute_path(destination_dir));
+        MUST(Core::Directory::create(destination_dir_absolute, Core::Directory::CreateDirectories::Yes));
     }
 
     for (auto const& source : sources) {

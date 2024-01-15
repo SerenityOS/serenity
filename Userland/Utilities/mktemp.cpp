@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (target_directory.is_empty()) {
         if (!file_template.is_empty()) {
-            auto resolved_path = LexicalPath(TRY(FileSystem::absolute_path(file_template)).to_byte_string());
+            auto resolved_path = LexicalPath(TRY(FileSystem::absolute_path(file_template)));
             final_target_directory = TRY(String::from_utf8(resolved_path.dirname()));
             final_file_template = TRY(String::from_utf8(resolved_path.basename()));
         } else {

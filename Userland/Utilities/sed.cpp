@@ -952,7 +952,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         pos_args.remove(0);
     }
 
-    HashMap<String, String> paths_to_unveil;
+    HashMap<ByteString, String> paths_to_unveil;
 
     for (auto const& input_filename : TRY(script.input_filenames())) {
         TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"_string : "r"_string));
