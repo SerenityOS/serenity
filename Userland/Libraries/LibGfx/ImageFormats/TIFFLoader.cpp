@@ -233,7 +233,7 @@ private:
         return Error::from_string_literal("Unsupported value for PhotometricInterpretation");
     }
 
-    template<CallableAs<ErrorOr<ReadonlyBytes>, u32> StripDecoder>
+    template<CallableAs<ErrorOr<ReadonlyBytes>, u32, u32> StripDecoder>
     ErrorOr<void> loop_over_pixels(StripDecoder&& strip_decoder)
     {
         auto const strips_offset = *m_metadata.strip_offsets();
@@ -244,7 +244,8 @@ private:
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
 
-            auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index]));
+            auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? *m_metadata.rows_per_strip() : *m_metadata.image_height() - *m_metadata.rows_per_strip() * strip_index;
+            auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index], rows_in_strip));
             auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
 
@@ -293,7 +294,7 @@ private:
     {
         switch (*m_metadata.compression()) {
         case Compression::NoCompression: {
-            auto identity = [&](u32 num_bytes) {
+            auto identity = [&](u32 num_bytes, u32) {
                 return m_stream->read_in_place<u8 const>(num_bytes);
             };
 
@@ -304,9 +305,9 @@ private:
             TRY(ensure_tags_are_correct_for_ccitt());
 
             ByteBuffer decoded_bytes {};
-            auto decode_ccitt_rle_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+            auto decode_ccitt_rle_strip = [&](u32 num_bytes, u32 image_height) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
-                decoded_bytes = TRY(CCITT::decode_ccitt_rle(encoded_bytes, *m_metadata.image_width(), *m_metadata.rows_per_strip()));
+                decoded_bytes = TRY(CCITT::decode_ccitt_rle(encoded_bytes, *m_metadata.image_width(), image_height));
                 return decoded_bytes;
             };
 
@@ -315,7 +316,7 @@ private:
         }
         case Compression::LZW: {
             ByteBuffer decoded_bytes {};
-            auto decode_lzw_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+            auto decode_lzw_strip = [&](u32 num_bytes, u32) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
 
                 if (encoded_bytes.is_empty())
@@ -343,7 +344,7 @@ private:
             // This is an extension from the Technical Notes from 2002:
             // https://web.archive.org/web/20160305055905/http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf
             ByteBuffer decoded_bytes {};
-            auto decode_zlib = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+            auto decode_zlib = [&](u32 num_bytes, u32) -> ErrorOr<ReadonlyBytes> {
                 auto stream = make<ConstrainedStream>(MaybeOwned<Stream>(*m_stream), num_bytes);
                 auto decompressed_stream = TRY(Compress::ZlibDecompressor::create(move(stream)));
                 decoded_bytes = TRY(decompressed_stream->read_until_eof(4096));
@@ -357,7 +358,7 @@ private:
             // Section 9: PackBits Compression
             ByteBuffer decoded_bytes {};
 
-            auto decode_packbits_strip = [&](u32 num_bytes) -> ErrorOr<ReadonlyBytes> {
+            auto decode_packbits_strip = [&](u32 num_bytes, u32) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
                 decoded_bytes = TRY(Compress::PackBits::decode_all(encoded_bytes));
                 return decoded_bytes;
