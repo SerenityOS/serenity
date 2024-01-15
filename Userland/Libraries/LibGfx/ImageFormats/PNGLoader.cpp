@@ -291,6 +291,8 @@ static_assert(AssertSize<Pixel, 4>());
 
 void PNGImageDecoderPlugin::unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel)
 {
+    // https://www.w3.org/TR/png-3/#9Filter-types
+    // "Filters are applied to bytes, not to pixels, regardless of the bit depth or colour type of the image."
     switch (filter) {
     case PNG::FilterType::None:
         break;
