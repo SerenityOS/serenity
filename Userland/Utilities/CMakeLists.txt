@@ -14,7 +14,8 @@ list(APPEND RECOMMENDED_TARGETS
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
 
 foreach(CMD_SRC ${CMD_SOURCES})
-    get_filename_component(CMD_NAME ${CMD_SRC} NAME_WE)
+    get_filename_component(CMD_NAME_WITH_EXTENSION ${CMD_SRC} NAME)
+    string(REPLACE ".cpp" "" CMD_NAME ${CMD_NAME_WITH_EXTENSION})
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
         set(TARGET_NAME "${CMD_NAME}-bin")
     else()
