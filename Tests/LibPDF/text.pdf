@@ -2,77 +2,51 @@
 %µ¶
 
 1 0 obj
-<<
-  /Type /Catalog
-  /Pages 2 0 R
->>
+<</Type/Catalog/Pages 2 0 R>>
 endobj
 
 2 0 obj
-<<
-  /Type /Pages
-  /Kids [ 3 0 R ]
-  /Count 1
->>
+<</Type/Pages/Kids[3 0 R]/Count 1>>
 endobj
 
 3 0 obj
-<<
-  /Type /Page
-  /Parent 2 0 R
-  /MediaBox [ 0 0 525 250 ]
-  /Contents 4 0 R
-  /Resources <<
-    /Font <<
-      /F1 5 0 R
-    >>
-  >>
->>
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 525 250]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>
 endobj
 
 4 0 obj
-<<
-  /Length 236
->>
+<</Length 291>>
 stream
 BT
-/F1 24 Tf
+/F1 25 Tf
 -30 TL
 40 40 Td
 [ (Hello) -2000 (World) ] TJ T*
 [ (Hello) -1000 -1000 (World) ] TJ T*
 [ (Hello) -1000 ] TJ [ -1000 ] TJ [ (World) ] TJ T*
+1 0 0 1 45 130 Tm [ 200 (Hello) -2000 (World) ] TJ T*
 (should be the same on all lines:) '
 (The distance between "Hello" and "World") '
 ET
+
 
 endstream
 endobj
 
 5 0 obj
-<<
-  /Type /Font
-  /Subtype /Type1
-  /Name /F1
-  /BaseFont /Helvetica
-  /Encoding /MacRomanEncoding
->>
+<</Type/Font/Subtype/Type1/Name/F1/BaseFont/Helvetica/Encoding/MacRomanEncoding>>
 endobj
 
 xref
 0 6
 0000000000 65536 f 
 0000000016 00000 n 
-0000000070 00000 n 
-0000000136 00000 n 
-0000000291 00000 n 
-0000000581 00000 n 
+0000000062 00000 n 
+0000000114 00000 n 
+0000000227 00000 n 
+0000000568 00000 n 
 
 trailer
-<<
-  /Size 6
-  /Root 1 0 R
->>
+<</Size 6/Root 1 0 R>>
 startxref
-700
+666
 %%EOF
