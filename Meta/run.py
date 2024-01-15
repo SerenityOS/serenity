@@ -619,13 +619,16 @@ def setup_display_device(config: Configuration):
 def setup_boot_drive(config: Configuration):
     provided_nvme_enable = environ.get("SERENITY_NVME_ENABLE")
     if provided_nvme_enable is not None:
-        config.nvme_enable = provided_nvme_enable == "1"
-    provided_usb_boot_enable = environ.get("SERENITY_USE_SDCARD")
-    if provided_usb_boot_enable is not None:
-        config.sd_enable = provided_usb_boot_enable == "1"
+        config.nvme_enable = provided_nvme_enable in ("1", "ON")
+    provided_sd_boot_enable = environ.get("SERENITY_USE_SDCARD")
+    if provided_sd_boot_enable is not None:
+        config.sd_enable = provided_sd_boot_enable in ("1", "ON")
+        config.nvme_enable = False
     provided_usb_boot_enable = environ.get("SERENITY_USE_USBDRIVE")
+    print(f"{provided_usb_boot_enable=}")
     if provided_usb_boot_enable is not None:
-        config.usb_boot_enable = provided_usb_boot_enable == "1"
+        config.usb_boot_enable = provided_usb_boot_enable in ("1", "ON")
+        config.nvme_enable = False
 
     if config.machine_type in [MachineType.MicroVM, MachineType.ISAPC]:
         if config.nvme_enable:
@@ -649,7 +652,7 @@ def setup_boot_drive(config: Configuration):
         config.kernel_cmdline.append("root=sd2:0:0")
     elif config.usb_boot_enable:
         config.boot_drive = f"if=none,id=usbstick,format=raw,file={config.disk_image}"
-        config.add_device("usb-storage,drive=usbstick")
+        config.add_devices(["qemu-xhci,p2=8,p3=8","usb-storage,drive=usbstick"])
         # FIXME: Find a better way to address the usb drive
         config.kernel_cmdline.append("root=block3:0")
     else:
@@ -767,7 +770,7 @@ def setup_machine_devices(config: Configuration):
                 ]
             )
             config.character_devices.append("stdio,id=stdout,mux=on")
-            config.enable_usb = True
+            # config.enable_usb = True
         case MachineType.MicroVM | MachineType.ISAPC:
             config.character_devices.append("stdio,id=stdout,mux=on")
             config.qemu_cpu = "qemu64"
@@ -813,7 +816,8 @@ def setup_machine_devices(config: Configuration):
                 ]
             )
             config.character_devices.append("stdio,id=stdout,mux=on")
-            config.enable_usb = True
+            # config.extra_arguments.extend(["-trace", "usb_xhci*"])
+            # config.enable_usb = True
 
     # Modifications for machine types that are *mostly* like the default,
     # but not entirely (especially in terms of networking).
