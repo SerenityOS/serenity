@@ -25,6 +25,7 @@ source_set("Painting") {
     "PaintContext.cpp",
     "Paintable.cpp",
     "PaintableBox.cpp",
+    "PaintableFragment.cpp",
     "PaintingCommandExecutorCPU.cpp",
     "RadioButtonPaintable.cpp",
     "RecordingPainter.cpp",
