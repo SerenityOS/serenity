@@ -1488,8 +1488,9 @@ void FlexFormattingContext::align_all_flex_lines()
             start_of_current_line = 0;
 
             auto leftover_free_space = cross_size_of_flex_container - sum_of_flex_line_cross_sizes;
-            if (leftover_free_space >= 0) {
-                int gap_count = m_flex_lines.size() - 1;
+            auto leftover_flex_lines_size = m_flex_lines.size();
+            if (leftover_free_space >= 0 && leftover_flex_lines_size > 1) {
+                int gap_count = leftover_flex_lines_size - 1;
                 gap_size = leftover_free_space / gap_count;
             }
             break;

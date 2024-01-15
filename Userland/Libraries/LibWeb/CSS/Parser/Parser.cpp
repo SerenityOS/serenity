@@ -6688,8 +6688,6 @@ LengthOrCalculated Parser::Parser::parse_as_sizes_attribute()
         auto context_window = m_context.window();
         if (context_window && media_condition && media_condition->evaluate(*context_window) == MatchResult::True) {
             return size.value();
-        } else {
-            continue;
         }
 
         // 5. If size is not auto, then return size.

@@ -250,10 +250,10 @@ static Painting::BorderRadiiData normalized_border_radii_data(Layout::Node const
     auto s_bottom = (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius);
     auto s_left = (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius);
     CSSPixelFraction f = 1;
-    f = min(f, l_top / s_top);
-    f = min(f, l_right / s_right);
-    f = min(f, l_bottom / s_bottom);
-    f = min(f, l_left / s_left);
+    f = (s_top != 0) ? min(f, l_top / s_top) : f;
+    f = (s_right != 0) ? min(f, l_right / s_right) : f;
+    f = (s_bottom != 0) ? min(f, l_bottom / s_bottom) : f;
+    f = (s_left != 0) ? min(f, l_left / s_left) : f;
 
     // If f < 1, then all corner radii are reduced by multiplying them by f.
     if (f < 1) {

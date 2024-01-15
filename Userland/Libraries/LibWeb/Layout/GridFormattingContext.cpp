@@ -1339,6 +1339,9 @@ void GridFormattingContext::stretch_auto_tracks(GridDimension const dimension)
             count_of_auto_max_sizing_tracks++;
     }
 
+    if (count_of_auto_max_sizing_tracks == 0)
+        return;
+
     CSSPixels remaining_space = get_free_space(*m_available_space, dimension).to_px_or_zero();
     auto remaining_space_to_distribute_per_track = remaining_space / count_of_auto_max_sizing_tracks;
     for (auto& track : tracks_and_gaps) {
