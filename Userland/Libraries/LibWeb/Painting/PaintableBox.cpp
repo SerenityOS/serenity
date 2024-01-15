@@ -438,7 +438,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
             .bottom_right = border_radii_data.bottom_right.as_corner(context),
             .bottom_left = border_radii_data.bottom_left.as_corner(context)
         };
-        if (border_radii_data.has_any_radius()) {
+        if (corner_radii.has_any_radius()) {
             VERIFY(!m_corner_clipper_id.has_value());
             m_corner_clipper_id = context.allocate_corner_clipper_id();
             context.recording_painter().sample_under_corners(*m_corner_clipper_id, corner_radii, context.rounded_device_rect(*clip_rect).to_type<int>(), CornerClip::Outside);
@@ -648,7 +648,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
             .bottom_right = border_radii.bottom_right.as_corner(context),
             .bottom_left = border_radii.bottom_left.as_corner(context)
         };
-        if (border_radii.has_any_radius()) {
+        if (corner_radii.has_any_radius()) {
             corner_clip_id = context.allocate_corner_clipper_id();
             context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, clip_box.to_type<int>(), CornerClip::Outside);
         }
