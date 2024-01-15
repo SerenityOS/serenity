@@ -747,6 +747,10 @@ video {
     object-fit: contain;
 }
 
+audio:not([controls]) {
+    display: none !important;
+}
+
 /* 15.4.3 Attributes for embedded content and images
  * https://html.spec.whatwg.org/multipage/rendering.html#attributes-for-embedded-content-and-images
  */
