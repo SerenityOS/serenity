@@ -316,6 +316,16 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
     return {};
 }
 
+static ErrorOr<void> read_eol(BigEndianInputBitStream& bit_stream)
+{
+    constexpr u16 EOL = 0b0000'0000'0001;
+    auto const read = TRY(bit_stream.read_bits<u16>(12));
+    if (read != EOL)
+        return Error::from_string_literal("CCITTDecoder: Invalid EndOfLine code");
+
+    return {};
+}
+
 }
 
 ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height)
@@ -335,6 +345,34 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
     }
 
     return decoded_bytes;
+}
+
+ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group3Options const& options)
+{
+    auto strip_stream = make<FixedMemoryStream>(bytes);
+    auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
+
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8)));
+    auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
+    auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
+
+    if (options.dimensions == Group3Options::Mode::OneDimension) {
+        // 4.1.2 End-of-line (EOL)
+        // This code word follows each line of data. It is a unique code word that can never be found within a
+        // valid line of data; therefore, resynchronization after an error burst is possible.
+        // In addition, this signal will occur prior to the first data line of a page.
+        // ---
+        // NOTE: For whatever reason, the last EOL doesn't seem to be included
+
+        for (u32 i = 0; i < image_height; ++i) {
+            TRY(read_eol(*bit_stream));
+            TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
+        }
+
+        return decoded_bytes;
+    }
+
+    return Error::from_string_literal("CCITT3 2D is not implemented yet :^(");
 }
 
 }

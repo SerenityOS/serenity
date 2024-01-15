@@ -314,6 +314,20 @@ private:
             TRY(loop_over_pixels(move(decode_ccitt_rle_strip)));
             break;
         }
+        case Compression::Group3Fax: {
+            TRY(ensure_tags_are_correct_for_ccitt());
+
+            auto const parameters = parse_t4_options(*m_metadata.t4_options());
+            ByteBuffer decoded_bytes {};
+            auto decode_group3_strip = [&](u32 num_bytes, u32 strip_height) -> ErrorOr<ReadonlyBytes> {
+                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
+                decoded_bytes = TRY(CCITT::decode_ccitt_group3(encoded_bytes, *m_metadata.image_width(), strip_height, parameters));
+                return decoded_bytes;
+            };
+
+            TRY(loop_over_pixels(move(decode_group3_strip)));
+            break;
+        }
         case Compression::LZW: {
             ByteBuffer decoded_bytes {};
             auto decode_lzw_strip = [&](u32 num_bytes, u32) -> ErrorOr<ReadonlyBytes> {
