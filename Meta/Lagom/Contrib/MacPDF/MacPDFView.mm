@@ -16,10 +16,11 @@
     NSBitmapImageRep* _cachedBitmap;
     int _page_index;
     __weak id<MacPDFViewDelegate> _delegate;
+    PDF::RenderingPreferences _preferences;
 }
 @end
 
-static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document, int page_index, NSSize size)
+static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document, int page_index, NSSize size, PDF::RenderingPreferences const& preferences)
 {
     auto page = TRY(document.get_page(page_index));
 
@@ -29,7 +30,7 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
-    auto errors = PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {});
+    auto errors = PDF::Renderer::render(document, page, bitmap, Color::White, preferences);
     if (errors.is_error()) {
         for (auto const& error : errors.error().errors())
             NSLog(@"warning: %@", @(error.message().characters()));
@@ -129,7 +130,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     if (NSEqualSizes([_cachedBitmap size], pixel_size))
         return;
 
-    if (auto bitmap_or = render(*_doc, _page_index, pixel_size); !bitmap_or.is_error())
+    if (auto bitmap_or = render(*_doc, _page_index, pixel_size, _preferences); !bitmap_or.is_error())
         _cachedBitmap = ns_from_gfx(bitmap_or.value());
 }
 
@@ -156,6 +157,23 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     int current_page = _page_index + 1;
     [self goToPage:current_page - 1];
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem*)item
+{
+    if ([item action] == @selector(toggleShowClippingPaths:)) {
+        [item setState:_preferences.show_clipping_paths ? NSControlStateValueOn : NSControlStateValueOff];
+        return _doc ? YES : NO;
+    }
+    return NO;
+}
+
+- (IBAction)toggleShowClippingPaths:(id)sender
+{
+    if (_doc) {
+        _preferences.show_clipping_paths = !_preferences.show_clipping_paths;
+        [self invalidateCachedBitmap];
+    }
 }
 
 - (void)keyDown:(NSEvent*)event
