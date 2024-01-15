@@ -21,6 +21,6 @@ namespace Gfx::CCITT {
 // However, this function implements the TIFF variant (see TIFFLoader.h for a spec link),
 // differences are detailed in section:
 // Section 10: Modified Huffman Compression
-ErrorOr<ByteBuffer> decode_ccitt3_1d(ReadonlyBytes bytes, u32 image_width, u32 image_height);
+ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height);
 
 }
