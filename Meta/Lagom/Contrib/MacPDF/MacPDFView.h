@@ -26,4 +26,6 @@
 - (IBAction)goToNextPage:(id)sender;
 - (IBAction)goToPreviousPage:(id)sender;
 
+- (IBAction)toggleShowClippingPaths:(id)sender;
+
 @end
