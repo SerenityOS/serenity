@@ -223,8 +223,7 @@ static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool m
     if (pid_to_debug != -1 || mode_coredump)
         project_path = "/usr/src/serenity";
     else if (!raw_path_argument.is_null())
-        // FIXME: Validation is unintentional, and should be removed when migrating to String.
-        project_path = TRY(ByteString::from_utf8(raw_path_argument));
+        project_path = raw_path_argument;
     else if (auto last_path = last_opened_project_path(); last_path.has_value())
         project_path = last_path.release_value();
     else
