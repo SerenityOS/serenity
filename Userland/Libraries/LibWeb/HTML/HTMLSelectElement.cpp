@@ -383,6 +383,9 @@ void HTMLSelectElement::create_shadow_tree_if_needed()
 
 void HTMLSelectElement::update_inner_text_element()
 {
+    if (!m_inner_text_element)
+        return;
+
     // Update inner text element to text content of selected option
     for (auto const& option_element : list_of_options()) {
         if (option_element->selected()) {
