@@ -18,6 +18,7 @@ Project::Project(ByteString const& root_path)
 
 OwnPtr<Project> Project::open_with_root_path(ByteString const& root_path)
 {
+    VERIFY(LexicalPath(root_path).is_absolute());
     if (!FileSystem::is_directory(root_path))
         return {};
     return adopt_own(*new Project(root_path));
