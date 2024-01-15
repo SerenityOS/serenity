@@ -63,7 +63,7 @@ public:
 
         inline operator bool() const
         {
-            return horizontal_radius > 0 && vertical_radius > 0;
+            return horizontal_radius > 0 || vertical_radius > 0;
         }
 
         Gfx::IntRect as_rect() const
