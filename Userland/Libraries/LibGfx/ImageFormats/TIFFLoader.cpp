@@ -523,9 +523,12 @@ private:
             return read_every_values.template operator()<Rational<u32>>();
         case Type::SignedLong:
             return read_every_values.template operator()<i32>();
-            ;
         case Type::SignedRational:
             return read_every_values.template operator()<Rational<i32>>();
+        case Type::Float:
+            return read_every_values.template operator()<float>();
+        case Type::Double:
+            return read_every_values.template operator()<double>();
         default:
             VERIFY_NOT_REACHED();
         }
