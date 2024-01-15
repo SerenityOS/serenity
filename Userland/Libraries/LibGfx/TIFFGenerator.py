@@ -211,6 +211,8 @@ def export_tag_related_enums(tags: List[Tag]) -> str:
 def promote_type(t: TIFFType) -> TIFFType:
     if t == TIFFType.UnsignedShort:
         return TIFFType.UnsignedLong
+    if t == TIFFType.Float:
+        return TIFFType.Double
     return t
 
 
@@ -229,6 +231,10 @@ def tiff_type_to_cpp(t: TIFFType, with_promotion: bool = True) -> str:
         return 'u32'
     if t == TIFFType.UnsignedRational:
         return 'TIFF::Rational<u32>'
+    if t == TIFFType.Float:
+        return 'float'
+    if t == TIFFType.Double:
+        return 'double'
     raise RuntimeError(f'Type "{t}" not recognized, please update tiff_type_to_read_only_cpp()')
 
 
@@ -394,7 +400,7 @@ struct Rational {{
 {export_promoter()}
 
 // Note that u16 is not include on purpose
-using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>>;
+using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>, double>;
 
 {export_tag_related_enums(known_tags)}
 
@@ -484,7 +490,6 @@ def generate_tag_handler(tag: Tag) -> str:
 
 
 def generate_tag_handler_file(tags: List[Tag]) -> str:
-
     formatter_for_tag_with_enum = '\n'.join([fR"""        case {tag.id}:
             return MUST(String::from_utf8(
                 name_for_enum_tag_value(static_cast<{tag.associated_enum.export_name()}>(v.get<u32>()))));"""
