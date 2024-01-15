@@ -111,17 +111,17 @@ void BorderRadiusCornerClipper::blit_corner_clipping(Gfx::Painter& painter)
 ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
     : m_context(context)
     , m_id(context.allocate_corner_clipper_id())
-    , m_has_radius(border_radii.has_any_radius())
     , m_border_rect(border_rect)
 {
-    if (!m_has_radius)
-        return;
     CornerRadii const corner_radii {
         .top_left = border_radii.top_left.as_corner(context),
         .top_right = border_radii.top_right.as_corner(context),
         .bottom_right = border_radii.bottom_right.as_corner(context),
         .bottom_left = border_radii.bottom_left.as_corner(context)
     };
+    m_has_radius = corner_radii.has_any_radius();
+    if (!m_has_radius)
+        return;
     m_context.recording_painter().sample_under_corners(m_id, corner_radii, border_rect.to_type<int>(), corner_clip);
 }
 
