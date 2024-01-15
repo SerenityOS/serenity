@@ -313,7 +313,7 @@ def generate_getter(tag: Tag) -> str:
 
     signature = fR"    Optional<{return_type}> {pascal_case_to_snake_case(tag.name)}() const"
 
-    if tag.default and single_count:
+    if tag.default is not None and single_count:
         return_if_empty = f'{default_value_to_cpp(tag.default)}'
     else:
         return_if_empty = 'OptionalNone {}'
