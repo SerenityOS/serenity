@@ -17,6 +17,8 @@ namespace Kernel::USB::xHCI {
 class xHCIController : public USBController
     , public PCI::Device {
 public:
+    static constexpr auto BaseRegister = PCI::HeaderType0BaseRegister::BAR0;
+
     static ErrorOr<NonnullLockRefPtr<xHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~xHCIController() override = default;
 
@@ -41,8 +43,12 @@ private:
     xHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region);
 
     NonnullOwnPtr<Memory::Region> m_register_region;
-    CapabilityRegisters const* m_cap_regs;
+    // FIXME: As stated in Registers.h, QEMU enforces 32 bit reads on the capability registers, which the spec does not seem to do
+    //        So to enforce full sized reads, we also need to make it volatile
+    CapabilityRegisters const volatile* m_cap_regs;
     OperationalRegisters volatile* m_op_regs;
+    RuntimeRegisters volatile* m_runtime_regs;
+    DoorbellRegister volatile* m_doorbell_regs;
 };
 
 }

@@ -12,6 +12,7 @@
 #include <Kernel/Bus/USB/EHCI/EHCIController.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
+#include <Kernel/Bus/USB/xHCI/xHCIController.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/Sections.h>
 
@@ -55,6 +56,8 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
             return;
         case xHCI:
             dmesgln("USBManagement: xHCI controller found at {} is not currently supported.", device_identifier.address());
+            if (auto xhci_controller_or_error = xHCI::xHCIController::try_to_initialize(device_identifier); !xhci_controller_or_error.is_error())
+                m_controllers.append(xhci_controller_or_error.release_value());
             return;
         case None:
             dmesgln("USBManagement: Non interface-able controller found at {} is not currently supported.", device_identifier.address());
