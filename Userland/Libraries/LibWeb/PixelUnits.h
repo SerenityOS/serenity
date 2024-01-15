@@ -294,6 +294,7 @@ public:
         : m_numerator(numerator)
         , m_denominator(denominator)
     {
+        VERIFY(denominator != 0);
     }
 
     explicit constexpr CSSPixelFraction(CSSPixels value)
@@ -307,6 +308,7 @@ public:
         : m_numerator(numerator)
         , m_denominator(denominator)
     {
+        VERIFY(denominator != 0);
     }
 
     constexpr operator CSSPixels() const
