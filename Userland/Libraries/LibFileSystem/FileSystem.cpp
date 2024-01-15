@@ -31,7 +31,7 @@ ErrorOr<ByteString> current_working_directory()
 ErrorOr<ByteString> absolute_path(StringView path)
 {
     if (exists(path))
-        return TRY(real_path(path)).to_byte_string();
+        return real_path(path);
 
     if (path.starts_with("/"sv))
         return LexicalPath::canonicalized_path(path);
@@ -40,7 +40,7 @@ ErrorOr<ByteString> absolute_path(StringView path)
     return LexicalPath::absolute_path(working_directory, path);
 }
 
-ErrorOr<String> real_path(StringView path)
+ErrorOr<ByteString> real_path(StringView path)
 {
     if (path.is_null())
         return Error::from_errno(ENOENT);
@@ -52,7 +52,7 @@ ErrorOr<String> real_path(StringView path)
     if (!real_path)
         return Error::from_syscall("realpath"sv, -errno);
 
-    return TRY(String::from_utf8({ real_path, strlen(real_path) }));
+    return ByteString { real_path, strlen(real_path) };
 }
 
 bool exists(StringView path)
@@ -244,12 +244,12 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
     TRY(Core::System::mkdir(destination_path, 0755));
 
     auto source_rp = TRY(real_path(source_path));
-    source_rp = TRY(String::formatted("{}/", source_rp));
+    source_rp = ByteString::formatted("{}/", source_rp);
 
     auto destination_rp = TRY(real_path(destination_path));
-    destination_rp = TRY(String::formatted("{}/", destination_rp));
+    destination_rp = ByteString::formatted("{}/", destination_rp);
 
-    if (!destination_rp.is_empty() && destination_rp.starts_with_bytes(source_rp))
+    if (!destination_rp.is_empty() && destination_rp.starts_with(source_rp))
         return Error::from_errno(EINVAL);
 
     Core::DirIterator di(source_path, Core::DirIterator::SkipParentAndBaseDir);

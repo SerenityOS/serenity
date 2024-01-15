@@ -147,7 +147,7 @@ bool RunWindow::run_via_launch(ByteString const& run_input)
             warnln("Failed to launch '{}': {}", file_path, real_path_or_error.error());
             return false;
         }
-        url = URL::create_with_url_or_path(real_path_or_error.release_value().to_byte_string());
+        url = URL::create_with_url_or_path(real_path_or_error.release_value());
     }
 
     if (!Desktop::Launcher::open(url)) {

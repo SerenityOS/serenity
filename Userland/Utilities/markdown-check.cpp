@@ -301,6 +301,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (verbose_output)
         outln("Reading and parsing Markdown files ...");
+    // FIXME: Use ByteString for file paths
     HashMap<String, MarkdownLinkage> files;
     for (auto path : file_paths) {
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
@@ -326,7 +327,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Since this should never happen anyway, fail early.
             return 1;
         }
-        files.set(TRY(FileSystem::real_path(path)), MarkdownLinkage::analyze(*document, verbose_output));
+        files.set(TRY(String::from_byte_string(TRY(FileSystem::real_path(path)))), MarkdownLinkage::analyze(*document, verbose_output));
     }
 
     if (verbose_output)

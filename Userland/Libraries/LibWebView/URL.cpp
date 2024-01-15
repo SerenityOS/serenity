@@ -88,7 +88,7 @@ Optional<URL> sanitize_url(StringView url, Optional<StringView> search_engine, A
         if (path.is_error())
             return {};
 
-        return URL::create_with_file_scheme(path.value().to_byte_string());
+        return URL::create_with_file_scheme(path.value());
     }
 
     auto format_search_engine = [&]() -> Optional<URL> {

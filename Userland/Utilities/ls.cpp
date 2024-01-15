@@ -267,7 +267,7 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
         auto full_path_or_error = FileSystem::real_path(path_for_hyperlink);
         if (!full_path_or_error.is_error()) {
             auto fullpath = full_path_or_error.release_value();
-            auto url = URL::create_with_file_scheme(fullpath.to_byte_string(), {}, hostname());
+            auto url = URL::create_with_file_scheme(fullpath, {}, hostname());
             out("\033]8;;{}\033\\", url.serialize());
         }
     }

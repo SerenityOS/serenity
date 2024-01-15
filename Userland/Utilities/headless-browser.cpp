@@ -264,7 +264,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
         loop.quit(0);
     }));
 
-    auto url = URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string());
+    auto url = URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)));
 
     String result;
     auto did_finish_test = false;
@@ -359,7 +359,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
         loop.quit(0);
     }));
 
-    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_byte_string()));
+    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path))));
 
     RefPtr<Gfx::Bitmap> actual_screenshot, expectation_screenshot;
     view.on_load_finish = [&](auto const&) {
@@ -478,7 +478,8 @@ static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, St
         auto basename = LexicalPath::title(name);
         auto expectation_path = TRY(String::formatted("{}/expected/{}/{}.txt", path, trail, basename));
 
-        tests.append({ move(input_path), move(expectation_path), mode, {} });
+        // FIXME: Test paths should be ByteString
+        tests.append({ TRY(String::from_byte_string(input_path)), move(expectation_path), mode, {} });
     }
     return {};
 }
@@ -489,7 +490,8 @@ static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
         if (entry.type == Core::DirectoryEntry::Type::Directory)
             return IterationDecision::Continue;
         auto input_path = TRY(FileSystem::real_path(TRY(String::formatted("{}/{}", path, entry.name))));
-        tests.append({ move(input_path), {}, TestMode::Ref, {} });
+        // FIXME: Test paths should be ByteString
+        tests.append({ TRY(String::from_byte_string(input_path)), {}, TestMode::Ref, {} });
         return IterationDecision::Continue;
     }));
 

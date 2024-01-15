@@ -174,14 +174,14 @@ int main(int argc, char** argv)
         warnln("Failed to resolve test root: {}", test_root_or_error.error());
         return 1;
     }
-    test_root = test_root_or_error.release_value().to_byte_string();
+    test_root = test_root_or_error.release_value();
 
     auto common_path_or_error = FileSystem::real_path(common_path);
     if (common_path_or_error.is_error()) {
         warnln("Failed to resolve common path: {}", common_path_or_error.error());
         return 1;
     }
-    common_path = common_path_or_error.release_value().to_byte_string();
+    common_path = common_path_or_error.release_value();
 
     if (chdir(test_root.characters()) < 0) {
         auto saved_errno = errno;

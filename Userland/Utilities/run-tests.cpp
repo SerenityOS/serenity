@@ -382,7 +382,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    test_root = TRY(FileSystem::real_path(test_root)).to_byte_string();
+    test_root = TRY(FileSystem::real_path(test_root));
 
     auto void_or_error = Core::System::chdir(test_root);
     if (void_or_error.is_error()) {

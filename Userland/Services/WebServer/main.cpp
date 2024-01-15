@@ -68,7 +68,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!username.is_empty() && !password.is_empty())
         credentials = HTTP::HttpRequest::BasicAuthenticationCredentials { username, password };
 
-    WebServer::Configuration configuration(real_document_root_path, credentials);
+    // FIXME: This should accept a ByteString for the path instead.
+    WebServer::Configuration configuration(TRY(String::from_byte_string(real_document_root_path)), credentials);
 
     Core::EventLoop loop;
 

@@ -259,9 +259,9 @@ Icon FileIconProvider::icon_for_path(StringView path, mode_t mode)
         auto raw_symlink_target_or_error = FileSystem::read_link(path);
         if (raw_symlink_target_or_error.is_error())
             return s_symlink_icon;
-        auto raw_symlink_target = raw_symlink_target_or_error.release_value();
+        auto raw_symlink_target = raw_symlink_target_or_error.release_value().to_byte_string();
 
-        String target_path;
+        ByteString target_path;
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {

@@ -579,7 +579,7 @@ private:
             auto full_path_or_error = FileSystem::real_path(file_data.full_path());
             if (!full_path_or_error.is_error()) {
                 auto fullpath = full_path_or_error.release_value();
-                auto url = URL::create_with_file_scheme(fullpath.to_byte_string());
+                auto url = URL::create_with_file_scheme(fullpath);
                 out("\033]8;;{}\033\\{}{}\033]8;;\033\\", url.serialize(), file_data.full_path(), m_terminator);
                 printed = true;
             }

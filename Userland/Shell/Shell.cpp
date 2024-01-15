@@ -394,7 +394,7 @@ ByteString Shell::resolve_path(ByteString path) const
     if (!path.starts_with('/'))
         path = ByteString::formatted("{}/{}", cwd, path);
 
-    return FileSystem::real_path(path).release_value_but_fixme_should_propagate_errors().to_byte_string();
+    return FileSystem::real_path(path).release_value_but_fixme_should_propagate_errors();
 }
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)

@@ -20,7 +20,7 @@ namespace FileSystem {
 
 ErrorOr<ByteString> current_working_directory();
 ErrorOr<ByteString> absolute_path(StringView path);
-ErrorOr<String> real_path(StringView path);
+ErrorOr<ByteString> real_path(StringView path);
 
 bool exists(StringView path);
 bool exists(int fd);
