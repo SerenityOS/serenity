@@ -45,4 +45,6 @@ struct Group3Options {
     UseFillBits use_fill_bits = UseFillBits::No;
 };
 
+ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group3Options const& options);
+
 }
