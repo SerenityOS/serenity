@@ -228,7 +228,7 @@ static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool m
     else if (auto last_path = last_opened_project_path(); last_path.has_value())
         project_path = last_path.release_value();
     else
-        project_path = TRY(FileSystem::real_path("."sv)).to_byte_string();
+        project_path = TRY(FileSystem::real_path("."sv));
 
     return HackStudioWidget::create(project_path);
 }

@@ -318,7 +318,7 @@ void Launcher::for_each_handler_for_path(ByteString const& path, Function<bool(H
         }
         auto real_path = real_path_or_error.release_value();
 
-        return for_each_handler_for_path(real_path.to_byte_string(), [&](auto const& handler) -> bool {
+        return for_each_handler_for_path(real_path, [&](auto const& handler) -> bool {
             return f(handler);
         });
     }

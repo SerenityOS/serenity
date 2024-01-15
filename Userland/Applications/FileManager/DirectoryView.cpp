@@ -413,11 +413,11 @@ bool DirectoryView::open(ByteString const& path)
         warnln("Failed to open '{}': {}", real_path, result.error());
     }
 
-    if (model().root_path() == real_path.to_byte_string()) {
+    if (model().root_path() == real_path) {
         refresh();
     } else {
         set_active_widget(&current_view());
-        model().set_root_path(real_path.to_byte_string());
+        model().set_root_path(real_path);
     }
     return true;
 }

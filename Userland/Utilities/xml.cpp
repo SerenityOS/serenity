@@ -355,7 +355,7 @@ static void dump(XML::Document& document)
     dump(document.root());
 }
 
-static String s_path;
+static ByteString s_path;
 static auto parse(StringView contents)
 {
     return XML::Parser {
@@ -363,7 +363,7 @@ static auto parse(StringView contents)
         {
             .preserve_comments = true,
             .resolve_external_resource = [&](XML::SystemID const& system_id, Optional<XML::PublicID> const&) -> ErrorOr<ByteString> {
-                auto base = URL::create_with_file_scheme(s_path.to_byte_string());
+                auto base = URL::create_with_file_scheme(s_path);
                 auto url = URLParser::basic_parse(system_id.system_literal, base);
                 if (!url.is_valid())
                     return Error::from_string_literal("Invalid URL");
@@ -402,7 +402,7 @@ static void do_run_tests(XML::Document& document)
 
     dump_cases(root);
 
-    auto base_path = LexicalPath::dirname(s_path.to_byte_string());
+    auto base_path = LexicalPath::dirname(s_path);
 
     while (!suites.is_empty()) {
         auto& node = *suites.dequeue();

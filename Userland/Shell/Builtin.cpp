@@ -454,7 +454,7 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
         warnln("Invalid path '{}'", new_path);
         return 1;
     }
-    auto real_path = real_path_or_error.release_value().to_byte_string();
+    auto real_path = real_path_or_error.release_value();
 
     if (cd_history.is_empty() || cd_history.last() != real_path)
         cd_history.enqueue(real_path);

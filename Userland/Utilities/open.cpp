@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
         } else {
-            url = URL::create_with_url_or_path(path_or_error.value().to_byte_string());
+            url = URL::create_with_url_or_path(path_or_error.value());
         }
 
         if (!Desktop::Launcher::open(url)) {

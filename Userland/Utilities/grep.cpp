@@ -88,7 +88,7 @@ static void append_formatted_path(StringBuilder& builder, StringView path, Optio
         auto full_path_or_error = FileSystem::real_path(path);
         if (!full_path_or_error.is_error()) {
             auto fullpath = full_path_or_error.release_value();
-            auto url = URL::create_with_file_scheme(fullpath.to_byte_string(), {}, hostname());
+            auto url = URL::create_with_file_scheme(fullpath, {}, hostname());
             if (has_flag(print_type, PrintType::LineNumbers) && line_number.has_value())
                 url.set_query(MUST(String::formatted("line_number={}", *line_number)));
             builder.appendff("\033]8;;{}\033\\", url.serialize());

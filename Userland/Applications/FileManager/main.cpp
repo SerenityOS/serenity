@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     LexicalPath path(initial_location);
     if (!initial_location.is_empty()) {
         if (auto error_or_path = FileSystem::real_path(initial_location); !ignore_path_resolution && !error_or_path.is_error())
-            initial_location = error_or_path.release_value().to_byte_string();
+            initial_location = error_or_path.release_value();
 
         if (!FileSystem::is_directory(initial_location)) {
             // We want to extract zips to a temporary directory when FileManager is launched with a .zip file as its first argument

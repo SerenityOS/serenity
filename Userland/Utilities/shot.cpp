@@ -179,7 +179,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             char hostname[HOST_NAME_MAX];
             VERIFY(gethostname(hostname, sizeof(hostname)) == 0);
 
-            auto url = URL::create_with_file_scheme(full_path_or_error.value().to_byte_string(), {}, hostname);
+            auto url = URL::create_with_file_scheme(full_path_or_error.value(), {}, hostname);
             out("\033]8;;{}\033\\", url.serialize());
             printed_hyperlink = true;
         }

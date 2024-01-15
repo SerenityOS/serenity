@@ -144,7 +144,7 @@ Optional<Interface&> Parser::resolve_import(auto path)
     auto real_path_error_or = FileSystem::real_path(include_path);
     if (real_path_error_or.is_error())
         report_parsing_error(ByteString::formatted("Failed to resolve path {}: {}", include_path, real_path_error_or.error()), filename, input, lexer.tell());
-    auto real_path = real_path_error_or.release_value().to_byte_string();
+    auto real_path = real_path_error_or.release_value();
 
     if (top_level_resolved_imports().contains(real_path))
         return *top_level_resolved_imports().find(real_path)->value;
@@ -966,7 +966,7 @@ Interface& Parser::parse()
         report_parsing_error(ByteString::formatted("Failed to resolve path '{}': {}", filename, this_module_or_error.error()), filename, input, 0);
         VERIFY_NOT_REACHED();
     }
-    auto this_module = this_module_or_error.release_value().to_byte_string();
+    auto this_module = this_module_or_error.release_value();
 
     auto interface_ptr = make<Interface>();
     auto& interface = *interface_ptr;
