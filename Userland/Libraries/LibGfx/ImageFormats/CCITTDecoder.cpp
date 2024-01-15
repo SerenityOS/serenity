@@ -266,7 +266,7 @@ Optional<Code> get_terminal_code(Color color, u16 code_word, u8 code_size)
 
 }
 
-ErrorOr<ByteBuffer> decode_ccitt3_1d(ReadonlyBytes bytes, u32 image_width, u32 image_height)
+ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height)
 {
     auto strip_stream = make<FixedMemoryStream>(bytes);
     auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));

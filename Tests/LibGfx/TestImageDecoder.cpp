@@ -532,9 +532,9 @@ TEST_CASE(test_tiff_uncompressed)
     EXPECT_EQ(frame.image->get_pixel(60, 75), Gfx::Color::NamedColor::Red);
 }
 
-TEST_CASE(test_tiff_ccitt3_1d)
+TEST_CASE(test_tiff_ccitt_rle)
 {
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/ccitt3_1d.tiff"sv)));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/ccitt_rle.tiff"sv)));
     EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
 
