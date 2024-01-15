@@ -354,14 +354,12 @@ CSSPixels FlexFormattingContext::specified_cross_min_size(Box const& box) const
 
 bool FlexFormattingContext::has_main_max_size(Box const& box) const
 {
-    auto const& value = is_row_layout() ? box.computed_values().max_width() : box.computed_values().max_height();
-    return !value.is_none();
+    return !should_treat_main_max_size_as_none(box);
 }
 
 bool FlexFormattingContext::has_cross_max_size(Box const& box) const
 {
-    auto const& value = !is_row_layout() ? box.computed_values().max_width() : box.computed_values().max_height();
-    return !value.is_none();
+    return !should_treat_cross_max_size_as_none(box);
 }
 
 CSSPixels FlexFormattingContext::specified_main_max_size(Box const& box) const
@@ -492,7 +490,7 @@ CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_
 // if the min/max constraints in the cross axis forces us to come up with a new main axis size.
 CSSPixels FlexFormattingContext::adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(Box const& box, CSSPixels main_size, CSS::Size const& min_cross_size, CSS::Size const& max_cross_size) const
 {
-    if (!max_cross_size.is_none()) {
+    if (!should_treat_cross_max_size_as_none(box)) {
         auto max_cross_size_px = max_cross_size.to_px(box, !is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
         main_size = min(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(max_cross_size_px, box.preferred_aspect_ratio().value()));
     }
@@ -1007,7 +1005,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
     auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
+    auto clamp_max = (!should_treat_cross_max_size_as_none(item.box) && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
     // If we have a definite cross size, this is easy! No need to perform layout, we can just use it as-is.
     if (has_definite_cross_size(item.box)) {
@@ -1143,7 +1141,7 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
                 auto const& computed_min_size = computed_cross_min_size(item.box);
                 auto const& computed_max_size = computed_cross_max_size(item.box);
                 auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(item.box) : 0;
-                auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(item.box) : CSSPixels::max();
+                auto cross_max_size = (!should_treat_cross_max_size_as_none(item.box) && !computed_max_size.contains_percentage()) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
                 item.cross_size = css_clamp(unclamped_cross_size, cross_min_size, cross_max_size);
             } else {
@@ -1688,7 +1686,7 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
                 auto const& computed_max_size = this->computed_main_max_size(item.box);
 
                 auto clamp_min = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_main_min_size(item.box) : automatic_minimum_size(item);
-                auto clamp_max = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_main_max_size(item.box) : CSSPixels::max();
+                auto clamp_max = (!should_treat_cross_max_size_as_none(item.box) && !computed_max_size.contains_percentage()) ? specified_main_max_size(item.box) : CSSPixels::max();
 
                 result = css_clamp(result, clamp_min, clamp_max);
 
@@ -1836,6 +1834,20 @@ bool FlexFormattingContext::should_treat_cross_size_as_auto(Box const& box) cons
     return should_treat_width_as_auto(box, m_available_space_for_items->space);
 }
 
+bool FlexFormattingContext::should_treat_main_max_size_as_none(Box const& box) const
+{
+    if (is_row_layout())
+        return should_treat_max_width_as_none(box, m_available_space_for_items->space.width);
+    return should_treat_max_height_as_none(box, m_available_space_for_items->space.height);
+}
+
+bool FlexFormattingContext::should_treat_cross_max_size_as_none(Box const& box) const
+{
+    if (is_row_layout())
+        return should_treat_max_height_as_none(box, m_available_space_for_items->space.height);
+    return should_treat_max_width_as_none(box, m_available_space_for_items->space.width);
+}
+
 CSSPixels FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem const& item, bool resolve_percentage_min_max_sizes) const
 {
     auto size = [&] {
@@ -1848,7 +1860,7 @@ CSSPixels FlexFormattingContext::calculate_cross_min_content_contribution(FlexIt
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
     auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
+    auto clamp_max = (!should_treat_cross_max_size_as_none(item.box) && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
     auto clamped_inner_size = css_clamp(size, clamp_min, clamp_max);
 
@@ -1867,7 +1879,7 @@ CSSPixels FlexFormattingContext::calculate_cross_max_content_contribution(FlexIt
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
     auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
+    auto clamp_max = (!should_treat_cross_max_size_as_none(item.box) && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
     auto clamped_inner_size = css_clamp(size, clamp_min, clamp_max);
 
@@ -1880,8 +1892,8 @@ CSSPixels FlexFormattingContext::calculate_width_to_use_when_determining_intrins
     auto computed_width = box.computed_values().width();
     auto const& computed_min_width = box.computed_values().min_width();
     auto const& computed_max_width = box.computed_values().max_width();
-    auto clamp_min = (!computed_min_width.is_auto() && (!computed_min_width.contains_percentage())) ? specified_cross_min_size(box) : 0;
-    auto clamp_max = (!computed_max_width.is_none() && (!computed_max_width.contains_percentage())) ? specified_cross_max_size(box) : CSSPixels::max();
+    auto clamp_min = (!computed_min_width.is_auto() && (!computed_min_width.contains_percentage())) ? get_pixel_width(box, computed_min_width) : 0;
+    auto clamp_max = (!should_treat_max_width_as_none(box, m_available_space_for_items->space.width) && (!computed_max_width.contains_percentage())) ? get_pixel_width(box, computed_max_width) : CSSPixels::max();
 
     CSSPixels width;
     if (should_treat_width_as_auto(box, m_available_space_for_items->space) || computed_width.is_fit_content())
