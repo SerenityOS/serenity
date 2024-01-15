@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteString.h>
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -82,7 +81,6 @@ public:
 
     // NOTE: This is for the JS bindings
     FlyString const& tag_name() const { return html_uppercased_qualified_name(); }
-    ByteString deprecated_tag_name() const { return html_uppercased_qualified_name().to_deprecated_fly_string(); }
 
     Optional<FlyString> const& prefix() const { return m_qualified_name.prefix(); }
 
