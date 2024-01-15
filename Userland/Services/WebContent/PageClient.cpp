@@ -171,48 +171,18 @@ Web::Layout::Viewport* PageClient::layout_root()
     return document->layout_node();
 }
 
-Gfx::Color PageClient::background_color() const
-{
-    auto document = page().top_level_browsing_context().active_document();
-    if (!document)
-        return Gfx::Color::Transparent;
-    return document->background_color();
-}
-
 void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
 {
-    Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
-
-    auto document = page().top_level_browsing_context().active_document();
-    if (document) {
-        document->update_layout();
-    }
-
-    auto background_color = this->background_color();
-
     Web::Painting::RecordingPainter recording_painter;
-    Web::PaintContext context(recording_painter, palette(), device_pixels_per_css_pixel());
 
-    if (background_color.alpha() < 255)
-        recording_painter.fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
-    recording_painter.fill_rect(bitmap_rect, background_color);
+    Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
+    recording_painter.fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
 
-    if (!document->paintable())
-        return;
-
-    context.set_should_show_line_box_borders(m_should_show_line_box_borders);
-    context.set_should_paint_overlay(paint_options.paint_overlay == Web::PaintOptions::PaintOverlay::Yes);
-    context.set_device_viewport_rect(content_rect);
-    context.set_has_focus(m_has_focus);
-
-    document->paintable()->collect_scroll_frames(context);
-    document->paintable()->paint_all_phases(context);
-
-    Vector<Gfx::IntPoint> scroll_offsets_by_frame_id;
-    scroll_offsets_by_frame_id.resize(context.scroll_frames().size());
-    for (auto [_, scrollable_frame] : context.scroll_frames())
-        scroll_offsets_by_frame_id[scrollable_frame.id] = context.rounded_device_point(scrollable_frame.offset).to_type<int>();
-    recording_painter.apply_scroll_offsets(scroll_offsets_by_frame_id);
+    Web::HTML::Navigable::PaintConfig paint_config;
+    paint_config.paint_overlay = paint_options.paint_overlay == Web::PaintOptions::PaintOverlay::Yes;
+    paint_config.should_show_line_box_borders = m_should_show_line_box_borders;
+    paint_config.has_focus = m_has_focus;
+    page().top_level_traversable()->paint(recording_painter, paint_config);
 
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS
