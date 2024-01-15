@@ -43,7 +43,7 @@
 - (NSMenuItem*)createHistoryMenu;
 - (NSMenuItem*)createInspectMenu;
 - (NSMenuItem*)createDebugMenu;
-- (NSMenuItem*)createWindowsMenu;
+- (NSMenuItem*)createWindowMenu;
 - (NSMenuItem*)createHelpMenu;
 
 @end
@@ -67,7 +67,7 @@
         [[NSApp mainMenu] addItem:[self createHistoryMenu]];
         [[NSApp mainMenu] addItem:[self createInspectMenu]];
         [[NSApp mainMenu] addItem:[self createDebugMenu]];
-        [[NSApp mainMenu] addItem:[self createWindowsMenu]];
+        [[NSApp mainMenu] addItem:[self createWindowMenu]];
         [[NSApp mainMenu] addItem:[self createHelpMenu]];
 
         self.managed_tabs = [[NSMutableArray alloc] init];
@@ -518,10 +518,10 @@
     return menu;
 }
 
-- (NSMenuItem*)createWindowsMenu
+- (NSMenuItem*)createWindowMenu
 {
     auto* menu = [[NSMenuItem alloc] init];
-    auto* submenu = [[NSMenu alloc] initWithTitle:@"Windows"];
+    auto* submenu = [[NSMenu alloc] initWithTitle:@"Window"];
 
     [NSApp setWindowsMenu:submenu];
 
