@@ -572,9 +572,11 @@ RENDERER_HANDLER(text_show_string_array)
         if (element.has<int>()) {
             float shift = (float)element.get<int>() / 1000.0f;
             m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
+            m_text_rendering_matrix_is_dirty = true;
         } else if (element.has<float>()) {
             float shift = element.get<float>() / 1000.0f;
             m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
+            m_text_rendering_matrix_is_dirty = true;
         } else {
             auto str = element.get<NonnullRefPtr<Object>>()->cast<StringObject>()->string();
             TRY(show_text(str));
