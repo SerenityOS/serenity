@@ -23,10 +23,9 @@
 
 namespace FileSystem {
 
-ErrorOr<String> current_working_directory()
+ErrorOr<ByteString> current_working_directory()
 {
-    auto cwd = TRY(Core::System::getcwd());
-    return TRY(String::from_byte_string({ cwd }));
+    return Core::System::getcwd();
 }
 
 ErrorOr<String> absolute_path(StringView path)
