@@ -32,6 +32,7 @@
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/XHR/FormData.h>
 
@@ -2030,6 +2031,47 @@ void Navigable::inform_the_navigation_api_about_aborting_navigation()
         // 4. Abort the ongoing navigation given navigation.
         navigation->abort_the_ongoing_navigation();
     });
+}
+
+void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig config)
+{
+    auto document = active_document();
+    if (!document)
+        return;
+
+    auto const& page = traversable_navigable()->page();
+    auto viewport_rect = page.css_to_device_rect(this->viewport_rect());
+    Gfx::IntRect bitmap_rect { {}, viewport_rect.size().to_type<int>() };
+
+    document->update_layout();
+    auto background_color = document->background_color();
+
+    recording_painter.fill_rect(bitmap_rect, background_color);
+    if (!document->paintable())
+        return;
+
+    Web::PaintContext context(recording_painter, page.palette(), page.client().device_pixels_per_css_pixel());
+    context.set_device_viewport_rect(viewport_rect);
+    context.set_should_show_line_box_borders(config.should_show_line_box_borders);
+    context.set_should_paint_overlay(config.paint_overlay);
+    context.set_has_focus(config.has_focus);
+
+    if (is_traversable()) {
+        document->paintable()->collect_scroll_frames(context);
+    }
+
+    document->paintable()->paint_all_phases(context);
+
+    // FIXME: Support scrollable frames inside iframes.
+    if (is_traversable()) {
+        Vector<Gfx::IntPoint> scroll_offsets_by_frame_id;
+        scroll_offsets_by_frame_id.resize(context.scroll_frames().size());
+        for (auto [_, scrollable_frame] : context.scroll_frames())
+            scroll_offsets_by_frame_id[scrollable_frame.id] = context.rounded_device_point(
+                                                                         scrollable_frame.offset)
+                                                                  .to_type<int>();
+        recording_painter.apply_scroll_offsets(scroll_offsets_by_frame_id);
+    }
 }
 
 }

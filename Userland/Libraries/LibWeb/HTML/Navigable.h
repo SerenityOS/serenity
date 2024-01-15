@@ -170,6 +170,13 @@ public:
 
     [[nodiscard]] TargetSnapshotParams snapshot_target_snapshot_params();
 
+    struct PaintConfig {
+        bool paint_overlay { false };
+        bool should_show_line_box_borders { false };
+        bool has_focus { false };
+    };
+    void paint(Painting::RecordingPainter&, PaintConfig);
+
 protected:
     Navigable();
 

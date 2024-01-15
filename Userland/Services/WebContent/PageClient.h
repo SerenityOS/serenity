@@ -61,11 +61,11 @@ public:
     void color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state);
     void select_dropdown_closed(Optional<String> value);
 
-    [[nodiscard]] Gfx::Color background_color() const;
-
     void set_user_style(String source);
 
     void ready_to_paint();
+
+    virtual double device_pixels_per_css_pixel() const override { return m_device_pixels_per_css_pixel; }
 
 private:
     PageClient(PageHost&, u64 id);
@@ -76,7 +76,6 @@ private:
     virtual bool is_connection_open() const override;
     virtual Gfx::Palette palette() const override;
     virtual Web::DevicePixelRect screen_rect() const override { return m_screen_rect; }
-    virtual double device_pixels_per_css_pixel() const override { return m_device_pixels_per_css_pixel; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
     virtual void page_did_invalidate(Web::CSSPixelRect const&) override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
