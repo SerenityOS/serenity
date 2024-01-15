@@ -1351,7 +1351,7 @@ static ErrorOr<void> read_quantization_table(JPEGStream& stream, JPEGLoadingCont
 
 static ErrorOr<void> skip_segment(JPEGStream& stream)
 {
-    u16 bytes_to_skip = TRY(stream.read_u16()) - 2;
+    u16 bytes_to_skip = TRY(read_effective_chunk_size(stream));
     TRY(stream.discard(bytes_to_skip));
     return {};
 }
