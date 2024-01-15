@@ -142,7 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (auto error_or_cwd = FileSystem::current_working_directory(); initial_location.is_empty() && !error_or_cwd.is_error())
-        initial_location = error_or_cwd.release_value().to_byte_string();
+        initial_location = error_or_cwd.release_value();
 
     if (initial_location.is_empty())
         initial_location = Core::StandardPaths::home_directory();
