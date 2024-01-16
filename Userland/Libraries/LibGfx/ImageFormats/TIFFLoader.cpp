@@ -75,6 +75,9 @@ public:
         if (m_metadata.strip_offsets()->size() != m_metadata.strip_byte_counts()->size())
             return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes");
 
+        if (!m_metadata.rows_per_strip().has_value() && m_metadata.strip_byte_counts()->size() != 1)
+            return Error::from_string_literal("TIFFImageDecoderPlugin: RowsPerStrip is not provided and impossible to deduce");
+
         if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
             return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value in BitsPerSample");
 
@@ -238,19 +241,20 @@ private:
     {
         auto const strips_offset = *m_metadata.strip_offsets();
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
+        auto const rows_per_strip = m_metadata.rows_per_strip().value_or(*m_metadata.image_height());
 
         auto oriented_bitmap = TRY(ExifOrientedBitmap::create(BitmapFormat::BGRA8888, { *metadata().image_width(), *metadata().image_height() }, *metadata().orientation()));
 
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
 
-            auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? *m_metadata.rows_per_strip() : *m_metadata.image_height() - *m_metadata.rows_per_strip() * strip_index;
+            auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? rows_per_strip : *m_metadata.image_height() - rows_per_strip * strip_index;
             auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index], rows_in_strip));
             auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
 
-            for (u32 row = 0; row < *m_metadata.rows_per_strip(); row++) {
-                auto const scanline = row + *m_metadata.rows_per_strip() * strip_index;
+            for (u32 row = 0; row < rows_per_strip; row++) {
+                auto const scanline = row + rows_per_strip * strip_index;
                 if (scanline >= *m_metadata.image_height())
                     break;
 

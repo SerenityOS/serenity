@@ -128,7 +128,7 @@ known_tags: List[Tag] = [
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets", is_required=True),
     Tag('274', [TIFFType.UnsignedShort], [1], Orientation.Default, "Orientation", Orientation),
     Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel", is_required=True),
-    Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip", is_required=True),
+    Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip", is_required=False),
     Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts", is_required=True),
     Tag('282', [TIFFType.UnsignedRational], [1], None, "XResolution"),
     Tag('283', [TIFFType.UnsignedRational], [1], None, "YResolution"),
