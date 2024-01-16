@@ -195,7 +195,7 @@ void HTMLTextAreaElement::create_shadow_tree_if_needed()
     MUST(element->append_child(*m_placeholder_element));
 
     m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), String {});
-    m_placeholder_text_node->set_data(get_attribute(HTML::AttributeNames::placeholder).value_or(String {}));
+    m_placeholder_text_node->set_data(get_attribute_value(HTML::AttributeNames::placeholder));
     m_placeholder_text_node->set_editable_text_node_owner(Badge<HTMLTextAreaElement> {}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
 

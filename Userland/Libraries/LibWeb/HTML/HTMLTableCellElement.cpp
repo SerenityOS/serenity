@@ -53,7 +53,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             return;
         }
         if (name == HTML::AttributeNames::valign) {
-            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::VerticalAlign))
+            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value, CSS::PropertyID::VerticalAlign))
                 style.set_property(CSS::PropertyID::VerticalAlign, parsed_value.release_nonnull());
             return;
         }
@@ -65,7 +65,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             } else if (value.equals_ignoring_ascii_case("right"sv)) {
                 style.set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::LibwebRight));
             } else {
-                if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::TextAlign))
+                if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value, CSS::PropertyID::TextAlign))
                     style.set_property(CSS::PropertyID::TextAlign, parsed_value.release_nonnull());
             }
             return;
@@ -112,7 +112,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
 // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
 unsigned int HTMLTableCellElement::col_span() const
 {
-    auto optional_value = Web::HTML::parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::colspan));
+    auto optional_value = Web::HTML::parse_non_negative_integer(get_attribute_value(HTML::AttributeNames::colspan));
 
     // If parsing that value failed, or returned zero, or if the attribute is absent, then let colspan be 1, instead.
     if (!optional_value.has_value() || optional_value.value() == 0) {
@@ -139,7 +139,7 @@ WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
 unsigned int HTMLTableCellElement::row_span() const
 {
     // If parsing that value failed or if the attribute is absent, then let rowspan be 1, instead.
-    auto value = Web::HTML::parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::rowspan)).value_or(1);
+    auto value = Web::HTML::parse_non_negative_integer(get_attribute_value(HTML::AttributeNames::rowspan)).value_or(1);
 
     // If rowspan is greater than 65534, let it be 65534 instead.
     if (value > 65534) {

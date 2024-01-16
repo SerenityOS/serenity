@@ -40,7 +40,7 @@ public:
     String data() const;
     void set_data(String const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
 
-    ByteString type() const { return deprecated_attribute(HTML::AttributeNames::type); }
+    String type() const { return get_attribute_value(HTML::AttributeNames::type); }
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed

@@ -71,7 +71,7 @@ void HTMLObjectElement::attribute_changed(FlyString const& name, Optional<String
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-object-data
 String HTMLObjectElement::data() const
 {
-    auto data = deprecated_attribute(HTML::AttributeNames::data);
+    auto data = get_attribute_value(HTML::AttributeNames::data);
     return MUST(document().parse_url(data).to_string());
 }
 
@@ -125,11 +125,11 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
         // FIXME: 3. If the classid attribute is present, and has a value that isn't the empty string, then: if the user agent can find a plugin suitable according to the value of the classid attribute, and plugins aren't being sandboxed, then that plugin should be used, and the value of the data attribute, if any, should be passed to the plugin. If no suitable plugin can be found, or if the plugin reports an error, jump to the step below labeled fallback.
 
         // 4. If the data attribute is present and its value is not the empty string, then:
-        if (auto data = deprecated_attribute(HTML::AttributeNames::data); !data.is_empty()) {
+        if (auto maybe_data = get_attribute(HTML::AttributeNames::data); maybe_data.has_value() && !maybe_data->is_empty()) {
             // 1. If the type attribute is present and its value is not a type that the user agent supports, and is not a type that the user agent can find a plugin for, then the user agent may jump to the step below labeled fallback without fetching the content to examine its real type.
 
             // 2. Parse a URL given the data attribute, relative to the element's node document.
-            auto url = document().parse_url(data);
+            auto url = document().parse_url(*maybe_data);
 
             // 3. If that failed, fire an event named error at the element, then jump to the step below labeled fallback.
             if (!url.is_valid()) {
@@ -170,7 +170,7 @@ void HTMLObjectElement::resource_did_load()
     // 4.8. Determine the resource type, as follows:
 
     // 1. Let the resource type be unknown.
-    Optional<ByteString> resource_type;
+    Optional<String> resource_type;
 
     // FIXME: 2. If the user agent is configured to strictly obey Content-Type headers for this resource, and the resource has associated Content-Type metadata, then let the resource type be the type specified in the resource's Content-Type metadata, and jump to the step below labeled handler.
     // FIXME: 3. If there is a type attribute present on the object element, and that attribute's value is not a type that the user agent supports, but it is a type that a plugin supports, then let the resource type be the type specified in that type attribute, and jump to the step below labeled handler.
@@ -195,7 +195,7 @@ void HTMLObjectElement::resource_did_load()
         if (auto type = this->type(); !type.is_empty() && (type != "application/octet-stream"sv)) {
             // 1. If the attribute's value is a type that a plugin supports, or the attribute's value is a type that starts with "image/" that is not also an XML MIME type, then let the resource type be the type specified in that type attribute.
             // FIXME: This only partially implements this step.
-            if (type.starts_with("image/"sv))
+            if (type.starts_with_bytes("image/"sv))
                 resource_type = move(type);
 
             // 2. Jump to the step below labeled handler.
@@ -203,7 +203,7 @@ void HTMLObjectElement::resource_did_load()
     }
     // * Otherwise, if the resource does not have associated Content-Type metadata
     else {
-        Optional<ByteString> tentative_type;
+        Optional<String> tentative_type;
 
         // 1. If there is a type attribute present on the object element, then let the tentative type be the type specified in that type attribute.
         //    Otherwise, let tentative type be the computed type of the resource.
@@ -213,7 +213,7 @@ void HTMLObjectElement::resource_did_load()
         // FIXME: For now, ignore application/ MIME types as we cannot render yet them anyways. We will need to implement the MIME type sniffing
         //        algorithm in order to map all unknown MIME types to "application/octet-stream".
         else if (auto type = resource()->mime_type(); !type.starts_with("application/"sv))
-            tentative_type = move(type);
+            tentative_type = MUST(String::from_byte_string(type));
 
         // 2. If tentative type is not application/octet-stream, then let resource type be tentative type and jump to the step below labeled handler.
         if (tentative_type.has_value() && tentative_type != "application/octet-stream"sv)
@@ -221,8 +221,7 @@ void HTMLObjectElement::resource_did_load()
     }
 
     // FIXME: 5. If applying the URL parser algorithm to the URL of the specified resource (after any redirects) results in a URL record whose path component matches a pattern that a plugin supports, then let resource type be the type that that plugin can handle.
-
-    run_object_representation_handler_steps(move(resource_type));
+    run_object_representation_handler_steps(resource_type.has_value() ? resource_type->to_byte_string() : ByteString::empty());
 }
 
 static bool is_xml_mime_type(StringView resource_type)
@@ -314,7 +313,7 @@ void HTMLObjectElement::run_object_representation_fallback_steps()
 void HTMLObjectElement::load_image()
 {
     // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
-    auto data = deprecated_attribute(HTML::AttributeNames::data);
+    auto data = get_attribute_value(HTML::AttributeNames::data);
     auto url = document().parse_url(data);
     m_image_request = HTML::SharedImageRequest::get_or_create(realm(), document().page(), url);
     m_image_request->add_callbacks(

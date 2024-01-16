@@ -1073,7 +1073,8 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
     // -> Otherwise
     else {
         // The result of getting an attribute by name name.
-        result = element->deprecated_get_attribute(name);
+        if (auto attr = element->get_attribute(name); attr.has_value())
+            result = attr->to_byte_string();
     }
 
     // 5. Return success with data result.

@@ -62,12 +62,12 @@ void HTMLLinkElement::inserted()
     if (m_relationship & Relationship::Preload) {
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
-        request.set_url(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
+        request.set_url(document().parse_url(get_attribute_value(HTML::AttributeNames::href)));
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     } else if (m_relationship & Relationship::DNSPrefetch) {
-        ResourceLoader::the().prefetch_dns(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
+        ResourceLoader::the().prefetch_dns(document().parse_url(get_attribute_value(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
-        ResourceLoader::the().preconnect(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
+        ResourceLoader::the().preconnect(document().parse_url(get_attribute_value(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Icon) {
         auto favicon_url = document().parse_url(href());
         auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, &document().page());

@@ -807,8 +807,8 @@ void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, PO
     ReferrerPolicy::ReferrerPolicy referrer_policy = ReferrerPolicy::ReferrerPolicy::EmptyString;
 
     // 2. If the form element's link types include the noreferrer keyword, then set referrerPolicy to "no-referrer".
-    auto rel = deprecated_attribute(HTML::AttributeNames::rel).to_lowercase();
-    auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
+    auto rel = MUST(get_attribute_value(HTML::AttributeNames::rel).to_lowercase());
+    auto link_types = rel.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
     if (link_types.contains_slow("noreferrer"sv))
         referrer_policy = ReferrerPolicy::ReferrerPolicy::NoReferrer;
 

@@ -93,12 +93,10 @@ public:
     bool has_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name) const;
     bool has_attributes() const;
 
-    ByteString deprecated_attribute(FlyString const& name) const { return deprecated_get_attribute(name); }
     Optional<String> attribute(FlyString const& name) const { return get_attribute(name); }
 
     Optional<String> get_attribute(FlyString const& name) const;
     Optional<String> get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name) const;
-    ByteString deprecated_get_attribute(FlyString const& name) const;
     String get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
@@ -135,7 +133,7 @@ public:
 
     void for_each_attribute(Function<void(Attr const&)>) const;
 
-    void for_each_attribute(Function<void(FlyString const&, ByteString const&)>) const;
+    void for_each_attribute(Function<void(FlyString const&, String const&)>) const;
 
     bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     Vector<FlyString> const& class_names() const { return m_classes; }
