@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/String.h>
+
 namespace Ladybird {
 
 enum class EnableCallgrindProfiling {
@@ -34,6 +36,8 @@ enum class WaitForDebugger {
 };
 
 struct WebContentOptions {
+    String command_line;
+    String executable_path;
     EnableCallgrindProfiling enable_callgrind_profiling { EnableCallgrindProfiling::No };
     EnableGPUPainting enable_gpu_painting { EnableGPUPainting::No };
     IsLayoutTestMode is_layout_test_mode { IsLayoutTestMode::No };

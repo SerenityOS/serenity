@@ -76,6 +76,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #endif
     });
 
+    StringView command_line {};
+    StringView executable_path {};
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
     bool use_lagom_networking = false;
@@ -83,6 +85,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool wait_for_debugger = false;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(command_line, "Chrome process command line", "command-line", 0, "command_line");
+    args_parser.add_option(executable_path, "Chrome process executable path", "executable-path", 0, "executable_path");
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
@@ -95,6 +99,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Core::Process::wait_for_debugger_and_break();
     }
 
+    Web::set_chrome_process_command_line(command_line);
+    Web::set_chrome_process_executable_path(executable_path);
     if (use_gpu_painting) {
         WebContent::PageClient::set_use_gpu_painter();
     }

@@ -44,6 +44,10 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 "--tool=callgrind"sv,
                 "--instr-atstart=no"sv,
                 path.bytes_as_string_view(),
+                "--command-line"sv,
+                web_content_options.command_line,
+                "--executable-path"sv,
+                web_content_options.executable_path,
                 "--webcontent-fd-passing-socket"sv,
                 webcontent_fd_passing_socket_string
             };

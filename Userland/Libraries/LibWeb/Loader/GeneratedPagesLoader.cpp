@@ -16,6 +16,16 @@
 
 namespace Web {
 
+void set_chrome_process_command_line(StringView command_line)
+{
+    s_chrome_process_command_line = MUST(String::from_utf8(command_line));
+}
+
+void set_chrome_process_executable_path(StringView executable_path)
+{
+    s_chrome_process_executable_path = MUST(String::from_utf8(executable_path));
+}
+
 ErrorOr<String> load_error_page(AK::URL const& url)
 {
     // Generate HTML error page from error template file
@@ -81,6 +91,8 @@ ErrorOr<String> load_about_version_page()
     generator.set("arch_name", CPU_STRING);
     generator.set("os_name", OS_STRING);
     generator.set("user_agent", default_user_agent);
+    generator.set("command_line", s_chrome_process_command_line);
+    generator.set("executable_path", s_chrome_process_executable_path);
     generator.append(template_file->data());
     return TRY(String::from_utf8(generator.as_string_view()));
 }
