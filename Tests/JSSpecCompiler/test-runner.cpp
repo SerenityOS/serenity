@@ -36,11 +36,23 @@ constexpr TestDescription::Flag always_dump_all = {
     .dump_cfg = true
 };
 
+constexpr TestDescription::Flag dump_after_frontend = {
+    .name = "reference-resolving"sv,
+    .dump_ast = true,
+    .dump_cfg = false
+};
+
 const Array regression_tests = {
     TestDescription {
         .sources = { "simple.cpp"sv },
         .flags = { always_dump_all },
     },
+    TestDescription {
+        .sources = {
+            "spec-single-function-simple.xml"sv,
+        },
+        .flags = { dump_after_frontend },
+    }
 };
 
 static const LexicalPath path_to_compiler_binary = [] {
