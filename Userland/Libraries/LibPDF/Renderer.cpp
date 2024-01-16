@@ -487,7 +487,7 @@ RENDERER_HANDLER(text_set_font)
     text_state().font_size = args[1].to_float();
 
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
-    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
+    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size / text_state().horizontal_scaling;
 
     auto resources = extra_resources.value_or(m_page.resources);
     auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
@@ -545,7 +545,7 @@ RENDERER_HANDLER(text_set_matrix_and_line_matrix)
     // Settings the text/line matrix retroactively affects fonts
     if (text_state().font) {
         auto new_text_rendering_matrix = calculate_text_rendering_matrix();
-        text_state().font->set_font_size(text_state().font_size * new_text_rendering_matrix.x_scale());
+        text_state().font->set_font_size(text_state().font_size * new_text_rendering_matrix.x_scale() / text_state().horizontal_scaling);
     }
 
     return {};
