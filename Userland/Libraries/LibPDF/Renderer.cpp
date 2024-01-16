@@ -1307,6 +1307,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(No
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
 {
     if (m_text_rendering_matrix_is_dirty) {
+        // PDF 1.7, 5.3.3. Text Space Details
         m_text_rendering_matrix = Gfx::AffineTransform(
             text_state().horizontal_scaling,
             0.0f,
