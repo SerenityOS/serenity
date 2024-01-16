@@ -155,7 +155,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_p
     int number_of_rows = bytes.size() / bytes_per_row;
 
     ByteBuffer decoded;
-    decoded.ensure_capacity(bytes.size() - number_of_rows);
+    TRY(decoded.try_ensure_capacity(bytes.size() - number_of_rows));
 
     auto empty_row = TRY(ByteBuffer::create_zeroed(bytes_per_row - 1));
     auto previous_row = empty_row.bytes();
@@ -210,7 +210,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_tiff_prediction(Bytes bytes, int columns, 
     int samples_per_pixel = colors;
 
     ByteBuffer decoded;
-    decoded.ensure_capacity(bytes.size());
+    TRY(decoded.try_ensure_capacity(bytes.size()));
 
     while (!bytes.is_empty()) {
         auto row = bytes.slice(0, columns * samples_per_pixel);
