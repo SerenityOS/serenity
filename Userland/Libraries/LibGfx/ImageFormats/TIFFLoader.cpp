@@ -354,7 +354,8 @@ private:
             TRY(loop_over_pixels(move(decode_lzw_strip)));
             break;
         }
-        case Compression::AdobeDeflate: {
+        case Compression::AdobeDeflate:
+        case Compression::PixarDeflate: {
             // This is an extension from the Technical Notes from 2002:
             // https://web.archive.org/web/20160305055905/http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf
             ByteBuffer decoded_bytes {};
