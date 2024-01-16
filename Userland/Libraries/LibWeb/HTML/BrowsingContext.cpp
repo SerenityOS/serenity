@@ -273,7 +273,7 @@ BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page, HTML::NavigableCon
     m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
         if (!is_focused_context())
             return;
-        if (m_cursor_position && m_cursor_position->node()->layout_node() && m_cursor_position->node()->layout_node()->paintable()) {
+        if (m_cursor_position && m_cursor_position->node()->paintable()) {
             m_cursor_blink_state = !m_cursor_blink_state;
             m_cursor_position->node()->paintable()->set_needs_display();
         }
