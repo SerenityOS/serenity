@@ -9,9 +9,9 @@
 
 namespace JSSpecCompiler {
 
-RecursionDecision FunctionCallCanonicalizationPass::on_entry(Tree tree)
+void FunctionCallCanonicalizationPass::on_leave(Tree tree)
 {
-    if (auto binary_operation = as<BinaryOperation>(tree); binary_operation) {
+    if (auto binary_operation = as<BinaryOperation>(tree)) {
         if (binary_operation->m_operation == BinaryOperator::FunctionCall) {
             Vector<Tree> arguments;
 
@@ -33,7 +33,6 @@ RecursionDecision FunctionCallCanonicalizationPass::on_entry(Tree tree)
             replace_current_node_with(make_ref_counted<FunctionCall>(binary_operation->m_left, move(arguments)));
         }
     }
-    return RecursionDecision::Recurse;
 }
 
 }

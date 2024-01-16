@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Compiler/GenericASTPass.h"
+#include <AK/TemporaryChange.h>
+
 #include "AST/AST.h"
+#include "Compiler/GenericASTPass.h"
 #include "Function.h"
 
 namespace JSSpecCompiler {
@@ -34,10 +36,10 @@ void RecursiveASTVisitor::replace_current_node_with(NullableTree tree)
 
 RecursionDecision RecursiveASTVisitor::recurse(Tree root, NodeSubtreePointer& pointer)
 {
-    RecursionDecision decision;
+    TemporaryChange change { m_current_subtree_pointer, &pointer };
 
-    m_current_subtree_pointer = &pointer;
-    decision = on_entry(root);
+    RecursionDecision decision = on_entry(root);
+    root = pointer.get({});
 
     if (decision == RecursionDecision::Recurse) {
         for (auto& child : root->subtrees()) {
@@ -46,7 +48,6 @@ RecursionDecision RecursiveASTVisitor::recurse(Tree root, NodeSubtreePointer& po
         }
     }
 
-    m_current_subtree_pointer = &pointer;
     on_leave(root);
 
     return RecursionDecision::Continue;

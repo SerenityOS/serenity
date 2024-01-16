@@ -22,7 +22,7 @@ public:
     using GenericASTPass::GenericASTPass;
 
 protected:
-    RecursionDecision on_entry(Tree tree) override;
+    void on_leave(Tree tree) override;
 };
 
 }

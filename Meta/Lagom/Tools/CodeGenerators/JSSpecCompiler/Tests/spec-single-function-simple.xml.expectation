@@ -1,0 +1,21 @@
+===== AST after reference-resolving =====
+SystemUTCEpochMilliseconds():
+TreeList
+  BinaryOperation Assignment
+    Var global
+    FunctionCall
+      UnresolvedReference GetGlobalObject
+  BinaryOperation Assignment
+    Var nowNs
+    FunctionCall
+      UnresolvedReference HostSystemUTCEpochNanoseconds
+      Var global
+  ReturnNode
+    FunctionCall
+      UnresolvedReference 𝔽
+      FunctionCall
+        UnresolvedReference floor
+        BinaryOperation Division
+          Var nowNs
+          MathematicalConstant 1000000
+
