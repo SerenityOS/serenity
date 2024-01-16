@@ -72,6 +72,7 @@ ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView sou
 ErrorOr<void> move_file(StringView destination_path, StringView source_path, PreserveMode = PreserveMode::Nothing);
 ErrorOr<void> remove(StringView path, RecursionMode);
 ErrorOr<off_t> size_from_stat(StringView path);
+ErrorOr<off_t> size_from_fstat(int fd);
 bool can_delete_or_move(StringView path);
 
 ErrorOr<ByteString> read_link(StringView link_path);
