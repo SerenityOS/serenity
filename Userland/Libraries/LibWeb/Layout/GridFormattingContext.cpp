@@ -2211,7 +2211,7 @@ void GridFormattingContext::determine_intrinsic_size_of_grid_container(Available
 
     if (available_space.height.is_intrinsic_sizing_constraint()) {
         CSSPixels grid_container_height = 0;
-        for (auto& track : m_grid_rows) {
+        for (auto& track : m_grid_rows_and_gaps) {
             grid_container_height += track.base_size;
         }
         m_state.get_mutable(grid_container()).set_content_height(grid_container_height);
@@ -2219,7 +2219,7 @@ void GridFormattingContext::determine_intrinsic_size_of_grid_container(Available
 
     if (available_space.width.is_intrinsic_sizing_constraint()) {
         CSSPixels grid_container_width = 0;
-        for (auto& track : m_grid_columns) {
+        for (auto& track : m_grid_columns_and_gaps) {
             grid_container_width += track.base_size;
         }
         m_state.get_mutable(grid_container()).set_content_width(grid_container_width);
