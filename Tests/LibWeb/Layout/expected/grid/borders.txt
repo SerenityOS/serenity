@@ -4,26 +4,26 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid-container> at (8,8) content-size 784x74 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,18) content-size 372x17 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,18) content-size 372.140625x17 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,18 6.34375x17] baseline: 13.296875
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (410,18) content-size 372x17 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [410,18 8.8125x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (410.140625,18) content-size 371.859375x17 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [410.140625,18 8.8125x17] baseline: 13.296875
               "2"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,55) content-size 372x17 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,55) content-size 372.140625x17 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,55 9.09375x17] baseline: 13.296875
               "3"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (410,55) content-size 372x17 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [410,55 7.75x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (410.140625,55) content-size 371.859375x17 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [410.140625,55 7.75x17] baseline: 13.296875
               "4"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -33,26 +33,26 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid-container> at (8,82) content-size 784x107 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,92) content-size 372x50 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,92) content-size 372.140625x50 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,92 6.34375x17] baseline: 13.296875
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (410,92) content-size 372x50 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [410,92 8.8125x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (410.140625,92) content-size 371.859375x50 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [410.140625,92 8.8125x17] baseline: 13.296875
               "2"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,162) content-size 372x17 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,162) content-size 372.140625x17 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,162 9.09375x17] baseline: 13.296875
               "3"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (410,162) content-size 372x17 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [410,162 7.75x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (410.140625,162) content-size 371.859375x17 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [410.140625,162 7.75x17] baseline: 13.296875
               "4"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -62,26 +62,26 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid-container> at (8,189) content-size 784x84 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,199) content-size 347x17 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,199) content-size 347.140625x17 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,199 6.34375x17] baseline: 13.296875
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (435,199) content-size 347x17 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [435,199 8.8125x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (435.140625,199) content-size 346.859375x17 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [435.140625,199 8.8125x17] baseline: 13.296875
               "2"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,246) content-size 347x17 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,246) content-size 347.140625x17 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,246 9.09375x17] baseline: 13.296875
               "3"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (435,246) content-size 347x17 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [435,246 7.75x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (435.140625,246) content-size 346.859375x17 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [435.140625,246 7.75x17] baseline: 13.296875
               "4"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -91,13 +91,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid-container> at (8,273) content-size 784x90 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (444.203125,283) content-size 337.796875x17 [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 1, rect: [444.203125,283 6.34375x17] baseline: 13.296875
+        BlockContainer <div.grid-item> at (445.4375,283) content-size 336.5625x17 [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 1, rect: [445.4375,283 6.34375x17] baseline: 13.296875
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,336) content-size 337.796875x17 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,336) content-size 339.03125x17 [BFC] children: inline
           frag 0 from TextNode start: 0, length: 1, rect: [18,336 8.8125x17] baseline: 13.296875
               "2"
           TextNode <#text>
@@ -148,39 +148,39 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x425] overflow: [8,8 784x432]
       PaintableBox (Box<DIV>.grid-container) [8,8 784x74]
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 392x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 392.140625x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,8 392x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400.140625,8 391.859375x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,45 392x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,45 392.140625x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,45 392x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400.140625,45 391.859375x37]
           TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [8,82 784x0]
       PaintableBox (Box<DIV>.grid-container) [8,82 784x107]
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,82 392x70]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,82 392.140625x70]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,82 392x70]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400.140625,82 391.859375x70]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,152 392x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,152 392.140625x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,152 392x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400.140625,152 391.859375x37]
           TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [8,189 784x0]
       PaintableBox (Box<DIV>.grid-container) [8,189 784x84]
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,189 367x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,189 367.140625x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [425,189 367x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [425.140625,189 366.859375x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,236 367x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,236 367.140625x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [425,236 367x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [425.140625,236 366.859375x37]
           TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [8,273 784x0]
       PaintableBox (Box<DIV>.grid-container) [8,273 784x90]
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [434.203125,273 357.796875x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [435.4375,273 356.5625x37]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,326 357.796875x37]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,326 359.03125x37]
           TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [8,363 784x0]
       PaintableBox (Box<DIV>.grid-container) [8,363 784x50] overflow: [8,363 784x52]

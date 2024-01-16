@@ -1302,13 +1302,11 @@ void GridFormattingContext::expand_flexible_tracks(GridDimension const dimension
 
 void GridFormattingContext::stretch_auto_tracks(GridDimension const dimension)
 {
-    // https://drafts.csswg.org/css-grid/#algo-stretch
+    // https://www.w3.org/TR/css-grid-2/#algo-stretch
     // 12.8. Stretch auto Tracks
-    // When the content-distribution property of the grid container is normal or stretch in this axis,
-    // this step expands tracks that have an auto max track sizing function by dividing any remaining
-    // positive, definite free space equally amongst them. If the free space is indefinite, but the grid
-    // container has a definite min-width/height, use that size to calculate the free space for this
-    // step instead.
+    // This step expands tracks that have an auto max track sizing function by dividing any remaining positive,
+    // definite free space equally amongst them. If the free space is indefinite, but the grid container has a
+    // definite min-width/height, use that size to calculate the free space for this step instead.
 
     auto content_distribution_property_is_normal_or_stretch = false;
     if (dimension == GridDimension::Column) {
@@ -1325,22 +1323,18 @@ void GridFormattingContext::stretch_auto_tracks(GridDimension const dimension)
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
     auto& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
 
-    CSSPixels used_space = 0;
-    for (auto& track : tracks_and_gaps) {
-        if (!track.max_track_sizing_function.is_auto(available_size))
-            used_space += track.base_size;
-    }
-
-    CSSPixels remaining_space = available_size.is_definite() ? available_size.to_px_or_zero() - used_space : 0;
     auto count_of_auto_max_sizing_tracks = 0;
     for (auto& track : tracks_and_gaps) {
         if (track.max_track_sizing_function.is_auto(available_size))
             count_of_auto_max_sizing_tracks++;
     }
 
+    CSSPixels remaining_space = get_free_space(*m_available_space, dimension).to_px_or_zero();
+    auto remaining_space_to_distribute_per_track = remaining_space / count_of_auto_max_sizing_tracks;
     for (auto& track : tracks_and_gaps) {
-        if (track.max_track_sizing_function.is_auto(available_size))
-            track.base_size = max(track.base_size, remaining_space / count_of_auto_max_sizing_tracks);
+        if (!track.max_track_sizing_function.is_auto(available_size))
+            continue;
+        track.base_size += remaining_space_to_distribute_per_track;
     }
 }
 
