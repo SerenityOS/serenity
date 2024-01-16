@@ -94,19 +94,23 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
 
 #undef CHECK
 
-    ArgvList argv_list(options.path, options.arguments.size());
+    ArgvList argv_list(options.executable, options.arguments.size());
     for (auto const& argument : options.arguments)
         argv_list.append(argument.characters());
 
-    auto pid = TRY(System::posix_spawn(options.path.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), System::environment()));
-
+    pid_t pid;
+    if (options.search_for_executable_in_path) {
+        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), System::environment()));
+    } else {
+        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), System::environment()));
+    }
     return Process { pid };
 }
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<ByteString> arguments, ByteString working_directory, KeepAsChild keep_as_child)
 {
     auto process = TRY(spawn({
-        .path = path,
+        .executable = path,
         .arguments = Vector<ByteString> { arguments },
         .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
     }));
@@ -128,7 +132,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> argument
         backing_strings.append(argument);
 
     auto process = TRY(spawn({
-        .path = path,
+        .executable = path,
         .arguments = backing_strings,
         .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
     }));
@@ -148,7 +152,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> argumen
         backing_strings.append(argument);
 
     auto process = TRY(spawn({
-        .path = path,
+        .executable = path,
         .arguments = backing_strings,
         .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
     }));
