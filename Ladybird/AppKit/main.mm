@@ -68,7 +68,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (initial_urls.is_empty())
         initial_urls.append(new_tab_page_url);
 
+    StringBuilder command_line_builder;
+    command_line_builder.join(' ', arguments.strings);
     Ladybird::WebContentOptions web_content_options {
+        .command_line = MUST(command_line_builder.to_string()),
+        .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
