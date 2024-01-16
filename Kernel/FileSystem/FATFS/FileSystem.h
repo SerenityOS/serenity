@@ -91,6 +91,11 @@ private:
     // Reads the cluster number located at the offset within the table.
     u32 cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const;
 
+    // Returns cluster number value that indicates the end of the chain
+    // has been reached. Any cluster value >= this value indicates this
+    // is the last cluster.
+    u32 end_of_chain_marker() const;
+
     ErrorOr<u32> fat_read(u32 cluster);
     ErrorOr<void> fat_write(u32 cluster, u32 value);
 
