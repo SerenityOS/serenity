@@ -8,6 +8,7 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
@@ -18,6 +19,88 @@ namespace Kernel {
 Processor* g_current_processor;
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
+
+static void store_fpu_state(FPUState* fpu_state)
+{
+    asm volatile(
+        "fsd f0, 0*8(%0) \n"
+        "fsd f1, 1*8(%0) \n"
+        "fsd f2, 2*8(%0) \n"
+        "fsd f3, 3*8(%0) \n"
+        "fsd f4, 4*8(%0) \n"
+        "fsd f5, 5*8(%0) \n"
+        "fsd f6, 6*8(%0) \n"
+        "fsd f7, 7*8(%0) \n"
+        "fsd f8, 8*8(%0) \n"
+        "fsd f9, 9*8(%0) \n"
+        "fsd f10, 10*8(%0) \n"
+        "fsd f11, 11*8(%0) \n"
+        "fsd f12, 12*8(%0) \n"
+        "fsd f13, 13*8(%0) \n"
+        "fsd f14, 14*8(%0) \n"
+        "fsd f15, 15*8(%0) \n"
+        "fsd f16, 16*8(%0) \n"
+        "fsd f17, 17*8(%0) \n"
+        "fsd f18, 18*8(%0) \n"
+        "fsd f19, 19*8(%0) \n"
+        "fsd f20, 20*8(%0) \n"
+        "fsd f21, 21*8(%0) \n"
+        "fsd f22, 22*8(%0) \n"
+        "fsd f23, 23*8(%0) \n"
+        "fsd f24, 24*8(%0) \n"
+        "fsd f25, 25*8(%0) \n"
+        "fsd f26, 26*8(%0) \n"
+        "fsd f27, 27*8(%0) \n"
+        "fsd f28, 28*8(%0) \n"
+        "fsd f29, 29*8(%0) \n"
+        "fsd f30, 30*8(%0) \n"
+        "fsd f31, 31*8(%0) \n"
+
+        "frcsr t0 \n"
+        "sd t0, 32*8(%0) \n" ::"r"(fpu_state)
+        : "t0", "memory");
+}
+
+static void load_fpu_state(FPUState* fpu_state)
+{
+    asm volatile(
+        "fld f0, 0*8(%0) \n"
+        "fld f1, 1*8(%0) \n"
+        "fld f2, 2*8(%0) \n"
+        "fld f3, 3*8(%0) \n"
+        "fld f4, 4*8(%0) \n"
+        "fld f5, 5*8(%0) \n"
+        "fld f6, 6*8(%0) \n"
+        "fld f7, 7*8(%0) \n"
+        "fld f8, 8*8(%0) \n"
+        "fld f9, 9*8(%0) \n"
+        "fld f10, 10*8(%0) \n"
+        "fld f11, 11*8(%0) \n"
+        "fld f12, 12*8(%0) \n"
+        "fld f13, 13*8(%0) \n"
+        "fld f14, 14*8(%0) \n"
+        "fld f15, 15*8(%0) \n"
+        "fld f16, 16*8(%0) \n"
+        "fld f17, 17*8(%0) \n"
+        "fld f18, 18*8(%0) \n"
+        "fld f19, 19*8(%0) \n"
+        "fld f20, 20*8(%0) \n"
+        "fld f21, 21*8(%0) \n"
+        "fld f22, 22*8(%0) \n"
+        "fld f23, 23*8(%0) \n"
+        "fld f24, 24*8(%0) \n"
+        "fld f25, 25*8(%0) \n"
+        "fld f26, 26*8(%0) \n"
+        "fld f27, 27*8(%0) \n"
+        "fld f28, 28*8(%0) \n"
+        "fld f29, 29*8(%0) \n"
+        "fld f30, 30*8(%0) \n"
+        "fld f31, 31*8(%0) \n"
+
+        "ld t0, 32*8(%0) \n"
+        "csrw fcsr, t0 \n" ::"r"(fpu_state)
+        : "t0", "memory");
+}
 
 template<typename T>
 void ProcessorBase<T>::early_initialize(u32 cpu)
@@ -37,6 +120,8 @@ void ProcessorBase<T>::initialize(u32)
     auto sstatus = RISCV64::CSR::SSTATUS::read();
     sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
     RISCV64::CSR::SSTATUS::write(sstatus);
+
+    store_fpu_state(&s_clean_fpu_state);
 
     // FIXME: Actually set correct count when we support SMP on riscv64.
     g_total_processors.store(1u, AK::MemoryOrder::memory_order_release);
@@ -392,10 +477,120 @@ void ProcessorBase<T>::exit_trap(TrapFrame& trap)
 }
 
 template<typename T>
-ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread&, size_t)
+ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& thread, size_t max_frames)
 {
-    dbgln("FIXME: Implement Processor::capture_stack_trace() for riscv64");
-    return Vector<FlatPtr, 32> {};
+    dbgln("thread: {}", thread);
+
+    FlatPtr frame_ptr = 0, pc = 0;
+    Vector<FlatPtr, 32> stack_trace;
+
+    auto walk_stack = [&](FlatPtr frame_ptr) -> ErrorOr<void> {
+        constexpr size_t max_stack_frames = 4096;
+        bool is_walking_userspace_stack = false;
+        TRY(stack_trace.try_append(pc));
+        size_t count = 1;
+        while (frame_ptr != 0 && stack_trace.size() < max_stack_frames) {
+            FlatPtr retaddr;
+
+            count++;
+            if (max_frames != 0 && count > max_frames)
+                break;
+
+            if (!Memory::is_user_address(VirtualAddress { frame_ptr })) {
+                if (is_walking_userspace_stack) {
+                    dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
+                    break;
+                }
+            } else {
+                is_walking_userspace_stack = true;
+            }
+
+            dbgln("frame_ptr: {:p}", frame_ptr);
+
+            if (Memory::is_user_range(VirtualAddress(frame_ptr - 2 * sizeof(FlatPtr)), sizeof(FlatPtr) * 2)) {
+                dbgln("user");
+
+                if (copy_from_user(&retaddr, &((FlatPtr*)frame_ptr)[-1]).is_error() || retaddr == 0)
+                    break;
+                dbgln("retaddr: {:p}", retaddr);
+                TRY(stack_trace.try_append(retaddr));
+
+                if (copy_from_user(&frame_ptr, &((FlatPtr*)frame_ptr)[-2]).is_error())
+                    break;
+            } else {
+                dbgln("kernel");
+
+                void* fault_at;
+                if (!safe_memcpy(&retaddr, &((FlatPtr*)frame_ptr)[-1], sizeof(FlatPtr), fault_at) || retaddr == 0)
+                    break;
+                dbgln("retaddr: {:p}", retaddr);
+
+                TRY(stack_trace.try_append(retaddr));
+                if (!safe_memcpy(&frame_ptr, &((FlatPtr*)frame_ptr)[-2], sizeof(FlatPtr), fault_at))
+                    break;
+            }
+        }
+        return {};
+    };
+
+    auto capture_current_thread = [&]() {
+        frame_ptr = bit_cast<FlatPtr>(__builtin_frame_address(0));
+        pc = bit_cast<FlatPtr>(__builtin_return_address(0));
+
+        return walk_stack(frame_ptr);
+    };
+
+    // Since the thread may be running on another processor, there
+    // is a chance a context switch may happen while we're trying
+    // to get it. It also won't be entirely accurate and merely
+    // reflect the status at the last context switch.
+    SpinlockLocker lock(g_scheduler_lock);
+    if (&thread == Processor::current_thread()) {
+        VERIFY(thread.state() == Thread::State::Running);
+        // Leave the scheduler lock. If we trigger page faults we may
+        // need to be preempted. Since this is our own thread it won't
+        // cause any problems as the stack won't change below this frame.
+        lock.unlock();
+        dbgln("capture_current_thread");
+        TRY(capture_current_thread());
+    } else if (thread.is_active()) {
+        VERIFY(thread.cpu() != Processor::current_id());
+        VERIFY_NOT_REACHED(); // We don't support SMP on riscv64 yet, so this should be unreachable
+    } else {
+        switch (thread.state()) {
+        case Thread::State::Running:
+            VERIFY_NOT_REACHED(); // should have been handled above
+        case Thread::State::Runnable:
+        case Thread::State::Stopped:
+        case Thread::State::Blocked:
+        case Thread::State::Dying:
+        case Thread::State::Dead: {
+            dbgln("dead");
+            ScopedAddressSpaceSwitcher switcher(thread.process());
+            auto& regs = thread.regs();
+
+            pc = regs.ip();
+            frame_ptr = regs.x[7];
+
+            dbgln("Program counter pc={:p}", regs.pc);
+            dbgln("ra={:p} sp={:p} gp={:p} tp={:p} fp={:p}", regs.x[0], regs.sp(), regs.x[2], regs.x[3], regs.x[7]);
+            dbgln("a0={:p} a1={:p} a2={:p} a3={:p} a4={:p} a5={:p} a6={:p} a7={:p}", regs.x[9], regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14], regs.x[15], regs.x[16]);
+            dbgln("t0={:p} t1={:p} t2={:p} t3={:p} t4={:p} t5={:p} t6={:p}", regs.x[4], regs.x[5], regs.x[6], regs.x[27], regs.x[28], regs.x[29], regs.x[30]);
+            dbgln("s1={:p} s2={:p} s3={:p} s4={:p} s5={:p} s6={:p} s7={:p} s8={:p} s9={:p} s10={:p} s11={:p}", regs.x[8], regs.x[17], regs.x[18], regs.x[19], regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24], regs.x[25], regs.x[26]);
+
+            // TODO: We need to leave the scheduler lock here, but we also
+            //       need to prevent the target thread from being run while
+            //       we walk the stack
+            lock.unlock();
+            TRY(walk_stack(frame_ptr));
+            break;
+        }
+        default:
+            dbgln("Cannot capture stack trace for thread {} in state {}", thread, thread.state_string());
+            break;
+        }
+    }
+    return stack_trace;
 }
 
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread)
@@ -410,8 +605,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     Processor::set_current_thread(*to_thread);
 
-    // FIXME:
-    // store_fpu_state(&from_thread->fpu_state());
+    store_fpu_state(&from_thread->fpu_state());
 
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
@@ -428,8 +622,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
 
-    // FIXME:
-    // load_fpu_state(&to_thread->fpu_state());
+    load_fpu_state(&to_thread->fpu_state());
 }
 
 NAKED void thread_context_first_enter()

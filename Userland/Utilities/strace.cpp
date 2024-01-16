@@ -908,11 +908,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         syscall_arg_t arg3 = 0;          // FIXME
         TODO_AARCH64();
 #elif ARCH(RISCV64)
-        syscall_arg_t syscall_index = 0; // FIXME
-        syscall_arg_t arg1 = 0;          // FIXME
-        syscall_arg_t arg2 = 0;          // FIXME
-        syscall_arg_t arg3 = 0;          // FIXME
-        TODO_RISCV64();
+        syscall_arg_t syscall_index = regs.x[16];
+        syscall_arg_t arg1 = regs.x[9];
+        syscall_arg_t arg2 = regs.x[10];
+        syscall_arg_t arg3 = regs.x[11];
 #else
 #    error Unknown architecture
 #endif
@@ -931,8 +930,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         u64 res = 0; // FIXME
         TODO_AARCH64();
 #elif ARCH(RISCV64)
-        u64 res = 0; // FIXME
-        TODO_RISCV64();
+        u64 res = regs.x[9];
 #else
 #    error Unknown architecture
 #endif

@@ -38,7 +38,9 @@ int main(int argc, char** argv)
 
     bool do_all_crash_types = false;
     bool do_segmentation_violation = false;
+#if !ARCH(RISCV64)
     bool do_division_by_zero = false;
+#endif
     bool do_illegal_instruction = false;
     bool do_abort = false;
     bool do_write_to_uninitialized_malloc_memory = false;
@@ -65,7 +67,9 @@ int main(int argc, char** argv)
         "(i.e., Kernel or UE) by crashing in many different ways.");
     args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
+#if !ARCH(RISCV64)
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
+#endif
     args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
     args_parser.add_option(do_abort, "Call `abort()`", nullptr, 'a');
     args_parser.add_option(do_read_from_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then read from it", nullptr, 'm');
@@ -107,6 +111,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
+#if !ARCH(RISCV64)
     if (do_division_by_zero || do_all_crash_types) {
         any_failures |= !Crash("Division by zero", []() {
             volatile int lala = 10;
@@ -115,6 +120,7 @@ int main(int argc, char** argv)
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
+#endif
 
     if (do_illegal_instruction || do_all_crash_types) {
         any_failures |= !Crash("Illegal instruction", []() {
@@ -211,8 +217,7 @@ int main(int argc, char** argv)
             (void)makeshift_esp;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)makeshift_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(makeshift_esp));
 #else
 #    error Unknown architecture
 #endif
@@ -230,8 +235,7 @@ int main(int argc, char** argv)
             (void)bad_esp;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)bad_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(bad_esp));
 #else
 #    error Unknown architecture
 #endif
@@ -254,8 +258,8 @@ int main(int argc, char** argv)
             (void)bad_esp;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)bad_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(bad_esp));
+            asm volatile("sd zero, (sp)");
 #else
 #    error Unknown architecture
 #endif
@@ -300,7 +304,7 @@ int main(int argc, char** argv)
 #elif ARCH(AARCH64)
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            TODO_RISCV64();
+            asm volatile("mret");
 #else
 #    error Unknown architecture
 #endif

@@ -54,7 +54,7 @@ configure() {
         -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
         -DLLVM_OCAML_INSTALL_PATH="${SERENITY_INSTALL_ROOT}/usr/local/ocaml" \
         -DLLVM_PTHREAD_LIB=pthread \
-        -DLLVM_TARGETS_TO_BUILD=X86
+        -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV"
 }
 
 build() {

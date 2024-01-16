@@ -421,8 +421,8 @@ long double rintl(long double value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    // FIXME
+    return value;
 #elif ARCH(X86_64)
     long double res;
     asm(
@@ -479,8 +479,8 @@ long lrintl(long double value)
     (void)value;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
+    // TODO
+    return value;
 #elif ARCH(X86_64)
     long res;
     asm(

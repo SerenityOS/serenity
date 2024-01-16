@@ -104,14 +104,22 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
     Thread::current()->m_signal_mask = ucontext.uc_sigmask;
     Thread::current()->m_currently_handled_signal = 0;
 #if ARCH(X86_64)
-    auto sp = registers.rsp;
+    auto kernel_sp = registers.rsp;
+#elif ARCH(RISCV64)
+    auto kernel_sp = registers.x[1];
 #endif
 
+    // FIXME: copy_ptrace_registers_into_kernel_registers overrides the kernel stack pointer
     copy_ptrace_registers_into_kernel_registers(registers, static_cast<PtraceRegisters const&>(ucontext.uc_mcontext));
 
 #if ARCH(X86_64)
     registers.set_userspace_sp(registers.rsp);
-    registers.rsp = sp;
+    registers.rsp = kernel_sp;
+#elif ARCH(RISCV64)
+    VERIFY(kernel_sp >= kernel_mapping_base);
+    VERIFY(registers.x[1] < kernel_mapping_base);
+    registers.set_userspace_sp(registers.x[1]);
+    registers.x[1] = kernel_sp;
 #endif
 
     return saved_ax;

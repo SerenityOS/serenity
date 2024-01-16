@@ -568,7 +568,7 @@ void Thread::finalize()
         auto trace_or_error = backtrace();
         if (!trace_or_error.is_error()) {
             auto trace = trace_or_error.release_value();
-            dbgln("Backtrace:");
+            dbgln("[2]Backtrace:");
             kernelputstr(trace->characters(), trace->length());
         }
     }

@@ -6,87 +6,85 @@
 
 .section .text.asm_trap_handler
 
-#define XLEN 8
-
-#define REGISTER_STATE_SIZE (36 * XLEN)
+#define REGISTER_STATE_SIZE (36 * 8)
 #if REGISTER_STATE_SIZE % 16 != 0
 #    error "REGISTER_STATE_SIZE is not a multiple of 16 bytes!"
 #endif
 
-#define SSTATUS_SLOT        (31 * XLEN)
-#define SEPC_SLOT           (32 * XLEN)
-#define SCAUSE_SLOT         (33 * XLEN)
-#define STVAL_SLOT          (34 * XLEN)
-#define USERSPACE_SP_SLOT   (35 * XLEN)
+#define SSTATUS_SLOT        (31 * 8)
+#define SEPC_SLOT           (32 * 8)
+#define SCAUSE_SLOT         (33 * 8)
+#define STVAL_SLOT          (34 * 8)
+#define USERSPACE_SP_SLOT   (35 * 8)
 
 .extern trap_handler
 
 .macro save_gpr_state_to_stack
-    sd x1, 0*XLEN(sp)
-    sd x2, 1*XLEN(sp)
-    sd x3, 2*XLEN(sp)
-    sd x4, 3*XLEN(sp)
-    sd x5, 4*XLEN(sp)
-    sd x6, 5*XLEN(sp)
-    sd x7, 6*XLEN(sp)
-    sd x8, 7*XLEN(sp)
-    sd x9, 8*XLEN(sp)
-    sd x10, 9*XLEN(sp)
-    sd x11, 10*XLEN(sp)
-    sd x12, 11*XLEN(sp)
-    sd x13, 12*XLEN(sp)
-    sd x14, 13*XLEN(sp)
-    sd x15, 14*XLEN(sp)
-    sd x16, 15*XLEN(sp)
-    sd x17, 16*XLEN(sp)
-    sd x18, 17*XLEN(sp)
-    sd x19, 18*XLEN(sp)
-    sd x20, 19*XLEN(sp)
-    sd x21, 20*XLEN(sp)
-    sd x22, 21*XLEN(sp)
-    sd x23, 22*XLEN(sp)
-    sd x24, 23*XLEN(sp)
-    sd x25, 24*XLEN(sp)
-    sd x26, 25*XLEN(sp)
-    sd x27, 26*XLEN(sp)
-    sd x28, 27*XLEN(sp)
-    sd x29, 28*XLEN(sp)
-    sd x30, 29*XLEN(sp)
-    sd x31, 30*XLEN(sp)
+    sd x1, 0*8(sp)
+    sd x2, 1*8(sp)
+    sd x3, 2*8(sp)
+    sd x4, 3*8(sp)
+    sd x5, 4*8(sp)
+    sd x6, 5*8(sp)
+    sd x7, 6*8(sp)
+    sd x8, 7*8(sp)
+    sd x9, 8*8(sp)
+    sd x10, 9*8(sp)
+    sd x11, 10*8(sp)
+    sd x12, 11*8(sp)
+    sd x13, 12*8(sp)
+    sd x14, 13*8(sp)
+    sd x15, 14*8(sp)
+    sd x16, 15*8(sp)
+    sd x17, 16*8(sp)
+    sd x18, 17*8(sp)
+    sd x19, 18*8(sp)
+    sd x20, 19*8(sp)
+    sd x21, 20*8(sp)
+    sd x22, 21*8(sp)
+    sd x23, 22*8(sp)
+    sd x24, 23*8(sp)
+    sd x25, 24*8(sp)
+    sd x26, 25*8(sp)
+    sd x27, 26*8(sp)
+    sd x28, 27*8(sp)
+    sd x29, 28*8(sp)
+    sd x30, 29*8(sp)
+    sd x31, 30*8(sp)
 .endm
 
 .macro load_gpr_state_from_stack_except_sp
-    ld x1, 0*XLEN(sp)
+    ld x1, 0*8(sp)
     // sp
-    ld x3, 2*XLEN(sp)
-    ld x4, 3*XLEN(sp)
-    ld x5, 4*XLEN(sp)
-    ld x6, 5*XLEN(sp)
-    ld x7, 6*XLEN(sp)
-    ld x8, 7*XLEN(sp)
-    ld x9, 8*XLEN(sp)
-    ld x10, 9*XLEN(sp)
-    ld x11, 10*XLEN(sp)
-    ld x12, 11*XLEN(sp)
-    ld x13, 12*XLEN(sp)
-    ld x14, 13*XLEN(sp)
-    ld x15, 14*XLEN(sp)
-    ld x16, 15*XLEN(sp)
-    ld x17, 16*XLEN(sp)
-    ld x18, 17*XLEN(sp)
-    ld x19, 18*XLEN(sp)
-    ld x20, 19*XLEN(sp)
-    ld x21, 20*XLEN(sp)
-    ld x22, 21*XLEN(sp)
-    ld x23, 22*XLEN(sp)
-    ld x24, 23*XLEN(sp)
-    ld x25, 24*XLEN(sp)
-    ld x26, 25*XLEN(sp)
-    ld x27, 26*XLEN(sp)
-    ld x28, 27*XLEN(sp)
-    ld x29, 28*XLEN(sp)
-    ld x30, 29*XLEN(sp)
-    ld x31, 30*XLEN(sp)
+    ld x3, 2*8(sp)
+    ld x4, 3*8(sp)
+    ld x5, 4*8(sp)
+    ld x6, 5*8(sp)
+    ld x7, 6*8(sp)
+    ld x8, 7*8(sp)
+    ld x9, 8*8(sp)
+    ld x10, 9*8(sp)
+    ld x11, 10*8(sp)
+    ld x12, 11*8(sp)
+    ld x13, 12*8(sp)
+    ld x14, 13*8(sp)
+    ld x15, 14*8(sp)
+    ld x16, 15*8(sp)
+    ld x17, 16*8(sp)
+    ld x18, 17*8(sp)
+    ld x19, 18*8(sp)
+    ld x20, 19*8(sp)
+    ld x21, 20*8(sp)
+    ld x22, 21*8(sp)
+    ld x23, 22*8(sp)
+    ld x24, 23*8(sp)
+    ld x25, 24*8(sp)
+    ld x26, 25*8(sp)
+    ld x27, 26*8(sp)
+    ld x28, 27*8(sp)
+    ld x29, 28*8(sp)
+    ld x30, 29*8(sp)
+    ld x31, 30*8(sp)
 .endm
 
 .p2align 2
@@ -142,8 +140,8 @@ asm_trap_handler:
     // Set up TrapFrame struct on the stack
     mv t0, sp
     addi sp, sp, -16
-    sd t0, 1*XLEN(sp)
-    sd zero, 0*XLEN(sp)
+    sd t0, 1*8(sp)
+    sd zero, 0*8(sp)
 
     // Move stack pointer into first argument register
     // and jump to the C++ trap handler
@@ -169,7 +167,7 @@ asm_trap_handler:
     csrw sscratch, zero
 
     load_gpr_state_from_stack_except_sp
-    ld sp, 1*XLEN(sp)
+    ld sp, 1*8(sp)
 
     // Remove RegisterState struct from kernel stack
     addi sp, sp, REGISTER_STATE_SIZE

@@ -50,7 +50,6 @@ set(LIBTEST_BASED_SOURCES
     TestKernelFilePermissions.cpp
     TestKernelPledge.cpp
     TestKernelUnveil.cpp
-    TestMemoryDeviceMmap.cpp
     TestMunMap.cpp
     TestProcFS.cpp
     TestProcFSWrite.cpp
@@ -62,6 +61,10 @@ set(LIBTEST_BASED_SOURCES
 
 if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     list(APPEND LIBTEST_BASED_SOURCES TestEFault.cpp)
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    list(APPEND TEST_SOURCES TestMemoryDeviceMmap.cpp)
 endif()
 
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)

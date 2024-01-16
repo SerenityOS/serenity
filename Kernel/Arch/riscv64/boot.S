@@ -14,7 +14,7 @@ start:
   // We also expect that an implementation of the RISC-V Supervisor Binary Interface is available.
 
   // Don't touch a0/a1 as we expect those registers to contain the hart ID
-  // and a pointer to the Flattened Fevice Tree.
+  // and a pointer to the Flattened Device Tree.
 
   // Set sstatus to a known state (which includes disabling supervisor interrupts).
   csrw sstatus, zero

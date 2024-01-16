@@ -550,7 +550,7 @@ void dump_thread_list(bool with_stack_traces)
             auto trace_or_error = thread.backtrace();
             if (!trace_or_error.is_error()) {
                 auto trace = trace_or_error.release_value();
-                dbgln("Backtrace:");
+                dbgln("[1]Backtrace:");
                 kernelputstr(trace->characters(), trace->length());
             }
         }

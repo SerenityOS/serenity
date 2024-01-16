@@ -83,9 +83,12 @@ ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with
         committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
-    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
+    auto new_physical_pages = VMObject::try_create_physical_pages(size);
+    if (new_physical_pages.is_error()) {
+        dbgln("try_create_with_size: {}", new_physical_pages.error());
+    }
 
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages), strategy, move(committed_pages)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages.value()), strategy, move(committed_pages)));
 }
 
 ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)

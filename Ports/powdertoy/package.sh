@@ -2,8 +2,8 @@
 port=powdertoy
 version=96.2.350
 useconfigure=true
-configopts=("-Dbuildtype=release" "build-release" "--cross-file" "${SERENITY_BUILD_DIR}/meson-cross-file.txt")
-depends=("luajit" "curl" "libfftw3f" "zlib" "SDL2")
+configopts=("-Dbuildtype=release" "-Dlua=none" "-Dstatic=none" "-Db_pie=true" "-Dworkaround_gcc_no_pie=false" "-Dx86_sse=none" "build-release" "--cross-file" "${SERENITY_BUILD_DIR}/meson-cross-file.txt")
+depends=("curl" "libfftw3f" "zlib" "SDL2")
 files=(
     "https://github.com/The-Powder-Toy/The-Powder-Toy/archive/refs/tags/v${version}.tar.gz#d95cbadee22632687661e8fc488bd64405d81c0dca737e16420f26e93ea5bf58"
 )

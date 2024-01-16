@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+Date: Sun, 24 Dec 2023 00:27:29 +0100
+Subject: [PATCH] Add support for the Serenity RISC-V port
+
+---
+ tcg/riscv/tcg-target.c.inc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tcg/riscv/tcg-target.c.inc b/tcg/riscv/tcg-target.c.inc
+index eeaeb6b6e3f6979a0d2ebcd1735954274ca98672..511161b40279e8ea08d062ad9e678e3554c74515 100644
+--- a/tcg/riscv/tcg-target.c.inc
++++ b/tcg/riscv/tcg-target.c.inc
+@@ -2060,7 +2060,7 @@ static void sigill_handler(int signo, siginfo_t *si, void *data)
+ {
+     /* Skip the faulty instruction */
+     ucontext_t *uc = (ucontext_t *)data;
+-    uc->uc_mcontext.__gregs[REG_PC] += 4;
++    uc->uc_mcontext.pc += 4;
+ 
+     got_sigill = 1;
+ }

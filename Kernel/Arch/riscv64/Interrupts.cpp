@@ -16,7 +16,9 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 namespace Kernel {
 
@@ -110,7 +112,21 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             break;
 
         case Breakpoint:
-            TODO();
+            if (trap_frame.regs->previous_mode() == ExecutionMode::User) {
+                // HACK?
+                trap_frame.regs->sepc += 4;
+
+                auto* current_thread = Thread::current();
+                auto& current_process = current_thread->process();
+
+                if (auto* tracer = current_process.tracer()) {
+                    tracer->set_regs(*trap_frame.regs);
+                }
+
+                current_thread->send_urgent_signal_to_self(SIGTRAP);
+            } else {
+                handle_crash(*trap_frame.regs, "Unexpected breakpoint trap from supervisor mode", SIGTRAP, false);
+            }
             break;
 
         default:

@@ -63,10 +63,13 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
     (void)end_color;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)regs;
-    (void)begin_color;
-    (void)end_color;
-    TODO_RISCV64();
+    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}){}",
+        begin_color,
+        Syscall::to_string((Syscall::Function)regs.x[16]),
+        regs.x[9],
+        regs.x[10],
+        regs.x[11],
+        end_color);
 #else
 #    error Unknown architecture
 #endif
@@ -148,8 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         const FlatPtr ip = 0; // FIXME
         TODO_AARCH64();
 #elif ARCH(RISCV64)
-        const FlatPtr ip = 0; // FIXME
-        TODO_RISCV64();
+        const FlatPtr ip = regs.value().pc;
 #else
 #    error Unknown architecture
 #endif

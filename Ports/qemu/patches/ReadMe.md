@@ -27,3 +27,8 @@ HPET timer read for each tick.
 file-posix: Include the correct file for ioctl on SerenityOS
 
 
+## `0005-Add-support-for-the-Serenity-RISC-V-port.patch`
+
+Add support for the Serenity RISC-V port
+
+

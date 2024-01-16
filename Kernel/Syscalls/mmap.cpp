@@ -205,7 +205,11 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         if (flags & MAP_PURGEABLE) {
             vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(rounded_size, strategy));
         } else {
+            if (addr == 0x10000)
+                dbgln("A");
             vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(rounded_size, strategy));
+            if (addr == 0x10000)
+                dbgln("B");
         }
     } else {
         if (offset < 0)
@@ -234,6 +238,10 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         if (map_fixed)
             TRY(space->unmap_mmap_range(VirtualAddress(addr), size));
 
+        if (addr == 0x10000) {
+            space->dump_regions();
+            dbgln("C");
+        }
         region = TRY(space->allocate_region_with_vmobject(
             map_randomized ? Memory::RandomizeVirtualAddress::Yes : Memory::RandomizeVirtualAddress::No,
             requested_range.base(),
@@ -244,9 +252,13 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
             {},
             prot,
             map_shared));
+        if (addr == 0x10000)
+            dbgln("D");
 
-        if (!region)
+        if (!region) {
+            dbgln("AAA !region");
             return ENOMEM;
+        }
 
         if (description)
             region->set_mmap(true, description->is_readable(), description->is_writable());

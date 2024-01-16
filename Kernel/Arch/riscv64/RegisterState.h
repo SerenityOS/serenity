@@ -66,7 +66,8 @@ inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_
     for (auto i = 0; i < 31; i++)
         ptrace_regs.x[i] = kernel_regs.x[i];
 
-    ptrace_regs.sp = kernel_regs.userspace_sp();
+    ptrace_regs.x[1] = kernel_regs.userspace_sp();
+    // ptrace_regs.sp = kernel_regs.userspace_sp();
     ptrace_regs.pc = kernel_regs.ip();
 }
 
@@ -75,7 +76,8 @@ inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_re
     for (auto i = 0; i < 31; i++)
         kernel_regs.x[i] = ptrace_regs.x[i];
 
-    kernel_regs.set_userspace_sp(ptrace_regs.sp);
+    // kernel_regs.set_userspace_sp(ptrace_regs.x[1]);
+    // kernel_regs.set_userspace_sp(ptrace_regs.sp);
     kernel_regs.set_ip(ptrace_regs.pc);
 }
 
