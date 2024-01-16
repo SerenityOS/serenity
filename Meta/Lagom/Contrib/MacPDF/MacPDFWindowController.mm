@@ -132,6 +132,18 @@
     [_pdfView goToPreviousPage:sender];
 }
 
+- (BOOL)validateMenuItem:(NSMenuItem*)item
+{
+    if ([_pdfView validateMenuItem:item])
+        return YES;
+    return [super validateMenuItem:item];
+}
+
+- (IBAction)toggleShowClippingPaths:(id)sender
+{
+    [_pdfView toggleShowClippingPaths:sender];
+}
+
 - (IBAction)showGoToPageDialog:(id)sender
 {
     auto alert = [[NSAlert alloc] init];
