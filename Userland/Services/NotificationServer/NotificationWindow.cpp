@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "NotificationWindow.h"
+#include "NotificationWidget.h"
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
@@ -65,25 +67,19 @@ NotificationWindow::NotificationWindow(i32 client_id, String const& text, String
 
     set_rect(rect);
 
-    auto widget = set_main_widget<GUI::Widget>();
+    auto widget = NotificationServer::NotificationWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    set_main_widget(widget);
 
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::HorizontalBoxLayout>(8, 6);
-
-    m_image = &widget->add<GUI::ImageWidget>();
+    m_image = widget->find_descendant_of_type_named<GUI::ImageWidget>("icon"sv);
     m_image->set_visible(icon.is_valid());
     if (icon.is_valid()) {
         m_image->set_bitmap(icon.bitmap());
     }
 
-    auto& left_container = widget->add<GUI::Widget>();
-    left_container.set_layout<GUI::VerticalBoxLayout>();
-
-    m_title_label = &left_container.add<GUI::Label>(title);
-    m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
-    m_title_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_text_label = &left_container.add<GUI::Label>(text);
-    m_text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    m_title_label = widget->find_descendant_of_type_named<GUI::Label>("title");
+    m_title_label->set_text(title);
+    m_text_label = widget->find_descendant_of_type_named<GUI::Label>("text");
+    m_text_label->set_text(text);
 
     // FIXME: There used to be code for setting the tooltip here, but since we
     // expand the notification now we no longer set the tooltip. Should there be
