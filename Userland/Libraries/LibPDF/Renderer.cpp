@@ -283,7 +283,10 @@ RENDERER_HANDLER(path_close)
 RENDERER_HANDLER(path_append_rect)
 {
     auto rect = Gfx::FloatRect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
-    rect_path(m_current_path, map(rect));
+    // Note: The path of the rectangle is mapped (rather than the rectangle).
+    // This is because negative width/heights are possible, and result in different
+    // winding orders, but this is lost by Gfx::AffineTransform::map().
+    m_current_path.append_path(map(rect_path(rect)));
     return {};
 }
 
@@ -931,6 +934,11 @@ template<typename T>
 Gfx::Rect<T> Renderer::map(Gfx::Rect<T> rect) const
 {
     return state().ctm.map(rect);
+}
+
+Gfx::Path Renderer::map(Gfx::Path const& path) const
+{
+    return path.copy_transformed(state().ctm);
 }
 
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)

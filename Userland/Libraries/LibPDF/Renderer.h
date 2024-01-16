@@ -155,6 +155,8 @@ private:
     template<typename T>
     ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
 
+    Gfx::Path map(Gfx::Path const&) const;
+
     Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
 
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
