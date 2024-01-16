@@ -249,12 +249,12 @@ void SpecParsingStep::run(TranslationUnitRef translation_unit)
 
     auto spec_function = SpecFunction::create(&m_document->root()).release_value_but_fixme_should_propagate_errors();
 
-    Vector<StringView> argument_names;
+    Vector<FunctionArgument> arguments;
     for (auto const& argument : spec_function.m_arguments)
-        argument_names.append(argument.name);
+        arguments.append({ argument.name });
 
     translation_unit->adopt_function(
-        make_ref_counted<FunctionDefinition>(spec_function.m_name, spec_function.m_algorithm.m_tree, move(argument_names)));
+        make_ref_counted<FunctionDefinition>(spec_function.m_name, spec_function.m_algorithm.m_tree, move(arguments)));
 }
 
 }

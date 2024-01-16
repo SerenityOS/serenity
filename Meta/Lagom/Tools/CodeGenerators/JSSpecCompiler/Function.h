@@ -38,24 +38,28 @@ private:
     HashMap<StringView, FunctionDeclarationRef> m_function_index;
 };
 
+struct FunctionArgument {
+    StringView name;
+};
+
 class FunctionDeclaration : public RefCounted<FunctionDeclaration> {
 public:
-    FunctionDeclaration(StringView name);
+    FunctionDeclaration(StringView name, Vector<FunctionArgument>&& arguments);
 
     virtual ~FunctionDeclaration() = default;
 
     TranslationUnitRef m_translation_unit = nullptr;
     StringView m_name;
+    Vector<FunctionArgument> m_arguments;
 };
 
 class FunctionDefinition : public FunctionDeclaration {
 public:
-    FunctionDefinition(StringView name, Tree ast, Vector<StringView>&& argument_names);
+    FunctionDefinition(StringView name, Tree ast, Vector<FunctionArgument>&& arguments);
 
     void reindex_ssa_variables();
 
     Tree m_ast;
-    Vector<StringView> m_argument_names;
 
     // Populates during reference resolving
     // NOTE: The hash map here is ordered since we do not want random hash changes to break our test
@@ -67,7 +71,7 @@ public:
     RefPtr<ControlFlowGraph> m_cfg;
 
     // Fields populate during SSA building
-    Vector<SSAVariableDeclarationRef> m_arguments;
+    Vector<SSAVariableDeclarationRef> m_ssa_arguments;
     SSAVariableDeclarationRef m_return_value;
     Vector<SSAVariableDeclarationRef> m_local_ssa_variables;
 };

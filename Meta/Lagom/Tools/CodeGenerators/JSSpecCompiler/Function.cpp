@@ -40,15 +40,15 @@ FunctionDeclarationRef TranslationUnit::find_declaration_by_name(StringView name
     return it->value;
 }
 
-FunctionDeclaration::FunctionDeclaration(StringView name)
+FunctionDeclaration::FunctionDeclaration(StringView name, Vector<FunctionArgument>&& arguments)
     : m_name(name)
+    , m_arguments(arguments)
 {
 }
 
-FunctionDefinition::FunctionDefinition(StringView name, Tree ast, Vector<StringView>&& argument_names)
-    : FunctionDeclaration(name)
+FunctionDefinition::FunctionDefinition(StringView name, Tree ast, Vector<FunctionArgument>&& arguments)
+    : FunctionDeclaration(name, move(arguments))
     , m_ast(move(ast))
-    , m_argument_names(move(argument_names))
     , m_named_return_value(make_ref_counted<NamedVariableDeclaration>("$return"sv))
 {
 }
