@@ -189,6 +189,7 @@ private:
     void resolve_border_radii();
     void resolve_box_shadow_data();
     void resolve_text_shadows(Vector<Painting::PaintableWithLines&> const& paintables_with_lines);
+    void resolve_css_transform();
 };
 
 }
