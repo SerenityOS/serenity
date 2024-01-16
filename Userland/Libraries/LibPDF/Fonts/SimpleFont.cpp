@@ -48,12 +48,13 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
 
 PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer)
 {
-    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
-    auto font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size;
-
-    auto character_spacing = text_rendering_matrix.x_scale() * renderer.text_state().character_spacing;
-    auto word_spacing = text_rendering_matrix.x_scale() * renderer.text_state().word_spacing;
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    auto font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling;
+
+    auto character_spacing = text_rendering_matrix.x_scale() * renderer.text_state().character_spacing / horizontal_scaling;
+    auto word_spacing = text_rendering_matrix.x_scale() * renderer.text_state().word_spacing / horizontal_scaling;
 
     for (auto char_code : string.bytes()) {
         // Use the width specified in the font's dictionary if available,
