@@ -170,7 +170,7 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
 
     auto const info = ContentInfo {
         .type = TRY(String::from_utf8(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
-        .length = TRY(FileSystem::size(real_path.bytes_as_string_view()))
+        .length = static_cast<u64>(TRY(FileSystem::size_from_stat(real_path.bytes_as_string_view())))
     };
     TRY(send_response(*stream, request, move(info)));
     return true;

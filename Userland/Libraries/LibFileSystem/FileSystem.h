@@ -71,7 +71,7 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
 ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView source_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 ErrorOr<void> move_file(StringView destination_path, StringView source_path, PreserveMode = PreserveMode::Nothing);
 ErrorOr<void> remove(StringView path, RecursionMode);
-ErrorOr<size_t> size(StringView path);
+ErrorOr<off_t> size_from_stat(StringView path);
 bool can_delete_or_move(StringView path);
 
 ErrorOr<ByteString> read_link(StringView link_path);

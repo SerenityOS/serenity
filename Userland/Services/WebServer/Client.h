@@ -28,7 +28,7 @@ private:
 
     struct ContentInfo {
         String type;
-        size_t length {};
+        u64 length {};
     };
 
     ErrorOr<void, WrappedError> on_ready_to_read();
