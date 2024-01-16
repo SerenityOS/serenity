@@ -39,7 +39,7 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
             entry.path = ByteString::formatted("{}/{}", playlist_path.dirname(), entry.path);
 
         if (!entry.extended_info->file_size_in_bytes.has_value()) {
-            auto size = FileSystem::size(entry.path);
+            auto size = FileSystem::size_from_stat(entry.path);
             if (size.is_error())
                 continue;
             entry.extended_info->file_size_in_bytes = size.value();

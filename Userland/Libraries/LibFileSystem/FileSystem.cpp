@@ -350,7 +350,7 @@ ErrorOr<void> remove(StringView path, RecursionMode mode)
     return {};
 }
 
-ErrorOr<size_t> size(StringView path)
+ErrorOr<off_t> size_from_stat(StringView path)
 {
     auto st = TRY(Core::System::stat(path));
     return st.st_size;
