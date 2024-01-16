@@ -321,7 +321,7 @@ def detect_ram_size() -> str | None:
     return environ.get("SERENITY_RAM_SIZE", "1G")
 
 
-def setup_qemu_binary(config: Configuration):
+def set_up_qemu_binary(config: Configuration):
     qemu_binary_basename: str | None = None
     if "SERENITY_QEMU_BIN" in environ:
         qemu_binary_basename = environ.get("SERENITY_QEMU_BIN")
@@ -368,7 +368,7 @@ def setup_qemu_binary(config: Configuration):
             config.qemu_kind = QEMUKind.Other
 
     if config.qemu_binary is None:
-        # Setup full path for the binary if possible (otherwise trust system PATH)
+        # Set up full path for the binary if possible (otherwise trust system PATH)
         local_qemu_bin = Path(str(config.serenity_src), "Toolchain/Local/qemu/bin/", qemu_binary_basename)
         old_local_qemu_bin = Path(str(config.serenity_src), "Toolchain/Local/x86_64/bin/", qemu_binary_basename)
         if local_qemu_bin.exists():
@@ -401,7 +401,7 @@ def check_qemu_version(config: Configuration):
         )
 
 
-def setup_virtualization_support(config: Configuration):
+def set_up_virtualization_support(config: Configuration):
     provided_virtualization_enable = environ.get("SERENITY_VIRTUALIZATION_SUPPORT")
     # The user config always forces the platform-appropriate virtualizer to be used,
     # even if we couldn't detect it otherwise; this is intended behavior.
@@ -423,7 +423,7 @@ def setup_virtualization_support(config: Configuration):
             config.virtualization_support = False
 
 
-def setup_basic_kernel_cmdline(config: Configuration):
+def set_up_basic_kernel_cmdline(config: Configuration):
     provided_cmdline = environ.get("SERENITY_KERNEL_CMDLINE")
     if provided_cmdline is not None:
         # Split environment variable at spaces, since we don't pass arguments like shell scripts do.
@@ -434,7 +434,7 @@ def setup_basic_kernel_cmdline(config: Configuration):
         config.kernel_cmdline.append("disable_virtio")
 
 
-def setup_disk_image_path(config: Configuration):
+def set_up_disk_image_path(config: Configuration):
     provided_disk_image = environ.get("SERENITY_DISK_IMAGE")
     if provided_disk_image is not None:
         config.disk_image = Path(provided_disk_image)
@@ -452,7 +452,7 @@ def setup_disk_image_path(config: Configuration):
         )
 
 
-def setup_cpu(config: Configuration):
+def set_up_cpu(config: Configuration):
     if config.qemu_kind == QEMUKind.NativeWindows:
         config.qemu_cpu = "max,vmx=off"
     else:
@@ -461,7 +461,7 @@ def setup_cpu(config: Configuration):
             config.qemu_cpu = provided_cpu
 
 
-def setup_cpu_count(config: Configuration):
+def set_up_cpu_count(config: Configuration):
     if config.architecture != Arch.x86_64:
         return
 
@@ -477,7 +477,7 @@ def setup_cpu_count(config: Configuration):
         config.qemu_cpu += ",-x2apic"
 
 
-def setup_spice(config: Configuration):
+def set_up_spice(config: Configuration):
     if environ.get("SERENITY_SPICE") == "1":
         chardev_info = run(
             [str(config.qemu_binary), "-chardev", "help"],
@@ -500,7 +500,7 @@ def setup_spice(config: Configuration):
             config.spice_arguments.extend(["-device", "virtserialport,chardev=vdagent,nr=1"])
 
 
-def setup_audio_backend(config: Configuration):
+def set_up_audio_backend(config: Configuration):
     if config.qemu_kind == QEMUKind.MacOS:
         config.audio_backend = "coreaudio"
     elif config.qemu_kind == QEMUKind.NativeWindows:
@@ -528,7 +528,7 @@ def setup_audio_backend(config: Configuration):
         config.audio_backend += ",id=snd0"
 
 
-def setup_audio_hardware(config: Configuration):
+def set_up_audio_hardware(config: Configuration):
     provided_audio_hardware = environ.get("SERENITY_AUDIO_HARDWARE", "intelhda")
     if provided_audio_hardware == "ac97":
         config.audio_devices = ["ac97,audiodev=snd0"]
@@ -550,7 +550,7 @@ def has_virgl() -> bool:
         return False
 
 
-def setup_screens(config: Configuration):
+def set_up_screens(config: Configuration):
     provided_screen_count_unparsed = environ.get("SERENITY_SCREENS", "1")
     try:
         config.screen_count = int(provided_screen_count_unparsed)
@@ -585,7 +585,7 @@ def setup_screens(config: Configuration):
             config.display_backend = "gtk,gl=off"
 
 
-def setup_display_device(config: Configuration):
+def set_up_display_device(config: Configuration):
     config.enable_gl = environ.get("SERENITY_GL") == "1"
     provided_display_device = environ.get("SERENITY_QEMU_DISPLAY_DEVICE")
     if provided_display_device is not None:
@@ -595,7 +595,7 @@ def setup_display_device(config: Configuration):
         if config.qemu_kind == QEMUKind.MacOS:
             raise RunError("SERENITY_GL is not supported since there's no GL backend on macOS")
         elif config.screen_count > 1:
-            raise RunError("SERENITY_GL and multi-monitor support cannot be setup simultaneously")
+            raise RunError("SERENITY_GL and multi-monitor support cannot be set up simultaneously")
         config.display_device = "virtio-vga-gl"
 
     elif config.screen_count > 1:
@@ -613,7 +613,7 @@ def setup_display_device(config: Configuration):
         config.kernel_cmdline.append("vmmouse=off")
 
 
-def setup_boot_drive(config: Configuration):
+def set_up_boot_drive(config: Configuration):
     provided_nvme_enable = environ.get("SERENITY_NVME_ENABLE")
     if provided_nvme_enable is not None:
         config.nvme_enable = provided_nvme_enable == "1"
@@ -657,7 +657,7 @@ def determine_host_address() -> str:
     return environ.get("SERENITY_HOST_IP", "127.0.0.1")
 
 
-def setup_gdb(config: Configuration):
+def set_up_gdb(config: Configuration):
     config.enable_gdb = environ.get("SERENITY_DISABLE_GDB_SOCKET") != "1"
     if config.qemu_kind == QEMUKind.NativeWindows or (
         config.virtualization_support and config.qemu_kind == QEMUKind.MacOS
@@ -668,7 +668,7 @@ def setup_gdb(config: Configuration):
         config.extra_arguments.extend(["-gdb", f"tcp:{config.host_ip}:1234"])
 
 
-def setup_network_hardware(config: Configuration):
+def set_up_network_hardware(config: Configuration):
     config.packet_logging_arguments = (environ.get("SERENITY_PACKET_LOGGING_ARG", "")).split()
 
     provided_ethernet_device_type = environ.get("SERENITY_ETHERNET_DEVICE_TYPE")
@@ -686,7 +686,7 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
         config.network_default_device = f"{config.ethernet_device_type},netdev=breh"
 
 
-def setup_kernel(config: Configuration):
+def set_up_kernel(config: Configuration):
     if config.architecture == Arch.Aarch64:
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
     elif config.architecture == Arch.RISCV64:
@@ -695,7 +695,7 @@ def setup_kernel(config: Configuration):
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Prekernel/Prekernel", "-initrd", "Kernel/Kernel"]
 
 
-def setup_machine_devices(config: Configuration):
+def set_up_machine_devices(config: Configuration):
     # TODO: Maybe disable SPICE everwhere except the default machine?
 
     if config.qemu_kind != QEMUKind.NativeWindows:
@@ -890,23 +890,23 @@ def configure_and_run():
         raise RunError("SERENITY_SOURCE_DIR not set or empty")
     config.serenity_src = Path(serenity_src)
 
-    setup_qemu_binary(config)
+    set_up_qemu_binary(config)
     check_qemu_version(config)
-    setup_virtualization_support(config)
-    setup_basic_kernel_cmdline(config)
-    setup_disk_image_path(config)
-    setup_cpu(config)
-    setup_cpu_count(config)
-    setup_spice(config)
-    setup_audio_backend(config)
-    setup_audio_hardware(config)
-    setup_screens(config)
-    setup_display_device(config)
-    setup_boot_drive(config)
-    setup_gdb(config)
-    setup_network_hardware(config)
-    setup_kernel(config)
-    setup_machine_devices(config)
+    set_up_virtualization_support(config)
+    set_up_basic_kernel_cmdline(config)
+    set_up_disk_image_path(config)
+    set_up_cpu(config)
+    set_up_cpu_count(config)
+    set_up_spice(config)
+    set_up_audio_backend(config)
+    set_up_audio_hardware(config)
+    set_up_screens(config)
+    set_up_display_device(config)
+    set_up_boot_drive(config)
+    set_up_gdb(config)
+    set_up_network_hardware(config)
+    set_up_kernel(config)
+    set_up_machine_devices(config)
 
     arguments = assemble_arguments(config)
 
