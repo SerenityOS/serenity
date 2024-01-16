@@ -62,7 +62,7 @@ static StringView s_current_test_path;
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No)
+    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, String const& command_line, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No)
     {
 #if defined(AK_OS_SERENITY)
         auto database = TRY(WebView::Database::create());
@@ -77,9 +77,14 @@ public:
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
+        (void)command_line;
         (void)is_layout_test_mode;
 #else
-        Ladybird::WebContentOptions web_content_options { .is_layout_test_mode = is_layout_test_mode };
+        Ladybird::WebContentOptions web_content_options {
+            .command_line = command_line,
+            .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
+            .is_layout_test_mode = is_layout_test_mode,
+        };
 
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
         view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options));
@@ -614,7 +619,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         is_layout_test_mode = true;
     }
 
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No));
+    StringBuilder command_line_builder;
+    command_line_builder.join(' ', arguments.strings);
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, MUST(command_line_builder.to_string()), web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No));
 
     if (!test_root_path.is_empty()) {
         return run_tests(*view, test_root_path, dump_failed_ref_tests);
