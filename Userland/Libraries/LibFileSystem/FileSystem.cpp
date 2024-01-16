@@ -12,8 +12,12 @@
 #include <LibFileSystem/FileSystem.h>
 #include <limits.h>
 
-#ifdef AK_OS_SERENITY
+#if defined(AK_OS_SERENITY)
 #    include <serenity.h>
+#elif defined(AK_OS_BSD_GENERIC)
+#    include <sys/disk.h>
+#elif defined(AK_OS_LINUX)
+#    include <linux/fs.h>
 #endif
 
 // On Linux distros that use glibc `basename` is defined as a macro that expands to `__xpg_basename`, so we undefine it
@@ -360,6 +364,52 @@ ErrorOr<off_t> size_from_fstat(int fd)
 {
     auto st = TRY(Core::System::fstat(fd));
     return st.st_size;
+}
+
+ErrorOr<off_t> block_device_size_from_ioctl(StringView path)
+{
+    if (!path.characters_without_null_termination())
+        return Error::from_syscall("ioctl"sv, -EFAULT);
+
+    ByteString path_string = path;
+    int fd = open(path_string.characters(), O_RDONLY);
+
+    if (fd < 0)
+        return Error::from_errno(errno);
+
+    off_t size = TRY(block_device_size_from_ioctl(fd));
+
+    if (close(fd) != 0)
+        return Error::from_errno(errno);
+
+    return size;
+}
+
+ErrorOr<off_t> block_device_size_from_ioctl(int fd)
+{
+#if defined(AK_OS_SERENITY)
+    u64 size = 0;
+    TRY(Core::System::ioctl(fd, STORAGE_DEVICE_GET_SIZE, &size));
+    return static_cast<off_t>(size);
+#elif defined(AK_OS_MACOS)
+    u64 block_count = 0;
+    u32 block_size = 0;
+    TRY(Core::System::ioctl(fd, DKIOCGETBLOCKCOUNT, &block_count));
+    TRY(Core::System::ioctl(fd, DKIOCGETBLOCKSIZE, &block_size));
+    return static_cast<off_t>(block_count * block_size);
+#elif defined(AK_OS_FREEBSD) || defined(AK_OS_NETBSD)
+    off_t size = 0;
+    TRY(Core::System::ioctl(fd, DIOCGMEDIASIZE, &size));
+    return size;
+#elif defined(AK_OS_LINUX)
+    u64 size = 0;
+    TRY(Core::System::ioctl(fd, BLKGETSIZE64, &size));
+    return static_cast<off_t>(size);
+#else
+    // FIXME: Add support for more platforms.
+    (void)fd;
+    return Error::from_string_literal("Platform does not support getting block device size");
+#endif
 }
 
 bool can_delete_or_move(StringView path)
