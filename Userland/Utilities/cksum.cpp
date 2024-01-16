@@ -80,7 +80,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (paths.is_empty()) {
-        paths.append("-"sv);
+        // The POSIX spec explains that when given no file operands, we should read from stdin and only print the checksum and file size. So let's do
+        // this here.
+        auto file_or_error = Core::File::open_file_or_standard_stream("-"sv, Core::File::OpenMode::Read);
+        auto filepath = "/dev/stdin"sv;
+        if (file_or_error.is_error()) {
+            warnln("{}: {}: {}", arguments.strings[0], filepath, file_or_error.error());
+            exit(1);
+        }
+
+        auto file = file_or_error.release_value();
+        auto data = build_checksum_data_using_file(file.ptr(), filepath);
+
+        outln("{:08x} {}", data.checksum, data.file_size);
+
+        // We return fail here since build_checksum_data_using_file() may set it to true, indicating problems have occurred.
+        return fail;
     }
 
     for (auto& path : paths) {
