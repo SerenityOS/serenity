@@ -17,11 +17,13 @@
             name: "title"
             font_weight: "Bold"
             text_alignment: "CenterLeft"
+            preferred_height: "shrink"
+            max_height: "shrink"
         }
 
         @GUI::Label {
             name: "text"
-            text_alignment: "CenterLeft"
+            text_alignment: "TopLeft"
         }
     }
 }
