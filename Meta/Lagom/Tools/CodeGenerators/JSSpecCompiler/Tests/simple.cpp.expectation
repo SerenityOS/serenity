@@ -1,5 +1,5 @@
 ===== AST after parser =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfBranch
     UnresolvedReference cond1
@@ -27,7 +27,7 @@ TreeList
     UnresolvedReference b
 
 ===== AST after function-call-canonicalization =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfBranch
     UnresolvedReference cond1
@@ -55,7 +55,7 @@ TreeList
     UnresolvedReference b
 
 ===== AST after if-branch-merging =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfElseIfChain
     UnresolvedReference cond1
@@ -81,7 +81,7 @@ TreeList
     UnresolvedReference b
 
 ===== AST after reference-resolving =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfElseIfChain
     Var cond1
@@ -107,7 +107,7 @@ TreeList
     Var b
 
 ===== AST after cfg-building =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfElseIfChain
     Var cond1
@@ -133,7 +133,7 @@ TreeList
     Var b
 
 ===== CFG after cfg-building =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 0:
 ControlFlowBranch true=3 false=7
   Var cond1
@@ -183,7 +183,7 @@ BinaryOperation Assignment
 ControlFlowJump jump=1
 
 ===== AST after cfg-simplification =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfElseIfChain
     Var cond1
@@ -209,7 +209,7 @@ TreeList
     Var b
 
 ===== CFG after cfg-simplification =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 0:
 ControlFlowBranch true=3 false=6
   Var cond1
@@ -250,7 +250,7 @@ BinaryOperation Assignment
 ControlFlowJump jump=2
 
 ===== AST after ssa-building =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfElseIfChain
     Var cond1@0
@@ -276,7 +276,7 @@ TreeList
     Var b@2
 
 ===== CFG after ssa-building =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 0:
 ControlFlowBranch true=1 false=6
   Var cond1@0
@@ -319,7 +319,7 @@ BinaryOperation Assignment
 ControlFlowJump jump=3
 
 ===== AST after dce =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 TreeList
   IfElseIfChain
     Var cond1@0
@@ -345,7 +345,7 @@ TreeList
     Var b@2
 
 ===== CFG after dce =====
-f([ cond1, cond2 ]):
+f(cond1, cond2):
 0:
 ControlFlowBranch true=1 false=6
   Var cond1@0

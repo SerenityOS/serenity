@@ -71,6 +71,19 @@ private:
     Vector<CompilationStepWithDumpOptions> m_pipeline;
 };
 
+template<>
+struct AK::Formatter<Vector<FunctionArgument>> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Vector<FunctionArgument> const& arguments)
+    {
+        for (size_t i = 0; i < arguments.size(); ++i) {
+            TRY(builder.put_string(arguments[i].name));
+            if (i + 1 != arguments.size())
+                TRY(builder.put_literal(", "sv));
+        }
+        return {};
+    }
+};
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -125,13 +138,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Functions referenced in DifferenceISODate
     // TODO: This is here just for testing. In a long run, we need some place, which is not
     //       `serenity_main`, to store built-in functions.
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("CompareISODate"sv));
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("CreateDateDurationRecord"sv));
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("AddISODate"sv));
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("ISODaysInMonth"sv));
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("ISODateToEpochDays"sv));
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("truncate"sv));
-    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("remainder"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("CompareISODate"sv, Vector<FunctionArgument> {}));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("CreateDateDurationRecord"sv, Vector<FunctionArgument> {}));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("AddISODate"sv, Vector<FunctionArgument> {}));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("ISODaysInMonth"sv, Vector<FunctionArgument> {}));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("ISODateToEpochDays"sv, Vector<FunctionArgument> {}));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("truncate"sv, Vector<FunctionArgument> {}));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("remainder"sv, Vector<FunctionArgument> {}));
 
     for (auto const& step : pipeline.pipeline()) {
         step.step->run(&translation_unit);
@@ -144,14 +157,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (step.dump_ast) {
             outln(stderr, "===== AST after {} =====", step.step->name());
             for (auto const& function : translation_unit.functions_to_compile()) {
-                outln(stderr, "{}({}):", function->m_name, function->m_argument_names);
+                outln(stderr, "{}({}):", function->m_name, function->m_arguments);
                 outln(stderr, "{}", function->m_ast);
             }
         }
         if (step.dump_cfg && translation_unit.functions_to_compile()[0]->m_cfg != nullptr) {
             outln(stderr, "===== CFG after {} =====", step.step->name());
             for (auto const& function : translation_unit.functions_to_compile()) {
-                outln(stderr, "{}({}):", function->m_name, function->m_argument_names);
+                outln(stderr, "{}({}):", function->m_name, function->m_arguments);
                 outln(stderr, "{}", *function->m_cfg);
             }
         }

@@ -430,16 +430,16 @@ void SSABuildingPass::rename_variables(Vertex u, Vertex from)
 void SSABuildingPass::rename_variables()
 {
     HashMap<StringView, size_t> argument_index_by_name;
-    for (size_t i = 0; i < m_function->m_argument_names.size(); ++i)
-        argument_index_by_name.set(m_function->m_argument_names[i], i);
-    m_function->m_arguments.resize(m_function->m_argument_names.size());
+    for (size_t i = 0; i < m_function->m_arguments.size(); ++i)
+        argument_index_by_name.set(m_function->m_arguments[i].name, i);
+    m_function->m_ssa_arguments.resize(m_function->m_arguments.size());
 
     for (auto const& [name, var_decl] : m_function->m_local_variables) {
         make_new_ssa_variable_for(var_decl);
 
         if (auto maybe_index = argument_index_by_name.get(name); maybe_index.has_value()) {
             size_t index = maybe_index.value();
-            m_function->m_arguments[index] = m_def_stack.get(var_decl).value()[0];
+            m_function->m_ssa_arguments[index] = m_def_stack.get(var_decl).value()[0];
         }
     }
     make_new_ssa_variable_for(m_function->m_named_return_value);

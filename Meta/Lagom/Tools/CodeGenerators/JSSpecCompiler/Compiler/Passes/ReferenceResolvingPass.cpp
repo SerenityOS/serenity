@@ -14,8 +14,8 @@ namespace JSSpecCompiler {
 
 void ReferenceResolvingPass::process_function()
 {
-    for (auto name : m_function->m_argument_names)
-        m_function->m_local_variables.set(name, make_ref_counted<NamedVariableDeclaration>(name));
+    for (auto argument : m_function->m_arguments)
+        m_function->m_local_variables.set(argument.name, make_ref_counted<NamedVariableDeclaration>(argument.name));
     GenericASTPass::process_function();
 }
 
