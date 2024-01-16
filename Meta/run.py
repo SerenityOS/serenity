@@ -292,15 +292,14 @@ def determine_qemu_kind() -> QEMUKind:
 
 
 def determine_serenity_arch() -> Arch:
-    match environ.get("SERENITY_ARCH"):
-        case "aarch64":
-            return Arch.Aarch64
-        case "riscv64":
-            return Arch.RISCV64
-        case "x86_64":
-            return Arch.x86_64
-        case _:
-            raise RunError("Please specify a valid SerenityOS architecture")
+    arch = environ.get("SERENITY_ARCH")
+    if arch == "aarch64":
+        return Arch.Aarch64
+    if arch == "riscv64":
+        return Arch.RISCV64
+    if arch == "x86_64":
+        return Arch.x86_64
+    raise RunError("Please specify a valid SerenityOS architecture")
 
 
 def determine_machine_type() -> MachineType:
@@ -327,13 +326,12 @@ def setup_qemu_binary(config: Configuration):
     if "SERENITY_QEMU_BIN" in environ:
         qemu_binary_basename = environ.get("SERENITY_QEMU_BIN")
     else:
-        match config.architecture:
-            case Arch.Aarch64:
-                qemu_binary_basename = "qemu-system-aarch64"
-            case Arch.RISCV64:
-                qemu_binary_basename = "qemu-system-riscv64"
-            case Arch.x86_64:
-                qemu_binary_basename = "qemu-system-x86_64"
+        if config.architecture == Arch.Aarch64:
+            qemu_binary_basename = "qemu-system-aarch64"
+        elif config.architecture == Arch.RISCV64:
+            qemu_binary_basename = "qemu-system-riscv64"
+        elif config.architecture == Arch.x86_64:
+            qemu_binary_basename = "qemu-system-x86_64"
     if qemu_binary_basename is None:
         raise RunError("QEMU binary could not be determined")
 
@@ -532,13 +530,12 @@ def setup_audio_backend(config: Configuration):
 
 def setup_audio_hardware(config: Configuration):
     provided_audio_hardware = environ.get("SERENITY_AUDIO_HARDWARE", "intelhda")
-    match provided_audio_hardware:
-        case "ac97":
-            config.audio_devices = ["ac97,audiodev=snd0"]
-        case "intelhda":
-            config.audio_devices = ["ich9-intel-hda", "hda-output,audiodev=snd0"]
-        case _:
-            raise RunError(f"Unknown audio hardware {provided_audio_hardware}. Supported values: ac97, intelhda")
+    if provided_audio_hardware == "ac97":
+        config.audio_devices = ["ac97,audiodev=snd0"]
+    elif provided_audio_hardware == "intelhda":
+        config.audio_devices = ["ich9-intel-hda", "hda-output,audiodev=snd0"]
+    else:
+        raise RunError(f"Unknown audio hardware {provided_audio_hardware}. Supported values: ac97, intelhda")
 
     if config.machine_type.supports_pc_speaker() and config.architecture == Arch.x86_64:
         config.extra_arguments.extend(["-machine", "pcspk-audiodev=snd0"])
@@ -690,13 +687,12 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
 
 
 def setup_kernel(config: Configuration):
-    match config.architecture:
-        case Arch.Aarch64:
-            config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
-        case Arch.RISCV64:
-            config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
-        case Arch.x86_64:
-            config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Prekernel/Prekernel", "-initrd", "Kernel/Kernel"]
+    if config.architecture == Arch.Aarch64:
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
+    elif config.architecture == Arch.RISCV64:
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
+    elif config.architecture == Arch.x86_64:
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Prekernel/Prekernel", "-initrd", "Kernel/Kernel"]
 
 
 def setup_machine_devices(config: Configuration):
@@ -733,100 +729,98 @@ def setup_machine_devices(config: Configuration):
         return
 
     # Machine specific base setups
-    match config.machine_type:
-        case MachineType.QEMU35Grub | MachineType.QEMU35:
-            config.qemu_machine = "q35"
-            config.vga_type = None
-            # We set up our own custom display devices.
-            config.display_device = None
-            config.add_devices(
-                [
-                    "isa-debugcon,chardev=stdout",
-                    "vmware-svga",
-                    "ich9-usb-ehci1,bus=pcie.0,multifunction=on,addr=0x05.3,multifunction=on,id=ehci1",
-                    "ich9-usb-uhci1,bus=pcie.0,multifunction=on,addr=0x05.0,masterbus=ehci1.0,firstport=0",
-                    "ich9-usb-uhci2,bus=pcie.0,multifunction=on,addr=0x05.1,masterbus=ehci1.0,firstport=2",
-                    "ich9-usb-uhci3,bus=pcie.0,multifunction=on,addr=0x05.2,masterbus=ehci1.0,firstport=4",
-                    "ich9-usb-ehci2,bus=pcie.0,multifunction=on,addr=0x07.3,multifunction=on,id=ehci2",
-                    "ich9-usb-uhci4,bus=pcie.0,multifunction=on,addr=0x07.0,masterbus=ehci2.0,firstport=0",
-                    "ich9-usb-uhci5,bus=pcie.0,multifunction=on,addr=0x07.1,masterbus=ehci2.0,firstport=2",
-                    "ich9-usb-uhci6,bus=pcie.0,multifunction=on,addr=0x07.2,masterbus=ehci2.0,firstport=4",
-                    "pcie-root-port,port=0x10,chassis=1,id=pcie.1,bus=pcie.0,multifunction=on,addr=0x6",
-                    "pcie-root-port,port=0x11,chassis=2,id=pcie.2,bus=pcie.0,addr=0x6.0x1",
-                    "pcie-root-port,port=0x12,chassis=3,id=pcie.3,bus=pcie.0,addr=0x6.0x2",
-                    "pcie-root-port,port=0x13,chassis=4,id=pcie.4,bus=pcie.0,addr=0x6.0x3",
-                    "pcie-root-port,port=0x14,chassis=5,id=pcie.5,bus=pcie.0,addr=0x6.0x4",
-                    "pcie-root-port,port=0x15,chassis=6,id=pcie.6,bus=pcie.0,addr=0x6.0x5",
-                    "pcie-root-port,port=0x16,chassis=7,id=pcie.7,bus=pcie.0,addr=0x6.0x6",
-                    "pcie-root-port,port=0x17,chassis=8,id=pcie.8,bus=pcie.0,addr=0x6.0x7",
-                    "ich9-intel-hda,bus=pcie.2,addr=0x03.0x0",
-                    "bochs-display",
-                    "nec-usb-xhci,bus=pcie.2,addr=0x11.0x0",
-                    "pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0",
-                    "sdhci-pci,bus=bridge1,addr=0x1.0x0",
-                ]
-            )
-            config.character_devices.append("stdio,id=stdout,mux=on")
-            config.enable_usb = True
-        case MachineType.MicroVM | MachineType.ISAPC:
-            config.character_devices.append("stdio,id=stdout,mux=on")
-            config.qemu_cpu = "qemu64"
-            config.cpu_count = None
-            config.display_device = None
-            config.network_default_device = None
-            config.audio_devices = []
-            config.add_devices(["isa-debugcon,chardev=stdout", "isa-vga", "ne2k_isa,netdev=breh"])
+    if config.machine_type in [MachineType.QEMU35Grub, MachineType.QEMU35]:
+        config.qemu_machine = "q35"
+        config.vga_type = None
+        # We set up our own custom display devices.
+        config.display_device = None
+        config.add_devices(
+            [
+                "isa-debugcon,chardev=stdout",
+                "vmware-svga",
+                "ich9-usb-ehci1,bus=pcie.0,multifunction=on,addr=0x05.3,multifunction=on,id=ehci1",
+                "ich9-usb-uhci1,bus=pcie.0,multifunction=on,addr=0x05.0,masterbus=ehci1.0,firstport=0",
+                "ich9-usb-uhci2,bus=pcie.0,multifunction=on,addr=0x05.1,masterbus=ehci1.0,firstport=2",
+                "ich9-usb-uhci3,bus=pcie.0,multifunction=on,addr=0x05.2,masterbus=ehci1.0,firstport=4",
+                "ich9-usb-ehci2,bus=pcie.0,multifunction=on,addr=0x07.3,multifunction=on,id=ehci2",
+                "ich9-usb-uhci4,bus=pcie.0,multifunction=on,addr=0x07.0,masterbus=ehci2.0,firstport=0",
+                "ich9-usb-uhci5,bus=pcie.0,multifunction=on,addr=0x07.1,masterbus=ehci2.0,firstport=2",
+                "ich9-usb-uhci6,bus=pcie.0,multifunction=on,addr=0x07.2,masterbus=ehci2.0,firstport=4",
+                "pcie-root-port,port=0x10,chassis=1,id=pcie.1,bus=pcie.0,multifunction=on,addr=0x6",
+                "pcie-root-port,port=0x11,chassis=2,id=pcie.2,bus=pcie.0,addr=0x6.0x1",
+                "pcie-root-port,port=0x12,chassis=3,id=pcie.3,bus=pcie.0,addr=0x6.0x2",
+                "pcie-root-port,port=0x13,chassis=4,id=pcie.4,bus=pcie.0,addr=0x6.0x3",
+                "pcie-root-port,port=0x14,chassis=5,id=pcie.5,bus=pcie.0,addr=0x6.0x4",
+                "pcie-root-port,port=0x15,chassis=6,id=pcie.6,bus=pcie.0,addr=0x6.0x5",
+                "pcie-root-port,port=0x16,chassis=7,id=pcie.7,bus=pcie.0,addr=0x6.0x6",
+                "pcie-root-port,port=0x17,chassis=8,id=pcie.8,bus=pcie.0,addr=0x6.0x7",
+                "ich9-intel-hda,bus=pcie.2,addr=0x03.0x0",
+                "bochs-display",
+                "nec-usb-xhci,bus=pcie.2,addr=0x11.0x0",
+                "pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0",
+                "sdhci-pci,bus=bridge1,addr=0x1.0x0",
+            ]
+        )
+        config.character_devices.append("stdio,id=stdout,mux=on")
+        config.enable_usb = True
+    elif config.machine_type in [MachineType.MicroVM, MachineType.ISAPC]:
+        config.character_devices.append("stdio,id=stdout,mux=on")
+        config.qemu_cpu = "qemu64"
+        config.cpu_count = None
+        config.display_device = None
+        config.network_default_device = None
+        config.audio_devices = []
+        config.add_devices(["isa-debugcon,chardev=stdout", "isa-vga", "ne2k_isa,netdev=breh"])
 
-            if config.machine_type == MachineType.MicroVM:
-                config.qemu_machine = "microvm,pit=on,rtc=on,pic=on"
-                config.add_devices(["isa-ide", "ide-hd,drive=disk", "i8042"])
-            else:  # ISAPC
-                config.qemu_machine = "isapc"
+        if config.machine_type == MachineType.MicroVM:
+            config.qemu_machine = "microvm,pit=on,rtc=on,pic=on"
+            config.add_devices(["isa-ide", "ide-hd,drive=disk", "i8042"])
+        else:  # ISAPC
+            config.qemu_machine = "isapc"
 
-        case MachineType.CI:
-            config.display_backend = "none"
-            config.audio_backend = None
-            config.audio_devices = []
-            config.extra_arguments.extend(["-serial", "stdio", "-no-reboot", "-monitor", "none"])
-            config.spice_arguments = []
-            if config.architecture == Arch.Aarch64:
-                config.extra_arguments.extend(["-serial", "file:debug.log"])
-            else:
-                config.add_device("ich9-ahci")
-                config.extra_arguments.extend(["-debugcon", "file:debug.log"])
+    elif config.machine_type == MachineType.CI:
+        config.display_backend = "none"
+        config.audio_backend = None
+        config.audio_devices = []
+        config.extra_arguments.extend(["-serial", "stdio", "-no-reboot", "-monitor", "none"])
+        config.spice_arguments = []
+        if config.architecture == Arch.Aarch64:
+            config.extra_arguments.extend(["-serial", "file:debug.log"])
+        else:
+            config.add_device("ich9-ahci")
+            config.extra_arguments.extend(["-debugcon", "file:debug.log"])
 
-        case _:
-            # Default machine
-            config.network_default_device = f"{config.network_default_device},bus=bridge1"
-            config.add_devices(
-                [
-                    "virtio-serial,max_ports=2",
-                    "virtconsole,chardev=stdout",
-                    "isa-debugcon,chardev=stdout",
-                    "virtio-rng-pci",
-                    "pci-bridge,chassis_nr=1,id=bridge1",
-                    "i82801b11-bridge,bus=bridge1,id=bridge2",
-                    "sdhci-pci,bus=bridge2",
-                    "i82801b11-bridge,id=bridge3",
-                    "sdhci-pci,bus=bridge3",
-                    "ich9-ahci,bus=bridge3",
-                ]
-            )
-            config.character_devices.append("stdio,id=stdout,mux=on")
-            config.enable_usb = True
+    else:
+        # Default machine
+        config.network_default_device = f"{config.network_default_device},bus=bridge1"
+        config.add_devices(
+            [
+                "virtio-serial,max_ports=2",
+                "virtconsole,chardev=stdout",
+                "isa-debugcon,chardev=stdout",
+                "virtio-rng-pci",
+                "pci-bridge,chassis_nr=1,id=bridge1",
+                "i82801b11-bridge,bus=bridge1,id=bridge2",
+                "sdhci-pci,bus=bridge2",
+                "i82801b11-bridge,id=bridge3",
+                "sdhci-pci,bus=bridge3",
+                "ich9-ahci,bus=bridge3",
+            ]
+        )
+        config.character_devices.append("stdio,id=stdout,mux=on")
+        config.enable_usb = True
 
     # Modifications for machine types that are *mostly* like the default,
     # but not entirely (especially in terms of networking).
-    match config.machine_type:
-        case MachineType.QEMUWithoutNetwork | MachineType.QEMU35Grub:
-            config.network_backend = None
-            config.network_default_device = config.ethernet_device_type
-            config.packet_logging_arguments = []
-        case MachineType.QEMUTap:
-            config.network_backend = "tap,ifname=tap0,id=br0"
-            config.network_default_device = f"{config.ethernet_device_type},netdev=br0"
-        case MachineType.QEMUGrub | MachineType.QEMUExtLinux:
-            config.kernel_cmdline = []
+    if config.machine_type in [MachineType.QEMUWithoutNetwork, MachineType.QEMU35Grub]:
+        config.network_backend = None
+        config.network_default_device = config.ethernet_device_type
+        config.packet_logging_arguments = []
+    elif config.machine_type == MachineType.QEMUTap:
+        config.network_backend = "tap,ifname=tap0,id=br0"
+        config.network_default_device = f"{config.ethernet_device_type},netdev=br0"
+    elif config.machine_type in [MachineType.QEMUGrub, MachineType.QEMUExtLinux]:
+        config.kernel_cmdline = []
 
 
 def assemble_arguments(config: Configuration) -> list[str | Path]:
