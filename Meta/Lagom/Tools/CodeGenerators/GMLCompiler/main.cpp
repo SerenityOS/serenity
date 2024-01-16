@@ -354,6 +354,7 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, Lexica
         TRY(String::from_utf8("<AK/JsonValue.h>"sv)),
         TRY(String::from_utf8("<AK/NonnullRefPtr.h>"sv)),
         TRY(String::from_utf8("<AK/RefPtr.h>"sv)),
+        TRY(String::from_utf8("<LibGfx/Font/FontWeight.h>"sv)),
         // For Gfx::ColorRole
         TRY(String::from_utf8("<LibGfx/SystemTheme.h>"sv)),
         TRY(String::from_utf8("<LibGUI/Widget.h>"sv)),

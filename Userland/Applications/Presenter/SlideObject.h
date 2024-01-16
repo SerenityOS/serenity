@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
+#include <AK/HashMap.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/Font/FontWeight.h>
 #include <LibGfx/Rect.h>
 
 class Presentation;

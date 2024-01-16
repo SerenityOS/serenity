@@ -34,8 +34,8 @@
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGfx/Font/BitmapFont.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Font/FontWeight.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/Typeface.h>
 #include <LibGfx/Font/WOFF/Font.h>
