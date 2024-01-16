@@ -43,25 +43,23 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_lo
     };
 }
 
-ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
+ErrorOr<Vector<u32>> FATInode::compute_cluster_list()
 {
     VERIFY(m_inode_lock.is_locked());
 
-    dbgln_if(FAT_DEBUG, "FATFS: computing block list for inode {}", index());
+    dbgln_if(FAT_DEBUG, "FATFS: computing cluster list for inode {}", index());
 
     u32 cluster = first_cluster();
 
-    Vector<BlockBasedFileSystem::BlockIndex> block_list;
+    Vector<u32> cluster_list;
 
     if (cluster == 0)
-        return block_list;
+        return cluster_list;
 
     while (cluster < end_of_chain_marker()) {
         dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
 
-        auto first_block_and_length = fs().first_block_of_cluster(cluster);
-        for (u8 i = 0; i < first_block_and_length.number_of_sectors; i++)
-            TRY(block_list.try_append(BlockBasedFileSystem::BlockIndex { first_block_and_length.start_block.value() + i }));
+        TRY(cluster_list.try_append(cluster));
 
         // Clusters 0 and 1 are reserved in the FAT, and their entries in the FAT will
         // not point to another valid cluster in the chain (Cluster 0 typically holds
@@ -81,6 +79,28 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
 
         // Look up the next cluster to read, or read End of Chain marker from table.
         cluster = TRY(fs().fat_read(cluster));
+    }
+
+    return cluster_list;
+}
+
+ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::get_block_list()
+{
+    VERIFY(m_inode_lock.is_locked());
+
+    dbgln_if(FAT_DEBUG, "FATFS: getting block list for inode {}", index());
+
+    Vector<BlockBasedFileSystem::BlockIndex> block_list;
+
+    if (m_cluster_list.is_empty())
+        m_cluster_list = TRY(compute_cluster_list());
+
+    for (auto cluster : m_cluster_list) {
+        auto span = fs().first_block_of_cluster(cluster);
+        for (size_t i = 0; i < span.number_of_sectors; i++) {
+            dbgln_if(FAT_DEBUG, "FATFS: Appending block {} to inode {}'s block list", BlockBasedFileSystem::BlockIndex { span.start_block.value() + i }, index());
+            TRY(block_list.try_append(BlockBasedFileSystem::BlockIndex { span.start_block.value() + i }));
+        }
     }
 
     return block_list;
@@ -107,10 +127,9 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 {
     VERIFY(m_inode_lock.is_locked());
 
-    dbgln_if(FAT_DEBUG, "FATFS: reading block list for inode {} ({} blocks)", index(), m_block_list.size());
+    auto block_list = TRY(get_block_list());
 
-    if (m_block_list.is_empty())
-        m_block_list = TRY(compute_block_list());
+    dbgln_if(FAT_DEBUG, "FATFS: reading block list for inode {} ({} blocks)", index(), block_list.size());
 
     auto builder = TRY(KBufferBuilder::try_create());
 
@@ -118,7 +137,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     VERIFY(fs().m_device_block_size <= sizeof(buffer));
     auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
 
-    for (BlockBasedFileSystem::BlockIndex block : m_block_list) {
+    for (BlockBasedFileSystem::BlockIndex block : block_list) {
         dbgln_if(FAT_DEBUG, "FATFS: reading block: {}", block);
         TRY(fs().raw_read(block, buf));
         TRY(builder.append((char const*)buffer, fs().m_device_block_size));
@@ -165,7 +184,8 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
             return EINVAL;
         } else {
             auto entry_number_bytes = i * sizeof(FATEntry);
-            auto block = m_block_list[entry_number_bytes / fs().m_device_block_size];
+            auto cluster = m_cluster_list[entry_number_bytes / (fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster)];
+            auto block = BlockBasedFileSystem::BlockIndex { fs().first_block_of_cluster(cluster).start_block.value() + (entry_number_bytes % (fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster)) / fs().m_device_block_size };
 
             auto entries_per_sector = fs().m_device_block_size / sizeof(FATEntry);
             u32 block_entry = i % entries_per_sector;
@@ -268,7 +288,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
     //   3. The number of blocks returned for reading.
     size_t read_size = min(
         min(size, m_metadata.size - offset),
-        (m_block_list.size() * fs().m_device_block_size) - offset);
+        (m_cluster_list.size() * fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster) - offset);
     TRY(buffer.write(blocks->data() + offset, read_size));
 
     return read_size;
