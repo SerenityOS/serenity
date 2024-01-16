@@ -64,7 +64,7 @@ StringView HTMLElement::dir() const
 {
     // FIXME: This should probably be `Reflect` in the IDL.
     // The dir IDL attribute on an element must reflect the dir content attribute of that element, limited to only known values.
-    auto dir = deprecated_attribute(HTML::AttributeNames::dir);
+    auto dir = get_attribute_value(HTML::AttributeNames::dir);
 #define __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(keyword) \
     if (dir.equals_ignoring_ascii_case(#keyword##sv))   \
         return #keyword##sv;
@@ -526,8 +526,8 @@ String HTMLElement::get_an_elements_target() const
 TokenizedFeature::NoOpener HTMLElement::get_an_elements_noopener(StringView target) const
 {
     // To get an element's noopener, given an a, area, or form element element and a string target:
-    auto rel = deprecated_attribute(HTML::AttributeNames::rel).to_lowercase();
-    auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
+    auto rel = MUST(get_attribute_value(HTML::AttributeNames::rel).to_lowercase());
+    auto link_types = rel.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
 
     // 1. If element's link types include the noopener or noreferrer keyword, then return true.
     if (link_types.contains_slow("noopener"sv) || link_types.contains_slow("noreferrer"sv))

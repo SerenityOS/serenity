@@ -196,7 +196,7 @@ Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_ifra
     // 2. If element has a src attribute specified, and its value is not the empty string,
     //    then parse the value of that attribute relative to element's node document.
     //    If this is successful, then set url to the resulting URL record.
-    auto src_attribute_value = deprecated_attribute(HTML::AttributeNames::src);
+    auto src_attribute_value = get_attribute_value(HTML::AttributeNames::src);
     if (!src_attribute_value.is_empty()) {
         auto parsed_src = document().parse_url(src_attribute_value);
         if (parsed_src.is_valid())

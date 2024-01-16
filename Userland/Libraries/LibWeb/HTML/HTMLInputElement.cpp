@@ -368,7 +368,7 @@ String HTMLInputElement::value() const
         || type_state() == TypeAttributeState::ResetButton
         || type_state() == TypeAttributeState::Button) {
         // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the empty string.
-        return get_attribute(AttributeNames::value).value_or(String {});
+        return get_attribute_value(AttributeNames::value);
     }
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
@@ -918,7 +918,7 @@ void HTMLInputElement::reset_algorithm()
     m_dirty_checkedness = false;
 
     // set the value of the element to the value of the value content attribute, if there is one, or the empty string otherwise,
-    m_value = get_attribute(AttributeNames::value).value_or(String {});
+    m_value = get_attribute_value(AttributeNames::value);
 
     // set the checkedness of the element to true if the element has a checked content attribute and false if it does not,
     m_checked = has_attribute(AttributeNames::checked);

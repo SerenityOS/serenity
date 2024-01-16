@@ -64,7 +64,7 @@ public:
     TypeAttributeState type_state() const { return m_type; }
     WebIDL::ExceptionOr<void> set_type(String const&);
 
-    ByteString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
+    String default_value() const { return get_attribute_value(HTML::AttributeNames::value); }
 
     virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);

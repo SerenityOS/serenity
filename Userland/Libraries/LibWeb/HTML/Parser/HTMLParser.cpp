@@ -4555,9 +4555,11 @@ RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-a-legacy-colour-value
-Optional<Color> parse_legacy_color_value(ByteString input)
+Optional<Color> parse_legacy_color_value(StringView string)
 {
     // 1. Let input be the string being parsed
+    ByteString input = MUST(ByteString::from_utf8(string));
+
     // 2. If input is the empty string, then return an error.
     if (input.is_empty())
         return {};

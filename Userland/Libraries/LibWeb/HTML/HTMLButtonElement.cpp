@@ -27,7 +27,7 @@ void HTMLButtonElement::initialize(JS::Realm& realm)
 
 HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
 {
-    auto value = deprecated_attribute(HTML::AttributeNames::type);
+    auto value = get_attribute_value(HTML::AttributeNames::type);
 
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(keyword, state) \
     if (value.equals_ignoring_ascii_case(#keyword##sv))        \

@@ -68,8 +68,7 @@ DOMTokenList::DOMTokenList(Element& associated_element, FlyString associated_att
 {
     m_legacy_platform_object_flags = LegacyPlatformObjectFlags { .supports_indexed_properties = 1 };
 
-    auto value = associated_element.deprecated_get_attribute(m_associated_attribute);
-    associated_attribute_changed(value);
+    associated_attribute_changed(associated_element.get_attribute_value(m_associated_attribute));
 }
 
 void DOMTokenList::initialize(JS::Realm& realm)

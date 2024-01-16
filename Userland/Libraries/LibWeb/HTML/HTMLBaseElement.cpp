@@ -68,7 +68,7 @@ void HTMLBaseElement::set_the_frozen_base_url()
     auto& document = this->document();
 
     // 2. Let urlRecord be the result of parsing the value of element's href content attribute with document's fallback base URL, and document's character encoding. (Thus, the base element isn't affected by itself.)
-    auto href = deprecated_attribute(AttributeNames::href);
+    auto href = get_attribute_value(AttributeNames::href);
     auto url_record = document.fallback_base_url().complete_url(href);
 
     // 3. Set element's frozen base URL to document's fallback base URL, if urlRecord is failure or running Is base allowed for Document? on the resulting URL record and document returns "Blocked", and to urlRecord otherwise.
