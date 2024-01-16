@@ -240,17 +240,21 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
         return AK::Error::from_string_literal("Invalid predictor value");
 
     // Rows are always a whole number of bytes long, for PNG starting with an algorithm tag.
+    auto buffer_bytes = buffer.bytes();
     size_t bytes_per_row = ceil_div(columns * colors * bits_per_component, 8);
     if (predictor != 2)
         bytes_per_row++;
-    if (buffer.size() % bytes_per_row)
-        return AK::Error::from_string_literal("Predictor input data is not divisible into columns");
+    if (buffer.size() % bytes_per_row) {
+        // Rarely, there is some trailing data after the image data. Ignore the part of it that doesn't fit into a row.
+        dbgln_if(PDF_DEBUG, "Predictor input data length {} is not divisible into columns {}, dropping {} bytes", buffer.size(), bytes_per_row, buffer.size() % bytes_per_row);
+        buffer_bytes = buffer_bytes.slice(0, buffer.size() - buffer.size() % bytes_per_row);
+    }
 
     if (predictor == 2)
-        return decode_tiff_prediction(buffer, columns, colors, bits_per_component);
+        return decode_tiff_prediction(buffer_bytes, columns, colors, bits_per_component);
 
     size_t bytes_per_pixel = ceil_div(colors * bits_per_component, 8);
-    return decode_png_prediction(buffer, bytes_per_row, bytes_per_pixel);
+    return decode_png_prediction(buffer_bytes, bytes_per_row, bytes_per_pixel);
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component, int early_change)
