@@ -228,6 +228,15 @@ ParseErrorOr<Tree> TextParser::parse_expression()
             if (last_element_type == ExpressionType)
                 stack.append(Token { TokenType::FunctionCall, ""sv, m_node });
             stack.append(token);
+
+            if (m_next_token_index + 1 < m_tokens.size()
+                && m_tokens[m_next_token_index + 1].type == TokenType::ParenClose) {
+                // This is a call to function which does not take parameters. We cannot handle it
+                // normally since we need text between parenthesis to be a valid expression. As a
+                // workaround, we push an artificial tree to stack to act as an argument (it'll be
+                // removed later during function call canonicalization).
+                stack.append(zero_argument_function_call);
+            }
         } else if (token.is_pre_merged_binary_operator()) {
             THROW_PARSE_ERROR_IF(last_element_type != ExpressionType);
             stack.append(token);
@@ -492,7 +501,14 @@ ParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
 
     TRY(consume_token_with_type(TokenType::ParenOpen));
     while (true) {
-        function_definition.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier))->data });
+        if (function_definition.arguments.is_empty()) {
+            auto argument = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Identifier }));
+            if (argument->type == TokenType::ParenClose)
+                break;
+            function_definition.arguments.append({ argument->data });
+        } else {
+            function_definition.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier))->data });
+        }
         auto next_token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
         if (next_token->type == TokenType::ParenClose)
             break;

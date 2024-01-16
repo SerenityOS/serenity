@@ -130,7 +130,27 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
+class WellKnownNode : public Expression {
+public:
+    enum Type {
+        ZeroArgumentFunctionCall,
+        // Update WellKnownNode::dump_tree after adding an entry here
+    };
+
+    WellKnownNode(Type type)
+        : m_type(type)
+    {
+    }
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+
+private:
+    Type m_type;
+};
+
 inline Tree const error_tree = make_ref_counted<ErrorNode>();
+inline Tree const zero_argument_function_call = make_ref_counted<WellKnownNode>(WellKnownNode::ZeroArgumentFunctionCall);
 
 class ControlFlowFunctionReturn : public ControlFlowOperator {
 public:
