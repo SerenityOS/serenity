@@ -71,7 +71,6 @@
 #include <LibThreading/Thread.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
