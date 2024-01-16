@@ -58,6 +58,7 @@ class Compression(EnumWithExportName):
     JPEG = 6
     AdobeDeflate = 8
     PackBits = 32773
+    PixarDeflate = 32946  # This is the old (and deprecated) code for AdobeDeflate
 
 
 class PhotometricInterpretation(EnumWithExportName):
