@@ -1686,7 +1686,7 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
                 auto const& computed_max_size = this->computed_main_max_size(item.box);
 
                 auto clamp_min = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_main_min_size(item.box) : automatic_minimum_size(item);
-                auto clamp_max = (!should_treat_cross_max_size_as_none(item.box) && !computed_max_size.contains_percentage()) ? specified_main_max_size(item.box) : CSSPixels::max();
+                auto clamp_max = (!should_treat_main_max_size_as_none(item.box) && !computed_max_size.contains_percentage()) ? specified_main_max_size(item.box) : CSSPixels::max();
 
                 result = css_clamp(result, clamp_min, clamp_max);
 
