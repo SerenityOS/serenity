@@ -85,6 +85,33 @@ class MachineType(Enum):
         ]
 
 
+def arguments_generator(prefix: str) -> Any:
+    """
+    Construct an argument generator that returns some prefix and the member value(s) if the member value
+    is not None, or returns an empty list otherwise.
+    The member value is the return value of the function decorated with this decorator.
+    If a default is provided, in this case we return [prefix, default] instead.
+    Many of our configurable QEMU arguments work like this.
+    """
+
+    def decorate_function(member_accessor: Callable[[Configuration], str | list[str]]):
+        def generate_arguments(self: Configuration) -> list[str]:
+            member_value = member_accessor(self)
+            if member_value is not None:
+                if type(member_value) is list:
+                    # apply the prefix to every element of the list
+                    return list(chain(*zip(repeat(prefix), member_value)))
+                # NOTE: the typechecker gets confused and can't figure out that
+                # type(member_value) is *always* str here.
+                elif type(member_value) is str:
+                    return [prefix, member_value]
+            return []
+
+        return generate_arguments
+
+    return decorate_function
+
+
 @dataclass
 class Configuration:
     """Run configuration, populated from command-line or environment variable data."""
@@ -157,33 +184,6 @@ class Configuration:
     spice_arguments: list[str] = field(default_factory=list)
     # Arbitrary extra arguments
     extra_arguments: list[str] = field(default_factory=list)
-
-    @staticmethod
-    def arguments_generator(prefix: str) -> Any:
-        """
-        Construct an argument generator that returns some prefix and the member value(s) if the member value
-        is not None, or returns an empty list otherwise.
-        The member value is the return value of the function decorated with this decorator.
-        If a default is provided, in this case we return [prefix, default] instead.
-        Many of our configurable QEMU arguments work like this.
-        """
-
-        def decorate_function(member_accessor: Callable[[Configuration], str | list[str]]):
-            def generate_arguments(self: Configuration) -> list[str]:
-                member_value = member_accessor(self)
-                if member_value is not None:
-                    if type(member_value) is list:
-                        # apply the prefix to every element of the list
-                        return list(chain(*zip(repeat(prefix), member_value)))
-                    # NOTE: the typechecker gets confused and can't figure out that
-                    # type(member_value) is *always* str here.
-                    elif type(member_value) is str:
-                        return [prefix, member_value]
-                return []
-
-            return generate_arguments
-
-        return decorate_function
 
     @property
     @arguments_generator(prefix="-accel")
