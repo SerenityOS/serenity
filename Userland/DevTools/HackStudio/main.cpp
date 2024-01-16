@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
@@ -20,7 +22,6 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -93,27 +94,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static bool make_is_available()
 {
-    char const* argv[] = { "make", "--version", nullptr };
-    posix_spawn_file_actions_t action;
-    posix_spawn_file_actions_init(&action);
-    posix_spawn_file_actions_addopen(&action, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
-
-    auto maybe_pid = Core::System::posix_spawnp("make"sv, &action, nullptr, const_cast<char**>(argv), environ);
-    if (maybe_pid.is_error()) {
-        warnln("Failed to posix_spawn make: {}", maybe_pid.release_error());
+    auto maybe_process = Core::Process::spawn({
+        .executable = "make",
+        .search_for_executable_in_path = true,
+        .arguments = { "--version" },
+        .file_actions = { Core::FileAction::OpenFile {
+            .path = "/dev/null"sv,
+            .mode = Core::File::OpenMode::Write,
+            .fd = STDOUT_FILENO,
+        } },
+    });
+    if (maybe_process.is_error()) {
+        warnln("Failed to spawn make: {}", maybe_process.release_error());
         return false;
     }
-    pid_t pid = maybe_pid.release_value();
+    auto process = maybe_process.release_value();
 
-    auto waitpid_result = Core::System::waitpid(pid, 0);
-    if (waitpid_result.is_error()) {
-        warnln("Failed to waitpid for make: {}", waitpid_result.release_error());
+    auto maybe_result = process.wait_for_termination();
+    if (maybe_result.is_error()) {
+        warnln("Error running make: {}", maybe_result.release_error());
         return false;
     }
 
-    int wstatus = waitpid_result.value().status;
-    posix_spawn_file_actions_destroy(&action);
-    return WEXITSTATUS(wstatus) == 0;
+    return maybe_result.value();
 }
 
 static ErrorOr<void> notify_make_not_available()
