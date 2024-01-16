@@ -37,7 +37,6 @@ public:
     void paint(PaintContext&) const;
     Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const;
 
-    Gfx::FloatMatrix4x4 const& transform_matrix() const { return m_transform; }
     Gfx::AffineTransform affine_transform_matrix() const;
 
     void dump(int indent = 0) const;
@@ -46,17 +45,12 @@ public:
 
 private:
     JS::NonnullGCPtr<Paintable> m_paintable;
-    Gfx::FloatMatrix4x4 m_transform;
-    Gfx::FloatPoint m_transform_origin;
     StackingContext* const m_parent { nullptr };
     Vector<StackingContext*> m_children;
     size_t m_index_in_tree_order { 0 };
 
     static void paint_child(PaintContext&, StackingContext const&);
     void paint_internal(PaintContext&) const;
-    Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
-    Gfx::FloatPoint transform_origin() const { return m_transform_origin; }
-    Gfx::FloatPoint compute_transform_origin() const;
 };
 
 }
