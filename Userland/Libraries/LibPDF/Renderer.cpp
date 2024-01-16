@@ -1011,15 +1011,13 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     if (!text_state().font)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
-    auto const& text_rendering_matrix = calculate_text_rendering_matrix();
-
-    auto start_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
+    auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
     auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, *this));
 
-    // Update text matrix
+    // Update text matrix.
     auto delta_x = end_position.x() - start_position.x();
     m_text_rendering_matrix_is_dirty = true;
-    m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale() * text_state().horizontal_scaling, 0.0f);
+    m_text_matrix.translate(delta_x * text_state().horizontal_scaling, 0.0f);
     return {};
 }
 
