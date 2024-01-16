@@ -14,9 +14,10 @@ endobj
 endobj
 
 4 0 obj
-<</Length 291>>
+<</Length 419>>
 stream
 BT
+0.9 0 0 0.9 0 0 cm
 /F1 25 Tf
 -30 TL
 40 40 Td
@@ -24,8 +25,16 @@ BT
 [ (Hello) -1000 -1000 (World) ] TJ T*
 [ (Hello) -1000 ] TJ [ -1000 ] TJ [ (World) ] TJ T*
 1 0 0 1 45 130 Tm [ 200 (Hello) -2000 (World) ] TJ T*
-(should be the same on all lines:) '
-(The distance between "Hello" and "World") '
+0.9 0 0 0.9 40 160 Tm
+80 Tz
+(should be the ) ' (same on all lines:) Tj
+15 Ts /F1 10 Tf ( super) Tj /F1 25 Tf -15 TL
+3 Tc
+5 Tw
+(The distance ) '
+(between "Hello" and "World") Tj
+10 Ts
+(yo) Tj
 ET
 
 
@@ -43,10 +52,10 @@ xref
 0000000062 00000 n 
 0000000114 00000 n 
 0000000227 00000 n 
-0000000568 00000 n 
+0000000696 00000 n 
 
 trailer
 <</Size 6/Root 1 0 R>>
 startxref
-666
+794
 %%EOF
