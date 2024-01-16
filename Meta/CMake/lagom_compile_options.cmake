@@ -8,6 +8,10 @@ if (NOT WIN32)
     add_compile_options(-fPIC)
 endif()
 
+if (LINUX)
+    add_compile_options(-D_FILE_OFFSET_BITS=64)
+endif()
+
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-ggdb3)
     add_compile_options(-Og)
