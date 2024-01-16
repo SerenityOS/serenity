@@ -52,7 +52,8 @@ private:
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
 
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list();
+    ErrorOr<Vector<u32>> compute_cluster_list();
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
     u32 first_cluster() const;
@@ -76,7 +77,7 @@ private:
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> flush_metadata() override;
 
-    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
+    Vector<u32> m_cluster_list;
     FATEntry m_entry;
     FATEntryLocation m_inode_metadata_location;
     NonnullOwnPtr<KString> m_filename;
