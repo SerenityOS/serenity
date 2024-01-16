@@ -17,6 +17,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibGfx/TextLayout.h>
 
 namespace NotificationServer {
 
@@ -100,11 +101,15 @@ RefPtr<NotificationWindow> NotificationWindow::get_window_by_id(i32 id)
 
 void NotificationWindow::resize_to_fit_text()
 {
-    auto line_height = m_text_label->font().pixel_size_rounded_up();
-    auto total_height = m_text_label->text_calculated_preferred_height();
+    // FIXME: It would be good if Labels could size themselves based on their available width, but for now, we have to
+    //        do the calculation manually.
+    Gfx::TextLayout text_layout { m_text_label->font(), Utf8View { m_text_label->text() }, m_text_label->rect().to_type<float>() };
+    auto line_count = text_layout.lines(Gfx::TextElision::None, m_text_label->text_wrapping()).size();
 
-    m_text_label->set_fixed_height(total_height);
-    set_height(40 - line_height + total_height);
+    auto line_height = m_text_label->font().preferred_line_height();
+    auto text_height = line_height * line_count;
+    m_text_label->set_height(text_height);
+    set_height(m_title_label->height() + GUI::Layout::default_spacing + text_height + main_widget()->layout()->margins().vertical_total());
 }
 
 void NotificationWindow::enter_event(Core::Event&)
@@ -118,7 +123,7 @@ void NotificationWindow::enter_event(Core::Event&)
 void NotificationWindow::leave_event(Core::Event&)
 {
     m_hovering = false;
-    m_text_label->set_preferred_height(GUI::SpecialDimension::Grow);
+    m_text_label->set_height(40 - (m_title_label->height() + GUI::Layout::default_spacing + main_widget()->layout()->margins().vertical_total()));
     set_height(40);
     update_notification_window_locations(GUI::Desktop::the().rect());
 }
