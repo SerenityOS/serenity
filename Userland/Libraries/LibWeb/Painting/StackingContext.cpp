@@ -33,8 +33,6 @@ static void paint_node(Paintable const& paintable, PaintContext& context, PaintP
 
 StackingContext::StackingContext(Paintable& paintable, StackingContext* parent, size_t index_in_tree_order)
     : m_paintable(paintable)
-    , m_transform(combine_transformations(paintable.computed_values().transformations()))
-    , m_transform_origin(compute_transform_origin())
     , m_parent(parent)
     , m_index_in_tree_order(index_in_tree_order)
 {
@@ -291,28 +289,13 @@ void StackingContext::paint_internal(PaintContext& context) const
     }
 }
 
-Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transformation> const& transformations) const
-{
-    // https://drafts.csswg.org/css-transforms-1/#WD20171130 says:
-    // "No transform on non-replaced inline boxes, table-column boxes, and table-column-group boxes."
-    // and https://www.w3.org/TR/css-transforms-2/ does not say anything about what to do with inline boxes.
-
-    auto matrix = Gfx::FloatMatrix4x4::identity();
-    if (paintable().is_paintable_box()) {
-        for (auto const& transform : transformations)
-            matrix = matrix * transform.to_matrix(paintable_box()).release_value();
-
-        return matrix;
-    }
-
-    return matrix;
-}
-
 // FIXME: This extracts the affine 2D part of the full transformation matrix.
 //  Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
 Gfx::AffineTransform StackingContext::affine_transform_matrix() const
 {
-    return Gfx::extract_2d_affine_transform(m_transform);
+    if (paintable().is_paintable_box())
+        return Gfx::extract_2d_affine_transform(paintable_box().transform());
+    return Gfx::AffineTransform {};
 }
 
 static Gfx::FloatMatrix4x4 matrix_with_scaled_translation(Gfx::FloatMatrix4x4 matrix, float scale)
@@ -342,14 +325,21 @@ void StackingContext::paint(PaintContext& context) const
         VERIFY_NOT_REACHED();
     }
 
+    auto transform_matrix = Gfx::FloatMatrix4x4::identity();
+    Gfx::FloatPoint transform_origin;
+    if (paintable().is_paintable_box()) {
+        transform_matrix = paintable_box().transform();
+        transform_origin = paintable_box().transform_origin().to_type<float>();
+    }
+
     RecordingPainter::PushStackingContextParams push_stacking_context_params {
         .opacity = opacity,
         .is_fixed_position = paintable().is_fixed_position(),
         .source_paintable_rect = source_paintable_rect,
         .image_rendering = paintable().computed_values().image_rendering(),
         .transform = {
-            .origin = transform_origin().scaled(to_device_pixels_scale),
-            .matrix = matrix_with_scaled_translation(transform_matrix(), to_device_pixels_scale),
+            .origin = transform_origin.scaled(to_device_pixels_scale),
+            .matrix = matrix_with_scaled_translation(transform_matrix, to_device_pixels_scale),
         },
     };
 
@@ -372,19 +362,6 @@ void StackingContext::paint(PaintContext& context) const
     context.recording_painter().push_stacking_context(push_stacking_context_params);
     paint_internal(context);
     context.recording_painter().pop_stacking_context();
-}
-
-Gfx::FloatPoint StackingContext::compute_transform_origin() const
-{
-    if (!paintable().is_paintable_box())
-        return {};
-
-    auto style_value = paintable().computed_values().transform_origin();
-    // FIXME: respect transform-box property
-    auto reference_box = paintable_box().absolute_border_box_rect();
-    auto x = reference_box.left() + style_value.x.to_px(paintable().layout_node(), reference_box.width());
-    auto y = reference_box.top() + style_value.y.to_px(paintable().layout_node(), reference_box.height());
-    return { x.to_float(), y.to_float() };
 }
 
 template<typename Callback>
@@ -420,7 +397,9 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     if (!paintable().is_visible())
         return {};
 
-    auto transform_origin = this->transform_origin().to_type<CSSPixels>();
+    CSSPixelPoint transform_origin { 0, 0 };
+    if (paintable().is_paintable_box())
+        transform_origin = paintable_box().transform_origin();
     // NOTE: This CSSPixels -> Float -> CSSPixels conversion is because we can't AffineTransform::map() a CSSPixelPoint.
     Gfx::FloatPoint offset_position {
         (position.x() - transform_origin.x()).to_float(),

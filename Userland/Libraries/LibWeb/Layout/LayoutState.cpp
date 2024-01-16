@@ -390,6 +390,38 @@ void LayoutState::resolve_text_shadows(Vector<Painting::PaintableWithLines&> con
     }
 }
 
+void LayoutState::resolve_css_transform()
+{
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        if (!used_values.node().is_box())
+            continue;
+
+        auto const& box = static_cast<Layout::Box const&>(used_values.node());
+        if (!box.paintable_box())
+            continue;
+
+        auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
+        auto const& transformations = box.computed_values().transformations();
+        if (transformations.is_empty())
+            continue;
+
+        auto matrix = Gfx::FloatMatrix4x4::identity();
+        for (auto const& transform : transformations)
+            matrix = matrix * transform.to_matrix(paintable_box).release_value();
+
+        paintable_box.set_transform(matrix);
+
+        auto const& style_value = box.computed_values().transform_origin();
+        // FIXME: respect transform-box property
+        auto const& reference_box = paintable_box.absolute_border_box_rect();
+        auto x = reference_box.left() + style_value.x.to_px(box, reference_box.width());
+        auto y = reference_box.top() + style_value.y.to_px(box, reference_box.height());
+
+        paintable_box.set_transform_origin({ x, y });
+    }
+}
+
 void LayoutState::commit(Box& root)
 {
     // Only the top-level LayoutState should ever be committed.
@@ -502,6 +534,7 @@ void LayoutState::commit(Box& root)
     resolve_border_radii();
     resolve_box_shadow_data();
     resolve_text_shadows(paintables_with_lines);
+    resolve_css_transform();
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)
