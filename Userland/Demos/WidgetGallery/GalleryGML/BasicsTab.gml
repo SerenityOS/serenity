@@ -98,7 +98,7 @@
                 @GUI::Button {
                     name: "disabled_normal_button"
                     text: "Disabled"
-                    enabled: "false"
+                    enabled: false
                 }
 
                 @GUI::Layout::Spacer {}
@@ -120,7 +120,7 @@
                 @GUI::Button {
                     name: "disabled_coolbar_button"
                     text: "Disabled"
-                    enabled: "false"
+                    enabled: false
                     button_style: "Coolbar"
                 }
 
@@ -196,7 +196,7 @@
                 @GUI::Button {
                     name: "disabled_icon_button"
                     text: "Disabled"
-                    enabled: "false"
+                    enabled: false
                 }
 
                 @GUI::Layout::Spacer {}
