@@ -52,7 +52,7 @@
 
         @GUI::ComboBox {
             name: "color_scheme_combo"
-            enabled: "false"
+            enabled: false
         }
     }
 
