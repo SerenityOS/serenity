@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,11 @@
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibMain/Main.h>
 #include <string.h>
+
+struct Data {
+    u32 checksum { 0 };
+    size_t file_size { 0 };
+};
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -34,16 +39,49 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(0);
     }
 
-    if (!available_algorithms.contains_slow(algorithm)) {
+    Array<u8, PAGE_SIZE> buffer;
+    bool fail = false;
+    Function<Data(Core::File*, StringView path)> build_checksum_data_using_file;
+    if (algorithm == "crc32") {
+        build_checksum_data_using_file = [&buffer, &arguments, &fail](Core::File* file, StringView path) {
+            Crypto::Checksum::CRC32 crc32;
+            size_t file_size = 0;
+            while (!file->is_eof()) {
+                auto data_or_error = file->read_some(buffer);
+                if (data_or_error.is_error()) {
+                    warnln("{}: Failed to read {}: {}", arguments.strings[0], path, data_or_error.error());
+                    fail = true;
+                    continue;
+                }
+                file_size += data_or_error.value().size();
+                crc32.update(data_or_error.value());
+            }
+            return Data { .checksum = crc32.digest(), .file_size = file_size };
+        };
+    } else if (algorithm == "adler32") {
+        build_checksum_data_using_file = [&buffer, &arguments, &fail](Core::File* file, StringView path) {
+            Crypto::Checksum::Adler32 adler32;
+            size_t file_size = 0;
+            while (!file->is_eof()) {
+                auto data_or_error = file->read_some(buffer);
+                if (data_or_error.is_error()) {
+                    warnln("{}: Failed to read {}: {}", arguments.strings[0], path, data_or_error.error());
+                    fail = true;
+                    continue;
+                }
+                file_size += data_or_error.value().size();
+                adler32.update(data_or_error.value());
+            }
+            return Data { .checksum = adler32.digest(), .file_size = file_size };
+        };
+    } else {
         warnln("{}: Unknown checksum algorithm: {}", arguments.strings[0], algorithm);
         exit(1);
     }
 
-    if (paths.is_empty())
+    if (paths.is_empty()) {
         paths.append("-"sv);
-
-    bool fail = false;
-    Array<u8, PAGE_SIZE> buffer;
+    }
 
     for (auto& path : paths) {
         auto file_or_error = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read);
@@ -53,39 +91,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             fail = true;
             continue;
         }
-        auto file = file_or_error.release_value();
-        size_t file_size = 0;
 
-        if (algorithm == "crc32"sv) {
-            Crypto::Checksum::CRC32 crc32;
-            while (!file->is_eof()) {
-                auto data_or_error = file->read_some(buffer);
-                if (data_or_error.is_error()) {
-                    warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, data_or_error.error());
-                    fail = true;
-                    continue;
-                }
-                file_size += data_or_error.value().size();
-                crc32.update(data_or_error.value());
-            }
-            outln("{:08x} {} {}", crc32.digest(), file_size, path);
-        } else if (algorithm == "adler32"sv) {
-            Crypto::Checksum::Adler32 adler32;
-            while (!file->is_eof()) {
-                auto data_or_error = file->read_some(buffer);
-                if (data_or_error.is_error()) {
-                    warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, data_or_error.error());
-                    fail = true;
-                    continue;
-                }
-                file_size += data_or_error.value().size();
-                adler32.update(data_or_error.value());
-            }
-            outln("{:08x} {} {}", adler32.digest(), file_size, path);
-        } else {
-            warnln("{}: Unknown checksum algorithm: {}", arguments.strings[0], algorithm);
-            exit(1);
-        }
+        auto file = file_or_error.release_value();
+        auto data = build_checksum_data_using_file(file.ptr(), path);
+
+        outln("{:08x} {} {}", data.checksum, data.file_size, path);
     }
 
     return fail;
