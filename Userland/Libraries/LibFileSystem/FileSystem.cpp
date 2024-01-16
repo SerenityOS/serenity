@@ -356,6 +356,12 @@ ErrorOr<off_t> size_from_stat(StringView path)
     return st.st_size;
 }
 
+ErrorOr<off_t> size_from_fstat(int fd)
+{
+    auto st = TRY(Core::System::fstat(fd));
+    return st.st_size;
+}
+
 bool can_delete_or_move(StringView path)
 {
     VERIFY(!path.is_empty());
