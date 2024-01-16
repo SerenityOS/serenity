@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = file_or_error.release_value();
         auto data = build_checksum_data_using_file(file.ptr(), filepath);
 
-        outln("{:08x} {}", data.checksum, data.file_size);
+        outln("{} {}", data.checksum, data.file_size);
 
         // We return fail here since build_checksum_data_using_file() may set it to true, indicating problems have occurred.
         return fail;
@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = file_or_error.release_value();
         auto data = build_checksum_data_using_file(file.ptr(), path);
 
-        outln("{:08x} {} {}", data.checksum, data.file_size, path);
+        outln("{} {} {}", data.checksum, data.file_size, path);
     }
 
     return fail;
