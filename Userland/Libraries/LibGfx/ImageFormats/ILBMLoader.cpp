@@ -182,7 +182,8 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
     u16 pitch = context.pitch;
     u16 width = context.bm_header.width;
     u16 height = context.bm_header.height;
-    u8 planes = context.bm_header.planes;
+    // mask is added as an extra plane
+    u8 planes = context.bm_header.mask == MaskType::HasMask ? context.bm_header.planes + 1 : context.bm_header.planes;
     size_t buffer_size = static_cast<size_t>(width) * height;
     // If planes number is 24 we'll store R,G,B components so buffer needs to be 3 times width*height
     // otherwise we'll store a single 8bit index to the CMAP.
@@ -209,17 +210,17 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
                 // when enough data for current bitplane row has been read
                 for (u8 b = 0; b < 8 && (i * 8) + b < width; b++) {
                     u8 mask = 1 << (7 - b);
-                    // get current plane
-                    if (bit & mask) {
+                    // get current plane: simply skip mask plane for now
+                    if (bit & mask && p < context.bm_header.planes) {
                         u16 x = (i * 8) + b;
                         size_t offset = (scanline * pixel_size) + (x * pixel_size) + rgb_shift;
                         // Only throw an error if we would actually attempt to write
                         // outside of the chunky buffer. Some apps like PPaint produce
                         // malformed bitplane data but files are still accepted by most readers
                         // since they do not cause writing past the chunky buffer.
-                        if (offset >= chunky.size()) {
+                        if (offset >= chunky.size())
                             return Error::from_string_literal("Malformed bitplane data");
-                        }
+
                         chunky[offset] |= plane_mask;
                     }
                 }
@@ -238,6 +239,10 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
     dbgln_if(ILBM_DEBUG, "uncompress_byte_run pitch={} size={}", context.pitch, data.size());
 
     size_t plane_data_size = context.pitch * context.bm_header.height * context.bm_header.planes;
+
+    // The mask is encoded as an extra bitplane but is not counted in the bm_header planes
+    if (context.bm_header.mask == MaskType::HasMask)
+        plane_data_size += context.pitch * context.bm_header.height;
 
     // The maximum run length of this compression method is 127 bytes, so the uncompressed size
     // cannot be more than 127 times the size of the chunk we are decompressing.

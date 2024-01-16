@@ -265,6 +265,17 @@ TEST_CASE(test_small_24bit)
     EXPECT_EQ(frame.image->get_pixel(0, 4), Gfx::Color(1, 0, 1, 255));
 }
 
+TEST_CASE(test_stencil_mask)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("ilbm/test-stencil.iff"sv)));
+    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 320, 200 }));
+
+    EXPECT_EQ(frame.image->get_pixel(0, 4), Gfx::Color(0, 0, 0, 255));
+}
+
 TEST_CASE(test_ilbm_malformed_header)
 {
     Array test_inputs = {
