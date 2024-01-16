@@ -35,11 +35,6 @@ public:
 private:
     FATInode(FATFS&, FATEntry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename);
 
-    // Returns cluster number value that indicates the end of the chain
-    // has been reached. Any cluster value >= this value indicates this
-    // is the last cluster.
-    u32 end_of_chain_marker() const;
-
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;
 
@@ -52,7 +47,7 @@ private:
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
 
-    ErrorOr<Vector<u32>> compute_cluster_list();
+    ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
@@ -81,7 +76,6 @@ private:
     FATEntry m_entry;
     FATEntryLocation m_inode_metadata_location;
     NonnullOwnPtr<KString> m_filename;
-    InodeMetadata m_metadata;
 };
 
 }
