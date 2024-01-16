@@ -1019,7 +1019,7 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     // Update text matrix
     auto delta_x = end_position.x() - start_position.x();
     m_text_rendering_matrix_is_dirty = true;
-    m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
+    m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale() * text_state().horizontal_scaling, 0.0f);
     return {};
 }
 
