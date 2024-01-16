@@ -1308,15 +1308,17 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
 {
     if (m_text_rendering_matrix_is_dirty) {
         // PDF 1.7, 5.3.3. Text Space Details
-        m_text_rendering_matrix = Gfx::AffineTransform(
+        Gfx::AffineTransform parameter_matrix {
             text_state().horizontal_scaling,
             0.0f,
             0.0f,
             1.0f,
             0.0f,
-            text_state().rise);
-        m_text_rendering_matrix.multiply(state().ctm);
+            text_state().rise
+        };
+        m_text_rendering_matrix = state().ctm;
         m_text_rendering_matrix.multiply(m_text_matrix);
+        m_text_rendering_matrix.multiply(parameter_matrix);
         m_text_rendering_matrix_is_dirty = false;
     }
     return m_text_rendering_matrix;
