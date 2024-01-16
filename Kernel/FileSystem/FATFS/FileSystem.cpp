@@ -354,6 +354,23 @@ u32 FATFS::cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u
     return cluster;
 }
 
+u32 FATFS::end_of_chain_marker() const
+{
+    // Returns the end of chain entry for the given file system.
+    // Any FAT entry of this value or greater signifies the end
+    // of the chain has been reached for a given entry.
+    switch (m_fat_version) {
+    case FATVersion::FAT12:
+        return 0xFF8;
+    case FATVersion::FAT16:
+        return 0xFFF8;
+    case FATVersion::FAT32:
+        return 0x0FFFFFF8;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 ErrorOr<u32> FATFS::fat_read(u32 cluster)
 {
     dbgln_if(FAT_DEBUG, "FATFS: Reading FAT entry for cluster {}", cluster);

@@ -14,7 +14,13 @@ namespace Kernel {
 ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& lfn_entries)
 {
     auto filename = TRY(compute_filename(entry, lfn_entries));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename)));
+    u32 entry_first_cluster = entry.first_cluster_low;
+    if (fs.m_fat_version == FATVersion::FAT32)
+        entry_first_cluster |= (static_cast<u32>(entry.first_cluster_high) << 16);
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename))));
+    MutexLocker locker(inode->m_inode_lock);
+    inode->m_cluster_list = TRY(inode->compute_cluster_list(fs, entry_first_cluster));
+    return inode;
 }
 
 FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename)
@@ -24,37 +30,20 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_lo
     , m_filename(move(filename))
 {
     dbgln_if(FAT_DEBUG, "FATFS: Creating inode {} with filename \"{}\"", index(), m_filename);
-
-    m_metadata = {
-        .inode = identifier(),
-        .size = m_entry.file_size,
-        .mode = static_cast<mode_t>((has_flag(m_entry.attributes, FATAttributes::Directory) ? S_IFDIR : S_IFREG) | 0777),
-        .uid = 0,
-        .gid = 0,
-        .link_count = 0,
-        .atime = time_from_packed_dos(m_entry.last_accessed_date, { 0 }),
-        .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
-        .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
-        .dtime = {},
-        .block_count = 0,
-        .block_size = 0,
-        .major_device = 0,
-        .minor_device = 0,
-    };
 }
 
-ErrorOr<Vector<u32>> FATInode::compute_cluster_list()
+ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster)
 {
     VERIFY(m_inode_lock.is_locked());
 
-    dbgln_if(FAT_DEBUG, "FATFS: computing cluster list for inode {}", index());
+    dbgln_if(FAT_DEBUG, "FATFS: computing block list starting with cluster {}", first_cluster);
 
-    u32 cluster = first_cluster();
+    u32 cluster = first_cluster;
 
     Vector<u32> cluster_list;
 
-    while (cluster < end_of_chain_marker()) {
-        dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
+    while (cluster < fs.end_of_chain_marker()) {
+        dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
 
         TRY(cluster_list.try_append(cluster));
 
@@ -75,7 +64,7 @@ ErrorOr<Vector<u32>> FATInode::compute_cluster_list()
         }
 
         // Look up the next cluster to read, or read End of Chain marker from table.
-        cluster = TRY(fs().fat_read(cluster));
+        cluster = TRY(fs.fat_read(cluster));
     }
 
     return cluster_list;
@@ -89,9 +78,6 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::get_block_list()
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
-    if (m_cluster_list.is_empty())
-        m_cluster_list = TRY(compute_cluster_list());
-
     for (auto cluster : m_cluster_list) {
         auto span = fs().first_block_of_cluster(cluster);
         for (size_t i = 0; i < span.number_of_sectors; i++) {
@@ -101,23 +87,6 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::get_block_list()
     }
 
     return block_list;
-}
-
-u32 FATInode::end_of_chain_marker() const
-{
-    // Returns the end of chain entry for the given file system.
-    // Any FAT entry of this value or greater signifies the end
-    // of the chain has been reached for a given entry.
-    switch (fs().m_fat_version) {
-    case FATVersion::FAT12:
-        return 0xFF8;
-    case FATVersion::FAT16:
-        return 0xFFF8;
-    case FATVersion::FAT32:
-        return 0x0FFFFFF8;
-    default:
-        VERIFY_NOT_REACHED();
-    }
 }
 
 ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
@@ -275,7 +244,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
 {
     dbgln_if(FAT_DEBUG, "FATFS: Reading inode {}: size: {} offset: {}", identifier().index(), size, offset);
     VERIFY(offset >= 0);
-    if (offset >= m_metadata.size)
+    if (offset >= m_entry.file_size)
         return 0;
 
     // FIXME: Read only the needed blocks instead of the whole file
@@ -286,7 +255,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
     //   2. The file size.
     //   3. The number of blocks returned for reading.
     size_t read_size = min(
-        min(size, m_metadata.size - offset),
+        min(size, m_entry.file_size - offset),
         (m_cluster_list.size() * fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster) - offset);
     TRY(buffer.write(blocks->data() + offset, read_size));
 
@@ -295,7 +264,23 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
 
 InodeMetadata FATInode::metadata() const
 {
-    return m_metadata;
+    return {
+        .inode = identifier(),
+        .size = m_entry.file_size,
+        // FIXME: Linux also removes the write permission if the file has the read only attribute set.
+        .mode = static_cast<mode_t>((has_flag(m_entry.attributes, FATAttributes::Directory) ? S_IFDIR : S_IFREG) | 0777),
+        .uid = 0,
+        .gid = 0,
+        .link_count = 0,
+        .atime = time_from_packed_dos(m_entry.last_accessed_date, { 0 }),
+        .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
+        .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
+        .dtime = {},
+        .block_count = m_cluster_list.size() * fs().m_parameter_block->common_bpb()->sectors_per_cluster,
+        .block_size = fs().m_device_block_size,
+        .major_device = 0,
+        .minor_device = 0,
+    };
 }
 
 ErrorOr<void> FATInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
