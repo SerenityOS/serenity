@@ -152,7 +152,7 @@ TEST_CASE(test_regression)
             auto path_to_expectation = LexicalPath::join(path_to_tests_directory.string(), ByteString::formatted("{}.expectation", source));
 
             auto process = MUST(Core::Process::spawn({
-                .path = path_to_compiler_binary.string(),
+                .executable = path_to_compiler_binary.string(),
                 .arguments = build_command_line_arguments(path_to_test, test_description),
                 .file_actions = {
                     Core::FileAction::OpenFile {

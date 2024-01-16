@@ -29,7 +29,8 @@ struct OpenFile {
 }
 
 struct ProcessSpawnOptions {
-    ByteString path;
+    ByteString executable;
+    bool search_for_executable_in_path { false };
     Vector<ByteString> const& arguments = {};
     Optional<ByteString> working_directory = {};
     Vector<Variant<FileAction::OpenFile>> const& file_actions = {};
