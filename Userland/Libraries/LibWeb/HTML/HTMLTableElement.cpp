@@ -44,7 +44,7 @@ void HTMLTableElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_t_bodies);
 }
 
-static unsigned parse_border(ByteString const& value)
+static unsigned parse_border(StringView value)
 {
     return value.to_number<unsigned>().value_or(0);
 }
@@ -66,7 +66,7 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
             if (value.equals_ignoring_ascii_case("center"sv)) {
                 style.set_property(CSS::PropertyID::MarginLeft, CSS::IdentifierStyleValue::create(CSS::ValueID::Auto));
                 style.set_property(CSS::PropertyID::MarginRight, CSS::IdentifierStyleValue::create(CSS::ValueID::Auto));
-            } else if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::Float)) {
+            } else if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value, CSS::PropertyID::Float)) {
                 style.set_property(CSS::PropertyID::Float, parsed_value.release_nonnull());
             }
             return;
@@ -435,7 +435,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 
 unsigned int HTMLTableElement::border() const
 {
-    return parse_border(deprecated_attribute(HTML::AttributeNames::border));
+    return parse_border(get_attribute_value(HTML::AttributeNames::border));
 }
 
 unsigned int HTMLTableElement::padding() const

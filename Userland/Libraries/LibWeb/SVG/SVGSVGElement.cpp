@@ -42,7 +42,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 
     auto width_attribute = attribute(SVG::AttributeNames::width);
     auto parsing_context = CSS::Parser::ParsingContext { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
-    if (auto width_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
+    if (auto width_value = parse_css_value(parsing_context, width_attribute.value_or(String {}), CSS::PropertyID::Width)) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
     } else if (width_attribute == "") {
         // If the `width` attribute is an empty string, it defaults to 100%.
@@ -53,7 +53,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 
     // Height defaults to 100%
     auto height_attribute = attribute(SVG::AttributeNames::height);
-    if (auto height_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height)) {
+    if (auto height_value = parse_css_value(parsing_context, height_attribute.value_or(String {}), CSS::PropertyID::Height)) {
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
     } else if (height_attribute == "") {
         // If the `height` attribute is an empty string, it defaults to 100%.
@@ -84,15 +84,15 @@ void SVGSVGElement::update_fallback_view_box_for_svg_as_image()
     Optional<double> width;
     Optional<double> height;
 
-    auto width_attribute = deprecated_attribute(SVG::AttributeNames::width);
+    auto width_attribute = get_attribute_value(SVG::AttributeNames::width);
     auto parsing_context = CSS::Parser::ParsingContext { document() };
-    if (auto width_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
+    if (auto width_value = parse_css_value(parsing_context, width_attribute, CSS::PropertyID::Width)) {
         if (width_value->is_length() && width_value->as_length().length().is_absolute())
             width = width_value->as_length().length().absolute_length_to_px().to_double();
     }
 
-    auto height_attribute = deprecated_attribute(SVG::AttributeNames::height);
-    if (auto height_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height)) {
+    auto height_attribute = get_attribute_value(SVG::AttributeNames::height);
+    if (auto height_value = parse_css_value(parsing_context, height_attribute, CSS::PropertyID::Height)) {
         if (height_value->is_length() && height_value->as_length().length().is_absolute())
             height = height_value->as_length().length().absolute_length_to_px().to_double();
     }

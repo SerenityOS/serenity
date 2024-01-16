@@ -259,14 +259,14 @@ void HTMLScriptElement::prepare_script()
     // 20. If el has an event attribute and a for attribute, and el's type is "classic", then:
     if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::event) && has_attribute(HTML::AttributeNames::for_)) {
         // 1. Let for be the value of el's' for attribute.
-        auto for_ = deprecated_attribute(HTML::AttributeNames::for_);
+        auto for_ = get_attribute_value(HTML::AttributeNames::for_);
 
         // 2. Let event be the value of el's event attribute.
-        auto event = deprecated_attribute(HTML::AttributeNames::event);
+        auto event = get_attribute_value(HTML::AttributeNames::event);
 
         // 3. Strip leading and trailing ASCII whitespace from event and for.
-        for_ = for_.trim(Infra::ASCII_WHITESPACE);
-        event = event.trim(Infra::ASCII_WHITESPACE);
+        for_ = MUST(for_.trim(Infra::ASCII_WHITESPACE));
+        event = MUST(event.trim(Infra::ASCII_WHITESPACE));
 
         // 4. If for is not an ASCII case-insensitive match for the string "window", then return.
         if (!Infra::is_ascii_case_insensitive_match(for_, "window"sv)) {
@@ -287,7 +287,7 @@ void HTMLScriptElement::prepare_script()
     Optional<String> encoding;
 
     if (has_attribute(HTML::AttributeNames::charset)) {
-        auto charset = TextCodec::get_standardized_encoding(deprecated_attribute(HTML::AttributeNames::charset));
+        auto charset = TextCodec::get_standardized_encoding(get_attribute_value(HTML::AttributeNames::charset));
         if (charset.has_value())
             encoding = String::from_utf8(*charset).release_value_but_fixme_should_propagate_errors();
     }
@@ -309,9 +309,8 @@ void HTMLScriptElement::prepare_script()
     // 25. If el has an integrity attribute, then let integrity metadata be that attribute's value.
     //     Otherwise, let integrity metadata be the empty string.
     String integrity_metadata;
-    if (has_attribute(HTML::AttributeNames::integrity)) {
-        auto integrity = deprecated_attribute(HTML::AttributeNames::integrity);
-        integrity_metadata = String::from_byte_string(integrity).release_value_but_fixme_should_propagate_errors();
+    if (auto maybe_integrity = attribute(HTML::AttributeNames::integrity); maybe_integrity.has_value()) {
+        integrity_metadata = *maybe_integrity;
     }
 
     // 26. Let referrer policy be the current state of el's referrerpolicy content attribute.
@@ -348,7 +347,7 @@ void HTMLScriptElement::prepare_script()
         }
 
         // 2. Let src be the value of el's src attribute.
-        auto src = deprecated_attribute(HTML::AttributeNames::src);
+        auto src = get_attribute_value(HTML::AttributeNames::src);
 
         // 3. If src is the empty string, then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
         if (src.is_empty()) {

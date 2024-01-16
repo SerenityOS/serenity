@@ -175,9 +175,10 @@ unsigned HTMLImageElement::width() const
         return paintable_box->content_width().to_int();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
-    auto width_attr = deprecated_get_attribute(HTML::AttributeNames::width);
-    if (auto converted = width_attr.to_number<unsigned>(); converted.has_value())
-        return *converted;
+    if (auto width_attr = get_attribute(HTML::AttributeNames::width); width_attr.has_value()) {
+        if (auto converted = width_attr->to_number<unsigned>(); converted.has_value())
+            return *converted;
+    }
 
     // ...or else the density-corrected intrinsic width and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
@@ -203,9 +204,10 @@ unsigned HTMLImageElement::height() const
         return paintable_box->content_height().to_int();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
-    auto height_attr = deprecated_get_attribute(HTML::AttributeNames::height);
-    if (auto converted = height_attr.to_number<unsigned>(); converted.has_value())
-        return *converted;
+    if (auto height_attr = get_attribute(HTML::AttributeNames::height); height_attr.has_value()) {
+        if (auto converted = height_attr->to_number<unsigned>(); converted.has_value())
+            return *converted;
+    }
 
     // ...or else the density-corrected intrinsic height and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
@@ -554,7 +556,7 @@ after_step_7:
             request->set_initiator(Fetch::Infrastructure::Request::Initiator::ImageSet);
 
         // 21. Set request's referrer policy to the current state of the element's referrerpolicy attribute.
-        request->set_referrer_policy(ReferrerPolicy::from_string(deprecated_attribute(HTML::AttributeNames::referrerpolicy)));
+        request->set_referrer_policy(ReferrerPolicy::from_string(get_attribute_value(HTML::AttributeNames::referrerpolicy)));
 
         // FIXME: 22. Set request's priority to the current state of the element's fetchpriority attribute.
 
@@ -769,7 +771,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
         request->set_initiator(Fetch::Infrastructure::Request::Initiator::ImageSet);
 
         // 3. Set request's referrer policy to the current state of the element's referrerpolicy attribute.
-        request->set_referrer_policy(ReferrerPolicy::from_string(deprecated_attribute(HTML::AttributeNames::referrerpolicy)));
+        request->set_referrer_policy(ReferrerPolicy::from_string(get_attribute_value(HTML::AttributeNames::referrerpolicy)));
 
         // FIXME: 4. Set request's priority to the current state of the element's fetchpriority attribute.
 
@@ -926,7 +928,7 @@ static void update_the_source_set(DOM::Element& element)
             continue;
 
         // 4. Parse child's srcset attribute and let the returned source set be source set.
-        auto source_set = parse_a_srcset_attribute(child->deprecated_attribute(HTML::AttributeNames::srcset));
+        auto source_set = parse_a_srcset_attribute(child->get_attribute_value(HTML::AttributeNames::srcset));
 
         // 5. If source set has zero image sources, continue to the next child.
         if (source_set.is_empty())
@@ -935,14 +937,14 @@ static void update_the_source_set(DOM::Element& element)
         // 6. If child has a media attribute, and its value does not match the environment, continue to the next child.
         if (child->has_attribute(HTML::AttributeNames::media)) {
             auto media_query = parse_media_query(CSS::Parser::ParsingContext { element.document() },
-                child->deprecated_attribute(HTML::AttributeNames::media));
+                child->get_attribute_value(HTML::AttributeNames::media));
             if (!media_query || !media_query->evaluate(element.document().window())) {
                 continue;
             }
         }
 
         // 7. Parse child's sizes attribute, and let source set's source size be the returned value.
-        source_set.m_source_size = parse_a_sizes_attribute(element.document(), child->deprecated_attribute(HTML::AttributeNames::sizes));
+        source_set.m_source_size = parse_a_sizes_attribute(element.document(), child->get_attribute_value(HTML::AttributeNames::sizes));
 
         // FIXME: 8. If child has a type attribute, and its value is an unknown or unsupported MIME type, continue to the next child.
         if (child->has_attribute(HTML::AttributeNames::type)) {

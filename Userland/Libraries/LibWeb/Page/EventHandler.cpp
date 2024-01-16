@@ -285,9 +285,9 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                     auto url = document->parse_url(href);
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Middle) {
-                        m_browsing_context->page().client().page_did_middle_click_link(url, link->target(), modifiers);
+                        m_browsing_context->page().client().page_did_middle_click_link(url, link->target().to_byte_string(), modifiers);
                     } else if (button == GUI::MouseButton::Secondary) {
-                        m_browsing_context->page().client().page_did_request_link_context_menu(m_browsing_context->to_top_level_position(position), url, link->target(), modifiers);
+                        m_browsing_context->page().client().page_did_request_link_context_menu(m_browsing_context->to_top_level_position(position), url, link->target().to_byte_string(), modifiers);
                     }
                 } else if (button == GUI::MouseButton::Secondary) {
                     if (is<HTML::HTMLImageElement>(*node)) {

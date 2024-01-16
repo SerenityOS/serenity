@@ -63,17 +63,17 @@ void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<String> 
     HTMLElement::attribute_changed(name, value);
     if (name.equals_ignoring_ascii_case("link"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-3
-        auto color = parse_legacy_color_value(value.value_or(String {}).to_byte_string());
+        auto color = parse_legacy_color_value(value.value_or(String {}));
         if (color.has_value())
             document().set_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("alink"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-5
-        auto color = parse_legacy_color_value(value.value_or(String {}).to_byte_string());
+        auto color = parse_legacy_color_value(value.value_or(String {}));
         if (color.has_value())
             document().set_active_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("vlink"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-4
-        auto color = parse_legacy_color_value(value.value_or(String {}).to_byte_string());
+        auto color = parse_legacy_color_value(value.value_or(String {}));
         if (color.has_value())
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("background"sv)) {

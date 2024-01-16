@@ -825,7 +825,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         element.for_each_attribute([&](auto& name, auto& value) {
             // 1. Let copyAttribute be a clone of attribute.
             // 2. Append copyAttribute to copy.
-            MUST(element_copy->set_attribute(name, MUST(String::from_byte_string(value))));
+            MUST(element_copy->set_attribute(name, value));
         });
         copy = move(element_copy);
 
@@ -1396,7 +1396,7 @@ bool Node::is_equal_node(Node const* other_node) const
         // If A is an element, each attribute in its attribute list has an attribute that equals an attribute in B’s attribute list.
         bool has_same_attributes = true;
         this_element.for_each_attribute([&](auto& name, auto& value) {
-            if (other_element.deprecated_get_attribute(name) != value)
+            if (other_element.get_attribute(name) != value)
                 has_same_attributes = false;
         });
         if (!has_same_attributes)

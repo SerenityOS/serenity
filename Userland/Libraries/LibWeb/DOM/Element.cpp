@@ -134,15 +134,6 @@ Optional<String> Element::get_attribute_ns(Optional<FlyString> const& namespace_
     return attribute->value();
 }
 
-ByteString Element::deprecated_get_attribute(FlyString const& name) const
-{
-    auto maybe_attribute = get_attribute(name);
-    if (!maybe_attribute.has_value())
-        return ByteString::empty();
-
-    return maybe_attribute->to_byte_string();
-}
-
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value
 String Element::get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_) const
 {
@@ -1051,7 +1042,7 @@ i32 Element::default_tab_index_value() const
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
 i32 Element::tab_index() const
 {
-    auto maybe_table_index = Web::HTML::parse_integer(deprecated_attribute(HTML::AttributeNames::tabindex));
+    auto maybe_table_index = Web::HTML::parse_integer(get_attribute_value(HTML::AttributeNames::tabindex));
 
     if (!maybe_table_index.has_value())
         return default_tab_index_value();
@@ -2038,10 +2029,10 @@ void Element::for_each_attribute(Function<void(Attr const&)> callback) const
         callback(*m_attributes->item(i));
 }
 
-void Element::for_each_attribute(Function<void(FlyString const&, ByteString const&)> callback) const
+void Element::for_each_attribute(Function<void(FlyString const&, String const&)> callback) const
 {
     for_each_attribute([&callback](Attr const& attr) {
-        callback(attr.name(), attr.value().to_byte_string());
+        callback(attr.name(), attr.value());
     });
 }
 

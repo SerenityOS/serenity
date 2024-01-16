@@ -34,7 +34,7 @@ void HTMLMetaElement::initialize(JS::Realm& realm)
 
 Optional<HTMLMetaElement::HttpEquivAttributeState> HTMLMetaElement::http_equiv_state() const
 {
-    auto value = deprecated_attribute(HTML::AttributeNames::http_equiv);
+    auto value = get_attribute_value(HTML::AttributeNames::http_equiv);
 
 #define __ENUMERATE_HTML_META_HTTP_EQUIV_ATTRIBUTE(keyword, state) \
     if (value.equals_ignoring_ascii_case(#keyword##sv))            \
@@ -96,7 +96,7 @@ void HTMLMetaElement::inserted()
             if (!has_attribute(AttributeNames::content))
                 break;
 
-            auto input = deprecated_attribute(AttributeNames::content);
+            auto input = get_attribute_value(AttributeNames::content);
             if (input.is_empty())
                 break;
 
@@ -105,7 +105,7 @@ void HTMLMetaElement::inserted()
             break;
         }
         default:
-            dbgln("FIXME: Implement '{}' http-equiv state", deprecated_attribute(AttributeNames::http_equiv));
+            dbgln("FIXME: Implement '{}' http-equiv state", get_attribute_value(AttributeNames::http_equiv));
             break;
         }
     }

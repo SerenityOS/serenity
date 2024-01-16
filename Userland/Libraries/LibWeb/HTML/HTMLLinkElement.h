@@ -29,9 +29,9 @@ public:
 
     virtual void inserted() override;
 
-    ByteString rel() const { return deprecated_attribute(HTML::AttributeNames::rel); }
-    ByteString type() const { return deprecated_attribute(HTML::AttributeNames::type); }
-    ByteString href() const { return deprecated_attribute(HTML::AttributeNames::href); }
+    String rel() const { return get_attribute_value(HTML::AttributeNames::rel); }
+    String type() const { return get_attribute_value(HTML::AttributeNames::type); }
+    String href() const { return get_attribute_value(HTML::AttributeNames::href); }
 
     bool has_loaded_icon() const;
     bool load_favicon_and_use_if_window_is_active();

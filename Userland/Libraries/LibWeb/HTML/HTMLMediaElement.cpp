@@ -578,8 +578,8 @@ public:
         // 2. ⌛ Process candidate: If candidate does not have a src attribute, or if its src attribute's value is the
         //    empty string, then end the synchronous section, and jump down to the failed with elements step below.
         String candiate_src;
-        if (m_candidate->has_attribute(HTML::AttributeNames::src))
-            candiate_src = TRY_OR_THROW_OOM(vm, String::from_byte_string(m_candidate->deprecated_attribute(HTML::AttributeNames::src)));
+        if (auto maybe_src = m_candidate->get_attribute(HTML::AttributeNames::src); maybe_src.has_value())
+            candiate_src = *maybe_src;
 
         if (candiate_src.is_empty()) {
             TRY(failed_with_elements());
@@ -826,7 +826,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
         };
 
         // 1. ⌛ If the src attribute's value is the empty string, then end the synchronous section, and jump down to the failed with attribute step below.
-        auto source = deprecated_attribute(HTML::AttributeNames::src);
+        auto source = get_attribute_value(HTML::AttributeNames::src);
         if (source.is_empty()) {
             failed_with_attribute("The 'src' attribute is empty"_string);
             return {};

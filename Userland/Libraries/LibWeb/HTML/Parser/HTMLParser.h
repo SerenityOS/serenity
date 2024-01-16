@@ -202,6 +202,6 @@ private:
 
 RefPtr<CSS::StyleValue> parse_dimension_value(StringView);
 RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView);
-Optional<Color> parse_legacy_color_value(ByteString input);
+Optional<Color> parse_legacy_color_value(StringView);
 
 }

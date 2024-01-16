@@ -53,7 +53,7 @@ void HTMLTableRowElement::apply_presentational_hints(CSS::StyleProperties& style
                 style.set_property(CSS::PropertyID::BackgroundImage, CSS::ImageStyleValue::create(parsed_value));
             return;
         } else if (name == HTML::AttributeNames::valign) {
-            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::VerticalAlign))
+            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value, CSS::PropertyID::VerticalAlign))
                 style.set_property(CSS::PropertyID::VerticalAlign, parsed_value.release_nonnull());
             return;
         }

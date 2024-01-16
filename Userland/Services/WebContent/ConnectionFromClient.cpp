@@ -457,7 +457,7 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
                 load_html("<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.");
             } else {
                 auto link = maybe_link.release_value();
-                auto url = document->parse_url(link->deprecated_get_attribute(Web::HTML::AttributeNames::href));
+                auto url = document->parse_url(link->get_attribute_value(Web::HTML::AttributeNames::href));
                 load_url(url);
             }
         }
