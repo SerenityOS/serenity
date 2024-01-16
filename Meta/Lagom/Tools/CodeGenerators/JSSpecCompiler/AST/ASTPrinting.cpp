@@ -35,6 +35,14 @@ void ErrorNode::dump_tree(StringBuilder& builder)
     dump_node(builder, "Error \"{}\"", m_error);
 }
 
+void WellKnownNode::dump_tree(StringBuilder& builder)
+{
+    static constexpr StringView type_to_name[] = {
+        "ZeroArgumentFunctionCall"sv,
+    };
+    dump_node(builder, "WellKnownNode {}", type_to_name[m_type]);
+}
+
 void ControlFlowFunctionReturn::dump_tree(StringBuilder& builder)
 {
     dump_node(builder, "ControlFlowFunctionReturn");

@@ -25,6 +25,11 @@ RecursionDecision FunctionCallCanonicalizationPass::on_entry(Tree tree)
             }
             arguments.append(current_tree);
 
+            if (arguments[0] == zero_argument_function_call) {
+                VERIFY(arguments.size() == 1);
+                arguments.clear();
+            }
+
             replace_current_node_with(make_ref_counted<FunctionCall>(binary_operation->m_left, move(arguments)));
         }
     }
