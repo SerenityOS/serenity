@@ -51,10 +51,14 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
 
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
-    auto font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling;
 
-    auto character_spacing = text_rendering_matrix.x_scale() * renderer.text_state().character_spacing / horizontal_scaling;
-    auto word_spacing = text_rendering_matrix.x_scale() * renderer.text_state().word_spacing / horizontal_scaling;
+    // TrueType fonts are prescaled to text_rendering_matrix.x_scale() * text_state().font_size / horizontal_scaling,
+    // cf `Renderer::text_set_font()`. That's the width we get back from `get_glyph_width()` if we use a fallback
+    // (or built-in) font. Scale the width size too, so the m_width.get() codepath is consistent.
+    auto const font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling;
+
+    auto character_spacing = renderer.text_state().character_spacing;
+    auto word_spacing = renderer.text_state().word_spacing;
 
     for (auto char_code : string.bytes()) {
         // Use the width specified in the font's dictionary if available,
@@ -67,9 +71,13 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         else
             glyph_width = m_missing_width; // FIXME: times m_font_matrix.x_scale() probably?
 
-        TRY(draw_glyph(painter, glyph_position, glyph_width, char_code, renderer));
+        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
+        TRY(draw_glyph(painter, glyph_render_position, glyph_width, char_code, renderer));
 
-        auto tx = glyph_width;
+        // glyph_width is scaled by `text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling`,
+        // but it should only be scaled by `renderer.text_state().font_size`.
+        // FIXME: Having to divide here isn't pretty. Refactor things so that this isn't needed.
+        auto tx = glyph_width / text_rendering_matrix.x_scale() * horizontal_scaling;
         tx += character_spacing;
 
         // ISO 32000 (PDF 2.0), 9.3.3 Wordspacing
@@ -79,7 +87,6 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         if (char_code == ' ')
             tx += word_spacing;
 
-        tx *= horizontal_scaling;
         glyph_position += { tx, 0.0f };
     }
     return glyph_position;
