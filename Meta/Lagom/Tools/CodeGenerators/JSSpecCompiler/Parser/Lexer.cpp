@@ -151,6 +151,10 @@ ParseErrorOr<TokenizeTreeResult> tokenize_tree(XML::Node const* node, bool allow
             },
             move(ignore_comments)));
     }
+
+    if (tokens.size() && tokens.last().type == TokenType::MemberAccess)
+        tokens.last().type = TokenType::Dot;
+
     return result;
 }
 
