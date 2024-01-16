@@ -161,6 +161,10 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item
 {
+    if ([item action] == @selector(goToNextPage:))
+        return _doc ? (_page_index < (int)_doc->get_page_count() - 1) : NO;
+    if ([item action] == @selector(goToPreviousPage:))
+        return _doc ? (_page_index > 0) : NO;
     if ([item action] == @selector(toggleShowClippingPaths:)) {
         [item setState:_preferences.show_clipping_paths ? NSControlStateValueOn : NSControlStateValueOff];
         return _doc ? YES : NO;
