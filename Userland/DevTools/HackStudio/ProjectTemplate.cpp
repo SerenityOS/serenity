@@ -11,10 +11,10 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <fcntl.h>
-#include <spawn.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -92,17 +92,14 @@ ErrorOr<void> ProjectTemplate::create_project(ByteString const& name, ByteString
 
         // Generate a namespace-safe project name (replace hyphens with underscores)
         auto namespace_safe = name.replace("-"sv, "_"sv, ReplaceMode::All);
-
-        char const* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };
-
-        pid_t child_pid = TRY(Core::System::posix_spawn(postcreate_script_path, nullptr, nullptr, const_cast<char**>(argv), environ));
+        auto child_process = TRY(Core::Process::spawn({
+            .executable = postcreate_script_path,
+            .arguments = { name, path, namespace_safe },
+        }));
 
         // Command spawned, wait for exit.
-        auto waitpid_result = TRY(Core::System::waitpid(child_pid, 0));
-        int child_error = WEXITSTATUS(waitpid_result.status);
-        dbgln("Post-create script exited with code {}", child_error);
-
-        if (child_error != 0)
+        auto child_exited_with_0 = TRY(child_process.wait_for_termination());
+        if (!child_exited_with_0)
             return Error::from_string_literal("Project post-creation script exited with non-zero error code.");
     }
 
