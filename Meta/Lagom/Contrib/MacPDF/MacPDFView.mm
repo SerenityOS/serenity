@@ -169,6 +169,14 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         [item setState:_preferences.show_clipping_paths ? NSControlStateValueOn : NSControlStateValueOff];
         return _doc ? YES : NO;
     }
+    if ([item action] == @selector(toggleClipImages:)) {
+        [item setState:_preferences.clip_images ? NSControlStateValueOn : NSControlStateValueOff];
+        return _doc ? YES : NO;
+    }
+    if ([item action] == @selector(toggleClipPaths:)) {
+        [item setState:_preferences.clip_paths ? NSControlStateValueOn : NSControlStateValueOff];
+        return _doc ? YES : NO;
+    }
     return NO;
 }
 
@@ -176,6 +184,22 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (_doc) {
         _preferences.show_clipping_paths = !_preferences.show_clipping_paths;
+        [self invalidateCachedBitmap];
+    }
+}
+
+- (IBAction)toggleClipImages:(id)sender
+{
+    if (_doc) {
+        _preferences.clip_images = !_preferences.clip_images;
+        [self invalidateCachedBitmap];
+    }
+}
+
+- (IBAction)toggleClipPaths:(id)sender
+{
+    if (_doc) {
+        _preferences.clip_paths = !_preferences.clip_paths;
         [self invalidateCachedBitmap];
     }
 }

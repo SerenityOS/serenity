@@ -144,6 +144,16 @@
     [_pdfView toggleShowClippingPaths:sender];
 }
 
+- (IBAction)toggleClipImages:(id)sender
+{
+    [_pdfView toggleClipImages:sender];
+}
+
+- (IBAction)toggleClipPaths:(id)sender
+{
+    [_pdfView toggleClipPaths:sender];
+}
+
 - (IBAction)showGoToPageDialog:(id)sender
 {
     auto alert = [[NSAlert alloc] init];
