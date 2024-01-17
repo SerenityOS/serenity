@@ -6,51 +6,51 @@
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-interface
 [Exposed=Window]
 interface Navigation : EventTarget {
-  sequence<NavigationHistoryEntry> entries();
-  readonly attribute NavigationHistoryEntry? currentEntry;
-  undefined updateCurrentEntry(NavigationUpdateCurrentEntryOptions options);
-  readonly attribute NavigationTransition? transition;
+    sequence<NavigationHistoryEntry> entries();
+    readonly attribute NavigationHistoryEntry? currentEntry;
+    undefined updateCurrentEntry(NavigationUpdateCurrentEntryOptions options);
+    readonly attribute NavigationTransition? transition;
 
-  readonly attribute boolean canGoBack;
-  readonly attribute boolean canGoForward;
+    readonly attribute boolean canGoBack;
+    readonly attribute boolean canGoForward;
 
-  NavigationResult navigate(USVString url, optional NavigationNavigateOptions options = {});
-  NavigationResult reload(optional NavigationReloadOptions options = {});
+    NavigationResult navigate(USVString url, optional NavigationNavigateOptions options = {});
+    NavigationResult reload(optional NavigationReloadOptions options = {});
 
-  NavigationResult traverseTo(DOMString key, optional NavigationOptions options = {});
-  NavigationResult back(optional NavigationOptions options = {});
-  NavigationResult forward(optional NavigationOptions options = {});
+    NavigationResult traverseTo(DOMString key, optional NavigationOptions options = {});
+    NavigationResult back(optional NavigationOptions options = {});
+    NavigationResult forward(optional NavigationOptions options = {});
 
-  attribute EventHandler onnavigate;
-  attribute EventHandler onnavigatesuccess;
-  attribute EventHandler onnavigateerror;
-  attribute EventHandler oncurrententrychange;
+    attribute EventHandler onnavigate;
+    attribute EventHandler onnavigatesuccess;
+    attribute EventHandler onnavigateerror;
+    attribute EventHandler oncurrententrychange;
 };
 
 dictionary NavigationUpdateCurrentEntryOptions {
-  required any state;
+    required any state;
 };
 
 dictionary NavigationOptions {
-  any info;
+    any info;
 };
 
 dictionary NavigationNavigateOptions : NavigationOptions {
-  any state;
-  NavigationHistoryBehavior history = "auto";
+    any state;
+    NavigationHistoryBehavior history = "auto";
 };
 
 dictionary NavigationReloadOptions : NavigationOptions {
-  any state;
+    any state;
 };
 
 dictionary NavigationResult {
-  Promise<NavigationHistoryEntry> committed;
-  Promise<NavigationHistoryEntry> finished;
+    Promise<NavigationHistoryEntry> committed;
+    Promise<NavigationHistoryEntry> finished;
 };
 
 enum NavigationHistoryBehavior {
-  "auto",
-  "push",
-  "replace"
+    "auto",
+    "push",
+    "replace"
 };
