@@ -16,12 +16,21 @@ bool contains_empty_text(XML::Node const* node)
     return node->as_text().builder.string_view().trim_whitespace().is_empty();
 }
 
-ParseErrorOr<StringView> get_attribute_by_name(XML::Node const* node, StringView attribute_name)
+ParseErrorOr<StringView> deprecated_get_attribute_by_name(XML::Node const* node, StringView attribute_name)
 {
     auto const& attribute = node->as_element().attributes.get(attribute_name);
 
     if (!attribute.has_value())
         return ParseError::create(String::formatted("Attribute {} is not present", attribute_name), node);
+    return attribute.value();
+}
+
+Optional<StringView> get_attribute_by_name(XML::Node const* node, StringView attribute_name)
+{
+    auto const& attribute = node->as_element().attributes.get(attribute_name);
+
+    if (!attribute.has_value())
+        return {};
     return attribute.value();
 }
 

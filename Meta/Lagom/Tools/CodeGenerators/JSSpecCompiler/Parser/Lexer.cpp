@@ -110,7 +110,7 @@ ParseErrorOr<TokenizeTreeResult> tokenize_tree(XML::Node const* node, bool allow
                 }
 
                 if (element.name == tag_span) {
-                    auto element_class = TRY(get_attribute_by_name(child, attribute_class));
+                    auto element_class = TRY(deprecated_get_attribute_by_name(child, attribute_class));
                     if (element_class != class_secnum)
                         return ParseError::create(String::formatted("Expected 'secnum' as a class name of <span>, but found '{}'", element_class), child);
                     tokens.append({ TokenType::SectionNumber, TRY(get_text_contents(child)), child });
