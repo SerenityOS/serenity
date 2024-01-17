@@ -33,12 +33,17 @@ public:
     auto with_new_logical_scope(Func&& func);
     LogicalLocation& current_logical_scope();
 
+    template<typename Func>
+    auto with_new_step_list_nesting_level(Func&& func);
+    int step_list_nesting_level() const;
+
     Location file_scope() const;
     Location location_from_xml_offset(XML::Offset offset) const;
 
 private:
     TranslationUnitRef m_translation_unit;
     RefPtr<LogicalLocation> m_current_logical_scope;
+    int m_step_list_nesting_level = 0;
 };
 
 class AlgorithmStepList {
@@ -47,11 +52,14 @@ public:
 
     Vector<AlgorithmStep> m_steps;
     Tree m_expression = error_tree;
+
+private:
+    static void update_logical_scope_for_step(SpecificationParsingContext& ctx, LogicalLocation const& parent_scope, int step_number);
 };
 
 class AlgorithmStep {
 public:
-    static ParseErrorOr<AlgorithmStep> create(SpecificationParsingContext& ctx, XML::Node const* node);
+    static Optional<AlgorithmStep> create(SpecificationParsingContext& ctx, XML::Node const* node);
 
     ParseErrorOr<Tree> parse();
 

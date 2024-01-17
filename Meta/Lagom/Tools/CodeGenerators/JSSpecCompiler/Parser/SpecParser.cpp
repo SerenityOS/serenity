@@ -33,6 +33,18 @@ LogicalLocation& SpecificationParsingContext::current_logical_scope()
     return *m_current_logical_scope;
 }
 
+template<typename Func>
+auto SpecificationParsingContext::with_new_step_list_nesting_level(Func&& func)
+{
+    TemporaryChange change(m_step_list_nesting_level, m_step_list_nesting_level + 1);
+    return func();
+}
+
+int SpecificationParsingContext::step_list_nesting_level() const
+{
+    return m_step_list_nesting_level;
+}
+
 Location SpecificationParsingContext::file_scope() const
 {
     return { .filename = m_translation_unit->filename() };
@@ -48,20 +60,38 @@ Location SpecificationParsingContext::location_from_xml_offset(XML::Offset offse
     };
 }
 
-ParseErrorOr<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, XML::Node const* node)
+Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, XML::Node const* element)
 {
-    VERIFY(node->as_element().name == tag_li);
+    VERIFY(element->as_element().name == tag_li);
 
-    auto [tokens, substeps] = TRY(tokenize_tree(node, true));
-    AlgorithmStep result { .m_tokens = move(tokens), .m_node = node };
+    auto tokenization_result = tokenize_tree(element, true);
+    if (tokenization_result.is_error()) {
+        ctx.diag().error(ctx.location_from_xml_offset(tokenization_result.error()->offset()),
+            "{}", tokenization_result.error()->to_string());
+        return {};
+    }
+
+    auto [tokens, substeps] = tokenization_result.release_value();
+    AlgorithmStep result { .m_tokens = move(tokens), .m_node = element };
 
     if (substeps) {
-        auto step_list = AlgorithmStepList::create(ctx, substeps);
+        // FIXME: Remove this once macOS Lagom CI updates to Clang >= 16.
+        auto substeps_copy = substeps;
+
+        auto step_list = ctx.with_new_step_list_nesting_level([&] {
+            return AlgorithmStepList::create(ctx, substeps_copy);
+        });
         if (step_list.has_value())
             result.m_substeps = step_list->m_expression;
     }
 
-    result.m_expression = TRY(result.parse());
+    auto parse_result = result.parse();
+    if (parse_result.is_error()) {
+        ctx.diag().error(ctx.location_from_xml_offset(parse_result.error()->offset()),
+            "{}", parse_result.error()->to_string());
+        return {};
+    }
+    result.m_expression = parse_result.release_value();
     return result;
 }
 
@@ -84,21 +114,25 @@ Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContex
 
     Vector<Tree> step_expressions;
     bool all_steps_parsed = true;
+    int step_number = 0;
+
+    auto const& parent_scope = ctx.current_logical_scope();
 
     for (auto const& child : element->as_element().children) {
         child->content.visit(
             [&](XML::Node::Element const& element) {
                 if (element.name == tag_li) {
-                    auto step_creation_result = AlgorithmStep::create(ctx, child);
-                    if (step_creation_result.is_error()) {
-                        // TODO: Integrate backtracing parser errors better
-                        ctx.diag().error(ctx.location_from_xml_offset(step_creation_result.error()->offset()),
-                            "{}", step_creation_result.error()->to_string());
+                    auto step_creation_result = ctx.with_new_logical_scope([&] {
+                        update_logical_scope_for_step(ctx, parent_scope, step_number);
+                        return AlgorithmStep::create(ctx, child);
+                    });
+                    if (!step_creation_result.has_value()) {
                         all_steps_parsed = false;
                     } else {
                         steps.append(step_creation_result.release_value());
                         step_expressions.append(steps.last().m_expression);
                     }
+                    ++step_number;
                     return;
                 }
 
@@ -119,6 +153,31 @@ Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContex
 
     result.m_expression = make_ref_counted<TreeList>(move(step_expressions));
     return result;
+}
+
+void AlgorithmStepList::update_logical_scope_for_step(SpecificationParsingContext& ctx, LogicalLocation const& parent_scope, int step_number)
+{
+    int nesting_level = ctx.step_list_nesting_level();
+    String list_step_number;
+
+    if (nesting_level == 0 || nesting_level == 3) {
+        list_step_number = MUST(String::formatted("{}", step_number + 1));
+    } else if (nesting_level == 1 || nesting_level == 4) {
+        if (step_number < 26)
+            list_step_number = String::from_code_point('a' + step_number);
+        else
+            list_step_number = MUST(String::formatted("{}", step_number + 1));
+    } else {
+        list_step_number = MUST(String::from_byte_string(ByteString::roman_number_from(step_number + 1).to_lowercase()));
+    }
+
+    auto& scope = ctx.current_logical_scope();
+    scope.section = parent_scope.section;
+
+    if (parent_scope.step.is_empty())
+        scope.step = list_step_number;
+    else
+        scope.step = MUST(String::formatted("{}.{}", parent_scope.step, list_step_number));
 }
 
 Optional<Algorithm> Algorithm::create(SpecificationParsingContext& ctx, XML::Node const* element)
