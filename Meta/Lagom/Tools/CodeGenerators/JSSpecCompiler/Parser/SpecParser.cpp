@@ -103,38 +103,48 @@ ParseErrorOr<AlgorithmStepList> AlgorithmStepList::create(XML::Node::Element con
     return result;
 }
 
-ParseErrorOr<Algorithm> Algorithm::create(XML::Node const* node)
+Optional<Algorithm> Algorithm::create(SpecificationParsingContext& ctx, XML::Node const* element)
 {
-    VERIFY(node->as_element().name == tag_emu_alg);
+    VERIFY(element->as_element().name == tag_emu_alg);
 
-    XML::Node::Element const* steps_list = nullptr;
-    for (auto const& child : node->as_element().children) {
-        TRY(child->content.visit(
-            [&](XML::Node::Element const& element) -> ParseErrorOr<void> {
+    Vector<XML::Node const*> steps_list;
+    for (auto const& child : element->as_element().children) {
+        child->content.visit(
+            [&](XML::Node::Element const& element) {
                 if (element.name == tag_ol) {
-                    if (steps_list != nullptr)
-                        return ParseError::create("<emu-alg> should have exactly one <ol> child"sv, child);
-                    steps_list = &element;
-                    return {};
-                } else {
-                    return ParseError::create("<emu-alg> should not have children other than <ol>"sv, child);
+                    steps_list.append(child);
+                    return;
+                }
+
+                ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                    "<{}> should not be a child of <emu-alg>"sv, element.name);
+            },
+            [&](XML::Node::Text const&) {
+                if (!contains_empty_text(child)) {
+                    ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                        "non-empty text node should not be a child of <emu-alg>");
                 }
             },
-            [&](XML::Node::Text const&) -> ParseErrorOr<void> {
-                if (!contains_empty_text(child))
-                    return ParseError::create("<emu-alg> should not have non-empty child text nodes"sv, child);
-                return {};
-            },
-            move(ignore_comments)));
+            [&](auto const&) {});
     }
 
-    if (steps_list == nullptr)
-        return ParseError::create("<emu-alg> should have exactly one <ol> child"sv, node);
+    if (steps_list.size() != 1) {
+        ctx.diag().error(ctx.location_from_xml_offset(element->offset),
+            "<emu-alg> should have exactly one <ol> child"sv);
+        return {};
+    }
+
+    auto steps_creation_result = AlgorithmStepList::create(steps_list[0]->as_element());
+    if (steps_creation_result.is_error()) {
+        // TODO: Integrate backtracing parser errors better
+        ctx.diag().error(ctx.location_from_xml_offset(steps_creation_result.error()->offset()),
+            "{}", steps_creation_result.error()->to_string());
+        return {};
+    }
 
     Algorithm algorithm;
-    algorithm.m_steps = TRY(AlgorithmStepList::create(*steps_list));
+    algorithm.m_steps = steps_creation_result.release_value();
     algorithm.m_tree = algorithm.m_steps.m_expression;
-
     return algorithm;
 }
 
@@ -278,21 +288,17 @@ bool SpecFunction::post_initialize(SpecificationParsingContext& ctx, XML::Node c
 
     if (algorithm_nodes.size() != 1) {
         ctx.diag().error(ctx.location_from_xml_offset(element->offset),
-            "<emu-clause> specifing function should have exactly one <emu-alg>"sv);
+            "<emu-clause> specifing function should have exactly one <emu-alg> child"sv);
         return false;
     }
 
-    auto algorithm_creation_result = Algorithm::create(algorithm_nodes[0]);
-    if (algorithm_creation_result.is_error()) {
-        // TODO: Integrate backtracing parser errors better
-        ctx.diag().error(ctx.location_from_xml_offset(algorithm_creation_result.error()->offset()),
-            "{}", algorithm_creation_result.error()->to_string());
+    auto maybe_algorithm = Algorithm::create(ctx, algorithm_nodes[0]);
+    if (maybe_algorithm.has_value()) {
+        m_algorithm = maybe_algorithm.release_value();
+        return true;
+    } else {
         return false;
     }
-
-    m_algorithm = algorithm_creation_result.release_value();
-
-    return true;
 }
 
 void SpecFunction::do_collect(TranslationUnitRef translation_unit)

@@ -63,7 +63,7 @@ public:
 
 class Algorithm {
 public:
-    static ParseErrorOr<Algorithm> create(XML::Node const* node);
+    static Optional<Algorithm> create(SpecificationParsingContext& ctx, XML::Node const* element);
 
     AlgorithmStepList m_steps;
     Tree m_tree = error_tree;
