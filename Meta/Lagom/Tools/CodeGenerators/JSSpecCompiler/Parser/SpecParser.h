@@ -70,7 +70,7 @@ private:
     {
     }
 
-    ParseErrorOr<Tree> parse();
+    bool parse();
 
     SpecificationParsingContext& m_ctx;
     Vector<Token> m_tokens;
@@ -113,7 +113,7 @@ private:
     {
     }
 
-    ParseErrorOr<void> parse_header(XML::Node const* element);
+    Optional<FailedTextParseDiagnostic> parse_header(XML::Node const* element);
     void parse(XML::Node const* element);
 
     SpecificationParsingContext* m_ctx_pointer;

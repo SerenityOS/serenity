@@ -86,24 +86,29 @@ Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, 
         result.m_substeps = step_list.has_value() ? step_list->tree() : error_tree;
     }
 
-    auto parse_result = result.parse();
-    if (parse_result.is_error()) {
-        ctx.diag().error(ctx.location_from_xml_offset(parse_result.error()->offset()),
-            "{}", parse_result.error()->to_string());
+    if (!result.parse())
         return {};
-    }
-    result.m_expression = parse_result.release_value();
     return result;
 }
 
-ParseErrorOr<Tree> AlgorithmStep::parse()
+bool AlgorithmStep::parse()
 {
-    TextParser parser(m_tokens, m_node);
+    TextParser parser(m_ctx, m_tokens, m_node);
 
+    TextParseErrorOr<Tree> parse_result = TextParseError {};
     if (m_substeps)
-        return parser.parse_step_with_substeps(RefPtr(m_substeps).release_nonnull());
+        parse_result = parser.parse_step_with_substeps(RefPtr(m_substeps).release_nonnull());
     else
-        return parser.parse_step_without_substeps();
+        parse_result = parser.parse_step_without_substeps();
+
+    if (parse_result.is_error()) {
+        auto [location, message] = parser.get_diagnostic();
+        m_ctx.diag().error(location, "{}", message);
+        return false;
+    } else {
+        m_expression = parse_result.release_value();
+        return true;
+    }
 }
 
 Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContext& ctx, XML::Node const* element)
@@ -250,12 +255,26 @@ void SpecificationClause::collect_into(TranslationUnitRef translation_unit)
         subclause->collect_into(translation_unit);
 }
 
-ParseErrorOr<void> SpecificationClause::parse_header(XML::Node const* element)
+Optional<FailedTextParseDiagnostic> SpecificationClause::parse_header(XML::Node const* element)
 {
+    auto& ctx = *m_ctx_pointer;
     VERIFY(element->as_element().name == tag_h1);
-    auto tokens = TRY(tokenize_tree(*m_ctx_pointer, element));
-    TextParser parser(tokens.tokens, element);
-    m_header = TRY(parser.parse_clause_header());
+
+    auto tokenization_result = tokenize_tree(ctx, element, false);
+    if (tokenization_result.is_error()) {
+        return FailedTextParseDiagnostic {
+            ctx.location_from_xml_offset(tokenization_result.error()->offset()),
+            tokenization_result.error()->to_string()
+        };
+    }
+    auto const& tokens = tokenization_result.release_value().tokens;
+
+    TextParser parser(ctx, tokens, element);
+    auto parse_result = parser.parse_clause_header();
+    if (parse_result.is_error())
+        return parser.get_diagnostic();
+
+    m_header = parse_result.value();
     return {};
 }
 
@@ -264,7 +283,7 @@ void SpecificationClause::parse(XML::Node const* element)
     auto& ctx = context();
     u32 child_index = 0;
 
-    Optional<NonnullRefPtr<ParseError>> header_parse_error;
+    Optional<FailedTextParseDiagnostic> header_parse_error;
 
     for (auto const& child : element->as_element().children) {
         child->content.visit(
@@ -275,10 +294,8 @@ void SpecificationClause::parse(XML::Node const* element)
                             "<h1> must be the first child of <emu-clause>");
                         return;
                     }
-
-                    if (auto error = parse_header(child); error.is_error())
-                        header_parse_error = error.release_error();
-                    else
+                    header_parse_error = parse_header(child);
+                    if (!header_parse_error.has_value())
                         ctx.current_logical_scope().section = MUST(String::from_utf8(m_header.section_number));
                 } else {
                     if (element.name == tag_h1) {
@@ -294,10 +311,7 @@ void SpecificationClause::parse(XML::Node const* element)
                     if (header_parse_error.has_value()) {
                         ctx.diag().warn(ctx.location_from_xml_offset(child->offset),
                             "node content will be ignored since section header was not parsed successfully");
-                        // TODO: Integrate backtracing parser errors better
-                        ctx.diag().note(ctx.location_from_xml_offset(header_parse_error.value()->offset()),
-                            "{}", header_parse_error.value()->to_string());
-                        header_parse_error.clear();
+                        ctx.diag().note(header_parse_error->location, "{}", header_parse_error->message);
                     }
                 }
                 ++child_index;

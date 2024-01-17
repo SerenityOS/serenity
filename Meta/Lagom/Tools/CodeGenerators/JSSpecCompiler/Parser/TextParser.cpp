@@ -6,9 +6,20 @@
 
 #include <AK/ScopeGuard.h>
 
+#include "Parser/SpecParser.h"
 #include "Parser/TextParser.h"
 
 namespace JSSpecCompiler {
+
+void TextParser::save_error(Variant<TokenType, StringView, CustomMessage>&& expected)
+{
+    if (m_max_parsed_tokens > m_next_token_index)
+        return;
+    if (m_max_parsed_tokens < m_next_token_index)
+        m_suitable_continuations.clear();
+    m_max_parsed_tokens = m_next_token_index;
+    m_suitable_continuations.append(move(expected));
+}
 
 void TextParser::retreat()
 {
@@ -24,48 +35,69 @@ auto TextParser::rollback_point()
     };
 }
 
-ParseErrorOr<Token const*> TextParser::peek_token()
+Optional<Token> TextParser::peek_token()
 {
     if (m_next_token_index == m_tokens.size())
-        return ParseError::create("Expected token but found EOF"sv, m_node);
-    return &m_tokens[m_next_token_index];
+        return {};
+    return m_tokens[m_next_token_index];
 }
 
-ParseErrorOr<Token const*> TextParser::consume_token()
+Optional<Token> TextParser::consume_token()
 {
     auto result = peek_token();
-    if (!result.is_error())
+    if (result.has_value())
         ++m_next_token_index;
     return result;
 }
 
-ParseErrorOr<Token const*> TextParser::consume_token_with_one_of_types(std::initializer_list<TokenType> types)
+TextParseErrorOr<Token> TextParser::consume_token_with_one_of_types(std::initializer_list<TokenType> types)
 {
-    auto token = TRY(consume_token());
-    for (TokenType type : types)
-        if (token->type == type)
-            return token;
-    retreat();
+    auto token = peek_token();
+    if (token.has_value()) {
+        for (TokenType type : types) {
+            if (token->type == type) {
+                (void)consume_token();
+                return *token;
+            } else {
+                save_error(type);
+            }
+        }
+    } else {
+        for (TokenType type : types)
+            save_error(type);
+    }
 
-    return ParseError::create(String::formatted("Unexpected token type {}", token->name()), token->node);
+    return TextParseError {};
 }
 
-ParseErrorOr<Token const*> TextParser::consume_token_with_type(TokenType type)
+TextParseErrorOr<Token> TextParser::consume_token_with_type(TokenType type)
 {
     return consume_token_with_one_of_types({ type });
 }
 
-ParseErrorOr<void> TextParser::consume_word(StringView word)
+TextParseErrorOr<void> TextParser::consume_token(TokenType type, StringView data)
 {
-    auto token = TRY(consume_token_with_type(TokenType::Word));
-    if (!token->data.equals_ignoring_ascii_case(word)) {
+    auto token = consume_token();
+    if (!token.has_value() || token->type != type || !token->data.equals_ignoring_ascii_case(data)) {
         retreat();
-        return ParseError::create("Unexpected word"sv, token->node);
+        save_error(data);
+        return TextParseError {};
     }
     return {};
 }
 
-ParseErrorOr<void> TextParser::consume_words(std::initializer_list<StringView> words)
+TextParseErrorOr<void> TextParser::consume_word(StringView word)
+{
+    auto token = consume_token();
+    if (!token.has_value() || token->type != TokenType::Word || !token->data.equals_ignoring_ascii_case(word)) {
+        retreat();
+        save_error(word);
+        return TextParseError {};
+    }
+    return {};
+}
+
+TextParseErrorOr<void> TextParser::consume_words(std::initializer_list<StringView> words)
 {
     for (auto word : words)
         TRY(consume_word(word));
@@ -77,14 +109,17 @@ bool TextParser::is_eof() const
     return m_next_token_index == m_tokens.size();
 }
 
-ParseErrorOr<void> TextParser::expect_eof() const
+TextParseErrorOr<void> TextParser::expect_eof()
 {
-    if (!is_eof())
-        return ParseError::create("Expected EOF"sv, m_node);
+    if (!is_eof()) {
+        save_error(CustomMessage { "EOF"sv });
+        return TextParseError {};
+    }
     return {};
 }
 
-ParseErrorOr<Tree> TextParser::parse_record_direct_list_initialization()
+// (the)? <record_name> { (<name>: <value>,)* }
+TextParseErrorOr<Tree> TextParser::parse_record_direct_list_initialization()
 {
     auto rollback = rollback_point();
 
@@ -96,36 +131,37 @@ ParseErrorOr<Tree> TextParser::parse_record_direct_list_initialization()
     while (true) {
         auto name = TRY(consume_token_with_one_of_types({ TokenType::Identifier, TokenType::BraceClose }));
 
-        if (name->is_bracket()) {
+        if (name.is_bracket()) {
             break;
         } else {
             TRY(consume_token_with_type(TokenType::Colon));
             auto value = TRY(parse_expression());
             (void)consume_token_with_type(TokenType::Comma);
-            arguments.append({ make_ref_counted<UnresolvedReference>(name->data), value });
+            arguments.append({ make_ref_counted<UnresolvedReference>(name.data), value });
         }
     }
 
     rollback.disarm();
     return make_ref_counted<RecordDirectListInitialization>(
-        make_ref_counted<UnresolvedReference>(identifier->data), move(arguments));
+        make_ref_counted<UnresolvedReference>(identifier.data), move(arguments));
 }
 
 // <expr>
-ParseErrorOr<Tree> TextParser::parse_expression()
+TextParseErrorOr<Tree> TextParser::parse_expression()
 {
     auto rollback = rollback_point();
 
-    // (the)? <record_name> { (<name>: <value>,)* }
     if (auto record_init = parse_record_direct_list_initialization(); !record_init.is_error()) {
         rollback.disarm();
         return record_init.release_value();
     }
 
-#define THROW_PARSE_ERROR_IF(expr)                                      \
-    do {                                                                \
-        if (expr)                                                       \
-            return ParseError::create("Expected expression"sv, m_node); \
+#define THROW_PARSE_ERROR_IF(expr)                                                                           \
+    do {                                                                                                     \
+        if (expr) {                                                                                          \
+            save_error(CustomMessage { "valid expression continuation (not valid because " #expr ")"##sv }); \
+            return TextParseError {};                                                                        \
+        }                                                                                                    \
     } while (false)
 #define THROW_PARSE_ERROR THROW_PARSE_ERROR_IF(true)
 
@@ -183,9 +219,9 @@ ParseErrorOr<Tree> TextParser::parse_expression()
 
     while (true) {
         auto token_or_error = peek_token();
-        if (token_or_error.is_error())
+        if (!token_or_error.has_value())
             break;
-        auto token = *token_or_error.release_value();
+        auto token = token_or_error.release_value();
 
         enum {
             NoneType,
@@ -274,7 +310,7 @@ ParseErrorOr<Tree> TextParser::parse_expression()
             merge_pre_merged();
         }
 
-        MUST(consume_token());
+        VERIFY(consume_token().has_value());
     }
 
     THROW_PARSE_ERROR_IF(stack.is_empty());
@@ -288,7 +324,7 @@ ParseErrorOr<Tree> TextParser::parse_expression()
 }
 
 // <condition> :== <expr> | (<expr> is <expr> (or <expr>)?)
-ParseErrorOr<Tree> TextParser::parse_condition()
+TextParseErrorOr<Tree> TextParser::parse_condition()
 {
     auto rollback = rollback_point();
     auto expression = TRY(parse_expression());
@@ -307,7 +343,7 @@ ParseErrorOr<Tree> TextParser::parse_condition()
 }
 
 // return <expr>
-ParseErrorOr<Tree> TextParser::parse_return_statement()
+TextParseErrorOr<Tree> TextParser::parse_return_statement()
 {
     auto rollback = rollback_point();
 
@@ -319,15 +355,11 @@ ParseErrorOr<Tree> TextParser::parse_return_statement()
 }
 
 // assert: <condition>
-ParseErrorOr<Tree> TextParser::parse_assert()
+TextParseErrorOr<Tree> TextParser::parse_assert()
 {
     auto rollback = rollback_point();
 
-    auto identifier = TRY(consume_token_with_type(TokenType::Identifier))->data;
-    if (!identifier.equals_ignoring_ascii_case("assert"sv)) {
-        return ParseError::create("Expected identifier \"Assert\""sv, m_node);
-    }
-
+    TRY(consume_token(TokenType::Identifier, "assert"sv));
     TRY(consume_token_with_type(TokenType::Colon));
     auto condition = TRY(parse_condition());
 
@@ -336,7 +368,7 @@ ParseErrorOr<Tree> TextParser::parse_assert()
 }
 
 // (let <expr> be <expr>) | (set <expr> to <expr>)
-ParseErrorOr<Tree> TextParser::parse_assignment()
+TextParseErrorOr<Tree> TextParser::parse_assignment()
 {
     auto rollback = rollback_point();
 
@@ -353,7 +385,7 @@ ParseErrorOr<Tree> TextParser::parse_assignment()
 }
 
 // <simple_step>
-ParseErrorOr<Tree> TextParser::parse_simple_step_or_inline_if_branch()
+TextParseErrorOr<Tree> TextParser::parse_simple_step_or_inline_if_branch()
 {
     auto rollback = rollback_point();
 
@@ -382,11 +414,11 @@ ParseErrorOr<Tree> TextParser::parse_simple_step_or_inline_if_branch()
         return result.release_value();
     }
 
-    return ParseError::create("Unable to parse simple step or inline if branch"sv, m_node);
+    return TextParseError {};
 }
 
 // <if_condition> :== (If <condition>) | (Else) | (Else if <condition>),
-ParseErrorOr<TextParser::IfConditionParseResult> TextParser::parse_if_beginning()
+TextParseErrorOr<TextParser::IfConditionParseResult> TextParser::parse_if_beginning()
 {
     auto rollback = rollback_point();
 
@@ -406,7 +438,7 @@ ParseErrorOr<TextParser::IfConditionParseResult> TextParser::parse_if_beginning(
 }
 
 // <inline_if> :== <if_condition> <simple_step>.$
-ParseErrorOr<Tree> TextParser::parse_inline_if_else()
+TextParseErrorOr<Tree> TextParser::parse_inline_if_else()
 {
     auto rollback = rollback_point();
 
@@ -420,7 +452,7 @@ ParseErrorOr<Tree> TextParser::parse_inline_if_else()
 }
 
 // <if> :== <if_condition> then$ <substeps>
-ParseErrorOr<Tree> TextParser::parse_if(Tree then_branch)
+TextParseErrorOr<Tree> TextParser::parse_if(Tree then_branch)
 {
     auto rollback = rollback_point();
 
@@ -436,7 +468,7 @@ ParseErrorOr<Tree> TextParser::parse_if(Tree then_branch)
 }
 
 // <else> :== Else,$ <substeps>
-ParseErrorOr<Tree> TextParser::parse_else(Tree else_branch)
+TextParseErrorOr<Tree> TextParser::parse_else(Tree else_branch)
 {
     auto rollback = rollback_point();
 
@@ -449,7 +481,7 @@ ParseErrorOr<Tree> TextParser::parse_else(Tree else_branch)
 }
 
 // <simple_step> | <inline_if>
-ParseErrorOr<Tree> TextParser::parse_step_without_substeps()
+TextParseErrorOr<Tree> TextParser::parse_step_without_substeps()
 {
     auto rollback = rollback_point();
 
@@ -465,11 +497,11 @@ ParseErrorOr<Tree> TextParser::parse_step_without_substeps()
         return result.release_value();
     }
 
-    return ParseError::create("Unable to parse step without substeps"sv, m_node);
+    return TextParseError {};
 }
 
 // <if> | <else>
-ParseErrorOr<Tree> TextParser::parse_step_with_substeps(Tree substeps)
+TextParseErrorOr<Tree> TextParser::parse_step_with_substeps(Tree substeps)
 {
     auto rollback = rollback_point();
 
@@ -485,32 +517,32 @@ ParseErrorOr<Tree> TextParser::parse_step_with_substeps(Tree substeps)
         return result.release_value();
     }
 
-    return ParseError::create("Unable to parse step with substeps"sv, m_node);
+    return TextParseError {};
 }
 
-ParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
+TextParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
 {
     ClauseHeader result;
 
     auto section_number_token = TRY(consume_token_with_type(TokenType::SectionNumber));
-    result.section_number = section_number_token->data;
+    result.section_number = section_number_token.data;
 
     ClauseHeader::FunctionDefinition function_definition;
 
-    function_definition.name = TRY(consume_token())->data;
+    function_definition.name = TRY(consume_token_with_type(TokenType::Word)).data;
 
     TRY(consume_token_with_type(TokenType::ParenOpen));
     while (true) {
         if (function_definition.arguments.is_empty()) {
             auto argument = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Identifier }));
-            if (argument->type == TokenType::ParenClose)
+            if (argument.type == TokenType::ParenClose)
                 break;
-            function_definition.arguments.append({ argument->data });
+            function_definition.arguments.append({ argument.data });
         } else {
-            function_definition.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier))->data });
+            function_definition.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier)).data });
         }
         auto next_token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
-        if (next_token->type == TokenType::ParenClose)
+        if (next_token.type == TokenType::ParenClose)
             break;
     }
     TRY(expect_eof());
@@ -518,6 +550,58 @@ ParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
     result.header = function_definition;
 
     return result;
+}
+
+FailedTextParseDiagnostic TextParser::get_diagnostic() const
+{
+    StringBuilder message;
+
+    message.append("unexpected "sv);
+
+    if (m_max_parsed_tokens == m_tokens.size()) {
+        message.append("EOF"sv);
+    } else {
+        auto token = m_tokens[m_max_parsed_tokens];
+        if (token.type == TokenType::Word)
+            message.appendff("'{}'", token.data);
+        else if (token.type == TokenType::Identifier)
+            message.appendff("identifier '{}'", token.data);
+        else
+            message.append(token.name_for_diagnostic());
+    }
+
+    message.appendff(", expected ");
+
+    size_t size = m_suitable_continuations.size();
+    VERIFY(size > 0);
+
+    for (size_t i = 0; i < size; ++i) {
+        m_suitable_continuations[i].visit(
+            [&](TokenType type) { message.append(token_info[to_underlying(type)].name_for_diagnostic); },
+            [&](StringView word) { message.appendff("'{}'", word); },
+            [&](CustomMessage continuation) { message.append(continuation.message); });
+
+        if (i + 1 != size) {
+            if (size == 2)
+                message.append(" or "sv);
+            else if (i + 2 == size)
+                message.append(", or "sv);
+            else
+                message.append(", "sv);
+        }
+    }
+
+    Location location = Location::global_scope();
+
+    if (m_max_parsed_tokens < m_tokens.size()) {
+        location = m_tokens[m_max_parsed_tokens].location;
+    } else {
+        // FIXME: Would be nice to point to the closing tag not the opening one. This is also the
+        //        only place where we use m_location.
+        location = m_ctx.location_from_xml_offset(m_node->offset);
+    }
+
+    return { location, MUST(message.to_string()) };
 }
 
 }
