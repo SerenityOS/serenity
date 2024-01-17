@@ -18,6 +18,7 @@ set(SOURCES
     BigInt/SignedBigInteger.cpp
     BigInt/UnsignedBigInteger.cpp
     Checksum/Adler32.cpp
+    Checksum/cksum.cpp
     Checksum/CRC32.cpp
     Cipher/AES.cpp
     Cipher/ChaCha20.cpp
