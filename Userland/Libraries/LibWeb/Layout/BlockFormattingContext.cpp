@@ -993,12 +993,12 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             // Walk all currently tracked floats on the side we're floating towards.
             // We're looking for the innermost preceding float that intersects vertically with `box`.
             for (auto& preceding_float : side_data.current_boxes.in_reverse()) {
-                auto const preceding_float_rect = margin_box_rect_in_ancestor_coordinate_space(preceding_float.box, root());
+                auto const& preceding_float_state = m_state.get(preceding_float.box);
+                auto const preceding_float_rect = margin_box_rect_in_ancestor_coordinate_space(preceding_float_state, root());
                 if (!preceding_float_rect.contains_vertically(y_in_root))
                     continue;
                 // We found a preceding float that intersects vertically with the current float.
                 // Now we need to find out if there's enough inline-axis space to stack them next to each other.
-                auto const& preceding_float_state = m_state.get(preceding_float.box);
                 CSSPixels tentative_offset_from_edge = 0;
                 bool fits_next_to_preceding_float = false;
                 if (side == FloatSide::Left) {
@@ -1150,12 +1150,11 @@ BlockFormattingContext::SpaceUsedAndContainingMarginForFloats BlockFormattingCon
         auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root());
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box_state, root());
         if (rect.contains_vertically(y)) {
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
-            for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
-                auto const& containing_block_state = m_state.get(*containing_block);
-                offset_from_containing_block_chain_margins_between_here_and_root += containing_block_state.margin_box_left();
+            for (auto const* containing_block = floating_box_state.containing_block_used_values(); containing_block && &containing_block->node() != &root(); containing_block = containing_block->containing_block_used_values()) {
+                offset_from_containing_block_chain_margins_between_here_and_root += containing_block->margin_box_left();
             }
             space_and_containing_margin.left_used_space = floating_box.offset_from_edge
                 + floating_box_state.content_width()
@@ -1170,12 +1169,11 @@ BlockFormattingContext::SpaceUsedAndContainingMarginForFloats BlockFormattingCon
         auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root());
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box_state, root());
         if (rect.contains_vertically(y)) {
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
-            for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
-                auto const& containing_block_state = m_state.get(*containing_block);
-                offset_from_containing_block_chain_margins_between_here_and_root += containing_block_state.margin_box_right();
+            for (auto const* containing_block = floating_box_state.containing_block_used_values(); containing_block && &containing_block->node() != &root(); containing_block = containing_block->containing_block_used_values()) {
+                offset_from_containing_block_chain_margins_between_here_and_root += containing_block->margin_box_right();
             }
             space_and_containing_margin.right_used_space = floating_box.offset_from_edge
                 + floating_box_state.margin_box_left();
