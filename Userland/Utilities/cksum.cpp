@@ -9,6 +9,7 @@
 #include <LibCore/File.h>
 #include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <LibCrypto/Checksum/cksum.h>
 #include <LibMain/Main.h>
 #include <string.h>
 
@@ -23,13 +24,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView opt_algorithm;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'crc32', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);
+    args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'cksum', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);
     args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto algorithm = opt_algorithm.is_empty() ? "crc32"sv : opt_algorithm;
+    auto algorithm = opt_algorithm.is_empty() ? "cksum"sv : opt_algorithm;
 
-    auto available_algorithms = Vector<StringView> { "crc32"sv, "adler32"sv };
+    auto available_algorithms = Vector<StringView> { "cksum"sv, "crc32"sv, "adler32"sv };
 
     if (algorithm == "list") {
         outln("Available algorithms:");
@@ -42,7 +43,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Array<u8, PAGE_SIZE> buffer;
     bool fail = false;
     Function<Data(Core::File*, StringView path)> build_checksum_data_using_file;
-    if (algorithm == "crc32") {
+    if (algorithm == "cksum") {
+        build_checksum_data_using_file = [&buffer, &arguments, &fail](Core::File* file, StringView path) {
+            Crypto::Checksum::cksum cksum;
+            size_t file_size = 0;
+            while (!file->is_eof()) {
+                auto data_or_error = file->read_some(buffer);
+                if (data_or_error.is_error()) {
+                    warnln("{}: Failed to read {}: {}", arguments.strings[0], path, data_or_error.error());
+                    fail = true;
+                    continue;
+                }
+                file_size += data_or_error.value().size();
+                cksum.update(data_or_error.value());
+            }
+            return Data { .checksum = cksum.digest(), .file_size = file_size };
+        };
+    } else if (algorithm == "crc32") {
         build_checksum_data_using_file = [&buffer, &arguments, &fail](Core::File* file, StringView path) {
             Crypto::Checksum::CRC32 crc32;
             size_t file_size = 0;
