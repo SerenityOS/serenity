@@ -540,6 +540,7 @@ void LayoutState::commit(Box& root)
 void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)
 {
     m_node = &node;
+    m_containing_block_used_values = containing_block_used_values;
 
     // NOTE: In the code below, we decide if `node` has definite width and/or height.
     //       This attempts to cover all the *general* cases where CSS considers sizes to be definite.
