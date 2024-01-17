@@ -1058,6 +1058,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         auto top_margin_edge = y - box_state.margin_box_top();
         side_data.all_boxes.append(adopt_own(*new FloatingBox {
             .box = box,
+            .used_values = box_state,
             .offset_from_edge = offset_from_edge,
             .top_margin_edge = top_margin_edge,
             .bottom_margin_edge = y + box_state.content_height() + box_state.margin_box_bottom(),
