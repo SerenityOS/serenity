@@ -59,6 +59,7 @@ class ControlFlowGraph;
 class RecursiveASTVisitor;
 
 // Parser/SpecParser.h
+class SpecificationParsingContext;
 class AlgorithmStep;
 class AlgorithmStepList;
 class Algorithm;
