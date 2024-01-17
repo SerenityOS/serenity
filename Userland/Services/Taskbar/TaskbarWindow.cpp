@@ -82,7 +82,7 @@ ErrorOr<void> TaskbarWidget::create_context_menu()
 {
     m_context_menu = GUI::Menu::construct();
 
-    auto show_desktop_action = GUI::Action::create("&Show Desktop", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv)), [](auto&) {
+    auto show_desktop_action = GUI::Action::create("Show &Desktop", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv)), [](auto&) {
         GUI::ConnectionToWindowManagerServer::the().async_toggle_show_desktop();
     });
 
@@ -90,7 +90,7 @@ ErrorOr<void> TaskbarWidget::create_context_menu()
         GUI::Process::spawn_or_show_error(window(), "/bin/Settings"sv);
     });
 
-    auto open_system_monitor_action = GUI::Action::create("System &Monitor", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
+    auto open_system_monitor_action = GUI::Action::create("&System Monitor", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv);
     });
 
