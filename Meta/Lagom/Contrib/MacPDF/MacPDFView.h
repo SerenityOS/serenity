@@ -27,5 +27,7 @@
 - (IBAction)goToPreviousPage:(id)sender;
 
 - (IBAction)toggleShowClippingPaths:(id)sender;
+- (IBAction)toggleClipImages:(id)sender;
+- (IBAction)toggleClipPaths:(id)sender;
 
 @end
