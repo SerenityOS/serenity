@@ -290,11 +290,7 @@ RENDERER_HANDLER(path_append_rect)
     return {};
 }
 
-///
-// Path painting operations
-///
-
-void Renderer::begin_path_paint()
+void Renderer::activate_clip()
 {
     auto bounding_box = state().clipping_paths.current.bounding_box();
     m_painter.clear_clip_rect();
@@ -304,11 +300,25 @@ void Renderer::begin_path_paint()
     m_painter.add_clip_rect(bounding_box.to_type<int>());
 }
 
+void Renderer::deactivate_clip()
+{
+    m_painter.clear_clip_rect();
+    state().clipping_paths.current = state().clipping_paths.next;
+}
+
+///
+// Path painting operations
+///
+
+void Renderer::begin_path_paint()
+{
+    activate_clip();
+}
+
 void Renderer::end_path_paint()
 {
     m_current_path.clear();
-    m_painter.clear_clip_rect();
-    state().clipping_paths.current = state().clipping_paths.next;
+    deactivate_clip();
 }
 
 RENDERER_HANDLER(path_stroke)
