@@ -15,30 +15,33 @@ Timer::Timer()
     : HardwareTimer(to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK)
 {
     // FIXME: Actually query the frequency of the timer from the device tree.
+
     // Based on the "/cpus/timebase-frequency" device tree node for the QEMU virt machine
     m_frequency = 10'000'000; // in Hz
 
-    set_interrupt_interval_usec(m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE);
-    enable_interrupt_mode();
-}
+    m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
 
-Timer::~Timer() = default;
+    set_compare(current_time() + m_interrupt_interval);
+    RISCV64::CSR::set_bits(RISCV64::CSR::Address::SIE, 1 << interrupt_number());
+}
 
 NonnullLockRefPtr<Timer> Timer::initialize()
 {
-    return adopt_lock_ref(*new Timer);
+    auto timer = adopt_lock_ref(*new Timer);
+    timer->register_interrupt_handler();
+    return timer;
 }
 
-u64 Timer::microseconds_since_boot()
+u64 Timer::current_time()
 {
     return RISCV64::CSR::read(RISCV64::CSR::Address::TIME);
 }
 
-bool Timer::handle_irq(RegisterState const& regs)
+bool Timer::handle_interrupt(RegisterState const& regs)
 {
-    auto result = HardwareTimer::handle_irq(regs);
+    auto result = HardwareTimer::handle_interrupt(regs);
 
-    set_compare(microseconds_since_boot() + m_interrupt_interval);
+    set_compare(current_time() + m_interrupt_interval);
 
     return result;
 }
@@ -46,7 +49,7 @@ bool Timer::handle_irq(RegisterState const& regs)
 u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
 {
     // Should only be called by the time keeper interrupt handler!
-    u64 current_value = microseconds_since_boot();
+    u64 current_value = current_time();
     u64 delta_ticks = m_main_counter_drift;
     if (current_value >= m_main_counter_last_read) {
         delta_ticks += current_value - m_main_counter_last_read;
@@ -69,21 +72,19 @@ u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool que
     return (delta_ticks * 1000000000ull) / ticks_per_second;
 }
 
-void Timer::enable_interrupt_mode()
-{
-    set_compare(microseconds_since_boot() + m_interrupt_interval);
-    enable_irq();
-}
-
-void Timer::set_interrupt_interval_usec(u32 interrupt_interval)
-{
-    m_interrupt_interval = interrupt_interval;
-}
-
 void Timer::set_compare(u64 compare)
 {
     if (SBI::Timer::set_timer(compare).is_error())
         MUST(SBI::Legacy::set_timer(compare));
+}
+
+}
+
+namespace Kernel {
+
+bool HardwareTimer<GenericInterruptHandler>::eoi()
+{
+    return true;
 }
 
 }

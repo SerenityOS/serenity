@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/BitCast.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 
 #include <AK/Platform.h>
@@ -23,6 +24,9 @@ enum class Address : u16 {
     SSTATUS = 0x100,
     SIE = 0x104,
     STVEC = 0x105,
+
+    // Supervisor Trap Handling
+    SIP = 0x144,
 
     // Supervisor Protection and Translation
     SATP = 0x180,
@@ -243,3 +247,143 @@ enum class SCAUSE : u64 {
 };
 
 }
+
+template<>
+struct AK::Formatter<Kernel::RISCV64::CSR::SSTATUS> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::RISCV64::CSR::SSTATUS value)
+    {
+        if (value.SD)
+            TRY(builder.put_literal("SD "sv));
+
+        switch (value.UXL) {
+        case Kernel::RISCV64::CSR::SSTATUS::XLEN::Bits32:
+            TRY(builder.put_literal("UXL=32 "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::XLEN::Bits64:
+            TRY(builder.put_literal("UXL=64 "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::XLEN::Bits128:
+            TRY(builder.put_literal("UXL=128 "sv));
+            break;
+        }
+
+        if (value.MXR)
+            TRY(builder.put_literal("MXR "sv));
+
+        if (value.SUM)
+            TRY(builder.put_literal("SUM "sv));
+
+        switch (value.XS) {
+        case Kernel::RISCV64::CSR::SSTATUS::UserModeExtensionsStatus::AllOff:
+            TRY(builder.put_literal("XS=AllOff "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::UserModeExtensionsStatus::NoneDirtyOrClean_SomeOn:
+            TRY(builder.put_literal("XS=NoneDirtyOrClean_SomeOn "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::UserModeExtensionsStatus::NoneDirty_SomeOn:
+            TRY(builder.put_literal("XS=NoneDirty_SomeOn "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::UserModeExtensionsStatus::SomeDirty:
+            TRY(builder.put_literal("XS=SomeDirty "sv));
+            break;
+        }
+
+        switch (value.FS) {
+        case Kernel::RISCV64::CSR::SSTATUS::FloatingPointStatus::Off:
+            TRY(builder.put_literal("FS=Off "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial:
+            TRY(builder.put_literal("FS=Initial "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::FloatingPointStatus::Clean:
+            TRY(builder.put_literal("FS=Clean "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::FloatingPointStatus::Dirty:
+            TRY(builder.put_literal("FS=Dirty "sv));
+            break;
+        }
+
+        switch (value.VS) {
+        case Kernel::RISCV64::CSR::SSTATUS::VectorStatus::Off:
+            TRY(builder.put_literal("VS=Off "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::VectorStatus::Initial:
+            TRY(builder.put_literal("VS=Initial "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::VectorStatus::Clean:
+            TRY(builder.put_literal("VS=Clean "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::VectorStatus::Dirty:
+            TRY(builder.put_literal("VS=Dirty "sv));
+            break;
+        }
+
+        switch (value.SPP) {
+        case Kernel::RISCV64::CSR::SSTATUS::PrivilegeMode::User:
+            TRY(builder.put_literal("SPP=User "sv));
+            break;
+        case Kernel::RISCV64::CSR::SSTATUS::PrivilegeMode::Supervisor:
+            TRY(builder.put_literal("SPP=Supervisor "sv));
+            break;
+        }
+
+        if (value.UBE)
+            TRY(builder.put_literal("UBE "sv));
+
+        if (value.SPIE)
+            TRY(builder.put_literal("SPIE "sv));
+
+        if (value.SIE)
+            TRY(builder.put_literal("SIE "sv));
+
+        TRY(builder.put_literal("("sv));
+        TRY(builder.put_u64(bit_cast<u64>(value), 16, true, false, true, false, FormatBuilder::Align::Right, 16));
+        TRY(builder.put_literal(")"sv));
+
+        return {};
+    }
+};
+
+template<>
+struct AK::Formatter<Kernel::RISCV64::CSR::SCAUSE> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::RISCV64::CSR::SCAUSE value)
+    {
+        switch (value) {
+        case Kernel::RISCV64::CSR::SCAUSE::SupervisorSoftwareInterrupt:
+            return builder.put_string("Supervisor software interrupt"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::SupervisorTimerInterrupt:
+            return builder.put_string("Supervisor timer interrupt"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt:
+            return builder.put_string("Supervisor external interrupt"sv);
+
+        case Kernel::RISCV64::CSR::SCAUSE::InstructionAddressMisaligned:
+            return builder.put_string("Instruction address misaligned"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::InstructionAccessFault:
+            return builder.put_string("Instruction access fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::IllegalInstrction:
+            return builder.put_string("Illegal instruction"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::Breakpoint:
+            return builder.put_string("Breakpoint"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::LoadAddressMisaligned:
+            return builder.put_string("Load address misaligned"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::LoadAccessFault:
+            return builder.put_string("Load access fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOAddressMisaligned:
+            return builder.put_string("Store/AMO address misaligned"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOAccessFault:
+            return builder.put_string("Store/AMO access fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::EnvironmentCallFromUMode:
+            return builder.put_string("Environment call from U-mode"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::EnvironmentCallFromSMode:
+            return builder.put_string("Environment call from S-mode"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::InstructionPageFault:
+            return builder.put_string("Instruction page fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::LoadPageFault:
+            return builder.put_string("Load page fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOPageFault:
+            return builder.put_string("Store/AMO page fault"sv);
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};

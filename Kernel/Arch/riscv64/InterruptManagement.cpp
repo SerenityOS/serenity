@@ -34,12 +34,12 @@ void InterruptManagement::initialize()
 
 void InterruptManagement::find_controllers()
 {
-    TODO_RISCV64();
+    // TODO: Once device tree support is in place, find interrupt controllers using that.
 }
 
-u8 InterruptManagement::acquire_mapped_interrupt_number(u8)
+u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
 {
-    TODO_RISCV64();
+    return original_irq;
 }
 
 Vector<NonnullLockRefPtr<IRQController>> const& InterruptManagement::controllers()
@@ -49,6 +49,7 @@ Vector<NonnullLockRefPtr<IRQController>> const& InterruptManagement::controllers
 
 NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(size_t)
 {
+    // TODO: Support interrupt controllers
     TODO_RISCV64();
 }
 

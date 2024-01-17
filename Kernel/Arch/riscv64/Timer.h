@@ -7,18 +7,14 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel::RISCV64 {
 
-struct TimerRegisters;
-
-class Timer final : public HardwareTimer<IRQHandler> {
+class Timer final : public HardwareTimer<GenericInterruptHandler> {
 public:
-    virtual ~Timer();
-
     static NonnullLockRefPtr<Timer> initialize();
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RISCVTimer; }
@@ -39,18 +35,14 @@ public:
     // FIXME: Share code with HPET::update_time
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
 
-    u64 microseconds_since_boot();
-
-    void set_interrupt_interval_usec(u32);
-    void enable_interrupt_mode();
-
 private:
     Timer();
 
-    void set_compare(u64 compare);
+    static u64 current_time();
+    static void set_compare(u64 compare);
 
-    //^ IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    //^ GenericInterruptHandler
+    virtual bool handle_interrupt(RegisterState const&) override;
 
     u32 m_interrupt_interval { 0 };
 
