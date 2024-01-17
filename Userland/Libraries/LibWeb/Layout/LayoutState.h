@@ -45,6 +45,8 @@ struct LayoutState {
         NodeWithStyle const& node() const { return *m_node; }
         void set_node(NodeWithStyle&, UsedValues const* containing_block_used_values);
 
+        UsedValues const* containing_block_used_values() const { return m_containing_block_used_values; }
+
         CSSPixels content_width() const { return m_content_width; }
         CSSPixels content_height() const { return m_content_height; }
         void set_content_width(CSSPixels);
@@ -142,6 +144,7 @@ struct LayoutState {
         CSSPixels border_bottom_collapsed() const { return use_collapsing_borders_model() ? round(border_bottom / 2) : border_bottom; }
 
         JS::GCPtr<Layout::NodeWithStyle> m_node { nullptr };
+        UsedValues const* m_containing_block_used_values { nullptr };
 
         CSSPixels m_content_width { 0 };
         CSSPixels m_content_height { 0 };
