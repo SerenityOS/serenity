@@ -30,9 +30,14 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
         dbgln_if(GIF_DEBUG, "loop_count: {}", gif_decoder.loop_count());
         dbgln_if(GIF_DEBUG, "frame_count: {}", gif_decoder.frame_count());
         for (size_t i = 0; i < gif_decoder.frame_count(); ++i) {
-            auto ifd = gif_decoder.frame(i).release_value_but_fixme_should_propagate_errors();
-            dbgln_if(GIF_DEBUG, "frame #{} size: {}", i, ifd.image->size());
-            dbgln_if(GIF_DEBUG, "frame #{} duration: {}", i, ifd.duration);
+            auto ifd_or_error = gif_decoder.frame(i);
+            if (ifd_or_error.is_error()) {
+                dbgln_if(GIF_DEBUG, "frame #{} error: {}", i, ifd_or_error.release_error());
+            } else {
+                auto ifd = ifd_or_error.release_value();
+                dbgln_if(GIF_DEBUG, "frame #{} size: {}", i, ifd.image->size());
+                dbgln_if(GIF_DEBUG, "frame #{} duration: {}", i, ifd.duration);
+            }
         }
         dbgln_if(GIF_DEBUG, "Done.");
     }
