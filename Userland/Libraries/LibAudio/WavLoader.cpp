@@ -298,7 +298,8 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 MaybeLoaderError WavLoaderPlugin::load_wav_info_block(Vector<RIFF::OwnedChunk> info_chunks)
 {
     for (auto const& chunk : info_chunks) {
-        auto metadata_name = chunk.id().as_ascii_string();
+        auto chunk_id = chunk.id();
+        auto metadata_name = chunk_id.as_ascii_string();
         // Chunk contents are zero-terminated strings "ZSTR", so we just drop the null terminator.
         StringView metadata_text { chunk.data().trim(chunk.size() - 1) };
         // Note that we assume chunks to be unique, since that seems to almost always be the case.
