@@ -10,5 +10,5 @@ interface SubmitEvent : Event {
 };
 
 dictionary SubmitEventInit : EventInit {
-   HTMLElement? submitter = null;
+    HTMLElement? submitter = null;
 };

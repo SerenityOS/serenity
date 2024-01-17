@@ -4,7 +4,7 @@
 // https://html.spec.whatwg.org/#navigationtransition
 [Exposed=Window]
 interface NavigationTransition {
-  readonly attribute NavigationType navigationType;
-  readonly attribute NavigationHistoryEntry from;
-  readonly attribute Promise<undefined> finished;
+    readonly attribute NavigationType navigationType;
+    readonly attribute NavigationHistoryEntry from;
+    readonly attribute Promise<undefined> finished;
 };

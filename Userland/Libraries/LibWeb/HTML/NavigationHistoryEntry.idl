@@ -4,13 +4,13 @@
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigationtype
 [Exposed=Window]
 interface NavigationHistoryEntry : EventTarget {
-  readonly attribute USVString? url;
-  readonly attribute DOMString key;
-  readonly attribute DOMString id;
-  readonly attribute long long index;
-  readonly attribute boolean sameDocument;
+    readonly attribute USVString? url;
+    readonly attribute DOMString key;
+    readonly attribute DOMString id;
+    readonly attribute long long index;
+    readonly attribute boolean sameDocument;
 
-  any getState();
+    any getState();
 
-  attribute EventHandler ondispose;
+    attribute EventHandler ondispose;
 };
