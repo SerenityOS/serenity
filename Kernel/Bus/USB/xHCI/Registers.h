@@ -102,23 +102,26 @@ static_assert(__builtin_offsetof(CapabilityRegisters, capability_parameters2) ==
 //  read/modify/write mechanism should be invoked for partial writes."
 //  Note: This means we can safely use u32 underlying types
 struct OperationalRegisters {
-    struct {
-        // 5.4.1 USB Command Register (USBCMD)
-        u32 run_stop : 1;                       //  0    R/S    - RW
-        u32 host_controller_reset : 1;          //  1    HCRST  - RW
-        u32 interrupt_enable : 1;               //  2    INTE   - RW
-        u32 host_system_error_enable : 1;       //  3    HSEE   - RW
-        u32 light_host_controller_reset : 1;    //  4    LHCRST - RO/RW
-        u32 controller_save_state : 1;          //  8    CSS    - RW
-        u32 controller_restore_state : 1;       //  9    CRS    - RW
-        u32 enable_warp_event : 1;              // 10    EWE    - RW
-        u32 eanble_u3_mfindex_stop : 1;         // 11    EU3S   - RW
-        u32 : 1;                                // 12    RsvdP
-        u32 CEM_enable : 1;                     // 13    CME    - RW
-        u32 extendet_tbc_enable : 1;            // 14    ETE    - ??
-        u32 extendet_tbc_trb_status_enable : 1; // 15    TSC_EN - ??
-        u32 vtio_enable : 1;                    // 16    VTIOE  - RW
-        u32 : 15;                               // 17-31 RsvdP
+    union USBCommand {
+        struct {
+            // 5.4.1 USB Command Register (USBCMD)
+            u32 run_stop : 1;                       //  0    R/S    - RW
+            u32 host_controller_reset : 1;          //  1    HCRST  - RW
+            u32 interrupt_enable : 1;               //  2    INTE   - RW
+            u32 host_system_error_enable : 1;       //  3    HSEE   - RW
+            u32 light_host_controller_reset : 1;    //  4    LHCRST - RO/RW
+            u32 controller_save_state : 1;          //  8    CSS    - RW
+            u32 controller_restore_state : 1;       //  9    CRS    - RW
+            u32 enable_warp_event : 1;              // 10    EWE    - RW
+            u32 eanble_u3_mfindex_stop : 1;         // 11    EU3S   - RW
+            u32 : 1;                                // 12    RsvdP
+            u32 CEM_enable : 1;                     // 13    CME    - RW
+            u32 extendet_tbc_enable : 1;            // 14    ETE    - ??
+            u32 extendet_tbc_trb_status_enable : 1; // 15    TSC_EN - ??
+            u32 vtio_enable : 1;                    // 16    VTIOE  - RW
+            u32 : 15;                               // 17-31 RsvdP
+        };
+        u32 raw;
     } usb_command;
     union StatusRegister {
         struct {

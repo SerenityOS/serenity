@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/USBController.h>
+#include <Kernel/Bus/USB/xHCI/DataStructures.h>
 #include <Kernel/Bus/USB/xHCI/Registers.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -20,7 +21,7 @@ public:
     static constexpr auto BaseRegister = PCI::HeaderType0BaseRegister::BAR0;
 
     static ErrorOr<NonnullLockRefPtr<xHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
-    virtual ~xHCIController() override = default;
+    virtual ~xHCIController() override;
 
     // ^PCI::Device
     virtual StringView device_name() const override { return "xHCI"sv; }
@@ -28,8 +29,8 @@ public:
     // ^USBController
     virtual ErrorOr<void> initialize() override;
 
-    virtual ErrorOr<void> reset() override { return ENOTSUP; }
-    virtual ErrorOr<void> stop() override { return ENOTSUP; }
+    virtual ErrorOr<void> reset() override;
+    virtual ErrorOr<void> stop() override;
     virtual ErrorOr<void> start() override { return ENOTSUP; }
 
     virtual void cancel_async_transfer(NonnullLockRefPtr<Transfer>) override {};
@@ -49,6 +50,13 @@ private:
     OperationalRegisters volatile* m_op_regs;
     RuntimeRegisters volatile* m_runtime_regs;
     DoorbellRegister volatile* m_doorbell_regs;
+
+    // FIXME: Automate the ownership management
+    // Note: This holds on to a SlotContext[], as both DeviceContext and DeviceContext64
+    //       have that as their parent class, and most of the info we need in the SlotContext
+    Span<SlotContext*> m_device_context_base_address_array;
+
+    Span<TransferRequestBlock> m_command_ring;
 };
 
 }

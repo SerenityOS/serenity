@@ -96,17 +96,26 @@ union TRBControl {
         u32 start_asap : 1;                       // SIA: 31
     };
 
+    // Table 6-86: Offset 0Ch – Link TRB Field Definitions
+    struct {
+        u32 : 1;              //  0    : C
+        u32 toggle_cycle : 1; //  1    : TC
+        u32 : 2;              //  2- 3 : RsvdZ
+        u32 : 2;              //  4- 5 : CH/IOC
+        u32 : 4;              //  6- 9 : RsvdZ
+        TRBType : 6;          // 10-15 : TRB Type
+        u32 : 16;             // 16-31 : RsvdZ
+    };
+
     u32 raw { 0 };
 };
-union TRBStatus {
-    struct {
-        // Table 6-21: Offset 08h - Normal TRB Field Definitions
-        // Table 6-25: Offset 08h - Setup Stage TRB Field Definitions
-        // Table 6-28: Offset 08h - Data Stage TRB Field Definitions
-        u32 length : 17;           // 0-16
-        u32 TD_size : 5;           // 17-21
-        u32 interrupt_target : 10; // 22-31
-    } transfer_status;
+struct TRBStatus {
+    // Table 6-21: Offset 08h - Normal TRB Field Definitions
+    // Table 6-25: Offset 08h - Setup Stage TRB Field Definitions
+    // Table 6-28: Offset 08h - Data Stage TRB Field Definitions
+    u32 length : 17 { 0 };           // 0-16
+    u32 TD_size : 5 { 0 };           // 17-21
+    u32 interrupt_target : 10 { 0 }; // 22-31
 };
 
 struct TransferRequestBlock {
@@ -137,6 +146,20 @@ struct TransferRequestBlock {
 
     TRBStatus status;
     TRBControl control;
+
+    static TransferRequestBlock link_trb(TransferRequestBlock* destination, u16 interrupter = 0)
+    {
+        return {
+            .data_buffer_pointer = destination,
+            .status { .interrupt_target = interrupter },
+            .control {
+                .cycle = 0,
+                .toggle_cycle = 0,
+                .chain_bit = 0,
+                .interrupt_on_complete = 0,
+                .trb_type = TRBType::Link }
+        };
+    }
 };
 static_assert(AssertSize<TransferRequestBlock, 128 / 8>());
 
