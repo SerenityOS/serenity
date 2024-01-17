@@ -5692,6 +5692,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(TokenStream<ComponentValue
     //        `parse_grid_area_shorthand_value()` using a single TokenStream.
     if (tokens.remaining_token_count() == 1) {
         auto& token = tokens.next_token();
+        if (auto maybe_calculated = parse_calculated_value(token); maybe_calculated && maybe_calculated->resolves_to_number()) {
+            transaction.commit();
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(maybe_calculated->resolve_integer().value()), {}));
+        }
         if (token.is_ident("auto"sv)) {
             transaction.commit();
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto());
