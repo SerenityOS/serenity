@@ -312,13 +312,15 @@ void Renderer::deactivate_clip()
 
 void Renderer::begin_path_paint()
 {
-    activate_clip();
+    if (m_rendering_preferences.clip_paths)
+        activate_clip();
 }
 
 void Renderer::end_path_paint()
 {
     m_current_path.clear();
-    deactivate_clip();
+    if (m_rendering_preferences.clip_paths)
+        deactivate_clip();
 }
 
 RENDERER_HANDLER(path_stroke)
@@ -1238,7 +1240,9 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         Renderer& m_renderer;
     };
 
-    ClipRAII clip_raii(*this);
+    OwnPtr<ClipRAII> clip_raii;
+    if (m_rendering_preferences.clip_images)
+        clip_raii = make<ClipRAII>(*this);
 
     if (!m_rendering_preferences.show_images) {
         show_empty_image(width, height);
