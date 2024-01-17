@@ -72,6 +72,7 @@ void operator delete(void* ptr, size_t, std::align_val_t) noexcept;
 
 [[nodiscard]] void* operator new[](size_t size);
 [[nodiscard]] void* operator new[](size_t size, std::nothrow_t const&) noexcept;
+[[nodiscard]] void* operator new[](size_t size, std::align_val_t, std::nothrow_t const&) noexcept;
 
 void operator delete[](void* ptrs) noexcept DISALLOW("All deletes in the kernel should have a known size.");
 void operator delete[](void* ptr, size_t) noexcept;

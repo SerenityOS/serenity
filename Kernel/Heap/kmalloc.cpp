@@ -570,6 +570,11 @@ void* operator new[](size_t size, std::nothrow_t const&) noexcept
     return kmalloc(size);
 }
 
+void* operator new[](size_t size, std::align_val_t al, std::nothrow_t const&) noexcept
+{
+    return kmalloc_aligned(size, (size_t)al);
+}
+
 void operator delete(void*) noexcept
 {
     // All deletes in kernel code should have a known size.
