@@ -93,16 +93,23 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(GridDimensi
     auto const& repeat_track_list = track_list.first().repeat().grid_track_size_list().track_list();
     for (auto const& explicit_grid_track : repeat_track_list) {
         auto const& track_sizing_function = explicit_grid_track;
+        CSSPixels track_size = 0;
         if (track_sizing_function.is_minmax()) {
-            if (track_sizing_function.minmax().max_grid_size().is_definite() && !track_sizing_function.minmax().min_grid_size().is_definite())
-                size_of_repeated_tracks += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), *m_available_space);
-            else if (track_sizing_function.minmax().min_grid_size().is_definite() && !track_sizing_function.minmax().max_grid_size().is_definite())
-                size_of_repeated_tracks += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), *m_available_space);
-            else if (track_sizing_function.minmax().min_grid_size().is_definite() && track_sizing_function.minmax().max_grid_size().is_definite())
-                size_of_repeated_tracks += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), *m_available_space));
+            auto const& min_size = track_sizing_function.minmax().min_grid_size();
+            auto const& max_size = track_sizing_function.minmax().max_grid_size();
+            if (max_size.is_definite()) {
+                track_size = resolve_definite_track_size(max_size, *m_available_space);
+                if (min_size.is_definite())
+                    track_size = min(track_size, resolve_definite_track_size(min_size, *m_available_space));
+            } else if (min_size.is_definite()) {
+                track_size = resolve_definite_track_size(min_size, *m_available_space);
+            } else {
+                VERIFY_NOT_REACHED();
+            }
         } else {
-            size_of_repeated_tracks += min(resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space));
+            track_size = resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space);
         }
+        size_of_repeated_tracks += track_size;
     }
 
     if (size_of_repeated_tracks == 0)
