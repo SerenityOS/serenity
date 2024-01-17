@@ -3,6 +3,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 
@@ -11,7 +13,6 @@ add_compile_options(-Wno-invalid-offsetof)
 add_compile_options(-Wno-unknown-warning-option)
 add_compile_options(-Wno-unused-command-line-argument)
 
-add_compile_options(-fdiagnostics-color=always)
 add_compile_options(-fno-exceptions)
 
 add_compile_options(-ffp-contract=off)
