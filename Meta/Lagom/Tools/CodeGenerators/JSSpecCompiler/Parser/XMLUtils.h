@@ -20,7 +20,8 @@ inline constexpr IgnoreComments ignore_comments {};
 
 bool contains_empty_text(XML::Node const* node);
 
-ParseErrorOr<StringView> get_attribute_by_name(XML::Node const* node, StringView attribute_name);
+ParseErrorOr<StringView> deprecated_get_attribute_by_name(XML::Node const* node, StringView attribute_name);
+Optional<StringView> get_attribute_by_name(XML::Node const* node, StringView attribute_name);
 
 ParseErrorOr<StringView> get_text_contents(XML::Node const* node);
 

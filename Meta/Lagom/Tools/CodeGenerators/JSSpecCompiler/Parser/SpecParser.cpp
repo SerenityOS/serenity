@@ -200,6 +200,12 @@ void SpecificationClause::parse(SpecificationParsingContext& ctx, XML::Node cons
                     else
                         ctx.current_logical_scope().section = MUST(String::from_utf8(m_header.section_number));
                 } else {
+                    if (element.name == tag_h1) {
+                        ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                            "<h1> can only be the first child of <emu-clause>");
+                        return;
+                    }
+
                     if (element.name == tag_emu_clause) {
                         m_subclauses.append(create(ctx, child));
                         return;
@@ -227,79 +233,71 @@ void SpecificationClause::parse(SpecificationParsingContext& ctx, XML::Node cons
 
 bool SpecFunction::post_initialize(SpecificationParsingContext& ctx, XML::Node const* element)
 {
-    auto initialization_result = do_post_initialize(ctx, element);
-    if (initialization_result.is_error()) {
-        // TODO: Integrate backtracing parser errors better
-        ctx.diag().error(ctx.location_from_xml_offset(initialization_result.error()->offset()),
-            "{}", initialization_result.error()->to_string());
+    VERIFY(element->as_element().name == tag_emu_clause);
+
+    auto maybe_id = get_attribute_by_name(element, attribute_id);
+    if (!maybe_id.has_value()) {
+        ctx.diag().error(ctx.location_from_xml_offset(element->offset),
+            "no id attribute");
+    } else {
+        m_id = maybe_id.value();
+    }
+
+    auto maybe_abstract_operation_id = get_attribute_by_name(element, attribute_aoid);
+    if (maybe_abstract_operation_id.has_value())
+        m_name = maybe_abstract_operation_id.value();
+
+    m_section_number = m_header.section_number;
+    auto const& [function_name, arguments] = m_header.header.get<ClauseHeader::FunctionDefinition>();
+    m_arguments = arguments;
+
+    if (m_name != function_name) {
+        ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
+            "function name in header and <emu-clause>[aoid] do not match");
+    }
+
+    Vector<XML::Node const*> algorithm_nodes;
+
+    for (auto const& child : element->as_element().children) {
+        child->content.visit(
+            [&](XML::Node::Element const& element) {
+                if (element.name == tag_h1) {
+                    // Processed in SpecificationClause
+                } else if (element.name == tag_p) {
+                    ctx.diag().warn(ctx.location_from_xml_offset(child->offset),
+                        "prose is ignored");
+                } else if (element.name == tag_emu_alg) {
+                    algorithm_nodes.append(child);
+                } else {
+                    ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                        "<{}> should not be a child of <emu-clause> specifing function"sv, element.name);
+                }
+            },
+            [&](auto const&) {});
+    }
+
+    if (algorithm_nodes.size() != 1) {
+        ctx.diag().error(ctx.location_from_xml_offset(element->offset),
+            "<emu-clause> specifing function should have exactly one <emu-alg>"sv);
         return false;
     }
+
+    auto algorithm_creation_result = Algorithm::create(algorithm_nodes[0]);
+    if (algorithm_creation_result.is_error()) {
+        // TODO: Integrate backtracing parser errors better
+        ctx.diag().error(ctx.location_from_xml_offset(algorithm_creation_result.error()->offset()),
+            "{}", algorithm_creation_result.error()->to_string());
+        return false;
+    }
+
+    m_algorithm = algorithm_creation_result.release_value();
+
     return true;
 }
 
 void SpecFunction::do_collect(TranslationUnitRef translation_unit)
 {
     translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.m_tree, move(m_arguments)));
-}
-
-ParseErrorOr<void> SpecFunction::do_post_initialize(SpecificationParsingContext& ctx, XML::Node const* element)
-{
-    VERIFY(element->as_element().name == tag_emu_clause);
-
-    m_id = TRY(get_attribute_by_name(element, attribute_id));
-    m_name = TRY(get_attribute_by_name(element, attribute_aoid));
-
-    m_section_number = m_header.section_number;
-    auto const& [function_name, arguments] = m_header.header.get<ClauseHeader::FunctionDefinition>();
-
-    if (m_name != function_name) {
-        ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
-            "function name in header and <emu-clause>[aoid] do not match");
-    }
-    m_arguments = arguments;
-
-    u32 children_count = 0;
-
-    XML::Node const* algorithm_node = nullptr;
-    XML::Node const* prose_node = nullptr;
-
-    for (auto const& child : element->as_element().children) {
-        TRY(child->content.visit(
-            [&](XML::Node::Element const& element) -> ParseErrorOr<void> {
-                if (element.name == tag_h1) {
-                    if (children_count != 0)
-                        return ParseError::create("<h1> can only be the first child of <emu-clause>"sv, child);
-                } else if (element.name == tag_p) {
-                    if (prose_node == nullptr)
-                        prose_node = child;
-                } else if (element.name == tag_emu_alg) {
-                    algorithm_node = child;
-                } else {
-                    return ParseError::create("Unknown child of <emu-clause>"sv, child);
-                }
-                ++children_count;
-                return {};
-            },
-            [&](XML::Node::Text const&) -> ParseErrorOr<void> {
-                if (!contains_empty_text(child)) {
-                    return ParseError::create("<emu-clause> should not have non-empty child text nodes"sv, child);
-                }
-                return {};
-            },
-            move(ignore_comments)));
-    }
-
-    if (algorithm_node == nullptr)
-        return ParseError::create("No <emu-alg>"sv, element);
-
-    if (prose_node) {
-        ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
-            "prose is ignored");
-    }
-
-    m_algorithm = TRY(Algorithm::create(algorithm_node));
-
-    return {};
 }
 
 Specification Specification::create(SpecificationParsingContext& ctx, XML::Node const* element)

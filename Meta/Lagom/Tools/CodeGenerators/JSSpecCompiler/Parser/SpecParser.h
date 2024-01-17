@@ -105,8 +105,6 @@ protected:
     void do_collect(TranslationUnitRef translation_unit) override;
 
 private:
-    ParseErrorOr<void> do_post_initialize(SpecificationParsingContext& ctx, XML::Node const* element);
-
     StringView m_section_number;
     StringView m_id;
     StringView m_name;
