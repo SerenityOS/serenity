@@ -86,40 +86,43 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(GridDimensi
 
     auto const& grid_computed_values = grid_container().computed_values();
     auto const& track_list = dimension == GridDimension::Row ? grid_computed_values.grid_template_rows().track_list() : grid_computed_values.grid_template_columns().track_list();
-    CSSPixels sum_of_grid_track_sizes = 0;
+    CSSPixels size_of_repeated_tracks = 0;
     // (treating each track as its max track sizing function if that is definite or its minimum track sizing
     // function otherwise, flooring the max track sizing function by the min track sizing function if both
     // are definite, and taking gap into account)
     auto const& repeat_track_list = track_list.first().repeat().grid_track_size_list().track_list();
-    for (auto& explicit_grid_track : repeat_track_list) {
-        auto track_sizing_function = explicit_grid_track;
+    for (auto const& explicit_grid_track : repeat_track_list) {
+        auto const& track_sizing_function = explicit_grid_track;
         if (track_sizing_function.is_minmax()) {
             if (track_sizing_function.minmax().max_grid_size().is_definite() && !track_sizing_function.minmax().min_grid_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), *m_available_space);
+                size_of_repeated_tracks += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), *m_available_space);
             else if (track_sizing_function.minmax().min_grid_size().is_definite() && !track_sizing_function.minmax().max_grid_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), *m_available_space);
+                size_of_repeated_tracks += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), *m_available_space);
             else if (track_sizing_function.minmax().min_grid_size().is_definite() && track_sizing_function.minmax().max_grid_size().is_definite())
-                sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), *m_available_space));
+                size_of_repeated_tracks += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), *m_available_space));
         } else {
-            sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space));
+            size_of_repeated_tracks += min(resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space), resolve_definite_track_size(track_sizing_function.grid_size(), *m_available_space));
         }
     }
 
-    if (sum_of_grid_track_sizes == 0)
+    if (size_of_repeated_tracks == 0)
         return 0;
 
     auto const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
     auto free_space = get_free_space(*m_available_space, dimension).to_px_or_zero();
     auto const& gap = dimension == GridDimension::Column ? grid_computed_values.column_gap() : grid_computed_values.row_gap();
-    free_space -= repeat_track_list.size() * gap.to_px(grid_container(), available_size.to_px_or_zero());
+    auto gap_px = gap.to_px(grid_container(), available_size.to_px_or_zero());
+    auto size_of_repeated_tracks_with_gap = size_of_repeated_tracks + repeat_track_list.size() * gap_px;
     // If any number of repetitions would overflow, then 1 repetition.
-    if (free_space <= sum_of_grid_track_sizes) {
+    if (free_space <= size_of_repeated_tracks_with_gap) {
         return 1;
     }
     // Otherwise, if the grid container has a definite min size in the relevant axis, the number of repetitions is the
     // smallest possible positive integer that fulfills that minimum requirement
     else if (available_size.is_definite()) {
-        return max(1, (free_space / sum_of_grid_track_sizes).to_int());
+        // NOTE: Gap size is added to free space to compensate for the fact that the last track does not have a gap
+        auto number_of_repetitions = ((free_space + gap_px) / size_of_repeated_tracks_with_gap).to_int();
+        return max(1, number_of_repetitions);
     }
     // Otherwise, the specified track list repeats only once.
     return 1;
