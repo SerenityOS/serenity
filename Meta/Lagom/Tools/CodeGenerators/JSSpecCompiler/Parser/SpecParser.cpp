@@ -48,15 +48,18 @@ Location SpecificationParsingContext::location_from_xml_offset(XML::Offset offse
     };
 }
 
-ParseErrorOr<AlgorithmStep> AlgorithmStep::create(XML::Node const* node)
+ParseErrorOr<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, XML::Node const* node)
 {
     VERIFY(node->as_element().name == tag_li);
 
     auto [tokens, substeps] = TRY(tokenize_tree(node, true));
     AlgorithmStep result { .m_tokens = move(tokens), .m_node = node };
 
-    if (substeps)
-        result.m_substeps = TRY(AlgorithmStepList::create(substeps->as_element())).m_expression;
+    if (substeps) {
+        auto step_list = AlgorithmStepList::create(ctx, substeps);
+        if (step_list.has_value())
+            result.m_substeps = step_list->m_expression;
+    }
 
     result.m_expression = TRY(result.parse());
     return result;
@@ -72,34 +75,49 @@ ParseErrorOr<Tree> AlgorithmStep::parse()
         return parser.parse_step_without_substeps();
 }
 
-ParseErrorOr<AlgorithmStepList> AlgorithmStepList::create(XML::Node::Element const& element)
+Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContext& ctx, XML::Node const* element)
 {
-    VERIFY(element.name == tag_ol);
+    VERIFY(element->as_element().name == tag_ol);
 
     AlgorithmStepList result;
     auto& steps = result.m_steps;
 
     Vector<Tree> step_expressions;
+    bool all_steps_parsed = true;
 
-    for (auto const& child : element.children) {
-        TRY(child->content.visit(
-            [&](XML::Node::Element const& element) -> ParseErrorOr<void> {
-                if (element.name != tag_li)
-                    return ParseError::create("<emu-alg> <ol> > :not(<li>) should not match any elements"sv, child);
-                steps.append(TRY(AlgorithmStep::create(child)));
-                step_expressions.append(steps.last().m_expression);
-                return {};
+    for (auto const& child : element->as_element().children) {
+        child->content.visit(
+            [&](XML::Node::Element const& element) {
+                if (element.name == tag_li) {
+                    auto step_creation_result = AlgorithmStep::create(ctx, child);
+                    if (step_creation_result.is_error()) {
+                        // TODO: Integrate backtracing parser errors better
+                        ctx.diag().error(ctx.location_from_xml_offset(step_creation_result.error()->offset()),
+                            "{}", step_creation_result.error()->to_string());
+                        all_steps_parsed = false;
+                    } else {
+                        steps.append(step_creation_result.release_value());
+                        step_expressions.append(steps.last().m_expression);
+                    }
+                    return;
+                }
+
+                ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                    "<{}> should not be a child of algorithm step list"sv, element.name);
             },
-            [&](XML::Node::Text const&) -> ParseErrorOr<void> {
-                if (!contains_empty_text(child))
-                    return ParseError::create("<emu-alg> <ol> should not have non-empty child text nodes"sv, child);
-                return {};
+            [&](XML::Node::Text const&) {
+                if (!contains_empty_text(child)) {
+                    ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                        "non-empty text node should not be a child of algorithm step list");
+                }
             },
-            move(ignore_comments)));
+            [&](auto const&) {});
     }
 
-    result.m_expression = make_ref_counted<TreeList>(move(step_expressions));
+    if (!all_steps_parsed)
+        return {};
 
+    result.m_expression = make_ref_counted<TreeList>(move(step_expressions));
     return result;
 }
 
@@ -134,18 +152,14 @@ Optional<Algorithm> Algorithm::create(SpecificationParsingContext& ctx, XML::Nod
         return {};
     }
 
-    auto steps_creation_result = AlgorithmStepList::create(steps_list[0]->as_element());
-    if (steps_creation_result.is_error()) {
-        // TODO: Integrate backtracing parser errors better
-        ctx.diag().error(ctx.location_from_xml_offset(steps_creation_result.error()->offset()),
-            "{}", steps_creation_result.error()->to_string());
-        return {};
+    auto steps_creation_result = AlgorithmStepList::create(ctx, steps_list[0]);
+    if (steps_creation_result.has_value()) {
+        Algorithm algorithm;
+        algorithm.m_steps = steps_creation_result.release_value();
+        algorithm.m_tree = algorithm.m_steps.m_expression;
+        return algorithm;
     }
-
-    Algorithm algorithm;
-    algorithm.m_steps = steps_creation_result.release_value();
-    algorithm.m_tree = algorithm.m_steps.m_expression;
-    return algorithm;
+    return {};
 }
 
 NonnullOwnPtr<SpecificationClause> SpecificationClause::create(SpecificationParsingContext& ctx, XML::Node const* element)
