@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
  * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
+ * Copyright (c) 2024, Wellington Santos <nyakonyns@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@
 #include <AK/Error.h>
 #include <AK/String.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
@@ -26,6 +28,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
+#include <LibGUI/Process.h>
 #include <LibGfx/Palette.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -35,6 +38,14 @@ class TaskbarWidget final : public GUI::Widget {
 
 public:
     virtual ~TaskbarWidget() override = default;
+
+    static ErrorOr<NonnullRefPtr<TaskbarWidget>> create();
+
+protected:
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override
+    {
+        m_context_menu->popup(event.screen_position());
+    }
 
 private:
     TaskbarWidget() = default;
@@ -54,7 +65,43 @@ private:
                 static_cast<TaskbarButton*>(button)->update_taskbar_rect();
         });
     }
+
+    ErrorOr<void> create_context_menu();
+
+    RefPtr<GUI::Menu> m_context_menu;
 };
+
+ErrorOr<NonnullRefPtr<TaskbarWidget>> TaskbarWidget::create()
+{
+    auto widget = TaskbarWidget::construct();
+    TRY(widget->create_context_menu());
+    return widget;
+}
+
+ErrorOr<void> TaskbarWidget::create_context_menu()
+{
+    m_context_menu = GUI::Menu::construct();
+
+    auto show_desktop_action = GUI::Action::create("&Show Desktop", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv)), [](auto&) {
+        GUI::ConnectionToWindowManagerServer::the().async_toggle_show_desktop();
+    });
+
+    auto open_settings_action = GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [this](auto&) {
+        GUI::Process::spawn_or_show_error(window(), "/bin/Settings"sv);
+    });
+
+    auto open_system_monitor_action = GUI::Action::create("System &Monitor", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
+        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv);
+    });
+
+    m_context_menu->add_action(*open_system_monitor_action);
+    m_context_menu->add_action(*open_settings_action);
+    m_context_menu->add_separator();
+    m_context_menu->add_action(*show_desktop_action);
+
+    return {};
+}
+
 
 ErrorOr<NonnullRefPtr<TaskbarWindow>> TaskbarWindow::create()
 {
@@ -74,7 +121,9 @@ TaskbarWindow::TaskbarWindow()
 
 ErrorOr<void> TaskbarWindow::populate_taskbar()
 {
-    auto main_widget = set_main_widget<TaskbarWidget>();
+    auto main_widget = TRY(TaskbarWidget::create());
+    set_main_widget(main_widget);
+
     main_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2, 3, 0, 3 });
 
     m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());
