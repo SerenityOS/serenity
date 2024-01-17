@@ -64,7 +64,7 @@ Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, 
 {
     VERIFY(element->as_element().name == tag_li);
 
-    auto tokenization_result = tokenize_tree(element, true);
+    auto tokenization_result = tokenize_tree(ctx, element, true);
     if (tokenization_result.is_error()) {
         ctx.diag().error(ctx.location_from_xml_offset(tokenization_result.error()->offset()),
             "{}", tokenization_result.error()->to_string());
@@ -253,7 +253,7 @@ void SpecificationClause::collect_into(TranslationUnitRef translation_unit)
 ParseErrorOr<void> SpecificationClause::parse_header(XML::Node const* element)
 {
     VERIFY(element->as_element().name == tag_h1);
-    auto tokens = TRY(tokenize_tree(element));
+    auto tokens = TRY(tokenize_tree(*m_ctx_pointer, element));
     TextParser parser(tokens.tokens, element);
     m_header = TRY(parser.parse_clause_header());
     return {};

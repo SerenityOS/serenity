@@ -31,13 +31,13 @@ inline constexpr StringView attribute_id = "id"sv;
 
 inline constexpr StringView class_secnum = "secnum"sv;
 
-ParseErrorOr<void> tokenize_string(XML::Node const* node, StringView view, Vector<Token>& tokens);
+ParseErrorOr<void> tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, StringView view, Vector<Token>& tokens);
 
 struct TokenizeTreeResult {
     Vector<Token> tokens;
     XML::Node const* substeps = nullptr;
 };
 
-ParseErrorOr<TokenizeTreeResult> tokenize_tree(XML::Node const* node, bool allow_substeps = false);
+ParseErrorOr<TokenizeTreeResult> tokenize_tree(SpecificationParsingContext& ctx, XML::Node const* node, bool allow_substeps = false);
 
 }

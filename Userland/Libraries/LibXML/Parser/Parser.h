@@ -39,9 +39,20 @@ struct Listener {
     virtual void error(ParseError const&) { }
 };
 
+// FIXME: This is also used in JSSpecCompiler, so should probably live in AK or even merged with
+//        AK::GenericLexer.
 class LineTrackingLexer : public GenericLexer {
 public:
     using GenericLexer::GenericLexer;
+
+    LineTrackingLexer(StringView input, XML::Offset start_offset)
+        : GenericLexer(input)
+        , m_cached_offset {
+            .line = start_offset.line,
+            .column = start_offset.column,
+        }
+    {
+    }
 
     Offset cached_offset() const { return m_cached_offset; }
     void restore_cached_offset(Offset cached_offset) { m_cached_offset = cached_offset; }

@@ -9,6 +9,7 @@
 #include <LibXML/Forward.h>
 
 #include "AST/AST.h"
+#include "DiagnosticEngine.h"
 
 namespace JSSpecCompiler {
 
@@ -46,7 +47,6 @@ constexpr i32 closing_bracket_precedence = 18;
     F(Multiplication, 5, Invalid, Multiplication, Invalid)    \
     F(Division, 5, Invalid, Division, Invalid)                \
     F(FunctionCall, 2, Invalid, FunctionCall, Invalid)        \
-    F(ArraySubscript, 2, Invalid, ArraySubscript, Invalid)    \
     F(ExclamationMark, 3, AssertCompletion, Invalid, Invalid) \
     F(Is, -1, Invalid, Invalid, Invalid)
 
@@ -110,6 +110,7 @@ struct Token {
     TokenType type;
     StringView data;
     XML::Node const* node;
+    Location location;
 };
 
 }
