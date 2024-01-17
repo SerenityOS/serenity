@@ -43,7 +43,7 @@ private:
 
 class AlgorithmStepList {
 public:
-    static ParseErrorOr<AlgorithmStepList> create(XML::Node::Element const& element);
+    static Optional<AlgorithmStepList> create(SpecificationParsingContext& ctx, XML::Node const* element);
 
     Vector<AlgorithmStep> m_steps;
     Tree m_expression = error_tree;
@@ -51,7 +51,7 @@ public:
 
 class AlgorithmStep {
 public:
-    static ParseErrorOr<AlgorithmStep> create(XML::Node const* node);
+    static ParseErrorOr<AlgorithmStep> create(SpecificationParsingContext& ctx, XML::Node const* node);
 
     ParseErrorOr<Tree> parse();
 
