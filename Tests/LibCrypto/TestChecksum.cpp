@@ -6,6 +6,7 @@
 
 #include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <LibCrypto/Checksum/cksum.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(test_adler32)
@@ -20,6 +21,35 @@ TEST_CASE(test_adler32)
     do_test(ByteString("abc").bytes(), 0x024d0127);
     do_test(ByteString("message digest").bytes(), 0x29750586);
     do_test(ByteString("abcdefghijklmnopqrstuvwxyz").bytes(), 0x90860b20);
+}
+
+TEST_CASE(test_cksum)
+{
+    auto do_test = [](ReadonlyBytes input, u32 expected_result) {
+        auto digest = Crypto::Checksum::cksum(input).digest();
+        EXPECT_EQ(digest, expected_result);
+    };
+
+    do_test(ByteString("").bytes(), 0xFFFFFFFF);
+    do_test(ByteString("The quick brown fox jumps over the lazy dog").bytes(), 0x7BAB9CE8);
+    do_test(ByteString("various CRC algorithms input data").bytes(), 0xEFB5CA4F);
+}
+
+TEST_CASE(test_cksum_atomic_digest)
+{
+    auto compare = [](u32 digest, u32 expected_result) {
+        EXPECT_EQ(digest, expected_result);
+    };
+
+    Crypto::Checksum::cksum cksum;
+
+    cksum.update(ByteString("Well").bytes());
+    cksum.update(ByteString(" hello ").bytes());
+    cksum.digest();
+    cksum.update(ByteString("friends").bytes());
+    auto digest = cksum.digest();
+
+    compare(digest, 0x2D65C7E0);
 }
 
 TEST_CASE(test_crc32)
