@@ -10,34 +10,32 @@ enum CompositeOperationOrAuto { "replace", "add", "accumulate", "auto" };
 // https://www.w3.org/TR/web-animations-1/#the-keyframeeffectoptions-dictionary
 dictionary KeyframeEffectOptions : EffectTiming {
     CompositeOperation composite = "replace";
-    CSSOMString?       pseudoElement = null;
+    CSSOMString? pseudoElement = null;
 };
 
 // https://www.w3.org/TR/web-animations-1/#dictdef-basepropertyindexedkeyframe
 dictionary BasePropertyIndexedKeyframe {
-    (double? or sequence<double?>)                         offset = [];
-    (DOMString or sequence<DOMString>)                     easing = [];
+    (double? or sequence<double?>) offset = [];
+    (DOMString or sequence<DOMString>) easing = [];
     (CompositeOperationOrAuto or sequence<CompositeOperationOrAuto>) composite = [];
 };
 
 // https://www.w3.org/TR/web-animations-1/#dictdef-basekeyframe
 dictionary BaseKeyframe {
-    double?                  offset = null;
-    DOMString                easing = "linear";
+    double? offset = null;
+    DOMString easing = "linear";
     CompositeOperationOrAuto composite = "auto";
 };
 
 // https://www.w3.org/TR/web-animations-1/#the-keyframeeffect-interface
 [Exposed=Window]
 interface KeyframeEffect : AnimationEffect {
-    constructor(Element? target,
-                object? keyframes,
-                optional (unrestricted double or KeyframeEffectOptions) options = {});
+    constructor(Element? target, object? keyframes, optional (unrestricted double or KeyframeEffectOptions) options = {});
     constructor(KeyframeEffect source);
 
-    attribute Element?           target;
-    attribute CSSOMString?       pseudoElement;
+    attribute Element? target;
+    attribute CSSOMString? pseudoElement;
     attribute CompositeOperation composite;
     sequence<object> getKeyframes();
-    undefined        setKeyframes(object? keyframes);
+    undefined setKeyframes(object? keyframes);
 };
