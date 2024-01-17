@@ -25,14 +25,14 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_lo
     , m_inode_metadata_location(inode_metadata_location)
     , m_filename(move(filename))
 {
-    dbgln_if(FAT_DEBUG, "FATFS: Creating inode {} with filename \"{}\"", index(), m_filename);
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::FATInode(): Creating inode with filename \"{}\"", identifier(), m_filename);
 }
 
 ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster)
 {
     // FIXME: We should make sure that there is a lock, but as this function is now static, we don't have access to the inode lock.
 
-    dbgln_if(FAT_DEBUG, "FATFS: computing block list starting with cluster {}", first_cluster);
+    dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): computing block list starting with cluster {}", first_cluster);
 
     u32 cluster = first_cluster;
 
@@ -42,7 +42,7 @@ ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster
         return cluster_list;
 
     while (cluster < fs.end_of_chain_marker()) {
-        dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
+        dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
 
         TRY(cluster_list.try_append(cluster));
 
@@ -73,14 +73,14 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::get_block_list()
 {
     VERIFY(m_inode_lock.is_locked());
 
-    dbgln_if(FAT_DEBUG, "FATFS: getting block list for inode {}", index());
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::get_block_list(): getting block list", identifier());
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
     for (auto cluster : m_cluster_list) {
         auto span = fs().first_block_of_cluster(cluster);
         for (size_t i = 0; i < span.number_of_sectors; i++) {
-            dbgln_if(FAT_DEBUG, "FATFS: Appending block {} to inode {}'s block list", BlockBasedFileSystem::BlockIndex { span.start_block.value() + i }, index());
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::get_block_list(): Appending block {} to  block list", identifier(), BlockBasedFileSystem::BlockIndex { span.start_block.value() + i });
             TRY(block_list.try_append(BlockBasedFileSystem::BlockIndex { span.start_block.value() + i }));
         }
     }
@@ -94,7 +94,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 
     auto block_list = TRY(get_block_list());
 
-    dbgln_if(FAT_DEBUG, "FATFS: reading block list for inode {} ({} blocks)", index(), block_list.size());
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::read_block_list(): reading block list ({} blocks)", identifier(), block_list.size());
 
     auto builder = TRY(KBufferBuilder::try_create());
 
@@ -103,7 +103,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
 
     for (BlockBasedFileSystem::BlockIndex block : block_list) {
-        dbgln_if(FAT_DEBUG, "FATFS: reading block: {}", block);
+        dbgln_if(FAT_DEBUG, "FATInode[{}]::read_block_list(): reading block: {}", identifier(), block);
         TRY(fs().raw_read(block, buf));
         TRY(builder.append((char const*)buffer, fs().m_device_block_size));
     }
@@ -130,13 +130,13 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
     for (u32 i = 0; i < blocks->size() / sizeof(FATEntry); i++) {
         auto* entry = reinterpret_cast<FATEntry*>(blocks->data() + i * sizeof(FATEntry));
         if (entry->filename[0] == end_entry_byte) {
-            dbgln_if(FAT_DEBUG, "FATFS: Found end entry");
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::traverse(): Found end entry", identifier());
             return nullptr;
         } else if (static_cast<u8>(entry->filename[0]) == unused_entry_byte) {
-            dbgln_if(FAT_DEBUG, "FATFS: Found unused entry");
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::traverse(): Found unused entry", identifier());
             lfn_entries.clear();
         } else if (entry->attributes == FATAttributes::LongFileName) {
-            dbgln_if(FAT_DEBUG, "FATFS: Found LFN entry");
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::traverse(): Found LFN entry", identifier());
             TRY(lfn_entries.try_append(*reinterpret_cast<FATLongFileNameEntry*>(entry)));
         } else if ((entry->first_cluster_high << 16 | entry->first_cluster_low) <= 1 && entry->file_size > 0) {
             // Because clusters 0 and 1 are reserved, only empty files (size == 0 files)
@@ -145,7 +145,7 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
             // on FAT12/16 file systems (a signal to look in the root directory region),
             // so we ensure that no entries read off the file system have a cluster number
             // that would also point to this region.
-            dbgln_if(FAT_DEBUG, "FATFS: Invalid cluster for entry");
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::traverse(): Invalid cluster for entry", identifier());
             return EINVAL;
         } else {
             auto entry_number_bytes = i * sizeof(FATEntry);
@@ -155,7 +155,7 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
             auto entries_per_sector = fs().m_device_block_size / sizeof(FATEntry);
             u32 block_entry = i % entries_per_sector;
 
-            dbgln_if(FAT_DEBUG, "FATFS: Found 8.3 entry at block {}, entry {}", block, block_entry);
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::traverse(): Found 8.3 entry at block {}, entry {}", identifier(), block, block_entry);
             lfn_entries.reverse();
             auto inode = TRY(FATInode::create(fs(), *entry, { block, block_entry }, lfn_entries));
             if (TRY(callback(inode)))
@@ -239,7 +239,7 @@ u32 FATInode::first_cluster(FATVersion const version) const
 
 ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    dbgln_if(FAT_DEBUG, "FATFS: Reading inode {}: size: {} offset: {}", identifier().index(), size, offset);
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::read_bytes_locked(): Reading {} bytes at offset {}", identifier(), size, offset);
     VERIFY(offset >= 0);
     if (offset >= m_entry.file_size)
         return 0;
