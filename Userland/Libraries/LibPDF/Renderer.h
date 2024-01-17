@@ -127,6 +127,9 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
 
+    void activate_clip();
+    void deactivate_clip();
+
     void begin_path_paint();
     void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
