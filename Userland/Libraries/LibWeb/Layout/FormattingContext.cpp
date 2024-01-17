@@ -1682,8 +1682,8 @@ CSSPixelRect FormattingContext::absolute_content_rect(Box const& box) const
 {
     auto const& box_state = m_state.get(box);
     CSSPixelRect rect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-    for (auto* block = box.containing_block(); block; block = block->containing_block())
-        rect.translate_by(m_state.get(*block).offset);
+    for (auto* block = box_state.containing_block_used_values(); block; block = block->containing_block_used_values())
+        rect.translate_by(block->offset);
     return rect;
 }
 
@@ -1742,61 +1742,95 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
     return box_state.margin_box_height();
 }
 
+CSSPixelRect FormattingContext::margin_box_rect(LayoutState::UsedValues const& used_values) const
+{
+    return {
+        used_values.offset.translated(-used_values.margin_box_left(), -used_values.margin_box_top()),
+        {
+            used_values.margin_box_left() + used_values.content_width() + used_values.margin_box_right(),
+            used_values.margin_box_top() + used_values.content_height() + used_values.margin_box_bottom(),
+        },
+    };
+}
+
 CSSPixelRect FormattingContext::margin_box_rect(Box const& box) const
 {
-    auto const& box_state = m_state.get(box);
+    return margin_box_rect(m_state.get(box));
+}
+
+CSSPixelRect FormattingContext::border_box_rect(LayoutState::UsedValues const& used_values) const
+{
     return {
-        box_state.offset.translated(-box_state.margin_box_left(), -box_state.margin_box_top()),
+        used_values.offset.translated(-used_values.border_box_left(), -used_values.border_box_top()),
         {
-            box_state.margin_box_left() + box_state.content_width() + box_state.margin_box_right(),
-            box_state.margin_box_top() + box_state.content_height() + box_state.margin_box_bottom(),
+            used_values.border_box_left() + used_values.content_width() + used_values.border_box_right(),
+            used_values.border_box_top() + used_values.content_height() + used_values.border_box_bottom(),
         },
     };
 }
 
 CSSPixelRect FormattingContext::border_box_rect(Box const& box) const
 {
-    auto const& box_state = m_state.get(box);
-    return {
-        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
-        {
-            box_state.border_box_left() + box_state.content_width() + box_state.border_box_right(),
-            box_state.border_box_top() + box_state.content_height() + box_state.border_box_bottom(),
-        },
-    };
+    return border_box_rect(m_state.get(box));
 }
 
-CSSPixelRect FormattingContext::border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
+CSSPixelRect FormattingContext::border_box_rect_in_ancestor_coordinate_space(LayoutState::UsedValues const& used_values, Box const& ancestor_box) const
 {
-    auto rect = border_box_rect(box);
-    if (&box == &ancestor_box)
+    auto rect = border_box_rect(used_values);
+    if (&used_values.node() == &ancestor_box)
         return rect;
-    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
-        if (current == &ancestor_box)
+    for (auto const* current = used_values.containing_block_used_values(); current; current = current->containing_block_used_values()) {
+        if (&current->node() == &ancestor_box)
             return rect;
-        auto const& current_state = m_state.get(*current);
-        rect.translate_by(current_state.offset);
+        rect.translate_by(current->offset);
     }
     // If we get here, ancestor_box was not a containing block ancestor of `box`!
     VERIFY_NOT_REACHED();
 }
 
+CSSPixelRect FormattingContext::border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
+{
+    return border_box_rect_in_ancestor_coordinate_space(m_state.get(box), ancestor_box);
+}
+
 CSSPixelRect FormattingContext::content_box_rect(Box const& box) const
 {
-    auto const& box_state = m_state.get(box);
-    return CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    return content_box_rect(m_state.get(box));
+}
+
+CSSPixelRect FormattingContext::content_box_rect(LayoutState::UsedValues const& used_values) const
+{
+    return CSSPixelRect { used_values.offset, { used_values.content_width(), used_values.content_height() } };
+}
+
+CSSPixelRect FormattingContext::content_box_rect_in_ancestor_coordinate_space(LayoutState::UsedValues const& used_values, Box const& ancestor_box) const
+{
+    auto rect = content_box_rect(used_values);
+    if (&used_values.node() == &ancestor_box)
+        return rect;
+    for (auto const* current = used_values.containing_block_used_values(); current; current = current->containing_block_used_values()) {
+        if (&current->node() == &ancestor_box)
+            return rect;
+        rect.translate_by(current->offset);
+    }
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
 }
 
 CSSPixelRect FormattingContext::content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
 {
-    auto rect = content_box_rect(box);
-    if (&box == &ancestor_box)
+    return content_box_rect_in_ancestor_coordinate_space(m_state.get(box), ancestor_box);
+}
+
+CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(LayoutState::UsedValues const& used_values, Box const& ancestor_box) const
+{
+    auto rect = margin_box_rect(used_values);
+    if (&used_values.node() == &ancestor_box)
         return rect;
-    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
-        if (current == &ancestor_box)
+    for (auto const* current = used_values.containing_block_used_values(); current; current = current->containing_block_used_values()) {
+        if (&current->node() == &ancestor_box)
             return rect;
-        auto const& current_state = m_state.get(*current);
-        rect.translate_by(current_state.offset);
+        rect.translate_by(current->offset);
     }
     // If we get here, ancestor_box was not a containing block ancestor of `box`!
     VERIFY_NOT_REACHED();
@@ -1804,17 +1838,7 @@ CSSPixelRect FormattingContext::content_box_rect_in_ancestor_coordinate_space(Bo
 
 CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
 {
-    auto rect = margin_box_rect(box);
-    if (&box == &ancestor_box)
-        return rect;
-    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
-        if (current == &ancestor_box)
-            return rect;
-        auto const& current_state = m_state.get(*current);
-        rect.translate_by(current_state.offset);
-    }
-    // If we get here, ancestor_box was not a containing block ancestor of `box`!
-    VERIFY_NOT_REACHED();
+    return margin_box_rect_in_ancestor_coordinate_space(m_state.get(box), ancestor_box);
 }
 
 bool box_is_sized_as_replaced_element(Box const& box)
