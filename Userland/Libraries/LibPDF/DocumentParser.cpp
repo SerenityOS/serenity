@@ -499,9 +499,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
         Vector<XRefEntry> entries;
 
         auto starting_index_value = TRY(parse_number());
-        auto starting_index = starting_index_value.get<int>();
         auto object_count_value = TRY(parse_number());
+        if (!(starting_index_value.has_u32() && object_count_value.has_u32()))
+            return error("Malformed xref entry");
+
         auto object_count = object_count_value.get<int>();
+        auto starting_index = starting_index_value.get<int>();
 
         for (int i = 0; i < object_count; i++) {
             auto offset_string = ByteString(m_reader.bytes().slice(m_reader.offset(), 10));
