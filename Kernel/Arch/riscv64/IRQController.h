@@ -24,9 +24,8 @@ public:
     virtual void enable(GenericInterruptHandler const&) = 0;
     virtual void disable(GenericInterruptHandler const&) = 0;
 
+    virtual size_t claim() const = 0;
     virtual void eoi(GenericInterruptHandler const&) const = 0;
-
-    virtual u64 pending_interrupts() const = 0;
 
     virtual StringView model() const = 0;
 

@@ -7,6 +7,7 @@
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/riscv64/IRQController.h>
 #include <Kernel/Arch/riscv64/InterruptManagement.h>
+#include <Kernel/Arch/riscv64/PLIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 
 namespace Kernel {
@@ -35,6 +36,7 @@ void InterruptManagement::initialize()
 void InterruptManagement::find_controllers()
 {
     // TODO: Once device tree support is in place, find interrupt controllers using that.
+    m_interrupt_controllers.append(RISCV64::PLIC::try_to_initialize(PhysicalAddress { 0xc000000 }).release_value_but_fixme_should_propagate_errors());
 }
 
 u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
@@ -49,8 +51,9 @@ Vector<NonnullLockRefPtr<IRQController>> const& InterruptManagement::controllers
 
 NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(size_t)
 {
-    // TODO: Support interrupt controllers
-    TODO_RISCV64();
+    // TODO: Support more interrupt controllers
+    VERIFY(m_interrupt_controllers.size() == 1);
+    return m_interrupt_controllers[0];
 }
 
 void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)> callback)

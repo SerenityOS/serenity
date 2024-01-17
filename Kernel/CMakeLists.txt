@@ -527,6 +527,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/PageDirectory.cpp
         Arch/riscv64/Panic.cpp
         Arch/riscv64/PCI/Initializer.cpp
+        Arch/riscv64/PLIC.cpp
         Arch/riscv64/PowerState.cpp
         Arch/riscv64/pre_init.cpp
         Arch/riscv64/Processor.cpp

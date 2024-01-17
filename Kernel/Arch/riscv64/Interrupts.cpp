@@ -48,94 +48,111 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
 
     if ((to_underlying(scause) & RISCV64::CSR::SCAUSE_INTERRUPT_MASK) != 0) {
         // Interrupt
-
         Processor::current().enter_trap(trap_frame, true);
 
-        auto irq = to_underlying(scause) & ~RISCV64::CSR::SCAUSE_INTERRUPT_MASK;
+    } else {
+        // Exception
+        Processor::current().enter_trap(trap_frame, false);
+        Processor::enable_interrupts();
+    }
 
-        auto* handler = s_interrupt_handlers[irq];
+    using enum RISCV64::CSR::SCAUSE;
+    switch (scause) {
+    case SupervisorSoftwareInterrupt:
+        VERIFY_NOT_REACHED();
+        break;
+
+    case SupervisorTimerInterrupt: {
+        auto* handler = s_interrupt_handlers[to_underlying(SupervisorTimerInterrupt) & ~RISCV64::CSR::SCAUSE_INTERRUPT_MASK];
         VERIFY(handler);
         handler->increment_call_count();
         handler->handle_interrupt(*trap_frame.regs);
         handler->eoi();
-
-        Processor::current().exit_trap(trap_frame);
-    } else {
-        // Exception
-
-        Processor::current().enter_trap(trap_frame, false);
-        Processor::enable_interrupts();
-
-        using enum RISCV64::CSR::SCAUSE;
-        switch (scause) {
-        case InstructionAddressMisaligned:
-        case LoadAddressMisaligned:
-        case StoreOrAMOAddressMisaligned:
-            handle_crash(*trap_frame.regs, "Unaligned memory access", SIGBUS, false);
-            break;
-
-        case InstructionAccessFault:
-        case LoadAccessFault:
-        case StoreOrAMOAccessFault:
-            handle_crash(*trap_frame.regs, "Memory access fault", SIGBUS, false);
-            break;
-
-        case IllegalInstrction:
-            handle_crash(*trap_frame.regs, "Illegal instruction", SIGILL, false);
-            break;
-
-        case InstructionPageFault:
-        case LoadPageFault:
-        case StoreOrAMOPageFault: {
-            PageFault fault { VirtualAddress(trap_frame.regs->stval) };
-
-            if (scause == InstructionPageFault)
-                fault.set_instruction_fetch(true);
-            else if (scause == LoadPageFault)
-                fault.set_access(PageFault::Access::Read);
-            else if (scause == StoreOrAMOPageFault)
-                fault.set_access(PageFault::Access::Write);
-
-            // FIXME: detect correct type by walking page table or rewrite MM to not depend on processor-provided reason
-            fault.set_type(PageFault::Type::ProtectionViolation);
-
-            fault.handle(*trap_frame.regs);
-            break;
-        }
-
-        case EnvironmentCallFromUMode:
-            trap_frame.regs->sepc += 4;
-            syscall_handler(&trap_frame);
-
-            // FIXME: HACK
-            trap_frame.regs->x[3] = Processor::current_thread()->thread_specific_data().get();
-            break;
-
-        case Breakpoint:
-            if (trap_frame.regs->previous_mode() == ExecutionMode::User) {
-                // HACK?
-                trap_frame.regs->sepc += 4;
-
-                auto* current_thread = Thread::current();
-                auto& current_process = current_thread->process();
-
-                if (auto* tracer = current_process.tracer()) {
-                    tracer->set_regs(*trap_frame.regs);
-                }
-
-                current_thread->send_urgent_signal_to_self(SIGTRAP);
-            } else {
-                handle_crash(*trap_frame.regs, "Unexpected breakpoint trap from supervisor mode", SIGTRAP, false);
-            }
-            break;
-
-        default:
-            VERIFY_NOT_REACHED();
-        };
-
-        Processor::disable_interrupts();
-        Processor::current().exit_trap(trap_frame);
+        break;
     }
+
+    case SupervisorExternalInterrupt: {
+        auto interrupt_number = InterruptManagement::the().controllers()[0]->claim();
+        dbgln("SEIP {}", interrupt_number);
+        auto* handler = s_interrupt_handlers[interrupt_number];
+        VERIFY(handler);
+        handler->increment_call_count();
+        handler->handle_interrupt(*trap_frame.regs);
+        handler->eoi();
+        break;
+    }
+
+    case InstructionAddressMisaligned:
+    case LoadAddressMisaligned:
+    case StoreOrAMOAddressMisaligned:
+        handle_crash(*trap_frame.regs, "Unaligned memory access", SIGBUS, false);
+        break;
+
+    case InstructionAccessFault:
+    case LoadAccessFault:
+    case StoreOrAMOAccessFault:
+        handle_crash(*trap_frame.regs, "Memory access fault", SIGBUS, false);
+        break;
+
+    case IllegalInstrction:
+        handle_crash(*trap_frame.regs, "Illegal instruction", SIGILL, false);
+        break;
+
+    case InstructionPageFault:
+    case LoadPageFault:
+    case StoreOrAMOPageFault: {
+        PageFault fault { VirtualAddress(trap_frame.regs->stval) };
+
+        if (scause == InstructionPageFault)
+            fault.set_instruction_fetch(true);
+        else if (scause == LoadPageFault)
+            fault.set_access(PageFault::Access::Read);
+        else if (scause == StoreOrAMOPageFault)
+            fault.set_access(PageFault::Access::Write);
+
+        // FIXME: detect correct type by walking page table or rewrite MM to not depend on processor-provided reason
+        fault.set_type(PageFault::Type::ProtectionViolation);
+
+        fault.handle(*trap_frame.regs);
+        break;
+    }
+
+    case EnvironmentCallFromUMode:
+        trap_frame.regs->sepc += 4;
+        syscall_handler(&trap_frame);
+
+        // FIXME: HACK
+        trap_frame.regs->x[3] = Processor::current_thread()->thread_specific_data().get();
+        break;
+
+    case EnvironmentCallFromSMode:
+        VERIFY_NOT_REACHED();
+        break;
+
+    case Breakpoint:
+        if (trap_frame.regs->previous_mode() == ExecutionMode::User) {
+            // HACK?
+            trap_frame.regs->sepc += 4;
+
+            auto* current_thread = Thread::current();
+            auto& current_process = current_thread->process();
+
+            if (auto* tracer = current_process.tracer()) {
+                tracer->set_regs(*trap_frame.regs);
+            }
+
+            current_thread->send_urgent_signal_to_self(SIGTRAP);
+        } else {
+            handle_crash(*trap_frame.regs, "Unexpected breakpoint trap from supervisor mode", SIGTRAP, false);
+        }
+        break;
+    };
+
+    if ((to_underlying(scause) & RISCV64::CSR::SCAUSE_INTERRUPT_MASK) == 0)
+        // Exception
+        Processor::disable_interrupts();
+
+    Processor::current().exit_trap(trap_frame);
 }
 
 // FIXME: Share the code below with Arch/x86_64/Interrupts.cpp
