@@ -89,6 +89,9 @@ private:
 
     struct FloatingBox {
         JS::NonnullGCPtr<Box const> box;
+
+        LayoutState::UsedValues& used_values;
+
         // Offset from left/right edge to the left content edge of `box`.
         CSSPixels offset_from_edge { 0 };
 
