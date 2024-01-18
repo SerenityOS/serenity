@@ -52,6 +52,8 @@ public:
     virtual bool needs_prepare_glyphs_texture() const override { return true; }
     void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override;
 
+    virtual void prepare_to_execute() override;
+
     bool needs_update_immutable_bitmap_texture_cache() const override { return true; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override;
 

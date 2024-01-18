@@ -14,6 +14,7 @@ PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Context& contex
     : m_target_bitmap(bitmap)
     , m_context(context)
 {
+    m_context.activate();
     auto canvas = AccelGfx::Canvas::create(bitmap.size());
     auto painter = AccelGfx::Painter::create(m_context, canvas);
     m_stacking_contexts.append({ .canvas = canvas,
@@ -25,6 +26,7 @@ PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Context& contex
 
 PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
 {
+    m_context.activate();
     VERIFY(m_stacking_contexts.size() == 1);
     painter().flush(m_target_bitmap);
 }
@@ -416,6 +418,11 @@ bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect 
 void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
 {
     AccelGfx::GlyphAtlas::the().update(unique_glyphs);
+}
+
+void PaintingCommandExecutorGPU::prepare_to_execute()
+{
+    m_context.activate();
 }
 
 void PaintingCommandExecutorGPU::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)

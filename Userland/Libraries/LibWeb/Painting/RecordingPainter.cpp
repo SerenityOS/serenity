@@ -448,6 +448,8 @@ void RecordingPainter::apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets
 
 void RecordingPainter::execute(PaintingCommandExecutor& executor)
 {
+    executor.prepare_to_execute();
+
     if (executor.needs_prepare_glyphs_texture()) {
         HashMap<Gfx::Font const*, HashTable<u32>> unique_glyphs;
         for (auto& command_with_scroll_id : m_painting_commands) {
