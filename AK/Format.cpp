@@ -752,7 +752,7 @@ ErrorOr<void> FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char
 {
     auto put_char_view = [&](auto i) -> ErrorOr<void> {
         TRY(put_padding(fill, 4));
-        for (size_t j = i - width; j < i; ++j) {
+        for (size_t j = i - min(i, width); j < i; ++j) {
             auto ch = bytes[j];
             TRY(m_builder.try_append(ch >= 32 && ch <= 127 ? ch : '.')); // silly hack
         }
@@ -769,7 +769,7 @@ ErrorOr<void> FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char
         TRY(put_u64(bytes[i], 16, false, false, true, false, Align::Right, 2));
     }
 
-    if (width > 0 && bytes.size() && bytes.size() % width == 0)
+    if (width > 0)
         TRY(put_char_view(bytes.size()));
 
     return {};
