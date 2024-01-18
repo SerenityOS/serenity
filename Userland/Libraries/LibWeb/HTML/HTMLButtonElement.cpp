@@ -70,40 +70,40 @@ bool HTMLButtonElement::has_activation_behavior() const
     return true;
 }
 
-void HTMLButtonElement::activation_behavior(DOM::Event const&)
+void HTMLButtonElement::activation_behavior(DOM::Event const& event)
 {
     // https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:activation-behaviour
     // 1. If element is disabled, then return.
     if (!enabled())
         return;
 
-    // 2. If element does not have a form owner, then return.
-    if (!form())
-        return;
-
-    // 3. If element's node document is not fully active, then return.
+    // 2. If element's node document is not fully active, then return.
     if (!this->document().is_fully_active())
         return;
 
-    // 4. Switch on element's type attribute's state:
-    switch (type_state()) {
-    case TypeAttributeState::Submit:
-        // Submit Button
-        // Submit element's form owner from element.
-        form()->submit_form(*this).release_value_but_fixme_should_propagate_errors();
-        break;
-    case TypeAttributeState::Reset:
-        // Reset Button
-        // Reset element's form owner.
-        form()->reset_form();
-        break;
-    case TypeAttributeState::Button:
-        // Button
-        // Do nothing.
-        break;
-    default:
-        VERIFY_NOT_REACHED();
+    // 3. If element has a form owner then switch on element's type attribute's state, then:
+    if (form() != nullptr) {
+        switch (type_state()) {
+        case TypeAttributeState::Submit:
+            // Submit Button
+            // Submit element's form owner from element with userInvolvement set to event's user navigation involvement.
+            form()->submit_form(*this, { .user_involvement = user_navigation_involvement(event) }).release_value_but_fixme_should_propagate_errors();
+            break;
+        case TypeAttributeState::Reset:
+            // Reset Button
+            // Reset element's form owner.
+            form()->reset_form();
+            break;
+        case TypeAttributeState::Button:
+            // Button
+            // Do nothing.
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
+
+    // 4. FIXME: Run the popover target attribute activation behavior given element.
 }
 
 }
