@@ -5675,7 +5675,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(TokenStream<ComponentValue
     //     [ span && [ <integer> || <custom-ident> ] ]
     auto is_valid_integer = [](auto& token) -> bool {
         // An <integer> value of zero makes the declaration invalid.
-        if (token.is(Token::Type::Number) && token.token().number().is_integer() && token.token().number_value() != 0)
+        if (token.is(Token::Type::Number) && token.token().number_value() != 0)
             return true;
         return false;
     };
