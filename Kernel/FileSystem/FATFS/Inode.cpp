@@ -586,9 +586,64 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
     return {};
 }
 
-ErrorOr<void> FATInode::remove_child(StringView)
+ErrorOr<void> FATInode::remove_child(StringView name)
 {
-    return EROFS;
+    MutexLocker locker(m_inode_lock);
+
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): removing inode \"{}\"", identifier(), name);
+
+    VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
+
+    Vector<FATLongFileNameEntry> lfn_entries;
+    TRY(lfn_entries.try_ensure_capacity(ceil_div(max_filename_length, characters_per_lfn_entry)));
+
+    Vector<FATEntryLocation> lfn_entry_locations;
+    TRY(lfn_entry_locations.try_ensure_capacity(ceil_div(max_filename_length, characters_per_lfn_entry)));
+
+    auto block_list = TRY(get_block_list());
+    auto blocks = TRY(read_block_list());
+
+    for (u32 i = 0; i < blocks->size() / sizeof(FATEntry); i++) {
+        auto* entry = reinterpret_cast<FATEntry*>(blocks->data() + i * sizeof(FATEntry));
+
+        auto entry_number_bytes = i * sizeof(FATEntry);
+        auto block = block_list[entry_number_bytes / fs().logical_block_size()];
+
+        auto entries_per_sector = fs().logical_block_size() / sizeof(FATEntry);
+        u32 block_entry = i % entries_per_sector;
+
+        if (entry->filename[0] == end_entry_byte) {
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): Found end entry", identifier());
+            return ENOENT;
+        } else if (static_cast<u8>(entry->filename[0]) == unused_entry_byte) {
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): Found unused entry", identifier());
+            lfn_entries.clear();
+            lfn_entry_locations.clear();
+        } else if (entry->attributes == FATAttributes::LongFileName) {
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): Found LFN entry", identifier());
+            lfn_entries.unchecked_append(*reinterpret_cast<FATLongFileNameEntry*>(entry));
+            lfn_entry_locations.unchecked_append({ block, block_entry });
+        } else {
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): Found 8.3 entry at block {}, entry {}", identifier(), block, block_entry);
+            lfn_entries.reverse();
+            auto filename = TRY(compute_filename(*entry, lfn_entries));
+            if (filename->view() == name) {
+                // FIXME: If it's the last entry move the end entry instead of unused entries
+                FATEntry unused_entry {};
+                unused_entry.filename[0] = unused_entry_byte;
+                TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&unused_entry)), sizeof(FATEntry), block_entry * sizeof(FATEntry)));
+
+                for (auto const& lfn_entry_location : lfn_entry_locations)
+                    TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&unused_entry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
+
+                return {};
+            }
+            lfn_entries.clear_with_capacity();
+            lfn_entry_locations.clear_with_capacity();
+        }
+    }
+
+    return EINVAL;
 }
 
 ErrorOr<void> FATInode::chmod(mode_t)
