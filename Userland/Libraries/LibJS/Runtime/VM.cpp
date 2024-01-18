@@ -742,6 +742,11 @@ void VM::save_execution_context_stack()
     m_saved_execution_context_stacks.append(move(m_execution_context_stack));
 }
 
+void VM::clear_execution_context_stack()
+{
+    m_execution_context_stack.clear_with_capacity();
+}
+
 void VM::restore_execution_context_stack()
 {
     m_execution_context_stack = m_saved_execution_context_stacks.take_last();
