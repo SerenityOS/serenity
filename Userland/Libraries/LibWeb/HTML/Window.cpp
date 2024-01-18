@@ -1273,6 +1273,12 @@ void Window::scroll(ScrollToOptions const& options)
     auto viewport_height = viewport_rect.height();
 
     auto const document = top_level_traversable->active_document();
+    VERIFY(document);
+
+    // Make sure layout is up-to-date before looking at scrollable overflow metrics.
+    document->update_layout();
+
+    VERIFY(document->paintable_box());
     auto scrolling_area = document->paintable_box()->scrollable_overflow_rect()->to_type<float>();
 
     // 7. FIXME: For now we always assume overflow direction is rightward
