@@ -34,7 +34,7 @@ void InterruptManagement::initialize()
 
 void InterruptManagement::find_controllers()
 {
-    TODO_RISCV64();
+    // TODO: Once device tree support is in place, find interrupt controllers using that.
 }
 
 u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
