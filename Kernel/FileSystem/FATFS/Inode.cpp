@@ -179,10 +179,12 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     return blocks.release_nonnull();
 }
 
-ErrorOr<void> FATInode::replace_child(StringView, Inode&)
+ErrorOr<void> FATInode::replace_child(StringView name, Inode& inode)
 {
-    // TODO: Implement this once we have write support.
-    return Error::from_errno(EROFS);
+    // FIXME: Implement this properly
+    TRY(remove_child(name));
+    TRY(add_child(inode, name, inode.mode()));
+    return {};
 }
 
 ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback)
