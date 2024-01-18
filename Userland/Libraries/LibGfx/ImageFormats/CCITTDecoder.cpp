@@ -318,9 +318,19 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
     return {};
 }
 
-static ErrorOr<void> read_eol(BigEndianInputBitStream& bit_stream)
+static ErrorOr<void> read_eol(BigEndianInputBitStream& bit_stream, Group3Options::UseFillBits use_fill_bits)
 {
     constexpr u16 EOL = 0b0000'0000'0001;
+
+    if (use_fill_bits == Group3Options::UseFillBits::Yes) {
+        // TIFF specification, description of the T4Options tag:
+        // "Fill bits have been added as necessary before EOL codes such that
+        // EOL always ends on a byte boundary, thus ensuring an EOL-sequence of 1 byte
+        // preceded by a zero nibble: xxxx-0000 0000-0001."
+        auto const to_skip = (12 + bit_stream.bits_until_next_byte_boundary()) % 8;
+        TRY(bit_stream.read_bits(to_skip));
+    }
+
     auto const read = TRY(bit_stream.read_bits<u16>(12));
     if (read != EOL)
         return Error::from_string_literal("CCITTDecoder: Invalid EndOfLine code");
@@ -368,7 +378,7 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
         // NOTE: For whatever reason, the last EOL doesn't seem to be included
 
         for (u32 i = 0; i < image_height; ++i) {
-            TRY(read_eol(*bit_stream));
+            TRY(read_eol(*bit_stream, options.use_fill_bits));
             TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
         }
 
