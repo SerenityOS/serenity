@@ -371,6 +371,36 @@ u32 FATFS::end_of_chain_marker() const
     }
 }
 
+ErrorOr<u32> FATFS::allocate_cluster()
+{
+    u32 start_cluster;
+    if (m_fat_version == FATVersion::FAT32) {
+        // If we have a hint, start there.
+        if (m_fs_info.free_cluster_lookup_hint != fs_info_data_unknown) {
+            start_cluster = m_fs_info.free_cluster_lookup_hint;
+        } else {
+            // Otherwise, start at the beginning of the data area.
+            start_cluster = first_data_cluster;
+        }
+    } else {
+        // For FAT12/16, start at the beginning of the data area, as there is no
+        // FSInfo struct to store the hint.
+        start_cluster = first_data_cluster;
+    }
+
+    MutexLocker locker(m_lock);
+
+    for (u32 i = start_cluster; i < m_parameter_block->sector_count() / m_parameter_block->common_bpb()->sectors_per_cluster; i++) {
+        if (TRY(fat_read(i)) == 0) {
+            dbgln_if(FAT_DEBUG, "FATFS: Allocating cluster {}", i);
+            TRY(fat_write(i, end_of_chain_marker()));
+            return i;
+        }
+    }
+
+    return Error::from_errno(ENOSPC);
+}
+
 ErrorOr<u32> FATFS::fat_read(u32 cluster)
 {
     dbgln_if(FAT_DEBUG, "FATFS: Reading FAT entry for cluster {}", cluster);

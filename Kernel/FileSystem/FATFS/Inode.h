@@ -56,6 +56,8 @@ private:
     // already being created to determine the FAT version. It is used
     // during FATInode creation (create()).
     u32 first_cluster(FATVersion const version) const;
+    ErrorOr<void> allocate_and_add_cluster_to_chain();
+    ErrorOr<void> remove_last_cluster_from_chain();
 
     // ^Inode
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
@@ -70,7 +72,9 @@ private:
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
+    virtual ErrorOr<void> truncate(u64) override;
     virtual ErrorOr<void> flush_metadata() override;
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
 
     Vector<u32> m_cluster_list;
     FATEntry m_entry;
