@@ -1709,7 +1709,6 @@ static ErrorOr<void> cmyk_to_rgb(JPEGLoadingContext& context)
         }
     }
 
-    context.cmyk_bitmap = nullptr;
     return {};
 }
 
@@ -2026,7 +2025,7 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
         m_context->state = JPEGLoadingContext::State::BitmapDecoded;
     }
 
-    if (m_context->cmyk_bitmap)
+    if (m_context->cmyk_bitmap && !m_context->bitmap)
         TRY(cmyk_to_rgb(*m_context));
 
     return ImageFrameDescriptor { m_context->bitmap, 0 };
