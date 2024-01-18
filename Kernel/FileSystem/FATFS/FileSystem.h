@@ -82,9 +82,12 @@ private:
     static constexpr u32 fs_info_signature_2 = 0x61417272;
     static constexpr u32 fs_info_signature_3 = 0xAA550000;
 
+    static constexpr u32 fs_info_data_unknown = 0xFFFFFFFF;
+
     static constexpr u32 first_data_cluster = 2;
 
     FatBlockSpan first_block_of_cluster(u32 cluster) const;
+    ErrorOr<u32> allocate_cluster();
 
     size_t fat_offset_for_cluster(u32 cluster) const;
 
