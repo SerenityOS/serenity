@@ -54,6 +54,7 @@ void dup_out_file(int fd_to_redirect)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    Main::set_return_code_for_errors(127);
     TRY(Core::System::pledge("stdio wpath cpath rpath exec sigaction"));
 
     StringView utility;
