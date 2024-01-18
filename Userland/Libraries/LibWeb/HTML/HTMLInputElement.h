@@ -223,9 +223,11 @@ private:
     JS::GCPtr<DOM::Text> m_placeholder_text_node;
 
     JS::GCPtr<DOM::Element> m_inner_text_element;
-    JS::GCPtr<DOM::Element> m_color_well_element;
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
+
+    void update_color_well_element();
+    JS::GCPtr<DOM::Element> m_color_well_element;
 
     void update_slider_thumb_element();
     JS::GCPtr<DOM::Element> m_slider_thumb;
