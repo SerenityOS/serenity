@@ -13,8 +13,6 @@
 
 namespace Kernel::RISCV64 {
 
-struct TimerRegisters;
-
 class Timer final : public HardwareTimer<GenericInterruptHandler> {
 public:
     static NonnullLockRefPtr<Timer> initialize();
@@ -37,14 +35,11 @@ public:
     // FIXME: Share code with HPET::update_time
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
 
-    u64 microseconds_since_boot();
-
-    void set_interrupt_interval_usec(u32);
-
 private:
     Timer();
 
-    void set_compare(u64 compare);
+    static u64 current_ticks();
+    static void set_compare(u64 compare);
 
     //^ GenericInterruptHandler
     virtual bool handle_interrupt(RegisterState const&) override;
