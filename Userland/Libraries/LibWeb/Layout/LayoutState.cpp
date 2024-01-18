@@ -139,48 +139,22 @@ static CSSPixelRect measure_scrollable_overflow(Box const& box)
     return scrollable_overflow_rect;
 }
 
-void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines&> const& paintables_with_lines)
+void LayoutState::resolve_relative_positions()
 {
-    // This function resolves relative position offsets of all the boxes & fragments in the paint tree.
+    // This function resolves relative position offsets of fragments that belong to inline paintables.
     // It runs *after* the paint tree has been constructed, so it modifies paintable node & fragment offsets directly.
-
-    // Regular boxes (not line box fragments):
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
         auto& node = const_cast<NodeWithStyle&>(used_values.node());
 
-        if (!node.is_box())
+        auto* paintable = node.paintable();
+        if (!paintable)
+            continue;
+        if (!is<Painting::InlinePaintable>(*paintable))
             continue;
 
-        auto& paintable = static_cast<Painting::PaintableBox&>(*node.paintable());
-        CSSPixelPoint offset;
-
-        if (used_values.containing_line_box_fragment.has_value()) {
-            // Atomic inline case:
-            // We know that `node` is an atomic inline because `containing_line_box_fragments` refers to the
-            // line box fragment in the parent block container that contains it.
-            auto const& containing_line_box_fragment = used_values.containing_line_box_fragment.value();
-            auto const& containing_block = *node.containing_block();
-            auto const& containing_block_used_values = get(containing_block);
-            auto const& fragment = containing_block_used_values.line_boxes[containing_line_box_fragment.line_box_index].fragments()[containing_line_box_fragment.fragment_index];
-
-            // The fragment has the final offset for the atomic inline, so we just need to copy it from there.
-            offset = fragment.offset();
-        } else {
-            // Not an atomic inline, much simpler case.
-            offset = used_values.offset;
-        }
-        // Apply relative position inset if appropriate.
-        if (node.computed_values().position() == CSS::Positioning::Relative && is<NodeWithStyleAndBoxModelMetrics>(node)) {
-            auto& inset = static_cast<NodeWithStyleAndBoxModelMetrics const&>(node).box_model().inset;
-            offset.translate_by(inset.left, inset.top);
-        }
-        paintable.set_offset(offset);
-    }
-
-    // Line box fragments:
-    for (auto const& paintable_with_lines : paintables_with_lines) {
-        for (auto& fragment : paintable_with_lines.fragments()) {
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
+        for (auto& fragment : inline_paintable.fragments()) {
             auto const& fragment_node = fragment.layout_node();
             if (!is<Layout::NodeWithStyleAndBoxModelMetrics>(*fragment_node.parent()))
                 continue;
@@ -489,7 +463,41 @@ void LayoutState::commit(Box& root)
         }
     }
 
-    resolve_relative_positions(paintables_with_lines);
+    // Resolve relative positions for regular boxes (not line box fragments):
+    // NOTE: This needs to occur before fragments are transferred into the corresponding inline paintables, because
+    //       after this transfer, the containing_line_box_fragment will no longer be valid.
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        auto& node = const_cast<NodeWithStyle&>(used_values.node());
+
+        if (!node.is_box())
+            continue;
+
+        auto& paintable = static_cast<Painting::PaintableBox&>(*node.paintable());
+        CSSPixelPoint offset;
+
+        if (used_values.containing_line_box_fragment.has_value()) {
+            // Atomic inline case:
+            // We know that `node` is an atomic inline because `containing_line_box_fragments` refers to the
+            // line box fragment in the parent block container that contains it.
+            auto const& containing_line_box_fragment = used_values.containing_line_box_fragment.value();
+            auto const& containing_block = *node.containing_block();
+            auto const& containing_block_used_values = get(containing_block);
+            auto const& fragment = containing_block_used_values.line_boxes[containing_line_box_fragment.line_box_index].fragments()[containing_line_box_fragment.fragment_index];
+
+            // The fragment has the final offset for the atomic inline, so we just need to copy it from there.
+            offset = fragment.offset();
+        } else {
+            // Not an atomic inline, much simpler case.
+            offset = used_values.offset;
+        }
+        // Apply relative position inset if appropriate.
+        if (node.computed_values().position() == CSS::Positioning::Relative && is<NodeWithStyleAndBoxModelMetrics>(node)) {
+            auto const& inset = static_cast<NodeWithStyleAndBoxModelMetrics const&>(node).box_model().inset;
+            offset.translate_by(inset.left, inset.top);
+        }
+        paintable.set_offset(offset);
+    }
 
     // Make a pass over all the line boxes to:
     // - Collect all text nodes, so we can create paintables for them later.
@@ -521,6 +529,8 @@ void LayoutState::commit(Box& root)
         text_node->set_paintable(text_node->create_paintable());
 
     build_paint_tree(root);
+
+    resolve_relative_positions();
 
     // Measure overflow in scroll containers.
     for (auto& it : used_values_per_layout_node) {
