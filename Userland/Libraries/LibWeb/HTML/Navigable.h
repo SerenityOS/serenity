@@ -227,5 +227,6 @@ HashTable<Navigable*>& all_navigables();
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
 void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
 void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, Optional<SerializationRecord> = {}, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
+UserNavigationInvolvement user_navigation_involvement(DOM::Event const&);
 
 }
