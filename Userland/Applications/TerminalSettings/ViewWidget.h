@@ -13,16 +13,18 @@
 #include <LibGUI/TextEditor.h>
 #include <LibVT/TerminalWidget.h>
 
-class TerminalSettingsViewWidget final : public GUI::SettingsWindow::Tab {
+namespace TerminalSettings {
+class ViewWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(TerminalSettingsViewWidget)
 public:
-    static ErrorOr<NonnullRefPtr<TerminalSettingsViewWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<ViewWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<ViewWidget>> create();
 
     virtual void apply_settings() override;
     virtual void cancel_settings() override;
 
 private:
-    TerminalSettingsViewWidget() = default;
+    ViewWidget() = default;
     ErrorOr<void> setup();
     void write_back_settings() const;
 
@@ -42,3 +44,4 @@ private:
     size_t m_original_max_history_size;
     bool m_original_show_scrollbar { true };
 };
+}
