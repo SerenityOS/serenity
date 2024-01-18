@@ -621,6 +621,7 @@ set(SOURCES
     WebDriver/Screenshot.cpp
     WebDriver/TimeoutsConfiguration.cpp
     WebGL/EventNames.cpp
+    WebGL/OpenGLContext.cpp
     WebGL/WebGLContextAttributes.cpp
     WebGL/WebGLContextEvent.cpp
     WebGL/WebGLRenderingContext.cpp
@@ -679,12 +680,18 @@ set(GENERATED_SOURCES
 serenity_lib(LibWeb web)
 
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
-target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL)
+target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
 
 if (HAS_ACCELERATED_GRAPHICS)
+    target_link_libraries(LibWeb PRIVATE ${ACCEL_GFX_LIBS})
     target_sources(LibWeb PRIVATE Painting/PaintingCommandExecutorGPU.cpp)
     target_link_libraries(LibWeb PRIVATE LibAccelGfx)
+    target_compile_definitions(LibWeb PRIVATE HAS_ACCELERATED_GRAPHICS)
+endif()
+
+if (SERENITYOS)
+    target_link_libraries(LibWeb PRIVATE LibGL)
 endif()
 
 generate_js_bindings(LibWeb)

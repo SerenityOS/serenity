@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Vector2.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 
 namespace Web::HTML {

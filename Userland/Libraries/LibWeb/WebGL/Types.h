@@ -6,4 +6,11 @@
 
 #pragma once
 
-// FIXME: This header is here just to satisfy the IDL code generator.
+typedef unsigned int GLenum;
+typedef unsigned char GLboolean;
+typedef int GLint;
+typedef int GLsizei;
+typedef float GLfloat;
+typedef double GLdouble;
+typedef GLfloat GLclampf;
+typedef unsigned int GLbitfield;
