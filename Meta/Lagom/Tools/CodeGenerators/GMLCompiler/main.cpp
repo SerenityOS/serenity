@@ -174,6 +174,7 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
     static HashMap<StringView, StringView> enum_properties = {
         { "text_alignment"sv, "Gfx::TextAlignment"sv },
         { "focus_policy"sv, "GUI::FocusPolicy"sv },
+        { "background_role"sv, "Gfx::ColorRole"sv },
         { "foreground_role"sv, "Gfx::ColorRole"sv },
         { "frame_style"sv, "Gfx::FrameStyle"sv },
         { "text_wrapping"sv, "Gfx::TextWrapping"sv },
