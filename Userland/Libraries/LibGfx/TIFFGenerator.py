@@ -73,6 +73,11 @@ class PhotometricInterpretation(EnumWithExportName):
     CIELab = 8
 
 
+class FillOrder(EnumWithExportName):
+    LeftToRight = 1
+    RightToLeft = 2
+
+
 class Orientation(EnumWithExportName):
     Default = 1
     FlipHorizontally = 2
@@ -124,6 +129,7 @@ known_tags: List[Tag] = [
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression, is_required=True),
     Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation",
         PhotometricInterpretation, is_required=True),
+    Tag('266', [TIFFType.UnsignedShort], [1], FillOrder.LeftToRight, "FillOrder", FillOrder),
     Tag('271', [TIFFType.ASCII], [], None, "Make"),
     Tag('272', [TIFFType.ASCII], [], None, "Model"),
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets", is_required=True),
