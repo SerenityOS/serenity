@@ -121,7 +121,7 @@ PYGAME_TO_SCAN_CODE_MAP = {
 
 
 pygame.init()
-screen = pygame.display.set_mode((320, 240))
+screen = pygame.display.set_mode((1920, 1080))
 pygame.display.set_caption("Hack Mouse")
 
 clock = pygame.time.Clock()
@@ -165,8 +165,8 @@ while running:
                 else:
                     scan_codes.append(0x80 | scan_code)
             case pygame.MOUSEMOTION if mouse_grabbed:
-                relative_mouse_movement[0] += event.rel[0]
-                relative_mouse_movement[1] += -event.rel[1]
+                relative_mouse_movement[0] += -event.rel[0]
+                relative_mouse_movement[1] += event.rel[1]
             case pygame.MOUSEBUTTONDOWN if not mouse_grabbed and event.button == pygame.BUTTON_LEFT:
                 mouse_grabbed = True
                 pygame.mouse.set_visible(False)
