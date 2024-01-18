@@ -1067,7 +1067,7 @@ bool Navigation::inner_navigate_event_firing_algorithm(
 
     // 31. Prepare to run script given navigation's relevant settings object.
     // NOTE: There's a massive spec note here
-    TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
+    TemporaryExecutionContext execution_context { relevant_settings_object(*this), TemporaryExecutionContext::CallbacksEnabled::Yes };
 
     // 32. If event's interception state is not "none":
     if (event->interception_state() != NavigateEvent::InterceptionState::None) {
