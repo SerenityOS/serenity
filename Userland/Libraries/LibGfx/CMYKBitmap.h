@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>
 
 namespace Gfx {
@@ -32,6 +33,8 @@ public:
     [[nodiscard]] CMYK* begin();
     [[nodiscard]] CMYK* end();
 
+    ErrorOr<RefPtr<Bitmap>> to_low_quality_rgb() const;
+
 private:
     CMYKBitmap(IntSize const& size, ByteBuffer data)
         : m_size(size)
@@ -41,6 +44,8 @@ private:
 
     IntSize m_size;
     ByteBuffer m_data;
+
+    mutable RefPtr<Bitmap> m_rgb_bitmap;
 };
 
 inline CMYK* CMYKBitmap::scanline(int y)
