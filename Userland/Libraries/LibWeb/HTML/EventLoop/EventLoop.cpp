@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/EventLoop.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
@@ -53,29 +54,38 @@ EventLoop& main_thread_event_loop()
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
 void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
 {
-    // FIXME: 1. Let task be the event loop's currently running task.
-
-    // FIXME: 2. Let task source be task's source.
+    // FIXME: The spec wants us to do the rest of the enclosing algorithm (i.e. the caller)
+    //    in the context of the currently running task on entry. That's not possible with this implementation.
+    // 1. Let task be the event loop's currently running task.
+    // 2. Let task source be task's source.
 
     // 3. Let old stack be a copy of the JavaScript execution context stack.
     // 4. Empty the JavaScript execution context stack.
-    auto& vm = Bindings::main_thread_vm();
-    vm.save_execution_context_stack();
+    m_vm->save_execution_context_stack();
+    m_vm->clear_execution_context_stack();
 
     // 5. Perform a microtask checkpoint.
     perform_a_microtask_checkpoint();
 
     // 6. In parallel:
-    // NOTE: We do these in reverse order here, but it shouldn't matter.
-
+    //    1. Wait until the condition goal is met.
     //    2. Queue a task on task source to:
     //       1. Replace the JavaScript execution context stack with old stack.
-    vm.restore_execution_context_stack();
     //       2. Perform any steps that appear after this spin the event loop instance in the original algorithm.
     //       NOTE: This is achieved by returning from the function.
 
-    //    1. Wait until the condition goal is met.
-    Platform::EventLoopPlugin::the().spin_until(move(goal_condition));
+    Platform::EventLoopPlugin::the().spin_until([&] {
+        if (goal_condition())
+            return true;
+        if (m_task_queue.has_runnable_tasks()) {
+            schedule();
+            // FIXME: Remove the platform event loop plugin so that this doesn't look out of place
+            Core::EventLoop::current().wake();
+        }
+        return goal_condition();
+    });
+
+    m_vm->restore_execution_context_stack();
 
     // 7. Stop task, allowing whatever algorithm that invoked it to resume.
     // NOTE: This is achieved by returning from the function.
