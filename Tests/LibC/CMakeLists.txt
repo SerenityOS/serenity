@@ -42,7 +42,10 @@ set(TEST_SOURCES
 set_source_files_properties(TestMath.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin")
 set_source_files_properties(TestStrtodAccuracy.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-strtod")
 # Don't assume default rounding behavior is used for testing rounding behavior modifications.
-set_source_files_properties(TestFenv.cpp PROPERTIES COMPILE_FLAGS "-frounding-math")
+# Clang doesn't seem support this on RISC-V, though (see comment on opaque_add() ).
+if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND "${SERENITY_ARCH}" STREQUAL "riscv64"))
+    set_source_files_properties(TestFenv.cpp PROPERTIES COMPILE_FLAGS "-frounding-math")
+endif()
 
 foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibC)

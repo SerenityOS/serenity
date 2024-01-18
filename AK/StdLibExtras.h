@@ -179,7 +179,7 @@ requires(IsIntegral<T>)
 }
 
 template<typename T>
-ALWAYS_INLINE constexpr void taint_for_optimizer(T& value)
+ALWAYS_INLINE constexpr T taint_for_optimizer(T value)
 requires(!IsIntegral<T>)
 {
     if (!is_constant_evaluated()) {
@@ -188,6 +188,7 @@ requires(!IsIntegral<T>)
                      : "m"(value)
                      : "memory");
     }
+    return value;
 }
 
 // These can't be exported into the global namespace as they would clash with the C standard library.

@@ -13,55 +13,64 @@
 // However, it is enough to distinguish the different rounding errors we test for.
 static constexpr double acceptable_float_error = 0.000001;
 
+// // Add two constants without the compiler constant-folding the calculation, so that the addition is affected by float rounding mode.
+// // The same functionality is achieved through -frounding-math, but Clang doesn't support that on RISC-V
+// // FIXME: Remove this workaround once Clang supports it on RISC-V.
+// static ALWAYS_INLINE float opaque_add(double a, double b) {
+//     volatile auto opaque_a = a;
+//     volatile auto opaque_b = b;
+//     return opaque_a + opaque_b;
+// }
+
 TEST_CASE(float_round_up)
 {
     fesetround(FE_UPWARD);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.2f, 0.3f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.3f, 0.4f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.4f, 0.5f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.099999f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(1.f + 0.1f, 1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.2f), 0.3f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.3f), 0.4f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.4f), 0.5f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.099999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(1.f) + AK::taint_for_optimizer(0.1f), 1.1f, acceptable_float_error);
 }
 
 TEST_CASE(float_round_down)
 {
     fesetround(FE_DOWNWARD);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.2f, 0.299999f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.3f, 0.4f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.4f, 0.5f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.1f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(1.f + 0.1f, 1.099999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.2f), 0.299999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.3f), 0.4f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.4f), 0.5f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(1.f) + AK::taint_for_optimizer(0.1f), 1.099999f, acceptable_float_error);
 }
 
 TEST_CASE(float_round_to_zero)
 {
     fesetround(FE_TOWARDZERO);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.2f, 0.299999f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.3f, 0.4f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.4f, 0.5f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.099999f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(1.f + 0.1f, 1.099999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.2f), 0.299999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.3f), 0.4f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.4f), 0.5f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.099999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(1.f) + AK::taint_for_optimizer(0.1f), 1.099999f, acceptable_float_error);
 }
 
 TEST_CASE(float_round_to_nearest)
 {
     fesetround(FE_TONEAREST);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.2f, 0.3, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.3f, 0.4, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.4f, 0.5, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.1f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(1.f + 0.1f, 1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.2f), 0.3, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.3f), 0.4, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.4f), 0.5, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(1.f) + AK::taint_for_optimizer(0.1f), 1.1f, acceptable_float_error);
 }
 
 // FIXME: Figure out some tests to distinguish nearest from max-magnitude on supported platforms.
 TEST_CASE(float_round_to_max_magnitude)
 {
     fesetround(FE_TOMAXMAGNITUDE);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.2f, 0.3f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.3f, 0.4f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(0.1f + 0.4f, 0.5f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.1f, acceptable_float_error);
-    EXPECT_APPROXIMATE_WITH_ERROR(1.f + 0.1f, 1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.2f), 0.3f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.3f), 0.4f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(0.1f) + AK::taint_for_optimizer(0.4f), 0.5f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(1.f) + AK::taint_for_optimizer(0.1f), 1.1f, acceptable_float_error);
 }
 
 TEST_CASE(store_round_in_env)
@@ -71,10 +80,10 @@ TEST_CASE(store_round_in_env)
     fegetenv(&env);
     fesetround(FE_UPWARD);
     // This result only happens under upward rounding.
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.099999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.099999f, acceptable_float_error);
     fesetenv(&env);
     // ... and this only under downward rounding.
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.1f, acceptable_float_error);
 }
 
 TEST_CASE(save_restore_round)
@@ -85,9 +94,9 @@ TEST_CASE(save_restore_round)
 
     fesetround(FE_UPWARD);
     EXPECT_EQ(fegetround(), FE_UPWARD);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.099999f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.099999f, acceptable_float_error);
     fesetround(rounding_mode);
-    EXPECT_APPROXIMATE_WITH_ERROR(-1.f + -0.1f, -1.1f, acceptable_float_error);
+    EXPECT_APPROXIMATE_WITH_ERROR(AK::taint_for_optimizer(-1.f) + AK::taint_for_optimizer(-0.1f), -1.1f, acceptable_float_error);
 
 #if ARCH(X86_64)
     // Max-magnitude rounding is not supported by x86, so we expect fesetround to decay it to some other rounding mode.
