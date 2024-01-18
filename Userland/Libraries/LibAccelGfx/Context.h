@@ -25,6 +25,12 @@ public:
     Context()
     {
     }
+
+    virtual ~Context()
+    {
+    }
+
+    virtual void activate() = 0;
 };
 
 }

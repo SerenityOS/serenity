@@ -17,7 +17,51 @@
 namespace AccelGfx {
 
 #ifdef AK_OS_MACOS
-static void make_context_cgl()
+class CGLContextWrapper : public Context {
+public:
+    CGLContextWrapper(CGLContextObj context)
+        : m_context(context)
+    {
+    }
+
+    virtual void activate() override
+    {
+        CGLSetCurrentContext(m_context);
+    }
+
+    ~CGLContextWrapper()
+    {
+        CGLReleaseContext(m_context);
+    }
+
+private:
+    CGLContextObj m_context;
+};
+#elif !defined(AK_OS_SERENITY)
+class EGLContextWrapper : public Context {
+public:
+    EGLContextWrapper(EGLContext context)
+        : m_context(context)
+    {
+    }
+
+    ~EGLContextWrapper()
+    {
+        eglDestroyContext(eglGetCurrentDisplay(), m_context);
+    }
+
+    virtual void activate() override
+    {
+        eglMakeCurrent(eglGetCurrentDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, m_context);
+    }
+
+private:
+    EGLContext m_context;
+};
+#endif
+
+#ifdef AK_OS_MACOS
+static NonnullOwnPtr<CGLContextWrapper> make_context_cgl()
 {
     CGLContextObj context = NULL;
     CGLPixelFormatAttribute attributes[4] = {
@@ -45,9 +89,11 @@ static void make_context_cgl()
     }
 
     VERIFY(glGetError() == GL_NO_ERROR);
+
+    return make<CGLContextWrapper>(context);
 }
-#else
-static void make_context_egl()
+#elif !defined(AK_OS_SERENITY)
+static NonnullOwnPtr<EGLContextWrapper> make_context_egl()
 {
     EGLDisplay egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
@@ -91,18 +137,18 @@ static void make_context_egl()
         dbgln("eglMakeCurrent failed");
         VERIFY_NOT_REACHED();
     }
+
+    return make<EGLContextWrapper>(egl_context);
 }
 #endif
 
 OwnPtr<Context> Context::create()
 {
 #ifdef AK_OS_MACOS
-    make_context_cgl();
+    return make_context_cgl();
 #else
-    make_context_egl();
+    return make_context_egl();
 #endif
-
-    return make<Context>();
 }
 
 }
