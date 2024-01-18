@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "TerminalSettingsWidget.h"
+#include "MainWidget.h"
+#include "ViewWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
