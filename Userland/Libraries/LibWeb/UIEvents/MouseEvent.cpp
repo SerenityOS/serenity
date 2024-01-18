@@ -83,7 +83,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platfo
     }
     event_init.button = determine_button(button);
     event_init.buttons = buttons;
-    return MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double(), modifiers);
+    auto event = MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double(), modifiers);
+    event->set_is_trusted(true);
+    return event;
 }
 
 void MouseEvent::set_event_characteristics()

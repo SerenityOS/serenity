@@ -169,7 +169,7 @@ private:
     bool m_initialized { false };
     bool m_dispatch { false };
 
-    bool m_is_trusted { true };
+    bool m_is_trusted { false };
 
     Path m_path;
     TouchTargetList m_touch_target_list;
