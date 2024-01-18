@@ -43,8 +43,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domains({ "SoundPlayer", "FileManager" });
     app->set_config_domain("SoundPlayer"_string);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread proc"));
-
     auto app_icon = GUI::Icon::default_icon("app-sound-player"sv);
 
     auto window = GUI::Window::construct();
