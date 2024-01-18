@@ -364,8 +364,6 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
         loop.quit(0);
     }));
 
-    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path))));
-
     RefPtr<Gfx::Bitmap> actual_screenshot, expectation_screenshot;
     view.on_load_finish = [&](auto const&) {
         if (actual_screenshot) {
@@ -376,6 +374,11 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
             view.debug_request("load-reference-page");
         }
     };
+    view.on_text_test_finish = [&] {
+        dbgln("Unexpected text test finished during ref test for {}", input_path);
+    };
+
+    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path))));
 
     timeout_timer->start();
     loop.exec();
