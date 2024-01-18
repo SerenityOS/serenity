@@ -8,7 +8,6 @@
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <Applications/TerminalSettings/TerminalSettingsViewGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Application.h>
@@ -28,17 +27,16 @@
 #include <LibVT/TerminalWidget.h>
 #include <spawn.h>
 
-ErrorOr<NonnullRefPtr<TerminalSettingsViewWidget>> TerminalSettingsViewWidget::try_create()
+namespace TerminalSettings {
+ErrorOr<NonnullRefPtr<ViewWidget>> ViewWidget::create()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TerminalSettingsViewWidget()));
+    auto widget = TRY(ViewWidget::try_create());
     TRY(widget->setup());
     return widget;
 }
 
-ErrorOr<void> TerminalSettingsViewWidget::setup()
+ErrorOr<void> ViewWidget::setup()
 {
-    TRY(load_from_gml(terminal_settings_view_gml));
-
     auto& slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
     m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv);
     m_original_opacity = m_opacity;
@@ -166,7 +164,7 @@ ErrorOr<void> TerminalSettingsViewWidget::setup()
     return {};
 }
 
-void TerminalSettingsViewWidget::apply_settings()
+void ViewWidget::apply_settings()
 {
     m_original_opacity = m_opacity;
     m_original_font = m_font;
@@ -177,7 +175,7 @@ void TerminalSettingsViewWidget::apply_settings()
     write_back_settings();
 }
 
-void TerminalSettingsViewWidget::write_back_settings() const
+void ViewWidget::write_back_settings() const
 {
     Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_original_opacity));
     Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_original_font->qualified_name());
@@ -187,7 +185,8 @@ void TerminalSettingsViewWidget::write_back_settings() const
     Config::write_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, m_original_show_scrollbar);
 }
 
-void TerminalSettingsViewWidget::cancel_settings()
+void ViewWidget::cancel_settings()
 {
     write_back_settings();
+}
 }

@@ -13,16 +13,18 @@
 #include <LibGUI/TextEditor.h>
 #include <LibVT/TerminalWidget.h>
 
-class TerminalSettingsMainWidget final : public GUI::SettingsWindow::Tab {
+namespace TerminalSettings {
+class MainWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(TerminalSettingsMainWidget)
 public:
-    static ErrorOr<NonnullRefPtr<TerminalSettingsMainWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<MainWidget>> create();
 
     virtual void apply_settings() override;
     virtual void cancel_settings() override;
 
 private:
-    TerminalSettingsMainWidget() = default;
+    static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
+    MainWidget() = default;
     ErrorOr<void> setup();
     void write_back_settings() const;
 
@@ -35,3 +37,4 @@ private:
     VT::TerminalWidget::BellMode m_original_bell_mode;
     bool m_orignal_confirm_close { true };
 };
+}
