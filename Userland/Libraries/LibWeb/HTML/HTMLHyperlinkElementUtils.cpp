@@ -470,7 +470,7 @@ bool HTMLHyperlinkElementUtils::cannot_navigate() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#following-hyperlinks-2
-void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_suffix)
+void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_suffix, UserNavigationInvolvement user_involvement)
 {
     // 1. If subject cannot navigate, then return.
     if (cannot_navigate())
@@ -496,18 +496,17 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     if (!target_navigable)
         return;
 
-    // 8. Parse a URL given subject's href attribute, relative to subject's node document.
+    // 8. Let urlString be the result of encoding-parsing-and-serializing a URL given subject's href attribute value,
+    //    relative to subject's node document.
     auto url = hyperlink_element_utils_document().parse_url(href());
 
-    // 9. If that is successful, let url be the resulting URL string.
-    //    Otherwise, if parsing the URL failed, then return.
+    // 9. If urlString is failure, then return.
     if (!url.is_valid())
         return;
 
-    // 10. If that is successful, let URL be the resulting URL string.
     auto url_string = url.to_byte_string();
 
-    // 12. If hyperlinkSuffix is non-null, then append it to URL.
+    // 10. If hyperlinkSuffix is non-null, then append it to urlString.
     if (hyperlink_suffix.has_value()) {
         StringBuilder url_builder;
         url_builder.append(url_string);
@@ -516,10 +515,12 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
         url_string = url_builder.to_byte_string();
     }
 
+    // FIXME: 11. Let referrerPolicy be the current state of subject's referrerpolicy content attribute.
     // FIXME: 12. If subject's link types includes the noreferrer keyword, then set referrerPolicy to "no-referrer".
+    auto const referrer_policy = ReferrerPolicy::ReferrerPolicy::EmptyString;
 
-    // 13. Navigate targetNavigable to url using subject's node document, with referrerPolicy set to referrerPolicy.
-    MUST(target_navigable->navigate({ .url = url, .source_document = hyperlink_element_utils_document() }));
+    // 13. Navigate targetNavigable to urlString using subject's node document, with referrerPolicy set to referrerPolicy and userInvolvement set to userInvolvement.
+    MUST(target_navigable->navigate({ .url = url, .source_document = hyperlink_element_utils_document(), .referrer_policy = referrer_policy, .user_involvement = user_involvement }));
 }
 
 }
