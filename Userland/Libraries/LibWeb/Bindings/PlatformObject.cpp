@@ -217,7 +217,7 @@ WebIDL::ExceptionOr<void> PlatformObject::invoke_named_property_setter(String co
 // https://webidl.spec.whatwg.org/#legacy-platform-object-getownproperty
 JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> PlatformObject::internal_get_own_property(JS::PropertyKey const& property_name) const
 {
-    if (m_legacy_platform_object_flags.has_value()) {
+    if (m_legacy_platform_object_flags.has_value() && !m_legacy_platform_object_flags->has_global_interface_extended_attribute) {
         // 1. Return ? PlatformObjectGetOwnProperty(O, P, false).
         return TRY(legacy_platform_object_get_own_property(property_name, IgnoreNamedProps::No));
     } else {
@@ -228,7 +228,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> PlatformObject::internal
 // https://webidl.spec.whatwg.org/#legacy-platform-object-set
 JS::ThrowCompletionOr<bool> PlatformObject::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver, JS::CacheablePropertyMetadata* metadata)
 {
-    if (!m_legacy_platform_object_flags.has_value())
+    if (!m_legacy_platform_object_flags.has_value() || m_legacy_platform_object_flags->has_global_interface_extended_attribute)
         return Base::internal_set(property_name, value, receiver, metadata);
 
     auto& vm = this->vm();
@@ -266,7 +266,7 @@ JS::ThrowCompletionOr<bool> PlatformObject::internal_set(JS::PropertyKey const& 
 // https://webidl.spec.whatwg.org/#legacy-platform-object-defineownproperty
 JS::ThrowCompletionOr<bool> PlatformObject::internal_define_own_property(JS::PropertyKey const& property_name, JS::PropertyDescriptor const& property_descriptor)
 {
-    if (!m_legacy_platform_object_flags.has_value())
+    if (!m_legacy_platform_object_flags.has_value() || m_legacy_platform_object_flags->has_global_interface_extended_attribute)
         return Base::internal_define_own_property(property_name, property_descriptor);
 
     auto& vm = this->vm();
@@ -335,7 +335,7 @@ JS::ThrowCompletionOr<bool> PlatformObject::internal_define_own_property(JS::Pro
 // https://webidl.spec.whatwg.org/#legacy-platform-object-delete
 JS::ThrowCompletionOr<bool> PlatformObject::internal_delete(JS::PropertyKey const& property_name)
 {
-    if (!m_legacy_platform_object_flags.has_value())
+    if (!m_legacy_platform_object_flags.has_value() || m_legacy_platform_object_flags->has_global_interface_extended_attribute)
         return Base::internal_delete(property_name);
 
     auto& vm = this->vm();
@@ -403,7 +403,7 @@ JS::ThrowCompletionOr<bool> PlatformObject::internal_delete(JS::PropertyKey cons
 // https://webidl.spec.whatwg.org/#legacy-platform-object-preventextensions
 JS::ThrowCompletionOr<bool> PlatformObject::internal_prevent_extensions()
 {
-    if (!m_legacy_platform_object_flags.has_value())
+    if (!m_legacy_platform_object_flags.has_value() || m_legacy_platform_object_flags->has_global_interface_extended_attribute)
         return Base::internal_prevent_extensions();
 
     // 1. Return false.
