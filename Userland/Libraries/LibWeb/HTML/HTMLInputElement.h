@@ -210,7 +210,7 @@ private:
     void create_text_input_shadow_tree();
     void create_color_input_shadow_tree();
     void create_range_input_shadow_tree();
-    WebIDL::ExceptionOr<void> run_input_activation_behavior();
+    WebIDL::ExceptionOr<void> run_input_activation_behavior(DOM::Event const&);
     void set_checked_within_group();
 
     void handle_readonly_attribute(Optional<String> const& value);
