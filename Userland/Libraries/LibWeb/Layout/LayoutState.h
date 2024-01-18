@@ -188,7 +188,7 @@ struct LayoutState {
     LayoutState const& m_root;
 
 private:
-    void resolve_relative_positions(Vector<Painting::PaintableWithLines&> const&);
+    void resolve_relative_positions();
     void resolve_border_radii();
     void resolve_box_shadow_data();
     void resolve_text_shadows(Vector<Painting::PaintableWithLines&> const& paintables_with_lines);
