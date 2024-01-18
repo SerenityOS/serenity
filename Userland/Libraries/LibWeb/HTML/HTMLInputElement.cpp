@@ -371,6 +371,19 @@ String HTMLInputElement::value() const
         return get_attribute(AttributeNames::value).value_or(String {});
     }
 
+    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):attr-input-value
+    if (type_state() == TypeAttributeState::Range) {
+        // https://html.spec.whatwg.org/multipage/input.html#concept-input-value-default-range
+        double minimum = *min();
+        double maximum = *max();
+        double default_value = minimum + (maximum - minimum) / 2;
+        if (maximum < minimum)
+            default_value = minimum;
+
+        if (!parse_floating_point_number(m_value).has_value())
+            return MUST(String::number(default_value));
+    }
+
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
     // Return the current value of the element.
     return m_value;
