@@ -320,7 +320,7 @@ void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
         m_dirty_value = true;
 
         if (m_color_well_element)
-            MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+            update_color_well_element();
 
         // the user agent must queue an element task on the user interaction task source
         queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
@@ -407,12 +407,20 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     // 5. If the element's value (after applying the value sanitization algorithm) is different from oldValue,
     //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
     //    text control, unselecting any selected text and resetting the selection direction to "none".
-    if (m_text_node && (m_value != old_value)) {
+    if (m_value != old_value) {
+        if (m_text_node) {
         m_text_node->set_data(m_value);
         update_placeholder_visibility();
 
         if (auto* browsing_context = document().browsing_context())
             browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
+        }
+
+        if (type_state() == TypeAttributeState::Color && m_color_well_element)
+            update_color_well_element();
+
+        if (type_state() == TypeAttributeState::Range && m_slider_thumb)
+            update_slider_thumb_element();
     }
 
     return {};
@@ -680,6 +688,11 @@ void HTMLInputElement::create_color_input_shadow_tree()
     set_shadow_root(shadow_root);
 }
 
+void HTMLInputElement::update_color_well_element()
+{
+    MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+}
+
 void HTMLInputElement::create_range_input_shadow_tree()
 {
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
@@ -745,28 +758,19 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String>
     } else if (name == HTML::AttributeNames::type) {
         m_type = parse_type_attribute(value.value_or(String {}));
     } else if (name == HTML::AttributeNames::value) {
-        if (!value.has_value()) {
             if (!m_dirty_value) {
+            if (!value.has_value()) {
                 m_value = String {};
-                update_placeholder_visibility();
-
-                if (type_state() == TypeAttributeState::Color && m_color_well_element)
-                    MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
-
-                if (type_state() == TypeAttributeState::Range && m_slider_thumb)
-                    update_slider_thumb_element();
-            }
         } else {
-            if (!m_dirty_value) {
                 m_value = value_sanitization_algorithm(*value);
+            }
                 update_placeholder_visibility();
 
                 if (type_state() == TypeAttributeState::Color && m_color_well_element)
-                    MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+                update_color_well_element();
 
                 if (type_state() == TypeAttributeState::Range && m_slider_thumb)
                     update_slider_thumb_element();
-            }
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
@@ -935,7 +939,10 @@ void HTMLInputElement::reset_algorithm()
     }
 
     if (type_state() == TypeAttributeState::Color && m_color_well_element)
-        MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+        update_color_well_element();
+
+    if (type_state() == TypeAttributeState::Range && m_slider_thumb)
+        update_slider_thumb_element();
 }
 
 void HTMLInputElement::form_associated_element_was_inserted()
