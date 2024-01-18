@@ -1719,7 +1719,7 @@ public:
         auto const height = m_channels[0].height();
 
         auto const orientation = static_cast<TIFF::Orientation>(metadata.orientation);
-        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(BitmapFormat::BGRA8888, { width, height }, orientation));
+        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(orientation, { width, height }, BitmapFormat::BGRA8888));
 
         auto const alpha_channel = metadata.alpha_channel();
 

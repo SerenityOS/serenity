@@ -243,7 +243,7 @@ private:
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
         auto const rows_per_strip = m_metadata.rows_per_strip().value_or(*m_metadata.image_height());
 
-        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(BitmapFormat::BGRA8888, { *metadata().image_width(), *metadata().image_height() }, *metadata().orientation()));
+        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_height() }, BitmapFormat::BGRA8888));
 
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
