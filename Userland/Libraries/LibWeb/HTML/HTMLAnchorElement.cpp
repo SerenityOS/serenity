@@ -49,9 +49,10 @@ bool HTMLAnchorElement::has_activation_behavior() const
     return true;
 }
 
-void HTMLAnchorElement::activation_behavior(Web::DOM::Event const&)
+// https://html.spec.whatwg.org/multipage/links.html#links-created-by-a-and-area-elements
+void HTMLAnchorElement::activation_behavior(Web::DOM::Event const& event)
 {
-    // The activation behavior of an a element element given an event event is:
+    // The activation behavior of an a or area element element given an event event is:
 
     // 1. If element has no href attribute, then return.
     if (href().is_empty())
@@ -60,8 +61,8 @@ void HTMLAnchorElement::activation_behavior(Web::DOM::Event const&)
     // 2. Let hyperlinkSuffix be null.
     Optional<String> hyperlink_suffix {};
 
-    // FIXME: 3. If event's target is an img with an ismap attribute
-    //        specified, then:
+    // FIXME: 3. If element is an a element, and event's target is an img with an ismap attribute specified, then:
+    //
     //   3.1. Let x and y be 0.
     //
     //   3.2. If event's isTrusted attribute is initialized to true, then
@@ -78,13 +79,18 @@ void HTMLAnchorElement::activation_behavior(Web::DOM::Event const&)
     //   U+002C (,), and the value of y expressed as a base-ten integer
     //   using ASCII digits.
 
-    // FIXME: 4. If element has a download attribute, or if the user has
-    // expressed a preference to download the hyperlink, then download the
-    // hyperlink created by element given hyperlinkSuffix.
+    // 4. Let userInvolvement be event's user navigation involvement.
+    auto user_involvement = user_navigation_involvement(event);
 
-    // 5. Otherwise, follow the hyperlink created by element given
-    // hyperlinkSuffix.
-    follow_the_hyperlink(hyperlink_suffix);
+    // FIXME: 5. If the user has expressed a preference to download the hyperlink, then set userInvolvement to "browser UI".
+    // NOTE: That is, if the user has expressed a specific preference for downloading, this no longer counts as merely "activation".
+
+    // FIXME: 6. If element has a download attribute, or if the user has expressed a preference to download the
+    //     hyperlink, then download the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and
+    //     userInvolvement set to userInvolvement.
+
+    // 7. Otherwise, follow the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and userInvolvement set to userInvolvement.
+    follow_the_hyperlink(hyperlink_suffix, user_involvement);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex

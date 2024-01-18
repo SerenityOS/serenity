@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 
 namespace Web::HTML {
@@ -61,7 +62,7 @@ protected:
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();
-    void follow_the_hyperlink(Optional<String> hyperlink_suffix);
+    void follow_the_hyperlink(Optional<String> hyperlink_suffix, UserNavigationInvolvement = UserNavigationInvolvement::None);
 
 private:
     void reinitialize_url() const;
