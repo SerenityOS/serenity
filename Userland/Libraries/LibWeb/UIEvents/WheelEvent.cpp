@@ -48,7 +48,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create_from_platfo
     event_init.delta_x = delta_x;
     event_init.delta_y = delta_y;
     event_init.delta_mode = WheelDeltaMode::DOM_DELTA_PIXEL;
-    return WheelEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double(), modifiers);
+    auto event = WheelEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double(), modifiers);
+    event->set_is_trusted(true);
+    return event;
 }
 
 void WheelEvent::set_event_characteristics()
