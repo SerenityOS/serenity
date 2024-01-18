@@ -336,6 +336,25 @@ private:
         return {};
     }
 
+    ErrorOr<ByteBuffer> read_bytes_considering_fill_order(u32 bytes_to_read) const
+    {
+        auto const reverse_byte = [](u8 b) {
+            b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+            b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+            b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+            return b;
+        };
+
+        auto const bytes = TRY(m_stream->read_in_place<u8 const>(bytes_to_read));
+        auto copy = TRY(ByteBuffer::copy(bytes));
+        if (m_metadata.fill_order() == FillOrder::RightToLeft) {
+            for (auto& byte : copy.bytes())
+                byte = reverse_byte(byte);
+        }
+
+        return copy;
+    }
+
     ErrorOr<void> decode_frame_impl()
     {
         switch (*m_metadata.compression()) {
@@ -352,7 +371,7 @@ private:
 
             ByteBuffer decoded_bytes {};
             auto decode_ccitt_rle_strip = [&](u32 num_bytes, u32 image_height) -> ErrorOr<ReadonlyBytes> {
-                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
+                auto const encoded_bytes = TRY(read_bytes_considering_fill_order(num_bytes));
                 decoded_bytes = TRY(CCITT::decode_ccitt_rle(encoded_bytes, *m_metadata.image_width(), image_height));
                 return decoded_bytes;
             };
@@ -366,7 +385,7 @@ private:
             auto const parameters = parse_t4_options(*m_metadata.t4_options());
             ByteBuffer decoded_bytes {};
             auto decode_group3_strip = [&](u32 num_bytes, u32 strip_height) -> ErrorOr<ReadonlyBytes> {
-                auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
+                auto const encoded_bytes = TRY(read_bytes_considering_fill_order(num_bytes));
                 decoded_bytes = TRY(CCITT::decode_ccitt_group3(encoded_bytes, *m_metadata.image_width(), strip_height, parameters));
                 return decoded_bytes;
             };
