@@ -229,6 +229,7 @@ public:
     ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name);
 
     void save_execution_context_stack();
+    void clear_execution_context_stack();
     void restore_execution_context_stack();
 
     // Do not call this method unless you are sure this is the only and first module to be loaded in this vm.
