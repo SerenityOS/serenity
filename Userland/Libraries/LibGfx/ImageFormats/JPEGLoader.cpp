@@ -1694,24 +1694,6 @@ static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Ve
     }
 }
 
-static ErrorOr<void> cmyk_to_rgb(JPEGLoadingContext& context)
-{
-    VERIFY(context.cmyk_bitmap);
-    VERIFY(!context.bitmap);
-
-    context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
-
-    for (int y = 0; y < context.frame.height; ++y) {
-        for (int x = 0; x < context.frame.width; ++x) {
-            auto const& cmyk = context.cmyk_bitmap->scanline(y)[x];
-            u8 k = 255 - cmyk.k;
-            context.bitmap->scanline(y)[x] = Color((255 - cmyk.c) * k / 255, (255 - cmyk.m) * k / 255, (255 - cmyk.y) * k / 255).value();
-        }
-    }
-
-    return {};
-}
-
 static void ycck_to_cmyk(Vector<Macroblock>& macroblocks)
 {
     // 7 - Conversions between colour encodings
@@ -2026,7 +2008,7 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
     }
 
     if (m_context->cmyk_bitmap && !m_context->bitmap)
-        TRY(cmyk_to_rgb(*m_context));
+        return ImageFrameDescriptor { TRY(m_context->cmyk_bitmap->to_low_quality_rgb()), 0 };
 
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
