@@ -96,7 +96,7 @@ bool Response::is_network_error() const
         return false;
     if (!header_list()->is_empty())
         return false;
-    if (!body())
+    if (body())
         return false;
     if (body_info() != BodyInfo {})
         return false;
