@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FATFS/Inode.h>
@@ -67,6 +68,70 @@ ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster
     }
 
     return cluster_list;
+}
+
+u8 FATInode::lfn_entry_checksum(FATEntry const& entry)
+{
+    u8 checksum = entry.filename[0];
+    for (size_t i = 1; i < normal_filename_length; i++)
+        checksum = (checksum << 7) + (checksum >> 1) + entry.filename[i];
+    for (size_t i = 0; i < normal_extension_length; i++)
+        checksum = (checksum << 7) + (checksum >> 1) + entry.extension[i];
+    return checksum;
+}
+
+void FATInode::create_83_filename_for(FATEntry& entry, StringView name)
+{
+    // FIXME: Implement the correct algorithm based on 3.2.4 from http://www.osdever.net/documents/LongFileName.pdf
+    for (size_t i = 0; i < min(name.length(), normal_filename_length); i++)
+        entry.filename[i] = to_ascii_uppercase(name[i]);
+}
+
+ErrorOr<Vector<FATLongFileNameEntry>> FATInode::create_lfn_entries(StringView name, u8 checksum)
+{
+    u32 lfn_entry_count = ceil_div(name.length(), characters_per_lfn_entry);
+
+    Vector<FATLongFileNameEntry> lfn_entries;
+    TRY(lfn_entries.try_ensure_capacity(lfn_entry_count));
+
+    auto characters_left = name.length();
+
+    for (u32 i = 0; i < lfn_entry_count; i++) {
+        FATLongFileNameEntry lfn_entry {};
+
+        size_t characters_in_part = min(characters_left, lfn_entry_characters_part_1_length);
+
+        for (size_t j = 0; j < characters_in_part; j++) {
+            lfn_entry.characters1[j] = name[name.length() - characters_left];
+            characters_left--;
+        }
+
+        if (characters_left > 0) {
+            characters_in_part = min(characters_left, lfn_entry_characters_part_2_length);
+
+            for (size_t j = 0; j < characters_in_part; j++) {
+                lfn_entry.characters2[j] = name[name.length() - characters_left];
+                characters_left--;
+            }
+        }
+
+        if (characters_left > 0) {
+            characters_in_part = min(characters_left, lfn_entry_characters_part_3_length);
+
+            for (size_t j = 0; j < characters_in_part; j++) {
+                lfn_entry.characters3[j] = name[name.length() - characters_left];
+                characters_left--;
+            }
+        }
+
+        lfn_entry.entry_index = (i + 1) | (i + 1 == lfn_entry_count ? last_lfn_entry_mask : 0);
+        lfn_entry.checksum = checksum;
+        lfn_entry.attributes = FATAttributes::LongFileName;
+
+        lfn_entries.unchecked_append(lfn_entry);
+    }
+
+    return lfn_entries;
 }
 
 ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::get_block_list()
@@ -298,6 +363,63 @@ ErrorOr<void> FATInode::remove_last_cluster_from_chain()
     return {};
 }
 
+ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
+{
+    // FIXME: This function ignores unused entries, we should make use of them
+    // FIXME: If we fail anywhere here, we should make sure the end entry is at the correct location
+
+    auto blocks = TRY(read_block_list());
+    auto entries = bit_cast<FATEntry*>(blocks->data());
+
+    auto const entries_per_block = fs().logical_block_size() / sizeof(FATEntry);
+
+    auto block_list = TRY(get_block_list());
+
+    Vector<FATEntryLocation> locations;
+    TRY(locations.try_ensure_capacity(count));
+
+    for (u32 current_entry_index = 0; current_entry_index < blocks->size() / sizeof(FATEntry); current_entry_index++) {
+        auto& entry = entries[current_entry_index];
+        if (entry.filename[0] == end_entry_byte) {
+            while (current_entry_index < blocks->size() / sizeof(FATEntry) && locations.size() < count) {
+                u32 chosen_block_index = current_entry_index / entries_per_block;
+                u32 chosen_entry_index = current_entry_index % entries_per_block;
+                locations.unchecked_append({ block_list[chosen_block_index], chosen_entry_index });
+                dbgln_if(FAT_DEBUG, "FATInode[{}]::allocate_entries(): allocated new entry at block {}, offset {}", identifier(), block_list[chosen_block_index], chosen_entry_index);
+                current_entry_index++;
+            }
+            if (locations.size() == count) {
+                u32 block_index = current_entry_index / entries_per_block;
+                u32 entry_index = current_entry_index % entries_per_block;
+                dbgln_if(FAT_DEBUG, "FATInode[{}]::allocate_entries(): putting new end entry at block {}, offset {}", identifier(), block_list[block_index], entry_index);
+
+                FATEntry end_entry {};
+                end_entry.filename[0] = end_entry_byte;
+                TRY(fs().write_block(block_list[block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
+                break;
+            }
+        }
+    }
+
+    if (locations.size() < count) {
+        TRY(allocate_and_add_cluster_to_chain());
+        u32 new_block_index = block_list.size() - fs().m_parameter_block->common_bpb()->sectors_per_cluster - 1;
+        u32 entry_index;
+        for (entry_index = 0; entry_index < count - locations.size(); entry_index++) {
+            locations.unchecked_append({ block_list[new_block_index], entry_index });
+            dbgln_if(FAT_DEBUG, "FATInode[{}]::allocate_entries(): allocated new entry at block {}, offset {}", identifier(), block_list[new_block_index], entry_index);
+        }
+
+        dbgln_if(FAT_DEBUG, "FATInode[{}]::allocate_entries(): putting new end entry at block {}, offset {}", identifier(), block_list[new_block_index], entry_index);
+
+        FATEntry end_entry {};
+        end_entry.filename[0] = end_entry_byte;
+        TRY(fs().write_block(block_list[new_block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
+    }
+
+    return locations;
+}
+
 ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     dbgln_if(FAT_DEBUG, "FATInode[{}]::read_bytes_locked(): Reading {} bytes at offset {}", identifier(), size, offset);
@@ -395,9 +517,37 @@ ErrorOr<size_t> FATInode::write_bytes_locked(off_t offset, size_t size, UserOrKe
     return size;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mode, dev_t, UserID, GroupID)
 {
-    return EROFS;
+    VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
+
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::create_child(): creating inode \"{}\"", identifier(), name);
+
+    FATEntry entry {};
+    create_83_filename_for(entry, name);
+
+    // TODO: We should set the hidden attribute if the file starts with a dot or read only (the same way Linux does this).
+    if (mode & S_IFDIR)
+        entry.attributes |= FATAttributes::Directory;
+
+    // FIXME: Set the dates
+
+    // FIXME: For some filenames lfn entries are not necessary
+    auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+
+    MutexLocker locker(m_inode_lock);
+
+    auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
+
+    // FIXME: If we fail here we should clean up the entries we wrote
+    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
+
+    for (u32 i = 0; i < lfn_entries.size(); i++) {
+        auto location = entries[lfn_entries.size() - i - 1];
+        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&lfn_entries[i])), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
+    }
+
+    return TRY(FATInode::create(fs(), entry, entries[lfn_entries.size()], lfn_entries));
 }
 
 ErrorOr<void> FATInode::add_child(Inode&, StringView, mode_t)

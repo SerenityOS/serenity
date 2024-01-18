@@ -44,9 +44,19 @@ private:
     static constexpr u8 normal_filename_length = 8;
     static constexpr u8 normal_extension_length = 3;
 
+    static constexpr size_t lfn_entry_characters_part_1_length = 5;
+    static constexpr size_t lfn_entry_characters_part_2_length = 6;
+    static constexpr size_t lfn_entry_characters_part_3_length = 2;
+
+    static constexpr size_t characters_per_lfn_entry = lfn_entry_characters_part_1_length + lfn_entry_characters_part_2_length + lfn_entry_characters_part_3_length;
+    static constexpr u8 last_lfn_entry_mask = 0x40;
+
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
     static ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
+    static u8 lfn_entry_checksum(FATEntry const& entry);
+    static void create_83_filename_for(FATEntry& entry, StringView name);
+    static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
 
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
@@ -58,6 +68,7 @@ private:
     u32 first_cluster(FATVersion const version) const;
     ErrorOr<void> allocate_and_add_cluster_to_chain();
     ErrorOr<void> remove_last_cluster_from_chain();
+    ErrorOr<Vector<FATEntryLocation>> allocate_entries(u32 count);
 
     // ^Inode
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
