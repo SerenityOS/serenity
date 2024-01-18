@@ -183,6 +183,7 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
         { "button_style"sv, "Gfx::ButtonStyle"sv },
         { "mode"sv, "GUI::TextEditor::Mode"sv },
         { "font_weight"sv, "Gfx::FontWeight"sv },
+        { "orientation"sv, "Gfx::Orientation"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
