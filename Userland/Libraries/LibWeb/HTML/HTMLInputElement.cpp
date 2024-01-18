@@ -252,7 +252,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
-WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
+WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior(DOM::Event const& event)
 {
     if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // 1. If the element is not connected, then return.
@@ -279,8 +279,8 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
         if (!document().is_fully_active())
             return {};
 
-        // 3. Submit the form owner from the element.
-        TRY(form->submit_form(*this));
+        // 3. Submit the element's form owner from the element with userInvolvement set to event's user navigation involvement.
+        TRY(form->submit_form(*this, { .user_involvement = user_navigation_involvement(event) }));
     } else if (type_state() == TypeAttributeState::FileUpload || type_state() == TypeAttributeState::Color) {
         show_the_picker_if_applicable(*this);
     }
@@ -1581,14 +1581,14 @@ bool HTMLInputElement::has_activation_behavior() const
     return true;
 }
 
-void HTMLInputElement::activation_behavior(DOM::Event const&)
+void HTMLInputElement::activation_behavior(DOM::Event const& event)
 {
     // The activation behavior for input elements are these steps:
 
     // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
 
     // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
-    run_input_activation_behavior().release_value_but_fixme_should_propagate_errors();
+    run_input_activation_behavior(event).release_value_but_fixme_should_propagate_errors();
 }
 
 bool HTMLInputElement::has_input_activation_behavior() const

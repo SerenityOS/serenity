@@ -63,7 +63,7 @@ void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
-WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElement> submitter, bool from_submit_binding)
+WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElement> submitter, SubmitFormOptions options)
 {
     auto& vm = this->vm();
     auto& realm = this->realm();
@@ -84,7 +84,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
         return {};
 
     // 5. If the submitted from submit() method flag is not set, then:
-    if (!from_submit_binding) {
+    if (!options.from_submit_binding) {
         // 1. If form's firing submission events is true, then return.
         if (m_firing_submission_events)
             return {};
@@ -203,13 +203,12 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
         return {};
     }
 
-    // 22. Let historyHandling be "push".
-    // NOTE: This is `Default` in the old spec.
-    auto history_handling = HistoryHandlingBehavior::Default;
+    // 22. Let historyHandling be "auto".
+    auto history_handling = Bindings::NavigationHistoryBehavior::Auto;
 
     // 23. If form document has not yet completely loaded, then set historyHandling to "replace".
     if (!form_document->is_completely_loaded())
-        history_handling = HistoryHandlingBehavior::Replace;
+        history_handling = Bindings::NavigationHistoryBehavior::Replace;
 
     // 24. Select the appropriate row in the table below based on scheme as given by the first cell of each row.
     //     Then, select the appropriate cell on that row based on method as given in the first cell of each column.
@@ -233,21 +232,21 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
 
     if (scheme.is_one_of("http"sv, "https"sv)) {
         if (method == MethodAttributeState::GET)
-            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling, options.user_involvement));
         else
-            TRY_OR_THROW_OOM(vm, submit_as_entity_body(move(parsed_action), move(entry_list), encoding_type, move(encoding), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, submit_as_entity_body(move(parsed_action), move(entry_list), encoding_type, move(encoding), *target_navigable, history_handling, options.user_involvement));
     } else if (scheme.is_one_of("ftp"sv, "javascript"sv)) {
-        get_action_url(move(parsed_action), *target_navigable, history_handling);
+        get_action_url(move(parsed_action), *target_navigable, history_handling, options.user_involvement);
     } else if (scheme == "data"sv) {
         if (method == MethodAttributeState::GET)
-            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling, options.user_involvement));
         else
-            get_action_url(move(parsed_action), *target_navigable, history_handling);
+            get_action_url(move(parsed_action), *target_navigable, history_handling, options.user_involvement);
     } else if (scheme == "mailto"sv) {
         if (method == MethodAttributeState::GET)
-            TRY_OR_THROW_OOM(vm, mail_with_headers(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, mail_with_headers(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling, options.user_involvement));
         else
-            TRY_OR_THROW_OOM(vm, mail_as_body(move(parsed_action), move(entry_list), encoding_type, move(encoding), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, mail_as_body(move(parsed_action), move(entry_list), encoding_type, move(encoding), *target_navigable, history_handling, options.user_involvement));
     } else {
         dbgln("Failed to submit form: Unknown scheme: {}", scheme);
         return {};
@@ -279,7 +278,7 @@ void HTMLFormElement::reset_form()
 
 WebIDL::ExceptionOr<void> HTMLFormElement::submit()
 {
-    return submit_form(*this, true);
+    return submit_form(*this, { .from_submit_binding = true });
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-reset
@@ -645,7 +644,7 @@ static ErrorOr<String> plain_text_encode(Vector<URL::QueryParam> const& pairs)
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-mutate-action
-ErrorOr<void> HTMLFormElement::mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling)
+ErrorOr<void> HTMLFormElement::mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling, UserNavigationInvolvement user_involvement)
 {
     // 1. Let pairs be the result of converting to a list of name-value pairs with entry list.
     auto pairs = TRY(convert_to_list_of_name_value_pairs(entry_list));
@@ -657,12 +656,12 @@ ErrorOr<void> HTMLFormElement::mutate_action_url(AK::URL parsed_action, Vector<X
     parsed_action.set_query(query);
 
     // 4. Plan to navigate to parsed action.
-    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling);
+    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling, user_involvement);
     return {};
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-body
-ErrorOr<void> HTMLFormElement::submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, [[maybe_unused]] String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling)
+ErrorOr<void> HTMLFormElement::submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, [[maybe_unused]] String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling, UserNavigationInvolvement user_involvement)
 {
     // 1. Assert: method is POST.
 
@@ -716,20 +715,20 @@ ErrorOr<void> HTMLFormElement::submit_as_entity_body(AK::URL parsed_action, Vect
     }
 
     // 3. Plan to navigate to parsed action given a POST resource whose request body is body and request content-type is mimeType.
-    plan_to_navigate_to(parsed_action, POSTResource { .request_body = move(body), .request_content_type = mime_type }, target_navigable, history_handling);
+    plan_to_navigate_to(parsed_action, POSTResource { .request_body = move(body), .request_content_type = mime_type }, target_navigable, history_handling, user_involvement);
     return {};
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-get-action
-void HTMLFormElement::get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<Navigable> target_navigable, Web::HTML::HistoryHandlingBehavior history_handling)
+void HTMLFormElement::get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling, UserNavigationInvolvement user_involvement)
 {
     // 1. Plan to navigate to parsed action.
     // Spec Note: entry list is discarded.
-    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling);
+    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling, user_involvement);
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-mailto-headers
-ErrorOr<void> HTMLFormElement::mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, [[maybe_unused]] String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling)
+ErrorOr<void> HTMLFormElement::mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, [[maybe_unused]] String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling, UserNavigationInvolvement user_involvement)
 {
     // 1. Let pairs be the result of converting to a list of name-value pairs with entry list.
     auto pairs = TRY(convert_to_list_of_name_value_pairs(entry_list));
@@ -744,11 +743,11 @@ ErrorOr<void> HTMLFormElement::mail_with_headers(AK::URL parsed_action, Vector<X
     parsed_action.set_query(headers);
 
     // 5. Plan to navigate to parsed action.
-    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling);
+    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling, user_involvement);
     return {};
 }
 
-ErrorOr<void> HTMLFormElement::mail_as_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, [[maybe_unused]] String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling)
+ErrorOr<void> HTMLFormElement::mail_as_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, [[maybe_unused]] String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling, UserNavigationInvolvement user_involvement)
 {
     // 1. Let pairs be the result of converting to a list of name-value pairs with entry list.
     auto pairs = TRY(convert_to_list_of_name_value_pairs(entry_list));
@@ -797,25 +796,12 @@ ErrorOr<void> HTMLFormElement::mail_as_body(AK::URL parsed_action, Vector<XHR::F
     parsed_action.set_query(MUST(query_builder.to_string()));
 
     // 7. Plan to navigate to parsed action.
-    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling);
+    plan_to_navigate_to(move(parsed_action), Empty {}, target_navigable, history_handling, user_involvement);
     return {};
 }
 
-// FIXME:
-static Bindings::NavigationHistoryBehavior to_navigation_history_behavior(HistoryHandlingBehavior b)
-{
-    switch (b) {
-    case HistoryHandlingBehavior::Push:
-        return Bindings::NavigationHistoryBehavior::Push;
-    case HistoryHandlingBehavior::Replace:
-        return Bindings::NavigationHistoryBehavior::Replace;
-    default:
-        return Bindings::NavigationHistoryBehavior::Auto;
-    }
-}
-
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#plan-to-navigate
-void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, POSTResource> post_resource, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling)
+void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, POSTResource> post_resource, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling, UserNavigationInvolvement user_involvement)
 {
     // 1. Let referrerPolicy be the empty string.
     ReferrerPolicy::ReferrerPolicy referrer_policy = ReferrerPolicy::ReferrerPolicy::EmptyString;
@@ -835,7 +821,7 @@ void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, PO
 
     // 4. Queue an element task on the DOM manipulation task source given the form element and the following steps:
     // NOTE: `this`, `actual_resource` and `target_navigable` are protected by JS::SafeFunction.
-    queue_an_element_task(Task::Source::DOMManipulation, [this, url, post_resource, target_navigable, history_handling, referrer_policy]() {
+    queue_an_element_task(Task::Source::DOMManipulation, [this, url, post_resource, target_navigable, history_handling, referrer_policy, user_involvement]() {
         // 1. Set the form's planned navigation to null.
         m_planned_navigation = nullptr;
 
@@ -846,8 +832,9 @@ void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, PO
             .document_resource = post_resource,
             .response = nullptr,
             .exceptions_enabled = false,
-            .history_handling = to_navigation_history_behavior(history_handling),
-            .referrer_policy = referrer_policy }));
+            .history_handling = history_handling,
+            .referrer_policy = referrer_policy,
+            .user_involvement = user_involvement }));
     });
 
     // 5. Set the form's planned navigation to the just-queued task.
