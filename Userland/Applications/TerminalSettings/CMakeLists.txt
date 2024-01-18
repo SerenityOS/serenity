@@ -8,7 +8,8 @@ stringify_gml(TerminalSettingsMain.gml TerminalSettingsMainGML.h terminal_settin
 stringify_gml(TerminalSettingsView.gml TerminalSettingsViewGML.h terminal_settings_view_gml)
 
 set(SOURCES
-    TerminalSettingsWidget.cpp
+    MainWidget.cpp
+    ViewWidget.cpp
     main.cpp
 )
 
