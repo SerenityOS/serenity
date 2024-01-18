@@ -64,7 +64,7 @@ NEVER_INLINE FLATTEN bool safe_memcpy(void* dest_ptr, void const* src_ptr, unsig
         return false;
     }
 
-    register void* asm_fault_at asm("t6");
+    register void* asm_fault_at asm("t6") = nullptr;
     asm volatile(
         ".global safe_memcpy_start \n"
         "safe_memcpy_start: \n"
@@ -110,7 +110,7 @@ NEVER_INLINE FLATTEN bool safe_memset(void* dest_ptr, int c, size_t n, void*& fa
         return false;
     }
 
-    register void* asm_fault_at asm("t6");
+    register void* asm_fault_at asm("t6") = nullptr;
     asm volatile(
         ".global safe_memset_start \n"
         "safe_memset_start: \n"
