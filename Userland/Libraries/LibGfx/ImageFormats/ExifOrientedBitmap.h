@@ -14,7 +14,7 @@ namespace Gfx {
 class ExifOrientedBitmap {
 public:
     template<typename... Args>
-    static ErrorOr<ExifOrientedBitmap> create(BitmapFormat format, IntSize size, TIFF::Orientation orientation)
+    static ErrorOr<ExifOrientedBitmap> create(TIFF::Orientation orientation, IntSize size, BitmapFormat format)
     {
         auto bitmap = TRY(Bitmap::create(format, oriented_size(size, orientation)));
         return ExifOrientedBitmap(move(bitmap), size, orientation);
