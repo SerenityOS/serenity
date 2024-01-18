@@ -648,7 +648,9 @@ JS::NonnullGCPtr<KeyboardEvent> KeyboardEvent::create_from_platform_event(JS::Re
     event_init.bubbles = true;
     event_init.cancelable = true;
     event_init.composed = true;
-    return KeyboardEvent::create(realm, event_name, event_init);
+    auto event = KeyboardEvent::create(realm, event_name, event_init);
+    event->set_is_trusted(true);
+    return event;
 }
 
 bool KeyboardEvent::get_modifier_state(String const& key_arg)
