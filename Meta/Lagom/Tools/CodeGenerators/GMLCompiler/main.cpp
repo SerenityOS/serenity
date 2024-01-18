@@ -36,6 +36,7 @@ static Optional<StringView> map_class_to_file(StringView class_)
         { "GUI::VerticalProgressbar"sv, "GUI/Progressbar"sv },
         { "GUI::DialogButton"sv, "GUI/Button"sv },
         { "GUI::PasswordBox"sv, "GUI/TextBox"sv },
+        { "GUI::HorizontalOpacitySlider"sv, "GUI/OpacitySlider"sv },
         // Map Layout::Spacer to the Layout header even though it's a pseudo class.
         { "GUI::Layout::Spacer"sv, "GUI/Layout"sv },
     };
