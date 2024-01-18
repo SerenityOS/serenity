@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2024, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
-#include <LibGL/GLContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/Paintable.h>
@@ -13,7 +13,12 @@
 
 namespace Web::WebGL {
 
-WebGLRenderingContextBase::WebGLRenderingContextBase(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
+// FIXME: Replace with constants defined in WebGL spec.
+#define GL_INVALID_OPERATION 0x0502
+#define GL_INVALID_VALUE 0x0501
+#define GL_FRONT_AND_BACK 0x0408
+
+WebGLRenderingContextBase::WebGLRenderingContextBase(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<OpenGLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
     : PlatformObject(realm)
     , m_canvas_element(canvas_element)
     , m_context(move(context))
@@ -48,36 +53,13 @@ void WebGLRenderingContextBase::present()
     // FIXME: Is this the operation it means?
     m_context->gl_flush();
 
-    m_context->present();
+    m_context->present(*canvas_element().bitmap());
 
     // "By default, after compositing the contents of the drawing buffer shall be cleared to their default values, as shown in the table above.
     // This default behavior can be changed by setting the preserveDrawingBuffer attribute of the WebGLContextAttributes object.
     // If this flag is true, the contents of the drawing buffer shall be preserved until the author either clears or overwrites them."
     if (!m_context_creation_parameters.preserve_drawing_buffer) {
-        Array<GLdouble, 4> current_clear_color;
-        m_context->gl_get_doublev(GL_COLOR_CLEAR_VALUE, current_clear_color.data());
-
-        GLdouble current_clear_depth;
-        m_context->gl_get_doublev(GL_DEPTH_CLEAR_VALUE, &current_clear_depth);
-
-        GLint current_clear_stencil;
-        m_context->gl_get_integerv(GL_STENCIL_CLEAR_VALUE, &current_clear_stencil);
-
-        // The implicit clear value for the color buffer is (0, 0, 0, 0)
-        m_context->gl_clear_color(0, 0, 0, 0);
-
-        // The implicit clear value for the depth buffer is 1.0.
-        m_context->gl_clear_depth(1.0);
-
-        // The implicit clear value for the stencil buffer is 0.
-        m_context->gl_clear_stencil(0);
-
-        m_context->gl_clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        // Restore the clear values.
-        m_context->gl_clear_color(current_clear_color[0], current_clear_color[1], current_clear_color[2], current_clear_color[3]);
-        m_context->gl_clear_depth(current_clear_depth);
-        m_context->gl_clear_stencil(current_clear_stencil);
+        m_context->clear_buffer_to_default_values();
     }
 }
 

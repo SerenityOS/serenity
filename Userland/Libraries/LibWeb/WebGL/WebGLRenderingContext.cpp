@@ -44,15 +44,18 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
         return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
 
-    auto context_or_error = GL::create_context(*canvas_element.bitmap());
-    if (context_or_error.is_error()) {
+    VERIFY(canvas_element.bitmap());
+    auto context = OpenGLContext::create(*canvas_element.bitmap());
+
+    if (!context) {
         fire_webgl_context_creation_error(canvas_element);
         return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
-    return realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context_or_error.release_value(), context_attributes, context_attributes);
+
+    return realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context.release_nonnull(), context_attributes, context_attributes);
 }
 
-WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
+WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<OpenGLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
     : WebGLRenderingContextBase(realm, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
 {
 }
