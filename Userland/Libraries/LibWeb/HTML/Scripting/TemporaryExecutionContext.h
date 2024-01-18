@@ -15,11 +15,17 @@ namespace Web::HTML {
 // this is a workaround to temporarily push an execution context.
 class TemporaryExecutionContext {
 public:
-    explicit TemporaryExecutionContext(EnvironmentSettingsObject&);
+    enum class CallbacksEnabled {
+        No,
+        Yes,
+    };
+
+    explicit TemporaryExecutionContext(EnvironmentSettingsObject&, CallbacksEnabled = CallbacksEnabled::No);
     ~TemporaryExecutionContext();
 
 private:
     EnvironmentSettingsObject& m_environment_settings;
+    CallbacksEnabled m_callbacks_enabled { CallbacksEnabled::No };
 };
 
 }
