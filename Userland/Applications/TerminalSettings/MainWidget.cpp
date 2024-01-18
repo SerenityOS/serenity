@@ -8,7 +8,6 @@
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <Applications/TerminalSettings/TerminalSettingsMainGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Application.h>
@@ -28,17 +27,16 @@
 #include <LibVT/TerminalWidget.h>
 #include <spawn.h>
 
-ErrorOr<NonnullRefPtr<TerminalSettingsMainWidget>> TerminalSettingsMainWidget::try_create()
+namespace TerminalSettings {
+ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::create()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TerminalSettingsMainWidget()));
+    auto widget = MainWidget::try_create().release_value_but_fixme_should_propagate_errors();
     TRY(widget->setup());
     return widget;
 }
 
-ErrorOr<void> TerminalSettingsMainWidget::setup()
+ErrorOr<void> MainWidget::setup()
 {
-    TRY(load_from_gml(terminal_settings_main_gml));
-
     auto& beep_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("beep_bell_radio");
     auto& visual_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
     auto& no_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("no_bell_radio");
@@ -86,7 +84,7 @@ ErrorOr<void> TerminalSettingsMainWidget::setup()
     return {};
 }
 
-VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView bell_string)
+VT::TerminalWidget::BellMode MainWidget::parse_bell(StringView bell_string)
 {
     if (bell_string == "AudibleBeep")
         return VT::TerminalWidget::BellMode::AudibleBeep;
@@ -97,7 +95,7 @@ VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView b
     VERIFY_NOT_REACHED();
 }
 
-ByteString TerminalSettingsMainWidget::stringify_bell(VT::TerminalWidget::BellMode bell_mode)
+ByteString MainWidget::stringify_bell(VT::TerminalWidget::BellMode bell_mode)
 {
     if (bell_mode == VT::TerminalWidget::BellMode::AudibleBeep)
         return "AudibleBeep";
@@ -108,19 +106,20 @@ ByteString TerminalSettingsMainWidget::stringify_bell(VT::TerminalWidget::BellMo
     VERIFY_NOT_REACHED();
 }
 
-void TerminalSettingsMainWidget::apply_settings()
+void MainWidget::apply_settings()
 {
     m_original_bell_mode = m_bell_mode;
     m_orignal_confirm_close = m_confirm_close;
     write_back_settings();
 }
-void TerminalSettingsMainWidget::write_back_settings() const
+void MainWidget::write_back_settings() const
 {
     Config::write_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, m_orignal_confirm_close);
     Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, stringify_bell(m_original_bell_mode));
 }
 
-void TerminalSettingsMainWidget::cancel_settings()
+void MainWidget::cancel_settings()
 {
     write_back_settings();
+}
 }
