@@ -31,6 +31,7 @@ class MouseEvent : public UIEvent {
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons, unsigned modifiers);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> construct_impl(JS::Realm&, FlyString const& event_name, MouseEventInit const&);
 
     virtual ~MouseEvent() override;
 
