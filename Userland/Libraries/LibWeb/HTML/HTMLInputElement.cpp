@@ -34,6 +34,7 @@
 #include <LibWeb/Layout/RadioButton.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -408,8 +409,6 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
 
     // 2. Set the element's value to the new value.
     // NOTE: For the TextNode this is done as part of step 4 below.
-    if (type_state() == TypeAttributeState::Color && m_color_well_element)
-        MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
 
     // 3. Set the element's dirty value flag to true.
     m_dirty_value = true;
@@ -422,11 +421,11 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     //    text control, unselecting any selected text and resetting the selection direction to "none".
     if (m_value != old_value) {
         if (m_text_node) {
-        m_text_node->set_data(m_value);
-        update_placeholder_visibility();
+            m_text_node->set_data(m_value);
+            update_placeholder_visibility();
 
-        if (auto* browsing_context = document().browsing_context())
-            browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
+            if (auto* browsing_context = document().browsing_context())
+                browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
         }
 
         if (type_state() == TypeAttributeState::Color && m_color_well_element)
@@ -645,12 +644,12 @@ void HTMLInputElement::create_text_input_shadow_tree()
 
         auto up_callback_function = JS::NativeFunction::create(
             realm(), [this](JS::VM&) {
-                (void)step_up();
+                MUST(step_up());
                 return JS::js_undefined();
             },
             0, "", &realm());
         auto up_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*up_callback_function, Bindings::host_defined_environment_settings_object(realm()));
-        up_button->add_event_listener_without_options("click"_fly_string, DOM::IDLEventListener::create(realm(), up_callback));
+        up_button->add_event_listener_without_options(UIEvents::EventNames::click, DOM::IDLEventListener::create(realm(), up_callback));
 
         // Down button
         auto down_button = MUST(DOM::create_element(document(), HTML::TagNames::button, Namespace::HTML));
@@ -663,12 +662,12 @@ void HTMLInputElement::create_text_input_shadow_tree()
 
         auto down_callback_function = JS::NativeFunction::create(
             realm(), [this](JS::VM&) {
-                (void)step_down();
+                MUST(step_down());
                 return JS::js_undefined();
             },
             0, "", &realm());
         auto down_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*down_callback_function, Bindings::host_defined_environment_settings_object(realm()));
-        down_button->add_event_listener_without_options("click"_fly_string, DOM::IDLEventListener::create(realm(), down_callback));
+        down_button->add_event_listener_without_options(UIEvents::EventNames::click, DOM::IDLEventListener::create(realm(), down_callback));
     }
 }
 
@@ -719,21 +718,102 @@ void HTMLInputElement::create_range_input_shadow_tree()
     m_slider_thumb->set_use_pseudo_element(CSS::Selector::PseudoElement::Type::SliderThumb);
     MUST(slider_runnable_track->append_child(*m_slider_thumb));
     update_slider_thumb_element();
+
+    //  User event listeners
+    auto dispatch_input_event = [this]() {
+        queue_an_element_task(HTML::Task::Source::UserInteraction, [&] {
+            auto input_event = DOM::Event::create(realm(), HTML::EventNames::input);
+            input_event->set_bubbles(true);
+            input_event->set_composed(true);
+            dispatch_event(*input_event);
+        });
+    };
+
+    auto keydown_callback_function = JS::NativeFunction::create(
+        realm(), [this, dispatch_input_event](JS::VM& vm) {
+            auto key = MUST(vm.argument(0).get(vm, "key")).as_string().utf8_string();
+
+            if (key == "ArrowLeft" || key == "ArrowDown")
+                MUST(step_down());
+            if (key == "PageDown")
+                MUST(step_down(10));
+
+            if (key == "ArrowRight" || key == "ArrowUp")
+                MUST(step_up());
+            if (key == "PageUp")
+                MUST(step_up(10));
+
+            dispatch_input_event();
+            return JS::js_undefined();
+        },
+        0, "", &realm());
+    auto keydown_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*keydown_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+    add_event_listener_without_options(UIEvents::EventNames::keydown, DOM::IDLEventListener::create(realm(), keydown_callback));
+
+    auto wheel_callback_function = JS::NativeFunction::create(
+        realm(), [this, dispatch_input_event](JS::VM& vm) {
+            auto deltaY = MUST(vm.argument(0).get(vm, "deltaY")).as_i32();
+            if (deltaY > 0) {
+                MUST(step_down());
+            } else {
+                MUST(step_up());
+            }
+            dispatch_input_event();
+            return JS::js_undefined();
+        },
+        0, "", &realm());
+    auto wheel_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*wheel_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+    add_event_listener_without_options(UIEvents::EventNames::wheel, DOM::IDLEventListener::create(realm(), wheel_callback));
+
+    auto update_slider_by_mouse = [this, dispatch_input_event](JS::VM& vm) {
+        auto client_x = MUST(vm.argument(0).get(vm, "clientX")).as_double();
+        auto rect = get_bounding_client_rect();
+        double minimum = *min();
+        double maximum = *max();
+        // FIXME: Snap new value to input steps
+        MUST(set_value_as_number(clamp(round(((client_x - rect->left()) / rect->width()) * (maximum - minimum) + minimum), minimum, maximum)));
+        dispatch_input_event();
+    };
+
+    auto mousedown_callback_function = JS::NativeFunction::create(
+        realm(), [this, update_slider_by_mouse](JS::VM& vm) {
+            update_slider_by_mouse(vm);
+
+            auto mousemove_callback_function = JS::NativeFunction::create(
+                realm(), [update_slider_by_mouse](JS::VM& vm) {
+                    update_slider_by_mouse(vm);
+                    return JS::js_undefined();
+                },
+                0, "", &realm());
+            auto mousemove_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*mousemove_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+            auto mousemove_listener = DOM::IDLEventListener::create(realm(), mousemove_callback);
+            auto& window = static_cast<HTML::Window&>(relevant_global_object(*this));
+            window.add_event_listener_without_options(UIEvents::EventNames::mousemove, mousemove_listener);
+
+            auto mouseup_callback_function = JS::NativeFunction::create(
+                realm(), [this, mousemove_listener](JS::VM&) {
+                    auto& window = static_cast<HTML::Window&>(relevant_global_object(*this));
+                    window.remove_event_listener_without_options(UIEvents::EventNames::mousemove, mousemove_listener);
+                    return JS::js_undefined();
+                },
+                0, "", &realm());
+            auto mouseup_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*mouseup_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+            DOM::AddEventListenerOptions mouseup_listener_options;
+            mouseup_listener_options.once = true;
+            window.add_event_listener(UIEvents::EventNames::mouseup, DOM::IDLEventListener::create(realm(), mouseup_callback), mouseup_listener_options);
+
+            return JS::js_undefined();
+        },
+        0, "", &realm());
+    auto mousedown_callback = realm().heap().allocate_without_realm<WebIDL::CallbackType>(*mousedown_callback_function, Bindings::host_defined_environment_settings_object(realm()));
+    add_event_listener_without_options(UIEvents::EventNames::mousedown, DOM::IDLEventListener::create(realm(), mousedown_callback));
 }
 
 void HTMLInputElement::update_slider_thumb_element()
 {
+    double value = value_as_number();
     double minimum = *min();
     double maximum = *max();
-
-    double default_value = minimum + (maximum - minimum) / 2;
-    if (maximum < minimum)
-        default_value = minimum;
-
-    double value = value_as_number();
-    if (!isfinite(value))
-        value = default_value;
-
     double position = (value - minimum) / (maximum - minimum) * 100;
     MUST(m_slider_thumb->style_for_bindings()->set_property(CSS::PropertyID::MarginLeft, MUST(String::formatted("{}%", position))));
 }
@@ -771,19 +851,19 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String>
     } else if (name == HTML::AttributeNames::type) {
         m_type = parse_type_attribute(value.value_or(String {}));
     } else if (name == HTML::AttributeNames::value) {
-            if (!m_dirty_value) {
+        if (!m_dirty_value) {
             if (!value.has_value()) {
                 m_value = String {};
-        } else {
+            } else {
                 m_value = value_sanitization_algorithm(*value);
             }
-                update_placeholder_visibility();
+            update_placeholder_visibility();
 
-                if (type_state() == TypeAttributeState::Color && m_color_well_element)
+            if (type_state() == TypeAttributeState::Color && m_color_well_element)
                 update_color_well_element();
 
-                if (type_state() == TypeAttributeState::Range && m_slider_thumb)
-                    update_slider_thumb_element();
+            if (type_state() == TypeAttributeState::Range && m_slider_thumb)
+                update_slider_thumb_element();
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
