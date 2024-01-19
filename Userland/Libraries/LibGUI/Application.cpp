@@ -371,7 +371,7 @@ void Application::update_recent_file_actions()
     m_recent_file_actions.last()->set_visible(number_of_recently_open_files == 0);
 }
 
-void Application::set_most_recently_open_file(String new_path)
+void Application::set_most_recently_open_file(ByteString new_path)
 {
     Vector<ByteString> new_recent_files_list;
 
@@ -386,7 +386,7 @@ void Application::set_most_recently_open_file(String new_path)
         return existing_path.view() == new_path;
     });
 
-    new_recent_files_list.prepend(new_path.to_byte_string());
+    new_recent_files_list.prepend(new_path);
 
     for (size_t i = 0; i < max_recently_open_files(); ++i) {
         auto& path = new_recent_files_list[i];

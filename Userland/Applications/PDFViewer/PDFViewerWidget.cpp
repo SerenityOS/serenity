@@ -424,7 +424,7 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
         m_sidebar_open = false;
     }
 
-    GUI::Application::the()->set_most_recently_open_file(TRY(String::from_utf8(path)));
+    GUI::Application::the()->set_most_recently_open_file(path);
 
     return {};
 }

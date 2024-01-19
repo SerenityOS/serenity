@@ -267,7 +267,7 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
     }
 
     set_path(path);
-    GUI::Application::the()->set_most_recently_open_file(path);
+    GUI::Application::the()->set_most_recently_open_file(path.to_byte_string());
 
     if (on_image_change)
         on_image_change(m_image);

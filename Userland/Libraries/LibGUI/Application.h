@@ -94,7 +94,7 @@ public:
 
     void set_config_domain(String);
     void update_recent_file_actions();
-    void set_most_recently_open_file(String path);
+    void set_most_recently_open_file(ByteString path);
 
     void register_recent_file_actions(Badge<GUI::Menu>, Vector<NonnullRefPtr<GUI::Action>>);
 

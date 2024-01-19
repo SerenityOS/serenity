@@ -600,8 +600,9 @@ void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::File
 {
     window()->set_modified(false);
     m_editor->open_file(move(file));
-    set_path(filename.to_byte_string());
-    GUI::Application::the()->set_most_recently_open_file(filename);
+    auto filename_byte_string = filename.to_byte_string();
+    set_path(filename_byte_string);
+    GUI::Application::the()->set_most_recently_open_file(filename_byte_string);
 }
 
 bool HexEditorWidget::request_close()

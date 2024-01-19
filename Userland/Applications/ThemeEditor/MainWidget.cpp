@@ -349,9 +349,10 @@ void MainWidget::set_path(ByteString path)
     update_title();
 }
 
-void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> file)
+void MainWidget::save_to_file(String const& filename_string, NonnullOwnPtr<Core::File> file)
 {
-    auto theme = Core::ConfigFile::open(filename.to_byte_string(), move(file)).release_value_but_fixme_should_propagate_errors();
+    auto filename = filename_string.to_byte_string();
+    auto theme = Core::ConfigFile::open(filename, move(file)).release_value_but_fixme_should_propagate_errors();
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry("Alignments", to_string(Gfx::AlignmentRole::role), to_string(m_current_palette.alignment(Gfx::AlignmentRole::role)));
     ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
@@ -378,7 +379,7 @@ void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> 
         GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save theme file: {}", sync_result.error()));
     } else {
         m_last_modified_time = MonotonicTime::now();
-        set_path(filename.to_byte_string());
+        set_path(filename);
         window()->set_modified(false);
         GUI::Application::the()->set_most_recently_open_file(filename);
     }
@@ -676,7 +677,7 @@ ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<C
 
     m_last_modified_time = MonotonicTime::now();
     window()->set_modified(false);
-    GUI::Application::the()->set_most_recently_open_file(filename);
+    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
     return {};
 }
 

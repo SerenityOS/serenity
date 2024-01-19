@@ -129,7 +129,7 @@ void MainWidget::load_file(FileSystemAccessClient::File file)
     m_file_path = file.filename().to_byte_string();
     update_title();
 
-    GUI::Application::the()->set_most_recently_open_file(file.filename());
+    GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
 }
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
@@ -150,7 +150,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         m_file_path = response.value().filename().to_byte_string();
         update_title();
 
-        GUI::Application::the()->set_most_recently_open_file(response.value().filename());
+        GUI::Application::the()->set_most_recently_open_file(response.value().filename().to_byte_string());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {

@@ -167,7 +167,7 @@ ErrorOr<void> MainWidget::create_actions()
         if (auto result = save_file(file.filename(), file.release_stream()); result.is_error())
             show_error(result.release_error(), "Saving"sv, file.filename());
         else
-            GUI::Application::the()->set_most_recently_open_file(file.filename());
+            GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([this](auto&) {
@@ -827,7 +827,7 @@ ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> f
     auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(move(mapped_file)))->unmasked_character_set());
     TRY(initialize(path, move(unmasked_font)));
     if (!path.is_empty())
-        GUI::Application::the()->set_most_recently_open_file(TRY(String::from_utf8(path)));
+        GUI::Application::the()->set_most_recently_open_file(path);
     return {};
 }
 
