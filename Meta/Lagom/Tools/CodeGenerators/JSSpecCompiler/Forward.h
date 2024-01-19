@@ -65,7 +65,7 @@ class Algorithm;
 class SpecFunction;
 
 // Function.h
-struct TranslationUnit;
+class TranslationUnit;
 using TranslationUnitRef = TranslationUnit*;
 class FunctionDeclaration;
 using FunctionDeclarationRef = FunctionDeclaration*;

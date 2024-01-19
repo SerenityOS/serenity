@@ -185,7 +185,7 @@ SpecParsingStep::~SpecParsingStep() = default;
 
 void SpecParsingStep::run(TranslationUnitRef translation_unit)
 {
-    auto filename = translation_unit->filename;
+    auto filename = translation_unit->filename();
 
     auto file = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
     m_input = file->read_until_eof().release_value_but_fixme_should_propagate_errors();

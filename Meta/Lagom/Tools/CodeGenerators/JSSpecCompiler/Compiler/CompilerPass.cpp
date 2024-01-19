@@ -11,7 +11,7 @@ namespace JSSpecCompiler {
 
 void IntraproceduralCompilerPass::run()
 {
-    for (auto const& function : m_translation_unit->functions_to_compile) {
+    for (auto const& function : m_translation_unit->functions_to_compile()) {
         m_function = function;
         process_function();
     }

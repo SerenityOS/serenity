@@ -15,14 +15,24 @@
 
 namespace JSSpecCompiler {
 
-struct TranslationUnit {
+class TranslationUnit {
+public:
+    TranslationUnit(StringView filename);
+    ~TranslationUnit();
+
     void adopt_declaration(NonnullRefPtr<FunctionDeclaration>&& declaration);
     FunctionDefinitionRef adopt_function(NonnullRefPtr<FunctionDefinition>&& definition);
 
-    StringView filename;
-    Vector<FunctionDefinitionRef> functions_to_compile;
-    Vector<NonnullRefPtr<FunctionDeclaration>> declarations_owner;
-    HashMap<StringView, FunctionDeclarationRef> function_index;
+    FunctionDeclarationRef find_declaration_by_name(StringView name) const;
+
+    StringView filename() const { return m_filename; }
+    Vector<FunctionDefinitionRef> functions_to_compile() const { return m_functions_to_compile; }
+
+private:
+    StringView m_filename;
+    Vector<FunctionDefinitionRef> m_functions_to_compile;
+    Vector<NonnullRefPtr<FunctionDeclaration>> m_declarations_owner;
+    HashMap<StringView, FunctionDeclarationRef> m_function_index;
 };
 
 class FunctionDeclaration : public RefCounted<FunctionDeclaration> {
