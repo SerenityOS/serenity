@@ -146,7 +146,7 @@ Locator::Locator(Core::EventReceiver* parent)
     };
 
     m_popup_window = GUI::Window::construct(parent);
-    m_popup_window->set_window_type(GUI::WindowType::Popup);
+    m_popup_window->set_window_type(GUI::WindowType::Autocomplete);
     m_popup_window->set_rect(0, 0, 500, 200);
 
     m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
