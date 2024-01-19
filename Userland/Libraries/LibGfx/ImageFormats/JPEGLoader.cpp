@@ -366,7 +366,7 @@ struct LoadingContext {
 
     State state { State::NotDecoded };
 
-    Array<Optional<Array<u16, 64>>, 4> quantization_tables {};
+    QuantizationTables quantization_tables {};
 
     StartOfFrame frame;
     SamplingFactors sampling_factors {};
@@ -1801,6 +1801,10 @@ static ErrorOr<void> parse_header(JPEGStream& stream, LoadingContext& context)
             context.frame.type = static_cast<StartOfFrame::FrameType>(marker & 0xF);
 
         switch (marker) {
+        case JPEG_EOI:
+            if (context.options.tiff_special_handling == JPEGDecoderOptions::TIFFSpecialHandling::TablesOnly)
+                return {};
+            [[fallthrough]];
         case JPEG_RST0:
         case JPEG_RST1:
         case JPEG_RST2:
@@ -1810,7 +1814,6 @@ static ErrorOr<void> parse_header(JPEGStream& stream, LoadingContext& context)
         case JPEG_RST6:
         case JPEG_RST7:
         case JPEG_SOI:
-        case JPEG_EOI:
             dbgln_if(JPEG_DEBUG, "Unexpected marker {:x}!", marker);
             return Error::from_string_literal("Unexpected marker");
         case JPEG_SOF0:
@@ -1923,6 +1926,17 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create_with_o
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(context))));
     TRY(decode_header(*plugin->m_context));
     return plugin;
+}
+
+ErrorOr<JPEG::Tables> JPEGImageDecoderPlugin::read_tables(ReadonlyBytes data)
+{
+    auto stream = TRY(try_make<FixedMemoryStream>(data));
+    auto temporary_context = TRY(JPEG::LoadingContext::create(move(stream), JPEGDecoderOptions { .tiff_special_handling = JPEGDecoderOptions::TIFFSpecialHandling::TablesOnly }));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(temporary_context))));
+    auto& context = *plugin->m_context;
+    TRY(decode_header(context));
+
+    return JPEG::Tables { context.quantization_tables, context.dc_tables, context.ac_tables };
 }
 
 ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
