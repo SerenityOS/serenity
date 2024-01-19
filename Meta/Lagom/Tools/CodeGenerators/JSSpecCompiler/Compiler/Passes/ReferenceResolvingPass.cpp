@@ -38,8 +38,6 @@ RecursionDecision ReferenceResolvingPass::on_entry(Tree tree)
 
 void ReferenceResolvingPass::on_leave(Tree tree)
 {
-    auto& functions = m_function->m_translation_unit->function_index;
-
     if (auto reference = as<UnresolvedReference>(tree); reference) {
         auto name = reference->m_name;
 
@@ -53,8 +51,8 @@ void ReferenceResolvingPass::on_leave(Tree tree)
             return;
         }
 
-        if (auto it = functions.find(name); it != functions.end()) {
-            replace_current_node_with(make_ref_counted<FunctionPointer>(it->value));
+        if (auto function = m_translation_unit->find_declaration_by_name(name)) {
+            replace_current_node_with(make_ref_counted<FunctionPointer>(function));
             return;
         }
     }

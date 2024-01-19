@@ -10,19 +10,34 @@
 
 namespace JSSpecCompiler {
 
+TranslationUnit::TranslationUnit(StringView filename)
+    : m_filename(filename)
+{
+}
+
+TranslationUnit::~TranslationUnit() = default;
+
 void TranslationUnit::adopt_declaration(NonnullRefPtr<FunctionDeclaration>&& declaration)
 {
     declaration->m_translation_unit = this;
-    function_index.set(declaration->m_name, declaration.ptr());
-    declarations_owner.append(move(declaration));
+    m_function_index.set(declaration->m_name, declaration.ptr());
+    m_declarations_owner.append(move(declaration));
 }
 
-FunctionDefinitionRef TranslationUnit::adopt_function(NonnullRefPtr<FunctionDefinition>&& function)
+FunctionDefinitionRef TranslationUnit::adopt_function(NonnullRefPtr<FunctionDefinition>&& definition)
 {
-    FunctionDefinitionRef result = function.ptr();
-    functions_to_compile.append(result);
-    adopt_declaration(function);
+    FunctionDefinitionRef result = definition.ptr();
+    m_functions_to_compile.append(result);
+    adopt_declaration(definition);
     return result;
+}
+
+FunctionDeclarationRef TranslationUnit::find_declaration_by_name(StringView name) const
+{
+    auto it = m_function_index.find(name);
+    if (it == m_function_index.end())
+        return nullptr;
+    return it->value;
 }
 
 FunctionDeclaration::FunctionDeclaration(StringView name)
