@@ -113,6 +113,11 @@ JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString cons
     return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y);
 }
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
+{
+    return create(realm, event_name, event_init);
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons, unsigned modifiers)
 {
     MouseEventInit event_init {};
