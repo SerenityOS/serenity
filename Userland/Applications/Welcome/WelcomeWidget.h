@@ -10,16 +10,18 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibWebView/OutOfProcessWebView.h>
 
+namespace Welcome {
 class WelcomeWidget final : public GUI::Widget {
     C_OBJECT(WelcomeWidget);
 
 public:
-    static ErrorOr<NonnullRefPtr<WelcomeWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<WelcomeWidget>> create();
     virtual ~WelcomeWidget() override = default;
 
 private:
     WelcomeWidget() = default;
     ErrorOr<void> create_widgets();
+    static ErrorOr<NonnullRefPtr<WelcomeWidget>> try_create();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
@@ -41,3 +43,4 @@ private:
     size_t m_tip_index { 0 };
     Vector<String> m_tips;
 };
+}
