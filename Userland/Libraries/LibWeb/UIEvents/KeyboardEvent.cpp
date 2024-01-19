@@ -653,16 +653,36 @@ JS::NonnullGCPtr<KeyboardEvent> KeyboardEvent::create_from_platform_event(JS::Re
     return event;
 }
 
-bool KeyboardEvent::get_modifier_state(String const& key_arg)
+bool KeyboardEvent::get_modifier_state(String const& key_arg) const
 {
-    if (key_arg == "Alt")
-        return m_alt_key;
     if (key_arg == "Control")
         return m_ctrl_key;
     if (key_arg == "Shift")
         return m_shift_key;
+    if (key_arg == "Alt")
+        return m_alt_key;
     if (key_arg == "Meta")
         return m_meta_key;
+    if (key_arg == "AltGraph")
+        return m_modifier_alt_graph;
+    if (key_arg == "CapsLock")
+        return m_modifier_caps_lock;
+    if (key_arg == "Fn")
+        return m_modifier_fn;
+    if (key_arg == "FnLock")
+        return m_modifier_fn_lock;
+    if (key_arg == "Hyper")
+        return m_modifier_hyper;
+    if (key_arg == "NumLock")
+        return m_modifier_num_lock;
+    if (key_arg == "ScrollLock")
+        return m_modifier_scroll_lock;
+    if (key_arg == "Super")
+        return m_modifier_super;
+    if (key_arg == "Symbol")
+        return m_modifier_symbol;
+    if (key_arg == "SymbolLock")
+        return m_modifier_symbol_lock;
     return false;
 }
 
@@ -685,6 +705,16 @@ KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, Keyb
     , m_shift_key(event_init.shift_key)
     , m_alt_key(event_init.alt_key)
     , m_meta_key(event_init.meta_key)
+    , m_modifier_alt_graph(event_init.modifier_alt_graph)
+    , m_modifier_caps_lock(event_init.modifier_caps_lock)
+    , m_modifier_fn(event_init.modifier_fn)
+    , m_modifier_fn_lock(event_init.modifier_fn_lock)
+    , m_modifier_hyper(event_init.modifier_hyper)
+    , m_modifier_num_lock(event_init.modifier_num_lock)
+    , m_modifier_scroll_lock(event_init.modifier_scroll_lock)
+    , m_modifier_super(event_init.modifier_super)
+    , m_modifier_symbol(event_init.modifier_symbol)
+    , m_modifier_symbol_lock(event_init.modifier_symbol_lock)
     , m_repeat(event_init.repeat)
     , m_is_composing(event_init.is_composing)
     , m_key_code(event_init.key_code)
