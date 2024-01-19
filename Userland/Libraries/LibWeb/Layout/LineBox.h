@@ -32,15 +32,10 @@ public:
 
     AvailableSize original_available_width() const { return m_original_available_width; }
 
-    CSSPixelRect const& absolute_rect() const { return m_absolute_rect; }
-    void set_absolute_rect(CSSPixelRect const& rect) { m_absolute_rect = rect; }
-
 private:
     friend class BlockContainer;
     friend class InlineFormattingContext;
     friend class LineBuilder;
-
-    CSSPixelRect m_absolute_rect;
 
     Vector<LineBoxFragment> m_fragments;
     CSSPixels m_width { 0 };
