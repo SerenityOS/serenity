@@ -12,6 +12,7 @@
 #include "CompilationPipeline.h"
 #include "Forward.h"
 #include "Parser/ParseError.h"
+#include "Parser/TextParser.h"
 #include "Parser/Token.h"
 
 namespace JSSpecCompiler {
@@ -68,22 +69,62 @@ public:
     Tree m_tree = error_tree;
 };
 
-class SpecFunction {
+class SpecificationClause {
+    AK_MAKE_DEFAULT_MOVABLE(SpecificationClause);
+
 public:
-    struct Argument {
-        StringView name;
-    };
+    static NonnullOwnPtr<SpecificationClause> create(SpecificationParsingContext& ctx, XML::Node const* element);
 
-    static ParseErrorOr<SpecFunction> create(XML::Node const* element);
+    virtual ~SpecificationClause() = default;
 
-    ParseErrorOr<void> parse_definition(XML::Node const* element);
+    void collect_into(TranslationUnitRef translation_unit);
+
+protected:
+    virtual bool post_initialize(SpecificationParsingContext& /*ctx*/, XML::Node const* /*element*/) { return true; }
+    virtual void do_collect(TranslationUnitRef /*translation_unit*/) { }
+
+    ClauseHeader m_header;
+
+private:
+    SpecificationClause() = default;
+    ParseErrorOr<void> parse_header(XML::Node const* element);
+    void parse(SpecificationParsingContext& ctx, XML::Node const* element);
+
+    Vector<NonnullOwnPtr<SpecificationClause>> m_subclauses;
+};
+
+class SpecFunction : public SpecificationClause {
+public:
+    SpecFunction(SpecificationClause&& clause)
+        : SpecificationClause(move(clause))
+    {
+    }
+
+protected:
+    bool post_initialize(SpecificationParsingContext& ctx, XML::Node const* element) override;
+    void do_collect(TranslationUnitRef translation_unit) override;
+
+private:
+    ParseErrorOr<void> do_post_initialize(SpecificationParsingContext& ctx, XML::Node const* element);
 
     StringView m_section_number;
     StringView m_id;
     StringView m_name;
 
-    Vector<Argument> m_arguments;
+    Vector<FunctionArgument> m_arguments;
     Algorithm m_algorithm;
+};
+
+class Specification {
+public:
+    static Specification create(SpecificationParsingContext& ctx, XML::Node const* element);
+
+    void collect_into(TranslationUnitRef translation_unit);
+
+private:
+    void parse(SpecificationParsingContext& ctx, XML::Node const* element);
+
+    Vector<NonnullOwnPtr<SpecificationClause>> m_clauses;
 };
 
 class SpecParsingStep : public CompilationStep {

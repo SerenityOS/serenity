@@ -7,26 +7,31 @@
 #pragma once
 
 #include "AST/AST.h"
+#include "Function.h"
 #include "Parser/ParseError.h"
 #include "Parser/Token.h"
 
 namespace JSSpecCompiler {
 
-class TextParser {
-public:
-    struct DefinitionParseResult {
-        StringView section_number;
-        StringView function_name;
-        Vector<StringView> arguments;
+struct ClauseHeader {
+    struct FunctionDefinition {
+        StringView name;
+        Vector<FunctionArgument> arguments;
     };
 
+    StringView section_number;
+    Variant<AK::Empty, FunctionDefinition> header;
+};
+
+class TextParser {
+public:
     TextParser(Vector<Token>& tokens_, XML::Node const* node_)
         : m_tokens(tokens_)
         , m_node(node_)
     {
     }
 
-    ParseErrorOr<DefinitionParseResult> parse_definition();
+    ParseErrorOr<ClauseHeader> parse_clause_header();
     ParseErrorOr<Tree> parse_step_without_substeps();
     ParseErrorOr<Tree> parse_step_with_substeps(Tree substeps);
 

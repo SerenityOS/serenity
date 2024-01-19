@@ -5,6 +5,7 @@
  */
 
 #include "Parser/ParseError.h"
+#include "DiagnosticEngine.h"
 
 namespace JSSpecCompiler {
 
@@ -27,7 +28,7 @@ NonnullRefPtr<ParseError> ParseError::create(ErrorOr<String> message, XML::Node 
 String ParseError::to_string() const
 {
     StringBuilder builder;
-    builder.appendff("error: {}\n", m_message);
+    builder.appendff("{}\n", m_message);
 
     XML::Node const* current = m_node;
     while (current != nullptr) {
@@ -46,6 +47,11 @@ String ParseError::to_string() const
         current = current->parent;
     }
     return MUST(builder.to_string());
+}
+
+XML::Offset ParseError::offset() const
+{
+    return m_node->offset;
 }
 
 }

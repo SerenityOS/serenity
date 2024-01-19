@@ -138,16 +138,127 @@ ParseErrorOr<Algorithm> Algorithm::create(XML::Node const* node)
     return algorithm;
 }
 
-ParseErrorOr<SpecFunction> SpecFunction::create(XML::Node const* element)
+NonnullOwnPtr<SpecificationClause> SpecificationClause::create(SpecificationParsingContext& ctx, XML::Node const* element)
+{
+    return ctx.with_new_logical_scope([&] {
+        VERIFY(element->as_element().name == tag_emu_clause);
+
+        SpecificationClause specification_clause;
+        specification_clause.parse(ctx, element);
+
+        OwnPtr<SpecificationClause> result;
+
+        specification_clause.m_header.header.visit(
+            [&](AK::Empty const&) {
+                result = make<SpecificationClause>(move(specification_clause));
+            },
+            [&](ClauseHeader::FunctionDefinition const&) {
+                result = make<SpecFunction>(move(specification_clause));
+            });
+
+        if (!result->post_initialize(ctx, element))
+            result = make<SpecificationClause>(move(*result));
+
+        return result.release_nonnull();
+    });
+}
+
+void SpecificationClause::collect_into(TranslationUnitRef translation_unit)
+{
+    do_collect(translation_unit);
+    for (auto& subclause : m_subclauses)
+        subclause->collect_into(translation_unit);
+}
+
+ParseErrorOr<void> SpecificationClause::parse_header(XML::Node const* element)
+{
+    VERIFY(element->as_element().name == tag_h1);
+    auto tokens = TRY(tokenize_tree(element));
+    TextParser parser(tokens.tokens, element);
+    m_header = TRY(parser.parse_clause_header());
+    return {};
+}
+
+void SpecificationClause::parse(SpecificationParsingContext& ctx, XML::Node const* element)
+{
+    u32 child_index = 0;
+
+    Optional<NonnullRefPtr<ParseError>> header_parse_error;
+
+    for (auto const& child : element->as_element().children) {
+        child->content.visit(
+            [&](XML::Node::Element const& element) {
+                if (child_index == 0) {
+                    if (element.name != tag_h1) {
+                        ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                            "<h1> must be the first child of <emu-clause>");
+                        return;
+                    }
+
+                    if (auto error = parse_header(child); error.is_error())
+                        header_parse_error = error.release_error();
+                    else
+                        ctx.current_logical_scope().section = MUST(String::from_utf8(m_header.section_number));
+                } else {
+                    if (element.name == tag_emu_clause) {
+                        m_subclauses.append(create(ctx, child));
+                        return;
+                    }
+                    if (header_parse_error.has_value()) {
+                        ctx.diag().warn(ctx.location_from_xml_offset(child->offset),
+                            "node content will be ignored since section header was not parsed successfully");
+                        // TODO: Integrate backtracing parser errors better
+                        ctx.diag().note(ctx.location_from_xml_offset(header_parse_error.value()->offset()),
+                            "{}", header_parse_error.value()->to_string());
+                        header_parse_error.clear();
+                    }
+                }
+                ++child_index;
+            },
+            [&](XML::Node::Text const&) {
+                if (!contains_empty_text(child)) {
+                    ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                        "non-empty text node should not be a child of <emu-clause>");
+                }
+            },
+            [&](auto) {});
+    }
+}
+
+bool SpecFunction::post_initialize(SpecificationParsingContext& ctx, XML::Node const* element)
+{
+    auto initialization_result = do_post_initialize(ctx, element);
+    if (initialization_result.is_error()) {
+        // TODO: Integrate backtracing parser errors better
+        ctx.diag().error(ctx.location_from_xml_offset(initialization_result.error()->offset()),
+            "{}", initialization_result.error()->to_string());
+        return false;
+    }
+    return true;
+}
+
+void SpecFunction::do_collect(TranslationUnitRef translation_unit)
+{
+    translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.m_tree, move(m_arguments)));
+}
+
+ParseErrorOr<void> SpecFunction::do_post_initialize(SpecificationParsingContext& ctx, XML::Node const* element)
 {
     VERIFY(element->as_element().name == tag_emu_clause);
 
-    SpecFunction result;
-    result.m_id = TRY(get_attribute_by_name(element, attribute_id));
-    result.m_name = TRY(get_attribute_by_name(element, attribute_aoid));
+    m_id = TRY(get_attribute_by_name(element, attribute_id));
+    m_name = TRY(get_attribute_by_name(element, attribute_aoid));
+
+    m_section_number = m_header.section_number;
+    auto const& [function_name, arguments] = m_header.header.get<ClauseHeader::FunctionDefinition>();
+
+    if (m_name != function_name) {
+        ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
+            "function name in header and <emu-clause>[aoid] do not match");
+    }
+    m_arguments = arguments;
 
     u32 children_count = 0;
-    bool has_definition = false;
 
     XML::Node const* algorithm_node = nullptr;
     XML::Node const* prose_node = nullptr;
@@ -155,12 +266,9 @@ ParseErrorOr<SpecFunction> SpecFunction::create(XML::Node const* element)
     for (auto const& child : element->as_element().children) {
         TRY(child->content.visit(
             [&](XML::Node::Element const& element) -> ParseErrorOr<void> {
-                ++children_count;
                 if (element.name == tag_h1) {
-                    if (children_count != 1)
-                        return ParseError::create("<h1> should be the first child of a <emu-clause>"sv, child);
-                    TRY(result.parse_definition(child));
-                    has_definition = true;
+                    if (children_count != 0)
+                        return ParseError::create("<h1> can only be the first child of <emu-clause>"sv, child);
                 } else if (element.name == tag_p) {
                     if (prose_node == nullptr)
                         prose_node = child;
@@ -169,6 +277,7 @@ ParseErrorOr<SpecFunction> SpecFunction::create(XML::Node const* element)
                 } else {
                     return ParseError::create("Unknown child of <emu-clause>"sv, child);
                 }
+                ++children_count;
                 return {};
             },
             [&](XML::Node::Text const&) -> ParseErrorOr<void> {
@@ -182,30 +291,56 @@ ParseErrorOr<SpecFunction> SpecFunction::create(XML::Node const* element)
 
     if (algorithm_node == nullptr)
         return ParseError::create("No <emu-alg>"sv, element);
-    if (prose_node == nullptr)
-        return ParseError::create("No prose element"sv, element);
-    if (!has_definition)
-        return ParseError::create("Definition was not found"sv, element);
 
-    result.m_algorithm = TRY(Algorithm::create(algorithm_node));
-    return result;
-}
+    if (prose_node) {
+        ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
+            "prose is ignored");
+    }
 
-ParseErrorOr<void> SpecFunction::parse_definition(XML::Node const* element)
-{
-    auto tokens = TRY(tokenize_tree(element));
-    TextParser parser(tokens.tokens, element);
-
-    auto [section_number, function_name, arguments] = TRY(parser.parse_definition());
-
-    if (function_name != m_name)
-        return ParseError::create("Function name in definition differs from <emu-clause>[aoid]"sv, element);
-
-    m_section_number = section_number;
-    for (auto const& argument : arguments)
-        m_arguments.append({ argument });
+    m_algorithm = TRY(Algorithm::create(algorithm_node));
 
     return {};
+}
+
+Specification Specification::create(SpecificationParsingContext& ctx, XML::Node const* element)
+{
+    VERIFY(element->as_element().name == tag_specification);
+
+    Specification specification;
+    specification.parse(ctx, element);
+    return specification;
+}
+
+void Specification::collect_into(TranslationUnitRef translation_unit)
+{
+    for (auto& clause : m_clauses)
+        clause->collect_into(translation_unit);
+}
+
+void Specification::parse(SpecificationParsingContext& ctx, XML::Node const* element)
+{
+    for (auto const& child : element->as_element().children) {
+        child->content.visit(
+            [&](XML::Node::Element const& element) {
+                if (element.name == tag_emu_intro) {
+                    // Introductory comments are ignored.
+                } else if (element.name == tag_emu_clause) {
+                    m_clauses.append(SpecificationClause::create(ctx, child));
+                } else if (element.name == tag_emu_import) {
+                    parse(ctx, child);
+                } else {
+                    ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                        "<{}> should not be a child of <specification>", element.name);
+                }
+            },
+            [&](XML::Node::Text const&) {
+                if (!contains_empty_text(child)) {
+                    ctx.diag().error(ctx.location_from_xml_offset(child->offset),
+                        "non-empty text node should not be a child of <specification>");
+                }
+            },
+            [&](auto) {});
+    }
 }
 
 SpecParsingStep::SpecParsingStep()
@@ -247,14 +382,14 @@ void SpecParsingStep::run(TranslationUnitRef translation_unit)
     }
     m_document = make<XML::Document>(document_or_error.release_value());
 
-    auto spec_function = SpecFunction::create(&m_document->root()).release_value_but_fixme_should_propagate_errors();
+    auto const& root = m_document->root();
+    if (!root.is_element() || root.as_element().name != tag_specification) {
+        ctx.diag().fatal_error(ctx.location_from_xml_offset(root.offset),
+            "document root must be <specification> tag");
+        return;
+    }
 
-    Vector<FunctionArgument> arguments;
-    for (auto const& argument : spec_function.m_arguments)
-        arguments.append({ argument.name });
-
-    translation_unit->adopt_function(
-        make_ref_counted<FunctionDefinition>(spec_function.m_name, spec_function.m_algorithm.m_tree, move(arguments)));
+    auto specification = Specification::create(ctx, &root);
+    specification.collect_into(translation_unit);
 }
-
 }

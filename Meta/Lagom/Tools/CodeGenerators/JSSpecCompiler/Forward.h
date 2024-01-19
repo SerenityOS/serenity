@@ -63,6 +63,8 @@ class AlgorithmStep;
 class AlgorithmStepList;
 class Algorithm;
 class SpecFunction;
+class SpecificationClause;
+class Specification;
 
 // DiagnosticEngine.h
 struct LogicalLocation;

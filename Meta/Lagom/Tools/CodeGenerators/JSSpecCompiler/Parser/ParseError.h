@@ -24,6 +24,7 @@ public:
     static NonnullRefPtr<ParseError> create(ErrorOr<String> message, XML::Node const* node);
 
     String to_string() const;
+    XML::Offset offset() const;
 
 private:
     String m_message;
