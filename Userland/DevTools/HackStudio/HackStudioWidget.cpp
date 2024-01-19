@@ -318,7 +318,7 @@ bool HackStudioWidget::open_file(ByteString const& full_filename, size_t line, s
 
     if (editor_wrapper_or_none.has_value()) {
         set_current_editor_wrapper(editor_wrapper_or_none.release_value());
-        current_editor().set_cursor(line, column);
+        current_editor().set_cursor_and_focus_line(line, column);
         return true;
     } else if (active_file().is_empty() && !current_editor().document().is_modified() && !full_filename.is_empty()) {
         // Replace "Untitled" blank file since it hasn't been modified
@@ -384,7 +384,7 @@ bool HackStudioWidget::open_file(ByteString const& full_filename, size_t line, s
     current_editor().on_cursor_change = [this] { on_cursor_change(); };
     current_editor().on_change = [this] { update_window_title(); };
     current_editor_wrapper().on_change = [this] { update_gml_preview(); };
-    current_editor().set_cursor(line, column);
+    current_editor().set_cursor_and_focus_line(line, column);
     update_gml_preview();
 
     return true;

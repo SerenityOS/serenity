@@ -184,6 +184,7 @@ void Locator::open()
 void Locator::close()
 {
     m_popup_window->hide();
+    m_textbox->set_focus(false);
 }
 
 void Locator::update_suggestions()
