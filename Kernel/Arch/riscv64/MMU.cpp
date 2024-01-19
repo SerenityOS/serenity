@@ -206,7 +206,8 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
         "   sd zero, (t0) \n"
         "   sfence.vma \n"
 
-        // TODO: Set `stvec` to a trap handling function
+        "   la t0, asm_trap_handler \n"
+        "   csrw stvec, t0 \n"
 
         "   li ra, 0 \n"
         "   li fp, 0 \n"
