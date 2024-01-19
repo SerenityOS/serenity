@@ -7,7 +7,6 @@
 #include "WelcomeWidget.h"
 #include <AK/Random.h>
 #include <AK/String.h>
-#include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
@@ -19,9 +18,10 @@
 #include <LibGUI/Process.h>
 #include <LibGfx/Palette.h>
 
-ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::try_create()
+namespace Welcome {
+ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::create()
 {
-    auto welcome_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WelcomeWidget()));
+    auto welcome_widget = TRY(WelcomeWidget::try_create());
     TRY(welcome_widget->create_widgets());
 
     return welcome_widget;
@@ -29,8 +29,6 @@ ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::try_create()
 
 ErrorOr<void> WelcomeWidget::create_widgets()
 {
-    TRY(load_from_gml(welcome_window_gml));
-
     m_banner_widget = find_descendant_of_type_named<GUI::Widget>("welcome_banner");
     m_banner_font = TRY(Gfx::BitmapFont::try_load_from_uri("resource://fonts/MarietaRegular24.font"sv));
 
@@ -129,4 +127,5 @@ void WelcomeWidget::paint_event(GUI::PaintEvent& event)
     painter.draw_text(rect, "Serenity"sv, m_banner_font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base_text());
     rect.set_x(rect.x() + static_cast<int>(ceilf(m_banner_font->bold_variant().width("Serenity"sv))));
     painter.draw_text(rect, "OS"sv, m_banner_font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().tray_text());
+}
 }

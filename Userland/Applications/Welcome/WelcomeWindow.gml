@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Welcome::WelcomeWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
@@ -56,7 +56,7 @@
                     @GUI::Label {
                         name: "tip_label"
                         text_alignment: "TopLeft"
-                        word_wrap: true
+                        text_wrapping: "Wrap"
                         font_size: 12
                     }
                 }
@@ -91,13 +91,13 @@
             @GUI::Button {
                 name: "help_button"
                 text: "Help Contents"
-                icon: "/res/icons/16x16/book-open.png"
+                icon_from_path: "/res/icons/16x16/book-open.png"
             }
 
             @GUI::Button {
                 name: "next_button"
                 text: "Next Tip"
-                icon: "/res/icons/16x16/go-forward.png"
+                icon_from_path: "/res/icons/16x16/go-forward.png"
             }
 
             @GUI::Layout::Spacer {}
