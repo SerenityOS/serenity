@@ -377,7 +377,7 @@ static bool print_filesystem_object(ByteString const& path, ByteString const& na
         st.st_mode & S_IWOTH ? 'w' : '-');
 
     if (st.st_mode & S_ISVTX)
-        printf("t");
+        printf("%c", st.st_mode & S_IXOTH ? 't' : 'T');
     else
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
