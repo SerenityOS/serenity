@@ -479,23 +479,27 @@ ParseErrorOr<Tree> TextParser::parse_step_with_substeps(Tree substeps)
     return ParseError::create("Unable to parse step with substeps"sv, m_node);
 }
 
-ParseErrorOr<TextParser::DefinitionParseResult> TextParser::parse_definition()
+ParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
 {
-    DefinitionParseResult result;
+    ClauseHeader result;
 
     auto section_number_token = TRY(consume_token_with_type(TokenType::SectionNumber));
     result.section_number = section_number_token->data;
 
-    result.function_name = TRY(consume_token())->data;
+    ClauseHeader::FunctionDefinition function_definition;
+
+    function_definition.name = TRY(consume_token())->data;
 
     TRY(consume_token_with_type(TokenType::ParenOpen));
     while (true) {
-        result.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier))->data });
+        function_definition.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier))->data });
         auto next_token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
         if (next_token->type == TokenType::ParenClose)
             break;
     }
     TRY(expect_eof());
+
+    result.header = function_definition;
 
     return result;
 }

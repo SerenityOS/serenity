@@ -13,6 +13,8 @@ namespace JSSpecCompiler {
 
 inline constexpr StringView tag_emu_alg = "emu-alg"sv;
 inline constexpr StringView tag_emu_clause = "emu-clause"sv;
+inline constexpr StringView tag_emu_import = "emu-import"sv;
+inline constexpr StringView tag_emu_intro = "emu-intro"sv;
 inline constexpr StringView tag_emu_val = "emu-val"sv;
 inline constexpr StringView tag_emu_xref = "emu-xref"sv;
 inline constexpr StringView tag_h1 = "h1"sv;
@@ -20,6 +22,7 @@ inline constexpr StringView tag_li = "li"sv;
 inline constexpr StringView tag_ol = "ol"sv;
 inline constexpr StringView tag_p = "p"sv;
 inline constexpr StringView tag_span = "span"sv;
+inline constexpr StringView tag_specification = "specification"sv;
 inline constexpr StringView tag_var = "var"sv;
 
 inline constexpr StringView attribute_aoid = "aoid"sv;
