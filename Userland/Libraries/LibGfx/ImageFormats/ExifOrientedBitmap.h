@@ -23,7 +23,7 @@ public:
     void set_pixel(u32 x, u32 y, Color color)
     {
         auto const new_position = oriented_position(IntPoint(x, y));
-        m_bitmap->set_pixel(new_position, color);
+        m_bitmap->scanline(new_position.y())[new_position.x()] = color.value();
     }
 
     NonnullRefPtr<Bitmap>& bitmap()
