@@ -144,6 +144,7 @@ known_tags: List[Tag] = [
     Tag('320', [TIFFType.UnsignedShort], [], None, "ColorMap"),
     Tag('338', [TIFFType.UnsignedShort], [], None, "ExtraSamples", ExtraSample),
     Tag('339', [TIFFType.UnsignedShort], [], SampleFormat.Unsigned, "SampleFormat", SampleFormat),
+    Tag('347', [TIFFType.Undefined], [], None, "JPEGTables"),
     Tag('34665', [TIFFType.UnsignedLong, TIFFType.IFD], [1], None, "ExifIFD"),
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]

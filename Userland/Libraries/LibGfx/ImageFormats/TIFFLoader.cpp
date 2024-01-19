@@ -15,6 +15,7 @@
 #include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
 
 namespace Gfx {
@@ -399,6 +400,13 @@ private:
 
             TRY(loop_over_pixels(move(decode_lzw_strip)));
             break;
+        }
+        case Compression::JPEG: {
+            Optional<JPEG::Tables> tables;
+            if (m_metadata.jpeg_tables().has_value())
+                tables = TRY(JPEGImageDecoderPlugin::read_tables(*metadata().jpeg_tables()));
+
+            return Error::from_string_literal("TIFFImageDecoderPlugin: JPEG compression is not supported yet :^(");
         }
         case Compression::AdobeDeflate:
         case Compression::PixarDeflate: {
