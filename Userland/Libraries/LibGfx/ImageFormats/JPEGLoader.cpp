@@ -23,6 +23,8 @@
 
 namespace Gfx {
 
+namespace JPEG {
+
 struct MacroblockMeta {
     u32 total { 0 };
     u32 padded_total { 0 };
@@ -423,17 +425,17 @@ enum class ColorTransform {
     YCCK = 2,
 };
 
-struct JPEGLoadingContext {
-    JPEGLoadingContext(JPEGStream jpeg_stream, JPEGDecoderOptions options)
+struct LoadingContext {
+    LoadingContext(JPEGStream jpeg_stream, JPEGDecoderOptions options)
         : stream(move(jpeg_stream))
         , options(options)
     {
     }
 
-    static ErrorOr<NonnullOwnPtr<JPEGLoadingContext>> create(NonnullOwnPtr<Stream> stream, JPEGDecoderOptions options)
+    static ErrorOr<NonnullOwnPtr<LoadingContext>> create(NonnullOwnPtr<Stream> stream, JPEGDecoderOptions options)
     {
         auto jpeg_stream = TRY(JPEGStream::create(move(stream)));
-        return make<JPEGLoadingContext>(move(jpeg_stream), options);
+        return make<LoadingContext>(move(jpeg_stream), options);
     }
 
     enum State {
@@ -507,7 +509,7 @@ enum class JPEGDecodingMode {
 };
 
 template<JPEGDecodingMode DecodingMode>
-static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
+static ErrorOr<void> add_dc(LoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.dc_tables.get(scan_component.dc_destination_id);
     if (!maybe_table.has_value()) {
@@ -588,7 +590,7 @@ static bool is_progressive(StartOfFrame::FrameType frame_type)
 }
 
 template<JPEGDecodingMode DecodingMode>
-static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
+static ErrorOr<void> add_ac(LoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.ac_tables.get(scan_component.ac_destination_id);
     if (!maybe_table.has_value()) {
@@ -722,7 +724,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
 template<JPEGDecodingMode DecodingMode>
-static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
+static ErrorOr<void> build_macroblocks(LoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (auto const& scan_component : context.current_scan->components) {
         for (u8 vfactor_i = 0; vfactor_i < scan_component.component.sampling_factors.vertical; vfactor_i++) {
@@ -780,7 +782,7 @@ static bool is_dct_based(StartOfFrame::FrameType frame_type)
         || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT_Arithmetic;
 }
 
-static void reset_decoder(JPEGLoadingContext& context)
+static void reset_decoder(LoadingContext& context)
 {
     // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
     context.current_scan->end_of_bands_run_count = 0;
@@ -794,7 +796,7 @@ static void reset_decoder(JPEGLoadingContext& context)
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static ErrorOr<void> decode_huffman_stream(LoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
@@ -908,11 +910,11 @@ static ErrorOr<u16> read_effective_chunk_size(JPEGStream& stream)
     return stored_size - 2;
 }
 
-static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(JPEGStream& stream, LoadingContext& context)
 {
     // B.2.3 - Scan header syntax
 
-    if (context.state < JPEGLoadingContext::State::FrameDecoded)
+    if (context.state < LoadingContext::State::FrameDecoded)
         return Error::from_string_literal("SOS found before reading a SOF");
 
     [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
@@ -978,7 +980,7 @@ static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& 
     return {};
 }
 
-static ErrorOr<void> read_restart_interval(JPEGStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_restart_interval(JPEGStream& stream, LoadingContext& context)
 {
     // B.2.4.4 - Restart interval definition syntax
     u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
@@ -991,7 +993,7 @@ static ErrorOr<void> read_restart_interval(JPEGStream& stream, JPEGLoadingContex
     return {};
 }
 
-static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(JPEGStream& stream, LoadingContext& context)
 {
     // B.2.4.2 - Huffman table-specification syntax
 
@@ -1050,7 +1052,7 @@ static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& 
     return {};
 }
 
-static ErrorOr<void> read_icc_profile(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_icc_profile(JPEGStream& stream, LoadingContext& context, int bytes_to_read)
 {
     // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf, page 5, "JFIF".
     if (bytes_to_read <= 2) {
@@ -1125,7 +1127,7 @@ static ErrorOr<void> read_icc_profile(JPEGStream& stream, JPEGLoadingContext& co
     return {};
 }
 
-static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] JPEGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] LoadingContext& context, int bytes_to_read)
 {
     // The App 14 segment is application specific in the first JPEG standard.
     // However, the Adobe implementation is globally accepted and the value of the color transform
@@ -1169,7 +1171,7 @@ static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] J
     return {};
 }
 
-static ErrorOr<void> read_exif(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_exif(JPEGStream& stream, LoadingContext& context, int bytes_to_read)
 {
     // This refers to Exif's specification, see TIFFLoader for more information.
     // 4.7.2.2. - APP1 internal structure
@@ -1189,7 +1191,7 @@ static ErrorOr<void> read_exif(JPEGStream& stream, JPEGLoadingContext& context, 
     return {};
 }
 
-static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& context, int app_marker_number)
+static ErrorOr<void> read_app_marker(JPEGStream& stream, LoadingContext& context, int app_marker_number)
 {
     // B.2.4.6 - Application data syntax
 
@@ -1223,7 +1225,7 @@ static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& con
     return stream.discard(bytes_to_read);
 }
 
-static inline bool validate_sampling_factors_and_modify_context(SamplingFactors const& sampling_factors, JPEGLoadingContext& context)
+static inline bool validate_sampling_factors_and_modify_context(SamplingFactors const& sampling_factors, LoadingContext& context)
 {
     if ((sampling_factors.horizontal == 1 || sampling_factors.horizontal == 2) && (sampling_factors.vertical == 1 || sampling_factors.vertical == 2)) {
         context.mblock_meta.hpadded_count += sampling_factors.horizontal == 1 ? 0 : context.mblock_meta.hcount % 2;
@@ -1237,7 +1239,7 @@ static inline bool validate_sampling_factors_and_modify_context(SamplingFactors 
     return false;
 }
 
-static inline void set_macroblock_metadata(JPEGLoadingContext& context)
+static inline void set_macroblock_metadata(LoadingContext& context)
 {
     context.mblock_meta.hcount = ceil_div<u32>(context.frame.width, 8);
     context.mblock_meta.vcount = ceil_div<u32>(context.frame.height, 8);
@@ -1264,9 +1266,9 @@ static ErrorOr<void> ensure_standard_precision(StartOfFrame const& frame)
     return Error::from_string_literal("Unsupported SOF precision.");
 }
 
-static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(JPEGStream& stream, LoadingContext& context)
 {
-    if (context.state == JPEGLoadingContext::FrameDecoded) {
+    if (context.state == LoadingContext::FrameDecoded) {
         dbgln_if(JPEG_DEBUG, "SOF repeated!");
         return Error::from_string_literal("SOF repeated");
     }
@@ -1338,7 +1340,7 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
     return {};
 }
 
-static ErrorOr<void> read_quantization_table(JPEGStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(JPEGStream& stream, LoadingContext& context)
 {
     // B.2.4.1 - Quantization table-specification syntax
 
@@ -1389,7 +1391,7 @@ static ErrorOr<void> skip_segment(JPEGStream& stream)
     return {};
 }
 
-static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static ErrorOr<void> dequantize(LoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
@@ -1572,7 +1574,7 @@ static void inverse_dct_8x8(i16* block_component)
     }
 }
 
-static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct(LoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
@@ -1621,7 +1623,7 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
     }
 }
 
-static void undo_subsampling(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void undo_subsampling(LoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     // The first component has sampling factors of context.sampling_factors, while the others
     // divide the first component's sampling factors. This is enforced by read_start_of_frame().
@@ -1685,7 +1687,7 @@ static void ycbcr_to_rgb(Vector<Macroblock>& macroblocks)
     }
 }
 
-static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void invert_colors_for_adobe_images(LoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     if (!context.color_transform.has_value())
         return;
@@ -1724,7 +1726,7 @@ static void ycck_to_cmyk(Vector<Macroblock>& macroblocks)
     }
 }
 
-static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static ErrorOr<void> handle_color_transform(LoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     // Note: This is non-standard but some encoder still add the App14 segment for grayscale images.
     //       So let's ignore the color transform value if we only have one component.
@@ -1770,7 +1772,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
     return {};
 }
 
-static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblock> const& macroblocks)
+static ErrorOr<void> compose_bitmap(LoadingContext& context, Vector<Macroblock> const& macroblocks)
 {
     context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
 
@@ -1790,7 +1792,7 @@ static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblo
     return {};
 }
 
-static ErrorOr<void> compose_cmyk_bitmap(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static ErrorOr<void> compose_cmyk_bitmap(LoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     if (context.options.cmyk == JPEGDecoderOptions::CMYK::Normal)
         invert_colors_for_adobe_images(context, macroblocks);
@@ -1828,7 +1830,7 @@ static bool is_miscellaneous_or_table_marker(Marker const marker)
     return is_misc || is_table;
 }
 
-static ErrorOr<void> handle_miscellaneous_or_table(JPEGStream& stream, JPEGLoadingContext& context, Marker const marker)
+static ErrorOr<void> handle_miscellaneous_or_table(JPEGStream& stream, LoadingContext& context, Marker const marker)
 {
     if (is_app_marker(marker)) {
         TRY(read_app_marker(stream, context, marker - JPEG_APPN0));
@@ -1861,7 +1863,7 @@ static ErrorOr<void> handle_miscellaneous_or_table(JPEGStream& stream, JPEGLoadi
     return {};
 }
 
-static ErrorOr<void> parse_header(JPEGStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> parse_header(JPEGStream& stream, LoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPEG_SOI) {
@@ -1897,7 +1899,7 @@ static ErrorOr<void> parse_header(JPEGStream& stream, JPEGLoadingContext& contex
         case JPEG_SOF1:
         case JPEG_SOF2:
             TRY(read_start_of_frame(stream, context));
-            context.state = JPEGLoadingContext::FrameDecoded;
+            context.state = LoadingContext::FrameDecoded;
             return {};
         default:
             if (auto result = skip_segment(stream); result.is_error()) {
@@ -1911,9 +1913,9 @@ static ErrorOr<void> parse_header(JPEGStream& stream, JPEGLoadingContext& contex
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> decode_header(JPEGLoadingContext& context)
+static ErrorOr<void> decode_header(LoadingContext& context)
 {
-    VERIFY(context.state < JPEGLoadingContext::State::HeaderDecoded);
+    VERIFY(context.state < LoadingContext::State::HeaderDecoded);
     TRY(parse_header(context.stream, context));
 
     if constexpr (JPEG_DEBUG) {
@@ -1924,11 +1926,11 @@ static ErrorOr<void> decode_header(JPEGLoadingContext& context)
         dbgln("Macroblock meta padded total: {}", context.mblock_meta.padded_total);
     }
 
-    context.state = JPEGLoadingContext::State::HeaderDecoded;
+    context.state = LoadingContext::State::HeaderDecoded;
     return {};
 }
 
-static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& context)
+static ErrorOr<Vector<Macroblock>> construct_macroblocks(LoadingContext& context)
 {
     // B.6 - Summary
     // See: Figure B.16 – Flow of compressed data syntax
@@ -1955,7 +1957,7 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
     }
 }
 
-static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
+static ErrorOr<void> decode_jpeg(LoadingContext& context)
 {
     auto macroblocks = TRY(construct_macroblocks(context));
     TRY(dequantize(context, macroblocks));
@@ -1969,7 +1971,9 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     return {};
 }
 
-JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<JPEGLoadingContext> context)
+}
+
+JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<JPEG::LoadingContext> context)
     : m_context(move(context))
 {
 }
@@ -1997,7 +2001,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(Readon
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create_with_options(ReadonlyBytes data, JPEGDecoderOptions options)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto context = TRY(JPEGLoadingContext::create(move(stream), options));
+    auto context = TRY(JPEG::LoadingContext::create(move(stream), options));
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(context))));
     TRY(decode_header(*plugin->m_context));
     return plugin;
@@ -2008,15 +2012,15 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
     if (index > 0)
         return Error::from_string_literal("JPEGImageDecoderPlugin: Invalid frame index");
 
-    if (m_context->state == JPEGLoadingContext::State::Error)
+    if (m_context->state == JPEG::LoadingContext::State::Error)
         return Error::from_string_literal("JPEGImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < JPEGLoadingContext::State::BitmapDecoded) {
+    if (m_context->state < JPEG::LoadingContext::State::BitmapDecoded) {
         if (auto result = decode_jpeg(*m_context); result.is_error()) {
-            m_context->state = JPEGLoadingContext::State::Error;
+            m_context->state = JPEG::LoadingContext::State::Error;
             return result.release_error();
         }
-        m_context->state = JPEGLoadingContext::State::BitmapDecoded;
+        m_context->state = JPEG::LoadingContext::State::BitmapDecoded;
     }
 
     if (m_context->cmyk_bitmap && !m_context->bitmap)
@@ -2041,9 +2045,9 @@ ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
 
 NaturalFrameFormat JPEGImageDecoderPlugin::natural_frame_format() const
 {
-    if (m_context->state == JPEGLoadingContext::State::Error)
+    if (m_context->state == JPEG::LoadingContext::State::Error)
         return NaturalFrameFormat::RGB;
-    VERIFY(m_context->state >= JPEGLoadingContext::State::HeaderDecoded);
+    VERIFY(m_context->state >= JPEG::LoadingContext::State::HeaderDecoded);
     if (m_context->components.size() == 1)
         return NaturalFrameFormat::Grayscale;
     if (m_context->components.size() == 4)
@@ -2055,12 +2059,12 @@ ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEGImageDecoderPlugin::cmyk_frame()
 {
     VERIFY(natural_frame_format() == NaturalFrameFormat::CMYK);
 
-    if (m_context->state < JPEGLoadingContext::State::BitmapDecoded) {
+    if (m_context->state < JPEG::LoadingContext::State::BitmapDecoded) {
         if (auto result = decode_jpeg(*m_context); result.is_error()) {
-            m_context->state = JPEGLoadingContext::State::Error;
+            m_context->state = JPEG::LoadingContext::State::Error;
             return result.release_error();
         }
-        m_context->state = JPEGLoadingContext::State::BitmapDecoded;
+        m_context->state = JPEG::LoadingContext::State::BitmapDecoded;
     }
 
     return *m_context->cmyk_bitmap;

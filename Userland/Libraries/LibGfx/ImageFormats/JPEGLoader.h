@@ -12,7 +12,9 @@
 
 namespace Gfx {
 
-struct JPEGLoadingContext;
+namespace JPEG {
+struct LoadingContext;
+}
 
 // For the specification, see: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
 
@@ -46,9 +48,9 @@ public:
     virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() override;
 
 private:
-    JPEGImageDecoderPlugin(NonnullOwnPtr<JPEGLoadingContext>);
+    JPEGImageDecoderPlugin(NonnullOwnPtr<JPEG::LoadingContext>);
 
-    NonnullOwnPtr<JPEGLoadingContext> m_context;
+    NonnullOwnPtr<JPEG::LoadingContext> m_context;
 };
 
 }
