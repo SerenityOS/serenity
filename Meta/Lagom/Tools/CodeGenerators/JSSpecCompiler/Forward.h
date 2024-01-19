@@ -64,6 +64,11 @@ class AlgorithmStepList;
 class Algorithm;
 class SpecFunction;
 
+// DiagnosticEngine.h
+struct LogicalLocation;
+struct Location;
+class DiagnosticEngine;
+
 // Function.h
 class TranslationUnit;
 using TranslationUnitRef = TranslationUnit*;

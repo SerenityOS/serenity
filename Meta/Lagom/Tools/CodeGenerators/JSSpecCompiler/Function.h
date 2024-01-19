@@ -11,6 +11,7 @@
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 
+#include "DiagnosticEngine.h"
 #include "Forward.h"
 
 namespace JSSpecCompiler {
@@ -26,10 +27,12 @@ public:
     FunctionDeclarationRef find_declaration_by_name(StringView name) const;
 
     StringView filename() const { return m_filename; }
+    DiagnosticEngine& diag() { return m_diagnostic_engine; }
     Vector<FunctionDefinitionRef> functions_to_compile() const { return m_functions_to_compile; }
 
 private:
     StringView m_filename;
+    DiagnosticEngine m_diagnostic_engine;
     Vector<FunctionDefinitionRef> m_functions_to_compile;
     Vector<NonnullRefPtr<FunctionDeclaration>> m_declarations_owner;
     HashMap<StringView, FunctionDeclarationRef> m_function_index;
