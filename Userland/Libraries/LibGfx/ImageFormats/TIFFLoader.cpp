@@ -272,7 +272,7 @@ private:
                     }
 
                     last_color = color;
-                    oriented_bitmap.set_pixel(column, scanline, color);
+                    oriented_bitmap.set_pixel(column, scanline, color.value());
                 }
 
                 decoded_stream->align_to_byte_boundary();
