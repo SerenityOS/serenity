@@ -161,6 +161,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name() == "unsigned long" && !type.is_nullable())
         return { .name = "WebIDL::UnsignedLong", .sequence_storage_type = SequenceStorageType::Vector };
 
+    if (type.name() == "short" && !type.is_nullable())
+        return { .name = "WebIDL::Short", .sequence_storage_type = SequenceStorageType::Vector };
+
     if (type.name() == "unsigned short" && !type.is_nullable())
         return { .name = "WebIDL::UnsignedShort", .sequence_storage_type = SequenceStorageType::Vector };
 
@@ -515,6 +518,31 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     else
         @cpp_name@ = @parameter.optional_default_value@UL;
+)~~~");
+        }
+    } else if (parameter.type->name() == "short") {
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    WebIDL::Short @cpp_name@;
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<WebIDL::Short> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::Short>(vm, @js_name@@js_suffix@));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@;
 )~~~");
         }
     } else if (parameter.type->name() == "unsigned short") {
