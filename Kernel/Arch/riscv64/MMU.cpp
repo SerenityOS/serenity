@@ -45,7 +45,11 @@ public:
         u64* page = m_current;
         m_current += (PAGE_TABLE_SIZE / sizeof(FlatPtr));
 
-        __builtin_memset(page, 0, PAGE_TABLE_SIZE);
+        // We can't use [__builtin_]memset here, as that would call into code which has stack protectors enabled,
+        // resulting in an access to an absolute address.
+        for (u64* p = page; p < page + (PAGE_TABLE_SIZE / sizeof(u64)); p++)
+            *p = 0;
+
         return page;
     }
 

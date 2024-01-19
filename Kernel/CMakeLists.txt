@@ -510,8 +510,19 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
     set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all")
 elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
+    set(SOURCES_RUNNING_WITHOUT_MMU
+        Arch/riscv64/MMU.cpp
+        Arch/riscv64/pre_init.cpp
+
+        # FIXME: Don't disable stack protectors and sanitizers in SBI.cpp.
+        #        Maybe implement SBI debug console printing directly in pre_init.cpp as well?
+        Arch/riscv64/SBI.cpp
+    )
+
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        ${SOURCES_RUNNING_WITHOUT_MMU}
+
         Arch/Processor.cpp
         kprintf.cpp
 
@@ -536,7 +547,15 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Timer.cpp
     )
 
-    add_compile_options(-fno-stack-protector -fno-sanitize=all)
+    # NOTE: These files cannot use a stack protector and sanitizers, as these will cause accesses to global variables to be inserted
+    #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
+    #       On GCC, also prevent loops from being optimized into functions like memset, as those might use stack protectors and sanitizers.
+    #       We also have to disable our -ftrivial-auto-var-init=pattern mitigation, as that would cause memsets to be inserted.
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all -ftrivial-auto-var-init=uninitialized -fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
+    else()
+        set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all -ftrivial-auto-var-init=uninitialized")
+    endif()
 endif()
 
 set(AK_SOURCES
