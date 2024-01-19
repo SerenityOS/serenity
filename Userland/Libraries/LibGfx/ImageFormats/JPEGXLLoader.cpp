@@ -1750,7 +1750,7 @@ public:
                         to_u8(m_channels[*alpha_channel].get(x, y)),
                     };
                 }();
-                oriented_bitmap.set_pixel(x, y, color);
+                oriented_bitmap.set_pixel(x, y, color.value());
             }
         }
 
