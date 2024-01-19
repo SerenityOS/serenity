@@ -18,6 +18,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/Geometry/DOMRect.h>
+#include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -1144,6 +1145,13 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
     TRY(set_start(*new_node, new_offset));
     TRY(set_end(*new_node, new_offset));
     return {};
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
+JS::NonnullGCPtr<Geometry::DOMRectList> Range::get_client_rects() const
+{
+    dbgln("(STUBBED) Range::get_client_rects()");
+    return Geometry::DOMRectList::create(realm(), {});
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-range-getboundingclientrect
