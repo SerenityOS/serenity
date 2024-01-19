@@ -29,7 +29,7 @@ class MouseEvent : public UIEvent {
     JS_DECLARE_ALLOCATOR(MouseEvent);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0, unsigned modifiers = 0);
+    [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons, unsigned modifiers);
 
     virtual ~MouseEvent() override;
@@ -60,10 +60,12 @@ public:
     i16 button() const { return m_button; }
     u16 buttons() const { return m_buttons; }
 
+    bool get_modifier_state(String const& key_arg) const;
+
     virtual u32 which() const override { return m_button + 1; }
 
 protected:
-    MouseEvent(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers);
+    MouseEvent(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y);
 
     virtual void initialize(JS::Realm&) override;
 
@@ -82,6 +84,16 @@ private:
     bool m_shift_key { false };
     bool m_alt_key { false };
     bool m_meta_key { false };
+    bool m_modifier_alt_graph { false };
+    bool m_modifier_caps_lock { false };
+    bool m_modifier_fn { false };
+    bool m_modifier_fn_lock { false };
+    bool m_modifier_hyper { false };
+    bool m_modifier_num_lock { false };
+    bool m_modifier_scroll_lock { false };
+    bool m_modifier_super { false };
+    bool m_modifier_symbol { false };
+    bool m_modifier_symbol_lock { false };
     double m_movement_x { 0 };
     double m_movement_y { 0 };
     i16 m_button { 0 };

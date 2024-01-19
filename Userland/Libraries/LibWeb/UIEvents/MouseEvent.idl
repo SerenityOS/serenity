@@ -1,4 +1,4 @@
-#import <UIEvents/UIEvent.idl>
+#import <UIEvents/EventModifier.idl>
 
 // https://w3c.github.io/uievents/#mouseevent
 [Exposed=Window]
@@ -31,7 +31,7 @@ interface MouseEvent : UIEvent {
 
     // FIXME: readonly attribute EventTarget? relatedTarget;
 
-    // FIXME: boolean getModifierState(DOMString keyArg);
+    boolean getModifierState(DOMString keyArg);
 };
 
 // https://w3c.github.io/uievents/#idl-mouseeventinit

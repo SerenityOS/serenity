@@ -16,7 +16,7 @@ namespace Web::UIEvents {
 
 JS_DEFINE_ALLOCATOR(MouseEvent);
 
-MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers)
+MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
     : UIEvent(realm, event_name, event_init)
     , m_screen_x(event_init.screen_x)
     , m_screen_y(event_init.screen_y)
@@ -26,10 +26,20 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_client_y(event_init.client_y)
     , m_offset_x(offset_x)
     , m_offset_y(offset_y)
-    , m_ctrl_key(modifiers & Mod_Ctrl)
-    , m_shift_key(modifiers & Mod_Shift)
-    , m_alt_key(modifiers & Mod_Alt)
-    , m_meta_key(modifiers & Mod_Super)
+    , m_ctrl_key(event_init.ctrl_key)
+    , m_shift_key(event_init.shift_key)
+    , m_alt_key(event_init.alt_key)
+    , m_meta_key(event_init.meta_key)
+    , m_modifier_alt_graph(event_init.modifier_alt_graph)
+    , m_modifier_caps_lock(event_init.modifier_caps_lock)
+    , m_modifier_fn(event_init.modifier_fn)
+    , m_modifier_fn_lock(event_init.modifier_fn_lock)
+    , m_modifier_hyper(event_init.modifier_hyper)
+    , m_modifier_num_lock(event_init.modifier_num_lock)
+    , m_modifier_scroll_lock(event_init.modifier_scroll_lock)
+    , m_modifier_super(event_init.modifier_super)
+    , m_modifier_symbol(event_init.modifier_symbol)
+    , m_modifier_symbol_lock(event_init.modifier_symbol_lock)
     , m_movement_x(event_init.movement_x)
     , m_movement_y(event_init.movement_y)
     , m_button(event_init.button)
@@ -44,6 +54,39 @@ void MouseEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"_fly_string));
+}
+
+bool MouseEvent::get_modifier_state(String const& key_arg) const
+{
+    if (key_arg == "Control")
+        return m_ctrl_key;
+    if (key_arg == "Shift")
+        return m_shift_key;
+    if (key_arg == "Alt")
+        return m_alt_key;
+    if (key_arg == "Meta")
+        return m_meta_key;
+    if (key_arg == "AltGraph")
+        return m_modifier_alt_graph;
+    if (key_arg == "CapsLock")
+        return m_modifier_caps_lock;
+    if (key_arg == "Fn")
+        return m_modifier_fn;
+    if (key_arg == "FnLock")
+        return m_modifier_fn_lock;
+    if (key_arg == "Hyper")
+        return m_modifier_hyper;
+    if (key_arg == "NumLock")
+        return m_modifier_num_lock;
+    if (key_arg == "ScrollLock")
+        return m_modifier_scroll_lock;
+    if (key_arg == "Super")
+        return m_modifier_super;
+    if (key_arg == "Symbol")
+        return m_modifier_symbol;
+    if (key_arg == "SymbolLock")
+        return m_modifier_symbol_lock;
+    return false;
 }
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button
@@ -65,14 +108,18 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers)
+JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
 {
-    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y, modifiers);
+    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons, unsigned modifiers)
 {
     MouseEventInit event_init {};
+    event_init.ctrl_key = modifiers & Mod_Ctrl;
+    event_init.shift_key = modifiers & Mod_Shift;
+    event_init.alt_key = modifiers & Mod_Alt;
+    event_init.meta_key = modifiers & Mod_Super;
     event_init.screen_x = screen.x().to_double();
     event_init.screen_y = screen.y().to_double();
     event_init.client_x = client.x().to_double();
@@ -83,7 +130,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platfo
     }
     event_init.button = determine_button(button);
     event_init.buttons = buttons;
-    auto event = MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double(), modifiers);
+    auto event = MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double());
     event->set_is_trusted(true);
     return event;
 }

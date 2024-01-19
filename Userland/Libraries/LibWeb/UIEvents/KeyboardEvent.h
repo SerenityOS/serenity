@@ -58,7 +58,7 @@ public:
     bool repeat() const { return m_repeat; }
     bool is_composing() const { return m_is_composing; }
 
-    bool get_modifier_state(String const& key_arg);
+    bool get_modifier_state(String const& key_arg) const;
 
     virtual u32 which() const override { return m_key_code; }
 
@@ -74,6 +74,16 @@ private:
     bool m_shift_key { false };
     bool m_alt_key { false };
     bool m_meta_key { false };
+    bool m_modifier_alt_graph { false };
+    bool m_modifier_caps_lock { false };
+    bool m_modifier_fn { false };
+    bool m_modifier_fn_lock { false };
+    bool m_modifier_hyper { false };
+    bool m_modifier_num_lock { false };
+    bool m_modifier_scroll_lock { false };
+    bool m_modifier_super { false };
+    bool m_modifier_symbol { false };
+    bool m_modifier_symbol_lock { false };
     bool m_repeat { false };
     bool m_is_composing { false };
     u32 m_key_code { 0 };
