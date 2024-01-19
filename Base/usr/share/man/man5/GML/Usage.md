@@ -50,3 +50,16 @@ From there, you can use `find_descendant_of_type_named` to select widgets from y
 // MyApp::Widget::foo_bar
 m_mem_add_button = *find_descendant_of_type_named<GUI::Button>("mem_add_button");
 ```
+
+### `initialize_fallibles` Pattern
+
+Initialization, like adding models, attaching callbacks, etc., should be done in a member function with the signature:
+
+```cpp
+// MyApp::Widget
+ErrorOr<void> initialize_fallibles();
+```
+
+This initializer function, if it exists, will automatically be called after the structure of your widget was set up by the auto-generated GML code.
+
+The only case where this function cannot be used is when your initialization requires additional parameters, like a GUI window. You may still consider moving as much initialization to the canonical function as possible.

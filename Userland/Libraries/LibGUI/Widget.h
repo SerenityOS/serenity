@@ -71,6 +71,28 @@ enum class AllowCallback {
     Yes
 };
 
+template<typename T>
+concept HasFalliblesInitializer = requires(T object) {
+    {
+        object.initialize_fallibles()
+    } -> SameAs<ErrorOr<void>>;
+};
+
+template<typename T>
+requires(HasFalliblesInitializer<T>)
+ErrorOr<void> initialize_fallibles(T& object)
+{
+    return object.initialize_fallibles();
+}
+
+template<typename T>
+requires(!HasFalliblesInitializer<T>)
+ErrorOr<void> initialize_fallibles(T& object)
+{
+    (void)object;
+    return {};
+}
+
 class Widget : public GUI::Object {
     C_OBJECT(Widget)
 public:
