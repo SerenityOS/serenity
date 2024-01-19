@@ -12,6 +12,7 @@
 #include <LibCompress/LZWDecoder.h>
 #include <LibCompress/PackBitsDecoder.h>
 #include <LibCompress/Zlib.h>
+#include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
@@ -114,6 +115,11 @@ public:
         return m_state;
     }
 
+    RefPtr<CMYKBitmap> cmyk_bitmap() const
+    {
+        return m_cmyk_bitmap;
+    }
+
     RefPtr<Bitmap> bitmap() const
     {
         return m_bitmap;
@@ -144,6 +150,8 @@ private:
             return 1;
         case PhotometricInterpretation::RGB:
             return 3;
+        case PhotometricInterpretation::CMYK:
+            return 4;
         default:
             TODO();
         }
@@ -238,6 +246,22 @@ private:
         return Error::from_string_literal("Unsupported value for PhotometricInterpretation");
     }
 
+    ErrorOr<CMYK> read_color_cmyk(BigEndianInputBitStream& stream)
+    {
+        VERIFY(m_metadata.photometric_interpretation() == PhotometricInterpretation::CMYK);
+        auto bits_per_sample = *m_metadata.bits_per_sample();
+
+        auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
+        auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
+        auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
+        auto const fourth_component = TRY(read_component(stream, bits_per_sample[3]));
+
+        // FIXME: We probably won't encounter CMYK images with an alpha channel, but if
+        //        we do: the first step to support them is not dropping the value here!
+        [[maybe_unused]] auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
+        return CMYK { first_component, second_component, third_component, fourth_component };
+    }
+
     template<CallableAs<ErrorOr<ReadonlyBytes>, u32, u32> StripDecoder>
     ErrorOr<void> loop_over_pixels(StripDecoder&& strip_decoder)
     {
@@ -245,7 +269,11 @@ private:
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
         auto const rows_per_strip = m_metadata.rows_per_strip().value_or(*m_metadata.image_height());
 
-        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_height() }, BitmapFormat::BGRA8888));
+        Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap> oriented_bitmap = TRY(([&]() -> ErrorOr<Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap>> {
+            if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK)
+                return ExifOrientedCMYKBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_height() });
+            return ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_height() }, BitmapFormat::BGRA8888);
+        }()));
 
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
@@ -263,25 +291,35 @@ private:
                 Optional<Color> last_color {};
 
                 for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
-                    auto color = TRY(read_color(*decoded_stream));
+                    if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK) {
+                        auto const cmyk = TRY(read_color_cmyk(*decoded_stream));
+                        oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(column, scanline, cmyk);
+                    } else {
+                        auto color = TRY(read_color(*decoded_stream));
 
-                    if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
-                        color.set_red(last_color->red() + color.red());
-                        color.set_green(last_color->green() + color.green());
-                        color.set_blue(last_color->blue() + color.blue());
-                        if (alpha_channel_index().has_value())
-                            color.set_alpha(last_color->alpha() + color.alpha());
+                        // FIXME:  We should do the differencing at the byte-stream level, that would make it
+                        //         compatible with both LibPDF and all color formats.
+                        if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
+                            color.set_red(last_color->red() + color.red());
+                            color.set_green(last_color->green() + color.green());
+                            color.set_blue(last_color->blue() + color.blue());
+                            if (alpha_channel_index().has_value())
+                                color.set_alpha(last_color->alpha() + color.alpha());
+                        }
+
+                        last_color = color;
+                        oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(column, scanline, color.value());
                     }
-
-                    last_color = color;
-                    oriented_bitmap.set_pixel(column, scanline, color.value());
                 }
 
                 decoded_stream->align_to_byte_boundary();
             }
         }
 
-        m_bitmap = oriented_bitmap.bitmap();
+        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::CMYK)
+            m_cmyk_bitmap = oriented_bitmap.get<ExifOrientedCMYKBitmap>().bitmap();
+        else
+            m_bitmap = oriented_bitmap.get<ExifOrientedBitmap>().bitmap();
 
         return {};
     }
@@ -564,6 +602,7 @@ private:
     NonnullOwnPtr<FixedMemoryStream> m_stream;
     State m_state {};
     RefPtr<Bitmap> m_bitmap {};
+    RefPtr<CMYKBitmap> m_cmyk_bitmap {};
 
     ByteOrder m_byte_order {};
     Optional<u32> m_next_ifd {};
@@ -610,6 +649,9 @@ ErrorOr<ImageFrameDescriptor> TIFFImageDecoderPlugin::frame(size_t index, Option
 
     if (m_context->state() < TIFF::TIFFLoadingContext::State::FrameDecoded)
         TRY(m_context->decode_frame());
+
+    if (m_context->cmyk_bitmap())
+        return ImageFrameDescriptor { TRY(m_context->cmyk_bitmap()->to_low_quality_rgb()), 0 };
 
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
 }
