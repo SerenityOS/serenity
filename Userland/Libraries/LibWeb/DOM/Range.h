@@ -85,6 +85,7 @@ public:
 
     static HashTable<Range*>& live_ranges();
 
+    JS::NonnullGCPtr<Geometry::DOMRectList> get_client_rects() const;
     JS::NonnullGCPtr<Geometry::DOMRect> get_bounding_client_rect() const;
 
     bool contains_node(Node const&) const;
