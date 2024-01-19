@@ -161,44 +161,46 @@ private:
         return OptionalNone {};
     }
 
-    ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
+    ErrorOr<u8> manage_extra_channels(BigEndianInputBitStream& stream, Vector<u32> const& bits_per_sample) const
     {
-        auto bits_per_sample = *m_metadata.bits_per_sample();
-
         // Section 7: Additional Baseline TIFF Requirements
         // Some TIFF files may have more components per pixel than you think. A Baseline TIFF reader must skip over
         // them gracefully, using the values of the SamplesPerPixel and BitsPerSample fields.
-        auto manage_extra_channels = [&]() -> ErrorOr<u8> {
-            // Both unknown and alpha channels are considered as extra channels, so let's iterate over
-            // them, conserve the alpha value (if any) and discard everything else.
 
-            auto const number_base_channels = samples_for_photometric_interpretation();
-            auto const alpha_index = alpha_channel_index();
+        // Both unknown and alpha channels are considered as extra channels, so let's iterate over
+        // them, conserve the alpha value (if any) and discard everything else.
 
-            Optional<u8> alpha {};
+        auto const number_base_channels = samples_for_photometric_interpretation();
+        auto const alpha_index = alpha_channel_index();
 
-            for (u8 i = number_base_channels; i < bits_per_sample.size(); ++i) {
-                if (alpha_index == i)
-                    alpha = TRY(read_component(stream, bits_per_sample[i]));
-                else
-                    TRY(read_component(stream, bits_per_sample[i]));
-            }
+        Optional<u8> alpha {};
 
-            return alpha.value_or(NumericLimits<u8>::max());
-        };
+        for (u8 i = number_base_channels; i < bits_per_sample.size(); ++i) {
+            if (alpha_index == i)
+                alpha = TRY(read_component(stream, bits_per_sample[i]));
+            else
+                TRY(read_component(stream, bits_per_sample[i]));
+        }
+
+        return alpha.value_or(NumericLimits<u8>::max());
+    }
+
+    ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
+    {
+        auto bits_per_sample = *m_metadata.bits_per_sample();
 
         if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGB) {
             auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
             auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
             auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
 
-            auto const alpha = TRY(manage_extra_channels());
+            auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
             return Color(first_component, second_component, third_component, alpha);
         }
 
         if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGBPalette) {
             auto const index = TRY(stream.read_bits<u16>(bits_per_sample[0]));
-            auto const alpha = TRY(manage_extra_channels());
+            auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
 
             // SamplesPerPixel == 1 is a requirement for RGBPalette
             // From description of PhotometricInterpretation in Section 8: Baseline Field Reference Guide
@@ -229,7 +231,7 @@ private:
             if (m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero)
                 luminosity = ~luminosity;
 
-            auto const alpha = TRY(manage_extra_channels());
+            auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
             return Color(luminosity, luminosity, luminosity, alpha);
         }
 
