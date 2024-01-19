@@ -399,7 +399,8 @@ void Application::set_most_recently_open_file(ByteString new_path)
             path);
     }
 
-    update_recent_file_actions();
+    if (!m_recent_file_actions.is_empty())
+        update_recent_file_actions();
 }
 
 }
