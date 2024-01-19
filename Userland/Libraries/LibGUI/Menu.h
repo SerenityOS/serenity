@@ -46,7 +46,11 @@ public:
     [[nodiscard]] NonnullRefPtr<Menu> add_submenu(String name);
     void remove_all_actions();
 
-    void add_recent_files_list(Function<void(Action&)>);
+    enum class AddTrailingSeparator {
+        No,
+        Yes,
+    };
+    void add_recent_files_list(Function<void(Action&)>, AddTrailingSeparator = AddTrailingSeparator::Yes);
 
     void popup(Gfx::IntPoint screen_position, RefPtr<Action> const& default_action = nullptr, Gfx::IntRect const& button_rect = {});
     void dismiss();

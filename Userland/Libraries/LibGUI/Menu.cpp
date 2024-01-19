@@ -224,7 +224,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
     }
 }
 
-void Menu::add_recent_files_list(Function<void(Action&)> callback)
+void Menu::add_recent_files_list(Function<void(Action&)> callback, AddTrailingSeparator add_trailing_separator)
 {
     m_recent_files_callback = move(callback);
 
@@ -244,7 +244,8 @@ void Menu::add_recent_files_list(Function<void(Action&)> callback)
         add_action(action);
     }
 
-    add_separator();
+    if (add_trailing_separator == AddTrailingSeparator::Yes)
+        add_separator();
 }
 
 }
