@@ -3,6 +3,7 @@
  * Copyright (c) 2020-2022, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2023-2024, Abhishek R. <raturiabhi1000@gmail.com>
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -275,14 +276,7 @@ void HackStudioWidget::open_project(ByteString const& root_path)
             LexicalPath::relative_path(absolute_new_path, m_project->root_path()));
     };
 
-    auto recent_projects = read_recent_projects();
-    recent_projects.remove_all_matching([&](auto& p) { return p == absolute_root_path; });
-    recent_projects.insert(0, absolute_root_path);
-    if (recent_projects.size() > recent_projects_history_size)
-        recent_projects.shrink(recent_projects_history_size);
-
-    Config::write_string("HackStudio"sv, "Global"sv, "RecentProjects"sv, JsonArray(recent_projects).to_byte_string());
-    update_recent_projects_submenu();
+    GUI::Application::the()->set_most_recently_open_file(absolute_root_path);
 }
 
 Vector<ByteString> HackStudioWidget::selected_file_paths() const
@@ -1404,29 +1398,6 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     };
 }
 
-void HackStudioWidget::update_recent_projects_submenu()
-{
-    if (!m_recent_projects_submenu)
-        return;
-
-    m_recent_projects_submenu->remove_all_actions();
-    auto recent_projects = read_recent_projects();
-
-    if (recent_projects.size() <= 1) {
-        auto empty_action = GUI::Action::create("(No recently open files)", [](auto&) {});
-        empty_action->set_enabled(false);
-        m_recent_projects_submenu->add_action(empty_action);
-        return;
-    }
-
-    for (size_t i = 1; i < recent_projects.size(); i++) {
-        auto project_path = recent_projects[i];
-        m_recent_projects_submenu->add_action(GUI::Action::create(recent_projects[i], [this, project_path](auto&) {
-            open_project(project_path);
-        }));
-    }
-}
-
 ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto file_menu = window.add_menu("&File"_string);
@@ -1451,8 +1422,10 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
     {
         auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-recent.png"sv));
         m_recent_projects_submenu->set_icon(icon);
+        m_recent_projects_submenu->add_recent_files_list(
+            [this](GUI::Action& action) { open_project(action.text()); },
+            GUI::Menu::AddTrailingSeparator::No);
     }
-    update_recent_projects_submenu();
     file_menu->add_action(*m_save_action);
     file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();

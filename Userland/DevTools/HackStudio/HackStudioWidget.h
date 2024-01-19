@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -86,8 +87,6 @@ public:
     void update_window_title();
 
 private:
-    static constexpr size_t recent_projects_history_size = 15;
-
     static ByteString get_full_path_of_serenity_source(ByteString const& file);
     ByteString get_absolute_path(ByteString const&) const;
     Vector<ByteString> selected_file_paths() const;
@@ -149,7 +148,6 @@ private:
     void create_toolbar(GUI::Widget& parent);
     ErrorOr<void> create_action_tab(GUI::Widget& parent);
     ErrorOr<void> create_file_menu(GUI::Window&);
-    void update_recent_projects_submenu();
     ErrorOr<void> create_edit_menu(GUI::Window&);
     void create_build_menu(GUI::Window&);
     ErrorOr<void> create_view_menu(GUI::Window&);
