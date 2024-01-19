@@ -569,7 +569,7 @@ void SpreadsheetWidget::save(String const& filename, Core::File& file)
     }
     undo_stack().set_current_unmodified();
     window()->set_modified(false);
-    GUI::Application::the()->set_most_recently_open_file(filename);
+    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
 }
 
 void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
@@ -592,7 +592,7 @@ void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
 
     setup_tabs(m_workbook->sheets());
     update_window_title();
-    GUI::Application::the()->set_most_recently_open_file(filename);
+    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
 }
 
 void SpreadsheetWidget::import_sheets(String const& filename, Core::File& file)

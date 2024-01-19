@@ -208,16 +208,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project_as();
-        auto path_string = String::from_byte_string(editor->path()).release_value_but_fixme_should_propagate_errors();
-        GUI::Application::the()->set_most_recently_open_file(path_string);
+        GUI::Application::the()->set_most_recently_open_file(editor->path());
     });
 
     m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project();
-        auto path_string = String::from_byte_string(editor->path()).release_value_but_fixme_should_propagate_errors();
-        GUI::Application::the()->set_most_recently_open_file(path_string);
+        GUI::Application::the()->set_most_recently_open_file(editor->path());
     });
 
     file_menu->add_action(*m_new_image_action);
@@ -1310,7 +1308,7 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
     editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
     m_toolbox->ensure_tool_selection();
-    GUI::Application::the()->set_most_recently_open_file(file.filename());
+    GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
 }
 
 ErrorOr<void> MainWidget::create_default_image()
