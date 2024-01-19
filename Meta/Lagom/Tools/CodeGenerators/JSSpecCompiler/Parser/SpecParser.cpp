@@ -16,6 +16,38 @@
 
 namespace JSSpecCompiler {
 
+DiagnosticEngine& SpecificationParsingContext::diag()
+{
+    return m_translation_unit->diag();
+}
+
+template<typename Func>
+auto SpecificationParsingContext::with_new_logical_scope(Func&& func)
+{
+    TemporaryChange<RefPtr<LogicalLocation>> change(m_current_logical_scope, make_ref_counted<LogicalLocation>());
+    return func();
+}
+
+LogicalLocation& SpecificationParsingContext::current_logical_scope()
+{
+    return *m_current_logical_scope;
+}
+
+Location SpecificationParsingContext::file_scope() const
+{
+    return { .filename = m_translation_unit->filename() };
+}
+
+Location SpecificationParsingContext::location_from_xml_offset(XML::Offset offset) const
+{
+    return {
+        .filename = m_translation_unit->filename(),
+        .line = offset.line,
+        .column = offset.column,
+        .logical_location = m_current_logical_scope,
+    };
+}
+
 ParseErrorOr<AlgorithmStep> AlgorithmStep::create(XML::Node const* node)
 {
     VERIFY(node->as_element().name == tag_li);
@@ -185,14 +217,35 @@ SpecParsingStep::~SpecParsingStep() = default;
 
 void SpecParsingStep::run(TranslationUnitRef translation_unit)
 {
+    SpecificationParsingContext ctx(translation_unit);
     auto filename = translation_unit->filename();
 
-    auto file = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
-    m_input = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
+    auto file_or_error = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read);
+    if (file_or_error.is_error()) {
+        ctx.diag().fatal_error(Location::global_scope(),
+            "unable to open '{}': {}", filename, file_or_error.error());
+        return;
+    }
+
+    auto input_or_error = file_or_error.value()->read_until_eof();
+    if (input_or_error.is_error()) {
+        ctx.diag().fatal_error(Location::global_scope(),
+            "unable to read '{}': {}", filename, input_or_error.error());
+        return;
+    }
+    m_input = input_or_error.release_value();
 
     XML::Parser parser { m_input };
-    auto document = parser.parse().release_value_but_fixme_should_propagate_errors();
-    m_document = AK::adopt_own_if_nonnull(new XML::Document(move(document)));
+    auto document_or_error = parser.parse();
+    if (document_or_error.is_error()) {
+        ctx.diag().fatal_error(ctx.file_scope(),
+            "XML::Parser failed to parse input: {}", document_or_error.error());
+        ctx.diag().note(ctx.file_scope(),
+            "since XML::Parser backtracks on error, the message above is likely to point to the "
+            "first tag in the input - use external XML verifier to find out the exact cause of error");
+        return;
+    }
+    m_document = make<XML::Document>(document_or_error.release_value());
 
     auto spec_function = SpecFunction::create(&m_document->root()).release_value_but_fixme_should_propagate_errors();
 

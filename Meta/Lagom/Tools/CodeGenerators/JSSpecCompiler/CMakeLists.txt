@@ -17,6 +17,7 @@ set(SOURCES
     Parser/SpecParser.cpp
     Parser/TextParser.cpp
     Parser/XMLUtils.cpp
+    DiagnosticEngine.cpp
     Function.cpp
     main.cpp
 )

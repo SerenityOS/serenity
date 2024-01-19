@@ -136,6 +136,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto const& step : pipeline.pipeline()) {
         step.step->run(&translation_unit);
 
+        if (translation_unit.diag().has_fatal_errors()) {
+            translation_unit.diag().print_diagnostics();
+            return 1;
+        }
+
         if (step.dump_ast) {
             outln(stderr, "===== AST after {} =====", step.step->name());
             for (auto const& function : translation_unit.functions_to_compile()) {
@@ -151,6 +156,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
     }
+
+    translation_unit.diag().print_diagnostics();
 
     return 0;
 }

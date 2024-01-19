@@ -15,6 +15,31 @@
 #include "Parser/Token.h"
 
 namespace JSSpecCompiler {
+
+class SpecificationParsingContext {
+    AK_MAKE_NONCOPYABLE(SpecificationParsingContext);
+    AK_MAKE_NONMOVABLE(SpecificationParsingContext);
+
+public:
+    SpecificationParsingContext(TranslationUnitRef translation_unit)
+        : m_translation_unit(translation_unit)
+    {
+    }
+
+    DiagnosticEngine& diag();
+
+    template<typename Func>
+    auto with_new_logical_scope(Func&& func);
+    LogicalLocation& current_logical_scope();
+
+    Location file_scope() const;
+    Location location_from_xml_offset(XML::Offset offset) const;
+
+private:
+    TranslationUnitRef m_translation_unit;
+    RefPtr<LogicalLocation> m_current_logical_scope;
+};
+
 class AlgorithmStepList {
 public:
     static ParseErrorOr<AlgorithmStepList> create(XML::Node::Element const& element);
