@@ -17,6 +17,10 @@ namespace Gfx {
 // First TIFF Technical notes from 1995
 // https://www.awaresystems.be/imaging/tiff/specification/TIFFPM6.pdf
 
+// Second TIFF Technical notes from 1995
+// The document is the second (and current) specification for embedded JPEGs in TIFF images.
+// https://www.awaresystems.be/imaging/tiff/specification/TIFFTechNote2.txt
+
 // This is also compatible with Exif as it is, basically, another set of TIFF tags:
 // The spec is named "Exchangeable image file format for digital still cameras: Exif Version 3.0"
 // And it can be found at https://www.cipa.jp/e/std/std-sec.html

@@ -55,7 +55,8 @@ class Compression(EnumWithExportName):
     Group3Fax = 3
     Group4Fax = 4
     LZW = 5
-    JPEG = 6
+    OldJPEG = 6
+    JPEG = 7
     AdobeDeflate = 8
     PackBits = 32773
     PixarDeflate = 32946  # This is the old (and deprecated) code for AdobeDeflate
