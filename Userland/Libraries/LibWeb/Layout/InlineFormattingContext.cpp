@@ -249,6 +249,11 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
     InlineLevelIterator iterator(*this, m_state, containing_block(), layout_mode);
     LineBuilder line_builder(*this, m_state);
 
+    // NOTE: When we ignore collapsible whitespace chunks at the start of a line,
+    //       we have to remember how much start margin that chunk had in the inline
+    //       axis, so that we can add it to the first non-whitespace chunk.
+    CSSPixels leading_margin_from_collapsible_whitespace = 0;
+
     for (;;) {
         auto item_opt = iterator.next();
         if (!item_opt.has_value())
@@ -262,8 +267,12 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 if (next_width > 0)
                     line_builder.break_if_needed(next_width);
             }
+            leading_margin_from_collapsible_whitespace += item.margin_start;
             continue;
         }
+
+        item.margin_start += leading_margin_from_collapsible_whitespace;
+        leading_margin_from_collapsible_whitespace = 0;
 
         switch (item.type) {
         case InlineLevelIterator::Item::Type::ForcedBreak: {
