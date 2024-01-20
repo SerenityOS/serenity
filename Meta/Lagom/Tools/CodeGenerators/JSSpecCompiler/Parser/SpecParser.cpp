@@ -271,10 +271,16 @@ Optional<FailedTextParseDiagnostic> SpecificationClause::parse_header(XML::Node 
 
     TextParser parser(ctx, tokens, element);
     auto parse_result = parser.parse_clause_header();
-    if (parse_result.is_error())
-        return parser.get_diagnostic();
+    if (parse_result.is_error()) {
+        // Still try to at least scavenge section number.
+        if (tokens.size() && tokens[0].type == TokenType::SectionNumber)
+            ctx.current_logical_scope().section = MUST(String::from_utf8(tokens[0].data));
 
-    m_header = parse_result.value();
+        return parser.get_diagnostic();
+    }
+
+    m_header = parse_result.release_value();
+    ctx.current_logical_scope().section = MUST(String::from_utf8(m_header.section_number));
     return {};
 }
 
@@ -295,8 +301,6 @@ void SpecificationClause::parse(XML::Node const* element)
                         return;
                     }
                     header_parse_error = parse_header(child);
-                    if (!header_parse_error.has_value())
-                        ctx.current_logical_scope().section = MUST(String::from_utf8(m_header.section_number));
                 } else {
                     if (element.name == tag_h1) {
                         ctx.diag().error(ctx.location_from_xml_offset(child->offset),
