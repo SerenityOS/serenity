@@ -1011,6 +1011,10 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     if (!text_state().font)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
+    OwnPtr<ClipRAII> clip_raii;
+    if (m_rendering_preferences.clip_text)
+        clip_raii = make<ClipRAII>(*this);
+
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
     auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, *this));
 

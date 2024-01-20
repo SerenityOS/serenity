@@ -682,6 +682,12 @@
                                     <action selector="toggleClipPaths:" target="-1" id="pZu-tJ-RFh"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Clip Text" state="on" id="u58-eB-op8">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleClipText:" target="-1" id="qxg-tH-KXd"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>

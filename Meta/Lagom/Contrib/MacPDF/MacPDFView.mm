@@ -177,6 +177,10 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         [item setState:_preferences.clip_paths ? NSControlStateValueOn : NSControlStateValueOff];
         return _doc ? YES : NO;
     }
+    if ([item action] == @selector(toggleClipText:)) {
+        [item setState:_preferences.clip_text ? NSControlStateValueOn : NSControlStateValueOff];
+        return _doc ? YES : NO;
+    }
     return NO;
 }
 
@@ -200,6 +204,14 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (_doc) {
         _preferences.clip_paths = !_preferences.clip_paths;
+        [self invalidateCachedBitmap];
+    }
+}
+
+- (IBAction)toggleClipText:(id)sender
+{
+    if (_doc) {
+        _preferences.clip_text = !_preferences.clip_text;
         [self invalidateCachedBitmap];
     }
 }

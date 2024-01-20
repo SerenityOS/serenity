@@ -29,5 +29,6 @@
 - (IBAction)toggleShowClippingPaths:(id)sender;
 - (IBAction)toggleClipImages:(id)sender;
 - (IBAction)toggleClipPaths:(id)sender;
+- (IBAction)toggleClipText:(id)sender;
 
 @end
