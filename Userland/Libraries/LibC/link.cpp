@@ -12,7 +12,7 @@ extern "C" {
 using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
 using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
 
-DlIteratePhdrFunction __dl_iterate_phdr;
+[[gnu::weak]] DlIteratePhdrFunction __dl_iterate_phdr;
 
 int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data)
 {

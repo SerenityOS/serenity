@@ -18,8 +18,8 @@
 extern "C" {
 
 extern uintptr_t __stack_chk_guard;
-// Initialized in `initialize_libc` (we leave a placeholder value here before initialization).
-__attribute__((used)) uintptr_t __stack_chk_guard = (uintptr_t)0xc6c7c8c9;
+// Populated by DynamicLinker in shared executables.
+[[gnu::weak]] uintptr_t __stack_chk_guard = (uintptr_t)0xc6c7c8c9;
 
 __attribute__((noreturn)) void __stack_chk_fail()
 {
