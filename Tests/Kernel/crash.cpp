@@ -218,8 +218,7 @@ int main(int argc, char** argv)
             (void)makeshift_stack_pointer;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)makeshift_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(makeshift_stack_pointer));
 #else
 #    error Unknown architecture
 #endif
@@ -237,8 +236,7 @@ int main(int argc, char** argv)
             (void)bad_stack_pointer;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)bad_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
 #else
 #    error Unknown architecture
 #endif
@@ -261,8 +259,8 @@ int main(int argc, char** argv)
             (void)bad_stack_pointer;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)bad_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
+            asm volatile("sd zero, (sp)");
 #else
 #    error Unknown architecture
 #endif
@@ -299,8 +297,11 @@ int main(int argc, char** argv)
             (void)ptr;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)ptr;
-            TODO_RISCV64();
+            // ret / jalr x0, 0(x1)
+            ptr[0] = 0x67;
+            ptr[1] = 0x80;
+            ptr[2] = 0x00;
+            ptr[3] = 0x00;
 #else
 #    error Unknown architecture
 #endif
@@ -317,7 +318,7 @@ int main(int argc, char** argv)
 #elif ARCH(AARCH64)
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            TODO_RISCV64();
+            asm volatile("sret");
 #else
 #    error Unknown architecture
 #endif
