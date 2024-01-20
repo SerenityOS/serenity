@@ -492,11 +492,13 @@ void TableFormattingContext::compute_table_width()
         // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
         // A percentage value for a column width is relative to the table width. If the table has 'width: auto',
         // a percentage represents a constraint on the column's width, which a UA should try to satisfy.
-        CSSPixels adjusted_used_width = 0;
         for (auto& cell : m_cells) {
             auto const& cell_width = cell.box->computed_values().width();
             if (cell_width.is_percentage()) {
-                adjusted_used_width = CSSPixels::nearest_value_for(ceil(100 / cell_width.percentage().value() * cell.outer_max_width.to_double())) + undistributable_space;
+                CSSPixels adjusted_used_width = undistributable_space;
+                if (cell_width.percentage().value() != 0)
+                    adjusted_used_width += CSSPixels::nearest_value_for(ceil(100 / cell_width.percentage().value() * cell.outer_max_width));
+
                 if (width_of_table_containing_block.is_definite())
                     used_width = min(max(used_width, adjusted_used_width), width_of_table_containing_block.to_px_or_zero());
                 else
