@@ -532,6 +532,8 @@ TEST_CASE(buffered_file_without_newlines)
 
     auto can_read_line = TRY_OR_FAIL(ro_file->can_read_line());
     EXPECT(can_read_line);
+    auto can_read_up_to_newline = TRY_OR_FAIL(ro_file->can_read_up_to_delimiter("\n"sv.bytes()));
+    EXPECT(!can_read_up_to_newline);
     Array<u8, new_newlines_message.length() + 1> buffer;
     EXPECT(ro_file->read_line(buffer).release_value() == new_newlines_message);
 }

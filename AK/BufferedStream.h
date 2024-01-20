@@ -175,15 +175,21 @@ public:
         return Optional<Match> {};
     }
 
-    // Returns whether a line can be read, populating the buffer in the process.
-    ErrorOr<bool> can_read_line()
+    // Populates the buffer, and returns whether it is possible to read up to the given delimiter.
+    ErrorOr<bool> can_read_up_to_delimiter(ReadonlyBytes delimiter)
     {
         if (stream().is_eof())
-            return m_buffer.used_space() > 0;
+            return m_buffer.offset_of(delimiter).has_value();
 
-        auto maybe_match = TRY(find_and_populate_until_any_of(Array { "\n"sv }));
+        auto maybe_match = TRY(find_and_populate_until_any_of(Array { StringView { delimiter } }));
         if (maybe_match.has_value())
             return true;
+
+        return stream().is_eof() && m_buffer.offset_of(delimiter).has_value();
+    }
+
+    bool is_eof_with_data_left_over() const
+    {
         return stream().is_eof() && m_buffer.used_space() > 0;
     }
 
@@ -292,10 +298,14 @@ public:
     }
 
     ErrorOr<StringView> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
+    ErrorOr<bool> can_read_line()
+    {
+        return TRY(m_helper.can_read_up_to_delimiter("\n"sv.bytes())) || m_helper.is_eof_with_data_left_over();
+    }
     ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
-    ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
+    ErrorOr<bool> can_read_up_to_delimiter(ReadonlyBytes delimiter) { return m_helper.can_read_up_to_delimiter(delimiter); }
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
 

@@ -369,6 +369,7 @@ public:
     virtual ErrorOr<StringView> read_line(Bytes buffer) = 0;
     virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) = 0;
     virtual ErrorOr<bool> can_read_line() = 0;
+    virtual ErrorOr<bool> can_read_up_to_delimiter(ReadonlyBytes delimiter) = 0;
     virtual size_t buffer_size() const = 0;
 };
 
@@ -413,10 +414,14 @@ public:
     virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
 
     virtual ErrorOr<StringView> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
+    virtual ErrorOr<bool> can_read_line() override
+    {
+        return TRY(m_helper.can_read_up_to_delimiter("\n"sv.bytes())) || m_helper.is_eof_with_data_left_over();
+    }
     virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
-    virtual ErrorOr<bool> can_read_line() override { return m_helper.can_read_line(); }
+    virtual ErrorOr<bool> can_read_up_to_delimiter(ReadonlyBytes delimiter) override { return m_helper.can_read_up_to_delimiter(delimiter); }
 
     virtual size_t buffer_size() const override { return m_helper.buffer_size(); }
 
