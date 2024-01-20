@@ -13,11 +13,17 @@ $ /usr/Tests/Kernel/crash [options]
 This program is used to test how the Serenity kernel handles userspace crashes,
 and can be used to simulate many different kinds of crashes.
 
+Some crash tests are only available on certain architectures.
+
+Some crash tests are excluded from the `-A` test, since depending on the hardware or implementation they may or may not crash.
+- Priviledged instructions in user mode are permitted by QEMU on some architectures such as x86. Therefore, this crash may not fail. See [discussion on pull request 10042](https://github.com/SerenityOS/serenity/pull/10042#issuecomment-920408568).
+
 ## Options
 
-* `-A`: Test that all of the following crash types crash as expected.
+All architectures:
+
+* `-A`: Test that all of the crash types implemented on this architecture crash as expected.
 * `-s`: Perform a segmentation violation by dereferencing an invalid pointer.
-* `-d`: Perform a division by zero.
 * `-i`: Execute an illegal CPU instruction.
 * `-a`: Call `abort()`.
 * `-m`: Read a pointer from uninitialized malloc memory, then read from it.
@@ -30,11 +36,18 @@ and can be used to simulate many different kinds of crashes.
 * `-S`: Make a syscall from writeable memory.
 * `-y`: Make a syscall from legitimate memory (but outside syscall-code mapped region).
 * `-X`: Attempt to execute non-executable memory (Not mapped with PROT\_EXEC).
-* `-U`: Attempt to trigger an x86 User Mode Instruction Prevention fault.
-* `-I`: Use an x86 I/O instruction in userspace.
+* `-U`: Attempt to use a priviledged (kernel mode or higher) instruction in user mode.
 * `-p`: Violate `pledge()`'d promises.
 * `-n`: Perform a failing assertion.
 * `-R`: Dereference a null RefPtr.
+
+x86_64 only:
+
+* `-I`: Use an x86 I/O instruction in userspace.
+
+AArch64 and x86_64 only:
+
+* `-d`: Perform a division by zero.
 
 ## Examples
 
