@@ -228,7 +228,7 @@ void Job::on_socket_connected()
         }
 
         while (m_state == State::InStatus) {
-            auto can_read_line = m_socket->can_read_line();
+            auto can_read_line = m_socket->can_read_up_to_delimiter("\r\n"sv.bytes());
             if (can_read_line.is_error()) {
                 dbgln_if(JOB_DEBUG, "Job {} could not figure out whether we could read a line", m_request.url());
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
@@ -279,7 +279,7 @@ void Job::on_socket_connected()
                 return;
         }
         while (m_state == State::InHeaders || m_state == State::Trailers) {
-            auto can_read_line = m_socket->can_read_line();
+            auto can_read_line = m_socket->can_read_up_to_delimiter("\r\n"sv.bytes());
             if (can_read_line.is_error()) {
                 dbgln_if(JOB_DEBUG, "Job {} could not figure out whether we could read a line", m_request.url());
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
@@ -399,6 +399,11 @@ void Job::on_socket_connected()
                 auto remaining = m_current_chunk_remaining_size.value();
                 if (remaining == -1) {
                     // read size
+                    auto can_read_line = m_socket->can_read_up_to_delimiter("\r\n"sv.bytes());
+                    if (can_read_line.is_error())
+                        return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+                    if (!can_read_line.value()) // We'll try later.
+                        return;
                     auto maybe_size_data = read_line(PAGE_SIZE);
                     if (maybe_size_data.is_error()) {
                         dbgln_if(JOB_DEBUG, "Job: Could not receive chunk: {}", maybe_size_data.error());
@@ -539,7 +544,7 @@ void Job::on_socket_connected()
                     // we've read everything, now let's get the next chunk
                     size = -1;
 
-                    auto can_read_line = m_socket->can_read_line();
+                    auto can_read_line = m_socket->can_read_up_to_delimiter("\r\n"sv.bytes());
                     if (can_read_line.is_error())
                         return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
                     if (can_read_line.value()) {
