@@ -72,7 +72,9 @@ Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, 
     }
 
     auto [tokens, substeps] = tokenization_result.release_value();
-    AlgorithmStep result { .m_tokens = move(tokens), .m_node = element };
+    AlgorithmStep result(ctx);
+    result.m_tokens = move(tokens);
+    result.m_node = element;
 
     if (substeps) {
         // FIXME: Remove this once macOS Lagom CI updates to Clang >= 16.
@@ -81,8 +83,7 @@ Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, 
         auto step_list = ctx.with_new_step_list_nesting_level([&] {
             return AlgorithmStepList::create(ctx, substeps_copy);
         });
-        if (step_list.has_value())
-            result.m_substeps = step_list->m_expression;
+        result.m_substeps = step_list.has_value() ? step_list->tree() : error_tree;
     }
 
     auto parse_result = result.parse();
@@ -110,7 +111,6 @@ Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContex
     VERIFY(element->as_element().name == tag_ol);
 
     AlgorithmStepList result;
-    auto& steps = result.m_steps;
 
     Vector<Tree> step_expressions;
     bool all_steps_parsed = true;
@@ -126,12 +126,10 @@ Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContex
                         update_logical_scope_for_step(ctx, parent_scope, step_number);
                         return AlgorithmStep::create(ctx, child);
                     });
-                    if (!step_creation_result.has_value()) {
+                    if (!step_creation_result.has_value())
                         all_steps_parsed = false;
-                    } else {
-                        steps.append(step_creation_result.release_value());
-                        step_expressions.append(steps.last().m_expression);
-                    }
+                    else
+                        step_expressions.append(step_creation_result.release_value().tree());
                     ++step_number;
                     return;
                 }
@@ -214,8 +212,7 @@ Optional<Algorithm> Algorithm::create(SpecificationParsingContext& ctx, XML::Nod
     auto steps_creation_result = AlgorithmStepList::create(ctx, steps_list[0]);
     if (steps_creation_result.has_value()) {
         Algorithm algorithm;
-        algorithm.m_steps = steps_creation_result.release_value();
-        algorithm.m_tree = algorithm.m_steps.m_expression;
+        algorithm.m_tree = steps_creation_result.release_value().tree();
         return algorithm;
     }
     return {};
@@ -226,8 +223,8 @@ NonnullOwnPtr<SpecificationClause> SpecificationClause::create(SpecificationPars
     return ctx.with_new_logical_scope([&] {
         VERIFY(element->as_element().name == tag_emu_clause);
 
-        SpecificationClause specification_clause;
-        specification_clause.parse(ctx, element);
+        SpecificationClause specification_clause(ctx);
+        specification_clause.parse(element);
 
         OwnPtr<SpecificationClause> result;
 
@@ -239,7 +236,7 @@ NonnullOwnPtr<SpecificationClause> SpecificationClause::create(SpecificationPars
                 result = make<SpecFunction>(move(specification_clause));
             });
 
-        if (!result->post_initialize(ctx, element))
+        if (!result->post_initialize(element))
             result = make<SpecificationClause>(move(*result));
 
         return result.release_nonnull();
@@ -262,8 +259,9 @@ ParseErrorOr<void> SpecificationClause::parse_header(XML::Node const* element)
     return {};
 }
 
-void SpecificationClause::parse(SpecificationParsingContext& ctx, XML::Node const* element)
+void SpecificationClause::parse(XML::Node const* element)
 {
+    auto& ctx = context();
     u32 child_index = 0;
 
     Optional<NonnullRefPtr<ParseError>> header_parse_error;
@@ -314,9 +312,11 @@ void SpecificationClause::parse(SpecificationParsingContext& ctx, XML::Node cons
     }
 }
 
-bool SpecFunction::post_initialize(SpecificationParsingContext& ctx, XML::Node const* element)
+bool SpecFunction::post_initialize(XML::Node const* element)
 {
     VERIFY(element->as_element().name == tag_emu_clause);
+
+    auto& ctx = context();
 
     auto maybe_id = get_attribute_by_name(element, attribute_id);
     if (!maybe_id.has_value()) {
@@ -376,7 +376,7 @@ bool SpecFunction::post_initialize(SpecificationParsingContext& ctx, XML::Node c
 
 void SpecFunction::do_collect(TranslationUnitRef translation_unit)
 {
-    translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.m_tree, move(m_arguments)));
+    translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.tree(), move(m_arguments)));
 }
 
 Specification Specification::create(SpecificationParsingContext& ctx, XML::Node const* element)

@@ -50,30 +50,42 @@ class AlgorithmStepList {
 public:
     static Optional<AlgorithmStepList> create(SpecificationParsingContext& ctx, XML::Node const* element);
 
-    Vector<AlgorithmStep> m_steps;
-    Tree m_expression = error_tree;
+    Tree tree() const { return m_expression; }
 
 private:
     static void update_logical_scope_for_step(SpecificationParsingContext& ctx, LogicalLocation const& parent_scope, int step_number);
+
+    Tree m_expression = error_tree;
 };
 
 class AlgorithmStep {
 public:
     static Optional<AlgorithmStep> create(SpecificationParsingContext& ctx, XML::Node const* node);
 
+    Tree tree() const { return m_expression; }
+
+private:
+    AlgorithmStep(SpecificationParsingContext& ctx)
+        : m_ctx(ctx)
+    {
+    }
+
     ParseErrorOr<Tree> parse();
 
-    Tree m_expression = error_tree;
+    SpecificationParsingContext& m_ctx;
     Vector<Token> m_tokens;
-    NullableTree m_substeps;
     XML::Node const* m_node;
+    Tree m_expression = error_tree;
+    NullableTree m_substeps;
 };
 
 class Algorithm {
 public:
     static Optional<Algorithm> create(SpecificationParsingContext& ctx, XML::Node const* element);
 
-    AlgorithmStepList m_steps;
+    Tree tree() const { return m_tree; }
+
+private:
     Tree m_tree = error_tree;
 };
 
@@ -88,16 +100,23 @@ public:
     void collect_into(TranslationUnitRef translation_unit);
 
 protected:
-    virtual bool post_initialize(SpecificationParsingContext& /*ctx*/, XML::Node const* /*element*/) { return true; }
+    virtual bool post_initialize(XML::Node const* /*element*/) { return true; }
     virtual void do_collect(TranslationUnitRef /*translation_unit*/) { }
+
+    SpecificationParsingContext& context() { return *m_ctx_pointer; }
 
     ClauseHeader m_header;
 
 private:
-    SpecificationClause() = default;
-    ParseErrorOr<void> parse_header(XML::Node const* element);
-    void parse(SpecificationParsingContext& ctx, XML::Node const* element);
+    SpecificationClause(SpecificationParsingContext& ctx)
+        : m_ctx_pointer(&ctx)
+    {
+    }
 
+    ParseErrorOr<void> parse_header(XML::Node const* element);
+    void parse(XML::Node const* element);
+
+    SpecificationParsingContext* m_ctx_pointer;
     Vector<NonnullOwnPtr<SpecificationClause>> m_subclauses;
 };
 
@@ -109,7 +128,7 @@ public:
     }
 
 protected:
-    bool post_initialize(SpecificationParsingContext& ctx, XML::Node const* element) override;
+    bool post_initialize(XML::Node const* element) override;
     void do_collect(TranslationUnitRef translation_unit) override;
 
 private:
