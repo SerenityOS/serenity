@@ -7,9 +7,12 @@
 #include <AK/Error.h>
 #include <AK/Types.h>
 
+#include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/TrapFrame.h>
+#include <Kernel/Arch/riscv64/InterruptManagement.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
@@ -30,6 +33,90 @@ void dump_registers(RegisterState const& regs)
     dbgln("a0={:p} a1={:p} a2={:p} a3={:p} a4={:p} a5={:p} a6={:p} a7={:p}", regs.x[9], regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14], regs.x[15], regs.x[16]);
     dbgln("t0={:p} t1={:p} t2={:p} t3={:p} t4={:p} t5={:p} t6={:p}", regs.x[4], regs.x[5], regs.x[6], regs.x[27], regs.x[28], regs.x[29], regs.x[30]);
     dbgln("s1={:p} s2={:p} s3={:p} s4={:p} s5={:p} s6={:p} s7={:p} s8={:p} s9={:p} s10={:p} s11={:p}", regs.x[8], regs.x[17], regs.x[18], regs.x[19], regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24], regs.x[25], regs.x[26]);
+}
+
+extern "C" void trap_handler(TrapFrame& trap_frame);
+extern "C" void trap_handler(TrapFrame& trap_frame)
+{
+    auto scause = trap_frame.regs->scause;
+
+    if ((to_underlying(scause) & RISCV64::CSR::SCAUSE_INTERRUPT_MASK) != 0) {
+        // Interrupt
+
+        Processor::current().enter_trap(trap_frame, true);
+
+        auto interrupt_number = to_underlying(scause) & ~RISCV64::CSR::SCAUSE_INTERRUPT_MASK;
+
+        auto* handler = s_interrupt_handlers[interrupt_number];
+        VERIFY(handler);
+        handler->increment_call_count();
+        handler->handle_interrupt(*trap_frame.regs);
+        handler->eoi();
+
+        Processor::current().exit_trap(trap_frame);
+    } else {
+        // Exception
+
+        Processor::current().enter_trap(trap_frame, false);
+        Processor::enable_interrupts();
+
+        using enum RISCV64::CSR::SCAUSE;
+        switch (scause) {
+        case InstructionAddressMisaligned:
+        case LoadAddressMisaligned:
+        case StoreOrAMOAddressMisaligned:
+            handle_crash(*trap_frame.regs, "Unaligned memory access", SIGBUS, false);
+            break;
+
+        case InstructionAccessFault:
+        case LoadAccessFault:
+        case StoreOrAMOAccessFault:
+            handle_crash(*trap_frame.regs, "Memory access fault", SIGBUS, false);
+            break;
+
+        case IllegalInstrction:
+            handle_crash(*trap_frame.regs, "Illegal instruction", SIGILL, false);
+            break;
+
+        case InstructionPageFault:
+        case LoadPageFault:
+        case StoreOrAMOPageFault: {
+            // The privileged ISA theoretically allows stval to always be zero (in which case we would report a page fault in the zero page).
+            // But all implementations capable of running general purpose operating systems should probably set this CSR,
+            // as otherwise you can't handle page faults.
+            // We simply require that Sstvala (see RISC-V Profiles) is supported, which means stval is always set to the faulting address on a page fault.
+            PageFault fault { VirtualAddress(trap_frame.regs->stval) };
+
+            if (scause == InstructionPageFault)
+                fault.set_instruction_fetch(true);
+            else if (scause == LoadPageFault)
+                fault.set_access(PageFault::Access::Read);
+            else if (scause == StoreOrAMOPageFault)
+                fault.set_access(PageFault::Access::Write);
+
+            // FIXME: RISC-V doesn't tell you *why* a memory access failed, only the original access type (r/w/x).
+            //        So either detect the correct type by walking the page table or rewrite MM to not depend on the processor-provided reason.
+            fault.set_type(PageFault::Type::ProtectionViolation);
+
+            fault.handle(*trap_frame.regs);
+            break;
+        }
+
+        case EnvironmentCallFromUMode:
+            TODO_RISCV64();
+            break;
+
+        case Breakpoint:
+            TODO_RISCV64();
+            break;
+
+        default:
+            VERIFY_NOT_REACHED();
+        };
+
+        Processor::disable_interrupts();
+        Processor::current().exit_trap(trap_frame);
+    }
 }
 
 // FIXME: Share the code below with Arch/x86_64/Interrupts.cpp
