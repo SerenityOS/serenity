@@ -90,8 +90,8 @@ struct RenderingPreferences {
     bool show_clipping_paths { false };
     bool show_images { true };
 
-    bool clip_paths { true };
     bool clip_images { true };
+    bool clip_paths { true };
 
     unsigned hash() const
     {
