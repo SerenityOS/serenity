@@ -92,6 +92,7 @@ struct RenderingPreferences {
 
     bool clip_images { true };
     bool clip_paths { true };
+    bool clip_text { true };
 
     unsigned hash() const
     {
