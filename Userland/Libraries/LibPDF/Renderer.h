@@ -130,6 +130,18 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
 
+    class ClipRAII {
+    public:
+        ClipRAII(Renderer& renderer)
+            : m_renderer(renderer)
+        {
+            m_renderer.activate_clip();
+        }
+        ~ClipRAII() { m_renderer.deactivate_clip(); }
+
+    private:
+        Renderer& m_renderer;
+    };
     void activate_clip();
     void deactivate_clip();
 
