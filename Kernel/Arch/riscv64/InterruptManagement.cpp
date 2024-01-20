@@ -37,9 +37,9 @@ void InterruptManagement::find_controllers()
     TODO_RISCV64();
 }
 
-u8 InterruptManagement::acquire_mapped_interrupt_number(u8)
+u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
 {
-    TODO_RISCV64();
+    return original_irq;
 }
 
 Vector<NonnullLockRefPtr<IRQController>> const& InterruptManagement::controllers()
