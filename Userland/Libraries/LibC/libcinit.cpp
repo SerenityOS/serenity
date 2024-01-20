@@ -17,8 +17,8 @@ int errno_storage;
 #else
 __thread int errno_storage;
 #endif
-char** environ;
-bool __environ_is_malloced;
+[[gnu::weak]] char** environ;
+bool __environ_is_malloced = false;
 bool __stdio_is_initialized;
 void* __auxiliary_vector;
 

@@ -11,10 +11,10 @@
 #include <string.h>
 
 // These are filled in by the dynamic loader.
-DlCloseFunction __dlclose;
-DlOpenFunction __dlopen;
-DlSymFunction __dlsym;
-DlAddrFunction __dladdr;
+[[gnu::weak]] DlCloseFunction __dlclose;
+[[gnu::weak]] DlOpenFunction __dlopen;
+[[gnu::weak]] DlSymFunction __dlsym;
+[[gnu::weak]] DlAddrFunction __dladdr;
 
 // FIXME: use thread_local and a String once TLS works
 #ifdef NO_TLS
