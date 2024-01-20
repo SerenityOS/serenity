@@ -26,12 +26,13 @@ struct InterruptRange {
     InterruptType m_type { InterruptType::PIN };
 };
 
-struct [[gnu::packed]] MSIxTableEntry {
+struct MSIxTableEntry {
     u32 address_low;
     u32 address_high;
     u32 data;
     u32 vector_control;
 };
+static_assert(AssertSize<MSIxTableEntry, 16>());
 
 class Device {
 public:

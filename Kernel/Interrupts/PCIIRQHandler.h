@@ -38,10 +38,10 @@ protected:
     IRQHandler(PCI::Device& device, u8 irq);
 
 private:
-    bool m_shared_with_others { false };
-    bool m_enabled { false };
     LockRefPtr<IRQController> m_responsible_irq_controller { nullptr };
     PCI::Device& device;
+    bool m_shared_with_others { false };
+    bool m_enabled { false };
 };
 
 }

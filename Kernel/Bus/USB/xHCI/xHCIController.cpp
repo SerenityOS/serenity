@@ -8,60 +8,37 @@
 #include <AK/kmalloc.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Bus/PCI/BarMapping.h>
+#include <Kernel/Bus/USB/xHCI/Utils.h>
 #include <Kernel/Bus/USB/xHCI/xHCIController.h>
 #include <Kernel/Library/StdLib.h>
 
 namespace Kernel::USB::xHCI {
 
-static size_t device_context_size(size_t endpoints, bool context_size)
-{
-    if (context_size)
-        return sizeof(DeviceContext64) + sizeof(EndpointContext64) * (endpoints * 2 + 1);
-    return sizeof(DeviceContext) + sizeof(EndpointContext) * (endpoints * 2 + 1);
-}
-
-ErrorOr<Span<TransferRequestBlock>> allocate_trb_ring(size_t size, bool link_back)
-{
-    VERIFY(size % sizeof(TransferRequestBlock) == 0);
-    // FIXME: Allow allocating split Transfer Rings
-    if (size > 64 * KiB)
-        return ENOTSUP;
-
-    auto count = size / sizeof(TransferRequestBlock);
-    auto* ring = new (std::align_val_t(64), nothrow) TransferRequestBlock[count];
-    if (ring == nullptr)
-        return ENOMEM;
-    // TRB Rings may be larger than a Page, however they shall not cross a 64K byte
-    // boundary. Refer to section 4.11.5.1 for more information on TRB Rings and page
-    // boundaries.
-    // FIXME: With a more dedicated allocation strategy we might avoid hitting this a bit more
-    // FIXME: Make use of LinkTRBs in this case
-    if ((bit_cast<FlatPtr>(ring) & (64 * KiB)) != ((bit_cast<FlatPtr>(ring) + size) & (64 * KiB)))
-        return ENOMEM;
-
-    memset(ring, 0, size);
-
-    auto span = Span<TransferRequestBlock> { ring, count };
-
-    if (link_back)
-        span.last() = TransferRequestBlock::link_trb(ring);
-
-    return span;
-}
-
 xHCIController::~xHCIController()
 {
-    size_t array_size = m_cap_regs->structural_parameters1.max_device_slots + 1;
     for (auto* device_context : m_device_context_base_address_array) {
+        if (!device_context)
+            return;
         kfree_sized(device_context,
             device_context_size(device_context->context_entries,
                 m_cap_regs->capability_parameters1.context_size));
     }
-    delete m_device_context_base_address_array.data()[array_size];
+    // FIXME: Maybe find a better way to call delete[] with a size
+    //        (or change the allocation strategies)
+    // FIXME: Should we call the aligned delete[] here?
+    // Note: The `size` parameter on these is in bytes, not elements
+    operator delete[](m_device_context_base_address_array.data(),
+        m_device_context_base_address_array.size() * sizeof(SlotContext*));
+
+    operator delete[](m_command_ring.data(), PAGE_SIZE);
 }
 
 ErrorOr<NonnullLockRefPtr<xHCIController>> xHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
+    // FIXME:
+    if (!pci_device_identifier.is_msix_capable())
+        return ENOTSUP;
+
     PCI::enable_bus_mastering(pci_device_identifier);
     PCI::enable_memory_space(pci_device_identifier);
 
@@ -136,9 +113,7 @@ ErrorOr<void> xHCIController::initialize()
     if (device_context_base_address_array == nullptr)
         return ENOMEM;
     m_device_context_base_address_array = { device_context_base_address_array, array_size };
-    u64 base_array_as_int = bit_cast<u64>(device_context_base_address_array);
-    m_op_regs->device_context_array_base_pointer[0] = base_array_as_int & 0xFFFF'FFFF; // lo
-    m_op_regs->device_context_array_base_pointer[1] = base_array_as_int >> 32;         // hi
+    set_address(m_op_regs->device_context_array_base_pointer, device_context_base_address_array);
     //      * Software shall set Device Context Base Address Array entries for unallocated
     //        Device Slots to ‘0’.
     m_device_context_base_address_array.fill(nullptr);
@@ -148,11 +123,34 @@ ErrorOr<void> xHCIController::initialize()
     //   the starting address of the first TRB of the Command Ring.
     // FIXME: Figure out an appropriate size
     m_command_ring = TRY(allocate_trb_ring(PAGE_SIZE, true));
-    m_op_regs->command_ring_control.addr_lo = bit_cast<FlatPtr>(m_command_ring.data()) & 0xFFFF'FFFF; // lo
-    m_op_regs->command_ring_control.addr_hi = bit_cast<FlatPtr>(m_command_ring.data()) >> 32;         // hi
+    set_address(m_op_regs->command_ring_control.addr, m_command_ring.data());
     // FIXME: I think we might need to set the dequeue/enqueue pointers here?
 
-    // FIXME: allof `Initialize interrupts by:`
+    // * Initialize interrupts 7 by:
+    TRY(initialize_interrupts());
+
+    // * Write the USBCMD (5.4.1) to turn the host controller ON via setting the
+    //   Run/Stop (R/S) bit to ‘1’. This operation allows the xHC to begin
+    //   accepting doorbell references.
+    m_op_regs->usb_command.run_stop = 1;
+
+    return {};
+}
+
+ErrorOr<void> xHCIController::initialize_interrupts()
+{
+    enable_extended_message_signalled_interrupts();
+
+    auto n_interrupters = m_cap_regs->structural_parameters1.max_interrupters;
+    TRY(reserve_irqs(n_interrupters, true));
+
+    TRY(m_interrupters.try_ensure_capacity(n_interrupters));
+    for (auto i = 0u; i < n_interrupters; ++i) {
+        m_interrupters.unchecked_append(
+            TRY(Interrupter::try_create(*this, i, TRY(allocate_irq(i)))));
+    }
+
+    m_op_regs->usb_command.interrupt_enable = 1;
 
     return {};
 }
@@ -183,5 +181,4 @@ ErrorOr<void> xHCIController::reset()
 
     return {};
 }
-
 }

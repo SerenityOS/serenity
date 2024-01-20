@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 // Address register
 static constexpr u32 msi_address_base = 0xfee00000;
 static constexpr u8 msi_destination_shift = 12;

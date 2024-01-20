@@ -10,12 +10,15 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/xHCI/DataStructures.h>
+#include <Kernel/Bus/USB/xHCI/Interrupter.h>
 #include <Kernel/Bus/USB/xHCI/Registers.h>
+#include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::USB::xHCI {
 
-class xHCIController : public USBController
+class xHCIController
+    : public USBController
     , public PCI::Device {
 public:
     static constexpr auto BaseRegister = PCI::HeaderType0BaseRegister::BAR0;
@@ -41,6 +44,8 @@ public:
     virtual ErrorOr<void> set_device_configuration(USB::Device&, USBConfiguration const&) override { return ENOTSUP; }
 
 private:
+    friend Interrupter;
+
     xHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region);
 
     NonnullOwnPtr<Memory::Region> m_register_region;
@@ -57,6 +62,10 @@ private:
     Span<SlotContext*> m_device_context_base_address_array;
 
     Span<TransferRequestBlock> m_command_ring;
+
+    Vector<NonnullOwnPtr<Interrupter>> m_interrupters;
+
+    ErrorOr<void> initialize_interrupts();
 };
 
 }

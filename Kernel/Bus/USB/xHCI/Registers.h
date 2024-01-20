@@ -146,14 +146,18 @@ struct OperationalRegisters {
                          // 16-31 Rsvd
     u32 rsvdZ_1[2];
     u32 device_notification_control; // DNCTRL
-    struct {
-        u32 ring_cycle_state : 1;           //  0    RCS                  - RW
-        u32 command_stop : 1;               //  1    CS                   - RW1S
-        u32 command_abort : 1;              //  2    CA                   - RW1S
-        u32 const command_ring_running : 1; //  3    CRR                  - RO
-        u32 : 2;                            //  4- 5 RsvdP
-        u32 addr_lo : 26;                   //  6-53 Command Ring Pointer - RW
-        u32 addr_hi;
+    union {
+
+        struct {
+            u32 ring_cycle_state : 1;           //  0    RCS                  - RW
+            u32 command_stop : 1;               //  1    CS                   - RW1S
+            u32 command_abort : 1;              //  2    CA                   - RW1S
+            u32 const command_ring_running : 1; //  3    CRR                  - RO
+            u32 : 2;                            //  4- 5 RsvdP
+            u32 : 26;                           //  6-53 Command Ring Pointer - RW
+            u32 : 32;
+        };
+        u32 addr[2];
     } command_ring_control; // CRCR
     u32 rsvdZ_2[4];
     u32 device_context_array_base_pointer[2]; // DCBAAP lo - hi
@@ -286,7 +290,7 @@ struct RuntimeRegisters {
     // 5.5.2 Interrupter Register Set
     // FIXME: Spec says: "Up to 1024 interrupters are supported"
     //        Figure out if and how we can limit this if we want to save some memory
-    //        These also map to MSI-X vectors
+    //        These also map to MSI-X vectors, so maybe we don't quite need these?
     struct InterrupterRegisters {
         union {
             // 5.5.2.1 Interrupter Management Register (IMAN)
@@ -307,17 +311,20 @@ struct RuntimeRegisters {
             // 5.5.2.3.1 Event Ring Segment Table Size Register (ERSTSZ)
             u32 segment_table_size : 16; //  0-15 Event Ring Segment Table Size - RW
             u32 : 16;                    // 16-31 RsvdP
+
+            u32 : 32; // RsvdP
             // 5.5.2.3.2 Event Ring Segment Table Base Address Register (ERSTBA)
             // Note: Bits 0-5 are RsvdP, but this essentially enforces alignments
-            u64 segment_table_address; //  6-63 Event Ring Segment Table Base Address Register - RW
+            u32 segment_table_address[2]; //  6-63 Event Ring Segment Table Base Address Register - RW
             // 5.5.2.3.3 Event Ring Dequeue Pointer Register (ERDP)
             union {
                 struct {
-                    u64 dequeue_erst_segment_index : 3; //  0- 2 Dequeue ERST Segment Index (DESI) - RW
-                    u64 event_handler_busy : 1;         //  3    Event Handler Busy (EHB)          - RW1C
-                    u64 : 60;
+                    u32 dequeue_erst_segment_index : 3; //  0- 2 Dequeue ERST Segment Index (DESI) - RW
+                    u32 event_handler_busy : 1;         //  3    Event Handler Busy (EHB)          - RW1C
+                    u32 : 28;
+                    u32 : 32;
                 };
-                u64 event_ring_deque_pointer; //  4-63 Event Ring Dequeue Pointer - RW
+                u32 addr[2]; //  4-63 Event Ring Dequeue Pointer - RW
             } event_ring_deque_pointer;
         } event_ring;
     } interrupt_set[1024];

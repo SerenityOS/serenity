@@ -140,8 +140,6 @@ struct TransferRequestBlock {
         // 6.4.1.2.3 Status Stage TRB
         // 6.4.1.4 No Op TRB
         u32 resvd[2];
-
-        //
     };
 
     TRBStatus status;
@@ -161,7 +159,7 @@ struct TransferRequestBlock {
         };
     }
 };
-static_assert(AssertSize<TransferRequestBlock, 128 / 8>());
+static_assert(AssertSize<TransferRequestBlock, 16>());
 
 // 6.2.2 Slot Context
 struct SlotContext {
@@ -334,5 +332,13 @@ static_assert(__builtin_offsetof(InputContext64, device_context.endpoint_context
 static_assert(__builtin_offsetof(InputContext64, device_context.endpoint_contexts[1]) == 0xC0);
 
 // FIXME: 6.2.6 Port Bandwidth Context
+
+// 6.5 Event Ring Segment Table
+struct EventRingSegmentTableEntry {
+    TransferRequestBlock* event_ring_segment;
+    u16 segment_size;
+    u16 rsvdZ[3] { 0 };
+};
+static_assert(AssertSize<EventRingSegmentTableEntry, 16>());
 
 }

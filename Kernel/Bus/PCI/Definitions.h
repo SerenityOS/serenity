@@ -223,7 +223,7 @@ enum class USBProgIf {
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, CapabilityID);
 
 namespace Capabilities {
-enum ID {
+enum ID : u8 {
     Null = 0x0,
     MSI = 0x5,
     VendorSpecific = 0x9,
@@ -467,7 +467,7 @@ public:
 
     void initialize();
     bool is_msix_capable() const { return m_msix_info.table_size > 0; }
-    u8 get_msix_table_bar() const { return m_msix_info.table_bar; }
+    HeaderType0BaseRegister get_msix_table_bar() const { return HeaderType0BaseRegister { m_msix_info.table_bar }; }
     u32 get_msix_table_offset() const { return m_msix_info.table_offset; }
 
     bool is_msi_capable() const { return m_msi_info.count > 0; }
