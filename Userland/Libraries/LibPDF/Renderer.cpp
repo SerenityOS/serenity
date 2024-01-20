@@ -1225,19 +1225,6 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
     auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
     auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
 
-    class ClipRAII {
-    public:
-        ClipRAII(Renderer& renderer)
-            : m_renderer(renderer)
-        {
-            m_renderer.activate_clip();
-        }
-        ~ClipRAII() { m_renderer.deactivate_clip(); }
-
-    private:
-        Renderer& m_renderer;
-    };
-
     OwnPtr<ClipRAII> clip_raii;
     if (m_rendering_preferences.clip_images)
         clip_raii = make<ClipRAII>(*this);
