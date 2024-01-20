@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)toggleShowClippingPaths:(id)sender;
 - (IBAction)toggleClipImages:(id)sender;
 - (IBAction)toggleClipPaths:(id)sender;
+- (IBAction)toggleClipText:(id)sender;
 - (IBAction)showGoToPageDialog:(id)sender;
 
 - (void)pdfDidInitialize;

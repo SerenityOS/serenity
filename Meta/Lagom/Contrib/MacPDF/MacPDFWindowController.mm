@@ -154,6 +154,11 @@
     [_pdfView toggleClipPaths:sender];
 }
 
+- (IBAction)toggleClipText:(id)sender
+{
+    [_pdfView toggleClipText:sender];
+}
+
 - (IBAction)showGoToPageDialog:(id)sender
 {
     auto alert = [[NSAlert alloc] init];
