@@ -74,6 +74,8 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         { "("sv, TokenType::ParenOpen },
         { "+"sv, TokenType::Plus },
         { "?"sv, TokenType::QuestionMark },
+        { "]"sv, TokenType::SquareBracketClose },
+        { "["sv, TokenType::SquareBracketOpen },
     };
 
     LineTrackingLexer lexer(view, node->offset);

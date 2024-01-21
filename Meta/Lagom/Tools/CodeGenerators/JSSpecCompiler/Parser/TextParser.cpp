@@ -13,6 +13,8 @@ namespace JSSpecCompiler {
 
 void TextParser::save_error(Variant<TokenType, StringView, CustomMessage>&& expected)
 {
+    if (expected.has<TokenType>() && expected.get<TokenType>() == TokenType::Invalid)
+        return;
     if (m_max_parsed_tokens > m_next_token_index)
         return;
     if (m_max_parsed_tokens < m_next_token_index)
@@ -650,21 +652,45 @@ TextParseErrorOr<Vector<StringView>> TextParser::parse_qualified_name()
 // <function_arguments> :== '(' (<word> (, <word>)*)? ')'
 TextParseErrorOr<Vector<FunctionArgument>> TextParser::parse_function_arguments_in_declaration()
 {
-    Vector<FunctionArgument> arguments;
     TRY(consume_token_with_type(TokenType::ParenOpen));
+
+    Vector<FunctionArgument> arguments;
+    size_t optional_arguments_group = 0;
+
     while (true) {
-        if (arguments.is_empty()) {
-            auto argument = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Identifier }));
-            if (argument.type == TokenType::ParenClose)
-                break;
-            arguments.append({ argument.data });
-        } else {
-            arguments.append({ TRY(consume_token_with_type(TokenType::Identifier)).data });
-        }
-        auto next_token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
-        if (next_token.type == TokenType::ParenClose)
+        Token token = TRY(consume_token_with_one_of_types({
+            TokenType::SquareBracketOpen,
+            arguments.is_empty() ? TokenType::Identifier : TokenType::Comma,
+            !optional_arguments_group ? TokenType::ParenClose : TokenType::Invalid,
+            optional_arguments_group ? TokenType::SquareBracketClose : TokenType::Invalid,
+        }));
+
+        StringView identifier;
+
+        if (token.type == TokenType::SquareBracketClose) {
+            VERIFY(optional_arguments_group != 0);
+            for (size_t i = 1; i < optional_arguments_group; ++i)
+                TRY(consume_token_with_type(TokenType::SquareBracketClose));
+            TRY(consume_token_with_type(TokenType::ParenClose));
             break;
+        } else if (token.type == TokenType::ParenClose) {
+            VERIFY(optional_arguments_group == 0);
+            break;
+        } else if (token.type == TokenType::SquareBracketOpen) {
+            ++optional_arguments_group;
+            if (!arguments.is_empty())
+                TRY(consume_token_with_type(TokenType::Comma));
+            identifier = TRY(consume_token_with_type(TokenType::Identifier)).data;
+        } else if (token.type == TokenType::Comma) {
+            identifier = TRY(consume_token_with_type(TokenType::Identifier)).data;
+        } else {
+            VERIFY(token.type == TokenType::Identifier);
+            identifier = token.data;
+        }
+
+        arguments.append({ identifier, optional_arguments_group });
     }
+
     return arguments;
 }
 
