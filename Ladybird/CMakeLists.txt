@@ -175,7 +175,7 @@ target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}
     FILES ${LADYBIRD_HEADERS}
 )
-target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebView LibProtocol)
+target_link_libraries(ladybird PRIVATE AK LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebView LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
@@ -189,7 +189,7 @@ add_executable(headless-browser
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(headless-browser PRIVATE LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibImageDecoderClient LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
+target_link_libraries(headless-browser PRIVATE AK LibCore LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibImageDecoderClient LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
 
 if (ANDROID)
     include(cmake/AndroidExtras.cmake)

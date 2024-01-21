@@ -24,7 +24,7 @@ add_executable(MacPDF MACOSX_BUNDLE
 target_compile_options(MacPDF PRIVATE
     -fobjc-arc
 )
-target_link_libraries(MacPDF PRIVATE LibCore LibGfx LibPDF)
+target_link_libraries(MacPDF PRIVATE AK LibCore LibGfx LibPDF)
 target_link_libraries(MacPDF PRIVATE
     "-framework Cocoa"
     "-framework UniformTypeIdentifiers"
@@ -39,7 +39,7 @@ set_target_properties(MacPDF PROPERTIES
 )
 
 # Normally you'd set `RESOURCE "${RESOURCES}"` on the MacPDF target properties
-# and add `"${RESOURCES}" to the sources in add_executable() 
+# and add `"${RESOURCES}" to the sources in add_executable()
 # and CMake would add build steps to compile the xib files to nib files and
 # add them to the bundle.
 # But with CMake's ninja generator that seems to not work, so do it manually.
@@ -51,7 +51,7 @@ foreach(xib ${RESOURCES})
     # FIXME: This is gross! It makes the link at least as slow as compiling all xib files.
     # Better to have a separate command for the compiles and to only do the copying in the postbuild.
     add_custom_command(TARGET MacPDF POST_BUILD
-        COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text 
+        COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text
                 --compile "$<TARGET_BUNDLE_DIR:MacPDF>/Contents/Resources/${nib}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/${xib}"
         COMMENT "Compiling ${CMAKE_CURRENT_SOURCE_DIR}/${xib}.xib")

@@ -224,9 +224,11 @@ function(lagom_lib target_name fs_name)
         OUTPUT_NAME lagom-${fs_name}
     )
     target_link_libraries(${target_name} PRIVATE ${LAGOM_LIBRARY_LIBS})
-    if (NOT ${target_name} STREQUAL "LibCore")
-        target_link_libraries(${target_name} PRIVATE LibCore)
+
+    if (NOT "${target_name}" STREQUAL "AK")
+        target_link_libraries(${target_name} PRIVATE AK)
     endif()
+
     # FIXME: Clean these up so that we don't need so many include dirs
     target_include_directories(${target_name} INTERFACE
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Services>
@@ -262,7 +264,7 @@ function(lagom_test source)
         get_filename_component(LAGOM_TEST_NAME ${source} NAME_WE)
     endif()
     add_executable(${LAGOM_TEST_NAME} ${source})
-    target_link_libraries(${LAGOM_TEST_NAME} PRIVATE LibCore LibFileSystem LibTest LibTestMain ${LAGOM_TEST_LIBS})
+    target_link_libraries(${LAGOM_TEST_NAME} PRIVATE AK LibCore LibFileSystem LibTest LibTestMain ${LAGOM_TEST_LIBS})
     add_test(
         NAME ${LAGOM_TEST_NAME}
         COMMAND ${LAGOM_TEST_NAME}
@@ -275,7 +277,7 @@ function(lagom_utility name)
     cmake_parse_arguments(LAGOM_UTILITY "" "" "SOURCES;LIBS" ${ARGN})
 
     add_executable("${name}" ${LAGOM_UTILITY_SOURCES})
-    target_link_libraries("${name}" PRIVATE LibCore ${LAGOM_UTILITY_LIBS})
+    target_link_libraries("${name}" PRIVATE AK LibCore ${LAGOM_UTILITY_LIBS})
 endfunction()
 
 function(serenity_test test_src sub_dir)
@@ -345,9 +347,11 @@ add_library(NoCoverage INTERFACE)
 # "install" these special targets to placate CMake
 install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 
-# AK/LibCore
-# Note: AK is included in LibCore for the host build instead of LibC per the target build
+# AK
 add_serenity_subdirectory(AK)
+lagom_lib(AK ak SOURCES ${AK_SOURCES})
+
+# LibCore
 add_serenity_subdirectory(Userland/Libraries/LibCore)
 target_link_libraries(LibCore PRIVATE Threads::Threads)
 if (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
@@ -366,7 +370,6 @@ if (HAIKU)
     # Haiku has networking related functions in the network library
     target_link_libraries(LibCore PRIVATE network)
 endif()
-target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
 add_serenity_subdirectory(Userland/Libraries/LibMain)
@@ -499,7 +502,7 @@ if (BUILD_LAGOM)
     list(TRANSFORM LIBGUI_SOURCES PREPEND "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibGUI/")
     lagom_lib(LibGUI gui
         SOURCES ${LIBGUI_SOURCES}
-        LIBS LibGfx LibSyntax)
+        LIBS LibCore LibGfx LibSyntax)
 
     # FIXME: How about we don't include Kernel/API from random high-level libraries?
     install(FILES ${SERENITY_PROJECT_ROOT}/Kernel/API/KeyCode.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Kernel/API")
@@ -563,7 +566,7 @@ if (BUILD_LAGOM)
         lagom_utility(js SOURCES ../../Userland/Utilities/js.cpp LIBS LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
 
         if (EMSCRIPTEN)
-            lagom_utility(libjs Wasm/js_repl.cpp LIBS LibJS LibLocale LibTimeZone LibUnicode)
+            lagom_utility(libjs SOURCES Wasm/js_repl.cpp LIBS LibJS LibLocale LibTimeZone LibUnicode)
             target_link_options(libjs PRIVATE
                     -sEXPORTED_FUNCTIONS=_initialize_repl,_execute
                     -sEXPORTED_RUNTIME_METHODS=allocateUTF8
@@ -612,7 +615,7 @@ if (BUILD_LAGOM)
             LibTest
             ${LIBTEST_SOURCES}
         )
-        target_link_libraries(LibTest PRIVATE LibCore LibFileSystem)
+        target_link_libraries(LibTest PRIVATE AK LibCore LibFileSystem)
         set_target_properties(LibTest PROPERTIES OUTPUT_NAME lagom-test)
         add_library(
             LibTestMain
@@ -677,14 +680,14 @@ if (BUILD_LAGOM)
         # test-jpeg-roundtrip
         add_executable(test-jpeg-roundtrip
             ../../Userland/Utilities/test-jpeg-roundtrip.cpp)
-        target_link_libraries(test-jpeg-roundtrip LibGfx LibMain)
+        target_link_libraries(test-jpeg-roundtrip AK LibGfx LibMain)
 
         # JavaScriptTestRunner + LibTest tests
         # test-js
         add_executable(test-js
             ../../Tests/LibJS/test-js.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-js LibCore LibFileSystem LibTest LibJS)
+        target_link_libraries(test-js AK LibCore LibFileSystem LibTest LibJS)
         add_test(
             NAME JS
             COMMAND test-js --show-progress=false
@@ -699,7 +702,7 @@ if (BUILD_LAGOM)
         add_executable(test-spreadsheet
                 ../../Tests/Spreadsheet/test-spreadsheet.cpp
                 ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-spreadsheet LibCore LibFileSystem LibTest LibJS)
+        target_link_libraries(test-spreadsheet AK LibCore LibFileSystem LibTest LibJS)
         add_test(
                 NAME Spreadsheet
                 COMMAND test-spreadsheet --show-progress=false
@@ -710,7 +713,7 @@ if (BUILD_LAGOM)
         add_executable(test-wasm
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-wasm LibCore LibFileSystem LibTest LibWasm LibJS LibCrypto)
+        target_link_libraries(test-wasm AK LibCore LibFileSystem LibTest LibWasm LibJS LibCrypto)
         add_test(
             NAME WasmParser
             COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests
