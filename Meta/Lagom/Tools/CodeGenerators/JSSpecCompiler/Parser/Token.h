@@ -112,7 +112,6 @@ struct Token {
 
     TokenType type;
     StringView data;
-    XML::Node const* node;
     Location location;
 };
 

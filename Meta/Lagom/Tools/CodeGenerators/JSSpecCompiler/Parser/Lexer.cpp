@@ -14,7 +14,7 @@
 namespace JSSpecCompiler {
 
 namespace {
-Optional<Token> consume_number(XML::LineTrackingLexer& lexer, XML::Node const* node, Location& location)
+Optional<Token> consume_number(XML::LineTrackingLexer& lexer, Location& location)
 {
     u64 start = lexer.tell();
 
@@ -36,7 +36,7 @@ Optional<Token> consume_number(XML::LineTrackingLexer& lexer, XML::Node const* n
 
     auto length = lexer.tell() - start;
     lexer.retreat(length);
-    return { Token { TokenType::Number, lexer.consume(length), node, move(location) } };
+    return { Token { TokenType::Number, lexer.consume(length), move(location) } };
 }
 
 bool can_end_word_token(char c)
@@ -82,7 +82,7 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         //        this properly, we need support from XML::Parser.
         Location token_location = ctx.location_from_xml_offset(lexer.offset_for(lexer.tell()));
 
-        if (auto result = consume_number(lexer, node, token_location); result.has_value()) {
+        if (auto result = consume_number(lexer, token_location); result.has_value()) {
             tokens.append(result.release_value());
             continue;
         }
@@ -90,7 +90,7 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         bool matched = false;
         for (auto const& [text_to_match, token_type] : choices) {
             if (lexer.consume_specific(text_to_match)) {
-                tokens.append({ token_type, ""sv, node, move(token_location) });
+                tokens.append({ token_type, ""sv, move(token_location) });
                 matched = true;
                 break;
             }
@@ -100,7 +100,7 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
 
         StringView word = lexer.consume_until(can_end_word_token);
         if (word.length())
-            tokens.append({ TokenType::Word, word, node, move(token_location) });
+            tokens.append({ TokenType::Word, word, move(token_location) });
     }
 }
 
@@ -144,7 +144,7 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
                     if (!variable_name.has_value())
                         report_error("malformed <var> subtree, expected single text child node");
 
-                    tokens.append({ TokenType::Identifier, variable_name.value_or(""sv), child, move(child_location) });
+                    tokens.append({ TokenType::Identifier, variable_name.value_or(""sv), move(child_location) });
                     return;
                 }
 
@@ -156,11 +156,11 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
                     auto contents = maybe_contents.value_or(""sv);
 
                     if (contents.length() >= 2 && contents.starts_with('"') && contents.ends_with('"'))
-                        tokens.append({ TokenType::String, contents.substring_view(1, contents.length() - 2), child, move(child_location) });
+                        tokens.append({ TokenType::String, contents.substring_view(1, contents.length() - 2), move(child_location) });
                     else if (contents == "undefined")
-                        tokens.append({ TokenType::Undefined, contents, child, move(child_location) });
+                        tokens.append({ TokenType::Undefined, contents, move(child_location) });
                     else
-                        tokens.append({ TokenType::Identifier, contents, child, move(child_location) });
+                        tokens.append({ TokenType::Identifier, contents, move(child_location) });
                     return;
                 }
 
@@ -171,7 +171,7 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
                     if (!identifier.has_value() || identifier.value().is_empty())
                         report_error("malformed <emu-xref> subtree, expected <a> with nested single text node");
 
-                    tokens.append({ TokenType::Identifier, identifier.value_or(""sv), child, move(child_location) });
+                    tokens.append({ TokenType::Identifier, identifier.value_or(""sv), move(child_location) });
                     return;
                 }
 
@@ -184,7 +184,7 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
                     if (!section_number.has_value())
                         report_error("malformed section number span subtree, expected single text child node");
 
-                    tokens.append({ TokenType::SectionNumber, section_number.value_or(""sv), child, move(child_location) });
+                    tokens.append({ TokenType::SectionNumber, section_number.value_or(""sv), move(child_location) });
                     return;
                 }
 
