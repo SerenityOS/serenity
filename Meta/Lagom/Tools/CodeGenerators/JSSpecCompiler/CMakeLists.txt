@@ -13,7 +13,6 @@ set(SOURCES
     Compiler/Passes/SSABuildingPass.cpp
     Parser/CppASTConverter.cpp
     Parser/Lexer.cpp
-    Parser/ParseError.cpp
     Parser/SpecParser.cpp
     Parser/TextParser.cpp
     Parser/XMLUtils.cpp

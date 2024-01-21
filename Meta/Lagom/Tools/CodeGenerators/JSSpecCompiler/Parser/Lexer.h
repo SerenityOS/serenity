@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Parser/ParseError.h"
 #include "Parser/Token.h"
 
 namespace JSSpecCompiler {
