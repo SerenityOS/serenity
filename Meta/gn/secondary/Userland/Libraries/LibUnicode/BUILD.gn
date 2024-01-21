@@ -177,10 +177,8 @@ source_set("LibUnicode") {
     "URL.cpp",
     "UnicodeUtils.cpp",
   ]
-  deps = [
-    "//AK",
-    "//Userland/Libraries/LibCore",
-  ]
+  deps = [ "//AK" ]
+
   if (enable_unicode_database_download) {
     deps += [
       ":generate_emoji_sources",

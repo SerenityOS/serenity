@@ -12,8 +12,5 @@ shared_library("LibRIFF") {
     "RIFF.h",
   ]
 
-  deps = [
-    "//AK",
-    "//Userland/Libraries/LibCore",
-  ]
+  deps = [ "//AK" ]
 }

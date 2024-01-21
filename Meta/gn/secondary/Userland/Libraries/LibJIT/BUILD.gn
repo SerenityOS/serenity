@@ -7,10 +7,7 @@ shared_library("LibJIT") {
     "GDB.cpp",
     "GDB.h",
   ]
-  deps = [
-    "//AK",
-    "//Userland/Libraries/LibCore",
-  ]
+  deps = [ "//AK" ]
 
   if (current_os == "mac") {
     sources += [ "GDBUnsupported.cpp" ]

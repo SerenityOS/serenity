@@ -4,4 +4,3 @@ set(SOURCES
 )
 
 serenity_lib(LibRIFF riff)
-target_link_libraries(LibRIFF PRIVATE LibCore)
