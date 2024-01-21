@@ -432,7 +432,7 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey co
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver, cacheable_metadata);
 
-    auto css_text = TRY(value.to_string(vm));
+    auto css_text = value.is_null() ? String {} : TRY(value.to_string(vm));
 
     TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return set_property(property_id, css_text); }));
     return true;
