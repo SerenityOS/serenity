@@ -163,6 +163,11 @@ public:
     {
     }
 
+    ~AccelGfxContext()
+    {
+        activate();
+    }
+
 private:
     OwnPtr<AccelGfx::Context> m_context;
     NonnullRefPtr<AccelGfx::Canvas> m_canvas;
