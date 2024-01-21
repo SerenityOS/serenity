@@ -63,4 +63,14 @@
          </ol>
       </emu-alg>
    </emu-clause>
+   <emu-clause id="6">
+      <h1><span class="secnum">6</span> get Temporal.PlainDateTime.prototype.inLeapYear</h1>
+      <emu-alg>
+         <ol>
+            <li>Let <var>dateTime</var> be the <emu-val>this</emu-val> value.</li>
+            <li>Perform ? <emu-xref><a>RequireInternalSlot</a></emu-xref>(<var>dateTime</var>, <var class="field">[[A]]</var>).</li>
+            <li>Return <emu-val>undefined</emu-val>.</li>
+         </ol>
+      </emu-alg>
+   </emu-clause>
 </specification>

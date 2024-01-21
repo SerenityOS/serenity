@@ -87,3 +87,16 @@ TreeList
   ReturnNode
     Enumerator unused
 
+%get Temporal.PlainDateTime.prototype.inLeapYear%():
+TreeList
+  BinaryOperation Assignment
+    Var dateTime
+    WellKnownNode This
+  UnaryOperation ReturnIfAbrubt
+    FunctionCall
+      UnresolvedReference RequireInternalSlot
+      Var dateTime
+      Slot A
+  ReturnNode
+    WellKnownNode Undefined
+

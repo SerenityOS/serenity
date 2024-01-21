@@ -78,6 +78,7 @@ private:
     TextParseErrorOr<Tree> parse_record_direct_list_initialization();
     TextParseErrorOr<Vector<Tree>> parse_function_arguments();
     TextParseErrorOr<Tree> parse_list_initialization();
+    TextParseErrorOr<Tree> parse_the_this_value();
     TextParseErrorOr<Tree> parse_value();
     TextParseErrorOr<Tree> parse_expression();
     TextParseErrorOr<Tree> parse_condition();
