@@ -26,34 +26,6 @@ TreeList
   ReturnNode
     UnresolvedReference b
 
-===== AST after function-call-canonicalization =====
-f(cond1, cond2):
-TreeList
-  IfBranch
-    UnresolvedReference cond1
-    TreeList
-      BinaryOperation Declaration
-        UnresolvedReference a
-        MathematicalConstant 1
-      IfBranch
-        UnresolvedReference cond2
-        TreeList
-          BinaryOperation Declaration
-            UnresolvedReference b
-            UnresolvedReference a
-      ElseIfBranch Else
-        TreeList
-          BinaryOperation Declaration
-            UnresolvedReference b
-            MathematicalConstant 3
-  ElseIfBranch Else
-    TreeList
-      BinaryOperation Declaration
-        UnresolvedReference b
-        MathematicalConstant 4
-  ReturnNode
-    UnresolvedReference b
-
 ===== AST after if-branch-merging =====
 f(cond1, cond2):
 TreeList

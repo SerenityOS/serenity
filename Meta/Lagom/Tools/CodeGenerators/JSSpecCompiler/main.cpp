@@ -11,7 +11,6 @@
 #include "Compiler/Passes/CFGBuildingPass.h"
 #include "Compiler/Passes/CFGSimplificationPass.h"
 #include "Compiler/Passes/DeadCodeEliminationPass.h"
-#include "Compiler/Passes/FunctionCallCanonicalizationPass.h"
 #include "Compiler/Passes/IfBranchMergingPass.h"
 #include "Compiler/Passes/ReferenceResolvingPass.h"
 #include "Compiler/Passes/SSABuildingPass.h"
@@ -118,7 +117,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         pipeline.add_step(adopt_own_if_nonnull(new CppParsingStep()));
     else
         pipeline.add_step(adopt_own_if_nonnull(new SpecParsingStep()));
-    pipeline.add_compilation_pass<FunctionCallCanonicalizationPass>();
     pipeline.add_compilation_pass<IfBranchMergingPass>();
     pipeline.add_compilation_pass<ReferenceResolvingPass>();
     pipeline.add_compilation_pass<CFGBuildingPass>();
