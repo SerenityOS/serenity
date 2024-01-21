@@ -306,9 +306,8 @@ inline NodeWithStyle* Node::parent()
 inline Gfx::Font const& NodeWithStyle::first_available_font() const
 {
     // https://drafts.csswg.org/css-fonts/#first-available-font
-    // FIXME: Should be be the first font for which the character U+0020 (space) instead of
-    //        any first font in the list
-    return computed_values().font_list().first();
+    // First font for which the character U+0020 (space) is not excluded by a unicode-range
+    return computed_values().font_list().font_for_code_point(' ');
 }
 
 }
