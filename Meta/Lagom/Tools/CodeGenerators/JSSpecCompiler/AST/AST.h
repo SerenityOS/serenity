@@ -242,7 +242,8 @@ protected:
 #define ENUMERATE_UNARY_OPERATORS(F) \
     F(Invalid)                       \
     F(AssertCompletion)              \
-    F(Minus)
+    F(Minus)                         \
+    F(ReturnIfAbrubt)
 
 #define ENUMERATE_BINARY_OPERATORS(F) \
     F(Invalid)                        \

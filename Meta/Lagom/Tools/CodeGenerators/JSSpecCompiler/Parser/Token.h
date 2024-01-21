@@ -44,6 +44,7 @@ constexpr i32 closing_bracket_precedence = 18;
     F(ParenClose, 18, Invalid, Invalid, ParenOpen, "')'")                            \
     F(ParenOpen, -1, Invalid, Invalid, ParenClose, "'('")                            \
     F(Plus, 6, Invalid, Plus, Invalid, "plus")                                       \
+    F(QuestionMark, 3, ReturnIfAbrubt, Invalid, Invalid, "question mark")            \
     F(SectionNumber, -1, Invalid, Invalid, Invalid, "section number")                \
     F(String, -1, Invalid, Invalid, Invalid, "string literal")                       \
     F(Superscript, 4, Invalid, Power, Invalid, "subscript")                          \
