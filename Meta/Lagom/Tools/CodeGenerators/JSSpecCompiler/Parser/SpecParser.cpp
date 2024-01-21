@@ -239,7 +239,7 @@ NonnullOwnPtr<SpecificationClause> SpecificationClause::create(SpecificationPars
             [&](AK::Empty const&) {
                 result = make<SpecificationClause>(move(specification_clause));
             },
-            [&](ClauseHeader::FunctionDefinition const&) {
+            [&](OneOf<ClauseHeader::AbstractOperation, ClauseHeader::Accessor> auto const&) {
                 result = make<SpecFunction>(move(specification_clause));
             });
 
@@ -346,18 +346,26 @@ bool SpecFunction::post_initialize(XML::Node const* element)
         m_id = maybe_id.value();
     }
 
-    auto maybe_abstract_operation_id = get_attribute_by_name(element, attribute_aoid);
-    if (maybe_abstract_operation_id.has_value())
-        m_name = maybe_abstract_operation_id.value();
+    m_header.header.visit(
+        [&](ClauseHeader::AbstractOperation const& abstract_operation) {
+            auto maybe_abstract_operation_id = get_attribute_by_name(element, attribute_aoid);
+            if (maybe_abstract_operation_id.has_value())
+                m_name = MUST(String::from_utf8(maybe_abstract_operation_id.value()));
 
-    m_section_number = m_header.section_number;
-    auto const& [function_name, arguments] = m_header.header.get<ClauseHeader::FunctionDefinition>();
-    m_arguments = arguments;
+            auto const& [function_name, arguments] = abstract_operation;
+            m_arguments = arguments;
 
-    if (m_name != function_name) {
-        ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
-            "function name in header and <emu-clause>[aoid] do not match");
-    }
+            if (m_name != function_name) {
+                ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
+                    "function name in header and <emu-clause>[aoid] do not match");
+            }
+        },
+        [&](ClauseHeader::Accessor const& accessor) {
+            m_name = MUST(String::formatted("%get {}%", MUST(String::join("."sv, accessor.qualified_name))));
+        },
+        [&](auto const&) {
+            VERIFY_NOT_REACHED();
+        });
 
     Vector<XML::Node const*> algorithm_nodes;
 
@@ -399,12 +407,12 @@ void SpecFunction::do_collect(TranslationUnitRef translation_unit)
     translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.tree(), move(m_arguments)));
 }
 
-Specification Specification::create(SpecificationParsingContext& ctx, XML::Node const* element)
+NonnullOwnPtr<Specification> Specification::create(SpecificationParsingContext& ctx, XML::Node const* element)
 {
     VERIFY(element->as_element().name == tag_specification);
 
-    Specification specification;
-    specification.parse(ctx, element);
+    auto specification = make<Specification>();
+    specification->parse(ctx, element);
     return specification;
 }
 
@@ -486,7 +494,7 @@ void SpecParsingStep::run(TranslationUnitRef translation_unit)
         return;
     }
 
-    auto specification = Specification::create(ctx, &root);
-    specification.collect_into(translation_unit);
+    m_specification = Specification::create(ctx, &root);
+    m_specification->collect_into(translation_unit);
 }
 }
