@@ -1,0 +1,29 @@
+===== AST after reference-resolving =====
+ArbitrarilyLargeNumbers(a):
+TreeList
+  BinaryOperation Assignment
+    Var a
+    MathematicalConstant 1
+  BinaryOperation Assignment
+    Var b
+    MathematicalConstant 3.6
+  BinaryOperation Assignment
+    Var c
+    MathematicalConstant -3.6
+  BinaryOperation Assignment
+    Var d
+    MathematicalConstant -1000000000000000000000
+  BinaryOperation Assignment
+    Var e
+    MathematicalConstant 10000001/10000000
+  ReturnNode
+    BinaryOperation Plus
+      Var a
+      BinaryOperation Plus
+        Var b
+        BinaryOperation Plus
+          Var c
+          BinaryOperation Plus
+            Var d
+            Var e
+

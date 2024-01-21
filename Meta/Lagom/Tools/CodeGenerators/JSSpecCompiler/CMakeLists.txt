@@ -21,6 +21,6 @@ set(SOURCES
     main.cpp
 )
 
-lagom_tool(JSSpecCompiler LIBS LibCpp LibMain LibXML)
+lagom_tool(JSSpecCompiler LIBS LibCpp LibMain LibXML LibCrypto)
 target_include_directories(JSSpecCompiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(JSSpecCompiler PRIVATE -Wno-missing-field-initializers)

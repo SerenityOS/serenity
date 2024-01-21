@@ -62,7 +62,12 @@ void ControlFlowBranch::dump_tree(StringBuilder& builder)
 
 void MathematicalConstant::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "MathematicalConstant {}", m_number);
+    String representation;
+    if (Crypto::UnsignedBigInteger { 1000 }.divided_by(m_number.denominator()).remainder == 0)
+        representation = MUST(String::from_byte_string(m_number.to_byte_string(3)));
+    else
+        representation = MUST(String::formatted("{}/{}", MUST(m_number.numerator().to_base(10)), MUST(m_number.denominator().to_base(10))));
+    dump_node(builder, "MathematicalConstant {}", representation);
 }
 
 void StringLiteral::dump_tree(StringBuilder& builder)

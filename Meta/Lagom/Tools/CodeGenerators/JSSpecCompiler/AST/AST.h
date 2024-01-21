@@ -10,6 +10,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
+#include <LibCrypto/BigFraction/BigFraction.h>
 
 #include "Forward.h"
 
@@ -208,16 +209,16 @@ protected:
 
 class MathematicalConstant : public Expression {
 public:
-    MathematicalConstant(i64 number)
+    MathematicalConstant(Crypto::BigFraction number)
         : m_number(number)
     {
     }
 
-    // TODO: This should be able to hold arbitrary number
-    i64 m_number;
-
 protected:
     void dump_tree(StringBuilder& builder) override;
+
+private:
+    Crypto::BigFraction m_number;
 };
 
 class StringLiteral : public Expression {
