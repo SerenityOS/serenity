@@ -118,7 +118,7 @@ TextParseErrorOr<void> TextParser::expect_eof()
     return {};
 }
 
-// (the)? <record_name> { (<name>: <value>,)* }
+// <record_initialization> :== (the)? <record_name> { (<name>: <value>,)* }
 TextParseErrorOr<Tree> TextParser::parse_record_direct_list_initialization()
 {
     auto rollback = rollback_point();
@@ -194,15 +194,51 @@ TextParseErrorOr<Tree> TextParser::parse_list_initialization()
     return make_ref_counted<List>(move(elements));
 }
 
+// <value> :== <identifier> | <well_known_value> | <enumerator> | <number> | <string> | <list_initialization> | <record_initialization>
+TextParseErrorOr<Tree> TextParser::parse_value()
+{
+    if (auto identifier = consume_token_with_type(TokenType::Identifier); !identifier.is_error())
+        return make_ref_counted<UnresolvedReference>(identifier.release_value().data);
+
+    if (auto well_known_value = consume_token_with_type(TokenType::WellKnownValue); !well_known_value.is_error()) {
+        static constexpr struct {
+            StringView name;
+            WellKnownNode::Type type;
+        } translations[] = {
+            { "false"sv, WellKnownNode::Type::False },
+            { "null"sv, WellKnownNode::Type::Null },
+            { "this"sv, WellKnownNode::Type::This },
+            { "true"sv, WellKnownNode::Type::True },
+            { "undefined"sv, WellKnownNode::Type::Undefined },
+        };
+        for (auto [name, type] : translations)
+            if (well_known_value.value().data == name)
+                return make_ref_counted<WellKnownNode>(type);
+        VERIFY_NOT_REACHED();
+    }
+
+    if (auto enumerator = consume_token_with_type(TokenType::Enumerator); !enumerator.is_error())
+        return m_ctx.translation_unit()->get_node_for_enumerator_value(enumerator.value().data);
+
+    if (auto number = consume_token_with_type(TokenType::Number); !number.is_error())
+        return make_ref_counted<MathematicalConstant>(MUST(Crypto::BigFraction::from_string(number.value().data)));
+
+    if (auto string = consume_token_with_type(TokenType::String); !string.is_error())
+        return make_ref_counted<StringLiteral>(string.value().data);
+
+    if (auto list_initialization = parse_list_initialization(); !list_initialization.is_error())
+        return list_initialization.release_value();
+
+    if (auto record_initialization = parse_record_direct_list_initialization(); !record_initialization.is_error())
+        return record_initialization.release_value();
+
+    return TextParseError {};
+}
+
 // <expr>
 TextParseErrorOr<Tree> TextParser::parse_expression()
 {
     auto rollback = rollback_point();
-
-    if (auto record_init = parse_record_direct_list_initialization(); !record_init.is_error()) {
-        rollback.disarm();
-        return record_init.release_value();
-    }
 
 #define THROW_PARSE_ERROR_IF(expr)                                                                           \
     do {                                                                                                     \
@@ -320,9 +356,6 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
                 // This is just an opening '(' in expression.
                 stack.append(token);
             }
-        } else if (token.type == TokenType::ListStart) {
-            stack.append(TRY(parse_list_initialization()));
-            is_consumed = true;
         } else if (token.is_pre_merged_binary_operator()) {
             THROW_PARSE_ERROR_IF(last_element_type != ExpressionType);
             stack.append(token);
@@ -345,39 +378,14 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
                 stack.append(token);
             }
         } else {
-            NullableTree expression;
-            if (token.type == TokenType::Identifier) {
-                expression = make_ref_counted<UnresolvedReference>(token.data);
-            } else if (token.type == TokenType::WellKnownValue) {
-                static constexpr struct {
-                    StringView name;
-                    WellKnownNode::Type type;
-                } translations[] = {
-                    { "false"sv, WellKnownNode::Type::False },
-                    { "null"sv, WellKnownNode::Type::Null },
-                    { "this"sv, WellKnownNode::Type::This },
-                    { "true"sv, WellKnownNode::Type::True },
-                    { "undefined"sv, WellKnownNode::Type::Undefined },
-                };
-                for (auto [name, type] : translations) {
-                    if (token.data == name) {
-                        expression = make_ref_counted<WellKnownNode>(type);
-                        break;
-                    }
-                }
-                VERIFY(expression);
-            } else if (token.type == TokenType::Enumerator) {
-                expression = m_ctx.translation_unit()->get_node_for_enumerator_value(token.data);
-            } else if (token.type == TokenType::Number) {
-                expression = make_ref_counted<MathematicalConstant>(MUST(Crypto::BigFraction::from_string(token.data)));
-            } else if (token.type == TokenType::String) {
-                expression = make_ref_counted<StringLiteral>(token.data);
+            if (auto expression = parse_value(); !expression.is_error()) {
+                is_consumed = true;
+                THROW_PARSE_ERROR_IF(last_element_type == ExpressionType);
+                stack.append(expression.release_value());
+                merge_pre_merged();
             } else {
                 break;
             }
-            THROW_PARSE_ERROR_IF(last_element_type == ExpressionType);
-            stack.append(expression.release_nonnull());
-            merge_pre_merged();
         }
 
         if (!is_consumed)
