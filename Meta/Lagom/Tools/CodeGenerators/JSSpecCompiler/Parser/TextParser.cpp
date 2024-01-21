@@ -262,7 +262,7 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
 
         if (token.type == TokenType::ParenOpen) {
             if (last_element_type == ExpressionType)
-                stack.append(Token { TokenType::FunctionCall, ""sv, token.node, token.location });
+                stack.append(Token { TokenType::FunctionCall, ""sv, token.location });
             stack.append(token);
 
             if (m_next_token_index + 1 < m_tokens.size()
