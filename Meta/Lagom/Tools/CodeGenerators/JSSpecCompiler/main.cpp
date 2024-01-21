@@ -74,11 +74,17 @@ template<>
 struct AK::Formatter<Vector<FunctionArgument>> : AK::Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Vector<FunctionArgument> const& arguments)
     {
+        size_t previous_optional_group = 0;
         for (size_t i = 0; i < arguments.size(); ++i) {
+            if (previous_optional_group != arguments[i].optional_arguments_group) {
+                previous_optional_group = arguments[i].optional_arguments_group;
+                TRY(builder.put_string("["sv));
+            }
             TRY(builder.put_string(arguments[i].name));
             if (i + 1 != arguments.size())
                 TRY(builder.put_literal(", "sv));
         }
+        TRY(builder.put_string(TRY(String::repeated(']', previous_optional_group))));
         return {};
     }
 };

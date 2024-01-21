@@ -43,6 +43,7 @@ private:
 
 struct FunctionArgument {
     StringView name;
+    size_t optional_arguments_group;
 };
 
 class FunctionDeclaration : public RefCounted<FunctionDeclaration> {

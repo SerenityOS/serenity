@@ -1,0 +1,11 @@
+===== AST after reference-resolving =====
+TestOptionalArgumentsGroups1([a, b, [c]]):
+TreeList
+  ReturnNode
+    Enumerator unused
+
+TestOptionalArgumentsGroups2(a, b, [c, d]):
+TreeList
+  ReturnNode
+    Enumerator unused
+
