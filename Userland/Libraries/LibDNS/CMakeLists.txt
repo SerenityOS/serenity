@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibDNS dns)
-target_link_libraries(LibDNS PRIVATE LibCore LibIPC)
+target_link_libraries(LibDNS PRIVATE LibIPC)

@@ -179,7 +179,6 @@ source_set("LibLocale") {
   ]
   deps = [
     "//AK",
-    "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibUnicode",
   ]
   if (enable_unicode_database_download) {

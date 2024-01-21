@@ -5,10 +5,7 @@ shared_library("LibGPU") {
     "Driver.cpp",
     "Image.cpp",
   ]
-  deps = [
-    "//AK",
-    "//Userland/Libraries/LibCore",
-  ]
+  deps = [ "//AK" ]
 
   # FIXME: express this dependency properly to avoid cycles
   #    we want to make sure that LibSoftGPU is built when LibGPU is needed

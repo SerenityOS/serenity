@@ -26,4 +26,4 @@ set(GENERATED_SOURCES
     GLAPI.cpp)
 
 serenity_lib(LibGL gl)
-target_link_libraries(LibGL PRIVATE LibCore LibGfx LibGLSL LibGPU)
+target_link_libraries(LibGL PRIVATE LibGfx LibGLSL LibGPU)
