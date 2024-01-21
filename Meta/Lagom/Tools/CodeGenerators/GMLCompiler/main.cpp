@@ -172,19 +172,18 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
 {
     // The value is the enum's type name.
     static HashMap<StringView, StringView> enum_properties = {
-        { "text_alignment"sv, "Gfx::TextAlignment"sv },
-        { "focus_policy"sv, "GUI::FocusPolicy"sv },
         { "background_role"sv, "Gfx::ColorRole"sv },
+        { "button_style"sv, "Gfx::ButtonStyle"sv },
+        { "checkbox_position"sv, "GUI::CheckBox::CheckBoxPosition"sv },
+        { "focus_policy"sv, "GUI::FocusPolicy"sv },
+        { "font_weight"sv, "Gfx::FontWeight"sv },
         { "foreground_role"sv, "Gfx::ColorRole"sv },
         { "frame_style"sv, "Gfx::FrameStyle"sv },
-        { "text_wrapping"sv, "Gfx::TextWrapping"sv },
-        { "button_style"sv, "Gfx::ButtonStyle"sv },
-        { "opportunistic_resizee"sv, "GUI::Splitter::OpportunisticResizee"sv },
-        { "checkbox_position"sv, "GUI::CheckBox::CheckBoxPosition"sv },
-        { "button_style"sv, "Gfx::ButtonStyle"sv },
         { "mode"sv, "GUI::TextEditor::Mode"sv },
-        { "font_weight"sv, "Gfx::FontWeight"sv },
+        { "opportunistic_resizee"sv, "GUI::Splitter::OpportunisticResizee"sv },
         { "orientation"sv, "Gfx::Orientation"sv },
+        { "text_alignment"sv, "Gfx::TextAlignment"sv },
+        { "text_wrapping"sv, "Gfx::TextWrapping"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
