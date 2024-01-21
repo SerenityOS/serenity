@@ -547,6 +547,22 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
+class List : public Expression {
+public:
+    List(Vector<Tree>&& elements)
+        : m_elements(elements)
+    {
+    }
+
+    Vector<NodeSubtreePointer> subtrees() override;
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+
+private:
+    Vector<Tree> m_elements;
+};
+
 }
 
 namespace AK {

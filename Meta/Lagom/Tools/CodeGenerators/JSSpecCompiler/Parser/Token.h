@@ -37,6 +37,8 @@ constexpr i32 closing_bracket_precedence = 18;
     F(Identifier, -1, Invalid, Invalid, Invalid, "identifier")                       \
     F(Is, -1, Invalid, Invalid, Invalid, "operator is")                              \
     F(Less, 9, Invalid, CompareLess, Invalid, "less than")                           \
+    F(ListEnd, -1, Invalid, Invalid, Invalid, "»")                                   \
+    F(ListStart, -1, Invalid, Invalid, Invalid, "«")                                 \
     F(MemberAccess, 2, Invalid, MemberAccess, Invalid, "member access operator '.'") \
     F(Multiplication, 5, Invalid, Multiplication, Invalid, "multiplication")         \
     F(NotEquals, 10, Invalid, CompareNotEqual, Invalid, "not equals")                \

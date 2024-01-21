@@ -146,4 +146,12 @@ String Variable::name() const
     return MUST(String::from_utf8(m_name->m_name));
 }
 
+Vector<NodeSubtreePointer> List::subtrees()
+{
+    Vector<NodeSubtreePointer> result;
+    for (auto& element : m_elements)
+        result.append({ &element });
+    return result;
+}
+
 }

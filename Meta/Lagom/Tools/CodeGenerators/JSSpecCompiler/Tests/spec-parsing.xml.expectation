@@ -62,3 +62,28 @@ TreeList
         Func "WellKnownConstants"
         Enumerator enumerator
 
+Lists(a, b):
+TreeList
+  BinaryOperation Assignment
+    Var a
+    List
+  BinaryOperation Assignment
+    Var a
+    List
+      Enumerator 1
+  BinaryOperation Assignment
+    Var a
+    List
+      Enumerator 1
+      Enumerator 2
+  BinaryOperation Assignment
+    Var a
+    List
+      Enumerator 1
+      Enumerator 2
+      BinaryOperation Plus
+        MathematicalConstant 3
+        MathematicalConstant 4
+  ReturnNode
+    Enumerator unused
+
