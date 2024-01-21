@@ -235,25 +235,25 @@ protected:
 
 #define ENUMERATE_UNARY_OPERATORS(F) \
     F(Invalid)                       \
-    F(Minus)                         \
-    F(AssertCompletion)
+    F(AssertCompletion)              \
+    F(Minus)
 
 #define ENUMERATE_BINARY_OPERATORS(F) \
     F(Invalid)                        \
-    F(CompareLess)                    \
-    F(CompareGreater)                 \
-    F(CompareNotEqual)                \
-    F(CompareEqual)                   \
+    F(ArraySubscript)                 \
     F(Assignment)                     \
+    F(Comma)                          \
+    F(CompareEqual)                   \
+    F(CompareGreater)                 \
+    F(CompareLess)                    \
+    F(CompareNotEqual)                \
     F(Declaration)                    \
-    F(Plus)                           \
+    F(Division)                       \
+    F(FunctionCall)                   \
+    F(MemberAccess)                   \
     F(Minus)                          \
     F(Multiplication)                 \
-    F(Division)                       \
-    F(Comma)                          \
-    F(MemberAccess)                   \
-    F(FunctionCall)                   \
-    F(ArraySubscript)
+    F(Plus)
 
 #define NAME(name) name,
 #define STRINGIFY(name) #name##sv,
