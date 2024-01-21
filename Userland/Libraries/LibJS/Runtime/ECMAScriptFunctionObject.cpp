@@ -118,6 +118,8 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
     // 5. Let parameterNames be the BoundNames of formals.
     // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
 
+    size_t parameters_in_environment = 0;
+
     // NOTE: This loop performs step 5, 6, and 8.
     for (auto const& parameter : formals) {
         if (parameter.default_value)
@@ -127,6 +129,8 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
             [&](Identifier const& identifier) {
                 if (m_parameter_names.set(identifier.string(), identifier.is_local() ? ParameterIsLocal::Yes : ParameterIsLocal::No) != AK::HashSetResult::InsertedNewEntry)
                     m_has_duplicates = true;
+                else if (!identifier.is_local())
+                    ++parameters_in_environment;
             },
             [&](NonnullRefPtr<BindingPattern const> const& pattern) {
                 if (pattern->contains_expression())
@@ -136,6 +140,8 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
                 MUST(pattern->for_each_bound_identifier([&](auto& identifier) {
                     if (m_parameter_names.set(identifier.string(), identifier.is_local() ? ParameterIsLocal::Yes : ParameterIsLocal::No) != AK::HashSetResult::InsertedNewEntry)
                         m_has_duplicates = true;
+                    else if (!identifier.is_local())
+                        ++parameters_in_environment;
                 }));
             });
     }
@@ -202,7 +208,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
         environment_size = &parameter_environment_bindings_count;
     }
 
-    *environment_size += m_parameter_names.size();
+    *environment_size += parameters_in_environment;
 
     HashMap<DeprecatedFlyString, ParameterIsLocal> parameter_bindings;
 
