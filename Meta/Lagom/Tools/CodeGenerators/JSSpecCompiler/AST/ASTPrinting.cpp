@@ -39,6 +39,7 @@ void WellKnownNode::dump_tree(StringBuilder& builder)
 {
     static constexpr StringView type_to_name[] = {
         "False"sv,
+        "NewTarget"sv,
         "Null"sv,
         "This"sv,
         "True"sv,
