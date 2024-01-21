@@ -144,6 +144,7 @@ executable("headless-browser") {
   include_dirs = [ "//Userland/Services" ]
   configs += [ ":ladybird_config" ]
   deps = [
+    "//AK",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",
     "//Userland/Libraries/LibDiff",

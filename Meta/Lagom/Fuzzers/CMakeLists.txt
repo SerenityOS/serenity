@@ -6,18 +6,18 @@ function(add_simple_fuzzer name)
       configure_file("${name}.dict" "${FUZZER_DICTIONARY_DIRECTORY}/${name}.dict" COPYONLY)
     endif()
     target_link_libraries(${name}
-      PUBLIC ${ARGN} LibCore)
+      PUBLIC ${ARGN} AK LibCore)
   elseif (ENABLE_FUZZERS_LIBFUZZER)
     target_compile_options(${name}
       PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
       )
     target_link_libraries(${name}
-      PUBLIC ${ARGN} LibCore
+      PUBLIC ${ARGN} AK LibCore
       PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize=fuzzer>
       )
   else()
     target_sources(${name} PRIVATE "EntryShim.cpp")
-    target_link_libraries(${name} PUBLIC ${ARGN} LibCore)
+    target_link_libraries(${name} PUBLIC ${ARGN} AK LibCore)
   endif()
 endfunction()
 
@@ -36,7 +36,7 @@ target_compile_options(FuzzilliJs
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize-coverage=trace-pc-guard>
     )
 target_link_libraries(FuzzilliJs
-    PUBLIC LibCore LibJS
+    PUBLIC AK LibCore LibJS
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize-coverage=trace-pc-guard>
     )
 endif()
