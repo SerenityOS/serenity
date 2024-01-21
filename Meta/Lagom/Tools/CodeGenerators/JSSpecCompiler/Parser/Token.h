@@ -46,6 +46,7 @@ constexpr i32 closing_bracket_precedence = 18;
     F(Plus, 6, Invalid, Plus, Invalid, "plus")                                       \
     F(SectionNumber, -1, Invalid, Invalid, Invalid, "section number")                \
     F(String, -1, Invalid, Invalid, Invalid, "string literal")                       \
+    F(Superscript, 4, Invalid, Power, Invalid, "subscript")                          \
     F(UnaryMinus, 3, Minus, Invalid, Invalid, "unary minus")                         \
     F(Undefined, -1, Invalid, Invalid, Invalid, "constant")                          \
     F(Word, -1, Invalid, Invalid, Invalid, "word")

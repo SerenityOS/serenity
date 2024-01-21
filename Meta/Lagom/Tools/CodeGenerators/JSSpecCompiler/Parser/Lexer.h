@@ -22,6 +22,7 @@ inline constexpr StringView tag_ol = "ol"sv;
 inline constexpr StringView tag_p = "p"sv;
 inline constexpr StringView tag_span = "span"sv;
 inline constexpr StringView tag_specification = "specification"sv;
+inline constexpr StringView tag_sup = "sup"sv;
 inline constexpr StringView tag_var = "var"sv;
 
 inline constexpr StringView attribute_aoid = "aoid"sv;

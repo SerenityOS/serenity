@@ -24,7 +24,7 @@
                         <emu-xref aoid="𝔽"><a href="https://tc39.es/ecma262/#𝔽">𝔽</a></emu-xref>
                         (
                         <emu-xref aoid="floor"><a href="https://tc39.es/ecma262/#eqn-floor">floor</a></emu-xref>
-                        (<var>nowNs</var> / 1000000)).
+                        (<var>nowNs</var> / 10<sup>6</sup>)).
                      </li>
                   </ol>
                </emu-alg>
