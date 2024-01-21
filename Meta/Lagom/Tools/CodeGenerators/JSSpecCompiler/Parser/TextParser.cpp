@@ -298,6 +298,24 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
             NullableTree expression;
             if (token.type == TokenType::Identifier) {
                 expression = make_ref_counted<UnresolvedReference>(token.data);
+            } else if (token.type == TokenType::WellKnownValue) {
+                static constexpr struct {
+                    StringView name;
+                    WellKnownNode::Type type;
+                } translations[] = {
+                    { "false"sv, WellKnownNode::Type::False },
+                    { "null"sv, WellKnownNode::Type::Null },
+                    { "this"sv, WellKnownNode::Type::This },
+                    { "true"sv, WellKnownNode::Type::True },
+                    { "undefined"sv, WellKnownNode::Type::Undefined },
+                };
+                for (auto [name, type] : translations) {
+                    if (token.data == name) {
+                        expression = make_ref_counted<WellKnownNode>(type);
+                        break;
+                    }
+                }
+                VERIFY(expression);
             } else if (token.type == TokenType::Number) {
                 expression = make_ref_counted<MathematicalConstant>(MUST(Crypto::BigFraction::from_string(token.data)));
             } else if (token.type == TokenType::String) {

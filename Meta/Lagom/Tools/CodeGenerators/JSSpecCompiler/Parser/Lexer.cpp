@@ -158,8 +158,8 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
 
                     if (contents.length() >= 2 && contents.starts_with('"') && contents.ends_with('"'))
                         tokens.append({ TokenType::String, contents.substring_view(1, contents.length() - 2), move(child_location) });
-                    else if (contents == "undefined")
-                        tokens.append({ TokenType::Undefined, contents, move(child_location) });
+                    else if (contents.is_one_of("undefined", "null", "this", "true", "false"))
+                        tokens.append({ TokenType::WellKnownValue, contents, move(child_location) });
                     else
                         tokens.append({ TokenType::Identifier, contents, move(child_location) });
                     return;

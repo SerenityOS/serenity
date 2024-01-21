@@ -27,3 +27,22 @@ TreeList
             Var d
             Var e
 
+WellKnownConstants(a):
+TreeList
+  IfElseIfChain
+    IsOneOf
+      Var a
+      WellKnownNode Undefined
+    TreeList
+      BinaryOperation Assignment
+        Var b
+        WellKnownNode Null
+      ReturnNode
+        WellKnownNode True
+    TreeList
+      BinaryOperation Assignment
+        Var c
+        WellKnownNode This
+      ReturnNode
+        WellKnownNode False
+

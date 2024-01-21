@@ -38,6 +38,11 @@ void ErrorNode::dump_tree(StringBuilder& builder)
 void WellKnownNode::dump_tree(StringBuilder& builder)
 {
     static constexpr StringView type_to_name[] = {
+        "False"sv,
+        "Null"sv,
+        "This"sv,
+        "True"sv,
+        "Undefined"sv,
         "ZeroArgumentFunctionCall"sv,
     };
     dump_node(builder, "WellKnownNode {}", type_to_name[m_type]);
