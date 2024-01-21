@@ -11,6 +11,7 @@ set(ARCH_FOLDER "${SERENITY_ARCH}")
 
 file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/${ARCH_FOLDER}/*.S")
 set(ELF_SOURCES ${ELF_SOURCES} "../Libraries/LibELF/Arch/${ARCH_FOLDER}/entry.S" "../Libraries/LibELF/Arch/${ARCH_FOLDER}/plt_trampoline.S")
+set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/${ARCH_FOLDER}/fenv.cpp")
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/x86_64/memset.cpp")
 elseif ("${SERENITY_ARCH}" STREQUAL "aarch64")
