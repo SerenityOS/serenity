@@ -153,7 +153,11 @@ private:
 
     bool m_has_parameter_expressions { false };
     bool m_has_duplicates { false };
-    HashTable<DeprecatedFlyString> m_parameter_names;
+    enum class ParameterIsLocal {
+        No,
+        Yes,
+    };
+    HashMap<DeprecatedFlyString, ParameterIsLocal> m_parameter_names;
     Vector<FunctionDeclaration const&> m_functions_to_initialize;
     bool m_arguments_object_needed { false };
     bool m_is_module_wrapper { false };

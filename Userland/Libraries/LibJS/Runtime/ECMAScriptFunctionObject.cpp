@@ -125,7 +125,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
 
         parameter.binding.visit(
             [&](Identifier const& identifier) {
-                if (m_parameter_names.set(identifier.string()) != AK::HashSetResult::InsertedNewEntry)
+                if (m_parameter_names.set(identifier.string(), identifier.is_local() ? ParameterIsLocal::Yes : ParameterIsLocal::No) != AK::HashSetResult::InsertedNewEntry)
                     m_has_duplicates = true;
             },
             [&](NonnullRefPtr<BindingPattern const> const& pattern) {
@@ -134,7 +134,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
 
                 // NOTE: Nothing in the callback throws an exception.
                 MUST(pattern->for_each_bound_identifier([&](auto& identifier) {
-                    if (m_parameter_names.set(identifier.string()) != AK::HashSetResult::InsertedNewEntry)
+                    if (m_parameter_names.set(identifier.string(), identifier.is_local() ? ParameterIsLocal::Yes : ParameterIsLocal::No) != AK::HashSetResult::InsertedNewEntry)
                         m_has_duplicates = true;
                 }));
             });
@@ -204,13 +204,13 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
 
     *environment_size += m_parameter_names.size();
 
-    HashTable<DeprecatedFlyString> parameter_bindings;
+    HashMap<DeprecatedFlyString, ParameterIsLocal> parameter_bindings;
 
     // 22. If argumentsObjectNeeded is true, then
     if (m_arguments_object_needed) {
         // f. Let parameterBindings be the list-concatenation of parameterNames and « "arguments" ».
         parameter_bindings = m_parameter_names;
-        parameter_bindings.set(vm().names.arguments.as_string());
+        parameter_bindings.set(vm().names.arguments.as_string(), ParameterIsLocal::No);
 
         (*environment_size)++;
     } else {
@@ -218,7 +218,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
         // a. Let parameterBindings be parameterNames.
     }
 
-    HashTable<DeprecatedFlyString> instantiated_var_names;
+    HashMap<DeprecatedFlyString, ParameterIsLocal> instantiated_var_names;
 
     size_t* var_environment_size = nullptr;
 
@@ -231,7 +231,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
             // c. For each element n of varNames, do
             MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
                 // i. If instantiatedVarNames does not contain n, then
-                if (instantiated_var_names.set(id.string()) == AK::HashSetResult::InsertedNewEntry) {
+                if (instantiated_var_names.set(id.string(), id.is_local() ? ParameterIsLocal::Yes : ParameterIsLocal::No) == AK::HashSetResult::InsertedNewEntry) {
                     // 1. Append n to instantiatedVarNames.
                     // Following steps will be executed in function_declaration_instantiation:
                     // 2. Perform ! env.CreateMutableBinding(n, false).
@@ -266,7 +266,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
                 // Following steps will be executed in function_declaration_instantiation:
                 // 2. Perform ! env.CreateMutableBinding(n, false).
                 // 3. Perform ! env.InitializeBinding(n, undefined).
-                if (instantiated_var_names.set(id.string()) == AK::HashSetResult::InsertedNewEntry) {
+                if (instantiated_var_names.set(id.string(), id.is_local() ? ParameterIsLocal::Yes : ParameterIsLocal::No) == AK::HashSetResult::InsertedNewEntry) {
                     m_var_names_to_initialize_binding.append({
                         .identifier = id,
                         .parameter_binding = parameter_bindings.contains(id.string()),
@@ -290,7 +290,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
 
             if (!instantiated_var_names.contains(function_name) && function_name != vm().names.arguments.as_string()) {
                 m_function_names_to_initialize_binding.append(function_name);
-                instantiated_var_names.set(function_name);
+                instantiated_var_names.set(function_name, ParameterIsLocal::No);
                 (*var_environment_size)++;
             }
 
@@ -620,6 +620,10 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     // 21. For each String paramName of parameterNames, do
     for (auto const& parameter_name : m_parameter_names) {
+        // OPTIMIZATION: Parameters that are locals don't need to be added to the environment.
+        if (parameter_name.value == ParameterIsLocal::Yes)
+            continue;
+
         // a. Let alreadyDeclared be ! env.HasBinding(paramName).
 
         // b. NOTE: Early errors ensure that duplicate parameter names can only occur in non-strict functions that do not have parameter default values or rest parameters.
@@ -627,12 +631,12 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         // c. If alreadyDeclared is false, then
         // NOTE: alreadyDeclared is always false because we use hash table for parameterNames
         // i. Perform ! env.CreateMutableBinding(paramName, false).
-        MUST(environment->create_mutable_binding(vm, parameter_name, false));
+        MUST(environment->create_mutable_binding(vm, parameter_name.key, false));
 
         // ii. If hasDuplicates is true, then
         if (m_has_duplicates) {
             // 1. Perform ! env.InitializeBinding(paramName, undefined).
-            MUST(environment->initialize_binding(vm, parameter_name, js_undefined(), Environment::InitializeBindingHint::Normal));
+            MUST(environment->initialize_binding(vm, parameter_name.key, js_undefined(), Environment::InitializeBindingHint::Normal));
         }
     }
 
