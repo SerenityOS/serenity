@@ -13,13 +13,17 @@
 namespace JSSpecCompiler {
 
 struct ClauseHeader {
-    struct FunctionDefinition {
+    struct AbstractOperation {
         StringView name;
         Vector<FunctionArgument> arguments;
     };
 
+    struct Accessor {
+        Vector<StringView> qualified_name;
+    };
+
     StringView section_number;
-    Variant<AK::Empty, FunctionDefinition> header;
+    Variant<AK::Empty, AbstractOperation, Accessor> header;
 };
 
 struct TextParseError { };
@@ -85,6 +89,11 @@ private:
     TextParseErrorOr<Tree> parse_inline_if_else();
     TextParseErrorOr<Tree> parse_if(Tree then_branch);
     TextParseErrorOr<Tree> parse_else(Tree else_branch);
+
+    TextParseErrorOr<Vector<StringView>> parse_qualified_name();
+    TextParseErrorOr<Vector<FunctionArgument>> parse_function_arguments_in_declaration();
+    TextParseErrorOr<ClauseHeader::AbstractOperation> parse_abstract_operation_declaration();
+    TextParseErrorOr<ClauseHeader::Accessor> parse_accessor_declaration();
 
     SpecificationParsingContext& m_ctx;
     Vector<Token> const& m_tokens;

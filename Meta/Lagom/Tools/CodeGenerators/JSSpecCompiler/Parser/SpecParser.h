@@ -132,9 +132,8 @@ protected:
     void do_collect(TranslationUnitRef translation_unit) override;
 
 private:
-    StringView m_section_number;
     StringView m_id;
-    StringView m_name;
+    String m_name;
 
     Vector<FunctionArgument> m_arguments;
     Algorithm m_algorithm;
@@ -142,7 +141,7 @@ private:
 
 class Specification {
 public:
-    static Specification create(SpecificationParsingContext& ctx, XML::Node const* element);
+    static NonnullOwnPtr<Specification> create(SpecificationParsingContext& ctx, XML::Node const* element);
 
     void collect_into(TranslationUnitRef translation_unit);
 
@@ -161,6 +160,8 @@ public:
 
 private:
     OwnPtr<XML::Document> m_document;
+    OwnPtr<Specification> m_specification;
+
     ByteBuffer m_input;
 };
 

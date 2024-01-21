@@ -599,6 +599,69 @@ TextParseErrorOr<Tree> TextParser::parse_step_with_substeps(Tree substeps)
     return TextParseError {};
 }
 
+// <qualified_name> :== <word> (. <word>)*
+TextParseErrorOr<Vector<StringView>> TextParser::parse_qualified_name()
+{
+    Vector<StringView> qualified_name;
+    qualified_name.append(TRY(consume_token_with_type(TokenType::Word)).data);
+    while (true) {
+        auto token_or_error = consume_token_with_type(TokenType::MemberAccess);
+        if (token_or_error.is_error())
+            return qualified_name;
+        qualified_name.append(TRY(consume_token_with_type(TokenType::Word)).data);
+    }
+}
+
+// <function_arguments> :== '(' (<word> (, <word>)*)? ')'
+TextParseErrorOr<Vector<FunctionArgument>> TextParser::parse_function_arguments_in_declaration()
+{
+    Vector<FunctionArgument> arguments;
+    TRY(consume_token_with_type(TokenType::ParenOpen));
+    while (true) {
+        if (arguments.is_empty()) {
+            auto argument = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Identifier }));
+            if (argument.type == TokenType::ParenClose)
+                break;
+            arguments.append({ argument.data });
+        } else {
+            arguments.append({ TRY(consume_token_with_type(TokenType::Identifier)).data });
+        }
+        auto next_token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
+        if (next_token.type == TokenType::ParenClose)
+            break;
+    }
+    return arguments;
+}
+
+// <ao_declaration> :== <word> <function_arguments> $
+TextParseErrorOr<ClauseHeader::AbstractOperation> TextParser::parse_abstract_operation_declaration()
+{
+    auto rollback = rollback_point();
+
+    ClauseHeader::AbstractOperation function_definition;
+    function_definition.name = TRY(consume_token_with_type(TokenType::Word)).data;
+    function_definition.arguments = TRY(parse_function_arguments_in_declaration());
+    TRY(expect_eof());
+
+    rollback.disarm();
+    return function_definition;
+}
+
+// <accessor_declaration> :== get <qualified_name> $
+TextParseErrorOr<ClauseHeader::Accessor> TextParser::parse_accessor_declaration()
+{
+    auto rollback = rollback_point();
+
+    TRY(consume_word("get"sv));
+    ClauseHeader::Accessor accessor;
+    accessor.qualified_name = TRY(parse_qualified_name());
+    TRY(expect_eof());
+
+    rollback.disarm();
+    return accessor;
+}
+
+// <clause_header> :== <section_number> <ao_declaration> | <accessor_declaration>
 TextParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
 {
     ClauseHeader result;
@@ -606,27 +669,13 @@ TextParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
     auto section_number_token = TRY(consume_token_with_type(TokenType::SectionNumber));
     result.section_number = section_number_token.data;
 
-    ClauseHeader::FunctionDefinition function_definition;
-
-    function_definition.name = TRY(consume_token_with_type(TokenType::Word)).data;
-
-    TRY(consume_token_with_type(TokenType::ParenOpen));
-    while (true) {
-        if (function_definition.arguments.is_empty()) {
-            auto argument = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Identifier }));
-            if (argument.type == TokenType::ParenClose)
-                break;
-            function_definition.arguments.append({ argument.data });
-        } else {
-            function_definition.arguments.append({ TRY(consume_token_with_type(TokenType::Identifier)).data });
-        }
-        auto next_token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
-        if (next_token.type == TokenType::ParenClose)
-            break;
+    if (auto ao_declaration = parse_abstract_operation_declaration(); !ao_declaration.is_error()) {
+        result.header = ao_declaration.release_value();
+    } else if (auto accessor = parse_accessor_declaration(); !accessor.is_error()) {
+        result.header = accessor.release_value();
+    } else {
+        return TextParseError {};
     }
-    TRY(expect_eof());
-
-    result.header = function_definition;
 
     return result;
 }
