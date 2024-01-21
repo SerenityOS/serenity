@@ -15,7 +15,6 @@ class OpenGLContext {
 public:
     static OwnPtr<OpenGLContext> create(Gfx::Bitmap&);
 
-    virtual void activate() = 0;
     virtual void present(Gfx::Bitmap&) = 0;
     void clear_buffer_to_default_values();
 

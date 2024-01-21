@@ -20,7 +20,7 @@ namespace Web::WebGL {
 #ifdef HAS_ACCELERATED_GRAPHICS
 class AccelGfxContext : public OpenGLContext {
 public:
-    virtual void activate() override
+    void activate()
     {
         m_context->activate();
     }
@@ -172,11 +172,6 @@ private:
 #ifdef AK_OS_SERENITY
 class LibGLContext : public OpenGLContext {
 public:
-    virtual void activate() override
-    {
-        GL::make_context_current(m_context);
-    }
-
     virtual void present(Gfx::Bitmap&) override
     {
         m_context->present();
