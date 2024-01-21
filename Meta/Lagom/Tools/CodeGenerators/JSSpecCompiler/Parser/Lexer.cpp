@@ -76,6 +76,7 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         { "?"sv, TokenType::QuestionMark },
         { "]"sv, TokenType::SquareBracketClose },
         { "["sv, TokenType::SquareBracketOpen },
+        { "NewTarget"sv, TokenType::WellKnownValue },
     };
 
     XML::LineTrackingLexer lexer(view, node->offset);
@@ -95,7 +96,7 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         bool matched = false;
         for (auto const& [text_to_match, token_type] : choices) {
             if (lexer.consume_specific(text_to_match)) {
-                tokens.append({ token_type, ""sv, move(token_location) });
+                tokens.append({ token_type, text_to_match, move(token_location) });
                 matched = true;
                 break;
             }

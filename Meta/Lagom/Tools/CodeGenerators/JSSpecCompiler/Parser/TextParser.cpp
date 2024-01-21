@@ -220,6 +220,7 @@ TextParseErrorOr<Tree> TextParser::parse_value()
             WellKnownNode::Type type;
         } translations[] = {
             { "false"sv, WellKnownNode::Type::False },
+            { "NewTarget"sv, WellKnownNode::Type::NewTarget },
             { "null"sv, WellKnownNode::Type::Null },
             { "this"sv, WellKnownNode::Type::This },
             { "true"sv, WellKnownNode::Type::True },

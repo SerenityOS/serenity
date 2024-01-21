@@ -135,6 +135,7 @@ class WellKnownNode : public Expression {
 public:
     enum Type {
         False,
+        NewTarget,
         Null,
         This,
         True,
