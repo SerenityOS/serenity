@@ -246,6 +246,18 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
         window.set_fullscreen(!window.is_fullscreen());
     }));
 
+    auto debug_menu = window.add_menu("&Debug"_string);
+    auto toggle_show_clipping_paths = GUI::Action::create_checkable("Show &Clipping Paths", [&](auto& action) {
+        m_viewer->set_show_clipping_paths(action.is_checked());
+    });
+    toggle_show_clipping_paths->set_checked(m_viewer->show_clipping_paths());
+    debug_menu->add_action(toggle_show_clipping_paths);
+    auto toggle_show_images = GUI::Action::create_checkable("Show &Images", [&](auto& action) {
+        m_viewer->set_show_images(action.is_checked());
+    });
+    toggle_show_images->set_checked(m_viewer->show_images());
+    debug_menu->add_action(*toggle_show_images);
+
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_about_action("PDF Viewer"_string, GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
@@ -354,15 +366,6 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*m_rotate_counterclockwise_action);
     toolbar.add_action(*m_rotate_clockwise_action);
     toolbar.add_separator();
-
-    m_show_clipping_paths = toolbar.add<GUI::CheckBox>();
-    m_show_clipping_paths->set_text("Show clipping paths"_string);
-    m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
-    m_show_clipping_paths->on_checked = [&](auto checked) { m_viewer->set_show_clipping_paths(checked); };
-    m_show_images = toolbar.add<GUI::CheckBox>();
-    m_show_images->set_text("Show images"_string);
-    m_show_images->set_checked(m_viewer->show_images(), GUI::AllowCallback::No);
-    m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }
 
 void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
@@ -411,7 +414,6 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
     m_reset_zoom_action->set_enabled(true);
     m_rotate_counterclockwise_action->set_enabled(true);
     m_rotate_clockwise_action->set_enabled(true);
-    m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
 
     if (document->outline()) {
         auto outline = document->outline();
