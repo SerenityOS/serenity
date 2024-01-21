@@ -49,4 +49,18 @@
          </ol>
       </emu-alg>
    </emu-clause>
+   <emu-clause id="5" aoid="Lists">
+      <h1>
+         <span class="secnum">5</span> Lists ( <var>a</var>, <var>b</var> )
+      </h1>
+      <emu-alg>
+         <ol>
+            <li>Let <var>a</var> be «  ».</li>
+            <li>Set <var>a</var> to « <emu-const>1</emu-const> ».</li>
+            <li>Set <var>a</var> to « <emu-const>1</emu-const>, <emu-const>2</emu-const> ».</li>
+            <li>Set <var>a</var> to « <emu-const>1</emu-const>, <emu-const>2</emu-const>, 3 + 4 ».</li>
+            <li>Return <emu-const>unused</emu-const>.</li>
+         </ol>
+      </emu-alg>
+   </emu-clause>
 </specification>

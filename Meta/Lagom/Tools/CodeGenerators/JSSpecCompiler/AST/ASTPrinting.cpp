@@ -187,4 +187,11 @@ void FunctionPointer::dump_tree(StringBuilder& builder)
     dump_node(builder, "Func \"{}\"", m_declaration->m_name);
 }
 
+void List::dump_tree(StringBuilder& builder)
+{
+    dump_node(builder, "List");
+    for (auto const& element : m_elements)
+        element->format_tree(builder);
+}
+
 }

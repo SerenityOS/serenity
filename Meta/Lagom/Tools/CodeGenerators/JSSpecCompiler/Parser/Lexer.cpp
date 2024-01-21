@@ -64,6 +64,8 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         { ">"sv, TokenType::Greater },
         { "is"sv, TokenType::Is },
         { "<"sv, TokenType::Less },
+        { "»"sv, TokenType::ListEnd },
+        { "«"sv, TokenType::ListStart },
         { "."sv, TokenType::MemberAccess },
         { "×"sv, TokenType::Multiplication },
         { "is not equal to"sv, TokenType::NotEquals },

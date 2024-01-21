@@ -170,6 +170,30 @@ TextParseErrorOr<Vector<Tree>> TextParser::parse_function_arguments()
     return arguments;
 }
 
+// <list_initialization> :== « (<expr> (, <expr>)*)? »
+TextParseErrorOr<Tree> TextParser::parse_list_initialization()
+{
+    auto rollback = rollback_point();
+
+    TRY(consume_token_with_type(TokenType::ListStart));
+
+    if (!consume_token_with_type(TokenType::ListEnd).is_error()) {
+        rollback.disarm();
+        return make_ref_counted<List>(Vector<Tree> {});
+    }
+
+    Vector<Tree> elements;
+    while (true) {
+        elements.append(TRY(parse_expression()));
+
+        auto token = TRY(consume_token_with_one_of_types({ TokenType::ListEnd, TokenType::Comma }));
+        if (token.type == TokenType::ListEnd)
+            break;
+    }
+    rollback.disarm();
+    return make_ref_counted<List>(move(elements));
+}
+
 // <expr>
 TextParseErrorOr<Tree> TextParser::parse_expression()
 {
@@ -296,6 +320,9 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
                 // This is just an opening '(' in expression.
                 stack.append(token);
             }
+        } else if (token.type == TokenType::ListStart) {
+            stack.append(TRY(parse_list_initialization()));
+            is_consumed = true;
         } else if (token.is_pre_merged_binary_operator()) {
             THROW_PARSE_ERROR_IF(last_element_type != ExpressionType);
             stack.append(token);
