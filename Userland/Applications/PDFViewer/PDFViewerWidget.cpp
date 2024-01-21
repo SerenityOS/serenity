@@ -257,6 +257,21 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     });
     toggle_show_images->set_checked(m_viewer->show_images());
     debug_menu->add_action(*toggle_show_images);
+    auto toggle_clip_images = GUI::Action::create_checkable("Clip I&mages", [&](auto& action) {
+        m_viewer->set_clip_images(action.is_checked());
+    });
+    toggle_clip_images->set_checked(m_viewer->clip_images());
+    debug_menu->add_action(toggle_clip_images);
+    auto toggle_clip_paths = GUI::Action::create_checkable("Clip &Paths", [&](auto& action) {
+        m_viewer->set_clip_paths(action.is_checked());
+    });
+    toggle_clip_paths->set_checked(m_viewer->clip_paths());
+    debug_menu->add_action(toggle_clip_paths);
+    auto toggle_clip_text = GUI::Action::create_checkable("Clip &Text", [&](auto& action) {
+        m_viewer->set_clip_text(action.is_checked());
+    });
+    toggle_clip_text->set_checked(m_viewer->clip_text());
+    debug_menu->add_action(toggle_clip_text);
 
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
