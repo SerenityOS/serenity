@@ -271,6 +271,13 @@ function(lagom_test source)
     set_target_properties(${LAGOM_TEST_NAME} PROPERTIES LAGOM_WORKING_DIRECTORY "${LAGOM_TEST_WORKING_DIRECTORY}")
 endfunction()
 
+function(lagom_utility name)
+    cmake_parse_arguments(LAGOM_UTILITY "" "" "SOURCES;LIBS" ${ARGN})
+
+    add_executable("${name}" ${LAGOM_UTILITY_SOURCES})
+    target_link_libraries("${name}" PRIVATE LibCore ${LAGOM_UTILITY_LIBS})
+endfunction()
+
 function(serenity_test test_src sub_dir)
     cmake_parse_arguments(PARSE_ARGV 2 SERENITY_TEST "MAIN_ALREADY_DEFINED" "CUSTOM_MAIN" "LIBS")
     # FIXME: Pass MAIN_ALREADY_DEFINED and CUSTOM_MAIN to support tests that use them.
@@ -511,38 +518,27 @@ if (BUILD_LAGOM)
         add_serenity_subdirectory(Userland/Services)
 
         # Lagom Utilities
-        add_executable(abench ../../Userland/Utilities/abench.cpp)
-        target_link_libraries(abench LibCore LibMain LibFileSystem LibAudio)
-
-        add_executable(aconv ../../Userland/Utilities/aconv.cpp)
-        target_link_libraries(aconv LibCore LibMain LibFileSystem LibAudio)
+        lagom_utility(abench SOURCES ../../Userland/Utilities/abench.cpp LIBS LibMain LibFileSystem LibAudio)
+        lagom_utility(aconv SOURCES ../../Userland/Utilities/aconv.cpp LIBS LibMain LibFileSystem LibAudio)
 
         if (NOT EMSCRIPTEN)
-            add_executable(adjtime ../../Userland/Utilities/adjtime.cpp)
-            target_link_libraries(adjtime LibCore LibMain)
+            lagom_utility(adjtime SOURCES ../../Userland/Utilities/adjtime.cpp LIBS LibMain)
         endif()
 
         # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
         #        for Lagom on Apple M1
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
-            add_executable(disasm ../../Userland/Utilities/disasm.cpp)
-            target_link_libraries(disasm LibCore LibELF LibX86 LibMain)
+            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibX86 LibMain)
         endif()
 
         if (NOT EMSCRIPTEN)
             # LibELF is part of LibC in SerenityOS builds, but not in Lagom.
-            add_executable(file ../../Userland/Utilities/file.cpp)
-            target_link_libraries(file LibAudio LibArchive LibCompress LibCore LibELF LibGfx LibIPC LibMain)
+            lagom_utility(file SOURCES ../../Userland/Utilities/file.cpp LIBS LibAudio LibArchive LibCompress LibELF LibGfx LibIPC LibMain)
         endif()
 
-        add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
-        target_link_libraries(gml-format LibCore LibGUI LibMain)
-
-        add_executable(gunzip ../../Userland/Utilities/gunzip.cpp)
-        target_link_libraries(gunzip LibCompress LibCore LibMain)
-
-        add_executable(gzip ../../Userland/Utilities/gzip.cpp)
-        target_link_libraries(gzip LibCompress LibCore LibMain)
+        lagom_utility(gml-format SOURCES ../../Userland/Utilities/gml-format.cpp LIBS LibGUI LibMain)
+        lagom_utility(gunzip SOURCES ../../Userland/Utilities/gunzip.cpp LIBS LibCompress LibMain)
+        lagom_utility(gzip SOURCES ../../Userland/Utilities/gzip.cpp LIBS LibCompress LibMain)
 
         # Work around bug in JetBrains distributed CMake 3.27.2 where this causes infinite recursion in
         # export_components() when called from CLion Nova by checking if we already have Ladybird included
@@ -560,23 +556,14 @@ if (BUILD_LAGOM)
             add_serenity_subdirectory(Meta/Lagom/Contrib/VideoPlayerSDL)
         endif()
 
-        add_executable(icc ../../Userland/Utilities/icc.cpp)
-        target_link_libraries(icc LibCore LibGfx LibMain)
+        lagom_utility(icc SOURCES ../../Userland/Utilities/icc.cpp LIBS LibGfx LibMain)
+        lagom_utility(image SOURCES ../../Userland/Utilities/image.cpp LIBS LibGfx LibMain)
+        lagom_utility(isobmff SOURCES ../../Userland/Utilities/isobmff.cpp LIBS LibGfx LibMain)
+        lagom_utility(ttfdisasm SOURCES ../../Userland/Utilities/ttfdisasm.cpp LIBS LibGfx LibMain)
+        lagom_utility(js SOURCES ../../Userland/Utilities/js.cpp LIBS LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
 
-        add_executable(image ../../Userland/Utilities/image.cpp)
-        target_link_libraries(image LibCore LibGfx LibMain)
-
-        add_executable(isobmff ../../Userland/Utilities/isobmff.cpp)
-        target_link_libraries(isobmff LibCore LibGfx LibMain)
-
-        add_executable(ttfdisasm ../../Userland/Utilities/ttfdisasm.cpp)
-        target_link_libraries(ttfdisasm LibGfx LibMain)
-
-        add_executable(js ../../Userland/Utilities/js.cpp)
-        target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
         if (EMSCRIPTEN)
-            add_executable(libjs Wasm/js_repl.cpp)
-            target_link_libraries(libjs LibJS LibLocale LibTimeZone LibUnicode)
+            lagom_utility(libjs Wasm/js_repl.cpp LIBS LibJS LibLocale LibTimeZone LibUnicode)
             target_link_options(libjs PRIVATE
                     -sEXPORTED_FUNCTIONS=_initialize_repl,_execute
                     -sEXPORTED_RUNTIME_METHODS=allocateUTF8
@@ -584,28 +571,17 @@ if (BUILD_LAGOM)
                     -sENVIRONMENT=web)
         endif()
 
-        add_executable(lzcat ../../Userland/Utilities/lzcat.cpp)
-        target_link_libraries(lzcat LibCompress LibCore LibMain)
-
-        add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
-        target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain LibManual)
+        lagom_utility(lzcat SOURCES ../../Userland/Utilities/lzcat.cpp LIBS LibCompress LibMain)
+        lagom_utility(markdown-check SOURCES ../../Userland/Utilities/markdown-check.cpp LIBS LibFileSystem LibMarkdown LibMain LibManual)
 
         if (NOT EMSCRIPTEN)
-            add_executable(ntpquery ../../Userland/Utilities/ntpquery.cpp)
-            target_link_libraries(ntpquery LibCore LibMain)
+            lagom_utility(ntpquery SOURCES ../../Userland/Utilities/ntpquery.cpp LIBS LibMain)
         endif()
 
-        add_executable(pdf ../../Userland/Utilities/pdf.cpp)
-        target_link_libraries(pdf LibCore LibGfx LibPDF LibMain)
-
-        add_executable(sql ../../Userland/Utilities/sql.cpp)
-        target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
-
-        add_executable(tar ../../Userland/Utilities/tar.cpp)
-        target_link_libraries(tar LibArchive LibCompress LibCore LibFileSystem LibMain)
-
-        add_executable(test262-runner ../../Tests/LibJS/test262-runner.cpp)
-        target_link_libraries(test262-runner LibJS LibCore LibFileSystem)
+        lagom_utility(pdf SOURCES ../../Userland/Utilities/pdf.cpp LIBS LibGfx LibPDF LibMain)
+        lagom_utility(sql SOURCES ../../Userland/Utilities/sql.cpp LIBS LibFileSystem LibIPC LibLine LibMain LibSQL)
+        lagom_utility(tar SOURCES ../../Userland/Utilities/tar.cpp LIBS LibArchive LibCompress LibFileSystem LibMain)
+        lagom_utility(test262-runner SOURCES ../../Tests/LibJS/test262-runner.cpp LIBS LibJS LibFileSystem)
 
         if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
             include(CheckCSourceCompiles)
@@ -619,18 +595,14 @@ if (BUILD_LAGOM)
                 ASSERT_FAIL_HAS_INT
             )
         endif()
+
         if (ASSERT_FAIL_HAS_INT OR EMSCRIPTEN)
             target_compile_definitions(test262-runner PRIVATE ASSERT_FAIL_HAS_INT)
         endif()
 
-        add_executable(wasm ../../Userland/Utilities/wasm.cpp)
-        target_link_libraries(wasm LibCore LibFileSystem LibWasm LibLine LibMain LibJS)
-
-        add_executable(xml ../../Userland/Utilities/xml.cpp)
-        target_link_libraries(xml LibCore LibFileSystem LibMain LibXML)
-
-        add_executable(xzcat ../../Userland/Utilities/xzcat.cpp)
-        target_link_libraries(xzcat LibCompress LibCore LibMain)
+        lagom_utility(wasm SOURCES ../../Userland/Utilities/wasm.cpp LIBS LibFileSystem LibWasm LibLine LibMain LibJS)
+        lagom_utility(xml SOURCES ../../Userland/Utilities/xml.cpp LIBS LibFileSystem LibMain LibXML)
+        lagom_utility(xzcat SOURCES ../../Userland/Utilities/xzcat.cpp LIBS LibCompress LibMain)
 
         enable_testing()
         # LibTest
