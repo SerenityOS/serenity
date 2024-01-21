@@ -18,6 +18,8 @@
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGShared.h>
+#include <LibGfx/ImageFormats/TIFFLoader.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
 
 namespace Gfx {
 
@@ -465,6 +467,8 @@ struct JPEGLoadingContext {
     JPEGDecoderOptions options;
 
     Optional<ColorTransform> color_transform {};
+
+    OwnPtr<ExifMetadata> exif_metadata {};
 
     Optional<ICCMultiChunkState> icc_multi_chunk_state;
     Optional<ByteBuffer> icc_data;
@@ -1163,6 +1167,26 @@ static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] J
     return {};
 }
 
+static ErrorOr<void> read_exif(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
+{
+    // This refers to Exif's specification, see TIFFLoader for more information.
+    // 4.7.2.2. - APP1 internal structure
+    if (bytes_to_read <= 1) {
+        TRY(stream.discard(bytes_to_read));
+        return {};
+    }
+
+    // Discard padding byte
+    TRY(stream.discard(1));
+
+    auto exif_buffer = TRY(ByteBuffer::create_uninitialized(bytes_to_read - 1));
+    TRY(stream.read_until_filled(exif_buffer));
+
+    context.exif_metadata = TRY(TIFFImageDecoderPlugin::read_exif_metadata(exif_buffer));
+
+    return {};
+}
+
 static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     // B.2.4.6 - Application data syntax
@@ -1187,6 +1211,8 @@ static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& con
 
     auto app_id = TRY(builder.to_string());
 
+    if (app_marker_number == 1 && app_id == "Exif"sv)
+        return read_exif(stream, context, bytes_to_read);
     if (app_marker_number == 2 && app_id == "ICC_PROFILE"sv)
         return read_icc_profile(stream, context, bytes_to_read);
     if (app_marker_number == 14 && app_id == "Adobe"sv)
@@ -2004,6 +2030,13 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
         TRY(cmyk_to_rgb(*m_context));
 
     return ImageFrameDescriptor { m_context->bitmap, 0 };
+}
+
+Optional<Metadata const&> JPEGImageDecoderPlugin::metadata()
+{
+    if (m_context->exif_metadata)
+        return *m_context->exif_metadata;
+    return OptionalNone {};
 }
 
 ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
