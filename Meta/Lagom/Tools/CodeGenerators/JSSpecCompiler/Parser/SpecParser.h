@@ -116,6 +116,7 @@ private:
     Optional<FailedTextParseDiagnostic> parse_header(XML::Node const* element);
     void parse(XML::Node const* element);
 
+    TextParser::ClauseHasAoidAttribute m_clause_has_aoid_attribute;
     SpecificationParsingContext* m_ctx_pointer;
     Vector<NonnullOwnPtr<SpecificationClause>> m_subclauses;
 };
