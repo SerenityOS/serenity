@@ -463,6 +463,18 @@ TextParseErrorOr<Tree> TextParser::parse_assignment()
     return make_ref_counted<BinaryOperation>(op, lvalue, rvalue);
 }
 
+// perform <expr>
+TextParseErrorOr<Tree> TextParser::parse_perform()
+{
+    auto rollback = rollback_point();
+
+    TRY(consume_word("perform"sv));
+    auto value = TRY(parse_expression());
+
+    rollback.disarm();
+    return value;
+}
+
 // <simple_step>
 TextParseErrorOr<Tree> TextParser::parse_simple_step_or_inline_if_branch()
 {
@@ -487,6 +499,14 @@ TextParseErrorOr<Tree> TextParser::parse_simple_step_or_inline_if_branch()
     // Let <expr> be <expr>.$
     // Set <expr> to <expr>.$
     if (auto result = parse_assignment(); !result.is_error()) {
+        TRY(consume_token_with_type(TokenType::Dot));
+        TRY(expect_eof());
+        rollback.disarm();
+        return result.release_value();
+    }
+
+    // Perform <expr>.$
+    if (auto result = parse_perform(); !result.is_error()) {
         TRY(consume_token_with_type(TokenType::Dot));
         TRY(expect_eof());
         rollback.disarm();
