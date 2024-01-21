@@ -22,33 +22,33 @@ constexpr i32 closing_bracket_precedence = 18;
 //       https://en.cppreference.com/w/cpp/language/operator_precedence (common sense applies).
 #define ENUMERATE_TOKENS(F)                                                          \
     F(Invalid, -1, Invalid, Invalid, Invalid, "")                                    \
-    F(SectionNumber, -1, Invalid, Invalid, Invalid, "section number")                \
-    F(Identifier, -1, Invalid, Invalid, Invalid, "identifier")                       \
-    F(Number, -1, Invalid, Invalid, Invalid, "number")                               \
-    F(String, -1, Invalid, Invalid, Invalid, "string literal")                       \
-    F(Undefined, -1, Invalid, Invalid, Invalid, "constant")                          \
-    F(Word, -1, Invalid, Invalid, Invalid, "word")                                   \
-    F(ParenOpen, -1, Invalid, Invalid, ParenClose, "'('")                            \
-    F(ParenClose, 18, Invalid, Invalid, ParenOpen, "')'")                            \
-    F(BraceOpen, -1, Invalid, Invalid, BraceClose, "'{'")                            \
-    F(BraceClose, 18, Invalid, Invalid, BraceOpen, "'}'")                            \
-    F(Comma, 17, Invalid, Comma, Invalid, "','")                                     \
-    F(MemberAccess, 2, Invalid, MemberAccess, Invalid, "member access operator '.'") \
-    F(Dot, -1, Invalid, Invalid, Invalid, "punctuation mark '.'")                    \
-    F(Colon, -1, Invalid, Invalid, Invalid, "':'")                                   \
-    F(Less, 9, Invalid, CompareLess, Invalid, "less than")                           \
-    F(Greater, 9, Invalid, CompareGreater, Invalid, "greater than")                  \
-    F(NotEquals, 10, Invalid, CompareNotEqual, Invalid, "not equals")                \
-    F(Equals, 10, Invalid, CompareEqual, Invalid, "equals")                          \
-    F(Plus, 6, Invalid, Plus, Invalid, "plus")                                       \
     F(AmbiguousMinus, -2, Invalid, Invalid, Invalid, "minus")                        \
-    F(UnaryMinus, 3, Minus, Invalid, Invalid, "unary minus")                         \
     F(BinaryMinus, 6, Invalid, Minus, Invalid, "binary minus")                       \
-    F(Multiplication, 5, Invalid, Multiplication, Invalid, "multiplication")         \
+    F(BraceClose, 18, Invalid, Invalid, BraceOpen, "'}'")                            \
+    F(BraceOpen, -1, Invalid, Invalid, BraceClose, "'{'")                            \
+    F(Colon, -1, Invalid, Invalid, Invalid, "':'")                                   \
+    F(Comma, 17, Invalid, Comma, Invalid, "','")                                     \
     F(Division, 5, Invalid, Division, Invalid, "division")                           \
-    F(FunctionCall, 2, Invalid, FunctionCall, Invalid, "function call token")        \
+    F(Dot, -1, Invalid, Invalid, Invalid, "punctuation mark '.'")                    \
+    F(Equals, 10, Invalid, CompareEqual, Invalid, "equals")                          \
     F(ExclamationMark, 3, AssertCompletion, Invalid, Invalid, "exclamation mark")    \
-    F(Is, -1, Invalid, Invalid, Invalid, "operator is")
+    F(FunctionCall, 2, Invalid, FunctionCall, Invalid, "function call token")        \
+    F(Greater, 9, Invalid, CompareGreater, Invalid, "greater than")                  \
+    F(Identifier, -1, Invalid, Invalid, Invalid, "identifier")                       \
+    F(Is, -1, Invalid, Invalid, Invalid, "operator is")                              \
+    F(Less, 9, Invalid, CompareLess, Invalid, "less than")                           \
+    F(MemberAccess, 2, Invalid, MemberAccess, Invalid, "member access operator '.'") \
+    F(Multiplication, 5, Invalid, Multiplication, Invalid, "multiplication")         \
+    F(NotEquals, 10, Invalid, CompareNotEqual, Invalid, "not equals")                \
+    F(Number, -1, Invalid, Invalid, Invalid, "number")                               \
+    F(ParenClose, 18, Invalid, Invalid, ParenOpen, "')'")                            \
+    F(ParenOpen, -1, Invalid, Invalid, ParenClose, "'('")                            \
+    F(Plus, 6, Invalid, Plus, Invalid, "plus")                                       \
+    F(SectionNumber, -1, Invalid, Invalid, Invalid, "section number")                \
+    F(String, -1, Invalid, Invalid, Invalid, "string literal")                       \
+    F(UnaryMinus, 3, Minus, Invalid, Invalid, "unary minus")                         \
+    F(Undefined, -1, Invalid, Invalid, Invalid, "constant")                          \
+    F(Word, -1, Invalid, Invalid, Invalid, "word")
 
 enum class TokenType {
 #define ID(name, precedence, unary_name, binary_name, matching_bracket, name_for_diagnostic) name,
