@@ -46,3 +46,11 @@ TreeList
       ReturnNode
         WellKnownNode False
 
+TestReturnIfAbrupt(a):
+TreeList
+  ReturnNode
+    UnaryOperation ReturnIfAbrubt
+      FunctionCall
+        Func "WellKnownConstants"
+        Var a
+

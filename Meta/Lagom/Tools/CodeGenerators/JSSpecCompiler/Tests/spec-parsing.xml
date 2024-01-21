@@ -33,4 +33,12 @@
          </ol>
       </emu-alg>
    </emu-clause>
+   <emu-clause id="3" aoid="TestReturnIfAbrupt">
+      <h1><span class="secnum">3</span> TestReturnIfAbrupt ( <var>a</var> )</h1>
+      <emu-alg>
+         <ol>
+            <li>Return ? <emu-xref><a>WellKnownConstants</a></emu-xref>(<var>a</var>).</li>
+         </ol>
+      </emu-alg>
+   </emu-clause>
 </specification>
