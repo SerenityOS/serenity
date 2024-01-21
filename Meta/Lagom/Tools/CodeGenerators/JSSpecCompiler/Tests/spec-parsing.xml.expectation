@@ -54,3 +54,11 @@ TreeList
         Func "WellKnownConstants"
         Var a
 
+Enumerators():
+TreeList
+  ReturnNode
+    UnaryOperation ReturnIfAbrubt
+      FunctionCall
+        Func "WellKnownConstants"
+        Enumerator enumerator
+

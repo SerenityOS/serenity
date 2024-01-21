@@ -30,12 +30,15 @@ public:
     DiagnosticEngine& diag() { return m_diagnostic_engine; }
     Vector<FunctionDefinitionRef> functions_to_compile() const { return m_functions_to_compile; }
 
+    EnumeratorRef get_node_for_enumerator_value(StringView value);
+
 private:
     StringView m_filename;
     DiagnosticEngine m_diagnostic_engine;
     Vector<FunctionDefinitionRef> m_functions_to_compile;
     Vector<NonnullRefPtr<FunctionDeclaration>> m_declarations_owner;
     HashMap<StringView, FunctionDeclarationRef> m_function_index;
+    HashMap<StringView, EnumeratorRef> m_enumerator_nodes;
 };
 
 struct FunctionArgument {

@@ -30,6 +30,7 @@ constexpr i32 closing_bracket_precedence = 18;
     F(Comma, 17, Invalid, Comma, Invalid, "','")                                     \
     F(Division, 5, Invalid, Division, Invalid, "division")                           \
     F(Dot, -1, Invalid, Invalid, Invalid, "punctuation mark '.'")                    \
+    F(Enumerator, -1, Invalid, Invalid, Invalid, "enumerator")                       \
     F(Equals, 10, Invalid, CompareEqual, Invalid, "equals")                          \
     F(ExclamationMark, 3, AssertCompletion, Invalid, Invalid, "exclamation mark")    \
     F(FunctionCall, 2, Invalid, FunctionCall, Invalid, "function call token")        \

@@ -41,4 +41,12 @@
          </ol>
       </emu-alg>
    </emu-clause>
+   <emu-clause id="4" aoid="Enumerators">
+      <h1><span class="secnum">4</span> Enumerators ( )</h1>
+      <emu-alg>
+         <ol>
+            <li>Return ? <emu-xref><a>WellKnownConstants</a></emu-xref>(<emu-const>enumerator</emu-const>).</li>
+         </ol>
+      </emu-alg>
+   </emu-clause>
 </specification>
