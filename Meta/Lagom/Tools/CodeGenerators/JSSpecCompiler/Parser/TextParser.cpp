@@ -146,6 +146,30 @@ TextParseErrorOr<Tree> TextParser::parse_record_direct_list_initialization()
         make_ref_counted<UnresolvedReference>(identifier.data), move(arguments));
 }
 
+// <function_arguments> :== '(' (<expr> (, <expr>)* )? ')'
+TextParseErrorOr<Vector<Tree>> TextParser::parse_function_arguments()
+{
+    auto rollback = rollback_point();
+
+    TRY(consume_token_with_type(TokenType::ParenOpen));
+
+    if (!consume_token_with_type(TokenType::ParenClose).is_error()) {
+        rollback.disarm();
+        return Vector<Tree> {};
+    }
+
+    Vector<Tree> arguments;
+    while (true) {
+        arguments.append(TRY(parse_expression()));
+
+        auto token = TRY(consume_token_with_one_of_types({ TokenType::ParenClose, TokenType::Comma }));
+        if (token.type == TokenType::ParenClose)
+            break;
+    }
+    rollback.disarm();
+    return arguments;
+}
+
 // <expr>
 TextParseErrorOr<Tree> TextParser::parse_expression()
 {
@@ -222,6 +246,7 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
         if (!token_or_error.has_value())
             break;
         auto token = token_or_error.release_value();
+        bool is_consumed = false;
 
         enum {
             NoneType,
@@ -261,17 +286,15 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
             break;
 
         if (token.type == TokenType::ParenOpen) {
-            if (last_element_type == ExpressionType)
-                stack.append(Token { TokenType::FunctionCall, ""sv, token.location });
-            stack.append(token);
-
-            if (m_next_token_index + 1 < m_tokens.size()
-                && m_tokens[m_next_token_index + 1].type == TokenType::ParenClose) {
-                // This is a call to function which does not take parameters. We cannot handle it
-                // normally since we need text between parenthesis to be a valid expression. As a
-                // workaround, we push an artificial tree to stack to act as an argument (it'll be
-                // removed later during function call canonicalization).
-                stack.append(zero_argument_function_call);
+            if (last_element_type == ExpressionType) {
+                // This is a function call.
+                auto arguments = TRY(parse_function_arguments());
+                is_consumed = true;
+                stack.append(Tree { make_ref_counted<FunctionCall>(stack.take_last().get<Tree>(), move(arguments)) });
+                --bracket_balance;
+            } else {
+                // This is just an opening '(' in expression.
+                stack.append(token);
             }
         } else if (token.is_pre_merged_binary_operator()) {
             THROW_PARSE_ERROR_IF(last_element_type != ExpressionType);
@@ -330,7 +353,8 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
             merge_pre_merged();
         }
 
-        VERIFY(consume_token().has_value());
+        if (!is_consumed)
+            VERIFY(consume_token().has_value());
     }
 
     THROW_PARSE_ERROR_IF(stack.is_empty());

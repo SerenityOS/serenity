@@ -139,7 +139,6 @@ public:
         This,
         True,
         Undefined,
-        ZeroArgumentFunctionCall,
         // Update WellKnownNode::dump_tree after adding an entry here
     };
 
@@ -156,7 +155,6 @@ private:
 };
 
 inline Tree const error_tree = make_ref_counted<ErrorNode>();
-inline Tree const zero_argument_function_call = make_ref_counted<WellKnownNode>(WellKnownNode::ZeroArgumentFunctionCall);
 
 class ControlFlowFunctionReturn : public ControlFlowOperator {
 public:
@@ -256,7 +254,6 @@ protected:
     F(CompareNotEqual)                \
     F(Declaration)                    \
     F(Division)                       \
-    F(FunctionCall)                   \
     F(MemberAccess)                   \
     F(Minus)                          \
     F(Multiplication)                 \

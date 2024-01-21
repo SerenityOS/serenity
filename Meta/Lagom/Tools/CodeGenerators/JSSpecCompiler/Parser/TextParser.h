@@ -72,6 +72,7 @@ private:
     TextParseErrorOr<void> expect_eof();
 
     TextParseErrorOr<Tree> parse_record_direct_list_initialization();
+    TextParseErrorOr<Vector<Tree>> parse_function_arguments();
     TextParseErrorOr<Tree> parse_expression();
     TextParseErrorOr<Tree> parse_condition();
     TextParseErrorOr<Tree> parse_return_statement();
