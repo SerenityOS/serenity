@@ -11,7 +11,6 @@
 #include "AST/AST.h"
 #include "CompilationPipeline.h"
 #include "Forward.h"
-#include "Parser/ParseError.h"
 #include "Parser/TextParser.h"
 #include "Parser/Token.h"
 

@@ -6,17 +6,10 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibXML/Forward.h>
 
-#include "Parser/ParseError.h"
-
 namespace JSSpecCompiler {
-
-struct IgnoreComments {
-    ParseErrorOr<void> operator()(XML::Node::Comment const&) { return {}; }
-};
-
-inline constexpr IgnoreComments ignore_comments {};
 
 bool contains_empty_text(XML::Node const* node);
 
