@@ -158,18 +158,19 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
 
         image_data = result.release_value();
     } else {
-        auto result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
-        if (!result.has_value())
+        auto maybe_result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
+        if (!maybe_result.has_value())
             return handle_failed_decode();
+        auto& result = maybe_result.value();
 
         Vector<AnimatedBitmapDecodedImageData::Frame> frames;
-        for (auto& frame : result.value().frames) {
+        for (auto& frame : result.frames) {
             frames.append(AnimatedBitmapDecodedImageData::Frame {
                 .bitmap = Gfx::ImmutableBitmap::create(*frame.bitmap),
                 .duration = static_cast<int>(frame.duration),
             });
         }
-        image_data = AnimatedBitmapDecodedImageData::create(m_document->realm(), move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
+        image_data = AnimatedBitmapDecodedImageData::create(m_document->realm(), move(frames), result.size, result.loop_count, result.is_animated).release_value_but_fixme_should_propagate_errors();
     }
 
     m_image_data = image_data;

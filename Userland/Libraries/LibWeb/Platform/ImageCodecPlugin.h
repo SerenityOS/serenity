@@ -10,6 +10,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Size.h>
 
 namespace Web::Platform {
 
@@ -19,6 +20,7 @@ struct Frame {
 };
 
 struct DecodedImage {
+    Gfx::IntSize size {};
     bool is_animated { false };
     u32 loop_count { 0 };
     Vector<Frame> frames;

@@ -40,6 +40,7 @@ Optional<Web::Platform::DecodedImage> ImageCodecPlugin::decode_image(ReadonlyByt
     auto result = result_or_empty.release_value();
 
     Web::Platform::DecodedImage decoded_image;
+    decoded_image.size = result.size;
     decoded_image.is_animated = result.is_animated;
     decoded_image.loop_count = result.loop_count;
     for (auto const& frame : result.frames) {

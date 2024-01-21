@@ -21,7 +21,7 @@ public:
         int duration { 0 };
     };
 
-    static ErrorOr<JS::NonnullGCPtr<AnimatedBitmapDecodedImageData>> create(JS::Realm&, Vector<Frame>&&, size_t loop_count, bool animated);
+    static ErrorOr<JS::NonnullGCPtr<AnimatedBitmapDecodedImageData>> create(JS::Realm&, Vector<Frame>&&, Gfx::IntSize size, size_t loop_count, bool animated);
     virtual ~AnimatedBitmapDecodedImageData() override;
 
     virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize = {}) const override;
@@ -36,9 +36,10 @@ public:
     virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;
 
 private:
-    AnimatedBitmapDecodedImageData(Vector<Frame>&&, size_t loop_count, bool animated);
+    AnimatedBitmapDecodedImageData(Vector<Frame>&&, Gfx::IntSize size, size_t loop_count, bool animated);
 
-    Vector<Frame> m_frames;
+    Gfx::IntSize m_intrinsic_size {};
+    Vector<Frame> m_frames {};
     size_t m_loop_count { 0 };
     bool m_animated { false };
 };

@@ -13,13 +13,14 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(AnimatedBitmapDecodedImageData);
 
-ErrorOr<JS::NonnullGCPtr<AnimatedBitmapDecodedImageData>> AnimatedBitmapDecodedImageData::create(JS::Realm& realm, Vector<Frame>&& frames, size_t loop_count, bool animated)
+ErrorOr<JS::NonnullGCPtr<AnimatedBitmapDecodedImageData>> AnimatedBitmapDecodedImageData::create(JS::Realm& realm, Vector<Frame>&& frames, Gfx::IntSize size, size_t loop_count, bool animated)
 {
-    return realm.heap().allocate<AnimatedBitmapDecodedImageData>(realm, move(frames), loop_count, animated);
+    return realm.heap().allocate<AnimatedBitmapDecodedImageData>(realm, move(frames), size, loop_count, animated);
 }
 
-AnimatedBitmapDecodedImageData::AnimatedBitmapDecodedImageData(Vector<Frame>&& frames, size_t loop_count, bool animated)
-    : m_frames(move(frames))
+AnimatedBitmapDecodedImageData::AnimatedBitmapDecodedImageData(Vector<Frame>&& frames, Gfx::IntSize size, size_t loop_count, bool animated)
+    : m_intrinsic_size(size)
+    , m_frames(move(frames))
     , m_loop_count(loop_count)
     , m_animated(animated)
 {
@@ -43,17 +44,17 @@ int AnimatedBitmapDecodedImageData::frame_duration(size_t frame_index) const
 
 Optional<CSSPixels> AnimatedBitmapDecodedImageData::intrinsic_width() const
 {
-    return m_frames.first().bitmap->width();
+    return m_intrinsic_size.width();
 }
 
 Optional<CSSPixels> AnimatedBitmapDecodedImageData::intrinsic_height() const
 {
-    return m_frames.first().bitmap->height();
+    return m_intrinsic_size.height();
 }
 
 Optional<CSSPixelFraction> AnimatedBitmapDecodedImageData::intrinsic_aspect_ratio() const
 {
-    return CSSPixels(m_frames.first().bitmap->width()) / CSSPixels(m_frames.first().bitmap->height());
+    return CSSPixels(m_intrinsic_size.width()) / CSSPixels(m_intrinsic_size.height());
 }
 
 }

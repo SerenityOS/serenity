@@ -19,6 +19,7 @@ struct Frame {
 };
 
 struct DecodedImage {
+    Gfx::IntSize size {};
     bool is_animated { false };
     u32 loop_count { 0 };
     Vector<Frame> frames;

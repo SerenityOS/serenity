@@ -46,13 +46,14 @@ Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional
         return {};
 
     DecodedImage image;
+    image.size = response.size();
     image.is_animated = response.is_animated();
     image.loop_count = response.loop_count();
     image.frames.ensure_capacity(response.bitmaps().size());
     auto bitmaps = response.take_bitmaps();
     for (size_t i = 0; i < bitmaps.size(); ++i) {
         if (!bitmaps[i].is_valid())
-            return {};
+            return image;
 
         image.frames.empend(*bitmaps[i].bitmap(), response.durations()[i]);
     }
