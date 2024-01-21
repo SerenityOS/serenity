@@ -64,16 +64,9 @@ Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, 
 {
     VERIFY(element->as_element().name == tag_li);
 
-    auto tokenization_result = tokenize_tree(ctx, element, true);
-    if (tokenization_result.is_error()) {
-        ctx.diag().error(ctx.location_from_xml_offset(tokenization_result.error()->offset()),
-            "{}", tokenization_result.error()->to_string());
-        return {};
-    }
+    auto [maybe_tokens, substeps] = tokenize_step(ctx, element);
 
-    auto [tokens, substeps] = tokenization_result.release_value();
     AlgorithmStep result(ctx);
-    result.m_tokens = move(tokens);
     result.m_node = element;
 
     if (substeps) {
@@ -85,6 +78,10 @@ Optional<AlgorithmStep> AlgorithmStep::create(SpecificationParsingContext& ctx, 
         });
         result.m_substeps = step_list.has_value() ? step_list->tree() : error_tree;
     }
+
+    if (!maybe_tokens.has_value())
+        return {};
+    result.m_tokens = maybe_tokens.release_value();
 
     if (!result.parse())
         return {};
@@ -260,14 +257,11 @@ Optional<FailedTextParseDiagnostic> SpecificationClause::parse_header(XML::Node 
     auto& ctx = *m_ctx_pointer;
     VERIFY(element->as_element().name == tag_h1);
 
-    auto tokenization_result = tokenize_tree(ctx, element, false);
-    if (tokenization_result.is_error()) {
-        return FailedTextParseDiagnostic {
-            ctx.location_from_xml_offset(tokenization_result.error()->offset()),
-            tokenization_result.error()->to_string()
-        };
-    }
-    auto const& tokens = tokenization_result.release_value().tokens;
+    auto maybe_tokens = tokenize_header(ctx, element);
+    if (!maybe_tokens.has_value())
+        return {};
+
+    auto const& tokens = maybe_tokens.release_value();
 
     TextParser parser(ctx, tokens, element);
     auto parse_result = parser.parse_clause_header();
@@ -289,6 +283,7 @@ void SpecificationClause::parse(XML::Node const* element)
     auto& ctx = context();
     u32 child_index = 0;
 
+    bool node_ignored_warning_issued = false;
     Optional<FailedTextParseDiagnostic> header_parse_error;
 
     for (auto const& child : element->as_element().children) {
@@ -312,10 +307,12 @@ void SpecificationClause::parse(XML::Node const* element)
                         m_subclauses.append(create(ctx, child));
                         return;
                     }
-                    if (header_parse_error.has_value()) {
+                    if (!node_ignored_warning_issued && m_header.header.has<AK::Empty>()) {
+                        node_ignored_warning_issued = true;
                         ctx.diag().warn(ctx.location_from_xml_offset(child->offset),
                             "node content will be ignored since section header was not parsed successfully");
-                        ctx.diag().note(header_parse_error->location, "{}", header_parse_error->message);
+                        if (header_parse_error.has_value())
+                            ctx.diag().note(header_parse_error->location, "{}", header_parse_error->message);
                     }
                 }
                 ++child_index;

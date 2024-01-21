@@ -16,15 +16,6 @@ bool contains_empty_text(XML::Node const* node)
     return node->as_text().builder.string_view().trim_whitespace().is_empty();
 }
 
-ParseErrorOr<StringView> deprecated_get_attribute_by_name(XML::Node const* node, StringView attribute_name)
-{
-    auto const& attribute = node->as_element().attributes.get(attribute_name);
-
-    if (!attribute.has_value())
-        return ParseError::create(String::formatted("Attribute {} is not present", attribute_name), node);
-    return attribute.value();
-}
-
 Optional<StringView> get_attribute_by_name(XML::Node const* node, StringView attribute_name)
 {
     auto const& attribute = node->as_element().attributes.get(attribute_name);
@@ -34,39 +25,34 @@ Optional<StringView> get_attribute_by_name(XML::Node const* node, StringView att
     return attribute.value();
 }
 
-ParseErrorOr<StringView> get_text_contents(XML::Node const* node)
+Optional<StringView> get_text_contents(XML::Node const* node)
 {
     auto const& children = node->as_element().children;
-
     if (children.size() != 1 || !children[0]->is_text())
-        return ParseError::create("Expected single text node in a child list of the node"sv, node);
+        return {};
     return children[0]->as_text().builder.string_view();
 }
 
-ParseErrorOr<XML::Node const*> get_only_child(XML::Node const* element, StringView tag_name)
+Optional<XML::Node const*> get_single_child_with_tag(XML::Node const* element, StringView tag_name)
 {
     XML::Node const* result = nullptr;
 
     for (auto const& child : element->as_element().children) {
-        TRY(child->content.visit(
-            [&](XML::Node::Element const& element) -> ParseErrorOr<void> {
-                if (element.name != tag_name)
-                    return ParseError::create(String::formatted("Expected child with the tag name {} but found {}", tag_name, element.name), child);
-                if (result != nullptr)
-                    return ParseError::create("Element must have only one child"sv, child);
+        auto is_valid = child->content.visit(
+            [&](XML::Node::Element const& element) {
                 result = child;
-                return {};
+                return result != nullptr || element.name != tag_name;
             },
-            [&](XML::Node::Text const&) -> ParseErrorOr<void> {
-                if (!contains_empty_text(child))
-                    return ParseError::create("Element should not have non-empty child text nodes"sv, element);
-                return {};
+            [&](XML::Node::Text const&) {
+                return contains_empty_text(child);
             },
-            move(ignore_comments)));
+            [&](auto const&) { return true; });
+        if (!is_valid)
+            return {};
     }
 
     if (result == nullptr)
-        return ParseError::create(String::formatted("Element must have only one child"), element);
+        return {};
     return result;
 }
 
