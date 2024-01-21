@@ -50,6 +50,7 @@ const Array regression_tests = {
     TestDescription {
         .sources = {
             "spec-no-new-line-after-dot.xml"sv,
+            "spec-parsing.xml"sv,
             "spec-single-function-simple.xml"sv,
         },
         .flags = { dump_after_frontend },

@@ -58,6 +58,9 @@ public:
     ByteString to_byte_string(unsigned rounding_threshold) const;
     double to_double() const;
 
+    Crypto::SignedBigInteger const& numerator() const& { return m_numerator; }
+    Crypto::UnsignedBigInteger const& denominator() const& { return m_denominator; }
+
 private:
     void reduce();
 

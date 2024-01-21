@@ -1,0 +1,16 @@
+<!DOCTYPE inline_dtd[<!ENTITY nbsp " ">]>
+<specification>
+   <emu-clause id="1" aoid="ArbitrarilyLargeNumbers">
+      <h1><span class="secnum">1</span> ArbitrarilyLargeNumbers ( <var>a</var> )</h1>
+      <emu-alg>
+         <ol>
+            <li>Let <var>a</var> be 1.</li>
+            <li>Let <var>b</var> be 3.6.</li>
+            <li>Let <var>c</var> be -3.6.</li>
+            <li>Let <var>d</var> be -1000000000000000000000.</li>
+            <li>Let <var>e</var> be 1.0000001.</li>
+            <li>Return <var>a</var>+<var>b</var>+<var>c</var>+<var>d</var>+<var>e</var>.</li>
+         </ol>
+      </emu-alg>
+   </emu-clause>
+</specification>
