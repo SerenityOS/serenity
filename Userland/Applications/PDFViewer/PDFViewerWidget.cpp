@@ -256,7 +256,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
         m_viewer->set_show_images(action.is_checked());
     });
     toggle_show_images->set_checked(m_viewer->show_images());
-    debug_menu->add_action(*toggle_show_images);
+    debug_menu->add_action(toggle_show_images);
     auto toggle_clip_images = GUI::Action::create_checkable("Clip I&mages", [&](auto& action) {
         m_viewer->set_clip_images(action.is_checked());
     });
