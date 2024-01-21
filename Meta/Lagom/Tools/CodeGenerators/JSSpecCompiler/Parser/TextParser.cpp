@@ -194,6 +194,18 @@ TextParseErrorOr<Tree> TextParser::parse_list_initialization()
     return make_ref_counted<List>(move(elements));
 }
 
+TextParseErrorOr<Tree> TextParser::parse_the_this_value()
+{
+    auto rollback = rollback_point();
+
+    TRY(consume_word("the"sv));
+    TRY(consume_token(TokenType::WellKnownValue, "this"sv));
+    TRY(consume_word("value"sv));
+
+    rollback.disarm();
+    return make_ref_counted<WellKnownNode>(WellKnownNode::Type::This);
+}
+
 // <value> :== <identifier> | <well_known_value> | <enumerator> | <number> | <string> | <list_initialization> | <record_initialization>
 TextParseErrorOr<Tree> TextParser::parse_value()
 {
@@ -231,6 +243,9 @@ TextParseErrorOr<Tree> TextParser::parse_value()
 
     if (auto record_initialization = parse_record_direct_list_initialization(); !record_initialization.is_error())
         return record_initialization.release_value();
+
+    if (auto the_this_value = parse_the_this_value(); !the_this_value.is_error())
+        return the_this_value.release_value();
 
     return TextParseError {};
 }
