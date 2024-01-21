@@ -253,7 +253,8 @@ protected:
     F(MemberAccess)                   \
     F(Minus)                          \
     F(Multiplication)                 \
-    F(Plus)
+    F(Plus)                           \
+    F(Power)
 
 #define NAME(name) name,
 #define STRINGIFY(name) #name##sv,

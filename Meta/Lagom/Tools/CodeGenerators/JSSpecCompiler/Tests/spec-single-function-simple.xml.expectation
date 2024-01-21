@@ -17,5 +17,7 @@ TreeList
         UnresolvedReference floor
         BinaryOperation Division
           Var nowNs
-          MathematicalConstant 1000000
+          BinaryOperation Power
+            MathematicalConstant 10
+            MathematicalConstant 6
 

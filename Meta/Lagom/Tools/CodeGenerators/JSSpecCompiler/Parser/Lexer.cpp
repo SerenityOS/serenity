@@ -106,6 +106,7 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
 
 enum class TreeType {
     AlgorithmStep,
+    NestedExpression,
     Header,
 };
 
@@ -175,6 +176,14 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
                     return;
                 }
 
+                if (element.name == tag_sup) {
+                    tokens.append({ TokenType::Superscript, ""sv, move(child_location) });
+                    tokens.append({ TokenType::ParenOpen, ""sv, move(child_location) });
+                    tokenize_tree(ctx, state, child, TreeType::NestedExpression);
+                    tokens.append({ TokenType::ParenClose, ""sv, move(child_location) });
+                    return;
+                }
+
                 if (tree_type == TreeType::Header && element.name == tag_span) {
                     auto element_class = get_attribute_by_name(child, attribute_class);
                     if (element_class != class_secnum)
@@ -207,7 +216,7 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
             [&](auto const&) {});
     }
 
-    if (tokens.size() && tokens.last().type == TokenType::MemberAccess)
+    if (tree_type == TreeType::AlgorithmStep && tokens.size() && tokens.last().type == TokenType::MemberAccess)
         tokens.last().type = TokenType::Dot;
 }
 }
