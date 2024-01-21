@@ -37,6 +37,9 @@ public:
     virtual IntSize size() override;
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
+
+    virtual Optional<Metadata const&> metadata() override;
+
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
     virtual NaturalFrameFormat natural_frame_format() const override;
