@@ -239,7 +239,7 @@ NonnullOwnPtr<SpecificationClause> SpecificationClause::create(SpecificationPars
             [&](AK::Empty const&) {
                 result = make<SpecificationClause>(move(specification_clause));
             },
-            [&](OneOf<ClauseHeader::AbstractOperation, ClauseHeader::Accessor> auto const&) {
+            [&](OneOf<ClauseHeader::AbstractOperation, ClauseHeader::Accessor, ClauseHeader::Method> auto const&) {
                 result = make<SpecFunction>(move(specification_clause));
             });
 
@@ -269,7 +269,7 @@ Optional<FailedTextParseDiagnostic> SpecificationClause::parse_header(XML::Node 
     auto const& tokens = maybe_tokens.release_value();
 
     TextParser parser(ctx, tokens, element);
-    auto parse_result = parser.parse_clause_header();
+    auto parse_result = parser.parse_clause_header(m_clause_has_aoid_attribute);
     if (parse_result.is_error()) {
         // Still try to at least scavenge section number.
         if (tokens.size() && tokens[0].type == TokenType::SectionNumber)
@@ -290,6 +290,10 @@ void SpecificationClause::parse(XML::Node const* element)
 
     bool node_ignored_warning_issued = false;
     Optional<FailedTextParseDiagnostic> header_parse_error;
+
+    m_clause_has_aoid_attribute = element->as_element().attributes.get("aoid").has_value()
+        ? TextParser::ClauseHasAoidAttribute::Yes
+        : TextParser::ClauseHasAoidAttribute::No;
 
     for (auto const& child : element->as_element().children) {
         child->content.visit(
@@ -362,6 +366,10 @@ bool SpecFunction::post_initialize(XML::Node const* element)
         },
         [&](ClauseHeader::Accessor const& accessor) {
             m_name = MUST(String::formatted("%get {}%", MUST(String::join("."sv, accessor.qualified_name))));
+        },
+        [&](ClauseHeader::Method const& method) {
+            m_name = MUST(String::formatted("%{}%", MUST(String::join("."sv, method.qualified_name))));
+            m_arguments = method.arguments;
         },
         [&](auto const&) {
             VERIFY_NOT_REACHED();

@@ -22,8 +22,13 @@ struct ClauseHeader {
         Vector<StringView> qualified_name;
     };
 
+    struct Method {
+        Vector<StringView> qualified_name;
+        Vector<FunctionArgument> arguments;
+    };
+
     StringView section_number;
-    Variant<AK::Empty, AbstractOperation, Accessor> header;
+    Variant<AK::Empty, AbstractOperation, Accessor, Method> header;
 };
 
 struct TextParseError { };
@@ -38,6 +43,11 @@ using TextParseErrorOr = ErrorOr<T, TextParseError>;
 
 class TextParser {
 public:
+    enum class ClauseHasAoidAttribute {
+        No,
+        Yes,
+    };
+
     TextParser(SpecificationParsingContext& ctx, Vector<Token> const& tokens, XML::Node const* node)
         : m_ctx(ctx)
         , m_tokens(tokens)
@@ -45,7 +55,7 @@ public:
     {
     }
 
-    TextParseErrorOr<ClauseHeader> parse_clause_header();
+    TextParseErrorOr<ClauseHeader> parse_clause_header(ClauseHasAoidAttribute clause_has_aoid_attribute);
     TextParseErrorOr<Tree> parse_step_without_substeps();
     TextParseErrorOr<Tree> parse_step_with_substeps(Tree substeps);
 
@@ -95,6 +105,7 @@ private:
     TextParseErrorOr<Vector<StringView>> parse_qualified_name();
     TextParseErrorOr<Vector<FunctionArgument>> parse_function_arguments_in_declaration();
     TextParseErrorOr<ClauseHeader::AbstractOperation> parse_abstract_operation_declaration();
+    TextParseErrorOr<ClauseHeader::Method> parse_method_declaration();
     TextParseErrorOr<ClauseHeader::Accessor> parse_accessor_declaration();
 
     SpecificationParsingContext& m_ctx;

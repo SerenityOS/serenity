@@ -49,6 +49,7 @@ const Array regression_tests = {
     },
     TestDescription {
         .sources = {
+            "spec-headers.xml"sv,
             "spec-no-new-line-after-dot.xml"sv,
             "spec-optional-arguments.xml"sv,
             "spec-parsing.xml"sv,

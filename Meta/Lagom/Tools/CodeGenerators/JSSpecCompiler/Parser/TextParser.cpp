@@ -722,23 +722,42 @@ TextParseErrorOr<ClauseHeader::Accessor> TextParser::parse_accessor_declaration(
     return accessor;
 }
 
+TextParseErrorOr<ClauseHeader::Method> TextParser::parse_method_declaration()
+{
+    auto rollback = rollback_point();
+
+    ClauseHeader::Method method;
+    method.qualified_name = TRY(parse_qualified_name());
+    method.arguments = TRY(parse_function_arguments_in_declaration());
+    TRY(expect_eof());
+
+    rollback.disarm();
+    return method;
+}
+
 // <clause_header> :== <section_number> <ao_declaration> | <accessor_declaration>
-TextParseErrorOr<ClauseHeader> TextParser::parse_clause_header()
+TextParseErrorOr<ClauseHeader> TextParser::parse_clause_header(ClauseHasAoidAttribute clause_has_aoid_attribute)
 {
     ClauseHeader result;
 
     auto section_number_token = TRY(consume_token_with_type(TokenType::SectionNumber));
     result.section_number = section_number_token.data;
 
-    if (auto ao_declaration = parse_abstract_operation_declaration(); !ao_declaration.is_error()) {
-        result.header = ao_declaration.release_value();
-    } else if (auto accessor = parse_accessor_declaration(); !accessor.is_error()) {
-        result.header = accessor.release_value();
+    if (clause_has_aoid_attribute == ClauseHasAoidAttribute::Yes) {
+        if (auto ao_declaration = parse_abstract_operation_declaration(); !ao_declaration.is_error()) {
+            result.header = ao_declaration.release_value();
+            return result;
+        }
     } else {
-        return TextParseError {};
+        if (auto accessor = parse_accessor_declaration(); !accessor.is_error()) {
+            result.header = accessor.release_value();
+            return result;
+        } else if (auto method = parse_method_declaration(); !method.is_error()) {
+            result.header = method.release_value();
+            return result;
+        }
     }
-
-    return result;
+    return TextParseError {};
 }
 
 FailedTextParseDiagnostic TextParser::get_diagnostic() const
