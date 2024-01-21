@@ -84,6 +84,7 @@ private:
     TextParseErrorOr<Tree> parse_return_statement();
     TextParseErrorOr<Tree> parse_assert();
     TextParseErrorOr<Tree> parse_assignment();
+    TextParseErrorOr<Tree> parse_perform();
     TextParseErrorOr<Tree> parse_simple_step_or_inline_if_branch();
     TextParseErrorOr<IfConditionParseResult> parse_if_beginning();
     TextParseErrorOr<Tree> parse_inline_if_else();
