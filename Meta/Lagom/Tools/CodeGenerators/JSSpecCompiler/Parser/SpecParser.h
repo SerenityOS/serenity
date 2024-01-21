@@ -26,6 +26,7 @@ public:
     {
     }
 
+    TranslationUnitRef translation_unit();
     DiagnosticEngine& diag();
 
     template<typename Func>

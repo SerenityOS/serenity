@@ -40,6 +40,16 @@ FunctionDeclarationRef TranslationUnit::find_declaration_by_name(StringView name
     return it->value;
 }
 
+EnumeratorRef TranslationUnit::get_node_for_enumerator_value(StringView value)
+{
+    if (auto it = m_enumerator_nodes.find(value); it != m_enumerator_nodes.end())
+        return it->value;
+
+    auto enumerator = NonnullRefPtr(NonnullRefPtr<Enumerator>::Adopt, *new Enumerator { {}, value });
+    m_enumerator_nodes.set(value, enumerator);
+    return enumerator;
+}
+
 FunctionDeclaration::FunctionDeclaration(StringView name, Vector<FunctionArgument>&& arguments)
     : m_name(name)
     , m_arguments(arguments)

@@ -45,6 +45,8 @@ class TreeList;
 class RecordDirectListInitialization;
 class FunctionCall;
 class SlotName;
+class Enumerator;
+using EnumeratorRef = NonnullRefPtr<Enumerator>;
 class Variable;
 using VariableRef = NonnullRefPtr<Variable>;
 class FunctionPointer;

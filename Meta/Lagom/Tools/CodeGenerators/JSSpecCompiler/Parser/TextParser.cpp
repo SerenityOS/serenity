@@ -316,6 +316,8 @@ TextParseErrorOr<Tree> TextParser::parse_expression()
                     }
                 }
                 VERIFY(expression);
+            } else if (token.type == TokenType::Enumerator) {
+                expression = m_ctx.translation_unit()->get_node_for_enumerator_value(token.data);
             } else if (token.type == TokenType::Number) {
                 expression = make_ref_counted<MathematicalConstant>(MUST(Crypto::BigFraction::from_string(token.data)));
             } else if (token.type == TokenType::String) {

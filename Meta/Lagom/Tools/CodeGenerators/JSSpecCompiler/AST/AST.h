@@ -523,6 +523,20 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
+class Enumerator : public Expression {
+public:
+    Enumerator(Badge<TranslationUnit>, StringView value)
+        : m_value(value)
+    {
+    }
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+
+private:
+    StringView m_value;
+};
+
 class FunctionPointer : public Expression {
 public:
     FunctionPointer(FunctionDeclarationRef declaration)

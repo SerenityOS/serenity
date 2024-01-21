@@ -178,6 +178,11 @@ void Variable::dump_tree(StringBuilder& builder)
     dump_node(builder, "Var {}", name());
 }
 
+void Enumerator::dump_tree(StringBuilder& builder)
+{
+    dump_node(builder, "Enumerator {}", m_value);
+}
+
 void FunctionPointer::dump_tree(StringBuilder& builder)
 {
     dump_node(builder, "Func \"{}\"", m_declaration->m_name);

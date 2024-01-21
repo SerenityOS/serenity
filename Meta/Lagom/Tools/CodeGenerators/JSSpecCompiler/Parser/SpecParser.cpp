@@ -16,6 +16,11 @@
 
 namespace JSSpecCompiler {
 
+TranslationUnitRef SpecificationParsingContext::translation_unit()
+{
+    return m_translation_unit;
+}
+
 DiagnosticEngine& SpecificationParsingContext::diag()
 {
     return m_translation_unit->diag();

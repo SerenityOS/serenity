@@ -185,6 +185,15 @@ void tokenize_tree(SpecificationParsingContext& ctx, TokenizerState& state, XML:
                     return;
                 }
 
+                if (element.name == tag_emu_const) {
+                    auto maybe_contents = get_text_contents(child);
+                    if (!maybe_contents.has_value())
+                        report_error("malformed <emu-const> subtree, expected single text child node");
+
+                    tokens.append({ TokenType::Enumerator, maybe_contents.value_or(""sv), move(child_location) });
+                    return;
+                }
+
                 if (tree_type == TreeType::Header && element.name == tag_span) {
                     auto element_class = get_attribute_by_name(child, attribute_class);
                     if (element_class != class_secnum)
