@@ -134,6 +134,11 @@ protected:
 class WellKnownNode : public Expression {
 public:
     enum Type {
+        False,
+        Null,
+        This,
+        True,
+        Undefined,
         ZeroArgumentFunctionCall,
         // Update WellKnownNode::dump_tree after adding an entry here
     };

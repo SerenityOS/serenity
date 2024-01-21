@@ -13,4 +13,24 @@
          </ol>
       </emu-alg>
    </emu-clause>
+   <emu-clause id="2" aoid="WellKnownConstants">
+      <h1><span class="secnum">2</span> WellKnownConstants ( <var>a</var> )</h1>
+      <emu-alg>
+         <ol>
+            <li>
+               If <var>a</var> is <emu-val>undefined</emu-val>, then
+               <ol>
+                  <li>Let <var>b</var> be <emu-val>null</emu-val>.</li>
+                  <li>Return <emu-val>true</emu-val>.</li>
+               </ol>
+            </li>
+            <li>Else,
+               <ol>
+                  <li>Let <var>c</var> be <emu-val>this</emu-val>.</li>
+                  <li>Return <emu-val>false</emu-val>.</li>
+               </ol>
+            </li>
+         </ol>
+      </emu-alg>
+   </emu-clause>
 </specification>
