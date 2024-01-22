@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
     window->resize(250, 215);
 
-    auto widget = TRY(Calculator::CalculatorWidget::create());
+    auto widget = TRY(Calculator::CalculatorWidget::try_create());
     window->set_main_widget(widget.ptr());
 
     window->set_icon(app_icon.bitmap_for_size(16));

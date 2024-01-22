@@ -35,10 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Games Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
-    auto widget_cards = TRY(GamesSettings::CardSettingsWidget::create());
-    auto widget_chess = TRY(GamesSettings::ChessSettingsWidget::create());
-    (void)TRY(window->add_tab(widget_cards, "Cards"_string, "cards"sv));
-    (void)TRY(window->add_tab(widget_chess, "Chess"_string, "chess"sv));
+    (void)TRY(window->add_tab<GamesSettings::CardSettingsWidget>("Cards"_string, "cards"sv));
+    (void)TRY(window->add_tab<GamesSettings::ChessSettingsWidget>("Chess"_string, "chess"sv));
     window->set_active_tab(selected_tab);
 
     window->show();

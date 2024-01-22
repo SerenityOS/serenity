@@ -151,13 +151,6 @@ ErrorOr<void> CertificateStoreWidget::export_pem()
     return {};
 }
 
-ErrorOr<NonnullRefPtr<CertificateStoreWidget>> CertificateStoreWidget::create()
-{
-    auto widget = TRY(CertificateStoreWidget::try_create());
-    TRY(widget->initialize());
-    return widget;
-}
-
 ErrorOr<void> CertificateStoreWidget::initialize()
 {
     m_root_ca_tableview = find_descendant_of_type_named<GUI::TableView>("root_ca_tableview");

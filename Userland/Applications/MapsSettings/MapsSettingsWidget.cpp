@@ -14,13 +14,6 @@
 
 namespace MapsSettings {
 
-ErrorOr<NonnullRefPtr<MapsSettingsWidget>> MapsSettingsWidget::create()
-{
-    auto widget = TRY(try_create());
-    TRY(widget->setup());
-    return widget;
-}
-
 void MapsSettingsWidget::apply_settings()
 {
     // Tile Provider
@@ -43,7 +36,7 @@ void MapsSettingsWidget::reset_default_values()
     set_tile_provider(Maps::default_tile_provider_url_format);
 }
 
-ErrorOr<void> MapsSettingsWidget::setup()
+ErrorOr<void> MapsSettingsWidget::initialize()
 {
     // Tile Provider
     Vector<GUI::JsonArrayModel::FieldSpec> tile_provider_fields;

@@ -61,13 +61,6 @@ void CardGamePreview::paint_event(GUI::PaintEvent& event)
         stack->paint(painter, background_color);
 }
 
-ErrorOr<NonnullRefPtr<CardSettingsWidget>> CardSettingsWidget::create()
-{
-    auto card_settings_widget = TRY(try_create());
-    TRY(card_settings_widget->initialize());
-    return card_settings_widget;
-}
-
 ErrorOr<void> CardSettingsWidget::initialize()
 {
     auto background_color = Gfx::Color::from_string(Config::read_string("Games"sv, "Cards"sv, "BackgroundColor"sv)).value_or(Gfx::Color::from_rgb(0x008000));

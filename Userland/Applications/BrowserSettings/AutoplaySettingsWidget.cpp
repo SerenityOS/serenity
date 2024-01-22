@@ -29,47 +29,46 @@ void AutoplayAllowlistModel::reset_default_values()
 
 namespace BrowserSettings {
 
-ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
+ErrorOr<void> AutoplaySettingsWidget::initialize()
 {
     auto allowlist_model = TRY(try_make_ref_counted<AutoplayAllowlistModel>());
     TRY(allowlist_model->load());
 
-    auto widget = TRY(AutoplaySettingsWidget::try_create());
-    widget->set_allowlist_model(move(allowlist_model));
+    set_allowlist_model(move(allowlist_model));
 
-    widget->m_allow_autoplay_on_all_websites_checkbox = widget->find_descendant_of_type_named<GUI::CheckBox>("allow_autoplay_on_all_websites_checkbox");
-    widget->m_allow_autoplay_on_all_websites_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, Browser::default_allow_autoplay_on_all_websites), GUI::AllowCallback::No);
-    widget->m_allow_autoplay_on_all_websites_checkbox->on_checked = [widget](auto) {
-        widget->set_modified(true);
+    m_allow_autoplay_on_all_websites_checkbox = find_descendant_of_type_named<GUI::CheckBox>("allow_autoplay_on_all_websites_checkbox");
+    m_allow_autoplay_on_all_websites_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, Browser::default_allow_autoplay_on_all_websites), GUI::AllowCallback::No);
+    m_allow_autoplay_on_all_websites_checkbox->on_checked = [this](auto) {
+        set_modified(true);
     };
 
-    widget->m_allowlist_view = widget->find_descendant_of_type_named<GUI::ListView>("allowlist_view");
-    widget->m_allowlist_view->set_model(widget->m_allowlist_model);
-    widget->m_allowlist_view->on_context_menu_request = [widget](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
-        widget->m_allowlist_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
-        widget->m_entry_context_menu->popup(event.screen_position());
+    m_allowlist_view = find_descendant_of_type_named<GUI::ListView>("allowlist_view");
+    m_allowlist_view->set_model(m_allowlist_model);
+    m_allowlist_view->on_context_menu_request = [this](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
+        m_allowlist_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
+        m_entry_context_menu->popup(event.screen_position());
     };
 
-    widget->m_add_website_button = widget->find_descendant_of_type_named<GUI::Button>("add_website_button");
-    widget->m_add_website_button->on_click = [widget](unsigned) {
+    m_add_website_button = find_descendant_of_type_named<GUI::Button>("add_website_button");
+    m_add_website_button->on_click = [this](unsigned) {
         String text;
 
-        if (GUI::InputBox::show(widget->window(), text, "Enter a website:"sv, "Add Autoplay Entry"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
-            widget->m_allowlist_model->add_domain(move(text));
-            widget->set_modified(true);
+        if (GUI::InputBox::show(window(), text, "Enter a website:"sv, "Add Autoplay Entry"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
+            m_allowlist_model->add_domain(move(text));
+            set_modified(true);
         }
     };
 
-    auto delete_action = GUI::CommonActions::make_delete_action([widget](GUI::Action const&) {
-        if (!widget->m_allowlist_view->selection().is_empty()) {
-            widget->m_allowlist_model->delete_domain(widget->m_allowlist_view->selection().first().row());
-            widget->set_modified(true);
+    auto delete_action = GUI::CommonActions::make_delete_action([this](GUI::Action const&) {
+        if (!m_allowlist_view->selection().is_empty()) {
+            m_allowlist_model->delete_domain(m_allowlist_view->selection().first().row());
+            set_modified(true);
         }
     });
-    widget->m_entry_context_menu = GUI::Menu::construct();
-    widget->m_entry_context_menu->add_action(move(delete_action));
+    m_entry_context_menu = GUI::Menu::construct();
+    m_entry_context_menu->add_action(move(delete_action));
 
-    return widget;
+    return {};
 }
 
 void AutoplaySettingsWidget::set_allowlist_model(NonnullRefPtr<AutoplayAllowlistModel> model)

@@ -17,89 +17,87 @@
 
 namespace Calculator {
 
-ErrorOr<NonnullRefPtr<CalculatorWidget>> CalculatorWidget::create()
+ErrorOr<void> CalculatorWidget::initialize()
 {
-    auto widget = TRY(CalculatorWidget::try_create());
-
-    widget->m_entry = *widget->find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
+    m_entry = *find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
     // FIXME: Use GML for this.
-    widget->m_entry->set_relative_rect(5, 5, 244, 26);
-    widget->m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
+    m_entry->set_relative_rect(5, 5, 244, 26);
+    m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
 
     // FIXME: Use GML for this.
-    widget->m_label = *widget->find_descendant_of_type_named<GUI::Label>("label");
-    widget->m_label->set_frame_style(Gfx::FrameStyle::SunkenContainer);
+    m_label = *find_descendant_of_type_named<GUI::Label>("label");
+    m_label->set_frame_style(Gfx::FrameStyle::SunkenContainer);
 
     for (int i = 0; i < 10; i++) {
-        widget->m_digit_button[i] = *widget->find_descendant_of_type_named<GUI::Button>(TRY(String::formatted("{}_button", i)));
-        widget->add_digit_button(*widget->m_digit_button[i], i);
+        m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(TRY(String::formatted("{}_button", i)));
+        add_digit_button(*m_digit_button[i], i);
     }
 
-    widget->m_mem_add_button = *widget->find_descendant_of_type_named<GUI::Button>("mem_add_button");
-    widget->add_operation_button(*widget->m_mem_add_button, Calculator::Operation::MemAdd);
+    m_mem_add_button = *find_descendant_of_type_named<GUI::Button>("mem_add_button");
+    add_operation_button(*m_mem_add_button, Calculator::Operation::MemAdd);
 
-    widget->m_mem_save_button = *widget->find_descendant_of_type_named<GUI::Button>("mem_save_button");
-    widget->add_operation_button(*widget->m_mem_save_button, Calculator::Operation::MemSave);
+    m_mem_save_button = *find_descendant_of_type_named<GUI::Button>("mem_save_button");
+    add_operation_button(*m_mem_save_button, Calculator::Operation::MemSave);
 
-    widget->m_mem_recall_button = *widget->find_descendant_of_type_named<GUI::Button>("mem_recall_button");
-    widget->add_operation_button(*widget->m_mem_recall_button, Calculator::Operation::MemRecall);
+    m_mem_recall_button = *find_descendant_of_type_named<GUI::Button>("mem_recall_button");
+    add_operation_button(*m_mem_recall_button, Calculator::Operation::MemRecall);
 
-    widget->m_mem_clear_button = *widget->find_descendant_of_type_named<GUI::Button>("mem_clear_button");
-    widget->add_operation_button(*widget->m_mem_clear_button, Calculator::Operation::MemClear);
+    m_mem_clear_button = *find_descendant_of_type_named<GUI::Button>("mem_clear_button");
+    add_operation_button(*m_mem_clear_button, Calculator::Operation::MemClear);
 
-    widget->m_clear_button = *widget->find_descendant_of_type_named<GUI::Button>("clear_button");
-    widget->m_clear_button->on_click = [self = NonnullRefPtr<CalculatorWidget>(widget)](auto) {
-        self->m_keypad.set_to_0();
-        self->m_calculator.clear_operation();
-        self->update_display();
+    m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
+    m_clear_button->on_click = [this](auto) {
+        m_keypad.set_to_0();
+        m_calculator.clear_operation();
+        update_display();
     };
 
-    widget->m_clear_error_button = *widget->find_descendant_of_type_named<GUI::Button>("clear_error_button");
-    widget->m_clear_error_button->on_click = [self = NonnullRefPtr<CalculatorWidget>(widget)](auto) {
-        self->m_keypad.set_to_0();
-        self->update_display();
+    m_clear_error_button = *find_descendant_of_type_named<GUI::Button>("clear_error_button");
+    m_clear_error_button->on_click = [this](auto) {
+        m_keypad.set_to_0();
+        update_display();
     };
 
-    widget->m_backspace_button = *widget->find_descendant_of_type_named<GUI::Button>("backspace_button");
-    widget->m_backspace_button->on_click = [self = NonnullRefPtr<CalculatorWidget>(widget)](auto) {
-        self->m_keypad.type_backspace();
-        self->update_display();
+    m_backspace_button = *find_descendant_of_type_named<GUI::Button>("backspace_button");
+    m_backspace_button->on_click = [this](auto) {
+        m_keypad.type_backspace();
+        update_display();
     };
 
-    widget->m_decimal_point_button = *widget->find_descendant_of_type_named<GUI::Button>("decimal_button");
-    widget->m_decimal_point_button->on_click = [self = NonnullRefPtr<CalculatorWidget>(widget)](auto) {
-        self->m_keypad.type_decimal_point();
-        self->update_display();
+    m_decimal_point_button = *find_descendant_of_type_named<GUI::Button>("decimal_button");
+    m_decimal_point_button->on_click = [this](auto) {
+        m_keypad.type_decimal_point();
+        update_display();
     };
 
-    widget->m_sign_button = *widget->find_descendant_of_type_named<GUI::Button>("sign_button");
-    widget->add_operation_button(*widget->m_sign_button, Calculator::Operation::ToggleSign);
+    m_sign_button = *find_descendant_of_type_named<GUI::Button>("sign_button");
+    add_operation_button(*m_sign_button, Calculator::Operation::ToggleSign);
 
-    widget->m_add_button = *widget->find_descendant_of_type_named<GUI::Button>("add_button");
-    widget->add_operation_button(*widget->m_add_button, Calculator::Operation::Add);
+    m_add_button = *find_descendant_of_type_named<GUI::Button>("add_button");
+    add_operation_button(*m_add_button, Calculator::Operation::Add);
 
-    widget->m_subtract_button = *widget->find_descendant_of_type_named<GUI::Button>("subtract_button");
-    widget->add_operation_button(*widget->m_subtract_button, Calculator::Operation::Subtract);
+    m_subtract_button = *find_descendant_of_type_named<GUI::Button>("subtract_button");
+    add_operation_button(*m_subtract_button, Calculator::Operation::Subtract);
 
-    widget->m_multiply_button = *widget->find_descendant_of_type_named<GUI::Button>("multiply_button");
-    widget->add_operation_button(*widget->m_multiply_button, Calculator::Operation::Multiply);
+    m_multiply_button = *find_descendant_of_type_named<GUI::Button>("multiply_button");
+    add_operation_button(*m_multiply_button, Calculator::Operation::Multiply);
 
-    widget->m_divide_button = *widget->find_descendant_of_type_named<GUI::Button>("divide_button");
-    widget->add_operation_button(*widget->m_divide_button, Calculator::Operation::Divide);
+    m_divide_button = *find_descendant_of_type_named<GUI::Button>("divide_button");
+    add_operation_button(*m_divide_button, Calculator::Operation::Divide);
 
-    widget->m_sqrt_button = *widget->find_descendant_of_type_named<GUI::Button>("sqrt_button");
-    widget->add_operation_button(*widget->m_sqrt_button, Calculator::Operation::Sqrt);
+    m_sqrt_button = *find_descendant_of_type_named<GUI::Button>("sqrt_button");
+    add_operation_button(*m_sqrt_button, Calculator::Operation::Sqrt);
 
-    widget->m_inverse_button = *widget->find_descendant_of_type_named<GUI::Button>("inverse_button");
-    widget->add_operation_button(*widget->m_inverse_button, Calculator::Operation::Inverse);
+    m_inverse_button = *find_descendant_of_type_named<GUI::Button>("inverse_button");
+    add_operation_button(*m_inverse_button, Calculator::Operation::Inverse);
 
-    widget->m_percent_button = *widget->find_descendant_of_type_named<GUI::Button>("mod_button");
-    widget->add_operation_button(*widget->m_percent_button, Calculator::Operation::Percent);
+    m_percent_button = *find_descendant_of_type_named<GUI::Button>("mod_button");
+    add_operation_button(*m_percent_button, Calculator::Operation::Percent);
 
-    widget->m_equals_button = *widget->find_descendant_of_type_named<GUI::Button>("equal_button");
-    widget->add_operation_button(*widget->m_equals_button, Calculator::Operation::Equals);
+    m_equals_button = *find_descendant_of_type_named<GUI::Button>("equal_button");
+    add_operation_button(*m_equals_button, Calculator::Operation::Equals);
 
-    return widget;
+    return {};
 }
 
 void CalculatorWidget::perform_operation(Calculator::Operation operation)

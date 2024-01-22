@@ -231,13 +231,6 @@ void ChessGamePreview::paint_event(GUI::PaintEvent& event)
     }
 }
 
-ErrorOr<NonnullRefPtr<ChessSettingsWidget>> ChessSettingsWidget::create()
-{
-    auto chess_settings_widget = TRY(try_create());
-    TRY(chess_settings_widget->initialize());
-    return chess_settings_widget;
-}
-
 ErrorOr<void> ChessSettingsWidget::initialize()
 {
     auto piece_set_name = Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "Classic"sv);

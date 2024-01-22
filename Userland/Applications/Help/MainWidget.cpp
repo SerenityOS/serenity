@@ -61,7 +61,7 @@ ErrorOr<void> MainWidget::set_start_page(Vector<StringView, 2> query_parameters)
     return {};
 }
 
-ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
+ErrorOr<void> MainWidget::initialize(GUI::Window& window)
 {
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
