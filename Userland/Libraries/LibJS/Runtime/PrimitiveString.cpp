@@ -223,9 +223,7 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, ByteString string)
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedFlyString const& string)
 {
-    if (string.is_empty())
-        return vm.empty_string();
-    return create(vm, *string.impl());
+    return create(vm, ByteString { string });
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, PrimitiveString& lhs, PrimitiveString& rhs)
