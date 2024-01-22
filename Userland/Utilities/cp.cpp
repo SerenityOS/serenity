@@ -20,6 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto preserve = FileSystem::PreserveMode::Nothing;
     bool recursion_allowed = false;
     bool verbose = false;
+    bool interactive = false;
     Vector<StringView> sources;
     ByteString destination;
 
@@ -56,6 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         Core::ArgsParser::OptionHideMode::None,
     });
+    args_parser.add_option(interactive, "Prompt before overwriting files", "interactive", 'i');
     args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'R');
     args_parser.add_option(recursion_allowed, "Same as -R", nullptr, 'r');
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
@@ -72,9 +74,62 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool destination_is_existing_dir = FileSystem::is_directory(destination);
 
     for (auto& source : sources) {
+        // FIXME: May be formatted wrong if destination is a directory with a trailing slash, e.g. if called as such:
+        // cp source dest/
+        // ... `destination_path` may be formatted as `dest//source`, which isn't strictly correct.
         auto destination_path = destination_is_existing_dir
             ? ByteString::formatted("{}/{}", destination, LexicalPath::basename(source))
             : destination;
+
+        if (interactive && FileSystem::exists(destination_path)) {
+            bool overwrite = false;
+            while (true) {
+                warn("cp: overwrite '{}'? ", destination_path);
+                fflush(stdout);
+
+                char* line = nullptr;
+
+                size_t n = 0;
+                ssize_t size = getline(&line, &n, stdin);
+                ScopeGuard guard([line] { free(line); });
+
+                // Strip trailing newline.
+                if (line[size - 1] == '\n') {
+                    --size;
+                }
+
+                if (size == 1) {
+                    if (*line == 'y') {
+                        overwrite = true;
+                        break;
+                    }
+                    if (*line == 'n') {
+                        break;
+                    }
+                } else if (size == 2) {
+                    if ("no"sv.compare(StringView { line, static_cast<unsigned long>(size) }) == 0) {
+                        break;
+                    }
+                } else if (size == 3) {
+                    if ("yes"sv.compare(StringView { line, static_cast<unsigned long>(size) }) == 0) {
+                        overwrite = true;
+                        break;
+                    }
+                }
+            }
+
+            if (verbose) {
+                if (!overwrite) {
+                    warnln("cp: skipping {}", destination_path);
+                    continue;
+                }
+                warnln("cp: overwriting {}", destination_path);
+            }
+
+            if (!overwrite) {
+                continue;
+            }
+        }
 
         auto result = FileSystem::copy_file_or_directory(
             destination_path, source,
