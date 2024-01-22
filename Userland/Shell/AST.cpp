@@ -6,6 +6,7 @@
 
 #include "AST.h"
 #include "Shell.h"
+#include <AK/Find.h>
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -1594,16 +1595,6 @@ ErrorOr<RefPtr<Value>> HistoryEvent::run(RefPtr<Shell> shell)
     }
     auto& history = editor->history();
 
-    // FIXME: Implement reverse iterators and find()?
-    auto find_reverse = [](auto it_start, auto it_end, auto finder) {
-        auto it = it_end;
-        while (it != it_start) {
-            --it;
-            if (finder(*it))
-                return it;
-        }
-        return it_end;
-    };
     // First, resolve the event itself.
     ByteString resolved_history;
     switch (m_selector.event.kind) {
@@ -1622,7 +1613,7 @@ ErrorOr<RefPtr<Value>> HistoryEvent::run(RefPtr<Shell> shell)
         resolved_history = history[history.size() - m_selector.event.index - 1].entry;
         break;
     case HistorySelector::EventKind::ContainingStringLookup: {
-        auto it = find_reverse(history.begin(), history.end(), [&](auto& entry) { return entry.entry.contains(m_selector.event.text); });
+        auto it = find_if(history.rbegin(), history.rend(), [&](auto& entry) { return entry.entry.contains(m_selector.event.text); });
         if (it.is_end()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event did not match any entry", m_selector.event.text_position);
             return make_ref_counted<AST::ListValue>({});
@@ -1631,7 +1622,7 @@ ErrorOr<RefPtr<Value>> HistoryEvent::run(RefPtr<Shell> shell)
         break;
     }
     case HistorySelector::EventKind::StartingStringLookup: {
-        auto it = find_reverse(history.begin(), history.end(), [&](auto& entry) { return entry.entry.starts_with(m_selector.event.text); });
+        auto it = find_if(history.rbegin(), history.rend(), [&](auto& entry) { return entry.entry.starts_with(m_selector.event.text); });
         if (it.is_end()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event did not match any entry", m_selector.event.text_position);
             return make_ref_counted<AST::ListValue>({});
