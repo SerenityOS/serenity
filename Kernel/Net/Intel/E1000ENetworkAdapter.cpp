@@ -13,7 +13,12 @@
 
 namespace Kernel {
 
+#define REG_EECD 0x0010
 #define REG_EEPROM 0x0014
+
+// EECD Register
+
+#define EECD_PRES 0x100
 
 static bool is_valid_device_id(u16 device_id)
 {
@@ -246,8 +251,8 @@ UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter() = default;
 
 UNMAP_AFTER_INIT void E1000ENetworkAdapter::detect_eeprom()
 {
-    // FIXME: Try to find a way to detect if EEPROM exists instead of assuming it is
-    m_has_eeprom = true;
+    // Section 13.4.3 of https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf
+    m_has_eeprom = in32(REG_EECD) & EECD_PRES;
 }
 
 UNMAP_AFTER_INIT u32 E1000ENetworkAdapter::read_eeprom(u8 address)
