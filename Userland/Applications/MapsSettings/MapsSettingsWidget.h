@@ -14,16 +14,15 @@ class MapsSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(MapsSettingsWidget)
 
 public:
-    static ErrorOr<NonnullRefPtr<MapsSettingsWidget>> create();
+    static ErrorOr<NonnullRefPtr<MapsSettingsWidget>> try_create();
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
     MapsSettingsWidget() = default;
-    static ErrorOr<NonnullRefPtr<MapsSettingsWidget>> try_create();
 
-    ErrorOr<void> setup();
     void set_tile_provider(StringView url);
 
     RefPtr<GUI::ComboBox> m_tile_provider_combobox;

@@ -22,7 +22,8 @@ public:
         MapWidget::LatLng latlng;
         int zoom;
     };
-    static ErrorOr<NonnullRefPtr<FavoritesPanel>> create();
+    static ErrorOr<NonnullRefPtr<FavoritesPanel>> try_create();
+    ErrorOr<void> initialize();
 
     void load_favorites();
     void reset();
@@ -33,10 +34,6 @@ public:
 
 protected:
     FavoritesPanel() = default;
-
-    static ErrorOr<NonnullRefPtr<FavoritesPanel>> try_create();
-
-    ErrorOr<void> setup();
 
 private:
     ErrorOr<void> edit_favorite(int row);

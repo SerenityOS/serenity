@@ -30,14 +30,7 @@ void CalendarSettingsWidget::reset_default_values()
     m_default_view_combobox->set_text("Month");
 }
 
-ErrorOr<NonnullRefPtr<CalendarSettingsWidget>> CalendarSettingsWidget::create()
-{
-    auto widget = TRY(try_create());
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> CalendarSettingsWidget::setup()
+ErrorOr<void> CalendarSettingsWidget::initialize()
 {
     m_first_day_of_week_combobox = *find_descendant_of_type_named<GUI::ComboBox>("first_day_of_week");
     m_first_day_of_week_combobox->set_text(Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeek"sv, "Sunday"sv));

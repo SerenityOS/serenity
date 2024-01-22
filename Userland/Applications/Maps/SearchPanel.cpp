@@ -9,14 +9,7 @@
 
 namespace Maps {
 
-ErrorOr<NonnullRefPtr<SearchPanel>> SearchPanel::create()
-{
-    auto widget = TRY(try_create());
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> SearchPanel::setup()
+ErrorOr<void> SearchPanel::initialize()
 {
     m_request_client = TRY(Protocol::RequestClient::try_create());
 

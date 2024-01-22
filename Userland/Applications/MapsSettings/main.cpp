@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Maps Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    (void)TRY(window->add_tab(TRY(MapsSettings::MapsSettingsWidget::create()), "Maps"_string, "maps"sv));
+    (void)TRY(window->add_tab<MapsSettings::MapsSettingsWidget>("Maps"_string, "maps"sv));
 
     window->show();
     return app->exec();

@@ -15,14 +15,7 @@
 
 namespace Maps {
 
-ErrorOr<NonnullRefPtr<FavoritesPanel>> FavoritesPanel::create()
-{
-    auto widget = TRY(try_create());
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> FavoritesPanel::setup()
+ErrorOr<void> FavoritesPanel::initialize()
 {
     m_empty_container = *find_descendant_of_type_named<GUI::Frame>("empty_container");
     m_favorites_list = *find_descendant_of_type_named<GUI::ListView>("favorites_list");

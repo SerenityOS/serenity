@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int panel_width = Config::read_i32("Maps"sv, "Panel"sv, "Width"sv, INT_MIN);
 
     // Search panel
-    auto search_panel = TRY(Maps::SearchPanel::create());
+    auto search_panel = TRY(Maps::SearchPanel::try_create());
     search_panel->on_places_change = [&map_widget](auto) { map_widget.remove_markers_with_name("search"sv); };
     search_panel->on_selected_place_change = [&map_widget](auto const& place) {
         // Remove old search marker
@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Favorites panel
     auto marker_red_image = TRY(Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-red.png"sv));
-    auto favorites_panel = TRY(Maps::FavoritesPanel::create());
+    auto favorites_panel = TRY(Maps::FavoritesPanel::try_create());
     favorites_panel->on_favorites_change = [&map_widget, marker_red_image](auto const& favorites) {
         // Sync all favorites markers
         map_widget.remove_markers_with_name("favorites"sv);
