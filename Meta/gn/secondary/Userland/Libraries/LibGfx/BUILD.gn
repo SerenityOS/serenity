@@ -118,6 +118,7 @@ shared_library("LibGfx") {
     "//Userland/Libraries/LibCrypto",
     "//Userland/Libraries/LibFileSystem",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibRIFF",
     "//Userland/Libraries/LibTextCodec",
     "//Userland/Libraries/LibUnicode",
   ]
