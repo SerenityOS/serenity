@@ -1625,7 +1625,7 @@ Optional<MatrixMatrixConversion> Profile::matrix_matrix_conversion(Profile const
     LutCurveType sourceGreenTRC = *source_profile.m_tag_table.get(greenTRCTag).value();
     LutCurveType sourceBlueTRC = *source_profile.m_tag_table.get(blueTRCTag).value();
 
-    FloatMatrix3x3 matrix = source_profile.rgb_to_xyz_matrix() * MUST(xyz_to_rgb_matrix());
+    FloatMatrix3x3 matrix = MUST(xyz_to_rgb_matrix()) * source_profile.rgb_to_xyz_matrix();
 
     LutCurveType destinationRedTRC = *m_tag_table.get(redTRCTag).value();
     LutCurveType destinationGreenTRC = *m_tag_table.get(greenTRCTag).value();
