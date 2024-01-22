@@ -727,13 +727,10 @@ static void for_each_child_box_matching(Box& parent, Matcher matcher, Callback c
 
 static void fixup_row(Box& row_box, TableGrid const& table_grid, size_t row_index)
 {
-    bool missing_cells_run_has_started = false;
     for (size_t column_index = 0; column_index < table_grid.column_count(); ++column_index) {
-        if (table_grid.occupancy_grid().contains({ column_index, row_index })) {
-            VERIFY(!missing_cells_run_has_started);
+        if (table_grid.occupancy_grid().contains({ column_index, row_index }))
             continue;
-        }
-        missing_cells_run_has_started = true;
+
         auto row_computed_values = row_box.computed_values().clone_inherited_values();
         auto& cell_computed_values = static_cast<CSS::MutableComputedValues&>(row_computed_values);
         cell_computed_values.set_display(Web::CSS::Display { CSS::DisplayInternal::TableCell });
