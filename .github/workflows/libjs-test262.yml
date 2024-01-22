@@ -71,19 +71,19 @@ jobs:
         run: set +e; g++ --version; g++-12 --version; python --version; python3 --version; ninja --version
 
       - name: TimeZoneData cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
       - name: UnicodeData cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
       - name: UnicodeLocale cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}

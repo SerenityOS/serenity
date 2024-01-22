@@ -91,7 +91,7 @@ jobs:
           message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
 
       - name: Toolchain cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: toolchain-cache
         with:
           path: ${{ github.workspace }}/Toolchain/Local/${{ matrix.arch }}
@@ -105,7 +105,7 @@ jobs:
         run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
 
       - name: Update toolchain cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         # Do not waste time and storage space by updating the toolchain cache from a PR,
         # as it would be discarded after being merged anyway.
         if: ${{ github.event_name != 'pull_request' && !steps.toolchain-cache.outputs.cache-hit }}
@@ -116,7 +116,7 @@ jobs:
       # FIXME: Qemu currently needs a local patch for AArch64 testing. It is included in Qemu 8.1; remove this when upgrading!
       - name: AArch64 Qemu cache
         id: qemu-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: ${{ matrix.arch == 'aarch64' }}
         with:
           path: ${{ github.workspace }}/Toolchain/Local/qemu
@@ -127,7 +127,7 @@ jobs:
         run: ${{ github.workspace }}/Toolchain/BuildQemu.sh
 
       - name: Update AArch64 Qemu cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ github.event_name != 'pull_request' && matrix.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
         with:
           path: ${{ github.workspace }}/Toolchain/Local/qemu
@@ -135,7 +135,7 @@ jobs:
 
       - name: ccache(1) cache
         # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache
         with:
           path: ${{ github.workspace }}/.ccache
@@ -165,17 +165,17 @@ jobs:
           mkdir -p ${{ github.workspace }}/Build/caches/UCD
           mkdir -p ${{ github.workspace }}/Build/caches/CLDR
       - name: TimeZoneData cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
       - name: UnicodeData cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: UnicodeLocale Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
@@ -219,7 +219,7 @@ jobs:
         run: ccache -s
 
       - name: Update ccache(1) cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           path: ${{ github.workspace }}/.ccache
