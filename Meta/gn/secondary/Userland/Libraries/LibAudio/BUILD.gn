@@ -35,6 +35,7 @@ shared_library("LibAudio") {
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibRIFF",
     "//Userland/Libraries/LibThreading",
     "//Userland/Libraries/LibUnicode",
   ]
