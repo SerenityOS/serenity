@@ -93,6 +93,23 @@ public:
     static ByteString must_from_utf8(StringView string) { return MUST(from_utf8(string)); }
     static ByteString from_utf8_without_validation(StringView string) { return ByteString { string }; }
 
+    template<
+        typename F,
+        typename PossiblyErrorOr = decltype(declval<F>()(declval<Bytes>())),
+        bool is_error_or = IsSpecializationOf<PossiblyErrorOr, ErrorOr>,
+        typename ReturnType = Conditional<is_error_or, ErrorOr<ByteString>, ByteString>>
+    static ReturnType create_and_overwrite(size_t length, F&& fill_function)
+    {
+        char* buffer;
+        auto impl = StringImpl::create_uninitialized(length, buffer);
+
+        if constexpr (is_error_or)
+            TRY(fill_function(Bytes { buffer, length }));
+        else
+            fill_function(Bytes { buffer, length });
+        return impl;
+    }
+
     [[nodiscard]] static ByteString repeated(char, size_t count);
     [[nodiscard]] static ByteString repeated(StringView, size_t count);
 

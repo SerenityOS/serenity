@@ -39,13 +39,10 @@ ErrorOr<ByteString> decode(Decoder& decoder)
     if (length == 0)
         return ByteString::empty();
 
-    char* text_buffer = nullptr;
-    auto text_impl = StringImpl::create_uninitialized(length, text_buffer);
-
-    Bytes bytes { text_buffer, length };
-    TRY(decoder.decode_into(bytes));
-
-    return ByteString { *text_impl };
+    return ByteString::create_and_overwrite(length, [&](Bytes bytes) -> ErrorOr<void> {
+        TRY(decoder.decode_into(bytes));
+        return {};
+    });
 }
 
 template<>
