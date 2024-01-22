@@ -17,7 +17,7 @@ class ExportProgressWindow : public GUI::Dialog {
 public:
     virtual ~ExportProgressWindow() override = default;
 
-    ErrorOr<void> initialize_fallibles();
+    ErrorOr<void> initialize();
 
     virtual void timer_event(Core::TimerEvent&) override;
 

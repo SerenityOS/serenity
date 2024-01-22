@@ -21,7 +21,8 @@ class SearchPanel final : public GUI::Widget {
     C_OBJECT(SearchPanel)
 
 public:
-    static ErrorOr<NonnullRefPtr<SearchPanel>> create();
+    static ErrorOr<NonnullRefPtr<SearchPanel>> try_create();
+    ErrorOr<void> initialize();
 
     void search(StringView query);
     void reset();
@@ -36,10 +37,6 @@ public:
 
 private:
     SearchPanel() = default;
-
-    static ErrorOr<NonnullRefPtr<SearchPanel>> try_create();
-
-    ErrorOr<void> setup();
 
     RefPtr<Protocol::RequestClient> m_request_client;
     RefPtr<Protocol::Request> m_request;

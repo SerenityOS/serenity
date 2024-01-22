@@ -95,16 +95,7 @@ private:
     Vector<WebView::SearchEngine> m_search_engines;
 };
 
-ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> BrowserSettingsWidget::create()
-{
-    auto widget = TRY(BrowserSettingsWidget::try_create());
-
-    TRY(widget->setup());
-
-    return widget;
-}
-
-ErrorOr<void> BrowserSettingsWidget::setup()
+ErrorOr<void> BrowserSettingsWidget::initialize()
 {
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
     m_homepage_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url), GUI::AllowCallback::No);

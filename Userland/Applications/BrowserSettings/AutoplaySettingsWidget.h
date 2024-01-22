@@ -27,13 +27,13 @@ class AutoplaySettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(AutoplaySettingsWidget)
 
 public:
-    static ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> create();
+    static ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> try_create();
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    static ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> try_create();
     AutoplaySettingsWidget() = default;
 
     void set_allowlist_model(NonnullRefPtr<AutoplayAllowlistModel> model);

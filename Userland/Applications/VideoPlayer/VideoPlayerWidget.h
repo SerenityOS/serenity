@@ -25,7 +25,7 @@ class VideoPlayerWidget final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<VideoPlayerWidget>> try_create();
-    static ErrorOr<NonnullRefPtr<VideoPlayerWidget>> create();
+    ErrorOr<void> initialize();
     virtual ~VideoPlayerWidget() override = default;
     void close_file();
     void open_file(FileSystemAccessClient::File filename);
@@ -43,7 +43,6 @@ public:
 
 private:
     VideoPlayerWidget() = default;
-    ErrorOr<void> setup_interface();
     void update_play_pause_icon();
     void update_seek_slider_max();
     void set_current_timestamp(Duration);

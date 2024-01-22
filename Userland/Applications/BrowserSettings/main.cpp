@@ -37,9 +37,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    (void)TRY(window->add_tab(TRY(BrowserSettings::BrowserSettingsWidget::create()), "Browser"_string, "browser"sv));
-    (void)TRY(window->add_tab(TRY(BrowserSettings::ContentFilterSettingsWidget::create()), "Content Filtering"_string, "content-filtering"sv));
-    (void)TRY(window->add_tab(TRY(BrowserSettings::AutoplaySettingsWidget::create()), "Autoplay"_string, "autoplay"sv));
+    (void)TRY(window->add_tab<BrowserSettings::BrowserSettingsWidget>("Browser"_string, "browser"sv));
+    (void)TRY(window->add_tab<BrowserSettings::ContentFilterSettingsWidget>("Content Filtering"_string, "content-filtering"sv));
+    (void)TRY(window->add_tab<BrowserSettings::AutoplaySettingsWidget>("Autoplay"_string, "autoplay"sv));
     window->set_active_tab(selected_tab);
 
     window->show();

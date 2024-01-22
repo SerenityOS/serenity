@@ -20,7 +20,8 @@ namespace Calculator {
 class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
-    static ErrorOr<NonnullRefPtr<CalculatorWidget>> create();
+    static ErrorOr<NonnullRefPtr<CalculatorWidget>> try_create();
+    ErrorOr<void> initialize();
 
     virtual ~CalculatorWidget() override = default;
     String get_entry();
@@ -34,7 +35,6 @@ public:
     void set_rounding_custom(GUI::Action& action, StringView);
 
 private:
-    static ErrorOr<NonnullRefPtr<CalculatorWidget>> try_create();
     CalculatorWidget() = default;
 
     void add_operation_button(GUI::Button&, Calculator::Operation);

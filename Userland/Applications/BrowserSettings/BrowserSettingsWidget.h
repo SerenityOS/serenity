@@ -17,17 +17,15 @@ namespace BrowserSettings {
 class BrowserSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(BrowserSettingsWidget)
 public:
-    static ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> create();
+    static ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> try_create();
     virtual ~BrowserSettingsWidget() override = default;
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
+    ErrorOr<void> initialize();
+
 private:
-    static ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> try_create();
-
-    ErrorOr<void> setup();
-
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
     RefPtr<GUI::TextBox> m_new_tab_url_textbox;
     void set_color_scheme(StringView);
