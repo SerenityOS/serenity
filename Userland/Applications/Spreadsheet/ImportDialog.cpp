@@ -177,7 +177,7 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-ErrorOr<Vector<NonnullRefPtr<Sheet>>, ByteString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook& workbook)
+ErrorOr<Vector<NonnullRefPtr<Sheet>>, ByteString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, ByteString const& filename, Core::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::create(&parent).release_value_but_fixme_should_propagate_errors();
     wizard->set_title("File Import Wizard");
@@ -247,7 +247,7 @@ ErrorOr<Vector<NonnullRefPtr<Sheet>>, ByteString> ImportDialog::make_and_run_for
     } else {
         auto page = GUI::WizardPage::create(
             "Import File Format"sv,
-            ByteString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(filename.to_byte_string())))
+            ByteString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(filename)))
                         .release_value_but_fixme_should_propagate_errors();
 
         page->on_next_page = [] { return nullptr; };

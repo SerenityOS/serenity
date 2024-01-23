@@ -22,9 +22,9 @@ class SpreadsheetWidget final
 public:
     virtual ~SpreadsheetWidget() override = default;
 
-    void save(String const& filename, Core::File&);
-    void load_file(String const& filename, Core::File&);
-    void import_sheets(String const& filename, Core::File&);
+    void save(ByteString const& filename, Core::File&);
+    void load_file(ByteString const& filename, Core::File&);
+    void import_sheets(ByteString const& filename, Core::File&);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);
