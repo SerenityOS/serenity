@@ -204,6 +204,7 @@ if (current_os == "mac") {
 
   bundle_data("ladybird_bundle_libs") {
     public_deps = [
+      "//AK",
       "//Userland/Libraries/LibAccelGfx",
       "//Userland/Libraries/LibAudio",
       "//Userland/Libraries/LibCompress",
@@ -226,6 +227,7 @@ if (current_os == "mac") {
       "//Userland/Libraries/LibLine",
       "//Userland/Libraries/LibMarkdown",
       "//Userland/Libraries/LibProtocol",
+      "//Userland/Libraries/LibRIFF",
       "//Userland/Libraries/LibRegex",
       "//Userland/Libraries/LibSQL",
       "//Userland/Libraries/LibSoftGPU",
@@ -242,6 +244,7 @@ if (current_os == "mac") {
     ]
     sources = [
       "$root_out_dir/lib/liblagom-accelgfx.dylib",
+      "$root_out_dir/lib/liblagom-ak.dylib",
       "$root_out_dir/lib/liblagom-audio.dylib",
       "$root_out_dir/lib/liblagom-compress.dylib",
       "$root_out_dir/lib/liblagom-core.dylib",
@@ -264,6 +267,7 @@ if (current_os == "mac") {
       "$root_out_dir/lib/liblagom-markdown.dylib",
       "$root_out_dir/lib/liblagom-protocol.dylib",
       "$root_out_dir/lib/liblagom-regex.dylib",
+      "$root_out_dir/lib/liblagom-riff.dylib",
       "$root_out_dir/lib/liblagom-softgpu.dylib",
       "$root_out_dir/lib/liblagom-sql.dylib",
       "$root_out_dir/lib/liblagom-syntax.dylib",

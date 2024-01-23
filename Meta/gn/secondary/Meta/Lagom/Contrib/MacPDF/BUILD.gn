@@ -52,6 +52,7 @@ bundle_data("pdf_bundle_executables") {
 
 bundle_data("pdf_bundle_libs") {
   public_deps = [
+    "//AK",
     "//Userland/Libraries/LibCompress",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",
@@ -59,9 +60,11 @@ bundle_data("pdf_bundle_libs") {
     "//Userland/Libraries/LibGfx",
     "//Userland/Libraries/LibIPC",
     "//Userland/Libraries/LibPDF",
+    "//Userland/Libraries/LibRIFF",
     "//Userland/Libraries/LibTextCodec",
   ]
   sources = [
+    "$root_out_dir/lib/liblagom-ak.dylib",
     "$root_out_dir/lib/liblagom-compress.dylib",
     "$root_out_dir/lib/liblagom-core.dylib",
     "$root_out_dir/lib/liblagom-crypto.dylib",
@@ -69,6 +72,7 @@ bundle_data("pdf_bundle_libs") {
     "$root_out_dir/lib/liblagom-gfx.dylib",
     "$root_out_dir/lib/liblagom-ipc.dylib",
     "$root_out_dir/lib/liblagom-pdf.dylib",
+    "$root_out_dir/lib/liblagom-riff.dylib",
     "$root_out_dir/lib/liblagom-textcodec.dylib",
   ]
   outputs = [ "{{bundle_contents_dir}}/lib/{{source_file_part}}" ]
