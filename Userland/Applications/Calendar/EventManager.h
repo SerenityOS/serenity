@@ -30,8 +30,8 @@ class EventManager {
 public:
     static OwnPtr<EventManager> create();
 
-    String const& current_filename() const { return m_current_filename; }
-    void set_filename(String const& filename) { m_current_filename = filename; }
+    ByteString const& current_filename() const { return m_current_filename; }
+    void set_filename(ByteString filename) { m_current_filename = move(filename); }
 
     ErrorOr<void> save(FileSystemAccessClient::File& file);
     ErrorOr<void> load_file(FileSystemAccessClient::File& file);
@@ -53,7 +53,7 @@ private:
     Vector<Event> m_events;
 
     bool m_dirty { false };
-    String m_current_filename;
+    ByteString m_current_filename;
 };
 
 }

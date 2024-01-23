@@ -31,7 +31,7 @@ enum ErrorFlag : u32 {
 class Client;
 class File {
 public:
-    File(Badge<Client>, NonnullOwnPtr<Core::File> stream, String filename)
+    File(Badge<Client>, NonnullOwnPtr<Core::File> stream, ByteString filename)
         : m_stream(move(stream))
         , m_filename(filename)
     {
@@ -39,11 +39,11 @@ public:
 
     Core::File& stream() const { return *m_stream; }
     NonnullOwnPtr<Core::File> release_stream() { return move(m_stream); }
-    String filename() const { return m_filename; }
+    ByteString const& filename() const { return m_filename; }
 
 private:
     NonnullOwnPtr<Core::File> m_stream;
-    String m_filename;
+    ByteString m_filename;
 };
 
 using Result = ErrorOr<File>;

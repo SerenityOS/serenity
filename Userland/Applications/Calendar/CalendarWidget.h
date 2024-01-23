@@ -34,7 +34,7 @@ private:
 
     void create_on_tile_doubleclick();
 
-    String const& current_filename() const { return m_event_calendar->event_manager().current_filename(); }
+    ByteString const& current_filename() const { return m_event_calendar->event_manager().current_filename(); }
 
     void create_on_events_change();
     NonnullRefPtr<GUI::Action> create_save_as_action();

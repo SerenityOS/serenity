@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!filename.is_empty()) {
         auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename));
-        spreadsheet_widget->load_file(file.filename(), file.stream());
+        spreadsheet_widget->load_file(TRY(String::from_byte_string(file.filename())), file.stream());
     }
 
     return app->exec();

@@ -145,8 +145,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
 
     auto file_or_error = [&]() -> ErrorOr<File> {
         auto stream = TRY(Core::File::adopt_fd(ipc_file->take_fd(), Core::File::OpenMode::ReadWrite));
-        auto filename = TRY(String::from_byte_string(*chosen_file));
-        return File({}, move(stream), filename);
+        return File({}, move(stream), *chosen_file);
     }();
     if (file_or_error.is_error()) {
         auto maybe_message = String::formatted("{} \"{}\" failed: {}", action, *chosen_file, file_or_error.error());

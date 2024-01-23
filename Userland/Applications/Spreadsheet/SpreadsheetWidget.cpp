@@ -136,7 +136,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
-        load_file(response.value().filename(), response.value().stream());
+        load_file(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
     });
 
     m_import_action = GUI::Action::create("Import Sheets...", [&](auto&) {
@@ -150,7 +150,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         if (response.is_error())
             return;
 
-        import_sheets(response.value().filename(), response.value().stream());
+        import_sheets(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -162,7 +162,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename(), Core::File::OpenMode::Write);
         if (response.is_error())
             return;
-        save(response.value().filename(), response.value().stream());
+        save(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -170,7 +170,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto response = FileSystemAccessClient::Client::the().save_file(window(), name, "sheets");
         if (response.is_error())
             return;
-        save(response.value().filename(), response.value().stream());
+        save(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
         update_window_title();
     });
 
@@ -733,7 +733,7 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (response.is_error())
             return;
-        load_file(response.value().filename(), response.value().stream());
+        load_file(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
     });
     file_menu->add_action(*m_quit_action);
 

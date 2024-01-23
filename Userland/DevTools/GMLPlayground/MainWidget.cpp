@@ -126,10 +126,10 @@ void MainWidget::load_file(FileSystemAccessClient::File file)
     m_editor->set_text(buffer_or_error.release_value());
     m_editor->set_focus(true);
 
-    m_file_path = file.filename().to_byte_string();
+    m_file_path = file.filename();
     update_title();
 
-    GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
+    GUI::Application::the()->set_most_recently_open_file(file.filename());
 }
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
@@ -147,10 +147,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::MessageBox::show(&window, ByteString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
-        m_file_path = response.value().filename().to_byte_string();
+        m_file_path = response.value().filename();
         update_title();
 
-        GUI::Application::the()->set_most_recently_open_file(response.value().filename().to_byte_string());
+        GUI::Application::the()->set_most_recently_open_file(response.value().filename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {

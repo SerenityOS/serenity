@@ -167,7 +167,7 @@ ErrorOr<void> MainWidget::create_actions()
         if (auto result = save_file(file.filename(), file.release_stream()); result.is_error())
             show_error(result.release_error(), "Saving"sv, file.filename());
         else
-            GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
+            GUI::Application::the()->set_most_recently_open_file(file.filename());
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([this](auto&) {

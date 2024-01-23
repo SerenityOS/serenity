@@ -596,13 +596,12 @@ void HexEditorWidget::update_title()
     window()->set_title(builder.to_byte_string());
 }
 
-void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::File> file)
+void HexEditorWidget::open_file(ByteString const& filename, NonnullOwnPtr<Core::File> file)
 {
     window()->set_modified(false);
     m_editor->open_file(move(file));
-    auto filename_byte_string = filename.to_byte_string();
-    set_path(filename_byte_string);
-    GUI::Application::the()->set_most_recently_open_file(filename_byte_string);
+    set_path(filename);
+    GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
 bool HexEditorWidget::request_close()

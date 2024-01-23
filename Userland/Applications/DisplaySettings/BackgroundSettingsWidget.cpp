@@ -110,7 +110,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
         if (response.is_error())
             return;
         m_wallpaper_view->selection().clear();
-        m_monitor_widget->set_wallpaper(response.release_value().filename());
+        m_monitor_widget->set_wallpaper(MUST(String::from_byte_string(response.release_value().filename())));
         m_background_settings_changed = true;
         set_modified(true);
     };
