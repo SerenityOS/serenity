@@ -8,11 +8,15 @@
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Promise.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Crypto {
 
@@ -119,69 +123,65 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data->raw_object());
     if (data_buffer_or_error.is_error()) {
-        auto error = WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string);
-        auto promise = JS::Promise::create(realm);
-        promise->reject(error.ptr());
-        return promise;
+        auto promise = WebIDL::create_rejected_promise(realm, WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string));
+        return verify_cast<JS::Promise>(*promise->promise());
     }
-    auto& data_buffer = data_buffer_or_error.value();
+    auto data_buffer = data_buffer_or_error.release_value();
 
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
     auto normalized_algorithm = normalize_an_algorithm(algorithm, "digest"_string);
 
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+    // FIXME: Spec bug: link to https://webidl.spec.whatwg.org/#a-promise-rejected-with
     if (normalized_algorithm.is_error()) {
-        auto promise = JS::Promise::create(realm);
-        auto error = normalized_algorithm.release_error();
-        auto error_value = error.value().value();
-        promise->reject(error_value);
-        return promise;
+        auto promise = WebIDL::create_rejected_promise(realm, normalized_algorithm.release_error().release_value().value());
+        return verify_cast<JS::Promise>(*promise->promise());
     }
 
     // 5. Let promise be a new Promise.
-    auto promise = JS::Promise::create(realm);
+    auto promise = WebIDL::create_promise(realm);
 
     // 6. Return promise and perform the remaining steps in parallel.
-    // FIXME: We don't have a good abstraction for this yet, so we do it in sync.
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, algorithm_object = normalized_algorithm.release_value(), promise, data_buffer = move(data_buffer)]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
 
-    // 7. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+        // 7. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+        // FIXME: Need spec reference to https://webidl.spec.whatwg.org/#reject
 
-    // 8. Let result be the result of performing the digest operation specified by normalizedAlgorithm using algorithm, with data as message.
-    auto algorithm_object = normalized_algorithm.release_value();
-    auto algorithm_name = algorithm_object.name;
+        // 8. Let result be the result of performing the digest operation specified by normalizedAlgorithm using algorithm, with data as message.
+        auto algorithm_name = algorithm_object.name;
 
-    ::Crypto::Hash::HashKind hash_kind;
-    if (algorithm_name.equals_ignoring_ascii_case("SHA-1"sv)) {
-        hash_kind = ::Crypto::Hash::HashKind::SHA1;
-    } else if (algorithm_name.equals_ignoring_ascii_case("SHA-256"sv)) {
-        hash_kind = ::Crypto::Hash::HashKind::SHA256;
-    } else if (algorithm_name.equals_ignoring_ascii_case("SHA-384"sv)) {
-        hash_kind = ::Crypto::Hash::HashKind::SHA384;
-    } else if (algorithm_name.equals_ignoring_ascii_case("SHA-512"sv)) {
-        hash_kind = ::Crypto::Hash::HashKind::SHA512;
-    } else {
-        auto error = WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid hash function '{}'", algorithm_name)));
-        promise->reject(error.ptr());
-        return promise;
-    }
+        ::Crypto::Hash::HashKind hash_kind;
+        if (algorithm_name.equals_ignoring_ascii_case("SHA-1"sv)) {
+            hash_kind = ::Crypto::Hash::HashKind::SHA1;
+        } else if (algorithm_name.equals_ignoring_ascii_case("SHA-256"sv)) {
+            hash_kind = ::Crypto::Hash::HashKind::SHA256;
+        } else if (algorithm_name.equals_ignoring_ascii_case("SHA-384"sv)) {
+            hash_kind = ::Crypto::Hash::HashKind::SHA384;
+        } else if (algorithm_name.equals_ignoring_ascii_case("SHA-512"sv)) {
+            hash_kind = ::Crypto::Hash::HashKind::SHA512;
+        } else {
+            WebIDL::reject_promise(realm, promise, WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid hash function '{}'", algorithm_name))));
+            return;
+        }
 
-    ::Crypto::Hash::Manager hash { hash_kind };
-    hash.update(data_buffer);
+        ::Crypto::Hash::Manager hash { hash_kind };
+        hash.update(data_buffer);
 
-    auto digest = hash.digest();
-    auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
-    if (result_buffer.is_error()) {
-        auto error = WebIDL::OperationError::create(realm, "Failed to create result buffer"_fly_string);
-        promise->reject(error.ptr());
-        return promise;
-    }
+        auto digest = hash.digest();
+        auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
+        if (result_buffer.is_error()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::OperationError::create(realm, "Failed to create result buffer"_fly_string));
+            return;
+        }
 
-    auto result = JS::ArrayBuffer::create(realm, result_buffer.release_value());
+        auto result = JS::ArrayBuffer::create(realm, result_buffer.release_value());
 
-    // 9. Resolve promise with result.
-    promise->fulfill(result);
+        // 9. Resolve promise with result.
+        WebIDL::resolve_promise(realm, promise, result);
+    });
 
-    return promise;
+    return verify_cast<JS::Promise>(*promise->promise());
 }
 
 SubtleCrypto::SupportedAlgorithmsMap& SubtleCrypto::supported_algorithms_internal()
