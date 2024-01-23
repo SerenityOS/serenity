@@ -151,7 +151,7 @@ String Node::descendant_text_content() const
         builder.append(text_node.data());
         return IterationDecision::Continue;
     });
-    return MUST(builder.to_string());
+    return builder.to_string_without_validation();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-textcontent
