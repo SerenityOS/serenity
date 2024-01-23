@@ -25,7 +25,7 @@ static ErrorOr<GLfloat> parse_float(StringView string)
     return maybe_float.release_value();
 }
 
-ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(String const& filename, NonnullOwnPtr<Core::File> file)
+ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(ByteString const& filename, NonnullOwnPtr<Core::File> file)
 {
     auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
 

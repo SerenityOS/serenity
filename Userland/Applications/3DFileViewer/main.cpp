@@ -34,7 +34,7 @@ class GLContextWidget final : public GUI::Frame {
     C_OBJECT(GLContextWidget);
 
 public:
-    bool load_file(String const& filename, NonnullOwnPtr<Core::File> file);
+    bool load_file(ByteString const& filename, NonnullOwnPtr<Core::File> file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -153,7 +153,7 @@ void GLContextWidget::drop_event(GUI::DropEvent& event)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), url.serialize_path());
         if (response.is_error())
             return;
-        load_file(MUST(String::from_byte_string(response.value().filename())), response.value().release_stream());
+        load_file(response.value().filename(), response.value().release_stream());
     }
 }
 
@@ -289,9 +289,9 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_cycles++;
 }
 
-bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File> file)
+bool GLContextWidget::load_file(ByteString const& filename, NonnullOwnPtr<Core::File> file)
 {
-    if (!filename.bytes_as_string_view().ends_with(".obj"sv)) {
+    if (!filename.ends_with(".obj"sv)) {
         GUI::MessageBox::show(window(), ByteString::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
@@ -304,7 +304,7 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
 
     // Determine whether or not a texture for this model resides within the same directory
     StringBuilder builder;
-    builder.append(filename.bytes_as_string_view().split_view('.').at(0));
+    builder.append(filename.split_view('.').at(0));
     builder.append(".bmp"sv);
 
     // Attempt to open the texture file from disk
@@ -389,7 +389,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         auto file = response.release_value();
-        widget->load_file(MUST(String::from_byte_string(file.filename())), file.release_stream());
+        widget->load_file(file.filename(), file.release_stream());
     }));
     file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -583,7 +583,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show(window, ByteString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return 1;
     }
-    widget->load_file(TRY(String::from_byte_string(file.value().filename())), file.value().release_stream());
+    widget->load_file(file.value().filename(), file.value().release_stream());
 
     return app->exec();
 }
