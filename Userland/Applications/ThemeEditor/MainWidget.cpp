@@ -349,9 +349,8 @@ void MainWidget::set_path(ByteString path)
     update_title();
 }
 
-void MainWidget::save_to_file(String const& filename_string, NonnullOwnPtr<Core::File> file)
+void MainWidget::save_to_file(ByteString const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto filename = filename_string.to_byte_string();
     auto theme = Core::ConfigFile::open(filename, move(file)).release_value_but_fixme_should_propagate_errors();
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry("Alignments", to_string(Gfx::AlignmentRole::role), to_string(m_current_palette.alignment(Gfx::AlignmentRole::role)));
@@ -635,15 +634,15 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     path_input.set_text(*result);
 }
 
-ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::File> file)
+ErrorOr<void> MainWidget::load_from_file(ByteString const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto config_file = TRY(Core::ConfigFile::open(filename.to_byte_string(), move(file)));
+    auto config_file = TRY(Core::ConfigFile::open(filename, move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
     VERIFY(theme.is_valid());
 
     auto new_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
     set_palette(move(new_palette));
-    set_path(filename.to_byte_string());
+    set_path(filename);
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role)                                                    \
     if (auto alignment_input = m_alignment_inputs[to_underlying(Gfx::AlignmentRole::role)]) \
@@ -677,7 +676,7 @@ ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<C
 
     m_last_modified_time = MonotonicTime::now();
     window()->set_modified(false);
-    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
+    GUI::Application::the()->set_most_recently_open_file(filename);
     return {};
 }
 

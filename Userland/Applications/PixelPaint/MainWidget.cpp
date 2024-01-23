@@ -1304,11 +1304,11 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
     editor.set_loaded_from_image(m_loader.is_raw_image());
-    editor.set_path(file.filename().to_byte_string());
+    editor.set_path(file.filename());
     editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
     m_toolbox->ensure_tool_selection();
-    GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
+    GUI::Application::the()->set_most_recently_open_file(file.filename());
 }
 
 ErrorOr<void> MainWidget::create_default_image()

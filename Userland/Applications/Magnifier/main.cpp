@@ -63,13 +63,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        AK::ByteString filename = "file for saving";
+        ByteString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
             auto response = FileSystemAccessClient::Client::the().save_file(window, "Capture", "png");
             if (response.is_error())
                 return {};
             auto file = response.value().release_stream();
-            auto path = AK::LexicalPath(response.value().filename().to_byte_string());
+            auto path = LexicalPath(response.value().filename());
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
 

@@ -776,7 +776,7 @@ void ImageEditor::save_project_as()
         GUI::MessageBox::show_error(window(), MUST(String::formatted("Could not save {}: {}", file.filename(), result.release_error())));
         return;
     }
-    set_path(file.filename().to_byte_string());
+    set_path(file.filename());
     set_loaded_from_image(false);
     set_unmodified();
 }

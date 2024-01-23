@@ -86,7 +86,7 @@ public:
     ErrorOr<void> initialize_menubar(GUI::Window&);
     GUI::Window::CloseRequestDecision request_close();
     void update_title();
-    ErrorOr<void> load_from_file(String const& filename, NonnullOwnPtr<Core::File> file);
+    ErrorOr<void> load_from_file(ByteString const& filename, NonnullOwnPtr<Core::File> file);
 
 private:
     explicit MainWidget(NonnullRefPtr<AlignmentModel>);
@@ -94,7 +94,7 @@ private:
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
-    void save_to_file(String const& filename, NonnullOwnPtr<Core::File> file);
+    void save_to_file(ByteString const& filename, NonnullOwnPtr<Core::File> file);
     ErrorOr<Core::AnonymousBuffer> encode();
     void set_path(ByteString);
 

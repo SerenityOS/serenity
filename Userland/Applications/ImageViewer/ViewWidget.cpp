@@ -169,7 +169,7 @@ void ViewWidget::navigate(Directions direction)
     m_current_index = index;
 
     auto value = result.release_value();
-    open_file(value.filename(), value.stream());
+    open_file(MUST(String::from_byte_string(value.filename())), value.stream());
 }
 
 void ViewWidget::doubleclick_event(GUI::MouseEvent&)

@@ -293,7 +293,7 @@ MainWidget::MainWidget()
         }
 
         set_path(file.filename());
-        GUI::Application::the()->set_most_recently_open_file(file.filename().to_byte_string());
+        GUI::Application::the()->set_most_recently_open_file(file.filename());
         dbgln("Wrote document to {}", file.filename());
     });
 
@@ -799,11 +799,11 @@ void MainWidget::update_title()
     window()->set_title(builder.to_byte_string());
 }
 
-ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)
+ErrorOr<void> MainWidget::read_file(ByteString const& filename, Core::File& file)
 {
     m_editor->set_text(TRY(file.read_until_eof()));
     set_path(filename);
-    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
+    GUI::Application::the()->set_most_recently_open_file(filename);
     m_editor->set_focus(true);
     return {};
 }

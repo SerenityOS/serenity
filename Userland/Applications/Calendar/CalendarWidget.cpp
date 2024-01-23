@@ -168,7 +168,7 @@ NonnullRefPtr<GUI::Action> CalendarWidget::create_save_action(GUI::Action& save_
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename().to_byte_string(), Core::File::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename(), Core::File::OpenMode::Write);
         if (response.is_error())
             return;
 

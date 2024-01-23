@@ -134,7 +134,7 @@ void VideoPlayerWidget::open_file(FileSystemAccessClient::File file)
         return;
     }
 
-    m_path = file.filename();
+    m_path = MUST(String::from_byte_string(file.filename()));
     update_title();
     close_file();
 

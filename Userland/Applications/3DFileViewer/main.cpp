@@ -153,7 +153,7 @@ void GLContextWidget::drop_event(GUI::DropEvent& event)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), url.serialize_path());
         if (response.is_error())
             return;
-        load_file(response.value().filename(), response.value().release_stream());
+        load_file(MUST(String::from_byte_string(response.value().filename())), response.value().release_stream());
     }
 }
 
@@ -389,7 +389,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         auto file = response.release_value();
-        widget->load_file(file.filename(), file.release_stream());
+        widget->load_file(MUST(String::from_byte_string(file.filename())), file.release_stream());
     }));
     file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -583,7 +583,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show(window, ByteString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return 1;
     }
-    widget->load_file(file.value().filename(), file.value().release_stream());
+    widget->load_file(TRY(String::from_byte_string(file.value().filename())), file.value().release_stream());
 
     return app->exec();
 }
