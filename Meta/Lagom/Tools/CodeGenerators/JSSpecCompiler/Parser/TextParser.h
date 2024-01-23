@@ -56,7 +56,7 @@ public:
     }
 
     TextParseErrorOr<ClauseHeader> parse_clause_header(ClauseHasAoidAttribute clause_has_aoid_attribute);
-    TextParseErrorOr<Tree> parse_step_without_substeps();
+    TextParseErrorOr<NullableTree> parse_step_without_substeps();
     TextParseErrorOr<Tree> parse_step_with_substeps(Tree substeps);
 
     FailedTextParseDiagnostic get_diagnostic() const;
