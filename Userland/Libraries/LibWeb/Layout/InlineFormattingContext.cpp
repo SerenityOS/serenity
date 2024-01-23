@@ -55,7 +55,7 @@ CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
 
 AvailableSize InlineFormattingContext::available_space_for_line(CSSPixels y) const
 {
-    auto intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
+    auto intrusions = parent().intrusion_by_floats_into_box(m_containing_block_state, y);
     if (m_available_space->width.is_definite()) {
         return AvailableSize::make_definite(m_available_space->width.to_px_or_zero() - (intrusions.left + intrusions.right));
     } else {
@@ -379,8 +379,8 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
 {
-    auto top_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
-    auto bottom_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y + containing_block().computed_values().line_height() - 1);
+    auto top_intrusions = parent().intrusion_by_floats_into_box(m_containing_block_state, y);
+    auto bottom_intrusions = parent().intrusion_by_floats_into_box(m_containing_block_state, y + containing_block().computed_values().line_height() - 1);
 
     auto left_edge = [](auto& space) -> CSSPixels {
         return space.left;

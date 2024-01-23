@@ -1134,7 +1134,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
     }
 
     auto offset_y = max(CSSPixels(0), (marker.computed_values().line_height() - marker_state.content_height()) / 2);
-    auto space_and_containing_margin = intrusion_by_floats_into_box(list_item_box, offset_y);
+    auto space_and_containing_margin = intrusion_by_floats_into_box(list_item_state, offset_y);
     marker_state.set_content_offset({ space_and_containing_margin.left - final_marker_width, offset_y });
 
     if (marker_state.content_height() > list_item_state.content_height())
@@ -1184,8 +1184,12 @@ BlockFormattingContext::SpaceUsedAndContainingMarginForFloats BlockFormattingCon
 
 FormattingContext::SpaceUsedByFloats BlockFormattingContext::intrusion_by_floats_into_box(Box const& box, CSSPixels y_in_box) const
 {
+    return intrusion_by_floats_into_box(m_state.get(box), y_in_box);
+}
+
+FormattingContext::SpaceUsedByFloats BlockFormattingContext::intrusion_by_floats_into_box(LayoutState::UsedValues const& box_used_values, CSSPixels y_in_box) const
+{
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto& box_used_values = m_state.get(box);
     auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box_used_values, root());
     CSSPixels y_in_root = box_in_root_rect.y() + y_in_box;
     auto space_and_containing_margin = space_used_and_containing_margin_for_floats(y_in_root);
