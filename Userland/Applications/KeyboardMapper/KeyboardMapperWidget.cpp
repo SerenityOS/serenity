@@ -69,7 +69,7 @@ void KeyboardMapperWidget::create_frame()
                 if (value.is_empty())
                     map[index] = '\0'; // Empty string
                 else
-                    map[index] = value.bytes().at(0);
+                    map[index] = *value.code_points().begin();
 
                 window()->set_modified(true);
             }
