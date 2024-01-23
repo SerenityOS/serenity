@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/ImageFormats/TIFFLoader.h>
+#include <stdint.h>
 #include <stdio.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)

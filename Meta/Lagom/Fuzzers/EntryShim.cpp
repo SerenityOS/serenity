@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Types.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -25,7 +26,7 @@ int fuzz_from_file(char const* filename)
 
     size_t file_size = file_stats.st_size;
 
-    uint8_t* file_buffer = (uint8_t*)malloc(file_size);
+    u8* file_buffer = (u8*)malloc(file_size);
 
     if (!file_buffer) {
         fprintf(stderr, "EntryShim: Failed to allocate file buffer\n");
@@ -53,11 +54,11 @@ int fuzz_from_stdin()
 {
     size_t chunk_size = 4096;
 
-    uint8_t* file_buffer = nullptr;
+    u8* file_buffer = nullptr;
     size_t file_size = 0;
 
     while (true) {
-        file_buffer = (uint8_t*)realloc(file_buffer, file_size + chunk_size);
+        file_buffer = (u8*)realloc(file_buffer, file_size + chunk_size);
 
         if (!file_buffer) {
             fprintf(stderr, "EntryShim: Failed to reallocate buffer to a size of %lu bytes\n", file_size + chunk_size);

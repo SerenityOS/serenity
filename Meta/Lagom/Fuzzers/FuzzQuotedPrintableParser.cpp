@@ -7,6 +7,7 @@
 #include <AK/Format.h>
 #include <AK/StringView.h>
 #include <LibIMAP/QuotedPrintable.h>
+#include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {

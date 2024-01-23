@@ -6,8 +6,9 @@
 
 #include <LibVideo/Containers/Matroska/Reader.h>
 #include <stddef.h>
+#include <stdint.h>
 
-extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     AK::set_debug_enabled(false);
     auto matroska_reader_result = Video::Matroska::Reader::from_data({ data, size });

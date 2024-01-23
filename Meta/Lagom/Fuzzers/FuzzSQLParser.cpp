@@ -6,6 +6,7 @@
 
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Parser.h>
+#include <stdint.h>
 #include <stdio.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)

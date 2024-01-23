@@ -7,6 +7,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
+#include <stdint.h>
 
 namespace {
 
