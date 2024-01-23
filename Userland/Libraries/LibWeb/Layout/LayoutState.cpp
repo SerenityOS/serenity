@@ -244,22 +244,57 @@ static Painting::BorderRadiiData normalized_border_radii_data(Layout::Node const
     return Painting::BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
 
-void LayoutState::resolve_border_radii()
+void LayoutState::resolve_layout_dependent_properties()
 {
-    Vector<Painting::InlinePaintable&> inline_paintables;
+    // Resolves layout-dependent properties not handled during layout and stores them in the paint tree.
+    // Properties resolved include:
+    // - Border radii
+    // - Box shadows
+    // - Text shadows
+    // - Transforms
+    // - Transform origins
 
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
         auto& node = const_cast<NodeWithStyle&>(used_values.node());
 
         auto* paintable = node.paintable();
+        auto const is_inline_paintable = paintable && paintable->is_inline_paintable();
+        auto const is_paintable_box = paintable && paintable->is_paintable_box();
+        auto const is_paintable_with_lines = paintable && paintable->is_paintable_with_lines();
 
-        if (paintable && is<Painting::InlinePaintable>(*paintable)) {
+        // Border radii
+        if (is_inline_paintable) {
             auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
-            inline_paintables.append(inline_paintable);
+            auto& fragments = inline_paintable.fragments();
+
+            auto const& top_left_border_radius = inline_paintable.computed_values().border_top_left_radius();
+            auto const& top_right_border_radius = inline_paintable.computed_values().border_top_right_radius();
+            auto const& bottom_right_border_radius = inline_paintable.computed_values().border_bottom_right_radius();
+            auto const& bottom_left_border_radius = inline_paintable.computed_values().border_bottom_left_radius();
+
+            auto containing_block_position_in_absolute_coordinates = inline_paintable.containing_block()->paintable_box()->absolute_position();
+            for (size_t i = 0; i < fragments.size(); ++i) {
+                auto is_first_fragment = i == 0;
+                auto is_last_fragment = i == fragments.size() - 1;
+                auto& fragment = fragments[i];
+                CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
+                if (is_first_fragment) {
+                    auto extra_start_width = inline_paintable.box_model().padding.left;
+                    absolute_fragment_rect.translate_by(-extra_start_width, 0);
+                    absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_start_width);
+                }
+                if (is_last_fragment) {
+                    auto extra_end_width = inline_paintable.box_model().padding.right;
+                    absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
+                }
+                auto border_radii_data = normalized_border_radii_data(inline_paintable.layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+                fragment.set_border_radii_data(border_radii_data);
+            }
         }
 
-        if (paintable && is<Painting::PaintableBox>(*paintable)) {
+        // Border radii
+        if (is_paintable_box) {
             auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
 
             CSSPixelRect const border_rect { 0, 0, used_values.border_box_width(), used_values.border_box_height() };
@@ -272,127 +307,74 @@ void LayoutState::resolve_border_radii()
             auto radii_data = normalized_border_radii_data(node, border_rect, border_top_left_radius, border_top_right_radius, border_bottom_right_radius, border_bottom_left_radius);
             paintable_box.set_border_radii_data(radii_data);
         }
-    }
 
-    for (auto& inline_paintable : inline_paintables) {
-        auto& fragments = inline_paintable.fragments();
-
-        auto const& top_left_border_radius = inline_paintable.computed_values().border_top_left_radius();
-        auto const& top_right_border_radius = inline_paintable.computed_values().border_top_right_radius();
-        auto const& bottom_right_border_radius = inline_paintable.computed_values().border_bottom_right_radius();
-        auto const& bottom_left_border_radius = inline_paintable.computed_values().border_bottom_left_radius();
-
-        auto containing_block_position_in_absolute_coordinates = inline_paintable.containing_block()->paintable_box()->absolute_position();
-        for (size_t i = 0; i < fragments.size(); ++i) {
-            auto is_first_fragment = i == 0;
-            auto is_last_fragment = i == fragments.size() - 1;
-            auto& fragment = fragments[i];
-
-            CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
-
-            if (is_first_fragment) {
-                auto extra_start_width = inline_paintable.box_model().padding.left;
-                absolute_fragment_rect.translate_by(-extra_start_width, 0);
-                absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_start_width);
-            }
-
-            if (is_last_fragment) {
-                auto extra_end_width = inline_paintable.box_model().padding.right;
-                absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
-            }
-
-            auto border_radii_data = normalized_border_radii_data(inline_paintable.layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
-            fragment.set_border_radii_data(border_radii_data);
-        }
-    }
-}
-
-void LayoutState::resolve_box_shadow_data()
-{
-    for (auto& it : used_values_per_layout_node) {
-        auto& used_values = *it.value;
-        auto& node = const_cast<NodeWithStyle&>(used_values.node());
-
+        // Box shadows
         auto const& box_shadow_data = node.computed_values().box_shadow();
-        if (box_shadow_data.is_empty())
-            continue;
-        Vector<Painting::ShadowData> resolved_box_shadow_data;
-        resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
-        for (auto const& layer : box_shadow_data) {
-            resolved_box_shadow_data.empend(
-                layer.color,
-                layer.offset_x.to_px(node),
-                layer.offset_y.to_px(node),
-                layer.blur_radius.to_px(node),
-                layer.spread_distance.to_px(node),
-                layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
-        }
+        if (!box_shadow_data.is_empty()) {
+            Vector<Painting::ShadowData> resolved_box_shadow_data;
+            resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
+            for (auto const& layer : box_shadow_data) {
+                resolved_box_shadow_data.empend(
+                    layer.color,
+                    layer.offset_x.to_px(node),
+                    layer.offset_y.to_px(node),
+                    layer.blur_radius.to_px(node),
+                    layer.spread_distance.to_px(node),
+                    layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
+            }
 
-        auto* paintable = node.paintable();
-        if (paintable && is<Painting::PaintableBox>(*paintable)) {
-            auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
-            paintable_box.set_box_shadow_data(move(resolved_box_shadow_data));
-        } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
-            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
-            inline_paintable.set_box_shadow_data(move(resolved_box_shadow_data));
-        } else {
-            VERIFY_NOT_REACHED();
-        }
-    }
-}
-
-void LayoutState::resolve_text_shadows(Vector<Painting::PaintableWithLines&> const& paintables_with_lines)
-{
-    for (auto const& paintable_with_lines : paintables_with_lines) {
-        for (auto const& fragment : paintable_with_lines.fragments()) {
-            auto const& text_shadow = fragment.m_layout_node->computed_values().text_shadow();
-            if (!text_shadow.is_empty()) {
-                Vector<Painting::ShadowData> resolved_shadow_data;
-                resolved_shadow_data.ensure_capacity(text_shadow.size());
-                for (auto const& layer : text_shadow) {
-                    resolved_shadow_data.empend(
-                        layer.color,
-                        layer.offset_x.to_px(paintable_with_lines.layout_node()),
-                        layer.offset_y.to_px(paintable_with_lines.layout_node()),
-                        layer.blur_radius.to_px(paintable_with_lines.layout_node()),
-                        layer.spread_distance.to_px(paintable_with_lines.layout_node()),
-                        Painting::ShadowPlacement::Outer);
-                }
-                const_cast<Painting::PaintableFragment&>(fragment).set_shadows(move(resolved_shadow_data));
+            if (paintable && is<Painting::PaintableBox>(*paintable)) {
+                auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
+                paintable_box.set_box_shadow_data(move(resolved_box_shadow_data));
+            } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
+                auto& inline_paintable = static_cast<Painting::InlinePaintable&>(*paintable);
+                inline_paintable.set_box_shadow_data(move(resolved_box_shadow_data));
+            } else {
+                VERIFY_NOT_REACHED();
             }
         }
-    }
-}
 
-void LayoutState::resolve_css_transform()
-{
-    for (auto& it : used_values_per_layout_node) {
-        auto& used_values = *it.value;
-        if (!used_values.node().is_box())
-            continue;
+        // Text shadows
+        if (is_paintable_with_lines) {
+            auto const& paintable_with_lines = static_cast<Painting::PaintableWithLines const&>(*paintable);
+            for (auto const& fragment : paintable_with_lines.fragments()) {
+                auto const& text_shadow = fragment.m_layout_node->computed_values().text_shadow();
+                if (!text_shadow.is_empty()) {
+                    Vector<Painting::ShadowData> resolved_shadow_data;
+                    resolved_shadow_data.ensure_capacity(text_shadow.size());
+                    for (auto const& layer : text_shadow) {
+                        resolved_shadow_data.empend(
+                            layer.color,
+                            layer.offset_x.to_px(paintable_with_lines.layout_node()),
+                            layer.offset_y.to_px(paintable_with_lines.layout_node()),
+                            layer.blur_radius.to_px(paintable_with_lines.layout_node()),
+                            layer.spread_distance.to_px(paintable_with_lines.layout_node()),
+                            Painting::ShadowPlacement::Outer);
+                    }
+                    const_cast<Painting::PaintableFragment&>(fragment).set_shadows(move(resolved_shadow_data));
+                }
+            }
+        }
 
-        auto const& box = static_cast<Layout::Box const&>(used_values.node());
-        if (!box.paintable_box())
-            continue;
+        // Transform and transform origin
+        if (is_paintable_box) {
+            auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
+            auto const& transformations = paintable_box.computed_values().transformations();
+            if (!transformations.is_empty()) {
+                auto matrix = Gfx::FloatMatrix4x4::identity();
+                for (auto const& transform : transformations)
+                    matrix = matrix * transform.to_matrix(paintable_box).release_value();
+                paintable_box.set_transform(matrix);
+            }
 
-        auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
-        auto const& transformations = box.computed_values().transformations();
-        if (transformations.is_empty())
-            continue;
-
-        auto matrix = Gfx::FloatMatrix4x4::identity();
-        for (auto const& transform : transformations)
-            matrix = matrix * transform.to_matrix(paintable_box).release_value();
-
-        paintable_box.set_transform(matrix);
-
-        auto const& style_value = box.computed_values().transform_origin();
-        // FIXME: respect transform-box property
-        auto const& reference_box = paintable_box.absolute_border_box_rect();
-        auto x = reference_box.left() + style_value.x.to_px(box, reference_box.width());
-        auto y = reference_box.top() + style_value.y.to_px(box, reference_box.height());
-
-        paintable_box.set_transform_origin({ x, y });
+            auto const& transform_origin = paintable_box.computed_values().transform_origin();
+            // FIXME: respect transform-box property
+            auto const& reference_box = paintable_box.absolute_border_box_rect();
+            auto x = reference_box.left() + transform_origin.x.to_px(node, reference_box.width());
+            auto y = reference_box.top() + transform_origin.y.to_px(node, reference_box.height());
+            paintable_box.set_transform_origin({ x, y });
+            paintable_box.set_transform_origin({ x, y });
+        }
     }
 }
 
@@ -541,10 +523,7 @@ void LayoutState::commit(Box& root)
         measure_scrollable_overflow(box);
     }
 
-    resolve_border_radii();
-    resolve_box_shadow_data();
-    resolve_text_shadows(paintables_with_lines);
-    resolve_css_transform();
+    resolve_layout_dependent_properties();
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)
