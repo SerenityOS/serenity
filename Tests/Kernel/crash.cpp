@@ -60,6 +60,9 @@ int main(int argc, char** argv)
     bool do_pledge_violation = false;
     bool do_failing_assertion = false;
     bool do_deref_null_refptr = false;
+#if !ARCH(X86_64)
+    bool do_misaligned_fetch = false;
+#endif
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help(
@@ -89,6 +92,9 @@ int main(int argc, char** argv)
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
     args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
+#if !ARCH(X86_64)
+    args_parser.add_option(do_misaligned_fetch, "Perform a misaligned instruction fetch. WARNING: This test runs only when invoked manually, since not all implementations trap misaligned instruction fetches.", nullptr, 'x');
+#endif
 
     if (argc == 1) {
         do_all_crash_types = true;
@@ -360,6 +366,27 @@ int main(int argc, char** argv)
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
+
+#if !ARCH(X86_64)
+    if (do_misaligned_fetch) {
+        any_failures |= !Crash("Perform a misaligned instruction fetch  ", []() {
+#    if ARCH(AARCH64)
+            TODO_AARCH64();
+#    elif ARCH(RISCV64)
+            // An offset of 8 should simply jump to the next instruction.
+            // 9 is misaligned, but will have the same effect if the test fails.
+            // FIXME: This relies on addi and jr being compiled to compressed instructions. Figure out a better way to do this.
+            asm volatile(
+                "auipc t0, 0\n"
+                "addi t0, t0, 9\n"
+                "jr t0");
+#    else
+#        error Unknown architecture
+#    endif
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+#endif
 
     return any_failures;
 }
