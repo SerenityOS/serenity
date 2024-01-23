@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='zlib'
-version='1.3'
+version='1.3.1'
 useconfigure='true'
 files=(
-    "https://www.zlib.net/zlib-${version}.tar.gz#ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e"
+    "https://www.zlib.net/fossils/zlib-${version}.tar.gz#9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
 )
 
 configure() {
