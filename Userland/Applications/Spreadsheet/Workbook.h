@@ -15,10 +15,10 @@ class Workbook {
 public:
     Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_window);
 
-    ErrorOr<void, ByteString> open_file(String const& filename, Core::File&);
-    ErrorOr<void> write_to_file(String const& filename, Core::File&);
+    ErrorOr<void, ByteString> open_file(ByteString const& filename, Core::File&);
+    ErrorOr<void> write_to_file(ByteString const& filename, Core::File&);
 
-    ErrorOr<bool, ByteString> import_file(String const& filename, Core::File&);
+    ErrorOr<bool, ByteString> import_file(ByteString const& filename, Core::File&);
 
     ByteString const& current_filename() const { return m_current_filename; }
     bool set_filename(ByteString const& filename);

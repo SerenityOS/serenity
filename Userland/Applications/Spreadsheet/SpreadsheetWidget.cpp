@@ -136,7 +136,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
-        load_file(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
+        load_file(response.value().filename(), response.value().stream());
     });
 
     m_import_action = GUI::Action::create("Import Sheets...", [&](auto&) {
@@ -150,7 +150,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         if (response.is_error())
             return;
 
-        import_sheets(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
+        import_sheets(response.value().filename(), response.value().stream());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -162,7 +162,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename(), Core::File::OpenMode::Write);
         if (response.is_error())
             return;
-        save(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
+        save(response.value().filename(), response.value().stream());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -170,7 +170,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto response = FileSystemAccessClient::Client::the().save_file(window(), name, "sheets");
         if (response.is_error())
             return;
-        save(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
+        save(response.value().filename(), response.value().stream());
         update_window_title();
     });
 
@@ -560,7 +560,7 @@ void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType 
         apply_color_to_selected_cells(dialog->color());
 }
 
-void SpreadsheetWidget::save(String const& filename, Core::File& file)
+void SpreadsheetWidget::save(ByteString const& filename, Core::File& file)
 {
     auto result = m_workbook->write_to_file(filename, file);
     if (result.is_error()) {
@@ -569,10 +569,10 @@ void SpreadsheetWidget::save(String const& filename, Core::File& file)
     }
     undo_stack().set_current_unmodified();
     window()->set_modified(false);
-    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
+    GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
-void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
+void SpreadsheetWidget::load_file(ByteString const& filename, Core::File& file)
 {
     auto result = m_workbook->open_file(filename, file);
     if (result.is_error()) {
@@ -592,10 +592,10 @@ void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
 
     setup_tabs(m_workbook->sheets());
     update_window_title();
-    GUI::Application::the()->set_most_recently_open_file(filename.to_byte_string());
+    GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
-void SpreadsheetWidget::import_sheets(String const& filename, Core::File& file)
+void SpreadsheetWidget::import_sheets(ByteString const& filename, Core::File& file)
 {
     auto result = m_workbook->import_file(filename, file);
     if (result.is_error()) {
@@ -733,7 +733,7 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (response.is_error())
             return;
-        load_file(MUST(String::from_byte_string(response.value().filename())), response.value().stream());
+        load_file(response.value().filename(), response.value().stream());
     });
     file_menu->add_action(*m_quit_action);
 

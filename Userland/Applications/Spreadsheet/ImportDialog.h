@@ -55,7 +55,7 @@ private:
 };
 
 struct ImportDialog {
-    static ErrorOr<Vector<NonnullRefPtr<Sheet>>, ByteString> make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook&);
+    static ErrorOr<Vector<NonnullRefPtr<Sheet>>, ByteString> make_and_run_for(GUI::Window& parent, StringView mime, ByteString const& filename, Core::File& file, Workbook&);
 };
 
 }
