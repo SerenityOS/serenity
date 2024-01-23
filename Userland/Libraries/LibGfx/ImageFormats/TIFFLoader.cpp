@@ -267,6 +267,8 @@ private:
                         color.set_red(last_color->red() + color.red());
                         color.set_green(last_color->green() + color.green());
                         color.set_blue(last_color->blue() + color.blue());
+                        if (alpha_channel_index().has_value())
+                            color.set_alpha(last_color->alpha() + color.alpha());
                     }
 
                     last_color = color;
