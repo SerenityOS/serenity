@@ -97,7 +97,7 @@ bool AlgorithmStep::parse()
 {
     TextParser parser(m_ctx, m_tokens, m_node);
 
-    TextParseErrorOr<Tree> parse_result = TextParseError {};
+    TextParseErrorOr<NullableTree> parse_result = TextParseError {};
     if (m_substeps)
         parse_result = parser.parse_step_with_substeps(RefPtr(m_substeps).release_nonnull());
     else
@@ -133,10 +133,12 @@ Optional<AlgorithmStepList> AlgorithmStepList::create(SpecificationParsingContex
                         update_logical_scope_for_step(ctx, parent_scope, step_number);
                         return AlgorithmStep::create(ctx, child);
                     });
-                    if (!step_creation_result.has_value())
+                    if (!step_creation_result.has_value()) {
                         all_steps_parsed = false;
-                    else
-                        step_expressions.append(step_creation_result.release_value().tree());
+                    } else {
+                        if (auto expression = step_creation_result.release_value().tree())
+                            step_expressions.append(expression.release_nonnull());
+                    }
                     ++step_number;
                     return;
                 }

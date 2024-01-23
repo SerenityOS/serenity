@@ -62,7 +62,7 @@ class AlgorithmStep {
 public:
     static Optional<AlgorithmStep> create(SpecificationParsingContext& ctx, XML::Node const* node);
 
-    Tree tree() const { return m_expression; }
+    NullableTree tree() const { return m_expression; }
 
 private:
     AlgorithmStep(SpecificationParsingContext& ctx)
@@ -75,7 +75,7 @@ private:
     SpecificationParsingContext& m_ctx;
     Vector<Token> m_tokens;
     XML::Node const* m_node;
-    Tree m_expression = error_tree;
+    NullableTree m_expression = error_tree;
     NullableTree m_substeps;
 };
 

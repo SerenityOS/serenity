@@ -598,9 +598,15 @@ TextParseErrorOr<Tree> TextParser::parse_else(Tree else_branch)
 }
 
 // <simple_step> | <inline_if>
-TextParseErrorOr<Tree> TextParser::parse_step_without_substeps()
+TextParseErrorOr<NullableTree> TextParser::parse_step_without_substeps()
 {
     auto rollback = rollback_point();
+
+    // NOTE: ...
+    if (auto result = consume_word("NOTE:"sv); !result.is_error()) {
+        rollback.disarm();
+        return nullptr;
+    }
 
     // <simple_step>
     if (auto result = parse_simple_step_or_inline_if_branch(); !result.is_error()) {
