@@ -842,26 +842,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
 
 void Document::tear_down_layout_tree()
 {
-    if (!m_layout_root)
-        return;
-
-    // Gather up all the layout nodes in a vector and detach them from parents
-    // while the vector keeps them alive.
-
-    Vector<JS::Handle<Layout::Node>> layout_nodes;
-
-    m_layout_root->for_each_in_inclusive_subtree([&](auto& layout_node) {
-        layout_nodes.append(layout_node);
-        return IterationDecision::Continue;
-    });
-
-    for (auto& layout_node : layout_nodes) {
-        if (layout_node->parent())
-            layout_node->parent()->remove_child(*layout_node);
-    }
-
     m_layout_root = nullptr;
-
     m_paintable = nullptr;
 }
 
