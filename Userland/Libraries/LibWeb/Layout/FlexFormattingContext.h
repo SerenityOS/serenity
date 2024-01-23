@@ -53,6 +53,7 @@ private:
 
     struct FlexItem {
         JS::NonnullGCPtr<Box> box;
+        LayoutState::UsedValues& used_values;
         Optional<CSS::FlexBasis> used_flex_basis {};
         bool used_flex_basis_is_definite { false };
         CSSPixels flex_base_size { 0 };
@@ -117,10 +118,15 @@ private:
 
     CSSPixels main_gap() const;
     CSSPixels cross_gap() const;
-    bool has_definite_main_size(Box const&) const;
-    bool has_definite_cross_size(Box const&) const;
-    CSSPixels inner_main_size(Box const&) const;
-    CSSPixels inner_cross_size(Box const&) const;
+    [[nodiscard]] bool has_definite_main_size(LayoutState::UsedValues const&) const;
+    [[nodiscard]] bool has_definite_cross_size(LayoutState::UsedValues const&) const;
+    [[nodiscard]] bool has_definite_main_size(FlexItem const& item) const { return has_definite_main_size(item.used_values); }
+    [[nodiscard]] bool has_definite_cross_size(FlexItem const& item) const { return has_definite_cross_size(item.used_values); }
+
+    [[nodiscard]] CSSPixels inner_main_size(LayoutState::UsedValues const&) const;
+    [[nodiscard]] CSSPixels inner_cross_size(LayoutState::UsedValues const&) const;
+    [[nodiscard]] CSSPixels inner_main_size(FlexItem const& item) const { return inner_main_size(item.used_values); }
+    [[nodiscard]] CSSPixels inner_cross_size(FlexItem const& item) const { return inner_cross_size(item.used_values); }
     bool has_main_min_size(Box const&) const;
     bool has_cross_min_size(Box const&) const;
     CSSPixels specified_main_max_size(Box const&) const;
