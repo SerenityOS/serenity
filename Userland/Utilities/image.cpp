@@ -105,7 +105,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*image.bitmap));
     } else {
-        return Error::from_string_view("can only write .bmp, .png, .ppm, and .qoi"sv);
+        return Error::from_string_view("can only write .bmp, .jpg, .png, .ppm, and .qoi"sv);
     }
     TRY(buffered_stream->write_until_depleted(bytes));
 
