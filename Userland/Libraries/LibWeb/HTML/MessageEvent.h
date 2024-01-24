@@ -48,7 +48,7 @@ private:
     String m_origin;
     String m_last_event_id;
     Optional<MessageEventSource> m_source;
-    Vector<JS::Handle<JS::Object>> m_ports;
+    Vector<JS::NonnullGCPtr<JS::Object>> m_ports;
     mutable JS::GCPtr<JS::Array> m_ports_array;
 };
 
