@@ -1,0 +1,8 @@
+[
+    {
+        "name": "CalendarSettings::CalendarSettingsWidget",
+        "header": "Applications/CalendarSettings/CalendarSettingsWidget.h",
+        "description": "CalendarSettings' main widget",
+        "inherits": "GUI::Widget"
+    }
+]

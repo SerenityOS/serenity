@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Flood::MainWidget",
+        "header": "Games/Flood/MainWidget.h",
+        "description": "Flood's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Flood::SettingsWidget",
+        "header": "Games/Flood/SettingsWidget.h",
+        "description": "Flood settings dialog widget",
+        "inherits": "GUI::Widget"
+    }
+]

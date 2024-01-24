@@ -1,0 +1,8 @@
+[
+    {
+        "name": "LoginServer::Widget",
+        "header": "Services/LoginServer/Widget.h",
+        "description": "LoginServer's login widget",
+        "inherits": "GUI::Widget"
+    }
+]

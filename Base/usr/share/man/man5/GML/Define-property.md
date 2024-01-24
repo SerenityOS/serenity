@@ -1,6 +1,6 @@
 ## Name
 
-GML Property Definition
+Registering widget properties
 
 ## Description
 

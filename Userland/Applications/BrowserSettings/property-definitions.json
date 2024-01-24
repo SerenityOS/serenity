@@ -1,0 +1,20 @@
+[
+    {
+        "name": "BrowserSettings::BrowserSettingsWidget",
+        "header": "Applications/BrowserSettings/BrowserSettingsWidget.h",
+        "description": "BrowserSettings's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "BrowserSettings::AutoplaySettingsWidget",
+        "header": "Applications/BrowserSettings/AutoplaySettingsWidget.h",
+        "description": "Autoplay settings widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "BrowserSettings::ContentFilterSettingsWidget",
+        "header": "Applications/BrowserSettings/ContentFilterSettingsWidget.h",
+        "description": "Content filter settings widget",
+        "inherits": "GUI::Widget"
+    }
+]

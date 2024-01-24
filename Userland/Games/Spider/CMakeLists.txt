@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Spider
 )
 
-compile_gml(Spider.gml SpiderGML.cpp spider_gml)
+compile_gml(Spider.gml SpiderGML.cpp PROPERTIES Userland/Libraries/LibCards)
 
 set(SOURCES
     Game.cpp

@@ -1,0 +1,31 @@
+[
+    {
+        "name": "VideoPlayer::VideoPlayerWidget",
+        "header": "Applications/VideoPlayer/VideoPlayerWidget.h",
+        "description": "Video player widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "VideoPlayer::VideoFrameWidget",
+        "header": "Applications/VideoPlayer/VideoFrameWidget.h",
+        "description": "Video frames display widget",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "auto_resize",
+                "description": "Whether the video should be automatically resized to fit in the widget",
+                "type": "bool"
+            },
+            {
+                "name": "sizing_mode",
+                "description": "How the video should be resized inside the widget",
+                "type": "VideoPlayer::VideoSizingMode"
+            },
+            {
+                "name": "bitmap",
+                "description": "'Video frame to display",
+                "type": "Gfx::Bitmap"
+            }
+        ]
+    }
+]

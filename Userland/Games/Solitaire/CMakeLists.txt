@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Solitaire
 )
 
-compile_gml(Solitaire.gml SolitaireGML.cpp solitaire_gml)
+compile_gml(Solitaire.gml SolitaireGML.cpp PROPERTIES Userland/Libraries/LibCards)
 
 set(SOURCES
     Game.cpp

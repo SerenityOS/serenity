@@ -5,7 +5,7 @@ serenity_component(
     DEPENDS WebContent
 )
 
-compile_gml(HelpWindow.gml HelpWindowGML.cpp)
+compile_gml(HelpWindow.gml HelpWindowGML.cpp PROPERTIES Userland/Libraries/LibWebView)
 
 set(SOURCES
     History.cpp

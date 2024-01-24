@@ -30,10 +30,16 @@ function(stringify_gml source output string_name)
 endfunction()
 
 function(compile_gml source output)
+    cmake_parse_arguments(PARSE_ARGV 2 "COMPILE_GML" "" "" "PROPERTIES")
+    # LibGUI's properties, as well as the properties of the current directory, are always needed and are included by default.
+    list(APPEND COMPILE_GML_PROPERTIES "Userland/Libraries/LibGUI")
+    list(TRANSFORM COMPILE_GML_PROPERTIES PREPEND "--property-definition=${CMAKE_SOURCE_DIR}/")
+    list(APPEND COMPILE_GML_PROPERTIES "--property-definition=${CMAKE_CURRENT_SOURCE_DIR}")
+    list(TRANSFORM COMPILE_GML_PROPERTIES APPEND "/property-definitions.json")
     set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     add_custom_command(
         OUTPUT ${output}
-        COMMAND $<TARGET_FILE:Lagom::GMLCompiler> ${source} > ${output}.tmp
+        COMMAND $<TARGET_FILE:Lagom::GMLCompiler> ${COMPILE_GML_PROPERTIES} ${source} > ${output}.tmp
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.tmp ${output}
         COMMAND "${CMAKE_COMMAND}" -E remove ${output}.tmp
         VERBATIM

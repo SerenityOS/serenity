@@ -1,0 +1,8 @@
+[
+    {
+        "name": "MapsSettings::MapsSettingsWidget",
+        "header": "Applications/MapsSettings/MapsSettingsWidget.h",
+        "description": "Maps settings widget",
+        "inherits": "GUI::SettingsWindow::Tab"
+    }
+]

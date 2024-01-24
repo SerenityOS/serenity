@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Calendar::CalendarWidget",
+        "header": "Applications/Calendar/CalendarWidget.h",
+        "description": "Calendar's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Calendar::EventCalendar",
+        "header": "Applications/Calendar/EventCalendar.h",
+        "description": "Calendar that displays events",
+        "inherits": "GUI::Calendar"
+    },
+    {
+        "name": "Calendar::AddEventWidget",
+        "header": "Applications/Calendar/AddEventWidget.h",
+        "description": "Dialog widget for adding a new event",
+        "inherits": "GUI::Widget"
+    }
+]

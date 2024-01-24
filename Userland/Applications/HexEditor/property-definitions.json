@@ -1,0 +1,32 @@
+[
+    {
+        "name": "HexEditor::HexEditorWidget",
+        "header": "Applications/HexEditor/HexEditorWidget.h",
+        "description": "HexEditor's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "HexEditor::HexEditor",
+        "header": "Applications/HexEditor/HexEditor.h",
+        "description": "Hex editor",
+        "inherits": "GUI::AbstractScrollableWidget"
+    },
+    {
+        "name": "HexEditor::GoToOffsetWidget",
+        "header": "Applications/HexEditor/GoToOffsetWidget.h",
+        "description": "Widget for the Go To Offset dialog",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "HexEditor::FindWidget",
+        "header": "Applications/HexEditor/FindWidget.h",
+        "description": "Widget for the Find dialog",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "HexEditor::EditAnnotationWidget",
+        "header": "Applications/HexEditor/EditAnnotationWidget.h",
+        "description": "Widget for the Edit Annotation dialog",
+        "inherits": "GUI::Widget"
+    }
+]

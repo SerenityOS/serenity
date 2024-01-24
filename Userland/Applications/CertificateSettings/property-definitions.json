@@ -1,0 +1,8 @@
+[
+    {
+        "name": "CertificateSettings::CertificateStoreWidget",
+        "header": "Applications/CertificateSettings/CertificateStoreWidget.h",
+        "description": "Certificate store settings widget",
+        "inherits": "GUI::SettingsWindow::Tab"
+    }
+]

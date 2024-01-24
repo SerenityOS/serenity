@@ -1,0 +1,8 @@
+[
+    {
+        "name": "Cards::CardGame",
+        "header": "Libraries/LibCards/CardGame.h",
+        "description": "Base class of card game widgets",
+        "inherits": "GUI::Frame"
+    }
+]

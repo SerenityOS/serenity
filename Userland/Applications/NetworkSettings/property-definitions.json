@@ -1,0 +1,8 @@
+[
+    {
+        "name": "NetworkSettings::NetworkSettingsWidget",
+        "header": "Applications/NetworkSettings/NetworkSettingsWidget.h",
+        "description": "Network settings widget",
+        "inherits": "GUI::SettingsWindow::Tab"
+    }
+]

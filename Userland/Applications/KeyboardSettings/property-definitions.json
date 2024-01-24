@@ -1,0 +1,14 @@
+[
+    {
+        "name": "KeyboardSettings::KeyboardSettingsWidget",
+        "header": "Applications/KeyboardSettings/KeyboardSettingsWidget.h",
+        "description": "Keyboard settings widget",
+        "inherits": "GUI::SettingsWindow::Tab"
+    },
+    {
+        "name": "KeyboardSettings::KeymapDialog",
+        "header": "Applications/KeyboardSettings/KeymapDialog.h",
+        "description": "Dialog for selecting a key map",
+        "inherits": "GUI::Widget"
+    }
+]

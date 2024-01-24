@@ -1,0 +1,8 @@
+[
+    {
+        "name": "NotificationServer::NotificationWidget",
+        "header": "Services/NotificationServer/NotificationWidget.h",
+        "description": "NotificationServer's login widget",
+        "inherits": "GUI::Widget"
+    }
+]

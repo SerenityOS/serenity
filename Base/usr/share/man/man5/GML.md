@@ -25,6 +25,7 @@ Or right clicking on a folder in the TreeView and using
 
 -   [Using GML](help://man/5/GML/Usage)
 -   [GML syntax](help://man/5/GML/Syntax)
+-   [GML property definitions](help://man/5/GML/PropertyDefinitions)
 -   Extending GML
     -   [Define properties](help://man/5/GML/Define-property)
     -   [Define widgets](help://man/5/GML/Define-widget)

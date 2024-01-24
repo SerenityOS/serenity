@@ -1,0 +1,8 @@
+[
+    {
+        "name": "Calculator::CalculatorWidget",
+        "header": "Applications/Calculator/CalculatorWidget.h",
+        "description": "Calculator's main widget",
+        "inherits": "GUI::Widget"
+    }
+]

@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Snake
 )
 
-compile_gml(Snake.gml SnakeGML.cpp)
+compile_gml(Snake.gml SnakeGML.cpp PROPERTIES Userland/Libraries/LibCards)
 
 set(SOURCES
     Game.cpp

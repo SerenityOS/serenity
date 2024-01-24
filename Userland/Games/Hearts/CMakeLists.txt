@@ -5,7 +5,7 @@ serenity_component(
     TARGETS Hearts
 )
 
-compile_gml(Hearts.gml HeartsGML.cpp)
+compile_gml(Hearts.gml HeartsGML.cpp PROPERTIES Userland/Libraries/LibCards)
 
 set(SOURCES
     Game.cpp

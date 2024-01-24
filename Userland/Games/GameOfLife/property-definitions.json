@@ -1,0 +1,14 @@
+[
+    {
+        "name": "GameOfLife::MainWidget",
+        "header": "Games/GameOfLife/MainWidget.h",
+        "description": "GameOfLife's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GameOfLife::BoardWidget",
+        "header": "Games/GameOfLife/BoardWidget.h",
+        "description": "GameOfLife board",
+        "inherits": "GUI::Widget"
+    }
+]

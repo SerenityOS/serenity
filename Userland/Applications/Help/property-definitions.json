@@ -1,0 +1,8 @@
+[
+    {
+        "name": "Help::MainWidget",
+        "header": "Applications/Help/MainWidget.h",
+        "description": "Help's main widget",
+        "inherits": "GUI::Widget"
+    }
+]

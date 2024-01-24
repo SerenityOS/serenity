@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Hearts::MainWidget",
+        "header": "Games/Hearts/MainWidget.h",
+        "description": "Hearts' main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Hearts::Game",
+        "header": "Games/Hearts/Game.h",
+        "description": "Hearts' game widget",
+        "inherits": "Cards::CardGame"
+    }
+]

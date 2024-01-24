@@ -25,7 +25,7 @@
 
                 @GUI::Button {
                     name: "playback"
-                    icon_from_path: "/res/icons/16x16/play.png"
+                    icon: "/res/icons/16x16/play.png"
                     fixed_width: 24
                     button_style: "Coolbar"
                 }
@@ -41,7 +41,7 @@
 
                 @GUI::Button {
                     name: "sizing"
-                    icon_from_path: "/res/icons/16x16/fit-image-to-view.png"
+                    icon: "/res/icons/16x16/fit-image-to-view.png"
                     fixed_width: 24
                     button_style: "Coolbar"
                 }
@@ -59,7 +59,7 @@
 
                 @GUI::Button {
                     name: "fullscreen"
-                    icon_from_path: "/res/icons/16x16/fullscreen.png"
+                    icon: "/res/icons/16x16/fullscreen.png"
                     fixed_width: 24
                     button_style: "Coolbar"
                 }

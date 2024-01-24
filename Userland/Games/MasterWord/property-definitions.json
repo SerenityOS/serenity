@@ -1,0 +1,14 @@
+[
+    {
+        "name": "MasterWord::MainWidget",
+        "header": "Games/MasterWord/MainWidget.h",
+        "description": "MasterWord's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "MasterWord::WordGame",
+        "header": "Games/MasterWord/WordGame.h",
+        "description": "MasterWord' game widget",
+        "inherits": "GUI::Widget"
+    }
+]

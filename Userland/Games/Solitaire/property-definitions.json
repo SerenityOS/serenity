@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Solitaire::MainWidget",
+        "header": "Games/Solitaire/MainWidget.h",
+        "description": "Solitaire's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Solitaire::Game",
+        "header": "Games/Solitaire/Game.h",
+        "description": "Solitaire' game widget",
+        "inherits": "Cards::CardGame"
+    }
+]

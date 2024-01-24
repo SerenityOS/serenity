@@ -1,0 +1,8 @@
+[
+    {
+        "name": "Escalator::MainWidget",
+        "header": "Applications/Escalator/MainWidget.h",
+        "description": "Escalator's main widget",
+        "inherits": "GUI::Widget"
+    }
+]

@@ -19,7 +19,7 @@
 
         @GUI::ColorInput {
             name: "cards_background_color"
-            color_has_alpha_channel: false
+            has_alpha_channel: false
         }
     }
 

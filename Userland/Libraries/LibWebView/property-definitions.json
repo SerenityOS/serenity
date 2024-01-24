@@ -1,0 +1,19 @@
+[
+    {
+        "name": "WebView::OutOfProcessWebView",
+        "header": "LibWebView/OutOfProcessWebView.h",
+        "description": "Display a website within a widget, rendered out-of-process",
+        "inherits": "GUI::AbstractScrollableWidget",
+        "properties": [
+            {
+                "name": "content_scales_to_viewport",
+                "description": "Whether the content scales to the viewport",
+                "type": "bool"
+            },
+            {
+                "name": "system_visibility_state",
+                "type": "bool"
+            }
+        ]
+    }
+]

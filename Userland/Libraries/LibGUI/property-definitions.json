@@ -1,0 +1,1080 @@
+[
+    {
+        "name": "GUI::Object",
+        "header": "LibGUI/Object.h",
+        "description": "Base class for GUI objects",
+        "properties": [
+            {
+                "name": "name",
+                "description": "Unique name of the widget, used to quickly access the widget via code later",
+                "type": "ByteString"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Widget",
+        "header": "LibGUI/Widget.h",
+        "description": "Base of all UI elements",
+        "inherits": "GUI::Object",
+        "properties": [
+            {
+                "name": "x",
+                "description": "x offset relative to parent",
+                "type": "i64"
+            },
+            {
+                "name": "y",
+                "description": "y offset relative to parent",
+                "type": "i64"
+            },
+            {
+                "name": "visible",
+                "description": "Whether widget and children are drawn",
+                "type": "bool"
+            },
+            {
+                "name": "focused",
+                "description": "Whether widget should be tab-focused on start",
+                "type": "bool"
+            },
+            {
+                "name": "auto_focusable",
+                "description": "Whether widget can be tab-focused",
+                "type": "bool"
+            },
+            {
+                "name": "focus_policy",
+                "description": "How the widget can receive focus",
+                "type": "GUI::FocusPolicy"
+            },
+            {
+                "name": "enabled",
+                "description": "Whether this widget is enabled for interactive purposes, e.g. can be clicked",
+                "type": "bool"
+            },
+            {
+                "name": "updates_enabled",
+                "description": "Whether this widget updates when its content changes",
+                "type": "bool"
+            },
+            {
+                "name": "title",
+                "description": "Title of the widget, used in various containers like tabs and dynamic containers",
+                "type": "String"
+            },
+            {
+                "name": "tooltip",
+                "description": "Mouse tooltip to show when hovering over this widget",
+                "type": "String"
+            },
+            {
+                "name": "cursor",
+                "description": "Mouse tooltip to show when hovering over this widget",
+                "type": "Variant<Gfx::StandardCursor, Gfx::Bitmap>"
+            },
+            {
+                "name": "grabbable_margins",
+                "description": "Margins within the widget which are grabbable, if the widget can be resized by the user",
+                "type": "Array<GUI::UIDimension>",
+                "min_values": 1,
+                "max_values": 4
+            },
+            {
+                "name": "min_size",
+                "description": "Minimum size the widget wants to occupy",
+                "type": "Array<GUI::UIDimension>",
+                "min_values": 2,
+                "max_values": 2
+            },
+            {
+                "name": "max_size",
+                "description": "Maximum size the widget wants to occupy",
+                "type": "Array<GUI::UIDimension>",
+                "min_values": 2,
+                "max_values": 2
+            },
+            {
+                "name": "preferred_size",
+                "description": "Preferred size this widget wants to occupy, if not otherwise constrained (Shrink means min_size)",
+                "type": "Array<GUI::UIDimension>",
+                "min_values": 2,
+                "max_values": 2
+            },
+            {
+                "name": "width",
+                "description": "Width of the widget, independent of its layout size calculation",
+                "type": "i64"
+            },
+            {
+                "name": "height",
+                "description": "Height of the widget, independent of its layout size calculation",
+                "type": "i64"
+            },
+            {
+                "name": "min_width",
+                "description": "Minimum width this widget wants to occupy (Shrink is equivalent to 0)",
+                "type": "GUI::UIDimension"
+            },
+            {
+                "name": "min_height",
+                "description": "Minimum height this widget wants to occupy (Shrink is equivalent to 0)",
+                "type": "GUI::UIDimension"
+            },
+            {
+                "name": "max_width",
+                "description": "Maximum width this widget wants to occupy",
+                "type": "GUI::UIDimension"
+            },
+            {
+                "name": "max_height",
+                "description": "Maximum height this widget wants to occupy",
+                "type": "GUI::UIDimension"
+            },
+            {
+                "name": "preferred_width",
+                "description": "Preferred width this widget wants to occupy, if not otherwise constrained (Shrink means min_width)",
+                "type": "GUI::UIDimension"
+            },
+            {
+                "name": "preferred_height",
+                "description": "Preferred height this widget wants to occupy, if not otherwise constrained (Shrink means min_height)",
+                "type": "GUI::UIDimension"
+            },
+            {
+                "name": "fixed_width",
+                "description": "Both maximum and minimum width; widget is fixed-width",
+                "type": "i64"
+            },
+            {
+                "name": "fixed_height",
+                "description": "Both maximum and minimum height; widget is fixed-height",
+                "type": "i64"
+            },
+            {
+                "name": "fixed_size",
+                "description": "Both maximum and minimum size; widget is fixed-size",
+                "type": "Array<i64>",
+                "min_values": 2,
+                "max_values": 2
+            },
+            {
+                "name": "shrink_to_fit",
+                "description": "Whether the widget shrinks as much as possible while still respecting its children's minimum sizes",
+                "type": "bool"
+            },
+            {
+                "name": "font",
+                "description": "Font family",
+                "type": "String"
+            },
+            {
+                "name": "font_size",
+                "description": "Font size",
+                "type": "i64"
+            },
+            {
+                "name": "font_weight",
+                "description": "Font weight",
+                "type": "Gfx::FontWeight"
+            },
+            {
+                "name": "font_fixed_width",
+                "description": "Whether font is fixed width",
+                "type": "bool"
+            },
+            {
+                "name": "foreground_color",
+                "description": "Color of foreground elements such as text",
+                "type": "Gfx::Color"
+            },
+            {
+                "name": "foreground_role",
+                "description": "Palette color role (depends on system theme) for the foreground elements",
+                "type": "Gfx::ColorRole"
+            },
+            {
+                "name": "background_color",
+                "description": "Color of the widget background",
+                "type": "Gfx::Color"
+            },
+            {
+                "name": "background_role",
+                "description": "Palette color role (depends on system theme) for the widget background",
+                "type": "Gfx::ColorRole"
+            },
+            {
+                "name": "fill_with_background_color",
+                "description": "Whether to fill the widget's background with the background color",
+                "type": "bool"
+            },
+            {
+                "name": "relative_rect",
+                "description": "Rectangle for relatively positioning the widget to the parent",
+                "type": "Array<i64>",
+                "min_values": 4,
+                "max_values": 4
+            }
+        ]
+    },
+    {
+        "name": "GUI::Frame",
+        "header": "LibGUI/Frame.h",
+        "description": "Container widget with a framed border",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "frame_style",
+                "description": "Visual style of the frame's border",
+                "type": "Gfx::FrameStyle"
+            }
+        ]
+    },
+    {
+        "name": "GUI::GroupBox",
+        "header": "LibGUI/GroupBox.h",
+        "description": "Container widget with a titled border",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GUI::Breadcrumbbar",
+        "header": "LibGUI/Breadcrumbbar.h",
+        "description": "Bread crumb toolbar widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GUI::RadioButton",
+        "header": "LibGUI/RadioButton.h",
+        "description": "Radio button / check box",
+        "inherits": "GUI::AbstractButton"
+    },
+    {
+        "name": "GUI::Toolbar",
+        "header": "LibGUI/Toolbar.h",
+        "description": "Toolbar. When `collapsible` is set to `true`, the toolbar can be resized below the size of its items. Any items that do not fit the current size, will be placed in an overflow menu. To keep groups (i.e. Buttons/items separated by Separators) together, and move them to the overflow menu as one, set the `grouped` property.",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "collapsible",
+                "description": "If items that do not fit should be placed in an overflow menu",
+                "type": "bool"
+            },
+            {
+                "name": "grouped",
+                "description": "If items should be moved to the overflow menu in groups, separated by Separator items",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::ToolbarContainer",
+        "header": "LibGUI/ToolbarContainer.h",
+        "description": "Container for a tool bar",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GUI::AbstractScrollableWidget",
+        "header": "LibGUI/AbstractScrollableWidget.h",
+        "description": "Base class for scrollable widgets",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "scrollbars_enabled",
+                "getter": "is_scrollbars_enabled",
+                "description": "Whether scroll bars are visible",
+                "type": "bool"
+            },
+            {
+                "name": "should_hide_unnecessary_scrollbars",
+                "description": "Whether unnecessary scroll bars should be hidden, if the contained widget doesn't occupy more than the widget's area",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::AbstractView",
+        "header": "LibGUI/AbstractView.h",
+        "description": "Base class for widgets that use ModelViews to display some underlying dynamic content",
+        "inherits": "GUI::AbstractScrollableWidget",
+        "properties": [
+            {
+                "name": "activates_on_selection",
+                "description": "Whether the widget activates when an element is selected",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::AbstractTableView",
+        "header": "LibGUI/AbstractTableView.h",
+        "description": "Base class for table-like views",
+        "inherits": "GUI::AbstractView"
+    },
+    {
+        "name": "GUI::TableView",
+        "header": "LibGUI/TableView.h",
+        "description": "Display content in a table",
+        "inherits": "GUI::AbstractTableView",
+        "properties": [
+            {
+                "name": "grid_style",
+                "description": "Style of the table grid",
+                "type": "GUI::TableView::GridStyle"
+            },
+            {
+                "name": "highlight_key_column",
+                "getter": "is_key_column_highlighted",
+                "description": "Whether to highlight the current key column (the column the table is sorted by)",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::ListView",
+        "header": "LibGUI/ListView.h",
+        "description": "Display content in a list",
+        "inherits": "GUI::AbstractView",
+        "properties": [
+            {
+                "name": "alternating_row_colors",
+                "description": "Whether to use alternating row colors for the list",
+                "type": "bool"
+            },
+            {
+                "name": "hover_highlighting",
+                "description": "Whether to highlight elements on hover",
+                "type": "bool"
+            },
+            {
+                "name": "item_height",
+                "description": "Height of rows",
+                "type": "i64"
+            },
+            {
+                "name": "horizontal_padding",
+                "description": "Padding between columns",
+                "type": "i64"
+            },
+            {
+                "name": "vertical_padding",
+                "description": "Padding between rows",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::TreeView",
+        "header": "LibGUI/TreeView.h",
+        "description": "Container for displaying items in an interactive tree",
+        "inherits": "GUI::AbstractTableView"
+    },
+    {
+        "name": "GUI::IconView",
+        "header": "LibGUI/IconView.h",
+        "description": "Container for displaying items as icons in a grid",
+        "inherits": "GUI::AbstractView",
+        "properties": [
+            {
+                "name": "flow_direction",
+                "description": "Flow direction of the icons",
+                "type": "GUI::IconView::FlowDirection"
+            },
+            {
+                "name": "always_wrap_item_labels",
+                "description": "Whether to always wrap item labels instead of eliding them",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Statusbar",
+        "header": "LibGUI/Statusbar.h",
+        "description": "Status bar for displaying textual application status",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "text",
+                "description": "Status text",
+                "type": "String"
+            },
+            {
+                "name": "segment_count",
+                "description": "Number of segments within the status bar",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::TextEditor",
+        "header": "LibGUI/TextEditor.h",
+        "description": "Text input widget",
+        "inherits": "GUI::AbstractScrollableWidget",
+        "properties": [
+            {
+                "name": "placeholder",
+                "description": "Placeholder text that is displayed when the text editor is empty",
+                "type": "ByteString"
+            },
+            {
+                "name": "visualize_trailing_whitespace",
+                "description": "Whether to visualize trailing whitespace (usually) with red background",
+                "type": "bool"
+            },
+            {
+                "name": "visualize_leading_whitespace",
+                "description": "Whether to visualize leading whitespace",
+                "type": "bool"
+            },
+            {
+                "name": "automatic_indentation_enabled",
+                "description": "Whether to enable automatic indentation when the user inserts a new line",
+                "type": "bool"
+            },
+            {
+                "name": "soft_tab_width",
+                "description": "Soft tab width",
+                "type": "i64"
+            },
+            {
+                "name": "wrapping_mode",
+                "description": "What to do when the line length exceeds the visual area",
+                "type": "GUI::TextEditor::WrappingMode"
+            },
+            {
+                "name": "text_alignment",
+                "description": "Alignment of contained text",
+                "type": "Gfx::TextAlignment"
+            },
+            {
+                "name": "mode",
+                "description": "Whether text can be selected and/or edited",
+                "type": "GUI::TextEditor::Mode"
+            },
+            {
+                "name": "relative_line_number",
+                "description": "Whether to display line numbers relative to the current cursor position",
+                "type": "bool"
+            },
+            {
+                "name": "ruler_visible",
+                "description": "Whether to display the line number ruler",
+                "type": "bool"
+            },
+            {
+                "name": "icon",
+                "description": "Icon to display in front of the line of a single-line text editor",
+                "type": "Gfx::Bitmap"
+            },
+            {
+                "name": "text",
+                "description": "Content text",
+                "type": "ByteString"
+            }
+        ]
+    },
+    {
+        "name": "GUI::TextBox",
+        "header": "LibGUI/TextBox.h",
+        "description": "Single-line text input",
+        "inherits": "GUI::TextEditor",
+        "properties": [
+            {
+                "name": "history_enabled",
+                "description": "Whether the user can see a list of previous inputs into this text box",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::AbstractButton",
+        "header": "LibGUI/AbstractButton.h",
+        "description": "Base class of button-like (clickable) input widgets",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "text",
+                "description": "Label text of the widget",
+                "type": "String"
+            },
+            {
+                "name": "exclusive",
+                "getter": "is_exclusive",
+                "description": "Whether the button's check state is exclusive to its group; this only applies to checkable subclasses",
+                "type": "bool"
+            },
+            {
+                "name": "checkable",
+                "getter": "is_checkable",
+                "description": "Whether the button can be checked; this only applies to checkable subclasses",
+                "type": "bool"
+            },
+            {
+                "name": "checked",
+                "getter": "is_checked",
+                "description": "Whether the button is checked; this only applies to checkable subclasses",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::AbstractSlider",
+        "header": "LibGUI/AbstractSlider.h",
+        "description": "Base class of slider inputs",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "orientation",
+                "description": "Slider orientation",
+                "type": "Gfx::Orientation"
+            },
+            {
+                "name": "value",
+                "description": "Current value",
+                "type": "i64"
+            },
+            {
+                "name": "min",
+                "description": "Minimum value",
+                "type": "i64"
+            },
+            {
+                "name": "max",
+                "description": "Maximum value",
+                "type": "i64"
+            },
+            {
+                "name": "step",
+                "description": "Step size for scroll inputs",
+                "type": "i64"
+            },
+            {
+                "name": "page_step",
+                "description": "Step size when scrolling an entire page",
+                "type": "i64"
+            },
+            {
+                "name": "jump_to_cursor",
+                "description": "Whether to jump to the cursor when a click happens off the scroll knob",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Slider",
+        "header": "LibGUI/Slider.h",
+        "description": "Generic slider input",
+        "inherits": "GUI::AbstractSlider",
+        "properties": [
+            {
+                "name": "knob_size_mode",
+                "description": "Size mode of the knob",
+                "type": "GUI::Slider::KnobSizeMode"
+            }
+        ]
+    },
+    {
+        "name": "GUI::VerticalSlider",
+        "header": "LibGUI/Slider.h",
+        "description": "Vertical slider input",
+        "inherits": "GUI::Slider"
+    },
+    {
+        "name": "GUI::HorizontalSlider",
+        "header": "LibGUI/HorizontalSlider.h",
+        "description": "Horizontal slider input",
+        "inherits": "GUI::Slider"
+    },
+    {
+        "name": "GUI::OpacitySlider",
+        "header": "LibGUI/OpacitySlider.h",
+        "description": "Slider for changing an opacity",
+        "inherits": "GUI::AbstractSlider",
+        "properties": [
+            {
+                "name": "base_color",
+                "description": "Base (non-transparent) color of the slider",
+                "type": "Gfx::Color"
+            }
+        ]
+    },
+    {
+        "name": "GUI::VerticalOpacitySlider",
+        "header": "LibGUI/OpacitySlider.h",
+        "description": "Vertical opacity slider input",
+        "inherits": "GUI::OpacitySlider"
+    },
+    {
+        "name": "GUI::HorizontalOpacitySlider",
+        "header": "LibGUI/OpacitySlider.h",
+        "description": "Horizontal opacity slider input",
+        "inherits": "GUI::OpacitySlider"
+    },
+    {
+        "name": "GUI::Button",
+        "header": "LibGUI/Button.h",
+        "description": "Button",
+        "inherits": "GUI::AbstractButton",
+        "properties": [
+            {
+                "name": "button_style",
+                "description": "Style of the button",
+                "type": "Gfx::ButtonStyle"
+            },
+            {
+                "name": "icon",
+                "description": "Icon to display in front of the button text",
+                "type": "Gfx::Bitmap"
+            },
+            {
+                "name": "text_alignment",
+                "description": "Alignment of button text",
+                "type": "Gfx::TextAlignment"
+            },
+            {
+                "name": "default",
+                "getter": "is_default",
+                "description": "Whether this button is the default button to be activated when the user presses enter in a dialog",
+                "type": "bool"
+            },
+            {
+                "name": "icon_spacing",
+                "description": "Set the spacing between the icon and the text",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::DialogButton",
+        "header": "LibGUI/Button.h",
+        "description": "Button for use in dialog windows",
+        "inherits": "GUI::Button"
+    },
+    {
+        "name": "GUI::CheckBox",
+        "header": "LibGUI/CheckBox.h",
+        "description": "Checkbox",
+        "inherits": "GUI::AbstractButton",
+        "properties": [
+            {
+                "name": "autosize",
+                "getter": "is_autosize",
+                "description": "Whether the checkbox autosizes to fit the text",
+                "type": "bool"
+            },
+            {
+                "name": "checkbox_position",
+                "description": "Position of the checkbox relative to the text",
+                "type": "GUI::CheckBox::CheckBoxPosition"
+            }
+        ]
+    },
+    {
+        "name": "GUI::ImageWidget",
+        "header": "LibGUI/ImageWidget.h",
+        "description": "Displays an image",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "bitmap",
+                "description": "Image to display",
+                "type": "Gfx::Bitmap"
+            },
+            {
+                "name": "should_stretch",
+                "description": "Whether the image should be stretched to fill the widget",
+                "type": "bool"
+            },
+            {
+                "name": "auto_resize",
+                "description": "Whether the image should be automatically resized to fit in the widget",
+                "type": "bool"
+            },
+            {
+                "name": "opacity_percent",
+                "description": "Opacity of the image in percent",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Label",
+        "header": "LibGUI/Label.h",
+        "description": "Text label",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "text",
+                "description": "Label text",
+                "type": "String"
+            },
+            {
+                "name": "text_alignment",
+                "description": "Alignment of label text",
+                "type": "Gfx::TextAlignment"
+            },
+            {
+                "name": "text_wrapping",
+                "description": "Wrapping behavior of label text",
+                "type": "Gfx::TextWrapping"
+            },
+            {
+                "name": "autosize",
+                "getter": "is_autosize",
+                "description": "Whether label auto-sizes",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::LabelWithEventDispatcher",
+        "header": "LibGUI/LabelWithEventDispatcher.h",
+        "description": "Text label with callbacks for mouse events",
+        "inherits": "GUI::Label"
+    },
+    {
+        "name": "GUI::LinkLabel",
+        "header": "LibGUI/LinkLabel.h",
+        "description": "Label with a clickable hyperlink",
+        "inherits": "GUI::Label"
+    },
+    {
+        "name": "GUI::ComboBox",
+        "header": "LibGUI/ComboBox.h",
+        "description": "Text combo box with a dropdown and selection of possible inputs",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "text",
+                "description": "Combo box text",
+                "type": "ByteString"
+            },
+            {
+                "name": "editor_placeholder",
+                "description": "Placeholder in the combo box text editor when no text was input",
+                "type": "ByteString"
+            },
+            {
+                "name": "only_allow_values_from_model",
+                "description": "Whether only values from the model can be input into the combo box",
+                "type": "bool"
+            },
+            {
+                "name": "max_visible_items",
+                "description": "Maximum number of visible items in the combo box list",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::NumericInput",
+        "header": "LibGUI/NumericInput.h",
+        "description": "Number input field",
+        "inherits": "GUI::TextBox",
+        "properties": [
+            {
+                "name": "value",
+                "description": "Current value",
+                "type": "i64"
+            },
+            {
+                "name": "min",
+                "description": "Minimum value",
+                "type": "i64"
+            },
+            {
+                "name": "max",
+                "description": "Maximum value",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::SpinBox",
+        "header": "LibGUI/SpinBox.h",
+        "description": "Number input field with an up-down spinner",
+        "inherits": "GUI::NumericInput"
+    },
+    {
+        "name": "GUI::PasswordBox",
+        "header": "LibGUI/TextBox.h",
+        "description": "Text box for inputting passwords or other sensitive text",
+        "inherits": "GUI::TextBox",
+        "properties": [
+            {
+                "name": "show_reveal_button",
+                "getter": "is_showing_reveal_button",
+                "description": "Whether to show the reveal button that allows viewing the clear text",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Progressbar",
+        "header": "LibGUI/Progressbar.h",
+        "description": "Progress bar",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "text",
+                "description": "Label text",
+                "type": "ByteString"
+            },
+            {
+                "name": "orientation",
+                "description": "Orientation of the bar",
+                "type": "Gfx::Orientation"
+            },
+            {
+                "name": "format",
+                "description": "Display format of the bar",
+                "type": "GUI:Progressbar::Format"
+            },
+            {
+                "name": "value",
+                "description": "Current value",
+                "type": "i64"
+            },
+            {
+                "name": "min",
+                "description": "Minimum value",
+                "type": "i64"
+            },
+            {
+                "name": "max",
+                "description": "Maximum value",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::ColorInput",
+        "header": "LibGUI/ColorInput.h",
+        "description": "Widget for selecting a color",
+        "inherits": "GUI::TextEditor",
+        "properties": [
+            {
+                "name": "color",
+                "description": "Current color of the color picker",
+                "type": "Gfx::Color"
+            },
+            {
+                "name": "has_alpha_channel",
+                "setter": "set_color_has_alpha_channel",
+                "description": "Whether the color has a selectable alpha channel",
+                "type": "bool"
+            },
+            {
+                "name": "color_picker_title",
+                "description": "Title of the color picker",
+                "type": "ByteString"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Splitter",
+        "header": "LibGUI/Splitter.h",
+        "description": "Container widget whose contents will be split by a user-adjustable splitter bar",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "opportunistic_resizee",
+                "description": "Which of the two contained widgets will resize when the available space changes; the other one will keep its size if possible",
+                "type": "GUI::Splitter::OpportunisticResizee"
+            }
+        ]
+    },
+    {
+        "name": "GUI::HorizontalSplitter",
+        "header": "LibGUI/Splitter.h",
+        "description": "Horizontal splitter",
+        "inherits": "GUI::Splitter"
+    },
+    {
+        "name": "GUI::VerticalSplitter",
+        "header": "LibGUI/Splitter.h",
+        "description": "Vertical splitter",
+        "inherits": "GUI::Splitter"
+    },
+    {
+        "name": "GUI::SeparatorWidget",
+        "header": "LibGUI/SeparatorWidget.h",
+        "description": "Widget that inserts a visual separator line",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GUI::HorizontalSeparator",
+        "header": "LibGUI/SeparatorWidget.h",
+        "description": "Horizontal separator",
+        "inherits": "GUI::SeparatorWidget"
+    },
+    {
+        "name": "GUI::VerticalSeparator",
+        "header": "LibGUI/SeparatorWidget.h",
+        "description": "Vertical separator",
+        "inherits": "GUI::SeparatorWidget"
+    },
+    {
+        "name": "GUI::TabWidget",
+        "header": "LibGUI/TabWidget.h",
+        "description": "Widget with one tab per child, uses the child titles to label each tab",
+        "inherits": "GUI::Widget",
+        "properties": [
+            {
+                "name": "container_margins",
+                "description": "Margins for the tab content",
+                "type": "GUI::Margins"
+            },
+            {
+                "name": "reorder_allowed",
+                "description": "Allow changing the order of the tabs",
+                "type": "bool"
+            },
+            {
+                "name": "show_close_buttons",
+                "description": "Show a close button on each tab",
+                "getter": "close_button_enabled",
+                "setter": "set_close_button_enabled",
+                "type": "bool"
+            },
+            {
+                "name": "show_tab_bar",
+                "description": "Whether to display the tabs",
+                "getter": "is_bar_visible",
+                "setter": "set_bar_visible",
+                "type": "bool"
+            },
+            {
+                "name": "text_alignment",
+                "description": "Alignment of tab text",
+                "type": "Gfx::TextAlignment"
+            },
+            {
+                "name": "tab_position",
+                "description": "Give all tabs the same width",
+                "type": "Gfx::TabPosition"
+            },
+            {
+                "name": "uniform_tabs",
+                "description": "Give all tabs the same width",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::Calendar",
+        "header": "LibGUI/Calendar.h",
+        "description": "Displays a calendar",
+        "inherits": "GUI::AbstractScrollableWidget",
+        "properties": [
+            {
+                "name": "grid",
+                "getter": "has_grid",
+                "description": "Whether the calendar has a grid separating dates",
+                "type": "bool"
+            },
+            {
+                "name": "show_year",
+                "getter": "is_showing_year",
+                "description": "Whether the year is displayed",
+                "type": "bool"
+            },
+            {
+                "name": "show_month_and_year",
+                "getter": "is_showing_month_and_year",
+                "description": "Whether month and year are displayed",
+                "type": "bool"
+            },
+            {
+                "name": "show_days_of_the_week",
+                "getter": "is_showing_days_of_the_week",
+                "description": "Whether the days of the week are displayed",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::SettingsWindow::Tab",
+        "header": "LibGUI/SettingsWindow.h",
+        "description": "Tab of a settings window",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GUI::DynamicWidgetContainer",
+        "header": "LibGUI/DynamicWidgetContainer.h",
+        "description": "Defines a container widget that will group its child widgets together so that they can be collapsed, expanded or detached to a new window as one unit. If DynamicWidgetContainers are nested within one DynamicWidgetContainer it is possible to move the positions of the child containers dynamically",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "view_state",
+                "description": "Initial view state",
+                "type": "GUI::DynamicWidgetContainer::ViewState"
+            },
+            {
+                "name": "section_label",
+                "description": "The label that will be used for the section",
+                "type": "String"
+            },
+            {
+                "name": "config_domain",
+                "description": "Defines if the changes to the widget's view state should be persisted. It is required that the domain has been already pleged by the application",
+                "type": "String"
+            },
+            {
+                "name": "controls",
+                "description": "Defines if the buttons and label should be visible or not. This allows e.g. a parent container to hide its controls but provide rearrenage functionality",
+                "type": "bool"
+            },
+            {
+                "name": "with_individual_order",
+                "getter": "is_container_with_individual_order",
+                "description": "",
+                "type": "bool"
+            },
+            {
+                "name": "view_state",
+                "description": "",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "name": "GUI::DynamicWidgetContainerControls",
+        "header": "LibGUI/DynamicWidgetContainerControls.h",
+        "description": "Controls of a dynamic widget container",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "GUI::Layout",
+        "header": "LibGUI/Layout.h",
+        "description": "Base class of layout objects, not to be used directly",
+        "inherits": "GUI::Object",
+        "properties": [
+            {
+                "name": "margins",
+                "description": "Margins inside the container widget to the children",
+                "type": "GUI::Margins"
+            },
+            {
+                "name": "spacing",
+                "description": "Spacing between each inner widget",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "GUI::HorizontalBoxLayout",
+        "header": "LibGUI/BoxLayout.h",
+        "description": "Lays out elements horizontally within a container widget",
+        "inherits": "GUI::Layout"
+    },
+    {
+        "name": "GUI::VerticalBoxLayout",
+        "header": "LibGUI/BoxLayout.h",
+        "description": "Lays out elements vertically within a container widget",
+        "inherits": "GUI::Layout"
+    },
+    {
+        "name": "GUI::Layout::Spacer",
+        "header": "LibGUI/Layout.h",
+        "description": "Pseudo-widget that inserts empty space into the layout"
+    }
+]

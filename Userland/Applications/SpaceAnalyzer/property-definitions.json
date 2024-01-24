@@ -1,0 +1,14 @@
+[
+    {
+        "name": "SpaceAnalyzer::MainWidget",
+        "header": "Applications/SpaceAnalyzer/MainWidget.h",
+        "description": "SpaceAnalyzer's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "SpaceAnalyzer::TreeMapWidget",
+        "header": "Applications/SpaceAnalyzer/TreeMapWidget.h",
+        "description": "Tree map widget",
+        "inherits": "GUI::Frame"
+    }
+]

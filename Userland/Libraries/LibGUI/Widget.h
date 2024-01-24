@@ -71,7 +71,7 @@ enum class AllowCallback {
     Yes
 };
 
-auto initialize = [](auto& object) -> ErrorOr<void> {
+inline auto initialize = [](auto& object) -> ErrorOr<void> {
     if constexpr (requires { { object.initialize() } -> SameAs<ErrorOr<void>>; })
         return object.initialize();
     else

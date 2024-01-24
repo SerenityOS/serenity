@@ -1,0 +1,8 @@
+[
+    {
+        "name": "Run::MainWidget",
+        "header": "Applications/Run/MainWidget.h",
+        "description": "Run's main widget",
+        "inherits": "GUI::Widget"
+    }
+]

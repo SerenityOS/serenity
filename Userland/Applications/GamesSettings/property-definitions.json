@@ -1,0 +1,26 @@
+[
+    {
+        "name": "GamesSettings::CardSettingsWidget",
+        "header": "Applications/GamesSettings/CardSettingsWidget.h",
+        "description": "Card settings widget",
+        "inherits": "GUI::SettingsWindow::Tab"
+    },
+    {
+        "name": "GamesSettings::ChessSettingsWidget",
+        "header": "Applications/GamesSettings/ChessSettingsWidget.h",
+        "description": "Chess settings widget",
+        "inherits": "GUI::SettingsWindow::Tab"
+    },
+    {
+        "name": "GamesSettings::CardGamePreview",
+        "header": "Applications/GamesSettings/CardGamePreview.h",
+        "description": "Previews the style of card games",
+        "inherits": "GUI::Frame"
+    },
+    {
+        "name": "GamesSettings::ChessGamePreview",
+        "header": "Applications/GamesSettings/ChessGamePreview.h",
+        "description": "Previews the style of chess games",
+        "inherits": "GUI::Frame"
+    }
+]

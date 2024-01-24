@@ -1,0 +1,33 @@
+[
+    {
+        "name": "Maps::MapWidget",
+        "header": "Applications/Maps/MapWidget.h",
+        "description": "Widget displaying a geographical map",
+        "inherits": "GUI::Frame",
+        "properties": [
+            {
+                "name": "zoom",
+                "description": "Zoom level of the map",
+                "type": "i64"
+            }
+        ]
+    },
+    {
+        "name": "Maps::SearchPanel",
+        "header": "Applications/Maps/SearchPanel.h",
+        "description": "Side panel to search for points of interest on a map",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Maps::FavoritesPanel",
+        "header": "Applications/Maps/FavoritesPanel.h",
+        "description": "Side panel listing user favorites",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Maps::FavoritesEditDialog",
+        "header": "Applications/Maps/FavoritesEditDialog.h",
+        "description": "Dialog widget for editing favorites",
+        "inherits": "GUI::Widget"
+    }
+]

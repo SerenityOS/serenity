@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Minesweeper::MainWidget",
+        "header": "Games/Minesweeper/MainWidget.h",
+        "description": "Minesweeper's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Minesweeper::CustomGameWidget",
+        "header": "Games/Minesweeper/CustomGameWidget.h",
+        "description": "Minesweeper custom game dialog widget",
+        "inherits": "GUI::Widget"
+    }
+]

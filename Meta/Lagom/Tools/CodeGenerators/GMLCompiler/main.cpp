@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "PropertyDefinition.h"
 #include <AK/Forward.h>
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
@@ -22,95 +23,27 @@ enum class UseObjectConstructor : bool {
     Yes,
 };
 
-// Classes whose header doesn't have the same name as the class.
-static Optional<StringView> map_class_to_file(StringView class_)
+static ErrorOr<String> include_path_for(StringView widget_name, HashMap<String, WidgetProperties> const& property_definitions)
 {
-    static HashMap<StringView, StringView> class_file_mappings {
-        { "GUI::HorizontalSplitter"sv, "GUI/Splitter"sv },
-        { "GUI::VerticalSplitter"sv, "GUI/Splitter"sv },
-        { "GUI::HorizontalSeparator"sv, "GUI/SeparatorWidget"sv },
-        { "GUI::VerticalSeparator"sv, "GUI/SeparatorWidget"sv },
-        { "GUI::HorizontalBoxLayout"sv, "GUI/BoxLayout"sv },
-        { "GUI::VerticalBoxLayout"sv, "GUI/BoxLayout"sv },
-        { "GUI::HorizontalProgressbar"sv, "GUI/Progressbar"sv },
-        { "GUI::VerticalProgressbar"sv, "GUI/Progressbar"sv },
-        { "GUI::DialogButton"sv, "GUI/Button"sv },
-        { "GUI::PasswordBox"sv, "GUI/TextBox"sv },
-        { "GUI::HorizontalOpacitySlider"sv, "GUI/OpacitySlider"sv },
-        // Map Layout::Spacer to the Layout header even though it's a pseudo class.
-        { "GUI::Layout::Spacer"sv, "GUI/Layout"sv },
-    };
-    return class_file_mappings.get(class_);
-}
-
-// Properties which don't take a direct JSON-like primitive (StringView, int, bool, Array etc) as arguments and need the arguments to be wrapped in a constructor call.
-static Optional<StringView> map_property_to_type(StringView property)
-{
-    static HashMap<StringView, StringView> property_to_type_mappings {
-        { "container_margins"sv, "GUI::Margins"sv },
-        { "margins"sv, "GUI::Margins"sv },
-    };
-    return property_to_type_mappings.get(property);
-}
-
-// Properties which take a UIDimension which can handle JSON directly.
-static bool is_ui_dimension_property(StringView property)
-{
-    static HashTable<StringView> ui_dimension_properties;
-    if (ui_dimension_properties.is_empty()) {
-        ui_dimension_properties.set("min_width"sv);
-        ui_dimension_properties.set("max_width"sv);
-        ui_dimension_properties.set("preferred_width"sv);
-        ui_dimension_properties.set("min_height"sv);
-        ui_dimension_properties.set("max_height"sv);
-        ui_dimension_properties.set("preferred_height"sv);
+    auto const maybe_widget_properties = property_definitions.get(widget_name);
+    if (!maybe_widget_properties.has_value()) {
+        warnln("widget {} not found", widget_name);
+        return Error::from_string_view("Widget not found in property definitions"sv);
     }
-    return ui_dimension_properties.contains(property);
-}
-
-// FIXME: Since normal string-based properties take either String or StringView (and the latter can be implicitly constructed from the former),
-//        we need to special-case ByteString property setters while those still exist.
-//        Please remove a setter from this list once it uses StringView or String.
-static bool takes_byte_string(StringView property)
-{
-    static HashTable<StringView> byte_string_properties;
-    if (byte_string_properties.is_empty()) {
-        byte_string_properties.set("icon_from_path"sv);
-        byte_string_properties.set("name"sv);
-    }
-    return byte_string_properties.contains(property);
-}
-
-static ErrorOr<String> include_path_for(StringView class_name, LexicalPath const& gml_file_name)
-{
-    String pathed_name;
-    if (auto mapping = map_class_to_file(class_name); mapping.has_value())
-        pathed_name = TRY(String::from_utf8(mapping.value()));
-    else
-        pathed_name = TRY(TRY(String::from_utf8(class_name)).replace("::"sv, "/"sv, ReplaceMode::All));
-
-    if (class_name.starts_with("GUI::"sv) || class_name.starts_with("WebView::"sv))
-        return String::formatted("<Lib{}.h>", pathed_name);
-
-    // We assume that all other paths are within the current application, for now.
-    // To figure out what kind of userland program this is (application, service, ...) we consider the path to the original GML file.
-    auto const& paths = gml_file_name.parts_view();
-    auto path_iter = paths.find("Userland"sv);
-    path_iter++;
-    auto const userland_subdirectory = (path_iter == paths.end()) ? "Applications"_string : TRY(String::from_utf8(*path_iter));
-    return String::formatted("<{}/{}.h>", userland_subdirectory, pathed_name);
+    auto const& widget_properties = maybe_widget_properties.value();
+    return String::formatted("<{}>", widget_properties.header());
 }
 
 // Each entry is an include path, without the "#include" itself.
-static ErrorOr<HashTable<String>> extract_necessary_includes(GUI::GML::Object const& gml_hierarchy, LexicalPath const& gml_file_name)
+static ErrorOr<HashTable<String>> extract_necessary_includes(GUI::GML::Object const& gml_hierarchy, HashMap<String, WidgetProperties> const& property_definitions)
 {
     HashTable<String> necessary_includes;
-    TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.name(), gml_file_name))));
+    TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.name(), property_definitions))));
     if (gml_hierarchy.layout_object() != nullptr)
-        TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.layout_object()->name(), gml_file_name))));
+        TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.layout_object()->name(), property_definitions))));
 
     TRY(gml_hierarchy.try_for_each_child_object([&](auto const& object) -> ErrorOr<void> {
-        auto necessary_child_includes = TRY(extract_necessary_includes(object, gml_file_name));
+        auto necessary_child_includes = TRY(extract_necessary_includes(object, property_definitions));
         for (auto const& include : necessary_child_includes)
             TRY(necessary_includes.try_set(include));
         return {};
@@ -140,122 +73,9 @@ static char const footer[] = R"~~~(
 }
 )~~~";
 
-static ErrorOr<String> escape_string(JsonValue to_escape)
-{
-    auto string = TRY(String::from_byte_string(to_escape.as_string()));
-
-    // All C++ simple escape sequences; see https://en.cppreference.com/w/cpp/language/escape
-    // Other commonly-escaped characters are hard-to-type Unicode and therefore fine to include verbatim in UTF-8 coded strings.
-    static HashMap<StringView, StringView> escape_sequences = {
-        { "\\"sv, "\\\\"sv }, // This needs to be the first because otherwise the the backslashes of other items will be double escaped
-        { "\0"sv, "\\0"sv },
-        { "\'"sv, "\\'"sv },
-        { "\""sv, "\\\""sv },
-        { "\a"sv, "\\a"sv },
-        { "\b"sv, "\\b"sv },
-        { "\f"sv, "\\f"sv },
-        { "\n"sv, "\\n"sv },
-        { "\r"sv, "\\r"sv },
-        { "\t"sv, "\\t"sv },
-        { "\v"sv, "\\v"sv },
-    };
-
-    for (auto const& entries : escape_sequences)
-        string = TRY(string.replace(entries.key, entries.value, ReplaceMode::All));
-
-    return string;
-}
-
-// This function assumes that the string is already the same as its enum constant's name.
-// Therefore, it does not handle UI dimensions.
-static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView property_name, JsonValue value)
-{
-    // The value is the enum's type name.
-    static HashMap<StringView, StringView> enum_properties = {
-        { "background_role"sv, "Gfx::ColorRole"sv },
-        { "button_style"sv, "Gfx::ButtonStyle"sv },
-        { "checkbox_position"sv, "GUI::CheckBox::CheckBoxPosition"sv },
-        { "focus_policy"sv, "GUI::FocusPolicy"sv },
-        { "font_weight"sv, "Gfx::FontWeight"sv },
-        { "foreground_role"sv, "Gfx::ColorRole"sv },
-        { "frame_style"sv, "Gfx::FrameStyle"sv },
-        { "mode"sv, "GUI::TextEditor::Mode"sv },
-        { "opportunistic_resizee"sv, "GUI::Splitter::OpportunisticResizee"sv },
-        { "orientation"sv, "Gfx::Orientation"sv },
-        { "text_alignment"sv, "Gfx::TextAlignment"sv },
-        { "text_wrapping"sv, "Gfx::TextWrapping"sv },
-    };
-
-    auto const& enum_type_name = enum_properties.get(property_name);
-    if (!enum_type_name.has_value())
-        return Optional<String> {};
-
-    return String::formatted("{}::{}", *enum_type_name, value.as_string());
-}
-
-// FIXME: In case of error, propagate the precise array+property that triggered the error.
-static ErrorOr<String> generate_initializer_for(Optional<StringView> property_name, JsonValue value)
-{
-    if (value.is_string()) {
-        if (property_name.has_value()) {
-            if (takes_byte_string(*property_name))
-                return String::formatted(R"~~~("{}"sv)~~~", TRY(escape_string(value)));
-
-            if (auto const enum_value = TRY(generate_enum_initializer_for(*property_name, value)); enum_value.has_value())
-                return String::formatted("{}", *enum_value);
-
-            if (*property_name == "bitmap"sv)
-                return String::formatted(R"~~~(TRY(Gfx::Bitmap::load_from_file("{}"sv)))~~~", TRY(escape_string(value)));
-        }
-
-        return String::formatted(R"~~~("{}"_string)~~~", TRY(escape_string(value)));
-    }
-    if (value.is_bool())
-        return String::formatted("{}", value.as_bool());
-    if (value.is_number()) {
-        return value.as_number().visit(
-            // NOTE: Passing by mutable reference here in order to disallow implicit casts.
-            [](u64& value) { return String::formatted("static_cast<u64>({})", value); },
-            [](i64& value) { return String::formatted("static_cast<i64>({})", value); },
-            [](double& value) { return String::formatted("static_cast<double>({})", value); });
-    }
-    if (value.is_array()) {
-        auto const& array = value.as_array();
-        auto child_type = Optional<StringView> {};
-        for (auto const& child_value : array.values()) {
-            if (child_value.is_array())
-                return Error::from_string_view("Nested arrays are not supported"sv);
-
-#define HANDLE_TYPE(type_name, is_type)                                                             \
-    if (child_value.is_type() && (!child_type.has_value() || child_type.value() == #type_name##sv)) \
-        child_type = #type_name##sv;                                                                \
-    else
-
-            HANDLE_TYPE(StringView, is_string)
-            HANDLE_TYPE(i64, is_integer<i64>)
-            HANDLE_TYPE(u64, is_integer<u64>)
-            HANDLE_TYPE(bool, is_bool)
-            // FIXME: Do we want to allow precision loss when C++ compiler parses these doubles?
-            HANDLE_TYPE(double, is_number)
-            return Error::from_string_view("Inconsistent contained type in JSON array"sv);
-#undef HANDLE_TYPE
-        }
-        if (!child_type.has_value())
-            return Error::from_string_view("Empty JSON array; cannot deduce type."sv);
-
-        StringBuilder initializer;
-        initializer.appendff("Array<{}, {}> {{ "sv, child_type.release_value(), array.size());
-        for (auto const& child_value : array.values())
-            initializer.appendff("{}, ", TRY(generate_initializer_for({}, child_value)));
-        initializer.append("}"sv);
-        return initializer.to_string();
-    }
-    return Error::from_string_view("Unsupported JSON value"sv);
-}
-
 // Loads an object and assigns it to the RefPtr<Widget> variable named object_name.
 // All loading happens in a separate block.
-static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_object, SourceGenerator generator, String object_name, size_t indentation, UseObjectConstructor use_object_constructor)
+static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_object, SourceGenerator generator, String object_name, size_t indentation, UseObjectConstructor use_object_constructor, HashMap<String, WidgetProperties> const& property_definitions)
 {
     generator.set("object_name", object_name.to_byte_string());
     generator.set("class_name", gml_object.name());
@@ -274,24 +94,28 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         TRY(append(generator, "@object_name@ = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ::@class_name@()));"));
 
     // Properties
+    auto const maybe_widget_properties = property_definitions.get(gml_object.name());
+    if (!maybe_widget_properties.has_value())
+        return Error::from_string_view("Widget not found in property definitions"sv);
+    auto const& widget_properties = maybe_widget_properties.value();
     TRY(gml_object.try_for_each_property([&](StringView key, NonnullRefPtr<GUI::GML::JsonValueNode> value) -> ErrorOr<void> {
-        auto value_code = TRY(generate_initializer_for(key, value));
-        if (is_ui_dimension_property(key)) {
-            if (auto ui_dimension = GUI::UIDimension::construct_from_json_value(value); ui_dimension.has_value())
-                value_code = TRY(ui_dimension->as_cpp_source());
-            else
-                // FIXME: propagate precise error cause
-                return Error::from_string_view("UI dimension invalid"sv);
-        } else {
-            // Wrap value in an extra constructor call if necessary.
-            if (auto type = map_property_to_type(key); type.has_value())
-                value_code = TRY(String::formatted("{} {{ {} }}", type.release_value(), value_code));
+        auto const maybe_property_definition = widget_properties.properties().get(key);
+        if (!maybe_property_definition.has_value()) {
+            // These errors are common and hard to track down, so we *definitely* want some extra context here.
+            warnln("in object {}: undefined property {}", gml_object.name(), key);
+            return Error::from_string_view("Undefined property"sv);
+        }
+        auto const& property_definition = maybe_property_definition.value();
+        auto maybe_value_code = property_definition.type.generate_initializer_for(value);
+        if (maybe_value_code.is_error()) {
+            warnln("{}", maybe_value_code.error());
+            return Error::from_string_view("Invalid property value"sv);
         }
 
         auto property_generator = generator.fork();
-        property_generator.set("key", key);
-        property_generator.set("value", value_code.bytes_as_string_view());
-        TRY(append(property_generator, R"~~~(@object_name@->set_@key@(@value@);)~~~"));
+        property_generator.set("setter", property_definition.setter);
+        property_generator.set("value", maybe_value_code.release_value());
+        TRY(append(property_generator, R"~~~(@object_name@->@setter@(@value@);)~~~"));
         return {};
     }));
     generator.appendln("");
@@ -299,7 +123,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     // Layout
     if (gml_object.layout_object() != nullptr) {
         TRY(append(generator, "RefPtr<GUI::Layout> layout;"));
-        TRY(generate_loader_for_object(*gml_object.layout_object(), generator.fork(), TRY(String::from_utf8("layout"sv)), indentation + 1, UseObjectConstructor::Yes));
+        TRY(generate_loader_for_object(*gml_object.layout_object(), generator.fork(), TRY(String::from_utf8("layout"sv)), indentation + 1, UseObjectConstructor::Yes, property_definitions));
         TRY(append(generator, "@object_name@->set_layout(layout.release_nonnull());"));
         generator.appendln("");
     }
@@ -310,7 +134,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         return String::formatted("{}_child_{}", object_name, current_child_index++);
     };
     TRY(gml_object.try_for_each_child_object([&](auto const& child) -> ErrorOr<void> {
-        // Spacer is a pseudo-class that insteads causes a call to `Widget::add_spacer` on the parent object.
+        // Spacer is a pseudo-class that instead causes a call to `Widget::add_spacer` on the parent object.
         if (child.name() == "GUI::Layout::Spacer"sv) {
             TRY(append(generator, "@object_name@->add_spacer();"));
             return {};
@@ -321,7 +145,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         child_generator.set("child_variable_name", child_variable_name.bytes_as_string_view());
         child_generator.set("child_class_name", child.name());
         TRY(append(child_generator, "RefPtr<::@child_class_name@> @child_variable_name@;"));
-        TRY(generate_loader_for_object(child, child_generator.fork(), child_variable_name, indentation + 1, UseObjectConstructor::Yes));
+        TRY(generate_loader_for_object(child, child_generator.fork(), child_variable_name, indentation + 1, UseObjectConstructor::Yes, property_definitions));
 
         // Handle the current two special cases of child adding.
         if (gml_object.name() == "GUI::ScrollableContainerWidget"sv)
@@ -342,15 +166,15 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     return {};
 }
 
-static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, LexicalPath const& gml_file_name)
+static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, HashMap<String, WidgetProperties> const& property_definitions)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.append(header);
 
-    auto& main_class = gml->main_class();
-    auto necessary_includes = TRY(extract_necessary_includes(main_class, gml_file_name));
+    auto const& main_class = gml->main_class();
+    auto necessary_includes = TRY(extract_necessary_includes(main_class, property_definitions));
     static String const always_necessary_includes[] = {
         TRY(String::from_utf8("<AK/Error.h>"sv)),
         TRY(String::from_utf8("<AK/JsonValue.h>"sv)),
@@ -370,7 +194,7 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, Lexica
     // FIXME: Use a UTF-8 aware function once possible.
     generator.set("main_class_name", main_class.name());
     generator.append(function_start);
-    TRY(generate_loader_for_object(main_class, generator.fork(), "main_object"_string, 2, UseObjectConstructor::No));
+    TRY(generate_loader_for_object(main_class, generator.fork(), "main_object"_string, 2, UseObjectConstructor::No, property_definitions));
 
     generator.append(footer);
     return builder.to_string();
@@ -380,12 +204,47 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser argument_parser;
     StringView gml_file_name;
+    Vector<ByteString> property_files;
+    argument_parser.add_option(property_files, "Property definition files to use", "property-definition", 0, "PROPERTY_DEFINITION");
     argument_parser.add_positional_argument(gml_file_name, "GML file to compile", "GML_FILE", Core::ArgsParser::Required::Yes);
     argument_parser.parse(arguments);
 
+    JsonArray properties_json;
+    for (auto const& property_file : property_files) {
+        auto maybe_file = Core::File::open(property_file, Core::File::OpenMode::Read);
+        if (maybe_file.is_error()) {
+            warnln("Couldn't open property file {} ({}), skipping", property_file, maybe_file.error());
+            continue;
+        }
+        auto properties_text = TRY(TRY(maybe_file)->read_until_eof());
+        auto maybe_properties_json = JsonValue::from_string(properties_text);
+        if (maybe_properties_json.is_error()) {
+            warnln("property file {}: JSON error: {}", property_file, maybe_properties_json.release_error());
+            continue;
+        }
+        if (!maybe_properties_json.value().is_array()) {
+            warnln("property file {}: JSON error: does not contain a top-level array", property_file);
+            continue;
+        }
+        auto new_properties_json = maybe_properties_json.release_value().as_array();
+        for (auto const& value : new_properties_json.values()) {
+            TRY(properties_json.append(value));
+        }
+    }
+
+    auto maybe_new_properties = WidgetProperties::parse_properties(properties_json);
+    if (maybe_new_properties.is_error()) {
+        warnln("property definition error: {}", maybe_new_properties.release_error());
+        return 1;
+    }
+    auto properties = maybe_new_properties.release_value();
+    auto maybe_error = WidgetProperties::expand_inherited_properties(properties);
+    if (maybe_error.is_error())
+        warnln("property definition error: {}", maybe_error.release_error());
+
     auto gml_text = TRY(TRY(Core::File::open(gml_file_name, Core::File::OpenMode::Read))->read_until_eof());
     auto parsed_gml = TRY(GUI::GML::parse_gml(gml_text));
-    auto generated_cpp = TRY(generate_cpp(parsed_gml, LexicalPath { gml_file_name }));
+    auto generated_cpp = TRY(generate_cpp(parsed_gml, properties));
     outln("{}", generated_cpp);
     return 0;
 }

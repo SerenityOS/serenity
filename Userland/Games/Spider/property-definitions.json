@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Spider::MainWidget",
+        "header": "Games/Spider/MainWidget.h",
+        "description": "Spider's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Spider::Game",
+        "header": "Games/Spider/Game.h",
+        "description": "Spider' game widget",
+        "inherits": "Cards::CardGame"
+    }
+]

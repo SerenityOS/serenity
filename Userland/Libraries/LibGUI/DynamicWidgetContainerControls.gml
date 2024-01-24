@@ -12,7 +12,7 @@
         button_style: "Coolbar"
         preferred_width: "shrink"
         preferred_height: "shrink"
-        icon_from_path: "/res/icons/16x16/detach.png"
+        icon: "/res/icons/16x16/detach.png"
     }
 
     @GUI::Button {
@@ -20,7 +20,7 @@
         button_style: "Coolbar"
         preferred_width: "shrink"
         preferred_height: "shrink"
-        icon_from_path: "/res/icons/16x16/upward-triangle.png"
+        icon: "/res/icons/16x16/upward-triangle.png"
     }
 
     @GUI::Button {
@@ -28,6 +28,6 @@
         button_style: "Coolbar"
         preferred_width: "shrink"
         preferred_height: "shrink"
-        icon_from_path: "/res/icons/16x16/downward-triangle.png"
+        icon: "/res/icons/16x16/downward-triangle.png"
     }
 }

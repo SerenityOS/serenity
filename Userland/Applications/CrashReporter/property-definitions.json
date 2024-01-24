@@ -1,0 +1,8 @@
+[
+    {
+        "name": "CrashReporter::MainWidget",
+        "header": "Applications/CrashReporter/MainWidget.h",
+        "description": "CrashReporter's main widget",
+        "inherits": "GUI::Widget"
+    }
+]

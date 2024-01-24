@@ -1,0 +1,20 @@
+[
+    {
+        "name": "MouseSettings::HighlightWidget",
+        "header": "Applications/MouseSettings/HighlightWidget.h",
+        "description": "Mouse highlight settings tab",
+        "inherits": "GUI::SettingsWindow::Tab"
+    },
+    {
+        "name": "MouseSettings::ThemeWidget",
+        "header": "Applications/MouseSettings/ThemeWidget.h",
+        "description": "Mouse theme settings tab",
+        "inherits": "GUI::SettingsWindow::Tab"
+    },
+    {
+        "name": "MouseSettings::MouseWidget",
+        "header": "Applications/MouseSettings/MouseWidget.h",
+        "description": "Mouse main settings tab",
+        "inherits": "GUI::SettingsWindow::Tab"
+    }
+]

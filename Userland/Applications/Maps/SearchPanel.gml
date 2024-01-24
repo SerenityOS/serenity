@@ -21,7 +21,7 @@
 
         @GUI::Button {
             name: "search_button"
-            icon_from_path: "/res/icons/16x16/find.png"
+            icon: "/res/icons/16x16/find.png"
             fixed_width: 24
         }
     }

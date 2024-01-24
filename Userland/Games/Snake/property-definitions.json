@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Snake::MainWidget",
+        "header": "Games/Snake/MainWidget.h",
+        "description": "Snake's main widget",
+        "inherits": "GUI::Widget"
+    },
+    {
+        "name": "Snake::Game",
+        "header": "Games/Snake/Game.h",
+        "description": "Snake' game widget",
+        "inherits": "Cards::CardGame"
+    }
+]

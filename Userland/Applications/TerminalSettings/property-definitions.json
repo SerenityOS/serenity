@@ -1,0 +1,14 @@
+[
+    {
+        "name": "TerminalSettings::MainWidget",
+        "header": "Applications/TerminalSettings/MainWidget.h",
+        "description": "Terminal main settings tab",
+        "inherits": "GUI::SettingsWindow::Tab"
+    },
+    {
+        "name": "TerminalSettings::ViewWidget",
+        "header": "Applications/TerminalSettings/ViewWidget.h",
+        "description": "Terminal view settings tab",
+        "inherits": "GUI::SettingsWindow::Tab"
+    }
+]
