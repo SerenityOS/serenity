@@ -28,8 +28,12 @@ MessageEvent::MessageEvent(JS::Realm& realm, FlyString const& event_name, Messag
     , m_origin(event_init.origin)
     , m_last_event_id(event_init.last_event_id)
     , m_source(event_init.source)
-    , m_ports(event_init.ports)
 {
+    m_ports.ensure_capacity(event_init.ports.size());
+    for (auto& port : event_init.ports) {
+        VERIFY(port);
+        m_ports.unchecked_append(*port);
+    }
 }
 
 MessageEvent::~MessageEvent() = default;
@@ -44,6 +48,9 @@ void MessageEvent::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_data);
+    visitor.visit(m_ports_array);
+    for (auto& port : m_ports)
+        visitor.visit(port);
 }
 
 Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>, Empty> MessageEvent::source() const
