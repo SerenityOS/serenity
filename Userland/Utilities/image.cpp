@@ -60,6 +60,23 @@ static ErrorOr<void> do_strip_alpha(LoadedImage& image)
     return {};
 }
 
+static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& image, StringView convert_color_profile_path, OwnPtr<Core::MappedFile> maybe_source_icc_file)
+{
+    if (!image.icc_data.has_value())
+        return Error::from_string_view("No source color space embedded in image. Pass one with --assign-color-profile."sv);
+
+    auto source_icc_file = move(maybe_source_icc_file);
+    auto source_icc_data = image.icc_data.value();
+    auto icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
+    image.icc_data = icc_file->bytes();
+
+    auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
+    auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
+    TRY(destination_profile->convert_image(*image.bitmap, *source_profile));
+
+    return icc_file;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -121,19 +138,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         image.icc_data = icc_file->bytes();
     }
 
-    if (!convert_color_profile_path.is_empty()) {
-        if (!image.icc_data.has_value())
-            return Error::from_string_view("No source color space embedded in image. Pass one with --assign-color-profile."sv);
-
-        auto source_icc_file = move(icc_file);
-        auto source_icc_data = image.icc_data.value();
-        icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
-        image.icc_data = icc_file->bytes();
-
-        auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
-        auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
-        TRY(destination_profile->convert_image(*image.bitmap, *source_profile));
-    }
+    if (!convert_color_profile_path.is_empty())
+        icc_file = TRY(convert_image_profile(image, convert_color_profile_path, move(icc_file)));
 
     if (strip_color_profile)
         image.icc_data.clear();
