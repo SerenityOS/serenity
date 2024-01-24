@@ -15,6 +15,44 @@
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 
+static ErrorOr<void> do_move_alpha_to_rgb(RefPtr<Gfx::Bitmap> frame)
+{
+    switch (frame->format()) {
+    case Gfx::BitmapFormat::Invalid:
+        return Error::from_string_view("Can't --move-alpha-to-rgb with invalid bitmaps"sv);
+    case Gfx::BitmapFormat::RGBA8888:
+        // No image decoder currently produces bitmaps with this format.
+        // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
+        // If there's a good reason for not doing that, implement support for this, I suppose.
+        return Error::from_string_view("--move-alpha-to-rgb not implemented for RGBA8888"sv);
+    case Gfx::BitmapFormat::BGRA8888:
+    case Gfx::BitmapFormat::BGRx8888:
+        // FIXME: If BitmapFormat::Gray8 existed (and image encoders made use of it to write grayscale images), we could use it here.
+        for (auto& pixel : *frame) {
+            u8 alpha = pixel >> 24;
+            pixel = 0xff000000 | (alpha << 16) | (alpha << 8) | alpha;
+        }
+    }
+    return {};
+}
+
+static ErrorOr<void> do_strip_alpha(RefPtr<Gfx::Bitmap> frame)
+{
+    switch (frame->format()) {
+    case Gfx::BitmapFormat::Invalid:
+        return Error::from_string_view("Can't --strip-alpha with invalid bitmaps"sv);
+    case Gfx::BitmapFormat::RGBA8888:
+        // No image decoder currently produces bitmaps with this format.
+        // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
+        // If there's a good reason for not doing that, implement support for this, I suppose.
+        return Error::from_string_view("--strip-alpha not implemented for RGBA8888"sv);
+    case Gfx::BitmapFormat::BGRA8888:
+    case Gfx::BitmapFormat::BGRx8888:
+        frame->strip_alpha_channel();
+    }
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -64,39 +102,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto frame = TRY(decoder->frame(frame_index)).image;
 
-    if (move_alpha_to_rgb) {
-        switch (frame->format()) {
-        case Gfx::BitmapFormat::Invalid:
-            return Error::from_string_view("Can't --move-alpha-to-rgb with invalid bitmaps"sv);
-        case Gfx::BitmapFormat::RGBA8888:
-            // No image decoder currently produces bitmaps with this format.
-            // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
-            // If there's a good reason for not doing that, implement support for this, I suppose.
-            return Error::from_string_view("--move-alpha-to-rgb not implemented for RGBA8888"sv);
-        case Gfx::BitmapFormat::BGRA8888:
-        case Gfx::BitmapFormat::BGRx8888:
-            // FIXME: If BitmapFormat::Gray8 existed (and image encoders made use of it to write grayscale images), we could use it here.
-            for (auto& pixel : *frame) {
-                u8 alpha = pixel >> 24;
-                pixel = 0xff000000 | (alpha << 16) | (alpha << 8) | alpha;
-            }
-        }
-    }
+    if (move_alpha_to_rgb)
+        TRY(do_move_alpha_to_rgb(frame));
 
-    if (strip_alpha) {
-        switch (frame->format()) {
-        case Gfx::BitmapFormat::Invalid:
-            return Error::from_string_view("Can't --strip-alpha with invalid bitmaps"sv);
-        case Gfx::BitmapFormat::RGBA8888:
-            // No image decoder currently produces bitmaps with this format.
-            // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
-            // If there's a good reason for not doing that, implement support for this, I suppose.
-            return Error::from_string_view("--strip-alpha not implemented for RGBA8888"sv);
-        case Gfx::BitmapFormat::BGRA8888:
-        case Gfx::BitmapFormat::BGRx8888:
-            frame->strip_alpha_channel();
-        }
-    }
+    if (strip_alpha)
+        TRY(do_strip_alpha(frame));
 
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
 
