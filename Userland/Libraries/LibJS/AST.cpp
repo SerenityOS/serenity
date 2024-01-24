@@ -1373,7 +1373,7 @@ void CatchClause::dump(int indent) const
     print_indent(indent);
     m_parameter.visit(
         [&](DeprecatedFlyString const& parameter) {
-            if (parameter.is_null())
+            if (parameter.is_empty())
                 outln("CatchClause");
             else
                 outln("CatchClause ({})", parameter);
