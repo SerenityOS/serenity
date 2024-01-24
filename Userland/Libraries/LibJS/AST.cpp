@@ -1530,8 +1530,8 @@ void ExportStatement::dump(int indent) const
     print_indent(indent + 1);
     outln("(ExportEntries)");
 
-    auto string_or_null = [](ByteString const& string) -> ByteString {
-        if (string.is_empty()) {
+    auto string_or_null = [](Optional<DeprecatedFlyString> const& string) -> ByteString {
+        if (!string.has_value()) {
             return "null";
         }
         return ByteString::formatted("\"{}\"", string);
