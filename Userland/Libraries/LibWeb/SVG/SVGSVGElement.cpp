@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/SVG/AttributeNames.h>
+#include <LibWeb/SVG/SVGAnimatedRect.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::SVG {
@@ -29,6 +30,13 @@ void SVGSVGElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGSVGElementPrototype>(realm, "SVGSVGElement"_fly_string));
+    m_view_box_for_bindings = heap().allocate<SVGAnimatedRect>(realm, realm);
+}
+
+void SVGSVGElement::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_view_box_for_bindings);
 }
 
 JS::GCPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -67,8 +75,18 @@ void SVGSVGElement::attribute_changed(FlyString const& name, Optional<String> co
 {
     SVGGraphicsElement::attribute_changed(name, value);
 
-    if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
-        m_view_box = try_parse_view_box(value.value_or(String {}));
+    if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox)) {
+        if (!value.has_value()) {
+            m_view_box_for_bindings->set_nulled(true);
+        } else {
+            m_view_box = try_parse_view_box(value.value_or(String {}));
+            m_view_box_for_bindings->set_nulled(!m_view_box.has_value());
+            if (m_view_box.has_value()) {
+                m_view_box_for_bindings->set_base_val(Gfx::DoubleRect { m_view_box->min_x, m_view_box->min_y, m_view_box->width, m_view_box->height });
+                m_view_box_for_bindings->set_anim_val(Gfx::DoubleRect { m_view_box->min_x, m_view_box->min_y, m_view_box->width, m_view_box->height });
+            }
+        }
+    }
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::preserveAspectRatio))
         m_preserve_aspect_ratio = AttributeParser::parse_preserve_aspect_ratio(value.value_or(String {}));
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::width) || name.equals_ignoring_ascii_case(SVG::AttributeNames::height))
