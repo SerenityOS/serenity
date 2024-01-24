@@ -6,6 +6,7 @@
 
 #include <AK/Endian.h>
 #include <LibGfx/CIELAB.h>
+#include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
@@ -1655,6 +1656,31 @@ ErrorOr<void> Profile::convert_image(Gfx::Bitmap& bitmap, Profile const& source_
         auto pcs = TRY(source_profile.to_pcs(rgb));
         TRY(from_pcs(source_profile, pcs, rgb));
         pixel = Color(rgb[0], rgb[1], rgb[2], Color::from_argb(pixel).alpha()).value();
+    }
+
+    return {};
+}
+
+ErrorOr<void> Profile::convert_cmyk_image(Bitmap& out, CMYKBitmap const& in, Profile const& source_profile) const
+{
+    if (out.size() != in.size())
+        return Error::from_string_literal("ICC::Profile::convert_cmyk_image: out and in must have the same dimensions");
+
+    // Might fail if `out` has a scale_factor() != 1.
+    if (out.data_size() != in.data_size())
+        return Error::from_string_literal("ICC::Profile::convert_cmyk_image: out and in must have the same buffer size");
+
+    static_assert(sizeof(ARGB32) == sizeof(CMYK));
+    ARGB32* out_data = out.begin();
+    CMYK const* in_data = const_cast<CMYKBitmap&>(in).begin();
+
+    for (size_t i = 0; i < in.data_size() / sizeof(CMYK); ++i) {
+        u8 cmyk[] = { in_data[i].c, in_data[i].m, in_data[i].y, in_data[i].k };
+        auto pcs = TRY(source_profile.to_pcs(cmyk));
+
+        u8 rgb[3];
+        TRY(from_pcs(source_profile, pcs, rgb));
+        out_data[i] = Color(rgb[0], rgb[1], rgb[2]).value();
     }
 
     return {};

@@ -275,6 +275,7 @@ public:
     ErrorOr<CIELAB> to_lab(ReadonlyBytes) const;
 
     ErrorOr<void> convert_image(Bitmap&, Profile const& source_profile) const;
+    ErrorOr<void> convert_cmyk_image(Bitmap&, CMYKBitmap const&, Profile const& source_profile) const;
 
     // Only call these if you know that this is an RGB matrix-based profile.
     XYZ const& red_matrix_column() const;
