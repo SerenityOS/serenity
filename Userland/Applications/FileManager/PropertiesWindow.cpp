@@ -186,7 +186,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
     m_size_label = general_tab.find_descendant_of_type_named<GUI::Label>("size");
     m_size_label->set_text(S_ISDIR(st.st_mode)
             ? "Calculating..."_string
-            : TRY(String::from_byte_string(human_readable_size_long(st.st_size, UseThousandsSeparator::Yes))));
+            : human_readable_size_long(st.st_size, UseThousandsSeparator::Yes));
 
     auto* owner = general_tab.find_descendant_of_type_named<GUI::Label>("owner");
     owner->set_text(String::formatted("{} ({})", owner_name, st.st_uid).release_value_but_fixme_should_propagate_errors());
@@ -266,7 +266,7 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     tab.find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
     tab.find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_string);
     tab.find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
-    tab.find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_byte_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(human_readable_size(statistics.total_uncompressed_bytes()));
 
     return {};
 }

@@ -405,9 +405,9 @@ static bool print_filesystem_object(ByteString const& path, ByteString const& na
         printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
     } else {
         if (flag_human_readable) {
-            printf(" %10s ", human_readable_size(st.st_size).characters());
+            printf(" %10s ", human_readable_size(st.st_size).to_byte_string().characters());
         } else if (flag_human_readable_si) {
-            printf(" %10s ", human_readable_size(st.st_size, AK::HumanReadableBasedOn::Base10).characters());
+            printf(" %10s ", human_readable_size(st.st_size, AK::HumanReadableBasedOn::Base10).to_byte_string().characters());
         } else {
             printf(" %10" PRIu64 " ", (uint64_t)st.st_size);
         }
