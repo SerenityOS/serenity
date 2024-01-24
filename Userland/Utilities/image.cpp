@@ -93,10 +93,6 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
     if (!image.icc_data.has_value())
         return Error::from_string_view("No source color space embedded in image. Pass one with --assign-color-profile."sv);
 
-    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
-        return Error::from_string_view("Psych, can't convert CMYK bitmaps yet either"sv);
-    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
-
     auto source_icc_file = move(maybe_source_icc_file);
     auto source_icc_data = image.icc_data.value();
     auto icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
@@ -104,7 +100,25 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
 
     auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
     auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
-    TRY(destination_profile->convert_image(*frame, *source_profile));
+
+    if (destination_profile->data_color_space() != Gfx::ICC::ColorSpace::RGB)
+        return Error::from_string_view("Can only convert to RGB at the moment, but destination color space is not RGB"sv);
+
+    if (image.bitmap.has<RefPtr<Gfx::CMYKBitmap>>()) {
+        if (source_profile->data_color_space() != Gfx::ICC::ColorSpace::CMYK)
+            return Error::from_string_view("Source image data is CMYK but source color space is not CMYK"sv);
+
+        auto& cmyk_frame = image.bitmap.get<RefPtr<Gfx::CMYKBitmap>>();
+        auto rgb_frame = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, cmyk_frame->size()));
+        TRY(destination_profile->convert_cmyk_image(*rgb_frame, *cmyk_frame, *source_profile));
+        image.bitmap = RefPtr(move(rgb_frame));
+        image.internal_format = Gfx::NaturalFrameFormat::RGB;
+    } else {
+        // FIXME: This likely wrong for grayscale images because they've been converted to
+        //        RGB at this point, but their embedded color profile is still for grayscale.
+        auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+        TRY(destination_profile->convert_image(*frame, *source_profile));
+    }
 
     return icc_file;
 }
