@@ -5,10 +5,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteString.h>
 #include <AK/NumberFormat.h>
 #include <AK/NumericLimits.h>
-#include <AK/StringView.h>
 
 namespace AK {
 
@@ -75,7 +73,7 @@ ByteString human_readable_size_long(u64 size, UseThousandsSeparator use_thousand
     return ByteString::formatted("{} ({} bytes)", human_readable_size_string, size);
 }
 
-ByteString human_readable_time(i64 time_in_seconds)
+String human_readable_time(i64 time_in_seconds)
 {
     auto days = time_in_seconds / 86400;
     time_in_seconds = time_in_seconds % 86400;
@@ -99,10 +97,10 @@ ByteString human_readable_time(i64 time_in_seconds)
 
     builder.appendff("{} second{}", time_in_seconds, time_in_seconds == 1 ? "" : "s");
 
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
-ByteString human_readable_digital_time(i64 time_in_seconds)
+String human_readable_digital_time(i64 time_in_seconds)
 {
     auto hours = time_in_seconds / 3600;
     time_in_seconds = time_in_seconds % 3600;
@@ -117,7 +115,7 @@ ByteString human_readable_digital_time(i64 time_in_seconds)
     builder.appendff("{:02}:", minutes);
     builder.appendff("{:02}", time_in_seconds);
 
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
 }

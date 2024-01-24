@@ -285,7 +285,7 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
 
     tab.find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_byte_string(loader->format_name())));
     auto duration_seconds = loader->total_samples() / loader->sample_rate();
-    tab.find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(TRY(String::from_byte_string(human_readable_digital_time(duration_seconds))));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(human_readable_digital_time(duration_seconds));
     tab.find_descendant_of_type_named<GUI::Label>("audio_sample_rate")->set_text(TRY(String::formatted("{} Hz", loader->sample_rate())));
     tab.find_descendant_of_type_named<GUI::Label>("audio_format")->set_text(TRY(String::formatted("{}-bit", loader->bits_per_sample())));
 

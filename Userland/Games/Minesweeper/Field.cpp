@@ -138,7 +138,7 @@ void Field::initialize()
     m_timer = Core::Timer::create_repeating(
         1000, [this] {
             ++m_time_elapsed;
-            m_time_label.set_text(String::from_byte_string(human_readable_digital_time(m_time_elapsed)).release_value_but_fixme_should_propagate_errors());
+            m_time_label.set_text(human_readable_digital_time(m_time_elapsed));
         },
         this)
                   .release_value_but_fixme_should_propagate_errors();
