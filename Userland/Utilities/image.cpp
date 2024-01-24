@@ -20,6 +20,11 @@ struct LoadedImage {
     Optional<ReadonlyBytes> icc_data;
 };
 
+static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder, int frame_index)
+{
+    return LoadedImage { TRY(decoder->frame(frame_index)).image, TRY(decoder->icc_data()) };
+}
+
 static ErrorOr<void> do_move_alpha_to_rgb(LoadedImage& image)
 {
     auto frame = image.bitmap;
@@ -151,7 +156,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!decoder)
         return Error::from_string_view("Failed to decode input file"sv);
 
-    LoadedImage image = { TRY(decoder->frame(frame_index)).image, TRY(decoder->icc_data()) };
+    LoadedImage image = TRY(load_image(*decoder, frame_index));
 
     if (move_alpha_to_rgb)
         TRY(do_move_alpha_to_rgb(image));
