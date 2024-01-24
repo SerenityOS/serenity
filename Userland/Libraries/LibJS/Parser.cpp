@@ -783,7 +783,7 @@ void Parser::parse_module(Program& program)
                     found = true;
             }));
             for (auto& import : program.imports()) {
-                if (import->has_bound_name(exported_name)) {
+                if (import->has_bound_name(exported_name.value())) {
                     found = true;
                     break;
                 }
@@ -4624,7 +4624,7 @@ NonnullRefPtr<ImportStatement const> Parser::parse_import_statement(Program& pro
         if (match_imported_binding()) {
             auto namespace_position = position();
             auto namespace_name = consume().value();
-            entries_with_location.append({ ImportEntry({}, namespace_name, true), namespace_position });
+            entries_with_location.append({ ImportEntry({}, namespace_name), namespace_position });
         } else {
             syntax_error(ByteString::formatted("Unexpected token: {}", m_state.current_token.name()));
         }
@@ -4746,14 +4746,14 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
 
     RefPtr<ASTNode const> expression = {};
     bool is_default = false;
-    ModuleRequest from_specifier;
+    Optional<ModuleRequest> from_specifier;
 
     if (match_default()) {
         is_default = true;
         auto default_position = position();
         consume(TokenType::Default);
 
-        DeprecatedFlyString local_name;
+        Optional<DeprecatedFlyString> local_name;
 
         auto lookahead_token = next_token();
 
@@ -4856,11 +4856,10 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
             local_name = "!!invalid!!";
         }
 
-        if (local_name.is_null()) {
+        if (!local_name.has_value())
             local_name = ExportStatement::local_name_for_default;
-        }
 
-        entries_with_location.append({ ExportEntry::named_export(default_string_value, move(local_name)), default_position });
+        entries_with_location.append({ ExportEntry::named_export(default_string_value, local_name.release_value()), default_position });
     } else {
         enum class FromSpecifier {
             NotAllowed,
@@ -5001,7 +5000,7 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
 
     for (auto& entry : entries_with_location) {
         for (auto& export_statement : program.exports()) {
-            if (export_statement->has_export(entry.entry.export_name))
+            if (export_statement->has_export(entry.entry.export_name.value_or("")))
                 syntax_error(ByteString::formatted("Duplicate export with name: '{}'", entry.entry.export_name), entry.position);
         }
 

@@ -350,17 +350,16 @@ private:
 
 // ImportEntry Record, https://tc39.es/ecma262/#table-importentry-record-fields
 struct ImportEntry {
-    DeprecatedFlyString import_name; // [[ImportName]] if a String
-    DeprecatedFlyString local_name;  // [[LocalName]]
-    bool is_namespace { false };     // [[ImportName]] if `namespace-object`
+    Optional<DeprecatedFlyString> import_name; // [[ImportName]]: stored string if Optional is not empty, NAMESPACE-OBJECT otherwise
+    DeprecatedFlyString local_name;            // [[LocalName]]
 
-    ImportEntry(DeprecatedFlyString import_name_, DeprecatedFlyString local_name_, bool is_namespace_ = false)
+    ImportEntry(Optional<DeprecatedFlyString> import_name_, DeprecatedFlyString local_name_)
         : import_name(move(import_name_))
         , local_name(move(local_name_))
-        , is_namespace(is_namespace_)
     {
-        VERIFY(!is_namespace || import_name.is_null());
     }
+
+    bool is_namespace() const { return !import_name.has_value(); }
 
     ModuleRequest const& module_request() const
     {
@@ -370,7 +369,7 @@ struct ImportEntry {
 
 private:
     friend class ImportStatement;
-    ModuleRequest* m_module_request; // [[ModuleRequest]]
+    ModuleRequest* m_module_request = nullptr; // [[ModuleRequest]]
 };
 
 class ImportStatement final : public Statement {
@@ -410,10 +409,10 @@ struct ExportEntry {
         EmptyNamedExport,
     } kind;
 
-    DeprecatedFlyString export_name;          // [[ExportName]]
-    DeprecatedFlyString local_or_import_name; // Either [[ImportName]] or [[LocalName]]
+    Optional<DeprecatedFlyString> export_name;          // [[ExportName]]
+    Optional<DeprecatedFlyString> local_or_import_name; // Either [[ImportName]] or [[LocalName]]
 
-    ExportEntry(Kind export_kind, DeprecatedFlyString export_name_, DeprecatedFlyString local_or_import_name_)
+    ExportEntry(Kind export_kind, Optional<DeprecatedFlyString> export_name_, Optional<DeprecatedFlyString> local_or_import_name_)
         : kind(export_kind)
         , export_name(move(export_name_))
         , local_or_import_name(move(local_or_import_name_))
@@ -425,7 +424,7 @@ struct ExportEntry {
         return m_module_request != nullptr;
     }
 
-    static ExportEntry indirect_export_entry(ModuleRequest const& module_request, DeprecatedFlyString export_name, DeprecatedFlyString import_name)
+    static ExportEntry indirect_export_entry(ModuleRequest const& module_request, Optional<DeprecatedFlyString> export_name, Optional<DeprecatedFlyString> import_name)
     {
         ExportEntry entry { Kind::NamedExport, move(export_name), move(import_name) };
         entry.m_module_request = &module_request;
@@ -468,16 +467,16 @@ class ExportStatement final : public Statement {
 public:
     static DeprecatedFlyString local_name_for_default;
 
-    ExportStatement(SourceRange source_range, RefPtr<ASTNode const> statement, Vector<ExportEntry> entries, bool is_default_export, ModuleRequest module_request)
+    ExportStatement(SourceRange source_range, RefPtr<ASTNode const> statement, Vector<ExportEntry> entries, bool is_default_export, Optional<ModuleRequest> module_request)
         : Statement(move(source_range))
         , m_statement(move(statement))
         , m_entries(move(entries))
         , m_is_default_export(is_default_export)
         , m_module_request(move(module_request))
     {
-        if (!m_module_request.module_specifier.is_null()) {
+        if (m_module_request.has_value()) {
             for (auto& entry : m_entries)
-                entry.m_module_request = &m_module_request;
+                entry.m_module_request = &m_module_request.value();
         }
     }
 
@@ -500,15 +499,14 @@ public:
 
     ModuleRequest const& module_request() const
     {
-        VERIFY(!m_module_request.module_specifier.is_null());
-        return m_module_request;
+        return m_module_request.value();
     }
 
 private:
     RefPtr<ASTNode const> m_statement;
     Vector<ExportEntry> m_entries;
     bool m_is_default_export { false };
-    ModuleRequest m_module_request;
+    Optional<ModuleRequest> m_module_request;
 };
 
 class Program final : public ScopeNode {
