@@ -69,7 +69,6 @@ public:
         : m_type(Type::String)
         , m_string(DeprecatedFlyString(string))
     {
-        VERIFY(!m_string.is_null());
     }
 
     PropertyKey(DeprecatedFlyString string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
@@ -77,7 +76,6 @@ public:
         , m_type(Type::String)
         , m_string(move(string))
     {
-        VERIFY(!m_string.is_null());
     }
 
     PropertyKey(NonnullGCPtr<Symbol> symbol)

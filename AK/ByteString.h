@@ -239,7 +239,7 @@ public:
         return StringImpl::the_empty_stringimpl();
     }
 
-    [[nodiscard]] StringImpl const* impl() const { return m_impl.ptr(); }
+    [[nodiscard]] NonnullRefPtr<StringImpl const> impl() const { return m_impl; }
 
     ByteString& operator=(ByteString&& other)
     {
@@ -325,12 +325,12 @@ private:
 
 template<>
 struct Traits<ByteString> : public DefaultTraits<ByteString> {
-    static unsigned hash(ByteString const& s) { return s.impl() ? s.impl()->hash() : 0; }
+    static unsigned hash(ByteString const& s) { return s.impl()->hash(); }
 };
 
 // FIXME: Rename this to indicate that it's about ASCII-only case insensitivity.
 struct CaseInsensitiveStringTraits : public Traits<ByteString> {
-    static unsigned hash(ByteString const& s) { return s.impl() ? s.impl()->case_insensitive_hash() : 0; }
+    static unsigned hash(ByteString const& s) { return s.impl()->case_insensitive_hash(); }
     static bool equals(ByteString const& a, ByteString const& b) { return a.equals_ignoring_ascii_case(b); }
 };
 

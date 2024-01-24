@@ -1261,7 +1261,6 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
 void ECMAScriptFunctionObject::set_name(DeprecatedFlyString const& name)
 {
-    VERIFY(!name.is_null());
     auto& vm = this->vm();
     m_name = name;
     m_name_string = PrimitiveString::create(vm, m_name);
