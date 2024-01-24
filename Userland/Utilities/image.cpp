@@ -87,25 +87,28 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
     auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
 
+    if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
+        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *image.bitmap, { .quality = jpeg_quality }));
+        return {};
+    }
+    if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
+        auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
+        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *image.bitmap, { .format = format }));
+        return {};
+    }
+
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::BMPWriter::encode(*image.bitmap, { .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::PNGWriter::encode(*image.bitmap, { .icc_data = image.icc_data }));
-    } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
-        auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *image.bitmap, { .format = format }));
-        return {};
-    } else if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *image.bitmap, { .quality = jpeg_quality }));
-        return {};
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*image.bitmap));
     } else {
         return Error::from_string_view("can only write .bmp, .png, .ppm, and .qoi"sv);
     }
-
     TRY(buffered_stream->write_until_depleted(bytes));
+
     return {};
 }
 
