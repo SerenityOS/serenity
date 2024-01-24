@@ -15,8 +15,14 @@
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 
-static ErrorOr<void> do_move_alpha_to_rgb(RefPtr<Gfx::Bitmap> frame)
+struct LoadedImage {
+    RefPtr<Gfx::Bitmap> bitmap;
+    Optional<ReadonlyBytes> icc_data;
+};
+
+static ErrorOr<void> do_move_alpha_to_rgb(LoadedImage& image)
 {
+    auto frame = image.bitmap;
     switch (frame->format()) {
     case Gfx::BitmapFormat::Invalid:
         return Error::from_string_view("Can't --move-alpha-to-rgb with invalid bitmaps"sv);
@@ -36,8 +42,9 @@ static ErrorOr<void> do_move_alpha_to_rgb(RefPtr<Gfx::Bitmap> frame)
     return {};
 }
 
-static ErrorOr<void> do_strip_alpha(RefPtr<Gfx::Bitmap> frame)
+static ErrorOr<void> do_strip_alpha(LoadedImage& image)
 {
+    auto frame = image.bitmap;
     switch (frame->format()) {
     case Gfx::BitmapFormat::Invalid:
         return Error::from_string_view("Can't --strip-alpha with invalid bitmaps"sv);
@@ -100,38 +107,36 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!decoder)
         return Error::from_string_view("Failed to decode input file"sv);
 
-    auto frame = TRY(decoder->frame(frame_index)).image;
+    LoadedImage image = { TRY(decoder->frame(frame_index)).image, TRY(decoder->icc_data()) };
 
     if (move_alpha_to_rgb)
-        TRY(do_move_alpha_to_rgb(frame));
+        TRY(do_move_alpha_to_rgb(image));
 
     if (strip_alpha)
-        TRY(do_strip_alpha(frame));
-
-    Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
+        TRY(do_strip_alpha(image));
 
     OwnPtr<Core::MappedFile> icc_file;
     if (!assign_color_profile_path.is_empty()) {
         icc_file = TRY(Core::MappedFile::map(assign_color_profile_path));
-        icc_data = icc_file->bytes();
+        image.icc_data = icc_file->bytes();
     }
 
     if (!convert_color_profile_path.is_empty()) {
-        if (!icc_data.has_value())
+        if (!image.icc_data.has_value())
             return Error::from_string_view("No source color space embedded in image. Pass one with --assign-color-profile."sv);
 
         auto source_icc_file = move(icc_file);
-        auto source_icc_data = icc_data.value();
+        auto source_icc_data = image.icc_data.value();
         icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
-        icc_data = icc_file->bytes();
+        image.icc_data = icc_file->bytes();
 
         auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
         auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
-        TRY(destination_profile->convert_image(*frame, *source_profile));
+        TRY(destination_profile->convert_image(*image.bitmap, *source_profile));
     }
 
     if (strip_color_profile)
-        icc_data.clear();
+        image.icc_data.clear();
 
     if (no_output)
         return 0;
@@ -141,18 +146,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = icc_data }));
+        bytes = TRY(Gfx::BMPWriter::encode(*image.bitmap, { .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = icc_data }));
+        bytes = TRY(Gfx::PNGWriter::encode(*image.bitmap, { .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
+        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *image.bitmap, { .format = format }));
         return 0;
     } else if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .quality = quality }));
+        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *image.bitmap, { .quality = quality }));
         return 0;
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::QOIWriter::encode(*frame));
+        bytes = TRY(Gfx::QOIWriter::encode(*image.bitmap));
     } else {
         return Error::from_string_view("can only write .bmp, .png, .ppm, and .qoi"sv);
     }
