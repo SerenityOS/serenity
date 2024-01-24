@@ -15,19 +15,39 @@
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 
+using AnyBitmap = Variant<RefPtr<Gfx::Bitmap>, RefPtr<Gfx::CMYKBitmap>>;
 struct LoadedImage {
-    RefPtr<Gfx::Bitmap> bitmap;
+    Gfx::NaturalFrameFormat internal_format;
+    AnyBitmap bitmap;
+
     Optional<ReadonlyBytes> icc_data;
 };
 
 static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder, int frame_index)
 {
-    return LoadedImage { TRY(decoder->frame(frame_index)).image, TRY(decoder->icc_data()) };
+    auto internal_format = decoder->natural_frame_format();
+
+    auto bitmap = TRY([&]() -> ErrorOr<AnyBitmap> {
+        switch (internal_format) {
+        case Gfx::NaturalFrameFormat::RGB:
+        case Gfx::NaturalFrameFormat::Grayscale:
+        case Gfx::NaturalFrameFormat::Vector:
+            return TRY(decoder->frame(frame_index)).image;
+        case Gfx::NaturalFrameFormat::CMYK:
+            return RefPtr(TRY(decoder->cmyk_frame()));
+        }
+        VERIFY_NOT_REACHED();
+    }());
+
+    return LoadedImage { internal_format, move(bitmap), TRY(decoder->icc_data()) };
 }
 
 static ErrorOr<void> do_move_alpha_to_rgb(LoadedImage& image)
 {
-    auto frame = image.bitmap;
+    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
+        return Error::from_string_view("Can't --move-alpha-to-rgb with CMYK bitmaps"sv);
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+
     switch (frame->format()) {
     case Gfx::BitmapFormat::Invalid:
         return Error::from_string_view("Can't --move-alpha-to-rgb with invalid bitmaps"sv);
@@ -49,7 +69,10 @@ static ErrorOr<void> do_move_alpha_to_rgb(LoadedImage& image)
 
 static ErrorOr<void> do_strip_alpha(LoadedImage& image)
 {
-    auto frame = image.bitmap;
+    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
+        return Error::from_string_view("Can't --strip-alpha with CMYK bitmaps"sv);
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+
     switch (frame->format()) {
     case Gfx::BitmapFormat::Invalid:
         return Error::from_string_view("Can't --strip-alpha with invalid bitmaps"sv);
@@ -70,6 +93,10 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
     if (!image.icc_data.has_value())
         return Error::from_string_view("No source color space embedded in image. Pass one with --assign-color-profile."sv);
 
+    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
+        return Error::from_string_view("Psych, can't convert CMYK bitmaps yet either"sv);
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+
     auto source_icc_file = move(maybe_source_icc_file);
     auto source_icc_data = image.icc_data.value();
     auto icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
@@ -77,33 +104,37 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
 
     auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
     auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
-    TRY(destination_profile->convert_image(*image.bitmap, *source_profile));
+    TRY(destination_profile->convert_image(*frame, *source_profile));
 
     return icc_file;
 }
 
 static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality)
 {
+    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
+        return Error::from_string_view("Can't save CMYK bitmaps yet, convert to RGB first with --convert-to-color-profile"sv);
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
     auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
 
     if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *image.bitmap, { .quality = jpeg_quality }));
+        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .quality = jpeg_quality }));
         return {};
     }
     if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *image.bitmap, { .format = format }));
+        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
         return {};
     }
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::BMPWriter::encode(*image.bitmap, { .icc_data = image.icc_data }));
+        bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PNGWriter::encode(*image.bitmap, { .icc_data = image.icc_data }));
+        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::QOIWriter::encode(*image.bitmap));
+        bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
         return Error::from_string_view("can only write .bmp, .jpg, .png, .ppm, and .qoi"sv);
     }
