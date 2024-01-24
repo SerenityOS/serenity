@@ -2118,22 +2118,22 @@ private:
 
 class BreakStatement final : public Statement {
 public:
-    BreakStatement(SourceRange source_range, DeprecatedFlyString target_label)
+    BreakStatement(SourceRange source_range, Optional<DeprecatedFlyString> target_label)
         : Statement(move(source_range))
         , m_target_label(move(target_label))
     {
     }
 
-    DeprecatedFlyString const& target_label() const { return m_target_label; }
+    Optional<DeprecatedFlyString> const& target_label() const { return m_target_label; }
     virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
-    DeprecatedFlyString m_target_label;
+    Optional<DeprecatedFlyString> m_target_label;
 };
 
 class ContinueStatement final : public Statement {
 public:
-    ContinueStatement(SourceRange source_range, DeprecatedFlyString target_label)
+    ContinueStatement(SourceRange source_range, Optional<DeprecatedFlyString> target_label)
         : Statement(move(source_range))
         , m_target_label(move(target_label))
     {
@@ -2141,10 +2141,10 @@ public:
 
     virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
-    DeprecatedFlyString const& target_label() const { return m_target_label; }
+    Optional<DeprecatedFlyString> const& target_label() const { return m_target_label; }
 
 private:
-    DeprecatedFlyString m_target_label;
+    Optional<DeprecatedFlyString> m_target_label;
 };
 
 class DebuggerStatement final : public Statement {

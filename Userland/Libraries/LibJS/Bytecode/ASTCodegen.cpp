@@ -2199,12 +2199,12 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ContinueStatement::
     // FIXME: Handle finally blocks in a graceful manner
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
-    if (m_target_label.is_null()) {
+    if (!m_target_label.has_value()) {
         generator.generate_continue();
         return Optional<Bytecode::Operand> {};
     }
 
-    generator.generate_continue(m_target_label);
+    generator.generate_continue(m_target_label.value());
     return Optional<Bytecode::Operand> {};
 }
 
@@ -2415,12 +2415,12 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> BreakStatement::gen
     // FIXME: Handle finally blocks in a graceful manner
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
-    if (m_target_label.is_null()) {
+    if (!m_target_label.has_value()) {
         generator.generate_break();
         return Optional<Bytecode::Operand> {};
     }
 
-    generator.generate_break(m_target_label);
+    generator.generate_break(m_target_label.value());
     return Optional<Bytecode::Operand> {};
 }
 
