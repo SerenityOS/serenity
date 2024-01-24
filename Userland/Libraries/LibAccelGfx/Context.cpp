@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <LibAccelGfx/Context.h>
 
 #ifdef AK_OS_MACOS
@@ -61,7 +62,7 @@ private:
 #endif
 
 #ifdef AK_OS_MACOS
-static NonnullOwnPtr<CGLContextWrapper> make_context_cgl()
+static ErrorOr<NonnullOwnPtr<CGLContextWrapper>> make_context_cgl()
 {
     CGLContextObj context = NULL;
     CGLPixelFormatAttribute attributes[4] = {
@@ -75,17 +76,20 @@ static NonnullOwnPtr<CGLContextWrapper> make_context_cgl()
     GLint numPixelFormats = 0;
     CGLError error = CGLChoosePixelFormat(attributes, &pixelFormat, &numPixelFormats);
     if (error) {
-        VERIFY_NOT_REACHED();
+        auto const* cgl_error_string = CGLErrorString(error);
+        return Error::from_string_view(StringView { cgl_error_string, strlen(cgl_error_string) });
     }
 
     error = CGLCreateContext(pixelFormat, NULL, &context);
     if (error) {
-        VERIFY_NOT_REACHED();
+        auto const* cgl_error_string = CGLErrorString(error);
+        return Error::from_string_view(StringView { cgl_error_string, strlen(cgl_error_string) });
     }
 
     error = CGLSetCurrentContext(context);
     if (error) {
-        VERIFY_NOT_REACHED();
+        auto const* cgl_error_string = CGLErrorString(error);
+        return Error::from_string_view(StringView { cgl_error_string, strlen(cgl_error_string) });
     }
 
     VERIFY(glGetError() == GL_NO_ERROR);
@@ -93,7 +97,46 @@ static NonnullOwnPtr<CGLContextWrapper> make_context_cgl()
     return make<CGLContextWrapper>(context);
 }
 #elif !defined(AK_OS_SERENITY)
-static NonnullOwnPtr<EGLContextWrapper> make_context_egl()
+
+static StringView format_egl_error(EGLint error)
+{
+    switch (error) {
+    case EGL_SUCCESS:
+        return "EGL_SUCCESS"sv;
+    case EGL_NOT_INITIALIZED:
+        return "EGL_NOT_INITIALIZED"sv;
+    case EGL_BAD_ACCESS:
+        return "EGL_BAD_ACCESS"sv;
+    case EGL_BAD_ALLOC:
+        return "EGL_BAD_ALLOC"sv;
+    case EGL_BAD_ATTRIBUTE:
+        return "EGL_BAD_ATTRIBUTE"sv;
+    case EGL_BAD_CONTEXT:
+        return "EGL_BAD_CONTEXT"sv;
+    case EGL_BAD_CONFIG:
+        return "EGL_BAD_CONFIG"sv;
+    case EGL_BAD_CURRENT_SURFACE:
+        return "EGL_BAD_CURRENT_SURFACE"sv;
+    case EGL_BAD_DISPLAY:
+        return "EGL_BAD_DISPLAY"sv;
+    case EGL_BAD_SURFACE:
+        return "EGL_BAD_SURFACE"sv;
+    case EGL_BAD_MATCH:
+        return "EGL_BAD_MATCH"sv;
+    case EGL_BAD_PARAMETER:
+        return "EGL_BAD_PARAMETER"sv;
+    case EGL_BAD_NATIVE_PIXMAP:
+        return "EGL_BAD_NATIVE_PIXMAP"sv;
+    case EGL_BAD_NATIVE_WINDOW:
+        return "EGL_BAD_NATIVE_WINDOW"sv;
+    case EGL_CONTEXT_LOST:
+        return "EGL_CONTEXT_LOST"sv;
+    default:
+        return "Unknown error"sv;
+    }
+}
+
+static ErrorOr<NonnullOwnPtr<EGLContextWrapper>> make_context_egl()
 {
     EGLDisplay egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
@@ -128,21 +171,19 @@ static NonnullOwnPtr<EGLContextWrapper> make_context_egl()
     };
     EGLContext egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attributes);
     if (egl_context == EGL_FALSE) {
-        dbgln("eglCreateContext failed");
-        VERIFY_NOT_REACHED();
+        return Error::from_string_view(format_egl_error(eglGetError()));
     }
 
     EGLBoolean result = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
     if (result == EGL_FALSE) {
-        dbgln("eglMakeCurrent failed");
-        VERIFY_NOT_REACHED();
+        return Error::from_string_view(format_egl_error(eglGetError()));
     }
 
     return make<EGLContextWrapper>(egl_context);
 }
 #endif
 
-OwnPtr<Context> Context::create()
+ErrorOr<NonnullOwnPtr<Context>> Context::create()
 {
 #ifdef AK_OS_MACOS
     return make_context_cgl();

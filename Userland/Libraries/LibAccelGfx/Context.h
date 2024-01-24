@@ -20,7 +20,7 @@ namespace AccelGfx {
 
 class Context {
 public:
-    static OwnPtr<Context> create();
+    static ErrorOr<NonnullOwnPtr<Context>> create();
 
     Context()
     {
