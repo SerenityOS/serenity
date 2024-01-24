@@ -56,7 +56,7 @@ static void closing_statistics()
     warnln("{}+{} blocks out", statistics.total_blocks_out, statistics.partial_blocks_out);
     if (statistics.status != Noxfer) {
         auto elapsed_time = statistics.timer.elapsed_time();
-        ByteString copy_speed = "INF B/s";
+        String copy_speed = "INF B/s"_string;
         if (!elapsed_time.is_zero()) {
             auto speed = statistics.total_bytes_copied * 1000 / elapsed_time.to_milliseconds();
             copy_speed = human_readable_quantity(speed, AK::HumanReadableBasedOn::Base2, "B/s"sv);

@@ -11,7 +11,7 @@
 namespace AK {
 
 // FIXME: Remove this hackery once printf() supports floats.
-static ByteString number_string_with_one_decimal(u64 number, u64 unit, StringView suffix, UseThousandsSeparator use_thousands_separator)
+static String number_string_with_one_decimal(u64 number, u64 unit, StringView suffix, UseThousandsSeparator use_thousands_separator)
 {
     constexpr auto max_unit_size = NumericLimits<u64>::max() / 10;
     VERIFY(unit < max_unit_size);
@@ -19,25 +19,25 @@ static ByteString number_string_with_one_decimal(u64 number, u64 unit, StringVie
     auto integer_part = number / unit;
     auto decimal_part = (number % unit) * 10 / unit;
     if (use_thousands_separator == UseThousandsSeparator::Yes)
-        return ByteString::formatted("{:'d}.{} {}", integer_part, decimal_part, suffix);
+        return MUST(String::formatted("{:'d}.{} {}", integer_part, decimal_part, suffix));
 
-    return ByteString::formatted("{}.{} {}", integer_part, decimal_part, suffix);
+    return MUST(String::formatted("{}.{} {}", integer_part, decimal_part, suffix));
 }
 
-ByteString human_readable_quantity(u64 quantity, HumanReadableBasedOn based_on, StringView unit, UseThousandsSeparator use_thousands_separator)
+String human_readable_quantity(u64 quantity, HumanReadableBasedOn based_on, StringView unit, UseThousandsSeparator use_thousands_separator)
 {
     u64 size_of_unit = based_on == HumanReadableBasedOn::Base2 ? 1024 : 1000;
     constexpr auto unit_prefixes = AK::Array { "", "K", "M", "G", "T", "P", "E" };
     auto full_unit_suffix = [&](int index) {
         auto binary_infix = (based_on == HumanReadableBasedOn::Base2 && index != 0) ? "i"sv : ""sv;
-        return ByteString::formatted("{}{}{}",
-            unit_prefixes[index], binary_infix, unit);
+        return MUST(String::formatted("{}{}{}",
+            unit_prefixes[index], binary_infix, unit));
     };
 
     auto size_of_current_unit = size_of_unit;
 
     if (quantity < size_of_unit)
-        return ByteString::formatted("{} {}", quantity, full_unit_suffix(0));
+        return MUST(String::formatted("{} {}", quantity, full_unit_suffix(0)));
 
     for (size_t i = 1; i < unit_prefixes.size() - 1; i++) {
         auto suffix = full_unit_suffix(i);
@@ -52,25 +52,25 @@ ByteString human_readable_quantity(u64 quantity, HumanReadableBasedOn based_on, 
         size_of_current_unit, full_unit_suffix(unit_prefixes.size() - 1), use_thousands_separator);
 }
 
-ByteString human_readable_size(u64 size, HumanReadableBasedOn based_on, UseThousandsSeparator use_thousands_separator)
+String human_readable_size(u64 size, HumanReadableBasedOn based_on, UseThousandsSeparator use_thousands_separator)
 {
     return human_readable_quantity(size, based_on, "B"sv, use_thousands_separator);
 }
 
-ByteString human_readable_size_long(u64 size, UseThousandsSeparator use_thousands_separator)
+String human_readable_size_long(u64 size, UseThousandsSeparator use_thousands_separator)
 {
     if (size < 1 * KiB) {
         if (use_thousands_separator == UseThousandsSeparator::Yes)
-            return ByteString::formatted("{:'d} bytes", size);
+            return MUST(String::formatted("{:'d} bytes", size));
 
-        return ByteString::formatted("{} bytes", size);
+        return MUST(String::formatted("{} bytes", size));
     }
 
     auto human_readable_size_string = human_readable_size(size, HumanReadableBasedOn::Base2, use_thousands_separator);
     if (use_thousands_separator == UseThousandsSeparator::Yes)
-        return ByteString::formatted("{} ({:'d} bytes)", human_readable_size_string, size);
+        return MUST(String::formatted("{} ({:'d} bytes)", human_readable_size_string, size));
 
-    return ByteString::formatted("{} ({} bytes)", human_readable_size_string, size);
+    return MUST(String::formatted("{} ({} bytes)", human_readable_size_string, size));
 }
 
 String human_readable_time(i64 time_in_seconds)
