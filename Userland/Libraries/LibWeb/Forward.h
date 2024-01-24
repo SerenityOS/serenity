@@ -622,6 +622,7 @@ struct UnderlyingSource;
 
 namespace Web::SVG {
 class SVGAnimatedLength;
+class SVGAnimatedRect;
 class SVGCircleElement;
 class SVGClipPathElement;
 class SVGDefsElement;

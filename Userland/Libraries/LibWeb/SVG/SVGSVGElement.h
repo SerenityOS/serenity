@@ -30,10 +30,13 @@ public:
 
     void set_fallback_view_box_for_svg_as_image(Optional<ViewBox>);
 
+    JS::NonnullGCPtr<SVGAnimatedRect> view_box_for_bindings() { return *m_view_box_for_bindings; }
+
 private:
     SVGSVGElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Visitor&) override;
 
     virtual bool is_svg_svg_element() const override { return true; }
 
@@ -45,6 +48,8 @@ private:
     Optional<PreserveAspectRatio> m_preserve_aspect_ratio;
 
     Optional<ViewBox> m_fallback_view_box_for_svg_as_image;
+
+    JS::GCPtr<SVGAnimatedRect> m_view_box_for_bindings;
 };
 
 }

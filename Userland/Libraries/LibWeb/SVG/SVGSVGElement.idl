@@ -1,7 +1,10 @@
 #import <SVG/SVGGraphicsElement.idl>
+#import <SVG/SVGFitToViewBox.idl>
 
 // https://svgwg.org/svg2-draft/struct.html#InterfaceSVGSVGElement
 [Exposed=Window]
 interface SVGSVGElement : SVGGraphicsElement {
 
 };
+
+SVGSVGElement includes SVGFitToViewBox;
