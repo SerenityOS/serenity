@@ -506,7 +506,7 @@ static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
     return {};
 }
 
-static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, bool dump_failed_ref_tests)
+static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, StringView test_glob, bool dump_failed_ref_tests)
 {
     view.clear_content_filters();
 
@@ -516,6 +516,10 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
     TRY(collect_dump_tests(tests, TRY(String::formatted("{}/Layout", test_root_path)), "."sv, TestMode::Layout));
     TRY(collect_dump_tests(tests, TRY(String::formatted("{}/Text", test_root_path)), "."sv, TestMode::Text));
     TRY(collect_ref_tests(tests, TRY(String::formatted("{}/Ref", test_root_path))));
+
+    tests.remove_all_matching([&](auto const& test) {
+        return !test.input_path.bytes_as_string_view().matches(test_glob, CaseSensitivity::CaseSensitive);
+    });
 
     size_t pass_count = 0;
     size_t fail_count = 0;
@@ -593,6 +597,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_text = false;
     bool is_layout_test_mode = false;
     StringView test_root_path;
+    ByteString test_glob;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
@@ -600,6 +605,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.add_option(dump_text, "Dump text and exit", "dump-text", 'T');
     args_parser.add_option(test_root_path, "Run tests in path", "run-tests", 'R', "test-root-path");
+    args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     args_parser.add_option(dump_failed_ref_tests, "Dump screenshots of failing ref tests", "dump-failed-ref-tests", 'D');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
@@ -629,7 +635,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, MUST(command_line_builder.to_string()), web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No));
 
     if (!test_root_path.is_empty()) {
-        return run_tests(*view, test_root_path, dump_failed_ref_tests);
+        test_glob = ByteString::formatted("*{}*", test_glob);
+        return run_tests(*view, test_root_path, test_glob, dump_failed_ref_tests);
     }
 
     auto url = WebView::sanitize_url(raw_url);
