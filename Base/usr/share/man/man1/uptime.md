@@ -16,6 +16,7 @@ This information includes when the system came online and how long it has been u
 ## Options
 
 * `-p`, `--pretty`: Output only the uptime, in human-readable format.
+* `-s`, `--since`: Output only the datetime when the system came online.
 
 ## Examples
 
@@ -27,4 +28,9 @@ $ uptime
 ```sh
 $ uptime -p
 Up 2 minutes, 20 seconds
+```
+
+```sh
+$ uptime -s
+2024-01-24 06:23:27
 ```
