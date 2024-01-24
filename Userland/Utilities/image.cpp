@@ -54,31 +54,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     args_parser.parse(arguments);
 
-    if (out_path.is_empty() ^ no_output) {
-        warnln("exactly one of -o or --no-output is required");
-        return 1;
-    }
+    if (out_path.is_empty() ^ no_output)
+        return Error::from_string_view("exactly one of -o or --no-output is required"sv);
 
     auto file = TRY(Core::MappedFile::map(in_path));
     auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
-    if (!decoder) {
-        warnln("Failed to decode input file '{}'", in_path);
-        return 1;
-    }
+    if (!decoder)
+        return Error::from_string_view("Failed to decode input file"sv);
 
     auto frame = TRY(decoder->frame(frame_index)).image;
 
     if (move_alpha_to_rgb) {
         switch (frame->format()) {
         case Gfx::BitmapFormat::Invalid:
-            warnln("Can't --move-alpha-to-rgb with invalid bitmaps");
-            return 1;
+            return Error::from_string_view("Can't --move-alpha-to-rgb with invalid bitmaps"sv);
         case Gfx::BitmapFormat::RGBA8888:
             // No image decoder currently produces bitmaps with this format.
             // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
             // If there's a good reason for not doing that, implement support for this, I suppose.
-            warnln("--move-alpha-to-rgb not implemented for RGBA8888");
-            return 1;
+            return Error::from_string_view("--move-alpha-to-rgb not implemented for RGBA8888"sv);
         case Gfx::BitmapFormat::BGRA8888:
         case Gfx::BitmapFormat::BGRx8888:
             // FIXME: If BitmapFormat::Gray8 existed (and image encoders made use of it to write grayscale images), we could use it here.
@@ -92,14 +86,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (strip_alpha) {
         switch (frame->format()) {
         case Gfx::BitmapFormat::Invalid:
-            warnln("Can't --strip-alpha with invalid bitmaps");
-            return 1;
+            return Error::from_string_view("Can't --strip-alpha with invalid bitmaps"sv);
         case Gfx::BitmapFormat::RGBA8888:
             // No image decoder currently produces bitmaps with this format.
             // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
             // If there's a good reason for not doing that, implement support for this, I suppose.
-            warnln("--strip-alpha not implemented for RGBA8888");
-            return 1;
+            return Error::from_string_view("--strip-alpha not implemented for RGBA8888"sv);
         case Gfx::BitmapFormat::BGRA8888:
         case Gfx::BitmapFormat::BGRx8888:
             frame->strip_alpha_channel();
@@ -115,10 +107,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!convert_color_profile_path.is_empty()) {
-        if (!icc_data.has_value()) {
-            warnln("No source color space embedded in image. Pass one with --assign-color-profile.");
-            return 1;
-        }
+        if (!icc_data.has_value())
+            return Error::from_string_view("No source color space embedded in image. Pass one with --assign-color-profile."sv);
 
         auto source_icc_file = move(icc_file);
         auto source_icc_data = icc_data.value();
@@ -154,8 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
-        warnln("can only write .bmp, .png, .ppm, and .qoi");
-        return 1;
+        return Error::from_string_view("can only write .bmp, .png, .ppm, and .qoi"sv);
     }
 
     TRY(buffered_stream->write_until_depleted(bytes));
