@@ -3397,21 +3397,21 @@ NonnullRefPtr<BreakStatement const> Parser::parse_break_statement()
 {
     auto rule_start = push_start();
     consume(TokenType::Break);
-    DeprecatedFlyString target_label;
+    Optional<DeprecatedFlyString> target_label;
     if (match(TokenType::Semicolon)) {
         consume();
     } else {
         if (!m_state.current_token.trivia_contains_line_terminator() && match_identifier()) {
             target_label = consume().value();
 
-            auto label = m_state.labels_in_scope.find(target_label);
+            auto label = m_state.labels_in_scope.find(target_label.value());
             if (label == m_state.labels_in_scope.end())
-                syntax_error(ByteString::formatted("Label '{}' not found", target_label));
+                syntax_error(ByteString::formatted("Label '{}' not found", target_label.value()));
         }
         consume_or_insert_semicolon();
     }
 
-    if (target_label.is_null() && !m_state.in_break_context)
+    if (!target_label.has_value() && !m_state.in_break_context)
         syntax_error("Unlabeled 'break' not allowed outside of a loop or switch statement");
 
     return create_ast_node<BreakStatement>({ m_source_code, rule_start.position(), position() }, target_label);
@@ -3424,7 +3424,7 @@ NonnullRefPtr<ContinueStatement const> Parser::parse_continue_statement()
         syntax_error("'continue' not allow outside of a loop");
 
     consume(TokenType::Continue);
-    DeprecatedFlyString target_label;
+    Optional<DeprecatedFlyString> target_label;
     if (match(TokenType::Semicolon)) {
         consume();
         return create_ast_node<ContinueStatement>({ m_source_code, rule_start.position(), position() }, target_label);
@@ -3433,9 +3433,9 @@ NonnullRefPtr<ContinueStatement const> Parser::parse_continue_statement()
         auto label_position = position();
         target_label = consume().value();
 
-        auto label = m_state.labels_in_scope.find(target_label);
+        auto label = m_state.labels_in_scope.find(target_label.value());
         if (label == m_state.labels_in_scope.end())
-            syntax_error(ByteString::formatted("Label '{}' not found or invalid", target_label));
+            syntax_error(ByteString::formatted("Label '{}' not found or invalid", target_label.value()));
         else
             label->value = label_position;
     }
