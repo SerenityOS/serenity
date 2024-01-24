@@ -32,6 +32,7 @@ public:
 
     [[nodiscard]] CMYK* begin();
     [[nodiscard]] CMYK* end();
+    [[nodiscard]] size_t data_size() const { return m_data.size(); }
 
     ErrorOr<RefPtr<Bitmap>> to_low_quality_rgb() const;
 
@@ -67,7 +68,7 @@ inline CMYK* CMYKBitmap::begin()
 
 inline CMYK* CMYKBitmap::end()
 {
-    return reinterpret_cast<CMYK*>(m_data.data() + m_data.size());
+    return reinterpret_cast<CMYK*>(m_data.data() + data_size());
 }
 
 }

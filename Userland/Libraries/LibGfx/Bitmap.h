@@ -142,6 +142,7 @@ public:
 
     [[nodiscard]] ARGB32* begin();
     [[nodiscard]] ARGB32* end();
+    [[nodiscard]] size_t data_size() const;
 
     [[nodiscard]] IntRect rect() const { return { {}, m_size }; }
     [[nodiscard]] IntSize size() const { return m_size; }
@@ -282,7 +283,12 @@ ALWAYS_INLINE ARGB32* Bitmap::begin()
 
 ALWAYS_INLINE ARGB32* Bitmap::end()
 {
-    return reinterpret_cast<ARGB32*>(reinterpret_cast<u8*>(m_data) + (m_size.height() * m_pitch));
+    return reinterpret_cast<ARGB32*>(reinterpret_cast<u8*>(m_data) + data_size());
+}
+
+ALWAYS_INLINE size_t Bitmap::data_size() const
+{
+    return m_size.height() * m_pitch;
 }
 
 template<>
