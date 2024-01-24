@@ -611,7 +611,7 @@ inline ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value supe
     auto* class_environment = vm.lexical_environment();
     vm.running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
 
-    DeprecatedFlyString binding_name;
+    Optional<DeprecatedFlyString> binding_name;
     DeprecatedFlyString class_name;
     if (!class_expression.has_name() && lhs_name.has_value()) {
         class_name = interpreter.current_executable().get_identifier(lhs_name.value());

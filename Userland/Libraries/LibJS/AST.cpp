@@ -293,7 +293,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     return ClassValue { normal_completion(body_function) };
 }
 
-ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_constructor(VM& vm, Environment* class_environment, Environment* environment, Value super_class, DeprecatedFlyString const& binding_name, DeprecatedFlyString const& class_name) const
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_constructor(VM& vm, Environment* class_environment, Environment* environment, Value super_class, Optional<DeprecatedFlyString> const& binding_name, DeprecatedFlyString const& class_name) const
 {
     auto& realm = *vm.current_realm();
 
@@ -421,8 +421,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
     vm.running_execution_context().lexical_environment = environment;
     restore_environment.disarm();
 
-    if (!binding_name.is_null())
-        MUST(class_environment->initialize_binding(vm, binding_name, class_constructor, Environment::InitializeBindingHint::Normal));
+    if (binding_name.has_value())
+        MUST(class_environment->initialize_binding(vm, binding_name.value(), class_constructor, Environment::InitializeBindingHint::Normal));
 
     for (auto& field : instance_fields)
         class_constructor->add_field(field);
@@ -451,7 +451,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
     return { class_constructor };
 }
 
-ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(VM& vm, DeprecatedFlyString const& binding_name, DeprecatedFlyString const& class_name) const
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(VM& vm, Optional<DeprecatedFlyString> const& binding_name, DeprecatedFlyString const& class_name) const
 {
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
@@ -459,8 +459,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     Value super_class;
 
-    if (!binding_name.is_null())
-        MUST(class_environment->create_immutable_binding(vm, binding_name, true));
+    if (binding_name.has_value())
+        MUST(class_environment->create_immutable_binding(vm, binding_name.value(), true));
 
     if (!m_super_class.is_null()) {
         vm.running_execution_context().lexical_environment = class_environment;

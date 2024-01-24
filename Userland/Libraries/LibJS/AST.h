@@ -1418,8 +1418,8 @@ public:
 
     bool has_name() const { return m_name; }
 
-    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(VM&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
-    ThrowCompletionOr<ECMAScriptFunctionObject*> create_class_constructor(VM&, Environment* class_environment, Environment* environment, Value super_class, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
+    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(VM&, Optional<DeprecatedFlyString> const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
+    ThrowCompletionOr<ECMAScriptFunctionObject*> create_class_constructor(VM&, Environment* class_environment, Environment* environment, Value super_class, Optional<DeprecatedFlyString> const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
 
 private:
     virtual bool is_class_expression() const override { return true; }
