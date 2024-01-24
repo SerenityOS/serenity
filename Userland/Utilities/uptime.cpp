@@ -18,9 +18,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     bool pretty_output = false;
+    bool output_since = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(pretty_output, "Output only the uptime, in human-readable format", "pretty", 'p');
+    args_parser.add_option(output_since, "Show when the system is up since, in yyyy-mm-dd HH:MM:SS format", "since", 's');
     args_parser.parse(arguments);
 
     auto file = TRY(Core::File::open("/sys/kernel/uptime"sv, Core::File::OpenMode::Read));
@@ -34,7 +36,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Error::from_string_literal("Couldn't convert to number");
     auto seconds = maybe_seconds.release_value();
 
-    if (pretty_output) {
+    if (output_since) {
+        auto since_timestamp = Core::DateTime::now().timestamp() - seconds;
+        auto since_time = TRY(Core::DateTime::from_timestamp(since_timestamp).to_string());
+        outln("{}", since_time);
+    } else if (pretty_output) {
         outln("Up {}", human_readable_time(seconds));
     } else {
         auto current_time = TRY(Core::DateTime::now().to_string());
