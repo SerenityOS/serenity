@@ -29,7 +29,6 @@ public:
     virtual ~Button() override;
 
     void set_icon(RefPtr<Gfx::Bitmap const>);
-    void set_icon_from_path(ByteString const&);
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
 
     void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
