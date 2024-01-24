@@ -157,7 +157,7 @@ public:
         TODO();
     }
 
-    AccelGfxContext(OwnPtr<AccelGfx::Context> context, NonnullRefPtr<AccelGfx::Canvas> canvas)
+    AccelGfxContext(NonnullOwnPtr<AccelGfx::Context> context, NonnullRefPtr<AccelGfx::Canvas> canvas)
         : m_context(move(context))
         , m_canvas(move(canvas))
     {
@@ -169,7 +169,7 @@ public:
     }
 
 private:
-    OwnPtr<AccelGfx::Context> m_context;
+    NonnullOwnPtr<AccelGfx::Context> m_context;
     NonnullRefPtr<AccelGfx::Canvas> m_canvas;
 };
 #endif
@@ -301,9 +301,13 @@ private:
 static OwnPtr<AccelGfxContext> make_accelgfx_context(Gfx::Bitmap& bitmap)
 {
     auto context = AccelGfx::Context::create();
+    if (context.is_error()) {
+        dbgln("Failed to create AccelGfx context: {}", context.error().string_literal());
+        return {};
+    }
     auto canvas = AccelGfx::Canvas::create(bitmap.size());
     canvas->bind();
-    return make<AccelGfxContext>(move(context), move(canvas));
+    return make<AccelGfxContext>(context.release_value(), move(canvas));
 }
 #endif
 

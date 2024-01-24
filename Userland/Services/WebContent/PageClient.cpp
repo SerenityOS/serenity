@@ -72,7 +72,12 @@ PageClient::PageClient(PageHost& owner, u64 id)
 
 #ifdef HAS_ACCELERATED_GRAPHICS
     if (s_use_gpu_painter) {
-        m_accelerated_graphics_context = AccelGfx::Context::create();
+        auto context = AccelGfx::Context::create();
+        if (context.is_error()) {
+            dbgln("Failed to create AccelGfx context: {}", context.error());
+            VERIFY_NOT_REACHED();
+        }
+        m_accelerated_graphics_context = AccelGfx::Context::create().release_value();
     }
 #endif
 }
