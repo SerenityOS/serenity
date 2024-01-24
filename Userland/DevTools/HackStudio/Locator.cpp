@@ -201,17 +201,6 @@ void Locator::update_suggestions()
             suggestions.append((LocatorSuggestionModel::Suggestion::create_symbol_declaration(decl)));
     });
 
-    dbgln("I have {} suggestion(s):", suggestions.size());
-    // Limit the debug logging otherwise this can be very slow for large projects
-    if (suggestions.size() < 100) {
-        for (auto& s : suggestions) {
-            if (s.is_filename())
-                dbgln("    {}", s.as_filename.value());
-            if (s.is_symbol_declaration())
-                dbgln("    {} ({})", s.as_symbol_declaration.value().name, s.as_symbol_declaration.value().position.file);
-        }
-    }
-
     bool has_suggestions = !suggestions.is_empty();
 
     m_suggestion_view->set_model(adopt_ref(*new LocatorSuggestionModel(move(suggestions))));
@@ -222,7 +211,6 @@ void Locator::update_suggestions()
         m_suggestion_view->selection().set(m_suggestion_view->model()->index(0));
 
     m_popup_window->move_to(screen_relative_rect().top_left().translated(0, -m_popup_window->height()));
-    dbgln("Popup rect: {}", m_popup_window->rect());
     m_popup_window->show();
 }
 }
