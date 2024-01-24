@@ -13,7 +13,10 @@ namespace AK {
 
 class DeprecatedFlyString {
 public:
-    DeprecatedFlyString() = default;
+    DeprecatedFlyString()
+        : m_impl(StringImpl::the_empty_stringimpl())
+    {
+    }
     DeprecatedFlyString(DeprecatedFlyString const& other)
         : m_impl(other.impl())
     {
@@ -49,8 +52,7 @@ public:
         return *this;
     }
 
-    bool is_empty() const { return !m_impl || !m_impl->length(); }
-    bool is_null() const { return !m_impl; }
+    bool is_empty() const { return !m_impl->length(); }
 
     bool operator==(DeprecatedFlyString const& other) const { return m_impl == other.m_impl; }
 
@@ -60,12 +62,12 @@ public:
 
     bool operator==(char const*) const;
 
-    StringImpl const* impl() const { return m_impl; }
-    char const* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    size_t length() const { return m_impl ? m_impl->length() : 0; }
+    NonnullRefPtr<StringImpl const> impl() const { return m_impl; }
+    char const* characters() const { return m_impl->characters(); }
+    size_t length() const { return m_impl->length(); }
 
-    ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
-    ALWAYS_INLINE StringView view() const { return m_impl ? m_impl->view() : StringView {}; }
+    ALWAYS_INLINE u32 hash() const { return m_impl->existing_hash(); }
+    ALWAYS_INLINE StringView view() const { return m_impl->view(); }
 
     DeprecatedFlyString to_lowercase() const;
 
@@ -88,7 +90,7 @@ public:
     }
 
 private:
-    RefPtr<StringImpl const> m_impl;
+    NonnullRefPtr<StringImpl const> m_impl;
 };
 
 template<>

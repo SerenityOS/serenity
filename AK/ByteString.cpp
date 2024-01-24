@@ -338,7 +338,7 @@ ByteString escape_html_entities(StringView html)
 }
 
 ByteString::ByteString(DeprecatedFlyString const& string)
-    : m_impl(*(string.impl() ?: &StringImpl::the_empty_stringimpl()))
+    : m_impl(string.impl())
 {
 }
 

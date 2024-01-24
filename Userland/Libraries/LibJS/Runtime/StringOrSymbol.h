@@ -33,7 +33,6 @@ public:
     StringOrSymbol(DeprecatedFlyString const& string)
         : m_string(string)
     {
-        VERIFY(!string.is_null());
     }
 
     ~StringOrSymbol()

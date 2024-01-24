@@ -14,12 +14,10 @@
 
 namespace AK {
 
-struct DeprecatedFlyStringImplTraits : public Traits<StringImpl*> {
-    static unsigned hash(StringImpl const* s) { return s ? s->hash() : 0; }
+struct DeprecatedFlyStringImplTraits : public Traits<StringImpl const*> {
+    static unsigned hash(StringImpl const* s) { return s->hash(); }
     static bool equals(StringImpl const* a, StringImpl const* b)
     {
-        VERIFY(a);
-        VERIFY(b);
         return *a == *b;
     }
 };
@@ -37,23 +35,24 @@ void DeprecatedFlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
 }
 
 DeprecatedFlyString::DeprecatedFlyString(ByteString const& string)
+    : m_impl(string.impl())
 {
-    if (string.impl()->is_fly()) {
-        m_impl = string.impl();
+    if (string.impl()->is_fly())
         return;
-    }
-    auto it = fly_impls().find(const_cast<StringImpl*>(string.impl()));
+
+    auto it = fly_impls().find(string.impl());
     if (it == fly_impls().end()) {
-        fly_impls().set(const_cast<StringImpl*>(string.impl()));
+        fly_impls().set(string.impl());
         string.impl()->set_fly({}, true);
         m_impl = string.impl();
     } else {
         VERIFY((*it)->is_fly());
-        m_impl = *it;
+        m_impl = **it;
     }
 }
 
 DeprecatedFlyString::DeprecatedFlyString(StringView string)
+    : m_impl(StringImpl::the_empty_stringimpl())
 {
     if (string.is_null())
         return;
@@ -67,7 +66,7 @@ DeprecatedFlyString::DeprecatedFlyString(StringView string)
         m_impl = new_string.impl();
     } else {
         VERIFY((*it)->is_fly());
-        m_impl = *it;
+        m_impl = **it;
     }
 }
 
