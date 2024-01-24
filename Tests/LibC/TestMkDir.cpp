@@ -63,14 +63,12 @@ TEST_CASE(parent_is_file)
 
 TEST_CASE(pledge)
 {
-    int res = pledge("stdio cpath", nullptr);
+    int res = pledge("stdio proc cpath", nullptr);
     EXPECT(res == 0);
 
     auto dirname = random_dirname();
     res = mkdir(dirname.characters(), 0755);
     EXPECT(res == 0);
-    // FIXME: Somehow also check that mkdir() stops working when removing the cpath promise. This is currently
-    //        not possible because this would prevent the unveil test case from properly working.
 }
 
 TEST_CASE(unveil)
@@ -102,4 +100,16 @@ TEST_CASE(unveil)
 
     res = unveil(nullptr, nullptr);
     EXPECT(res == 0);
+}
+
+TEST_CASE(pledge_without_cpath)
+{
+    int res = pledge("stdio proc", nullptr);
+    EXPECT(res == 0);
+
+    auto dirname = random_dirname();
+    EXPECT_CRASH("Calling mkdir() without cpath pledge", [dirname] {
+        mkdir(dirname.characters(), 0755);
+        return Test::Crash::Failure::DidNotCrash;
+    });
 }
