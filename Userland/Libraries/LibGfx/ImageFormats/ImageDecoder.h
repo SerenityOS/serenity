@@ -117,7 +117,7 @@ public:
     NaturalFrameFormat natural_frame_format() { return m_plugin->natural_frame_format(); }
 
     // Call only if natural_frame_format() == NaturalFrameFormat::CMYK.
-    ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame(size_t) { return m_plugin->cmyk_frame(); }
+    ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() { return m_plugin->cmyk_frame(); }
 
     // Call only if natural_frame_format() == NaturalFrameFormat::Vector.
     ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t index) { return m_plugin->vector_frame(index); }
