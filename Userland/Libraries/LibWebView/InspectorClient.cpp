@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -523,11 +523,13 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
 
         if (auto attributes = node.get_object("attributes"sv); attributes.has_value()) {
             attributes->for_each_member([&](auto const& name, auto const& value) {
+                auto value_string = value.as_string();
+
                 builder.append("&nbsp;"sv);
-                builder.appendff("<span data-node-type=\"attribute\"  data-tag=\"{}\" data-attribute-name=\"{}\" data-attribute-value=\"{}\" class=\"editable\">", tag, name, value);
+                builder.appendff("<span data-node-type=\"attribute\" data-tag=\"{}\" data-attribute-name=\"{}\" data-attribute-value=\"{}\" class=\"editable\">", tag, name, value_string);
                 builder.appendff("<span class=\"attribute-name\">{}</span>", name);
                 builder.append('=');
-                builder.appendff("<span class=\"attribute-value\">\"{}\"</span>", value);
+                builder.appendff("<span class=\"attribute-value\">\"{}\"</span>", value_string);
                 builder.append("</span>"sv);
             });
         }
