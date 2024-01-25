@@ -669,6 +669,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_box_shadow(computed_style.box_shadow(*this));
 
     computed_values.set_transformations(computed_style.transformations());
+    if (auto transform_box = computed_style.transform_box(); transform_box.has_value())
+        computed_values.set_transform_box(transform_box.value());
     computed_values.set_transform_origin(computed_style.transform_origin());
 
     auto transition_delay_property = computed_style.property(CSS::PropertyID::TransitionDelay);

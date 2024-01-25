@@ -119,6 +119,7 @@ public:
 
     static Vector<CSS::Transformation> transformations_for_style_value(StyleValue const& value);
     Vector<CSS::Transformation> transformations() const;
+    Optional<CSS::TransformBox> transform_box() const;
     CSS::TransformOrigin transform_origin() const;
 
     Optional<CSS::MaskType> mask_type() const;

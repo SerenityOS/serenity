@@ -493,6 +493,12 @@ static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue c
     return {};
 }
 
+Optional<CSS::TransformBox> StyleProperties::transform_box() const
+{
+    auto value = property(CSS::PropertyID::TransformBox);
+    return value_id_to_transform_box(value->to_identifier());
+}
+
 CSS::TransformOrigin StyleProperties::transform_origin() const
 {
     auto value = property(CSS::PropertyID::TransformOrigin);

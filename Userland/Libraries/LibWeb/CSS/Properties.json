@@ -2082,6 +2082,14 @@
     "affects-layout": false,
     "affects-stacking-context": true
   },
+  "transform-box": {
+    "inherited": false,
+    "initial": "view-box",
+    "affects-layout": false,
+    "valid-types": [
+      "transform-box"
+    ]
+  },
   "transform-origin": {
     "affects-layout": false,
     "inherited": false,
