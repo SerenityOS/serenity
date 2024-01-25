@@ -173,7 +173,19 @@ Optional<HitTestResult> InlinePaintable::hit_test(CSSPixelPoint position, HitTes
                 fragment.text_index_at(position.x()) };
         }
     }
-    return {};
+
+    Optional<HitTestResult> hit_test_result;
+    for_each_child([&](Paintable const& child) {
+        if (child.stacking_context())
+            return IterationDecision::Continue;
+        if (auto result = child.hit_test(position, type); result.has_value()) {
+            hit_test_result = result;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    return hit_test_result;
 }
 
 CSSPixelRect InlinePaintable::bounding_rect() const
