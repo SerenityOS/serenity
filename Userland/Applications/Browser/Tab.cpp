@@ -588,10 +588,10 @@ Tab::Tab(BrowserWindow& window)
             view().select_dropdown_closed({});
     };
 
-    view().on_request_select_dropdown = [this](Gfx::IntPoint content_position, i32, Vector<Web::HTML::SelectItem> items) {
+    view().on_request_select_dropdown = [this](Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) {
         m_select_dropdown_closed_by_action = false;
         m_select_dropdown->remove_all_actions();
-        // FIXME: Set menu minimum width
+        m_select_dropdown->set_minimum_width(minimum_width);
         for (auto const& item : items) {
             select_dropdown_add_item(*m_select_dropdown, item);
         }

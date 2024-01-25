@@ -38,11 +38,12 @@ u32 find_ampersand_shortcut_character(StringView string)
     return 0;
 }
 
-Menu::Menu(ConnectionFromClient* client, int menu_id, String name)
+Menu::Menu(ConnectionFromClient* client, int menu_id, String name, int minimum_width)
     : Core::EventReceiver(client)
     , m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
+    , m_minimum_width(minimum_width)
 {
     m_alt_shortcut_character = find_ampersand_shortcut_character(m_name);
 }
@@ -90,7 +91,7 @@ int Menu::content_width() const
     if (widest_shortcut)
         widest_item += padding_between_text_and_shortcut() + widest_shortcut;
 
-    return max(widest_item, rect_in_window_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
+    return max(m_minimum_width, max(widest_item, rect_in_window_menubar().width()) + horizontal_padding() + frame_thickness() * 2);
 }
 
 int Menu::item_height() const
@@ -768,6 +769,11 @@ void Menu::set_hovered_index(int index, bool make_input)
 void Menu::set_name(String name)
 {
     m_name = move(name);
+}
+
+void Menu::set_minimum_width(int minimum_width)
+{
+    m_minimum_width = minimum_width;
 }
 
 bool Menu::is_open() const

@@ -61,6 +61,9 @@ public:
     String const& name() const { return m_name; }
     void set_name(String);
 
+    int minimum_width() const { return m_minimum_width; }
+    void set_minimum_width(int);
+
     template<typename Callback>
     IterationDecision for_each_item(Callback callback)
     {
@@ -138,7 +141,7 @@ public:
     Vector<size_t> const* items_with_alt_shortcut(u32 alt_shortcut) const;
 
 private:
-    Menu(ConnectionFromClient*, int menu_id, String name);
+    Menu(ConnectionFromClient*, int menu_id, String name, int minimum_width = 0);
 
     virtual void event(Core::Event&) override;
 
@@ -156,6 +159,7 @@ private:
     ConnectionFromClient* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
+    int m_minimum_width { 0 };
     u32 m_alt_shortcut_character { 0 };
     Gfx::IntRect m_rect_in_window_menubar;
     Gfx::IntPoint m_unadjusted_position;

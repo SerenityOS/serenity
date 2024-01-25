@@ -36,6 +36,9 @@ public:
     String const& name() const { return m_name; }
     void set_name(String);
 
+    int minimum_width() const { return m_minimum_width; }
+    void set_minimum_width(int);
+
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     void set_icon(Gfx::Bitmap const*);
 
@@ -77,6 +80,7 @@ private:
 
     int m_menu_id { -1 };
     String m_name;
+    int m_minimum_width { 0 };
     RefPtr<Gfx::Bitmap const> m_icon;
     Vector<NonnullOwnPtr<MenuItem>> m_items;
     WeakPtr<Action> m_current_default_action;
