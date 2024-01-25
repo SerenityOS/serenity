@@ -8,8 +8,16 @@
 
 #include "DeclarationsModel.h"
 #include "ProjectDeclarations.h"
+#include <AK/FuzzyMatch.h>
 
 namespace HackStudio {
+
+static String qualified_symbol_name(CodeComprehension::Declaration symbol)
+{
+    if (!symbol.scope.is_empty())
+        return MUST(String::from_byte_string(symbol.name));
+    return MUST(String::formatted("{}::{}", symbol.scope, symbol.name));
+}
 
 Declaration Declaration::create_filename(ByteString const& filename)
 {
@@ -39,11 +47,8 @@ GUI::Variant DeclarationsModel::data(GUI::ModelIndex const& index, GUI::ModelRol
             return GUI::FileIconProvider::icon_for_path(suggestion.as_filename.value());
     }
     if (suggestion.is_symbol_declaration()) {
-        if (index.column() == Column::Name) {
-            if (!suggestion.as_symbol_declaration.value().scope.is_empty())
-                return suggestion.as_symbol_declaration.value().name;
-            return ByteString::formatted("{}::{}", suggestion.as_symbol_declaration.value().scope, suggestion.as_symbol_declaration.value().name);
-        }
+        if (index.column() == Column::Name)
+            return qualified_symbol_name(suggestion.as_symbol_declaration.value());
         if (index.column() == Column::Filename)
             return suggestion.as_symbol_declaration.value().position.file;
         if (index.column() == Column::Icon) {
@@ -68,14 +73,15 @@ GUI::Model::MatchResult DeclarationsModel::data_matches(GUI::ModelIndex const& i
 
     auto& declaration = m_declarations[index.row()];
     if (declaration.is_filename()) {
-        if (declaration.as_filename->contains(needle, CaseSensitivity::CaseInsensitive))
-            return { TriState::True };
+        if (auto match_result = fuzzy_match(needle, *declaration.as_filename); match_result.matched)
+            return { TriState::True, match_result.score };
         return { TriState::False };
     }
     if (declaration.is_symbol_declaration()) {
-        if (declaration.as_symbol_declaration->name.contains(needle, CaseSensitivity::CaseInsensitive)
-            || declaration.as_symbol_declaration->scope.contains(needle, CaseSensitivity::CaseInsensitive))
-            return { TriState::True };
+        auto& symbol = *declaration.as_symbol_declaration;
+        auto haystack = qualified_symbol_name(symbol);
+        if (auto match_result = fuzzy_match(needle, haystack); match_result.matched)
+            return { TriState::True, match_result.score };
         return { TriState::False };
     }
 
