@@ -8,7 +8,10 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
+#include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
@@ -33,6 +36,8 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm&
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadableBytes const& object, bool keepalive)
 {
+    HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes };
+
     auto& vm = realm.vm();
 
     // 1. Let stream be null.
@@ -44,14 +49,12 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
     }
     // 3. Otherwise, if object is a Blob object, set stream to the result of running object’s get stream.
     else if (auto const* blob_handle = object.get_pointer<JS::Handle<FileAPI::Blob>>()) {
-        // FIXME: "set stream to the result of running object’s get stream"
-        (void)blob_handle;
-        stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
+        stream = TRY(blob_handle->cell()->get_stream());
     }
-    // 4. Otherwise, set stream to a new ReadableStream object, and set up stream.
+    // 4. Otherwise, set stream to a new ReadableStream object, and set up stream with byte reading support.
     else {
-        // FIXME: "set up stream"
         stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
+        TRY(Streams::set_up_readable_stream_controller_with_byte_reading_support(*stream));
     }
 
     // 5. Assert: stream is a ReadableStream object.
