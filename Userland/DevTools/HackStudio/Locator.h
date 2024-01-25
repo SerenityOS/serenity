@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {
@@ -29,6 +30,7 @@ private:
     RefPtr<GUI::TextBox> m_textbox;
     RefPtr<GUI::Window> m_popup_window;
     RefPtr<GUI::TableView> m_suggestion_view;
+    RefPtr<GUI::FilteringProxyModel> m_model;
 };
 
 }

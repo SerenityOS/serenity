@@ -57,4 +57,35 @@ GUI::Variant DeclarationsModel::data(GUI::ModelIndex const& index, GUI::ModelRol
     return {};
 }
 
+GUI::Model::MatchResult DeclarationsModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
+{
+    if (index.row() < 0 || (size_t)index.row() >= m_declarations.size())
+        return { TriState::False };
+
+    auto needle = term.as_string();
+    if (needle.is_empty())
+        return { TriState::True };
+
+    auto& declaration = m_declarations[index.row()];
+    if (declaration.is_filename()) {
+        if (declaration.as_filename->contains(needle, CaseSensitivity::CaseInsensitive))
+            return { TriState::True };
+        return { TriState::False };
+    }
+    if (declaration.is_symbol_declaration()) {
+        if (declaration.as_symbol_declaration->name.contains(needle, CaseSensitivity::CaseInsensitive)
+            || declaration.as_symbol_declaration->scope.contains(needle, CaseSensitivity::CaseInsensitive))
+            return { TriState::True };
+        return { TriState::False };
+    }
+
+    return { TriState::False };
+}
+
+void DeclarationsModel::set_declarations(Vector<HackStudio::Declaration>&& declarations)
+{
+    m_declarations = move(declarations);
+    did_update();
+}
+
 }
