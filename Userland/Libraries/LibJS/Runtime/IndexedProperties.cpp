@@ -103,7 +103,7 @@ Optional<ValueAndAttributes> GenericIndexedPropertyStorage::get(u32 index) const
 {
     if (index >= m_array_size)
         return {};
-    return m_sparse_elements.get(index);
+    return static_cast<Optional<ValueAndAttributes>>(m_sparse_elements.get(index));
 }
 
 void GenericIndexedPropertyStorage::put(u32 index, Value value, PropertyAttributes attributes)

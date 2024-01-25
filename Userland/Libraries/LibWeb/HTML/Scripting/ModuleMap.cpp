@@ -42,7 +42,7 @@ bool ModuleMap::is(AK::URL const& url, ByteString const& type, EntryType entry_t
 
 Optional<ModuleMap::Entry> ModuleMap::get(AK::URL const& url, ByteString const& type) const
 {
-    return m_values.get({ url, type });
+    return static_cast<Optional<ModuleMap::Entry>>(m_values.get({ url, type }));
 }
 
 AK::HashSetResult ModuleMap::set(AK::URL const& url, ByteString const& type, Entry entry)

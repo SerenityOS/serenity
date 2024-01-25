@@ -382,7 +382,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     // Non-standard
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->instruction_stream_iterator = static_cast<Optional<Bytecode::InstructionStreamIterator>>(vm.bytecode_interpreter().instruction_stream_iterator());
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
@@ -452,7 +452,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
 
     // Non-standard
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->instruction_stream_iterator = static_cast<Optional<Bytecode::InstructionStreamIterator>>(vm.bytecode_interpreter().instruction_stream_iterator());
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.

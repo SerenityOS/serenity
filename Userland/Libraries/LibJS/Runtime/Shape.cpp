@@ -187,7 +187,7 @@ Optional<PropertyMetadata> Shape::lookup(StringOrSymbol const& property_key) con
     auto property = property_table().get(property_key);
     if (!property.has_value())
         return {};
-    return property;
+    return static_cast<Optional<PropertyMetadata>>(property);
 }
 
 FLATTEN OrderedHashMap<StringOrSymbol, PropertyMetadata> const& Shape::property_table() const

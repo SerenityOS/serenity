@@ -53,7 +53,7 @@ void Instance::initialize(JS::Realm& realm)
     for (auto& export_ : instance.exports()) {
         export_.value().visit(
             [&](Wasm::FunctionAddress const& address) {
-                Optional<JS::GCPtr<JS::FunctionObject>> object = cache.function_instances.get(address);
+                Optional<JS::GCPtr<JS::FunctionObject>> object = static_cast<Optional<JS::GCPtr<JS::FunctionObject>>>(cache.function_instances.get(address));
                 if (!object.has_value()) {
                     object = Detail::create_native_function(vm, address, export_.name());
                     cache.function_instances.set(address, *object);
@@ -62,7 +62,7 @@ void Instance::initialize(JS::Realm& realm)
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
             [&](Wasm::MemoryAddress const& address) {
-                Optional<JS::GCPtr<Memory>> object = cache.memory_instances.get(address);
+                Optional<JS::GCPtr<Memory>> object = static_cast<Optional<JS::GCPtr<Memory>>>(cache.memory_instances.get(address));
                 if (!object.has_value()) {
                     object = heap().allocate<Memory>(realm, realm, address);
                     cache.memory_instances.set(address, *object);
@@ -71,7 +71,7 @@ void Instance::initialize(JS::Realm& realm)
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
             [&](Wasm::TableAddress const& address) {
-                Optional<JS::GCPtr<Table>> object = cache.table_instances.get(address);
+                Optional<JS::GCPtr<Table>> object = static_cast<Optional<JS::GCPtr<Table>>>(cache.table_instances.get(address));
                 if (!object.has_value()) {
                     object = heap().allocate<Table>(realm, realm, address);
                     cache.table_instances.set(address, *object);

@@ -101,7 +101,7 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
     auto const look_up_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<ByteString> {
         if (do_only_path_search)
             return {};
-        return m_aliases.get(alias);
+        return static_cast<Optional<ByteString>>(m_aliases.get(alias));
     };
 
     auto const look_up_builtin = [do_only_path_search](StringView builtin) -> Optional<ByteString> {
