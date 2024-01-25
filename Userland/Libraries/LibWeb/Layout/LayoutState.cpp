@@ -12,6 +12,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/SVGPathPaintable.h>
+#include <LibWeb/Painting/TextPaintable.h>
 
 namespace Web::Layout {
 
@@ -507,8 +508,20 @@ void LayoutState::commit(Box& root)
         paintable_with_lines.set_fragments(move(fragments_with_inline_paintables_removed));
     }
 
-    for (auto* text_node : text_nodes)
+    for (auto* text_node : text_nodes) {
         text_node->set_paintable(text_node->create_paintable());
+        auto* paintable = text_node->paintable();
+        auto const& font = text_node->first_available_font();
+        auto const glyph_height = CSSPixels::nearest_value_for(font.pixel_size());
+        auto const css_line_thickness = [&] {
+            auto computed_thickness = text_node->computed_values().text_decoration_thickness().resolved(*text_node, CSS::Length(1, CSS::Length::Type::Em).to_px(*text_node));
+            if (computed_thickness.is_auto())
+                return max(glyph_height.scaled(0.1), 1);
+            return computed_thickness.to_px(*text_node);
+        }();
+        auto& text_paintable = static_cast<Painting::TextPaintable&>(*paintable);
+        text_paintable.set_text_decoration_thickness(css_line_thickness);
+    }
 
     build_paint_tree(root);
 

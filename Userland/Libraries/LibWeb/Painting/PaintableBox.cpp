@@ -16,6 +16,7 @@
 #include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Painting/TextPaintable.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
@@ -508,15 +509,8 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
     auto baseline = fragment.baseline();
 
     auto line_color = text_node.computed_values().text_decoration_color();
-
-    CSSPixels css_line_thickness = [&] {
-        CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em).to_px(text_node));
-        if (computed_thickness.is_auto())
-            return max(glyph_height.scaled(0.1), 1);
-
-        return computed_thickness.to_px(text_node);
-    }();
-    auto device_line_thickness = context.rounded_device_pixels(css_line_thickness);
+    auto const& text_paintable = static_cast<TextPaintable const&>(fragment.paintable());
+    auto device_line_thickness = context.rounded_device_pixels(text_paintable.text_decoration_thickness());
 
     auto text_decoration_lines = text_node.computed_values().text_decoration_line();
     for (auto line : text_decoration_lines) {

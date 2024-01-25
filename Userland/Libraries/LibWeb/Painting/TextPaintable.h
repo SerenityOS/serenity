@@ -24,8 +24,13 @@ public:
     virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
     virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
 
+    void set_text_decoration_thickness(CSSPixels thickness) { m_text_decoration_thickness = thickness; }
+    CSSPixels text_decoration_thickness() const { return m_text_decoration_thickness; }
+
 private:
     explicit TextPaintable(Layout::TextNode const&);
+
+    CSSPixels m_text_decoration_thickness { 0 };
 };
 
 }
