@@ -457,6 +457,24 @@ TEST_CASE(test_pam_rgb)
     EXPECT_EQ(frame.image->get_pixel(1, 0), Gfx::Color('0', '0', 'z'));
 }
 
+TEST_CASE(test_pam_cmyk)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("pnm/2x1-cmyk.pam"sv)));
+    EXPECT(Gfx::PAMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::PAMImageDecoderPlugin::create(file->bytes()));
+
+    EXPECT_EQ(plugin_decoder->natural_frame_format(), Gfx::NaturalFrameFormat::CMYK);
+    auto cmyk_frame = TRY_OR_FAIL(plugin_decoder->cmyk_frame());
+    EXPECT_EQ(cmyk_frame->size(), Gfx::IntSize(2, 1));
+    EXPECT_EQ(cmyk_frame->begin()[0], (Gfx::CMYK { '0', 'z', '0', 'y' }));
+    EXPECT_EQ(cmyk_frame->begin()[1], (Gfx::CMYK { '0', '0', 'z', 'y' }));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(2, 1));
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color('l', 'E', 'l'));
+    EXPECT_EQ(frame.image->get_pixel(1, 0), Gfx::Color('l', 'l', 'E'));
+}
+
 TEST_CASE(test_pbm)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pbm"sv)));
