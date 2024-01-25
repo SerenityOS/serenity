@@ -585,7 +585,7 @@ Shell::Frame::~Frame()
 
 Optional<ByteString> Shell::resolve_alias(StringView name) const
 {
-    return m_aliases.get(name);
+    return static_cast<Optional<ByteString>>(m_aliases.get(name));
 }
 
 Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)

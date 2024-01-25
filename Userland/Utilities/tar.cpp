@@ -92,12 +92,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         HashMap<ByteString, ByteString> local_overrides;
 
         auto get_override = [&](StringView key) -> Optional<ByteString> {
-            Optional<ByteString> maybe_local = local_overrides.get(key);
+            Optional<ByteString> maybe_local = static_cast<Optional<ByteString>>(local_overrides.get(key));
 
             if (maybe_local.has_value())
                 return maybe_local;
 
-            Optional<ByteString> maybe_global = global_overrides.get(key);
+            Optional<ByteString> maybe_global = static_cast<Optional<ByteString>>(global_overrides.get(key));
 
             if (maybe_global.has_value())
                 return maybe_global;

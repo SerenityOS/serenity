@@ -117,7 +117,7 @@ HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringv
 
 Optional<ValueID> value_id_from_string(StringView string)
 {
-    return g_stringview_to_value_id_map.get(string);
+    return static_cast<Optional<ValueID>>(g_stringview_to_value_id_map.get(string));
 }
 
 StringView string_from_value_id(ValueID value_id) {

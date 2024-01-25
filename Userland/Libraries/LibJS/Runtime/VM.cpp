@@ -994,7 +994,7 @@ void VM::load_imported_module(ImportedModuleReferrer referrer, ModuleRequest con
 void VM::push_execution_context(ExecutionContext& context)
 {
     if (!m_execution_context_stack.is_empty())
-        m_execution_context_stack.last()->instruction_stream_iterator = bytecode_interpreter().instruction_stream_iterator();
+        m_execution_context_stack.last()->instruction_stream_iterator = static_cast<Optional<Bytecode::InstructionStreamIterator>>(bytecode_interpreter().instruction_stream_iterator());
     m_execution_context_stack.append(&context);
 }
 

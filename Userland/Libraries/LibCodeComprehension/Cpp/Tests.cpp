@@ -55,7 +55,7 @@ public:
         if (project_root().has_value() && filename.starts_with(*project_root())) {
             target_filename = LexicalPath::relative_path(filename, *project_root());
         }
-        return m_map.get(target_filename);
+        return static_cast<Optional<ByteString>>(m_map.get(target_filename));
     }
 
 private:

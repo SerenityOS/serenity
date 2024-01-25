@@ -200,17 +200,17 @@ public:
 
     Optional<String> get(StringView key) const
     {
-        return m_members.get(key);
+        return static_cast<Optional<String>>(m_members.get(key));
     }
 
     Optional<String> get(AttributeType key) const
     {
-        return m_members.get(enum_value(key));
+        return static_cast<Optional<String>>(m_members.get(enum_value(key)));
     }
 
     Optional<String> get(ObjectClass key) const
     {
-        return m_members.get(enum_value(key));
+        return static_cast<Optional<String>>(m_members.get(enum_value(key)));
     }
 
     String common_name() const

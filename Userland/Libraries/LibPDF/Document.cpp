@@ -488,7 +488,7 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
     if (page_ref.has<int>())
         page_number = page_ref.get<int>();
     else
-        page_number = page_number_by_index_ref.get(page_ref.as_ref_index());
+        page_number = static_cast<Optional<u32>>(page_number_by_index_ref.get(page_ref.as_ref_index()));
 
     return Destination { type, page_number, parameters };
 }
