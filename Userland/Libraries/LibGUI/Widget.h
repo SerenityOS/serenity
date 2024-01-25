@@ -71,6 +71,15 @@ enum class AllowCallback {
     Yes
 };
 
+template<typename T>
+ALWAYS_INLINE ErrorOr<void> initialize(T& object)
+{
+    if constexpr (requires { { object.initialize() } -> SameAs<ErrorOr<void>>; })
+        return object.initialize();
+    else
+        return {};
+}
+
 class Widget : public GUI::Object {
     C_OBJECT(Widget)
 public:
