@@ -19,30 +19,41 @@ ErrorOr<void> read_image_data(PAMLoadingContext& context)
     bool is_rgb = context.format_details.depth == 3 && context.format_details.tupl_type == "RGB"sv;
     bool is_rgba = context.format_details.depth == 4 && context.format_details.tupl_type == "RGB_ALPHA"sv;
 
-    if (!is_gray && !is_gray_alpha && !is_rgb && !is_rgba)
-        return Error::from_string_view("Unsupported PAM depth"sv);
+    bool is_cmyk = context.format_details.depth == 4 && context.format_details.tupl_type == "CMYK"sv;
 
-    TRY(create_bitmap(context));
+    if (!is_gray && !is_gray_alpha && !is_rgb && !is_rgba && !is_cmyk)
+        return Error::from_string_view("Unsupported PAM depth"sv);
 
     auto& stream = *context.stream;
 
-    for (u64 i = 0; i < context.width * context.height; ++i) {
-        if (is_gray) {
-            Array<u8, 1> pixel;
-            TRY(stream.read_until_filled(pixel));
-            context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[0], pixel[0] });
-        } else if (is_gray_alpha) {
-            Array<u8, 2> pixel;
-            TRY(stream.read_until_filled(pixel));
-            context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[0], pixel[0], pixel[1] });
-        } else if (is_rgb) {
-            Array<u8, 3> pixel;
-            TRY(stream.read_until_filled(pixel));
-            context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[1], pixel[2] });
-        } else if (is_rgba) {
+    if (is_cmyk) {
+        context.format_details.cmyk_bitmap = TRY(CMYKBitmap::create_with_size({ context.width, context.height }));
+        CMYK* data = context.format_details.cmyk_bitmap.value()->begin();
+        for (u64 i = 0; i < context.width * context.height; ++i) {
             Array<u8, 4> pixel;
             TRY(stream.read_until_filled(pixel));
-            context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[1], pixel[2], pixel[3] });
+            data[i] = { pixel[0], pixel[1], pixel[2], pixel[3] };
+        }
+    } else {
+        TRY(create_bitmap(context));
+        for (u64 i = 0; i < context.width * context.height; ++i) {
+            if (is_gray) {
+                Array<u8, 1> pixel;
+                TRY(stream.read_until_filled(pixel));
+                context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[0], pixel[0] });
+            } else if (is_gray_alpha) {
+                Array<u8, 2> pixel;
+                TRY(stream.read_until_filled(pixel));
+                context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[0], pixel[0], pixel[1] });
+            } else if (is_rgb) {
+                Array<u8, 3> pixel;
+                TRY(stream.read_until_filled(pixel));
+                context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[1], pixel[2] });
+            } else if (is_rgba) {
+                Array<u8, 4> pixel;
+                TRY(stream.read_until_filled(pixel));
+                context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[1], pixel[2], pixel[3] });
+            }
         }
     }
 
