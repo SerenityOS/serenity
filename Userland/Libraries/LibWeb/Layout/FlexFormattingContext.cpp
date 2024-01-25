@@ -1230,11 +1230,11 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                     initial_offset = 0;
                 }
                 if (flex_line.remaining_free_space.has_value() && number_of_items > 1)
-                    space_between_items = flex_line.remaining_free_space.value() / (number_of_items - 1);
+                    space_between_items = max(CSSPixels(0), flex_line.remaining_free_space.value() / (number_of_items - 1));
                 break;
             case CSS::JustifyContent::SpaceAround:
                 if (flex_line.remaining_free_space.has_value())
-                    space_between_items = flex_line.remaining_free_space.value() / number_of_items;
+                    space_between_items = max(CSSPixels(0), flex_line.remaining_free_space.value() / number_of_items);
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(m_flex_container_state) - space_between_items / 2;
                 } else {
@@ -1243,7 +1243,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 break;
             case CSS::JustifyContent::SpaceEvenly:
                 if (flex_line.remaining_free_space.has_value())
-                    space_between_items = flex_line.remaining_free_space.value() / (number_of_items + 1);
+                    space_between_items = max(CSSPixels(0), flex_line.remaining_free_space.value() / (number_of_items + 1));
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(m_flex_container_state) - space_between_items;
                 } else {
