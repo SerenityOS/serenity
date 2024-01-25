@@ -29,7 +29,7 @@ static constexpr Color adjust_color(u16 max_val, Color color)
     return color;
 }
 
-static inline ErrorOr<u16> read_number(SeekableStream& stream)
+inline ErrorOr<String> read_token(SeekableStream& stream)
 {
     StringBuilder sb {};
     u8 byte {};
@@ -43,7 +43,12 @@ static inline ErrorOr<u16> read_number(SeekableStream& stream)
         sb.append(byte);
     }
 
-    auto const maybe_value = TRY(sb.to_string()).to_number<u16>();
+    return TRY(sb.to_string());
+}
+
+static inline ErrorOr<u16> read_number(SeekableStream& stream)
+{
+    auto const maybe_value = TRY(read_token(stream)).to_number<u16>();
     if (!maybe_value.has_value())
         return Error::from_string_literal("Can't convert bytes to a number");
 
@@ -81,9 +86,11 @@ static ErrorOr<void> read_magic_number(TContext& context)
     Array<u8, 2> magic_number {};
     TRY(context.stream->read_until_filled(Bytes { magic_number }));
 
-    if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::ascii_magic_number) {
-        context.type = TContext::Type::ASCII;
-        return {};
+    if constexpr (requires { TContext::FormatDetails::ascii_magic_number; }) {
+        if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::ascii_magic_number) {
+            context.type = TContext::Type::ASCII;
+            return {};
+        }
     }
 
     if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::binary_magic_number) {
@@ -186,6 +193,9 @@ static ErrorOr<void> read_header(Context& context)
 
     return {};
 }
+
+template<typename Context>
+static ErrorOr<void> read_pam_header(Context& context);
 
 template<typename TContext>
 static ErrorOr<void> decode(TContext& context)

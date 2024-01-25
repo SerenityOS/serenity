@@ -26,6 +26,7 @@
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpg")  \
     __ENUMERATE_IMAGE_FORMAT(jxl, ".jxl")   \
     __ENUMERATE_IMAGE_FORMAT(iff, ".lbm")   \
+    __ENUMERATE_IMAGE_FORMAT(pam, ".pam")   \
     __ENUMERATE_IMAGE_FORMAT(pbm, ".pbm")   \
     __ENUMERATE_IMAGE_FORMAT(pgm, ".pgm")   \
     __ENUMERATE_IMAGE_FORMAT(png, ".png")   \

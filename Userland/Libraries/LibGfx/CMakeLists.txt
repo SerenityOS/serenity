@@ -55,6 +55,7 @@ set(SOURCES
     ImageFormats/PNGLoader.cpp
     ImageFormats/PNGWriter.cpp
     ImageFormats/PortableFormatWriter.cpp
+    ImageFormats/PAMLoader.cpp
     ImageFormats/PPMLoader.cpp
     ImageFormats/QOILoader.cpp
     ImageFormats/QOIWriter.cpp
