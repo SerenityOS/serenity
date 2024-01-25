@@ -160,6 +160,7 @@ public:
     static CSS::Length outline_width() { return CSS::Length::make_px(3); }
     static CSS::TableLayout table_layout() { return CSS::TableLayout::Auto; }
     static QuotesData quotes() { return QuotesData { .type = QuotesData::Type::Auto }; }
+    static CSS::TransformBox transform_box() { return CSS::TransformBox::ViewBox; }
 
     static CSS::MaskType mask_type() { return CSS::MaskType::Luminance; }
     static CSS::MathShift math_shift() { return CSS::MathShift::Normal; }
@@ -387,6 +388,7 @@ public:
     CSS::MaskType mask_type() const { return m_noninherited.mask_type; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
+    CSS::TransformBox const& transform_box() const { return m_noninherited.transform_box; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
 
     Gfx::FontCascadeList const& font_list() const { return *m_inherited.font_list; }
@@ -508,6 +510,7 @@ protected:
         float opacity { InitialValues::opacity() };
         Vector<ShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
+        CSS::TransformBox transform_box { InitialValues::transform_box() };
         CSS::TransformOrigin transform_origin {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
         CSS::ContentData content;
@@ -620,6 +623,7 @@ public:
     void set_justify_self(CSS::JustifySelf value) { m_noninherited.justify_self = value; }
     void set_box_shadow(Vector<ShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
+    void set_transform_box(CSS::TransformBox value) { m_noninherited.transform_box = value; }
     void set_transform_origin(CSS::TransformOrigin value) { m_noninherited.transform_origin = value; }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
     void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = move(value); }

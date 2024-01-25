@@ -396,6 +396,13 @@
     "none",
     "uppercase"
   ],
+  "transform-box": [
+    "content-box",
+    "border-box",
+    "fill-box",
+    "stroke-box",
+    "view-box "
+  ],
   "vertical-align": [
     "baseline",
     "bottom",

@@ -156,6 +156,7 @@ text-shadow: none
 text-transform: none
 top: auto
 transform: none
+transform-box: view-box
 transform-origin: 50% 50%
 transition-delay: 0s
 user-select: auto
