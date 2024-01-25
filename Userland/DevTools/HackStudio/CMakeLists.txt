@@ -21,6 +21,7 @@ set(SOURCES
     Debugger/DisassemblyWidget.cpp
     Debugger/RegistersModel.cpp
     Debugger/VariablesModel.cpp
+    DeclarationsModel.cpp
     Dialogs/Git/GitCommitDialog.cpp
     Dialogs/NewProjectDialog.cpp
     Dialogs/ProjectTemplatesModel.cpp
