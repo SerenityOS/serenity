@@ -754,10 +754,6 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     for (auto const& fragment : fragments()) {
         if (fragment.paintable().stacking_context())
             continue;
-        if (!fragment.paintable().containing_block()) {
-            dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
-            continue;
-        }
         auto fragment_absolute_rect = fragment.absolute_rect();
         if (fragment_absolute_rect.contains(position)) {
             if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
