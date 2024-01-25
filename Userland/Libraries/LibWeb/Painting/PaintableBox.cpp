@@ -505,7 +505,7 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
     auto& font = fragment.layout_node().first_available_font();
     auto fragment_box = fragment.absolute_rect();
     CSSPixels glyph_height = CSSPixels::nearest_value_for(font.pixel_size());
-    auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
+    auto baseline = fragment.baseline();
 
     auto line_color = text_node.computed_values().text_decoration_color();
 
