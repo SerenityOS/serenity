@@ -38,7 +38,14 @@ public:
         Filename,
         __Column_Count,
     };
-    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_declarations.size(); }
+
+    virtual int row_count(GUI::ModelIndex const& index = GUI::ModelIndex()) const override
+    {
+        if (!index.is_valid())
+            return m_declarations.size();
+        return 0;
+    }
+
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Column_Count; }
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override;
 
