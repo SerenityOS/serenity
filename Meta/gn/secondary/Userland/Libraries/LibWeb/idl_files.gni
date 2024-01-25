@@ -244,6 +244,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/Streams/WritableStreamDefaultWriter.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGAnimatedLength.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGAnimatedNumber.idl",
+  "//Userland/Libraries/LibWeb/SVG/SVGAnimatedRect.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGAnimatedString.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGCircleElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGClipPathElement.idl",

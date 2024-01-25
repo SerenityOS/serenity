@@ -6,6 +6,7 @@ source_set("SVG") {
     "AttributeParser.cpp",
     "SVGAnimatedLength.cpp",
     "SVGAnimatedNumber.cpp",
+    "SVGAnimatedRect.cpp",
     "SVGAnimatedString.cpp",
     "SVGCircleElement.cpp",
     "SVGClipPathElement.cpp",
