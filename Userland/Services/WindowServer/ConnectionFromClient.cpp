@@ -90,9 +90,9 @@ void ConnectionFromClient::notify_about_new_screen_rects()
     async_screen_rects_changed(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns());
 }
 
-void ConnectionFromClient::create_menu(i32 menu_id, String const& name)
+void ConnectionFromClient::create_menu(i32 menu_id, String const& name, i32 minimum_width)
 {
-    auto menu = Menu::construct(this, menu_id, name);
+    auto menu = Menu::construct(this, menu_id, name, minimum_width);
     m_menus.set(menu_id, move(menu));
 }
 
@@ -105,6 +105,27 @@ void ConnectionFromClient::set_menu_name(i32 menu_id, String const& name)
     }
     auto& menu = *it->value;
     menu.set_name(name);
+    for (auto& it : m_windows) {
+        auto& window = *it.value;
+        window.menubar().for_each_menu([&](Menu& other_menu) {
+            if (&menu == &other_menu) {
+                window.invalidate_menubar();
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    }
+}
+
+void ConnectionFromClient::set_menu_minimum_width(i32 menu_id, i32 minimum_width)
+{
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end()) {
+        did_misbehave("DestroyMenu: Bad menu ID");
+        return;
+    }
+    auto& menu = *it->value;
+    menu.set_minimum_width(minimum_width);
     for (auto& it : m_windows) {
         auto& window = *it.value;
         window.menubar().for_each_menu([&](Menu& other_menu) {

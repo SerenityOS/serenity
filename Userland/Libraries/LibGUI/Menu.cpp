@@ -89,6 +89,15 @@ void Menu::set_name(String name)
     }
 }
 
+void Menu::set_minimum_width(int minimum_width)
+{
+    m_minimum_width = minimum_width;
+    if (m_menu_id != -1) {
+        ConnectionToWindowServer::the().async_set_menu_minimum_width(m_menu_id, m_minimum_width);
+        update_parent_menu_item();
+    }
+}
+
 void Menu::set_parent(Menu& menu, int submenu_index)
 {
     m_parent_menu = menu;
@@ -141,7 +150,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     unrealize_menu();
     m_menu_id = s_menu_id_allocator.allocate();
 
-    ConnectionToWindowServer::the().async_create_menu(m_menu_id, m_name);
+    ConnectionToWindowServer::the().async_create_menu(m_menu_id, m_name, m_minimum_width);
 
     dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);

@@ -4,8 +4,9 @@
 
 endpoint WindowServer
 {
-    create_menu(i32 menu_id, [UTF8] String name) =|
+    create_menu(i32 menu_id, [UTF8] String name, i32 minimum_width) =|
     set_menu_name(i32 menu_id, String name) =|
+    set_menu_minimum_width(i32 menu_id, i32 minimum_width) =|
     destroy_menu(i32 menu_id) =|
 
     add_menu(i32 window_id, i32 menu_id) =|
