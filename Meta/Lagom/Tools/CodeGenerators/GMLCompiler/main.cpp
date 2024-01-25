@@ -334,6 +334,8 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         return {};
     }));
 
+    TRY(append(generator, "TRY(::GUI::initialize(*@object_name@));"));
+
     generator.append(TRY(String::repeated(' ', (indentation - 1) * 4)).bytes_as_string_view());
     generator.appendln("}");
 
