@@ -21,7 +21,6 @@ public:
     CommandResult draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) override;
     CommandResult set_clip_rect(Gfx::IntRect const& rect) override;
     CommandResult clear_clip_rect() override;
-    CommandResult set_font(Gfx::Font const&) override;
     CommandResult push_stacking_context(float opacity, bool, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask) override;
     CommandResult pop_stacking_context() override;
     CommandResult paint_linear_gradient(Gfx::IntRect const&, Web::Painting::LinearGradientData const&) override;

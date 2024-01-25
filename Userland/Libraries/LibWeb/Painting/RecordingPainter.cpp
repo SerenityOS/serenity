@@ -207,18 +207,6 @@ void RecordingPainter::draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color col
     });
 }
 
-void RecordingPainter::draw_text(Gfx::IntRect const& rect, String raw_text, Gfx::TextAlignment alignment, Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping)
-{
-    push_command(DrawText {
-        .rect = state().translation.map(rect),
-        .raw_text = move(raw_text),
-        .alignment = alignment,
-        .color = color,
-        .elision = elision,
-        .wrapping = wrapping,
-    });
-}
-
 void RecordingPainter::draw_text(Gfx::IntRect const& rect, String raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping)
 {
     push_command(DrawText {
@@ -279,11 +267,6 @@ void RecordingPainter::translate(int dx, int dy)
 void RecordingPainter::translate(Gfx::IntPoint delta)
 {
     m_state_stack.last().translation.translate(delta.to_type<float>());
-}
-
-void RecordingPainter::set_font(Gfx::Font const& font)
-{
-    push_command(SetFont { .font = font });
 }
 
 void RecordingPainter::save()
@@ -513,9 +496,6 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
             },
             [&](ClearClipRect const&) {
                 return executor.clear_clip_rect();
-            },
-            [&](SetFont const& command) {
-                return executor.set_font(command.font);
             },
             [&](PushStackingContext const& command) {
                 return executor.push_stacking_context(command.opacity, command.is_fixed_position, command.source_paintable_rect, command.post_transform_translation, command.image_rendering, command.transform, command.mask);

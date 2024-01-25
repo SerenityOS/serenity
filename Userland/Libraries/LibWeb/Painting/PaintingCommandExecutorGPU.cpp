@@ -88,12 +88,6 @@ CommandResult PaintingCommandExecutorGPU::clear_clip_rect()
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
-{
-    // FIXME
-    return CommandResult::Continue;
-}
-
 CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform transform, Optional<StackingContextMask>)
 {
     if (source_paintable_rect.is_empty())
