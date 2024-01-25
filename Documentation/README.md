@@ -10,6 +10,7 @@ A list of useful pages across the web can be found on [the link list](Links.md).
 * [Troubleshooting](Troubleshooting.md)
 * [Running in VirtualBox](VirtualBox.md)
 * [Running in VMware](VMware.md)
+* [Building and running the RISC-V port](RISC-V.md)
 * [Running Tests](RunningTests.md)
 * [Setting Up Self-Hosted Runners](SelfHostedRunners.md)
 * [Profiling the Build](BuildProfilingInstructions.md)
