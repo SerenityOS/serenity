@@ -77,12 +77,15 @@ Locator::Locator(Core::EventReceiver* parent)
     m_suggestion_view->on_activation = [this](auto& index) {
         open_suggestion(index);
     };
+
+    m_model = GUI::FilteringProxyModel::create(ProjectDeclarations::the().declarations_model()).release_value_but_fixme_should_propagate_errors();
+    m_suggestion_view->set_model(m_model);
 }
 
 void Locator::open_suggestion(const GUI::ModelIndex& index)
 {
-    auto& model = reinterpret_cast<DeclarationsModel&>(*m_suggestion_view->model());
-    auto suggestion = model.declarations()[index.row()];
+    auto original_index = m_model->map(index);
+    auto suggestion = ProjectDeclarations::the().declarations_model().declarations()[original_index.row()];
     if (suggestion.is_filename()) {
         auto filename = suggestion.as_filename.value();
         open_file(filename);
@@ -111,23 +114,9 @@ void Locator::close()
 
 void Locator::update_suggestions()
 {
-    auto typed_text = m_textbox->text();
-    Vector<Declaration> suggestions;
-    project().for_each_text_file([&](auto& file) {
-        if (file.name().contains(typed_text, CaseSensitivity::CaseInsensitive))
-            suggestions.append(Declaration::create_filename(file.name()));
-    });
+    m_model->set_filter_term(m_textbox->text());
 
-    ProjectDeclarations::the().for_each_declared_symbol([&suggestions, &typed_text](auto& decl) {
-        if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive) || decl.scope.contains(typed_text, CaseSensitivity::CaseInsensitive))
-            suggestions.append((Declaration::create_symbol_declaration(decl)));
-    });
-
-    bool has_suggestions = !suggestions.is_empty();
-
-    m_suggestion_view->set_model(adopt_ref(*new DeclarationsModel(move(suggestions))));
-
-    if (!has_suggestions)
+    if (m_model->row_count() == 0)
         m_suggestion_view->selection().clear();
     else
         m_suggestion_view->selection().set(m_suggestion_view->model()->index(0));

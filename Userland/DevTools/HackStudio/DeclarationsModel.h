@@ -48,8 +48,10 @@ public:
 
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Column_Count; }
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override;
+    virtual MatchResult data_matches(GUI::ModelIndex const&, GUI::Variant const&) const override;
 
     Vector<Declaration> const& declarations() const { return m_declarations; }
+    void set_declarations(Vector<Declaration>&&);
 
 private:
     Vector<Declaration> m_declarations;
