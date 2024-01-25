@@ -163,13 +163,13 @@ void InlinePaintable::for_each_fragment(Callback callback) const
 Optional<HitTestResult> InlinePaintable::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     for (auto& fragment : m_fragments) {
-        if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
+        if (fragment.paintable().stacking_context())
             continue;
         auto fragment_absolute_rect = fragment.absolute_rect();
         if (fragment_absolute_rect.contains(position)) {
-            if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
-                return fragment.layout_node().paintable()->hit_test(position, type);
-            return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())),
+            if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
+                return result;
+            return HitTestResult { const_cast<Paintable&>(fragment.paintable()),
                 fragment.text_index_at(position.x()) };
         }
     }

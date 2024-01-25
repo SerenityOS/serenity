@@ -752,17 +752,17 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
 
     Optional<HitTestResult> last_good_candidate;
     for (auto const& fragment : fragments()) {
-        if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
+        if (fragment.paintable().stacking_context())
             continue;
-        if (!fragment.layout_node().containing_block()) {
+        if (!fragment.paintable().containing_block()) {
             dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
             continue;
         }
         auto fragment_absolute_rect = fragment.absolute_rect();
         if (fragment_absolute_rect.contains(position)) {
-            if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
-                return fragment.layout_node().paintable()->hit_test(position, type);
-            return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())), fragment.text_index_at(position.x()) };
+            if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
+                return result;
+            return HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.text_index_at(position.x()) };
         }
 
         // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
@@ -771,14 +771,14 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
         // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
         // If we knew the direction of selection, we could make a better choice.
         if (fragment_absolute_rect.bottom() - 1 <= position.y()) { // fully below the fragment
-            last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
+            last_good_candidate = HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.start() + fragment.length() };
         } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
             if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
                 if (!last_good_candidate.has_value()) {            // first fragment of the line
-                    last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() };
+                    last_good_candidate = HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.start() };
                 }
             } else { // right of the fragment
-                last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
+                last_good_candidate = HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.start() + fragment.length() };
             }
         }
     }
