@@ -17,6 +17,13 @@ function println(s) {
     __outputElement.appendChild(document.createTextNode(s + "\n"));
 }
 
+function printElement(e) {
+    let element_string = `<${e.nodeName} `;
+    if (e.id) element_string += `id="${e.id}" `;
+    element_string += ">";
+    println(element_string);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     __outputElement = document.createElement("pre");
     __outputElement.setAttribute("id", "out");
