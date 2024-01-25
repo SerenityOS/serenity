@@ -18,6 +18,7 @@ struct PAM {
     u16 max_val { 0 };
     u16 depth { 0 };
     String tupl_type {};
+    Optional<NonnullRefPtr<CMYKBitmap>> cmyk_bitmap {};
 };
 
 using PAMLoadingContext = PortableImageMapLoadingContext<PAM>;
