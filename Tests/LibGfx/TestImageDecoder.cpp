@@ -15,6 +15,7 @@
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
+#include <LibGfx/ImageFormats/PAMLoader.h>
 #include <LibGfx/ImageFormats/PBMLoader.h>
 #include <LibGfx/ImageFormats/PGMLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -442,6 +443,18 @@ TEST_CASE(test_jpeg_malformed_frame)
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
     }
+}
+
+TEST_CASE(test_pam_rgb)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("pnm/2x1.pam"sv)));
+    EXPECT(Gfx::PAMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::PAMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(2, 1));
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color('0', 'z', '0'));
+    EXPECT_EQ(frame.image->get_pixel(1, 0), Gfx::Color('0', '0', 'z'));
 }
 
 TEST_CASE(test_pbm)
