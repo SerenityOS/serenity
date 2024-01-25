@@ -127,11 +127,21 @@
         globalThis.doneCallback = done;
 
         const blobIframeLoadPromise = new Promise(resolve => {
-            blobIframe.onload = () => resolve();
+            if (blobIframe.contentDocument.readyState === "complete") {
+                resolve();
+            }
+            else {
+                blobIframe.onload = () => resolve();
+            }
         });
 
         const srcdocIframeLoadPromise = new Promise(resolve => {
-            iframe.onload = () => resolve();
+            if (iframe.contentDocument.readyState === "complete") {
+                resolve()
+            }
+            else {
+                iframe.onload = () => resolve();
+            }
         });
 
         Promise.all([blobIframeLoadPromise, srcdocIframeLoadPromise]).then(() => {
