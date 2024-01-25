@@ -10,7 +10,6 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicyEnforcementResult.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PolicyContainers.h>

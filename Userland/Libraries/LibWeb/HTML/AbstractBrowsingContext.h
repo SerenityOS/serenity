@@ -8,8 +8,6 @@
 
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
-#include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/WindowProxy.h>
 

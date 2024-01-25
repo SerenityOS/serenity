@@ -190,5 +190,6 @@ private:
 };
 
 HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior);
+Bindings::NavigationHistoryBehavior to_navigation_history_behavior(HistoryHandlingBehavior);
 
 }

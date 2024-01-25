@@ -18,7 +18,6 @@
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/AbstractBrowsingContext.h>
 #include <LibWeb/HTML/ActivateTab.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>

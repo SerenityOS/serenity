@@ -61,20 +61,8 @@ JS::GCPtr<DOM::Document> Location::relevant_document() const
     return browsing_context ? browsing_context->active_document() : nullptr;
 }
 
-static Bindings::NavigationHistoryBehavior to_navigation_history_behavior(HistoryHandlingBehavior b)
-{
-    switch (b) {
-    case HistoryHandlingBehavior::Push:
-        return Bindings::NavigationHistoryBehavior::Push;
-    case HistoryHandlingBehavior::Replace:
-        return Bindings::NavigationHistoryBehavior::Replace;
-    default:
-        return Bindings::NavigationHistoryBehavior::Auto;
-    }
-}
-
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#location-object-navigate
-WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavior history_handling)
+WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, Bindings::NavigationHistoryBehavior history_handling)
 {
     // 1. Let navigable be location's relevant global object's navigable.
     auto navigable = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigable();
@@ -84,14 +72,14 @@ WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavio
 
     // 3. If location's relevant Document is not yet completely loaded, and the incumbent global object does not have transient activation, then set historyHandling to "replace".
     if (!relevant_document()->is_completely_loaded() && !verify_cast<HTML::Window>(incumbent_global_object()).has_transient_activation()) {
-        history_handling = HistoryHandlingBehavior::Replace;
+        history_handling = Bindings::NavigationHistoryBehavior::Replace;
     }
 
     // 4. Navigate navigable to url using sourceDocument, with exceptionsEnabled set to true and historyHandling set to historyHandling.
     TRY(navigable->navigate({ .url = url,
         .source_document = source_document,
         .exceptions_enabled = true,
-        .history_handling = to_navigation_history_behavior(history_handling) }));
+        .history_handling = history_handling }));
 
     return {};
 }
@@ -389,7 +377,7 @@ WebIDL::ExceptionOr<void> Location::replace(String const& url)
         return WebIDL::SyntaxError::create(realm(), MUST(String::formatted("Invalid URL '{}'", url)));
 
     // 3. Location-object navigate this to the resulting URL record given "replace".
-    TRY(navigate(replace_url, HistoryHandlingBehavior::Replace));
+    TRY(navigate(replace_url, Bindings::NavigationHistoryBehavior::Replace));
 
     return {};
 }
