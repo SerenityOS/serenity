@@ -85,7 +85,10 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>:
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream))));
-    TRY(read_header(*plugin->m_context));
+    if constexpr (TContext::FormatDetails::binary_magic_number == '7')
+        TRY(read_pam_header(*plugin->m_context));
+    else
+        TRY(read_header(*plugin->m_context));
     return plugin;
 }
 
@@ -96,8 +99,10 @@ bool PortableImageDecoderPlugin<TContext>::sniff(ReadonlyBytes data)
     if (data.size() < 2)
         return false;
 
-    if (data.data()[0] == 'P' && data.data()[1] == Context::FormatDetails::ascii_magic_number)
-        return true;
+    if constexpr (requires { Context::FormatDetails::ascii_magic_number; }) {
+        if (data.data()[0] == 'P' && data.data()[1] == Context::FormatDetails::ascii_magic_number)
+            return true;
+    }
 
     if (data.data()[0] == 'P' && data.data()[1] == Context::FormatDetails::binary_magic_number)
         return true;
