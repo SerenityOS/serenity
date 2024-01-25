@@ -41,6 +41,7 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 * [Coding Style](CodingStyle.md)
 * [Common Patterns](Patterns.md)
 * [Guidelines for Text in UI](HumanInterfaceGuidelines/Text.md)
+* [Guidelines for writing manual pages](WritingManPages.md)
 * [EventLoop](EventLoop.md)
 * [High DPI Support](HighDPI.md)
 * [Smart Pointers](SmartPointers.md)
