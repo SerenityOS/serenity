@@ -14,21 +14,21 @@
 
 namespace HackStudio {
 
+struct Declaration {
+    static Declaration create_filename(ByteString const& filename);
+    static Declaration create_symbol_declaration(CodeComprehension::Declaration const&);
+
+    bool is_filename() const { return as_filename.has_value(); }
+    bool is_symbol_declaration() const { return as_symbol_declaration.has_value(); }
+
+    Optional<ByteString> as_filename;
+    Optional<CodeComprehension::Declaration> as_symbol_declaration;
+};
+
 class DeclarationsModel final : public GUI::Model {
 public:
-    struct Suggestion {
-        static Suggestion create_filename(ByteString const& filename);
-        static Suggestion create_symbol_declaration(CodeComprehension::Declaration const&);
-
-        bool is_filename() const { return as_filename.has_value(); }
-        bool is_symbol_declaration() const { return as_symbol_declaration.has_value(); }
-
-        Optional<ByteString> as_filename;
-        Optional<CodeComprehension::Declaration> as_symbol_declaration;
-    };
-
-    explicit DeclarationsModel(Vector<Suggestion>&& suggestions)
-        : m_suggestions(move(suggestions))
+    explicit DeclarationsModel(Vector<Declaration>&& declarations)
+        : m_declarations(move(declarations))
     {
     }
 
@@ -38,14 +38,14 @@ public:
         Filename,
         __Column_Count,
     };
-    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
+    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_declarations.size(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Column_Count; }
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override;
 
-    Vector<Suggestion> const& suggestions() const { return m_suggestions; }
+    Vector<Declaration> const& declarations() const { return m_declarations; }
 
 private:
-    Vector<Suggestion> m_suggestions;
+    Vector<Declaration> m_declarations;
 };
 
 }

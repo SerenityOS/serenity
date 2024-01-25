@@ -82,7 +82,7 @@ Locator::Locator(Core::EventReceiver* parent)
 void Locator::open_suggestion(const GUI::ModelIndex& index)
 {
     auto& model = reinterpret_cast<DeclarationsModel&>(*m_suggestion_view->model());
-    auto suggestion = model.suggestions()[index.row()];
+    auto suggestion = model.declarations()[index.row()];
     if (suggestion.is_filename()) {
         auto filename = suggestion.as_filename.value();
         open_file(filename);
@@ -112,15 +112,15 @@ void Locator::close()
 void Locator::update_suggestions()
 {
     auto typed_text = m_textbox->text();
-    Vector<DeclarationsModel::Suggestion> suggestions;
+    Vector<Declaration> suggestions;
     project().for_each_text_file([&](auto& file) {
         if (file.name().contains(typed_text, CaseSensitivity::CaseInsensitive))
-            suggestions.append(DeclarationsModel::Suggestion::create_filename(file.name()));
+            suggestions.append(Declaration::create_filename(file.name()));
     });
 
     ProjectDeclarations::the().for_each_declared_symbol([&suggestions, &typed_text](auto& decl) {
         if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive) || decl.scope.contains(typed_text, CaseSensitivity::CaseInsensitive))
-            suggestions.append((DeclarationsModel::Suggestion::create_symbol_declaration(decl)));
+            suggestions.append((Declaration::create_symbol_declaration(decl)));
     });
 
     bool has_suggestions = !suggestions.is_empty();

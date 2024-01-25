@@ -11,22 +11,22 @@
 
 namespace HackStudio {
 
-DeclarationsModel::Suggestion DeclarationsModel::Suggestion::create_filename(ByteString const& filename)
+Declaration Declaration::create_filename(ByteString const& filename)
 {
-    DeclarationsModel::Suggestion s;
+    Declaration s;
     s.as_filename = filename;
     return s;
 }
-DeclarationsModel::Suggestion DeclarationsModel::Suggestion::create_symbol_declaration(CodeComprehension::Declaration const& decl)
+Declaration Declaration::create_symbol_declaration(CodeComprehension::Declaration const& decl)
 {
-    DeclarationsModel::Suggestion s;
+    Declaration s;
     s.as_symbol_declaration = decl;
     return s;
 }
 
 GUI::Variant DeclarationsModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
-    auto& suggestion = m_suggestions.at(index.row());
+    auto& suggestion = m_declarations.at(index.row());
     if (role != GUI::ModelRole::Display)
         return {};
 
