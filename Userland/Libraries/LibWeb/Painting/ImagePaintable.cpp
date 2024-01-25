@@ -55,10 +55,9 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
         if (layout_box().renders_as_alt_text()) {
             auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
-            context.recording_painter().set_font(Platform::FontPlugin::the().default_font());
             context.recording_painter().paint_frame(enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
             auto alt = image_element.get_attribute_value(HTML::AttributeNames::alt);
-            context.recording_painter().draw_text(enclosing_rect, alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
+            context.recording_painter().draw_text(enclosing_rect, alt, Platform::FontPlugin::the().default_font(), Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = layout_box().image_provider().current_image_bitmap(image_rect.size().to_type<int>())) {
             ScopedCornerRadiusClip corner_clip { context, image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             auto image_int_rect = image_rect.to_type<int>();

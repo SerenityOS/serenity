@@ -99,10 +99,6 @@ struct SetClipRect {
 
 struct ClearClipRect { };
 
-struct SetFont {
-    NonnullRefPtr<Gfx::Font> font;
-};
-
 struct StackingContextTransform {
     Gfx::FloatPoint origin;
     Gfx::FloatMatrix4x4 matrix;
@@ -418,7 +414,6 @@ using PaintingCommand = Variant<
     DrawScaledImmutableBitmap,
     SetClipRect,
     ClearClipRect,
-    SetFont,
     PushStackingContext,
     PopStackingContext,
     PaintLinearGradient,
@@ -455,7 +450,6 @@ public:
     virtual CommandResult draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) = 0;
     virtual CommandResult set_clip_rect(Gfx::IntRect const& rect) = 0;
     virtual CommandResult clear_clip_rect() = 0;
-    virtual CommandResult set_font(Gfx::Font const& font) = 0;
     virtual CommandResult push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask) = 0;
     virtual CommandResult pop_stacking_context() = 0;
     virtual CommandResult paint_linear_gradient(Gfx::IntRect const&, LinearGradientData const&) = 0;
@@ -546,7 +540,6 @@ public:
     void draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color color, int thickness = 1, Gfx::Painter::LineStyle style = Gfx::Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
 
     void draw_text(Gfx::IntRect const&, String, Gfx::Font const&, Gfx::TextAlignment = Gfx::TextAlignment::TopLeft, Color = Color::Black, Gfx::TextElision = Gfx::TextElision::None, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
-    void draw_text(Gfx::IntRect const& rect, String raw_text, Gfx::TextAlignment alignment = Gfx::TextAlignment::TopLeft, Color color = Color::Black, Gfx::TextElision elision = Gfx::TextElision::None, Gfx::TextWrapping wrapping = Gfx::TextWrapping::DontWrap);
 
     void draw_signed_distance_field(Gfx::IntRect const& dst_rect, Color color, Gfx::GrayscaleBitmap const& sdf, float smoothing);
 
@@ -557,8 +550,6 @@ public:
 
     void translate(int dx, int dy);
     void translate(Gfx::IntPoint delta);
-
-    void set_font(Gfx::Font const& font);
 
     void set_scroll_frame_id(i32 id)
     {

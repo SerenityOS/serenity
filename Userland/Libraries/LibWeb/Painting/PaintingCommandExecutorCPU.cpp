@@ -85,13 +85,6 @@ CommandResult PaintingCommandExecutorCPU::clear_clip_rect()
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::set_font(Gfx::Font const& font)
-{
-    auto& painter = this->painter();
-    painter.set_font(font);
-    return CommandResult::Continue;
-}
-
 CommandResult PaintingCommandExecutorCPU::push_stacking_context(
     float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation,
     CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask)
