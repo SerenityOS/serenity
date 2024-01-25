@@ -19,6 +19,8 @@ struct CMYK {
     u8 m;
     u8 y;
     u8 k;
+
+    int operator<=>(CMYK const&) const = default;
 };
 
 class CMYKBitmap : public RefCounted<CMYKBitmap> {
