@@ -12,6 +12,7 @@
 namespace Gfx {
 
 struct JPEGEncoderOptions {
+    Optional<ReadonlyBytes> icc_data;
     u8 quality { 75 };
 };
 

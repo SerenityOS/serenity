@@ -133,7 +133,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
 
     if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .quality = jpeg_quality }));
+        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
         return {};
     }
     if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
