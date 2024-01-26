@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::sys$faccessat(Userspace<Syscall::SC_faccessat_params c
     if (params.flags & AT_EACCESS)
         flags |= AccessFlags::EffectiveAccess;
 
-    TRY(VirtualFileSystem::the().access(credentials(), pathname->view(), params.mode, TRY(custody_for_dirfd(params.dirfd)), flags));
+    TRY(VirtualFileSystem::the().access(vfs_root_context(), credentials(), pathname->view(), params.mode, TRY(custody_for_dirfd(params.dirfd)), flags));
     return 0;
 }
 

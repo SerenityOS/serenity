@@ -67,6 +67,8 @@ public:
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const { return entry.file_type; }
 
     SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<VirtualFileSystem>) { return m_attach_count; }
+    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<StorageManagement>) { return m_attach_count; }
+    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<VFSRootContext>) { return m_attach_count; }
 
 protected:
     FileSystem();
