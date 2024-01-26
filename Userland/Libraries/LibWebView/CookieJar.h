@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <LibCore/DateTime.h>
@@ -23,9 +23,9 @@ namespace WebView {
 struct CookieStorageKey {
     bool operator==(CookieStorageKey const&) const = default;
 
-    ByteString name;
-    ByteString domain;
-    ByteString path;
+    String name;
+    String domain;
+    String path;
 };
 
 class CookieJar {
@@ -61,17 +61,17 @@ private:
     explicit CookieJar(PersistedStorage);
     explicit CookieJar(TransientStorage);
 
-    static Optional<ByteString> canonicalize_domain(const URL& url);
+    static Optional<String> canonicalize_domain(const URL& url);
     static bool domain_matches(StringView string, StringView domain_string);
     static bool path_matches(StringView request_path, StringView cookie_path);
-    static ByteString default_path(const URL& url);
+    static String default_path(const URL& url);
 
     enum class MatchingCookiesSpecMode {
         RFC6265,
         WebDriver,
     };
 
-    void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, ByteString canonicalized_domain, Web::Cookie::Source source);
+    void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
     Vector<Web::Cookie::Cookie> get_matching_cookies(const URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
 
     void insert_cookie_into_database(Web::Cookie::Cookie const& cookie);
@@ -96,9 +96,9 @@ struct AK::Traits<WebView::CookieStorageKey> : public AK::DefaultTraits<WebView:
     static unsigned hash(WebView::CookieStorageKey const& key)
     {
         unsigned hash = 0;
-        hash = pair_int_hash(hash, string_hash(key.name.characters(), key.name.length()));
-        hash = pair_int_hash(hash, string_hash(key.domain.characters(), key.domain.length()));
-        hash = pair_int_hash(hash, string_hash(key.path.characters(), key.path.length()));
+        hash = pair_int_hash(hash, key.name.hash());
+        hash = pair_int_hash(hash, key.domain.hash());
+        hash = pair_int_hash(hash, key.path.hash());
         return hash;
     }
 };
