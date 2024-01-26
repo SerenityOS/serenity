@@ -55,10 +55,9 @@ ErrorOr<FlatPtr> Process::sys$fsmount(Userspace<Syscall::SC_fsmount_params const
 
     RefPtr<OpenFileDescription> source_description = TRY(open_file_description_ignoring_negative(params.source_fd));
     auto target = TRY(try_copy_kstring_from_user(params.target));
-    auto current_vfs_root_context = Process::current().vfs_root_context();
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(current_vfs_root_context, credentials, target->view(), current_directory()));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
     auto flags = mount_description->mount_file()->mount_flags();
-    TRY(VirtualFileSystem::the().mount(current_vfs_root_context, *mount_description->mount_file(), source_description.ptr(), target_custody, flags));
+    TRY(VirtualFileSystem::the().mount(mount_target_context.vfs_root_context, *mount_description->mount_file(), source_description.ptr(), mount_target_context.custody, flags));
     return 0;
 }
 
@@ -78,8 +77,8 @@ ErrorOr<FlatPtr> Process::sys$remount(Userspace<Syscall::SC_remount_params const
 
     auto target = TRY(try_copy_kstring_from_user(params.target));
     auto current_vfs_root_context = Process::current().vfs_root_context();
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(current_vfs_root_context, credentials, target->view(), current_directory()));
-    TRY(VirtualFileSystem::the().remount(current_vfs_root_context, target_custody, params.flags));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
+    TRY(VirtualFileSystem::the().remount(mount_target_context.vfs_root_context, mount_target_context.custody, params.flags));
     return 0;
 }
 
@@ -99,8 +98,7 @@ ErrorOr<FlatPtr> Process::sys$bindmount(Userspace<Syscall::SC_bindmount_params c
 
     auto source_fd = params.source_fd;
     auto target = TRY(try_copy_kstring_from_user(params.target));
-    auto current_vfs_root_context = Process::current().vfs_root_context();
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(current_vfs_root_context, credentials, target->view(), current_directory()));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
 
     auto description = TRY(open_file_description(source_fd));
     if (!description->custody()) {
@@ -108,11 +106,11 @@ ErrorOr<FlatPtr> Process::sys$bindmount(Userspace<Syscall::SC_bindmount_params c
         return ENODEV;
     }
 
-    TRY(VirtualFileSystem::the().bind_mount(current_vfs_root_context, *description->custody(), target_custody, params.flags));
+    TRY(VirtualFileSystem::the().bind_mount(mount_target_context.vfs_root_context, *description->custody(), mount_target_context.custody, params.flags));
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, size_t mountpoint_length)
+ErrorOr<FlatPtr> Process::sys$umount(Userspace<Syscall::SC_umount_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto credentials = this->credentials();
@@ -121,10 +119,10 @@ ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, siz
 
     TRY(require_promise(Pledge::mount));
 
-    auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
-    auto current_vfs_root_context = Process::current().vfs_root_context();
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(current_vfs_root_context, credentials, mountpoint->view(), current_directory()));
-    TRY(VirtualFileSystem::the().unmount(current_vfs_root_context, custody));
+    auto params = TRY(copy_typed_from_user(user_params));
+    auto target = TRY(try_copy_kstring_from_user(params.target));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
+    TRY(VirtualFileSystem::the().unmount(mount_target_context.vfs_root_context, mount_target_context.custody));
     return 0;
 }
 

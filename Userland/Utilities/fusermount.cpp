@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(set_mount_flag("fd", fd, mount_fd));
     TRY(set_mount_flag("rootmode", 40000, mount_fd));
 
-    TRY(Core::System::fsmount(mount_fd, -1, target));
+    TRY(Core::System::fsmount({}, mount_fd, -1, target));
 
     return 0;
 }
