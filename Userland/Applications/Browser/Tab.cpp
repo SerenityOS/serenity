@@ -479,34 +479,6 @@ Tab::Tab(BrowserWindow& window)
             on_favicon_change(icon);
     };
 
-    view().on_get_all_cookies = [this](auto& url) -> Vector<Web::Cookie::Cookie> {
-        if (on_get_all_cookies)
-            return on_get_all_cookies(url);
-        return {};
-    };
-
-    view().on_get_named_cookie = [this](auto& url, auto& name) -> Optional<Web::Cookie::Cookie> {
-        if (on_get_named_cookie)
-            return on_get_named_cookie(url, name);
-        return {};
-    };
-
-    view().on_get_cookie = [this](auto& url, auto source) -> ByteString {
-        if (on_get_cookie)
-            return on_get_cookie(url, source);
-        return {};
-    };
-
-    view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
-        if (on_set_cookie)
-            on_set_cookie(url, cookie, source);
-    };
-
-    view().on_update_cookie = [this](auto& cookie) {
-        if (on_update_cookie)
-            on_update_cookie(cookie);
-    };
-
     view().on_request_alert = [this](String const& message) {
         auto& window = this->window();
 
@@ -975,8 +947,8 @@ void Tab::show_storage_inspector()
         storage_window->set_icon(g_icon_bag.cookie);
         m_storage_widget = storage_window->set_main_widget<StorageWidget>();
         m_storage_widget->on_update_cookie = [this](Web::Cookie::Cookie cookie) {
-            if (on_update_cookie)
-                on_update_cookie(move(cookie));
+            if (view().on_update_cookie)
+                view().on_update_cookie(move(cookie));
         };
     }
 
