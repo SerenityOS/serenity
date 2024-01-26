@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2024, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
@@ -9,7 +9,6 @@
 
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
-#include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
@@ -163,7 +162,7 @@ void CookieJar::dump_cookies()
         builder.appendff("\t{}SameSite{} = {:s}\n", attribute_color, no_color, Web::Cookie::same_site_to_string(cookie.same_site));
     });
 
-    dbgln("{} cookies stored\n{}", total_cookies, builder.to_byte_string());
+    dbgln("{} cookies stored\n{}", total_cookies, builder.string_view());
 }
 
 Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies()
@@ -187,7 +186,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL const& url)
     return get_matching_cookies(url, domain.value(), Web::Cookie::Source::Http, MatchingCookiesSpecMode::WebDriver);
 }
 
-Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, ByteString const& name)
+Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, StringView name)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -196,7 +195,7 @@ Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, ByteSt
     auto cookie_list = get_matching_cookies(url, domain.value(), Web::Cookie::Source::Http, MatchingCookiesSpecMode::WebDriver);
 
     for (auto const& cookie : cookie_list) {
-        if (cookie.name == name.view())
+        if (cookie.name == name)
             return cookie;
     }
 
@@ -216,7 +215,7 @@ Optional<ByteString> CookieJar::canonicalize_domain(const URL& url)
     return url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string().to_lowercase();
 }
 
-bool CookieJar::domain_matches(ByteString const& string, ByteString const& domain_string)
+bool CookieJar::domain_matches(StringView string, StringView domain_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.3
 
@@ -240,7 +239,7 @@ bool CookieJar::domain_matches(ByteString const& string, ByteString const& domai
     return true;
 }
 
-bool CookieJar::path_matches(ByteString const& request_path, ByteString const& cookie_path)
+bool CookieJar::path_matches(StringView request_path, StringView cookie_path)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.4
 
@@ -333,7 +332,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // 6. If the domain-attribute is non-empty:
     if (!cookie.domain.is_empty()) {
         // If the canonicalized request-host does not domain-match the domain-attribute: Ignore the cookie entirely and abort these steps.
-        if (!domain_matches(canonicalized_domain, cookie.domain.to_byte_string()))
+        if (!domain_matches(canonicalized_domain, cookie.domain))
             return;
 
         // Set the cookie's host-only-flag to false. Set the cookie's domain to the domain-attribute.
@@ -393,7 +392,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     MUST(sync_promise->await());
 }
 
-Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, ByteString const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
+Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.4
 
@@ -403,13 +402,13 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Byte
     select_all_cookies_from_database([&](auto cookie) {
         // Either: The cookie's host-only-flag is true and the canonicalized request-host is identical to the cookie's domain.
         // Or: The cookie's host-only-flag is false and the canonicalized request-host domain-matches the cookie's domain.
-        bool is_host_only_and_has_identical_domain = cookie.host_only && (canonicalized_domain.view() == cookie.domain);
-        bool is_not_host_only_and_domain_matches = !cookie.host_only && domain_matches(canonicalized_domain, cookie.domain.to_byte_string());
+        bool is_host_only_and_has_identical_domain = cookie.host_only && (canonicalized_domain == cookie.domain);
+        bool is_not_host_only_and_domain_matches = !cookie.host_only && domain_matches(canonicalized_domain, cookie.domain);
         if (!is_host_only_and_has_identical_domain && !is_not_host_only_and_domain_matches)
             return;
 
         // The request-uri's path path-matches the cookie's path.
-        if (!path_matches(url.serialize_path(), cookie.path.to_byte_string()))
+        if (!path_matches(url.serialize_path(), cookie.path))
             return;
 
         // If the cookie's secure-only-flag is true, then the request-uri's scheme must denote a "secure" protocol.
