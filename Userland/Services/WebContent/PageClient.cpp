@@ -470,7 +470,7 @@ Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL cons
 
 String PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
-    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(move(url), static_cast<u8>(source));
+    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(move(url), source);
     if (!response) {
         dbgln("WebContent client disconnected during DidRequestCookie. Exiting peacefully.");
         exit(0);
@@ -480,7 +480,7 @@ String PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Source s
 
 void PageClient::page_did_set_cookie(const URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
-    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidSetCookie>(url, cookie, static_cast<u8>(source));
+    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidSetCookie>(url, cookie, source);
     if (!response) {
         dbgln("WebContent client disconnected during DidSetCookie. Exiting peacefully.");
         exit(0);
