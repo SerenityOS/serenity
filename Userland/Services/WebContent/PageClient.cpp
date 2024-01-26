@@ -463,7 +463,7 @@ Vector<Web::Cookie::Cookie> PageClient::page_did_request_all_cookies(URL const& 
     return client().did_request_all_cookies(url);
 }
 
-Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL const& url, ByteString const& name)
+Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL const& url, String const& name)
 {
     return client().did_request_named_cookie(url, name);
 }

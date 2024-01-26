@@ -1538,7 +1538,7 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
     // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the current browsing context’s active document, return success with the serialized cookie as data.
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
 
-    if (auto cookie = m_page_client.page_did_request_named_cookie(document->url(), name.to_byte_string()); cookie.has_value()) {
+    if (auto cookie = m_page_client.page_did_request_named_cookie(document->url(), name); cookie.has_value()) {
         auto serialized_cookie = serialize_cookie(*cookie);
         return serialized_cookie;
     }

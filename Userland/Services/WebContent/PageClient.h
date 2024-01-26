@@ -113,7 +113,7 @@ private:
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
-    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, ByteString const&) override;
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, String const&) override;
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
     virtual void page_did_set_cookie(const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
     virtual void page_did_update_cookie(Web::Cookie::Cookie) override;

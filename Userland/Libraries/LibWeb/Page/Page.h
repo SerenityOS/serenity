@@ -263,7 +263,7 @@ public:
     virtual void page_did_request_accept_dialog() { }
     virtual void page_did_request_dismiss_dialog() { }
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(AK::URL const&) { return {}; }
-    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, ByteString const&) { return {}; }
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, String const&) { return {}; }
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
