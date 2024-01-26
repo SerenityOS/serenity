@@ -361,9 +361,7 @@ void BrowserWindow::build_menus(StringView const man_file)
         active_tab().m_history.dump();
     }));
     debug_menu->add_action(GUI::Action::create("Dump C&ookies", g_icon_bag.cookie, [this](auto&) {
-        auto& tab = active_tab();
-        if (tab.on_dump_cookies)
-            tab.on_dump_cookies();
+        m_cookie_jar.dump_cookies();
     }));
     debug_menu->add_action(GUI::Action::create("Dump Loc&al Storage", g_icon_bag.local_storage, [this](auto&) {
         active_tab().view().debug_request("dump-local-storage");
@@ -578,28 +576,24 @@ Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activa
         create_new_window(url);
     };
 
-    new_tab.on_get_all_cookies = [this](auto& url) {
+    new_tab.view().on_get_all_cookies = [this](auto& url) {
         return m_cookie_jar.get_all_cookies(url);
     };
 
-    new_tab.on_get_named_cookie = [this](auto& url, auto& name) {
+    new_tab.view().on_get_named_cookie = [this](auto& url, auto& name) {
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    new_tab.on_get_cookie = [this](auto& url, auto source) -> ByteString {
+    new_tab.view().on_get_cookie = [this](auto& url, auto source) {
         return m_cookie_jar.get_cookie(url, source);
     };
 
-    new_tab.on_set_cookie = [this](auto& url, auto& cookie, auto source) {
+    new_tab.view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
         m_cookie_jar.set_cookie(url, cookie, source);
     };
 
-    new_tab.on_dump_cookies = [this]() {
-        m_cookie_jar.dump_cookies();
-    };
-
-    new_tab.on_update_cookie = [this](auto cookie) {
-        m_cookie_jar.update_cookie(move(cookie));
+    new_tab.view().on_update_cookie = [this](auto const& cookie) {
+        m_cookie_jar.update_cookie(cookie);
     };
 
     new_tab.on_get_cookies_entries = [this]() {
