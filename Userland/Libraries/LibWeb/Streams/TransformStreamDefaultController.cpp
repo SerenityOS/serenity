@@ -29,6 +29,8 @@ void TransformStreamDefaultController::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_stream);
+    visitor.visit(m_flush_algorithm);
+    visitor.visit(m_transform_algorithm);
 }
 
 // https://streams.spec.whatwg.org/#ts-default-controller-desired-size

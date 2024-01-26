@@ -42,13 +42,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TransformStream>> TransformStream::construc
     auto readable_high_water_mark = TRY(extract_high_water_mark(readable_strategy, 0));
 
     // 6. Let readableSizeAlgorithm be ! ExtractSizeAlgorithm(readableStrategy).
-    auto readable_size_algorithm = extract_size_algorithm(readable_strategy);
+    auto readable_size_algorithm = extract_size_algorithm(vm, readable_strategy);
 
     // 7. Let writableHighWaterMark be ? ExtractHighWaterMark(writableStrategy, 1).
     auto writable_high_water_mark = TRY(extract_high_water_mark(writable_strategy, 1));
 
     // 8. Let writableSizeAlgorithm be ! ExtractSizeAlgorithm(writableStrategy).
-    auto writable_size_algorithm = extract_size_algorithm(writable_strategy);
+    auto writable_size_algorithm = extract_size_algorithm(vm, writable_strategy);
 
     // 9. Let startPromise be a new promise.
     auto start_promise = WebIDL::create_promise(realm);

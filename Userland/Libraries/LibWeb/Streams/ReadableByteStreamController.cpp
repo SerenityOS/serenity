@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -98,7 +98,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableByteStreamControl
     reset_queue(*this);
 
     // 3. Let result be the result of performing this.[[cancelAlgorithm]], passing in reason.
-    auto result = (*m_cancel_algorithm)(reason);
+    auto result = m_cancel_algorithm->function()(reason);
 
     // 4. Perform ! ReadableByteStreamControllerClearAlgorithms(this).
     readable_byte_stream_controller_clear_algorithms(*this);
@@ -201,6 +201,8 @@ void ReadableByteStreamController::visit_edges(Cell::Visitor& visitor)
     for (auto const& item : m_queue)
         visitor.visit(item.buffer);
     visitor.visit(m_stream);
+    visitor.visit(m_cancel_algorithm);
+    visitor.visit(m_pull_algorithm);
 }
 
 }

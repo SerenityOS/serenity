@@ -19,6 +19,10 @@ void WritableStreamDefaultController::visit_edges(Visitor& visitor)
     for (auto& value : m_queue)
         visitor.visit(value.value);
     visitor.visit(m_stream);
+    visitor.visit(m_abort_algorithm);
+    visitor.visit(m_close_algorithm);
+    visitor.visit(m_strategy_size_algorithm);
+    visitor.visit(m_write_algorithm);
 }
 
 // https://streams.spec.whatwg.org/#ws-default-controller-error
@@ -39,7 +43,7 @@ WebIDL::ExceptionOr<void> WritableStreamDefaultController::error(JS::Value error
 WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> WritableStreamDefaultController::abort_steps(JS::Value reason)
 {
     // 1. Let result be the result of performing this.[[abortAlgorithm]], passing reason.
-    auto result = TRY((*m_abort_algorithm)(reason));
+    auto result = TRY(m_abort_algorithm->function()(reason));
 
     // 2. Perform ! WritableStreamDefaultControllerClearAlgorithms(this).
     writable_stream_default_controller_clear_algorithms(*this);
