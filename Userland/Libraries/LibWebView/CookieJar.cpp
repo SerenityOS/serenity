@@ -109,7 +109,7 @@ void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& pars
     if (!domain.has_value())
         return;
 
-    store_cookie(parsed_cookie, url, move(domain.value()), source);
+    store_cookie(parsed_cookie, url, domain.release_value(), source);
 }
 
 // This is based on https://www.rfc-editor.org/rfc/rfc6265#section-5.3 as store_cookie() below
@@ -202,7 +202,7 @@ Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, String
     return {};
 }
 
-Optional<ByteString> CookieJar::canonicalize_domain(const URL& url)
+Optional<String> CookieJar::canonicalize_domain(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.2
     if (!url.is_valid())
@@ -212,7 +212,7 @@ Optional<ByteString> CookieJar::canonicalize_domain(const URL& url)
     if (url.host().has<Empty>())
         return {};
 
-    return url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string().to_lowercase();
+    return MUST(MUST(url.serialized_host()).to_lowercase());
 }
 
 bool CookieJar::domain_matches(StringView string, StringView domain_string)
@@ -262,29 +262,29 @@ bool CookieJar::path_matches(StringView request_path, StringView cookie_path)
     return false;
 }
 
-ByteString CookieJar::default_path(const URL& url)
+String CookieJar::default_path(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.4
 
     // 1. Let uri-path be the path portion of the request-uri if such a portion exists (and empty otherwise).
-    ByteString uri_path = url.serialize_path();
+    auto uri_path = url.serialize_path();
 
     // 2. If the uri-path is empty or if the first character of the uri-path is not a %x2F ("/") character, output %x2F ("/") and skip the remaining steps.
     if (uri_path.is_empty() || (uri_path[0] != '/'))
-        return "/";
+        return "/"_string;
 
     StringView uri_path_view = uri_path;
     size_t last_separator = uri_path_view.find_last('/').value();
 
     // 3. If the uri-path contains no more than one %x2F ("/") character, output %x2F ("/") and skip the remaining step.
     if (last_separator == 0)
-        return "/";
+        return "/"_string;
 
     // 4. Output the characters of the uri-path from the first character up to, but not including, the right-most %x2F ("/").
-    return uri_path.substring(0, last_separator);
+    return MUST(String::from_utf8(uri_path.substring_view(0, last_separator)));
 }
 
-void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, ByteString canonicalized_domain, Web::Cookie::Source source)
+void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
@@ -318,7 +318,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // 5. If the user agent is configured to reject "public suffixes" and the domain-attribute is a public suffix:
     if (is_public_suffix(cookie.domain)) {
         // If the domain-attribute is identical to the canonicalized request-host:
-        if (cookie.domain == canonicalized_domain.view()) {
+        if (cookie.domain == canonicalized_domain) {
             // Let the domain-attribute be the empty string.
             cookie.domain = String {};
         }
@@ -340,7 +340,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     } else {
         // Set the cookie's host-only-flag to true. Set the cookie's domain to the canonicalized request-host.
         cookie.host_only = true;
-        cookie.domain = MUST(String::from_byte_string(canonicalized_domain));
+        cookie.domain = move(canonicalized_domain);
     }
 
     // 7. If the cookie-attribute-list contains an attribute with an attribute-name of "Path":
@@ -348,7 +348,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
         // Set the cookie's path to attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Path".
         cookie.path = parsed_cookie.path.value();
     } else {
-        cookie.path = MUST(String::from_byte_string(default_path(url)));
+        cookie.path = default_path(url);
     }
 
     // 8. If the cookie-attribute-list contains an attribute with an attribute-name of "Secure", set the cookie's secure-only-flag to true.
@@ -465,7 +465,7 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
         if (value.type() != SQL::SQLType::Text)
             return Error::from_string_view(name);
 
-        field = MUST(String::from_byte_string(value.to_byte_string()));
+        field = MUST(value.to_string());
         return {};
     };
 
@@ -523,21 +523,21 @@ void CookieJar::insert_cookie_into_database(Web::Cookie::Cookie const& cookie)
         [&](PersistedStorage& storage) {
             storage.database.execute_statement(
                 storage.statements.insert_cookie, {}, [this]() { purge_expired_cookies(); }, {},
-                cookie.name.to_byte_string(),
-                cookie.value.to_byte_string(),
+                cookie.name,
+                cookie.value,
                 to_underlying(cookie.same_site),
                 cookie.creation_time,
                 cookie.last_access_time,
                 cookie.expiry_time,
-                cookie.domain.to_byte_string(),
-                cookie.path.to_byte_string(),
+                cookie.domain,
+                cookie.path,
                 cookie.secure,
                 cookie.http_only,
                 cookie.host_only,
                 cookie.persistent);
         },
         [&](TransientStorage& storage) {
-            CookieStorageKey key { cookie.name.to_byte_string(), cookie.domain.to_byte_string(), cookie.path.to_byte_string() };
+            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
             storage.set(key, cookie);
         });
 }
@@ -548,7 +548,7 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
         [&](PersistedStorage& storage) {
             storage.database.execute_statement(
                 storage.statements.update_cookie, {}, [this]() { purge_expired_cookies(); }, {},
-                cookie.value.to_byte_string(),
+                cookie.value,
                 to_underlying(cookie.same_site),
                 cookie.creation_time,
                 cookie.last_access_time,
@@ -557,12 +557,12 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
                 cookie.http_only,
                 cookie.host_only,
                 cookie.persistent,
-                cookie.name.to_byte_string(),
-                cookie.domain.to_byte_string(),
-                cookie.path.to_byte_string());
+                cookie.name,
+                cookie.domain,
+                cookie.path);
         },
         [&](TransientStorage& storage) {
-            CookieStorageKey key { cookie.name.to_byte_string(), cookie.domain.to_byte_string(), cookie.path.to_byte_string() };
+            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
             storage.set(key, cookie);
         });
 }
@@ -599,12 +599,12 @@ void CookieJar::select_cookie_from_database(Web::Cookie::Cookie cookie, OnCookie
                         on_complete_without_results(move(wrapped_cookie->cookie));
                 },
                 {},
-                wrapped_cookie->cookie.name.to_byte_string(),
-                wrapped_cookie->cookie.domain.to_byte_string(),
-                wrapped_cookie->cookie.path.to_byte_string());
+                wrapped_cookie->cookie.name,
+                wrapped_cookie->cookie.domain,
+                wrapped_cookie->cookie.path);
         },
         [&](TransientStorage& storage) {
-            CookieStorageKey key { cookie.name.to_byte_string(), cookie.domain.to_byte_string(), cookie.path.to_byte_string() };
+            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
 
             if (auto it = storage.find(key); it != storage.end())
                 on_result(cookie, it->value);
