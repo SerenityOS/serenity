@@ -80,7 +80,7 @@ CookieJar::CookieJar(TransientStorage storage)
 {
 }
 
-ByteString CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
+String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
 {
     purge_expired_cookies();
 
@@ -100,7 +100,7 @@ ByteString CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
         builder.appendff("{}={}", cookie.name, cookie.value);
     }
 
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
 void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source)

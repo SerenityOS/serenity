@@ -313,7 +313,7 @@ Messages::WebContentClient::DidRequestCookieResponse WebContentClient::did_reque
 {
     if (m_view.on_get_cookie)
         return m_view.on_get_cookie(url, static_cast<Web::Cookie::Source>(source));
-    return ByteString {};
+    return String {};
 }
 
 void WebContentClient::did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, u8 source)

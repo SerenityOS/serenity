@@ -636,7 +636,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         return [delegate cookieJar].get_named_cookie(url, name);
     };
 
-    m_web_view_bridge->on_get_cookie = [](auto const& url, auto source) -> ByteString {
+    m_web_view_bridge->on_get_cookie = [](auto const& url, auto source) {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         return [delegate cookieJar].get_cookie(url, source);
     };

@@ -541,7 +541,7 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    tab->view().on_get_cookie = [this](auto& url, auto source) -> ByteString {
+    tab->view().on_get_cookie = [this](auto& url, auto source) {
         return m_cookie_jar.get_cookie(url, source);
     };
 

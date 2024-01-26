@@ -168,7 +168,7 @@ private:
                 on_scroll_to_point(position);
         };
 
-        on_get_cookie = [this](auto const& url, auto source) -> ByteString {
+        on_get_cookie = [this](auto const& url, auto source) {
             return m_cookie_jar.get_cookie(url, source);
         };
 
