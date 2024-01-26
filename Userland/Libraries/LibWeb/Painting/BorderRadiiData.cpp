@@ -10,7 +10,7 @@
 
 namespace Web::Painting {
 
-Gfx::AntiAliasingPainter::CornerRadius BorderRadiusData::as_corner(PaintContext& context) const
+Gfx::AntiAliasingPainter::CornerRadius BorderRadiusData::as_corner(PaintContext const& context) const
 {
     return Gfx::AntiAliasingPainter::CornerRadius {
         context.floored_device_pixels(horizontal_radius).value(),

@@ -27,6 +27,26 @@ Layout::InlineNode const& InlinePaintable::layout_node() const
     return static_cast<Layout::InlineNode const&>(Paintable::layout_node());
 }
 
+void InlinePaintable::before_paint(PaintContext& context, PaintPhase) const
+{
+    if (m_scroll_frame_id.has_value()) {
+        context.recording_painter().save();
+        context.recording_painter().set_scroll_frame_id(m_scroll_frame_id.value());
+    }
+    if (m_clip_rect.has_value()) {
+        context.recording_painter().save();
+        context.recording_painter().add_clip_rect(context.enclosing_device_rect(*m_clip_rect).to_type<int>());
+    }
+}
+
+void InlinePaintable::after_paint(PaintContext& context, PaintPhase) const
+{
+    if (m_clip_rect.has_value())
+        context.recording_painter().restore();
+    if (m_scroll_frame_id.has_value())
+        context.recording_painter().restore();
+}
+
 void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     auto& painter = context.recording_painter();

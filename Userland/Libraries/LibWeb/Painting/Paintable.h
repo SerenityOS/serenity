@@ -186,8 +186,6 @@ public:
     DOM::Document const& document() const { return layout_node().document(); }
     DOM::Document& document() { return layout_node().document(); }
 
-    PaintableBox const* nearest_scrollable_ancestor_within_stacking_context() const;
-
     CSSPixelPoint box_type_agnostic_position() const;
 
 protected:
