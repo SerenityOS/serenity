@@ -11,6 +11,12 @@
 #include <AK/StringView.h>
 #include <LibDeviceTree/FlattenedDeviceTree.h>
 
+#ifdef KERNEL
+#    include <Kernel/Library/StdLib.h>
+#else
+#    include <string.h>
+#endif
+
 namespace DeviceTree {
 
 static ErrorOr<StringView> read_string_view(ReadonlyBytes bytes, StringView error_string)

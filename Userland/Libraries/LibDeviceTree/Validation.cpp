@@ -8,10 +8,18 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
+#include <AK/MemoryStream.h>
+#include <AK/StringBuilder.h>
 #include <AK/Try.h>
+#include <AK/Vector.h>
 #include <LibDeviceTree/Validation.h>
 
 namespace DeviceTree {
+
+#ifdef KERNEL
+#    define warnln dbgln
+#    define outln dbgln
+#endif
 
 bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree, Verbose verbose)
 {
@@ -116,16 +124,16 @@ bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, Rea
 ErrorOr<void> dump(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
 {
     outln("/dts-v1/;");
-    outln("// magic:               {:#08x}", header.magic);
-    outln("// totalsize:           {:#08x} ({})", header.totalsize, header.totalsize);
-    outln("// off_dt_struct:       {:#08x}", header.off_dt_struct);
-    outln("// off_dt_strings:      {:#08x}", header.off_dt_strings);
-    outln("// off_mem_rsvmap:      {:#08x}", header.off_mem_rsvmap);
-    outln("// version:             {:#08x}", header.version);
-    outln("// last_comp_version:   {:#08x}", header.last_comp_version);
-    outln("// boot_cpuid_phys:     {:#08x}", header.boot_cpuid_phys);
-    outln("// size_dt_strings:     {:#08x}", header.size_dt_strings);
-    outln("// size_dt_struct:      {:#08x}", header.size_dt_struct);
+    outln("// magic:             {:#08x}", header.magic);
+    outln("// totalsize:         {:#08x} ({})", header.totalsize, header.totalsize);
+    outln("// off_dt_struct:     {:#x}", header.off_dt_struct);
+    outln("// off_dt_strings:    {:#x}", header.off_dt_strings);
+    outln("// off_mem_rsvmap:    {:#x}", header.off_mem_rsvmap);
+    outln("// version:           {}", header.version);
+    outln("// last_comp_version: {}", header.last_comp_version);
+    outln("// boot_cpuid_phys:   {:#x}", header.boot_cpuid_phys);
+    outln("// size_dt_strings:   {:#x}", header.size_dt_strings);
+    outln("// size_dt_struct:    {:#x}", header.size_dt_struct);
 
     if (!validate_flattened_device_tree(header, raw_device_tree, Verbose::Yes))
         return Error::from_errno(EINVAL);
@@ -147,34 +155,68 @@ ErrorOr<void> dump_flattened_device_tree_structure(FlattenedDeviceTreeHeader con
     u8 indent = 0;
     DeviceTreeCallbacks callbacks = {
         .on_node_begin = [&](StringView token_name) -> ErrorOr<IterationDecision> {
-            outln("{: >{}}FDT_BEGIN_NODE: {}", ""sv, indent * 2, token_name);
+            // Root Entry:
+            if (indent == 0)
+                outln("/ {{");
+            else
+                outln("{: >{}}{} {{", ""sv, indent * 2, token_name);
             ++indent;
             return IterationDecision::Continue;
         },
         .on_node_end = [&](StringView) -> ErrorOr<IterationDecision> {
             --indent;
-            outln("{: >{}}FDT_END_NODE", ""sv, indent * 2);
+            outln("{: >{}}}};", ""sv, indent * 2);
             return IterationDecision::Continue;
         },
         .on_property = [&](StringView property_name, ReadonlyBytes property_value) -> ErrorOr<IterationDecision> {
-            StringView property_as_string { property_value };
             // Note: We want to figure out if the value is a string, a stringlist, a number or something unprintable.
             //     In reality, the entity retrieving the value needs to know if it's a u32, u64, string, stringlist, or "property-encoded-value" a priori
-            bool const is_print = (property_as_string.length() > 0) && all_of(property_as_string.begin(), --property_as_string.end(), [](char c) { return is_ascii_printable(c); });
-            if (is_print)
-                outln("{: >{}}FDT_PROP: {}: {}", ""sv, indent * 2, property_name, property_as_string);
-            else
-                outln("{: >{}}FDT_PROP: {}: {:hex-dump}", ""sv, indent * 2, property_name, property_as_string);
+            bool had_valid_character = false;
+            bool const is_print = all_of(property_value, [&had_valid_character](char c) -> bool {
+                if (AK::is_ascii_printable(c)) {
+                    had_valid_character = true;
+                    return true;
+                }
+                if (had_valid_character) {
+                    had_valid_character = false;
+                    return c == 0;
+                }
+                return false;
+            });
+            if (property_value.size() == 0) {
+                outln("{: >{}}{};", ""sv, indent * 2, property_name);
+            } else if (is_print) {
+                StringView property_as_string { property_value };
+                StringBuilder property;
+                TRY(property.try_appendff("{: >{}}{} = ", ""sv, indent * 2, property_name));
+                TRY(property.try_join(", "sv, property_as_string.split_view('\00'), "\"{}\""sv));
+                outln("{};", property.string_view());
+            } else {
+                StringBuilder property;
+                if (property_value.size() % 4 != 0) {
+                    // This is the best hint we can use, that we are given an array
+                    // without looking at the schema of the current tree node
+                    TRY(property.try_appendff("{: >{}}{} = [", ""sv, indent * 2, property_name));
+                    TRY(property.try_join(' ', property_value, "{:02x}"sv));
+                    outln("{}];", property.string_view());
+                } else {
+                    TRY(property.try_appendff("{: >{}}{} = <", ""sv, indent * 2, property_name));
+                    auto value_stream = FixedMemoryStream(property_value);
+                    bool first_value = true;
+                    while (!value_stream.is_eof()) {
+                        if (first_value)
+                            property.appendff("{:#08x}", TRY(value_stream.read_value<BigEndian<u32>>()));
+                        else
+                            property.appendff(" {:#08x}", TRY(value_stream.read_value<BigEndian<u32>>()));
+                        first_value = false;
+                    }
+                    outln("{}>;", property.string_view());
+                }
+            }
             return IterationDecision::Continue;
         },
-        .on_noop = [&]() -> ErrorOr<IterationDecision> {
-            outln("{: >{}}FDT_NOOP", ""sv, indent * 2);
-            return IterationDecision::Continue;
-        },
-        .on_end = []() -> ErrorOr<void> {
-            outln("FDT_END");
-            return {};
-        }
+        .on_noop = []() -> ErrorOr<IterationDecision> { return IterationDecision::Continue; },
+        .on_end = []() -> ErrorOr<void> { return {}; }
     };
 
     return walk_device_tree(header, raw_device_tree, move(callbacks));
