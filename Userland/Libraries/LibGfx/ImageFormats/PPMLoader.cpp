@@ -45,7 +45,6 @@ ErrorOr<void> read_image_data(PPMLoadingContext& context)
         }
     }
 
-    context.state = PPMLoadingContext::State::BitmapDecoded;
     return {};
 }
 }
