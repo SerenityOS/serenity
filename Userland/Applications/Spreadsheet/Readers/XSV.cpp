@@ -25,19 +25,19 @@ void XSV::set_error(ReadError error)
         m_error = error;
 }
 
-Vector<ByteString> XSV::headers() const
+Vector<String> XSV::headers() const
 {
-    Vector<ByteString> headers;
+    Vector<String> headers;
     if (has_explicit_headers()) {
         for (auto& field : m_names)
-            headers.append(field.is_string_view ? field.as_string_view : field.as_string.view());
+            headers.append(field.is_string_view ? MUST(String::from_utf8(field.as_string_view)) : field.as_string);
     } else {
         // No headers read, grab one of the rows and generate empty names
         if (m_rows.is_empty())
             return headers;
 
         for ([[maybe_unused]] auto& field : m_rows.first())
-            headers.append(ByteString::empty());
+            headers.append({});
     }
 
     return headers;
@@ -89,7 +89,7 @@ Vector<XSV::Field> XSV::read_row(bool header_row)
 {
     Vector<Field> row;
     bool first = true;
-    while (!(m_lexer.is_eof() || m_lexer.next_is('\n') || m_lexer.next_is("\r\n")) && (first || m_lexer.consume_specific(m_traits.separator.view()))) {
+    while (!(m_lexer.is_eof() || m_lexer.next_is('\n') || m_lexer.next_is("\r\n")) && (first || m_lexer.consume_specific(m_traits.separator))) {
         first = false;
         row.append(read_one_field());
     }
@@ -137,7 +137,7 @@ XSV::Field XSV::read_one_field()
 
     bool is_quoted = false;
     Field field;
-    if (m_lexer.next_is(m_traits.quote.view())) {
+    if (m_lexer.next_is(m_traits.quote.bytes_as_string_view())) {
         is_quoted = true;
         field = read_one_quoted_field();
     } else {
@@ -167,7 +167,7 @@ XSV::Field XSV::read_one_field()
             if (field.is_string_view)
                 field.as_string_view = view;
             else
-                field.as_string = field.as_string.substring(0, view.length());
+                field.as_string = MUST(field.as_string.substring_from_byte_offset(0, view.length()));
         }
     }
 
@@ -176,7 +176,7 @@ XSV::Field XSV::read_one_field()
 
 XSV::Field XSV::read_one_quoted_field()
 {
-    if (!m_lexer.consume_specific(m_traits.quote.view()))
+    if (!m_lexer.consume_specific(m_traits.quote.bytes_as_string_view()))
         set_error(ReadError::InternalError);
 
     size_t start = m_lexer.tell(), end = start;
@@ -188,7 +188,7 @@ XSV::Field XSV::read_one_quoted_field()
         char ch;
         switch (m_traits.quote_escape) {
         case ParserTraits::Backslash:
-            if (m_lexer.consume_specific('\\') && m_lexer.consume_specific(m_traits.quote.view())) {
+            if (m_lexer.consume_specific('\\') && m_lexer.consume_specific(m_traits.quote.bytes_as_string_view())) {
                 // If there is an escaped quote, we have no choice but to make a copy.
                 if (!is_copy) {
                     is_copy = true;
@@ -200,8 +200,8 @@ XSV::Field XSV::read_one_quoted_field()
             }
             break;
         case ParserTraits::Repeat:
-            if (m_lexer.consume_specific(m_traits.quote.view())) {
-                if (m_lexer.consume_specific(m_traits.quote.view())) {
+            if (m_lexer.consume_specific(m_traits.quote.bytes_as_string_view())) {
+                if (m_lexer.consume_specific(m_traits.quote.bytes_as_string_view())) {
                     // If there is an escaped quote, we have no choice but to make a copy.
                     if (!is_copy) {
                         is_copy = true;
@@ -211,14 +211,14 @@ XSV::Field XSV::read_one_quoted_field()
                     end = m_lexer.tell();
                     continue;
                 }
-                for (size_t i = 0; i < m_traits.quote.length(); ++i)
+                for (size_t i = 0; i < m_traits.quote.bytes().size(); ++i)
                     m_lexer.retreat();
                 goto end;
             }
             break;
         }
 
-        if (m_lexer.next_is(m_traits.quote.view()))
+        if (m_lexer.next_is(m_traits.quote.bytes_as_string_view()))
             goto end;
 
         if (!allow_newlines) {
@@ -236,11 +236,11 @@ XSV::Field XSV::read_one_quoted_field()
         break;
     }
 
-    if (!m_lexer.consume_specific(m_traits.quote.view()))
+    if (!m_lexer.consume_specific(m_traits.quote))
         set_error(ReadError::QuoteFailure);
 
     if (is_copy)
-        return { {}, builder.to_byte_string(), false };
+        return { {}, MUST(builder.to_string()), false };
 
     return { m_source.substring_view(start, end - start), {}, true };
 }
@@ -251,13 +251,13 @@ XSV::Field XSV::read_one_unquoted_field()
     bool allow_quote_in_field = (m_behaviors & ParserBehavior::QuoteOnlyInFieldStart) != ParserBehavior::None;
 
     for (; !m_lexer.is_eof();) {
-        if (m_lexer.next_is(m_traits.separator.view()))
+        if (m_lexer.next_is(m_traits.separator.bytes_as_string_view()))
             break;
 
         if (m_lexer.next_is("\r\n") || m_lexer.next_is("\n"))
             break;
 
-        if (m_lexer.consume_specific(m_traits.quote.view())) {
+        if (m_lexer.consume_specific(m_traits.quote)) {
             if (!allow_quote_in_field)
                 set_error(ReadError::QuoteFailure);
             end = m_lexer.tell();

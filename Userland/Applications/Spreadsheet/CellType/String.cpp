@@ -7,6 +7,7 @@
 #include "String.h"
 #include "../Cell.h"
 #include "../Spreadsheet.h"
+#include <LibJS/Runtime/Completion.h>
 
 namespace Spreadsheet {
 
@@ -15,12 +16,12 @@ StringCell::StringCell()
 {
 }
 
-JS::ThrowCompletionOr<ByteString> StringCell::display(Cell& cell, CellTypeMetadata const& metadata) const
+JS::ThrowCompletionOr<String> StringCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto& vm = cell.sheet().global_object().vm();
-    auto string = TRY(cell.js_data().to_byte_string(vm));
+    auto string = TRY(cell.js_data().to_string(vm));
     if (metadata.length >= 0)
-        return string.substring(0, metadata.length);
+        return MUST(String::from_view(string.code_points().unicode_substring_view(0, metadata.length)));
 
     return string;
 }

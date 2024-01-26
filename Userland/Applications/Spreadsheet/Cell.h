@@ -11,7 +11,7 @@
 #include "Forward.h"
 #include "JSIntegration.h"
 #include "Position.h"
-#include <AK/ByteString.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <LibGUI/Command.h>
@@ -24,7 +24,7 @@ struct Cell : public Weakable<Cell> {
         Formula,
     };
 
-    Cell(ByteString data, Position position, WeakPtr<Sheet> sheet)
+    Cell(String data, Position position, WeakPtr<Sheet> sheet)
         : m_dirty(false)
         , m_data(move(data))
         , m_kind(LiteralString)
@@ -33,7 +33,7 @@ struct Cell : public Weakable<Cell> {
     {
     }
 
-    Cell(ByteString source, JS::Value&& cell_value, Position position, WeakPtr<Sheet> sheet)
+    Cell(String source, JS::Value&& cell_value, Position position, WeakPtr<Sheet> sheet)
         : m_dirty(false)
         , m_data(move(source))
         , m_evaluated_data(move(cell_value))
@@ -45,7 +45,7 @@ struct Cell : public Weakable<Cell> {
 
     void reference_from(Cell*);
 
-    void set_data(ByteString new_data);
+    void set_data(String new_data);
     void set_data(JS::Value new_data);
     bool dirty() const { return m_dirty; }
     void clear_dirty() { m_dirty = false; }
@@ -55,7 +55,7 @@ struct Cell : public Weakable<Cell> {
         if (!m_name_for_javascript.is_empty())
             return m_name_for_javascript;
 
-        m_name_for_javascript = ByteString::formatted("cell {}", m_position.to_cell_identifier(sheet));
+        m_name_for_javascript = MUST(String::formatted("cell {}", m_position.to_cell_identifier(sheet)));
         return m_name_for_javascript;
     }
 
@@ -67,7 +67,7 @@ struct Cell : public Weakable<Cell> {
         return m_thrown_value;
     }
 
-    ByteString const& data() const { return m_data; }
+    String const& data() const { return m_data; }
     const JS::Value& evaluated_data() const { return m_evaluated_data; }
     Kind kind() const { return m_kind; }
     Vector<WeakPtr<Cell>> const& referencing_cells() const { return m_referencing_cells; }
@@ -95,14 +95,14 @@ struct Cell : public Weakable<Cell> {
         m_conditional_formats = move(fmts);
     }
 
-    JS::ThrowCompletionOr<ByteString> typed_display() const;
+    JS::ThrowCompletionOr<String> typed_display() const;
     JS::ThrowCompletionOr<JS::Value> typed_js_data() const;
 
     CellType const& type() const;
     CellTypeMetadata const& type_metadata() const { return m_type_metadata; }
     CellTypeMetadata& type_metadata() { return m_type_metadata; }
 
-    ByteString source() const;
+    String source() const;
 
     JS::Value js_data();
 
@@ -117,7 +117,7 @@ struct Cell : public Weakable<Cell> {
 private:
     bool m_dirty { false };
     bool m_evaluated_externally { false };
-    ByteString m_data;
+    String m_data;
     JS::Value m_evaluated_data;
     JS::Value m_thrown_value;
     Kind m_kind { LiteralString };
@@ -126,7 +126,7 @@ private:
     CellType const* m_type { nullptr };
     CellTypeMetadata m_type_metadata;
     Position m_position;
-    mutable ByteString m_name_for_javascript;
+    mutable String m_name_for_javascript;
 
     Vector<ConditionalFormat> m_conditional_formats;
     Format m_evaluated_formats;

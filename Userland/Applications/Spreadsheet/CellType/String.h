@@ -15,7 +15,7 @@ class StringCell : public CellType {
 public:
     StringCell();
     virtual ~StringCell() override = default;
-    virtual JS::ThrowCompletionOr<ByteString> display(Cell&, CellTypeMetadata const&) const override;
+    virtual JS::ThrowCompletionOr<String> display(Cell&, CellTypeMetadata const&) const override;
     virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, CellTypeMetadata const&) const override;
     virtual String metadata_hint(MetadataName) const override;
 };

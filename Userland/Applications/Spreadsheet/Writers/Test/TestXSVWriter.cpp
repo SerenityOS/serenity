@@ -52,9 +52,9 @@ TEST_CASE(can_write_with_header)
 
 TEST_CASE(can_write_with_different_behaviors)
 {
-    Vector<Vector<ByteString>> data = {
-        { "Well", "Hello\"", "Friends" },
-        { "We\"ll", "Hello,", "   Friends" },
+    Vector<Vector<String>> data = {
+        { "Well"_string, "Hello\""_string, "Friends"_string },
+        { "We\"ll"_string, "Hello,"_string, "   Friends"_string },
     };
 
     AllocatingMemoryStream stream;

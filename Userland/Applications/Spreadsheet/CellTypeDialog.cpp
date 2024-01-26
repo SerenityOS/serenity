@@ -61,9 +61,9 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     ok_button.on_click = [&](auto) { done(ExecResult::OK); };
 }
 
-Vector<ByteString> const g_horizontal_alignments { "Left", "Center", "Right" };
-Vector<ByteString> const g_vertical_alignments { "Top", "Center", "Bottom" };
-Vector<ByteString> g_types;
+Vector<String> const g_horizontal_alignments { "Left"_string, "Center"_string, "Right"_string };
+Vector<String> const g_vertical_alignments { "Top"_string, "Center"_string, "Bottom"_string };
+Vector<String> g_types;
 
 constexpr static CellTypeDialog::VerticalAlignment vertical_alignment_from(Gfx::TextAlignment alignment)
 {
@@ -113,7 +113,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 {
     g_types.clear();
     for (auto& type_name : CellType::names())
-        g_types.append(type_name);
+        g_types.append(MUST(String::from_utf8(type_name)));
 
     Vector<Cell&> cells;
     for (auto& position : positions) {
@@ -142,7 +142,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         right_side.set_fixed_width(170);
 
         auto& type_list = left_side.add<GUI::ListView>();
-        type_list.set_model(*GUI::ItemListModel<ByteString>::create(g_types));
+        type_list.set_model(*GUI::ItemListModel<String>::create(g_types));
         type_list.set_should_hide_unnecessary_scrollbars(true);
         type_list.on_selection_change = [&] {
             const auto& index = type_list.selection().first();
@@ -188,11 +188,11 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
             checkbox.on_checked = [&](auto checked) {
                 editor.set_enabled(checked);
                 if (!checked)
-                    m_format = ByteString::empty();
+                    m_format = {};
                 editor.set_text(m_format);
             };
             editor.on_change = [&] {
-                m_format = editor.text();
+                m_format = MUST(String::from_byte_string(editor.text()));
             };
         }
     }
@@ -213,7 +213,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
             auto& horizontal_combobox = alignment_tab.add<GUI::ComboBox>();
             horizontal_combobox.set_only_allow_values_from_model(true);
-            horizontal_combobox.set_model(*GUI::ItemListModel<ByteString>::create(g_horizontal_alignments));
+            horizontal_combobox.set_model(*GUI::ItemListModel<String>::create(g_horizontal_alignments));
             horizontal_combobox.set_selected_index((int)m_horizontal_alignment);
             horizontal_combobox.on_change = [&](auto&, const GUI::ModelIndex& index) {
                 switch (index.row()) {
@@ -244,7 +244,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
             auto& vertical_combobox = alignment_tab.add<GUI::ComboBox>();
             vertical_combobox.set_only_allow_values_from_model(true);
-            vertical_combobox.set_model(*GUI::ItemListModel<ByteString>::create(g_vertical_alignments));
+            vertical_combobox.set_model(*GUI::ItemListModel<String>::create(g_vertical_alignments));
             vertical_combobox.set_selected_index((int)m_vertical_alignment);
             vertical_combobox.on_change = [&](auto&, const GUI::ModelIndex& index) {
                 switch (index.row()) {
@@ -412,7 +412,7 @@ ConditionView::ConditionView(ConditionalFormat& fmt)
     formula_editor.set_syntax_highlighter(make<JS::SyntaxHighlighter>());
     formula_editor.set_should_hide_unnecessary_scrollbars(true);
     formula_editor.on_change = [&] {
-        m_format.condition = formula_editor.text();
+        m_format.condition = MUST(String::from_byte_string(formula_editor.text()));
     };
 }
 

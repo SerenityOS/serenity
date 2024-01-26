@@ -21,9 +21,9 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     if (role == GUI::ModelRole::Display) {
         auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
-            return ByteString::empty();
+            return String {};
 
-        Function<ByteString(JS::Value)> to_byte_string_as_exception = [&](JS::Value value) {
+        Function<String(JS::Value)> to_string_as_exception = [&](JS::Value value) {
             auto& vm = cell->sheet().global_object().vm();
             StringBuilder builder;
             builder.append("Error: "sv);
@@ -31,31 +31,31 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                 auto& object = value.as_object();
                 if (is<JS::Error>(object)) {
                     auto message = object.get_without_side_effects("message");
-                    auto error = message.to_byte_string(vm);
+                    auto error = message.to_string(vm);
                     if (error.is_throw_completion())
                         builder.append(message.to_string_without_side_effects());
                     else
                         builder.append(error.release_value());
-                    return builder.to_byte_string();
+                    return MUST(builder.to_string());
                 }
             }
-            auto error_message = value.to_byte_string(vm);
+            auto error_message = value.to_string(vm);
 
             if (error_message.is_throw_completion())
-                return to_byte_string_as_exception(*error_message.release_error().value());
+                return to_string_as_exception(*error_message.release_error().value());
 
             builder.append(error_message.release_value());
-            return builder.to_byte_string();
+            return MUST(builder.to_string());
         };
 
         if (cell->kind() == Spreadsheet::Cell::Formula) {
             if (auto opt_throw_value = cell->thrown_value(); opt_throw_value.has_value())
-                return to_byte_string_as_exception(*opt_throw_value);
+                return to_string_as_exception(*opt_throw_value);
         }
 
         auto display = cell->typed_display();
         if (display.is_error())
-            return to_byte_string_as_exception(*display.release_error().value());
+            return to_string_as_exception(*display.release_error().value());
 
         return display.release_value();
     }
@@ -154,10 +154,10 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
 
     Position cursor_position { (size_t)cursor->column(), (size_t)cursor->row() };
     auto mime_data_buffer = mime_data->data("text/x-spreadsheet-data"sv);
-    auto new_data = ByteString::formatted("{}\n{}",
-        cursor_position.to_url(m_sheet).to_byte_string(),
-        StringView(mime_data_buffer));
-    mime_data->set_data("text/x-spreadsheet-data"_string, new_data.to_byte_buffer());
+    auto new_data = MUST(String::formatted("{}\n{}",
+        cursor_position.to_url(m_sheet),
+        StringView(mime_data_buffer)));
+    mime_data->set_data("text/x-spreadsheet-data"_string, MUST(ByteBuffer::copy(new_data.bytes())));
 
     return mime_data;
 }
@@ -167,7 +167,7 @@ ErrorOr<String> SheetModel::column_name(int index) const
     if (index < 0)
         return String {};
 
-    return TRY(String::from_byte_string(m_sheet->column(index)));
+    return m_sheet->column(index);
 }
 
 bool SheetModel::is_editable(const GUI::ModelIndex& index) const
@@ -185,7 +185,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
 
     auto& cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
     auto previous_data = cell.data();
-    cell.set_data(value.to_byte_string());
+    cell.set_data(MUST(String::from_byte_string(value.to_byte_string())));
     if (on_cell_data_change)
         on_cell_data_change(cell, previous_data);
     did_update(UpdateFlag::DontInvalidateIndices);
@@ -202,7 +202,7 @@ CellsUndoCommand::CellsUndoCommand(Vector<CellChange> cell_changes)
     m_cell_changes = cell_changes;
 }
 
-CellsUndoCommand::CellsUndoCommand(Cell& cell, ByteString const& previous_data)
+CellsUndoCommand::CellsUndoCommand(Cell& cell, String const& previous_data)
 {
     m_cell_changes.append(CellChange(cell, previous_data));
 }

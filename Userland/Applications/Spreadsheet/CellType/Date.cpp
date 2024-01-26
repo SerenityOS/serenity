@@ -17,15 +17,15 @@ DateCell::DateCell()
 {
 }
 
-JS::ThrowCompletionOr<ByteString> DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
+JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
-    return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<ByteString> {
+    return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
         auto& vm = cell.sheet().global_object().vm();
         auto timestamp = TRY(js_value(cell, metadata));
-        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(vm))).to_byte_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
+        auto string = MUST(Core::DateTime::from_timestamp(TRY(timestamp.to_i32(vm))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.bytes_as_string_view()));
 
         if (metadata.length >= 0)
-            return string.substring(0, metadata.length);
+            return MUST(String::from_view(string.code_points().unicode_substring_view(0, min(string.code_points().length(), metadata.length))));
 
         return string;
     });

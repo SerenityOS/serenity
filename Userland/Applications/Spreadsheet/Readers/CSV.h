@@ -15,7 +15,7 @@ namespace Reader {
 class CSV : public XSV {
 public:
     CSV(StringView source, ParserBehavior behaviors = default_behaviors())
-        : XSV(source, { ",", "\"", ParserTraits::Repeat }, behaviors)
+        : XSV(source, { ","_string, "\""_string, ParserTraits::Repeat }, behaviors)
     {
     }
 };

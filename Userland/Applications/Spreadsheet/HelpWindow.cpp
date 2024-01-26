@@ -38,13 +38,13 @@ public:
         return {};
     }
 
-    ByteString key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
+    String key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
 
     void set_from(JsonObject const& object)
     {
         m_keys.clear();
         object.for_each_member([this](auto& name, auto&) {
-            m_keys.append(name);
+            m_keys.append(MUST(String::from_byte_string(name)));
         });
         AK::quick_sort(m_keys);
         invalidate();
@@ -55,7 +55,7 @@ private:
     {
     }
 
-    Vector<ByteString> m_keys;
+    Vector<String> m_keys;
 };
 
 RefPtr<HelpWindow> HelpWindow::s_the { nullptr };
@@ -90,7 +90,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto entry = LexicalPath::basename(example_path);
             auto doc_option = m_docs.get_object(entry);
             if (!doc_option.has_value()) {
-                GUI::MessageBox::show_error(this, ByteString::formatted("No documentation entry found for '{}'", example_path));
+                GUI::MessageBox::show_error(this, MUST(String::formatted("No documentation entry found for '{}'", example_path)));
                 return;
             }
             auto& doc = doc_option.value();
@@ -98,13 +98,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
             auto maybe_example_data = doc.get_object("example_data"sv);
             if (!maybe_example_data.has_value()) {
-                GUI::MessageBox::show_error(this, ByteString::formatted("No example data found for '{}'", example_path));
+                GUI::MessageBox::show_error(this, MUST(String::formatted("No example data found for '{}'", example_path)));
                 return;
             }
             auto& example_data = maybe_example_data.value();
 
             if (!example_data.has_object(name)) {
-                GUI::MessageBox::show_error(this, ByteString::formatted("Example '{}' not found for '{}'", name, example_path));
+                GUI::MessageBox::show_error(this, MUST(String::formatted("Example '{}' not found for '{}'", name, example_path)));
                 return;
             }
             auto& value = example_data.get_object(name).value();
@@ -112,13 +112,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto window = GUI::Window::construct(this);
             window->resize(size());
             window->set_icon(icon());
-            window->set_title(ByteString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
+            window->set_title(MUST(String::formatted("Spreadsheet Help - Example {} for {}", name, entry)).to_byte_string());
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
             auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false);
             auto sheet = Sheet::from_json(value, widget->workbook());
             if (!sheet) {
-                GUI::MessageBox::show_error(this, ByteString::formatted("Corrupted example '{}' in '{}'", name, example_path));
+                GUI::MessageBox::show_error(this, MUST(String::formatted("Corrupted example '{}' in '{}'", name, example_path)));
                 return;
             }
 
@@ -141,7 +141,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     };
 }
 
-ByteString HelpWindow::render(StringView key)
+String HelpWindow::render(StringView key)
 {
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get_object(key).value();
@@ -194,7 +194,7 @@ ByteString HelpWindow::render(StringView key)
     }
 
     auto document = Markdown::Document::parse(markdown_builder.string_view());
-    return document->render_to_html();
+    return MUST(String::from_byte_string(document->render_to_html()));
 }
 
 void HelpWindow::set_docs(JsonObject&& docs)

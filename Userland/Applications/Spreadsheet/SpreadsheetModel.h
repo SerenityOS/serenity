@@ -34,7 +34,7 @@ public:
 
     void update();
 
-    Function<void(Cell&, ByteString&)> on_cell_data_change;
+    Function<void(Cell&, String&)> on_cell_data_change;
     Function<void(Vector<CellChange>)> on_cells_data_change;
 
 private:
@@ -48,7 +48,7 @@ private:
 
 class CellsUndoCommand : public GUI::Command {
 public:
-    CellsUndoCommand(Cell&, ByteString const&);
+    CellsUndoCommand(Cell&, String const&);
     CellsUndoCommand(Vector<CellChange>);
 
     virtual void undo() override;

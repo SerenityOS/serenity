@@ -448,7 +448,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
         if (event.mime_data().has_text()) {
             auto& target_cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
-            target_cell.set_data(event.text());
+            target_cell.set_data(MUST(String::from_byte_string(event.text())));
             return;
         }
     };

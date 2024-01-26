@@ -5,8 +5,8 @@
  */
 
 #include "Format.h"
-#include <AK/ByteString.h>
 #include <AK/PrintfImplementation.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace Spreadsheet {
@@ -37,13 +37,13 @@ struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentL
     }
 };
 
-ByteString format_double(char const* format, double value)
+String format_double(char const* format, double value)
 {
     StringBuilder builder;
     auto putch = [&](auto, auto ch) { builder.append(ch); };
     printf_internal<decltype(putch), PrintfImpl, double, SingleEntryListNext>(putch, nullptr, format, value);
 
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
 }

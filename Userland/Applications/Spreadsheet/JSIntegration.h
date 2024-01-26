@@ -14,7 +14,7 @@
 namespace Spreadsheet {
 
 struct FunctionAndArgumentIndex {
-    ByteString function_name;
+    String function_name;
     size_t argument_index { 0 };
 };
 Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView source);

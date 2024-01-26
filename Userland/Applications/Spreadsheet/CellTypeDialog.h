@@ -39,7 +39,7 @@ private:
     CellType const* m_type { nullptr };
 
     int m_length { -1 };
-    ByteString m_format;
+    String m_format;
     HorizontalAlignment m_horizontal_alignment { HorizontalAlignment::Right };
     VerticalAlignment m_vertical_alignment { VerticalAlignment::Center };
     Format m_static_format;

@@ -12,7 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 
-static HashMap<ByteString, Spreadsheet::CellType*> s_cell_types;
+static HashMap<String, Spreadsheet::CellType*> s_cell_types;
 static Spreadsheet::StringCell s_string_cell;
 static Spreadsheet::NumericCell s_numeric_cell;
 static Spreadsheet::IdentityCell s_identity_cell;
@@ -34,10 +34,10 @@ Vector<StringView> CellType::names()
 }
 
 CellType::CellType(StringView name)
-    : m_name(name)
+    : m_name(MUST(String::from_utf8(name)))
 {
     VERIFY(!s_cell_types.contains(name));
-    s_cell_types.set(name, this);
+    s_cell_types.set(m_name, this);
 }
 
 }

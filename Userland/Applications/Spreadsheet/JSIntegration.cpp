@@ -89,7 +89,7 @@ Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView so
         token = lexer.next();
     }
     if (!names.is_empty() && !state.is_empty())
-        return FunctionAndArgumentIndex { names.last(), state.last() };
+        return FunctionAndArgumentIndex { MUST(String::from_utf8(names.last())), state.last() };
     return {};
 }
 
@@ -206,7 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
         return JS::js_undefined();
 
     if (cell->kind() == Spreadsheet::Cell::Kind::Formula)
-        return JS::PrimitiveString::create(vm, ByteString::formatted("={}", cell->data()));
+        return JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::formatted("={}", cell->data())));
 
     return JS::PrimitiveString::create(vm, cell->data());
 }
@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
     auto name_value = vm.argument(0);
     if (!name_value.is_string())
         return vm.throw_completion<JS::TypeError>("Expected the first argument of set_real_cell_contents() to be a String"sv);
-    auto position = sheet_object.m_sheet.parse_cell_name(name_value.as_string().byte_string());
+    auto position = sheet_object.m_sheet.parse_cell_name(name_value.as_string().utf8_string().bytes_as_string_view());
     if (!position.has_value())
         return vm.throw_completion<JS::TypeError>("Invalid cell name"sv);
 
@@ -235,7 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
         return vm.throw_completion<JS::TypeError>("Expected the second argument of set_real_cell_contents() to be a String"sv);
 
     auto& cell = sheet_object.m_sheet.ensure(position.value());
-    auto new_contents = new_contents_value.as_string().byte_string();
+    auto new_contents = new_contents_value.as_string().utf8_string();
     cell.set_data(new_contents);
     return JS::js_null();
 }
@@ -407,7 +407,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
     auto& workbook = workbook_object.m_workbook;
 
     if (name_value.is_string()) {
-        auto name = name_value.as_string().byte_string();
+        auto name = name_value.as_string().utf8_string();
         for (auto& sheet : workbook.sheets()) {
             if (sheet->name() == name)
                 return JS::Value(&sheet->global_object());

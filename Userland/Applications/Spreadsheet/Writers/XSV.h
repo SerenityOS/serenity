@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stream.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -26,8 +26,8 @@ enum class WriterBehavior : u32 {
 AK_ENUM_BITWISE_OPERATORS(WriterBehavior);
 
 struct WriterTraits {
-    ByteString separator;
-    ByteString quote { "\"" };
+    String separator;
+    String quote { "\""_string };
     enum QuoteEscape {
         Repeat,
         Backslash,
@@ -121,7 +121,7 @@ private:
     template<typename T>
     ErrorOr<void> write_entry(T&& entry)
     {
-        auto string = ByteString::formatted("{}", FormatIfSupported(entry));
+        auto string = TRY(String::formatted("{}", FormatIfSupported(entry)));
 
         auto safe_to_write_normally = !has_flag(m_behaviors, WriterBehavior::QuoteAll)
             && !string.contains('\n')
@@ -129,9 +129,9 @@ private:
 
         if (safe_to_write_normally) {
             if (has_flag(m_behaviors, WriterBehavior::QuoteOnlyInFieldStart))
-                safe_to_write_normally = !string.starts_with(m_traits.quote);
+                safe_to_write_normally = !string.code_points().starts_with(m_traits.quote.code_points());
             else
-                safe_to_write_normally = !string.contains(m_traits.quote);
+                safe_to_write_normally = !string.contains(m_traits.quote.bytes_as_string_view());
         }
 
         if (safe_to_write_normally) {
@@ -144,7 +144,7 @@ private:
 
         GenericLexer lexer(string);
         while (!lexer.is_eof()) {
-            if (lexer.consume_specific(m_traits.quote.view())) {
+            if (lexer.consume_specific(m_traits.quote)) {
                 switch (m_traits.quote_escape) {
                 case WriterTraits::Repeat:
                     TRY(m_output.write_until_depleted(m_traits.quote.bytes()));

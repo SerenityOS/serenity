@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/ByteString.h>
 #include <AK/GenericLexer.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -31,20 +31,20 @@ ParserBehavior operator&(ParserBehavior left, ParserBehavior right);
 ParserBehavior operator|(ParserBehavior left, ParserBehavior right);
 
 struct ParserTraits {
-    ByteString separator;
-    ByteString quote { "\"" };
+    String separator;
+    String quote { "\""_string };
     enum QuoteEscape {
         Repeat,
         Backslash,
     } quote_escape { Repeat };
 };
 
-#define ENUMERATE_READ_ERRORS()                                                   \
-    E(None, "No errors")                                                          \
-    E(NonConformingColumnCount, "Header count does not match given column count") \
-    E(QuoteFailure, "Quoting failure")                                            \
-    E(InternalError, "Internal error")                                            \
-    E(DataPastLogicalEnd, "Extra data past the logical end of the rows")
+#define ENUMERATE_READ_ERRORS()                                                          \
+    E(None, "No errors"_string)                                                          \
+    E(NonConformingColumnCount, "Header count does not match given column count"_string) \
+    E(QuoteFailure, "Quoting failure"_string)                                            \
+    E(InternalError, "Internal error"_string)                                            \
+    E(DataPastLogicalEnd, "Extra data past the logical end of the rows"_string)
 
 enum class ReadError {
 #define E(name, _) name,
@@ -73,7 +73,7 @@ public:
     void parse();
     bool has_error() const { return m_error != ReadError::None; }
     ReadError error() const { return m_error; }
-    ByteString error_string() const
+    String error_string() const
     {
         switch (m_error) {
 #define E(x, y)        \
@@ -87,7 +87,7 @@ public:
     }
 
     size_t size() const { return m_rows.size(); }
-    Vector<ByteString> headers() const;
+    Vector<String> headers() const;
     [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviors) & static_cast<u32>(ParserBehavior::ReadHeaders)) != 0; }
 
     class Row {
@@ -185,7 +185,7 @@ public:
 private:
     struct Field {
         StringView as_string_view;
-        ByteString as_string; // This member only used if the parser couldn't use the original source verbatim.
+        String as_string; // This member only used if the parser couldn't use the original source verbatim.
         bool is_string_view { true };
 
         bool operator==(StringView other) const

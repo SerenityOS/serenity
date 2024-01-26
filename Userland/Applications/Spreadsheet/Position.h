@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/ByteString.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/URL.h>
 
@@ -37,7 +37,7 @@ struct Position {
         return row == other.row && column == other.column;
     }
 
-    ByteString to_cell_identifier(Sheet const& sheet) const;
+    String to_cell_identifier(Sheet const& sheet) const;
     URL to_url(Sheet const& sheet) const;
 
     size_t column { 0 };

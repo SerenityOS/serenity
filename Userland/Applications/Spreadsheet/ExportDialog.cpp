@@ -7,10 +7,10 @@
 #include "ExportDialog.h"
 #include "Spreadsheet.h"
 #include "Workbook.h"
-#include <AK/ByteString.h>
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
+#include <AK/String.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
@@ -59,7 +59,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 
     m_data_preview_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
-    m_quote_escape_combo_box->set_model(GUI::ItemListModel<ByteString>::create(m_quote_escape_items));
+    m_quote_escape_combo_box->set_model(GUI::ItemListModel<String>::create(m_quote_escape_items));
 
     // By default, use commas, double quotes with repeat, disable headers, and quote only the fields that require quoting.
     m_delimiter_comma_radio->set_checked(true);
@@ -91,33 +91,33 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 
 auto CSVExportDialogPage::generate(Stream& stream, GenerationType type) -> ErrorOr<void>
 {
-    auto delimiter = TRY([this]() -> ErrorOr<ByteString> {
+    auto delimiter = TRY([this]() -> ErrorOr<String> {
         if (m_delimiter_other_radio->is_checked()) {
             if (m_delimiter_other_text_box->text().is_empty())
                 return Error::from_string_literal("Delimiter unset");
-            return m_delimiter_other_text_box->text();
+            return String::from_byte_string(m_delimiter_other_text_box->text());
         }
         if (m_delimiter_comma_radio->is_checked())
-            return ",";
+            return ","_string;
         if (m_delimiter_semicolon_radio->is_checked())
-            return ";";
+            return ";"_string;
         if (m_delimiter_tab_radio->is_checked())
-            return "\t";
+            return "\t"_string;
         if (m_delimiter_space_radio->is_checked())
-            return " ";
+            return " "_string;
         return Error::from_string_literal("Delimiter unset");
     }());
 
-    auto quote = TRY([this]() -> ErrorOr<ByteString> {
+    auto quote = TRY([this]() -> ErrorOr<String> {
         if (m_quote_other_radio->is_checked()) {
             if (m_quote_other_text_box->text().is_empty())
                 return Error::from_string_literal("Quote separator unset");
-            return m_quote_other_text_box->text();
+            return String::from_byte_string(m_quote_other_text_box->text());
         }
         if (m_quote_single_radio->is_checked())
-            return "'";
+            return "'"_string;
         if (m_quote_double_radio->is_checked())
-            return "\"";
+            return "\""_string;
         return Error::from_string_literal("Quote separator unset");
     }());
 
@@ -140,7 +140,7 @@ auto CSVExportDialogPage::generate(Stream& stream, GenerationType type) -> Error
     };
 
     auto behaviors = Writer::default_behaviors();
-    Vector<ByteString> empty_headers;
+    Vector<String> empty_headers;
     auto* headers = &empty_headers;
 
     if (should_export_headers) {
@@ -153,7 +153,7 @@ auto CSVExportDialogPage::generate(Stream& stream, GenerationType type) -> Error
 
     switch (type) {
     case GenerationType::Normal:
-        TRY((Writer::XSV<decltype(m_data), Vector<ByteString>>::generate(stream, m_data, move(traits), *headers, behaviors)));
+        TRY((Writer::XSV<decltype(m_data), Vector<String>>::generate(stream, m_data, move(traits), *headers, behaviors)));
         break;
     case GenerationType::Preview:
         TRY((Writer::XSV<decltype(m_data), decltype(*headers)>::generate_preview(stream, m_data, move(traits), *headers, behaviors)));
@@ -176,7 +176,7 @@ void CSVExportDialogPage::update_preview()
         return {};
     }();
     if (maybe_error.is_error())
-        m_data_preview_text_editor->set_text(ByteString::formatted("Cannot update preview: {}", maybe_error.error()));
+        m_data_preview_text_editor->set_text(MUST(String::formatted("Cannot update preview: {}", maybe_error.error())).bytes_as_string_view());
 }
 
 ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, ByteString filename, Workbook& workbook)
@@ -223,11 +223,11 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
         TRY(page->body_widget().load_from_gml(select_format_page_gml));
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
-        Vector<ByteString> supported_formats {
-            "CSV (text/csv)",
-            "Spreadsheet Worksheet",
+        Vector<String> supported_formats {
+            "CSV (text/csv)"_string,
+            "Spreadsheet Worksheet"_string,
         };
-        format_combo_box->set_model(GUI::ItemListModel<ByteString>::create(supported_formats));
+        format_combo_box->set_model(GUI::ItemListModel<String>::create(supported_formats));
 
         wizard->push_page(page);
 

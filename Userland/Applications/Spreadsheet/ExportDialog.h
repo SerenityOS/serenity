@@ -33,8 +33,8 @@ protected:
     void update_preview();
 
 private:
-    Vector<Vector<ByteString>> m_data;
-    Vector<ByteString> m_headers;
+    Vector<Vector<String>> m_data;
+    Vector<String> m_headers;
     RefPtr<GUI::WizardPage> m_page;
     RefPtr<GUI::RadioButton> m_delimiter_comma_radio;
     RefPtr<GUI::RadioButton> m_delimiter_semicolon_radio;
@@ -50,10 +50,10 @@ private:
     RefPtr<GUI::CheckBox> m_export_header_check_box;
     RefPtr<GUI::CheckBox> m_quote_all_fields_check_box;
     RefPtr<GUI::TextEditor> m_data_preview_text_editor;
-    Vector<ByteString> m_quote_escape_items {
+    Vector<String> m_quote_escape_items {
         // Note: Keep in sync with Writer::WriterTraits::QuoteEscape.
-        "Repeat",
-        "Backslash",
+        "Repeat"_string,
+        "Backslash"_string,
     };
 };
 

@@ -14,6 +14,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
@@ -30,7 +31,7 @@ namespace Spreadsheet {
 Sheet::Sheet(StringView name, Workbook& workbook)
     : Sheet(workbook)
 {
-    m_name = name;
+    m_name = MUST(String::from_utf8(name));
 
     for (size_t i = 0; i < default_row_count; ++i)
         add_row();
@@ -109,9 +110,9 @@ static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, 
     return value - 1;
 }
 
-ByteString Sheet::add_column()
+String Sheet::add_column()
 {
-    auto next_column = ByteString::bijective_base_from(m_columns.size());
+    auto next_column = MUST(String::from_byte_string(ByteString::bijective_base_from(m_columns.size())));
     m_columns.append(next_column);
     return next_column;
 }
@@ -200,7 +201,7 @@ Optional<Position> Sheet::parse_cell_name(StringView name) const
     if (!lexer.is_eof() || row.is_empty() || col.is_empty())
         return {};
 
-    auto it = m_columns.find(col);
+    auto it = m_columns.find(MUST(String::from_utf8(col)));
     if (it == m_columns.end())
         return {};
 
@@ -215,7 +216,7 @@ Optional<size_t> Sheet::column_index(StringView column_name) const
 
     auto index = maybe_index.value();
     if (m_columns.size() <= index || m_columns[index] != column_name) {
-        auto it = m_columns.find(column_name);
+        auto it = m_columns.find(MUST(String::from_utf8(column_name)));
         if (it == m_columns.end())
             return {};
         index = it.index();
@@ -224,7 +225,7 @@ Optional<size_t> Sheet::column_index(StringView column_name) const
     return index;
 }
 
-Optional<ByteString> Sheet::column_arithmetic(StringView column_name, int offset)
+Optional<String> Sheet::column_arithmetic(StringView column_name, int offset)
 {
     auto maybe_index = column_index(column_name);
     if (!maybe_index.has_value())
@@ -310,7 +311,7 @@ Vector<CellChange> Sheet::copy_cells(Vector<Position> from, Vector<Position> to,
         auto previous_data = target_cell.data();
 
         if (!source_cell) {
-            target_cell.set_data("");
+            target_cell.set_data(""_string);
             cell_changes.append(CellChange(target_cell, previous_data));
             return;
         }
@@ -319,7 +320,7 @@ Vector<CellChange> Sheet::copy_cells(Vector<Position> from, Vector<Position> to,
         cell_changes.append(CellChange(target_cell, previous_data));
         if (copy_operation == CopyOperation::Cut && !target_cells.contains_slow(source_position)) {
             cell_changes.append(CellChange(*source_cell, source_cell->data()));
-            source_cell->set_data("");
+            source_cell->set_data(""_string);
         }
     };
 
@@ -376,7 +377,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     if (object.has("cells"sv) && !object.has_object("cells"sv))
         return {};
 
-    sheet->set_name(name);
+    sheet->set_name(MUST(String::from_byte_string(name)));
 
     for (size_t i = 0; i < max(rows, (unsigned)Sheet::default_row_count); ++i)
         sheet->add_row();
@@ -384,7 +385,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     // FIXME: Better error checking.
     if (columns.has_value()) {
         columns->for_each([&](auto& value) {
-            sheet->m_columns.append(value.as_string());
+            sheet->m_columns.append(MUST(String::from_byte_string(value.as_string())));
             return IterationDecision::Continue;
         });
     }
@@ -417,7 +418,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
             OwnPtr<Cell> cell;
             switch (kind) {
             case Cell::LiteralString:
-                cell = make<Cell>(obj.get_byte_string("value"sv).value_or({}), position, *sheet);
+                cell = make<Cell>(MUST(String::from_byte_string(obj.get_byte_string("value"sv).value_or({}))), position, *sheet);
                 break;
             case Cell::Formula: {
                 auto& vm = sheet->vm();
@@ -426,7 +427,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();
                 }
-                cell = make<Cell>(obj.get_byte_string("source"sv).value_or({}), value_or_error.release_value(), position, *sheet);
+                cell = make<Cell>(MUST(String::from_byte_string(obj.get_byte_string("source"sv).value_or({}))), value_or_error.release_value(), position, *sheet);
                 break;
             }
             }
@@ -441,7 +442,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 if (auto value = meta_obj.get_i32("length"sv); value.has_value())
                     meta.length = value.value();
                 if (auto value = meta_obj.get_byte_string("format"sv); value.has_value())
-                    meta.format = value.value();
+                    meta.format = MUST(String::from_byte_string(value.value()));
                 if (auto value = meta_obj.get_byte_string("alignment"sv); value.has_value()) {
                     auto alignment = Gfx::text_alignment_from_string(*value);
                     if (alignment.has_value())
@@ -460,7 +461,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                         return IterationDecision::Continue;
 
                     auto& fmt_obj = fmt_val.as_object();
-                    auto fmt_cond = fmt_obj.get_byte_string("condition"sv).value_or({});
+                    auto fmt_cond = MUST(String::from_byte_string(fmt_obj.get_byte_string("condition"sv).value_or({})));
                     if (fmt_cond.is_empty())
                         return IterationDecision::Continue;
 
@@ -513,7 +514,7 @@ Position Sheet::written_data_bounds(Optional<size_t> column_index) const
 bool Sheet::columns_are_standard() const
 {
     for (size_t i = 0; i < m_columns.size(); ++i) {
-        if (m_columns[i] != ByteString::bijective_base_from(i))
+        if (m_columns[i] != MUST(String::from_byte_string(ByteString::bijective_base_from(i))))
             return false;
     }
 
@@ -523,7 +524,7 @@ bool Sheet::columns_are_standard() const
 JsonObject Sheet::to_json() const
 {
     JsonObject object;
-    object.set("name", m_name);
+    object.set("name", m_name.to_byte_string());
 
     auto save_format = [](auto const& format, auto& obj) {
         if (format.foreground_color.has_value())
@@ -537,7 +538,7 @@ JsonObject Sheet::to_json() const
     if (!columns_are_standard()) {
         auto columns = JsonArray();
         for (auto& column : m_columns)
-            columns.must_append(column);
+            columns.must_append(column.to_byte_string());
         object.set("columns", move(columns));
     }
     object.set("rows", bottom_right.row + 1);
@@ -552,23 +553,23 @@ JsonObject Sheet::to_json() const
         JsonObject data;
         data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
         if (it.value->kind() == Cell::Formula) {
-            data.set("source", it.value->data());
+            data.set("source", it.value->data().to_byte_string());
             auto json = realm().global_object().get_without_side_effects("JSON");
             auto stringified_or_error = JS::call(vm(), json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
             data.set("value", stringified_or_error.release_value().to_string_without_side_effects().to_byte_string());
         } else {
-            data.set("value", it.value->data());
+            data.set("value", it.value->data().to_byte_string());
         }
 
         // Set type & meta
         auto& type = it.value->type();
         auto& meta = it.value->type_metadata();
-        data.set("type", type.name());
+        data.set("type", type.name().to_byte_string());
 
         JsonObject metadata_object;
         metadata_object.set("length", meta.length);
-        metadata_object.set("format", meta.format);
+        metadata_object.set("format", meta.format.to_byte_string());
         metadata_object.set("alignment", Gfx::to_string(meta.alignment));
         save_format(meta.static_format, metadata_object);
 
@@ -578,7 +579,7 @@ JsonObject Sheet::to_json() const
         JsonArray conditional_formats;
         for (auto& fmt : it.value->conditional_formats()) {
             JsonObject fmt_object;
-            fmt_object.set("condition", fmt.condition);
+            fmt_object.set("condition", fmt.condition.to_byte_string());
             save_format(fmt, fmt_object);
 
             conditional_formats.must_append(move(fmt_object));
@@ -599,9 +600,9 @@ JsonObject Sheet::to_json() const
     return object;
 }
 
-Vector<Vector<ByteString>> Sheet::to_xsv() const
+Vector<Vector<String>> Sheet::to_xsv() const
 {
-    Vector<Vector<ByteString>> data;
+    Vector<Vector<String>> data;
 
     auto bottom_right = written_data_bounds();
 
@@ -609,7 +610,7 @@ Vector<Vector<ByteString>> Sheet::to_xsv() const
     size_t column_count = m_columns.size();
     if (columns_are_standard()) {
         column_count = bottom_right.column + 1;
-        Vector<ByteString> cols;
+        Vector<String> cols;
         for (size_t i = 0; i < column_count; ++i)
             cols.append(m_columns[i]);
         data.append(move(cols));
@@ -618,7 +619,7 @@ Vector<Vector<ByteString>> Sheet::to_xsv() const
     }
 
     for (size_t i = 0; i <= bottom_right.row; ++i) {
-        Vector<ByteString> row;
+        Vector<String> row;
         row.resize(column_count);
         for (size_t j = 0; j < column_count; ++j) {
             auto cell = at({ j, i });
@@ -646,7 +647,7 @@ RefPtr<Sheet> Sheet::from_xsv(Reader::XSV const& xsv, Workbook& workbook)
     } else {
         sheet->m_columns.ensure_capacity(cols.size());
         for (size_t i = 0; i < cols.size(); ++i)
-            sheet->m_columns.append(ByteString::bijective_base_from(i));
+            sheet->m_columns.append(MUST(String::from_byte_string(ByteString::bijective_base_from(i))));
     }
     for (size_t i = 0; i < max(rows, Sheet::default_row_count); ++i)
         sheet->add_row();
@@ -661,7 +662,7 @@ RefPtr<Sheet> Sheet::from_xsv(Reader::XSV const& xsv, Workbook& workbook)
             if (str.is_empty())
                 continue;
             Position position { i, row.index() };
-            auto cell = make<Cell>(str, position, *sheet);
+            auto cell = make<Cell>(MUST(String::from_utf8(str)), position, *sheet);
             sheet->m_cells.set(position, move(cell));
         }
     }
@@ -706,7 +707,7 @@ JsonObject Sheet::gather_documentation() const
     return m_cached_documentation.value();
 }
 
-ByteString Sheet::generate_inline_documentation_for(StringView function, size_t argument_index)
+String Sheet::generate_inline_documentation_for(StringView function, size_t argument_index)
 {
     if (!m_cached_documentation.has_value())
         gather_documentation();
@@ -714,13 +715,13 @@ ByteString Sheet::generate_inline_documentation_for(StringView function, size_t 
     auto& docs = m_cached_documentation.value();
     auto entry = docs.get_object(function);
     if (!entry.has_value())
-        return ByteString::formatted("{}(...???{})", function, argument_index);
+        return MUST(String::formatted("{}(...???{})", function, argument_index));
 
     auto& entry_object = entry.value();
     size_t argc = entry_object.get_integer<int>("argc"sv).value_or(0);
     auto argnames_value = entry_object.get_array("argnames"sv);
     if (!argnames_value.has_value())
-        return ByteString::formatted("{}(...{}???{})", function, argc, argument_index);
+        return MUST(String::formatted("{}(...{}???{})", function, argc, argument_index));
     auto& argnames = argnames_value.value();
     StringBuilder builder;
     builder.appendff("{}(", function);
@@ -739,12 +740,12 @@ ByteString Sheet::generate_inline_documentation_for(StringView function, size_t 
     }
 
     builder.append(')');
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
-ByteString Position::to_cell_identifier(Sheet const& sheet) const
+String Position::to_cell_identifier(Sheet const& sheet) const
 {
-    return ByteString::formatted("{}{}", sheet.column(column), row);
+    return MUST(String::formatted("{}{}", sheet.column(column), row));
 }
 
 URL Position::to_url(Sheet const& sheet) const
@@ -753,11 +754,11 @@ URL Position::to_url(Sheet const& sheet) const
     url.set_scheme("spreadsheet"_string);
     url.set_host("cell"_string);
     url.set_paths({ ByteString::number(getpid()) });
-    url.set_fragment(String::from_byte_string(to_cell_identifier(sheet)).release_value());
+    url.set_fragment(to_cell_identifier(sheet));
     return url;
 }
 
-CellChange::CellChange(Cell& cell, ByteString const& previous_data)
+CellChange::CellChange(Cell& cell, String const& previous_data)
     : m_cell(cell)
     , m_previous_data(previous_data)
 {
