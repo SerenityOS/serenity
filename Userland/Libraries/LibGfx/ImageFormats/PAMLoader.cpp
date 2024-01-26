@@ -57,7 +57,6 @@ ErrorOr<void> read_image_data(PAMLoadingContext& context)
         }
     }
 
-    context.state = PAMLoadingContext::State::BitmapDecoded;
     return {};
 }
 }
