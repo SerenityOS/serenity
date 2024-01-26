@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,7 @@
 #include <AK/Checked.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -39,6 +40,7 @@ class Value {
 
 public:
     explicit Value(SQLType sql_type = SQLType::Null);
+    explicit Value(String);
     explicit Value(ByteString);
     explicit Value(double);
     Value(Value const&);
@@ -74,6 +76,7 @@ public:
         return *m_value;
     }
 
+    [[nodiscard]] ErrorOr<String> to_string() const;
     [[nodiscard]] ByteString to_byte_string() const;
     [[nodiscard]] Optional<double> to_double() const;
     [[nodiscard]] Optional<bool> to_bool() const;

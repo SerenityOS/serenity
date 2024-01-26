@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,6 +94,11 @@ static ResultOr<Value> perform_integer_operation(Value const& lhs, Value const& 
 
 Value::Value(SQLType type)
     : m_type(type)
+{
+}
+
+Value::Value(String value)
+    : Value(value.to_byte_string())
 {
 }
 
@@ -212,6 +217,27 @@ bool Value::is_null() const
 bool Value::is_int() const
 {
     return m_value.has_value() && (m_value->has<i64>() || m_value->has<u64>());
+}
+
+ErrorOr<String> Value::to_string() const
+{
+    if (is_null())
+        return String::from_utf8("(null)"sv);
+
+    return m_value->visit(
+        [](ByteString const& value) { return String::from_byte_string(value); },
+        [](Integer auto value) { return String::number(value); },
+        [](double value) { return String::number(value); },
+        [](bool value) { return String::from_utf8(value ? "true"sv : "false"sv); },
+        [](TupleValue const& value) {
+            StringBuilder builder;
+
+            builder.append('(');
+            builder.join(',', value.values);
+            builder.append(')');
+
+            return builder.to_string();
+        });
 }
 
 ByteString Value::to_byte_string() const
