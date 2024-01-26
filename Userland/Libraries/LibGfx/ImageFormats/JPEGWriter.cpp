@@ -356,6 +356,45 @@ ErrorOr<void> add_end_of_image(Stream& stream)
     return {};
 }
 
+ErrorOr<void> add_icc_data(Stream& stream, ReadonlyBytes icc_data)
+{
+    // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf, JFIF section
+    constexpr StringView icc_chunk_name = "ICC_PROFILE\0"sv;
+
+    // One JPEG chunk is at most 65535 bytes long, which includes the size of the 2-byte
+    // "length" field. This leaves 65533 bytes for the actual data. One ICC chunk needs
+    // 12 bytes for the "ICC_PROFILE\0" app id and then one byte each for the current
+    // sequence number and the number of ICC chunks. This leaves 65519 bytes for the
+    // ICC data.
+    constexpr size_t icc_chunk_header_size = 2 + icc_chunk_name.length() + 1 + 1;
+    constexpr size_t max_chunk_size = 65535 - icc_chunk_header_size;
+    static_assert(max_chunk_size == 65519);
+
+    constexpr size_t max_number_of_icc_chunks = 255; // Chunk IDs are stored in an u8 and start at 1.
+    constexpr size_t max_icc_data_size = max_chunk_size * max_number_of_icc_chunks;
+
+    // "The 1-byte chunk count limits the size of embeddable profiles to 16 707 345 bytes.""
+    static_assert(max_icc_data_size == 16'707'345);
+
+    if (icc_data.size() > max_icc_data_size)
+        return Error::from_string_view("JPEGWriter: icc data too large for jpeg format"sv);
+
+    size_t const number_of_icc_chunks = AK::ceil_div(icc_data.size(), max_chunk_size);
+    for (size_t chunk_id = 1; chunk_id <= number_of_icc_chunks; ++chunk_id) {
+        size_t const chunk_size = min(icc_data.size(), max_chunk_size);
+
+        TRY(stream.write_value<BigEndian<Marker>>(JPEG_APPN2));
+        TRY(stream.write_value<BigEndian<u16>>(icc_chunk_header_size + chunk_size));
+        TRY(stream.write_until_depleted(icc_chunk_name.bytes()));
+        TRY(stream.write_value<u8>(chunk_id));
+        TRY(stream.write_value<u8>(number_of_icc_chunks));
+        TRY(stream.write_until_depleted(icc_data.slice(0, chunk_size)));
+        icc_data = icc_data.slice(chunk_size);
+    }
+    VERIFY(icc_data.is_empty());
+    return {};
+}
+
 ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& context, Bitmap const& bitmap)
 {
     // B.2.2 - Frame header syntax
@@ -493,6 +532,9 @@ ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     context.ac_chrominance_huffman_table = s_default_ac_chrominance_huffman_table;
 
     TRY(add_start_of_image(stream));
+
+    if (options.icc_data.has_value())
+        TRY(add_icc_data(stream, options.icc_data.value()));
 
     TRY(add_frame_header(stream, context, bitmap));
 
