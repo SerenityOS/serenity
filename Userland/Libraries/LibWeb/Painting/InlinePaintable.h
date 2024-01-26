@@ -20,6 +20,9 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 
+    virtual void before_paint(PaintContext& context, PaintPhase) const override;
+    virtual void after_paint(PaintContext& context, PaintPhase) const override;
+
     Layout::InlineNode const& layout_node() const;
     auto const& box_model() const { return layout_node().box_model(); }
 
@@ -34,11 +37,17 @@ public:
     void set_box_shadow_data(Vector<ShadowData>&& box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
     Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
 
+    void set_scroll_frame_id(int id) { m_scroll_frame_id = id; }
+    void set_clip_rect(Optional<CSSPixelRect> rect) { m_clip_rect = rect; }
+
 private:
     InlinePaintable(Layout::InlineNode const&);
 
     template<typename Callback>
     void for_each_fragment(Callback) const;
+
+    Optional<int> m_scroll_frame_id;
+    Optional<CSSPixelRect> m_clip_rect;
 
     Vector<ShadowData> m_box_shadow_data;
     Vector<PaintableFragment> m_fragments;

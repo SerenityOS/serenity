@@ -148,19 +148,6 @@ void Paintable::set_needs_display() const
     });
 }
 
-PaintableBox const* Paintable::nearest_scrollable_ancestor_within_stacking_context() const
-{
-    auto* ancestor = parent();
-    while (ancestor) {
-        if (ancestor->stacking_context())
-            return nullptr;
-        if (ancestor->is_paintable_box() && static_cast<PaintableBox const*>(ancestor)->has_scrollable_overflow())
-            return static_cast<PaintableBox const*>(ancestor);
-        ancestor = ancestor->parent();
-    }
-    return nullptr;
-}
-
 CSSPixelPoint Paintable::box_type_agnostic_position() const
 {
     if (is_paintable_box())

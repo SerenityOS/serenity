@@ -74,12 +74,6 @@ public:
 
     u32 allocate_corner_clipper_id() { return m_next_corner_clipper_id++; }
 
-    struct ScrollFrame {
-        i32 id { -1 };
-        CSSPixelPoint offset;
-    };
-    HashMap<Painting::PaintableBox const*, ScrollFrame>& scroll_frames() { return m_scroll_frames; }
-
 private:
     Painting::RecordingPainter& m_recording_painter;
     Palette m_palette;
@@ -90,7 +84,6 @@ private:
     bool m_focus { false };
     Gfx::AffineTransform m_svg_transform;
     u32 m_next_corner_clipper_id { 0 };
-    HashMap<Painting::PaintableBox const*, ScrollFrame> m_scroll_frames;
 };
 
 }

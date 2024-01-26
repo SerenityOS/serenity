@@ -121,6 +121,26 @@ CSSPixelRect PaintableBox::compute_absolute_rect() const
     return rect;
 }
 
+CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_applied() const
+{
+    CSSPixelRect rect { offset(), content_size() };
+    for (auto const* block = containing_block(); block; block = block->containing_block()) {
+        auto offset = block->paintable_box()->offset();
+        auto affine_transform = Gfx::extract_2d_affine_transform(block->paintable_box()->transform());
+        offset.translate_by(affine_transform.translation().to_type<CSSPixels>());
+        rect.translate_by(offset);
+    }
+    auto affine_transform = Gfx::extract_2d_affine_transform(transform());
+    rect.translate_by(affine_transform.translation().to_type<CSSPixels>());
+
+    CSSPixelRect padding_rect;
+    padding_rect.set_x(rect.x() - box_model().padding.left);
+    padding_rect.set_width(content_width() + box_model().padding.left + box_model().padding.right);
+    padding_rect.set_y(rect.y() - box_model().padding.top);
+    padding_rect.set_height(content_height() + box_model().padding.top + box_model().padding.bottom);
+    return padding_rect;
+}
+
 CSSPixelRect PaintableBox::absolute_rect() const
 {
     if (!m_absolute_rect.has_value())
@@ -171,11 +191,8 @@ void PaintableBox::before_paint(PaintContext& context, [[maybe_unused]] PaintPha
     if (!is_visible())
         return;
 
-    auto clip_rect = get_clip_rect();
-    if (clip_rect.has_value()) {
-        context.recording_painter().save();
-        context.recording_painter().add_clip_rect(clip_rect->to_type<int>());
-    }
+    apply_scroll_offset(context, phase);
+    apply_clip_overflow_rect(context, phase);
 }
 
 void PaintableBox::after_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
@@ -183,8 +200,8 @@ void PaintableBox::after_paint(PaintContext& context, [[maybe_unused]] PaintPhas
     if (!is_visible())
         return;
 
-    if (get_clip_rect().has_value())
-        context.recording_painter().restore();
+    clear_clip_overflow_rect(context, phase);
+    reset_scroll_offset(context, phase);
 }
 
 void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
@@ -358,110 +375,63 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radii_data;
 }
 
-Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
-{
-    if (layout_node().is_viewport()) {
-        return {};
-    }
-
-    if (!m_clip_rect.has_value()) {
-        // NOTE: stacking context should not be crossed while aggregating rectangle to
-        // clip `overflow: hidden` because intersecting rectangles with different
-        // transforms doesn't make sense
-        // TODO: figure out if there are cases when stacking context should be
-        // crossed to calculate correct clip rect
-        if (!stacking_context() && containing_block() && containing_block()->paintable_box()) {
-            m_clip_rect = containing_block()->paintable_box()->calculate_overflow_clipped_rect();
-        }
-
-        auto overflow_x = computed_values().overflow_x();
-        auto overflow_y = computed_values().overflow_y();
-
-        if (overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible) {
-            if (m_clip_rect.has_value()) {
-                m_clip_rect->intersect(absolute_padding_box_rect());
-            } else {
-                m_clip_rect = absolute_padding_box_rect();
-            }
-        }
-    }
-
-    return m_clip_rect;
-}
-
 void PaintableBox::apply_scroll_offset(PaintContext& context, PaintPhase) const
 {
-    if (context.scroll_frames().contains(this)) {
+    if (m_scroll_frame_id.has_value()) {
         context.recording_painter().save();
-        context.recording_painter().set_scroll_frame_id(context.scroll_frames().get(this)->id);
+        context.recording_painter().set_scroll_frame_id(m_scroll_frame_id.value());
     }
 }
 
 void PaintableBox::reset_scroll_offset(PaintContext& context, PaintPhase) const
 {
-    if (context.scroll_frames().contains(this)) {
+    if (m_scroll_frame_id.has_value())
         context.recording_painter().restore();
-    }
 }
 
 void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
 {
-    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground, PaintPhase::Outline))
         return;
 
-    // FIXME: Support more overflow variations.
-    auto clip_rect = this->calculate_overflow_clipped_rect();
-    auto overflow_x = computed_values().overflow_x();
-    auto overflow_y = computed_values().overflow_y();
+    if (m_clip_rect.has_value()) {
+        auto overflow_clip_rect = m_clip_rect.value();
+        for (auto const* ancestor = &this->layout_box(); ancestor; ancestor = ancestor->containing_block()) {
+            auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->paintable_box()->transform());
+            if (!affine_transform.is_identity()) {
+                // NOTE: Because the painting command executor applies CSS transform of the nearest stacking context
+                //       and the m_clip_rect is determined considering CSS transforms, here transform of the nearest
+                //       stacking context need to be compensated.
+                //       This adjustment ensures the transform is accounted for just once.
+                overflow_clip_rect.translate_by(-affine_transform.translation().to_type<CSSPixels>());
+                break;
+            }
+        }
 
-    auto css_clip_property = get_clip_rect();
-    if (css_clip_property.has_value()) {
-        if (clip_rect.has_value())
-            clip_rect->intersect(css_clip_property.value());
-        else
-            clip_rect = css_clip_property.value();
-    }
-
-    if (!clip_rect.has_value())
-        return;
-
-    if (!m_clipping_overflow) {
-        context.recording_painter().save();
-        context.recording_painter().add_clip_rect(context.enclosing_device_rect(*clip_rect).to_type<int>());
         m_clipping_overflow = true;
-    }
-
-    if (!clip_rect->is_empty() && overflow_y == CSS::Overflow::Hidden && overflow_x == CSS::Overflow::Hidden) {
-        auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
-        CornerRadii corner_radii {
-            .top_left = border_radii_data.top_left.as_corner(context),
-            .top_right = border_radii_data.top_right.as_corner(context),
-            .bottom_right = border_radii_data.bottom_right.as_corner(context),
-            .bottom_left = border_radii_data.bottom_left.as_corner(context)
-        };
-        if (corner_radii.has_any_radius()) {
+        context.recording_painter().save();
+        context.recording_painter().add_clip_rect(context.enclosing_device_rect(overflow_clip_rect).to_type<int>());
+        if (m_corner_clip_radii.has_value()) {
             VERIFY(!m_corner_clipper_id.has_value());
             m_corner_clipper_id = context.allocate_corner_clipper_id();
-            context.recording_painter().sample_under_corners(*m_corner_clipper_id, corner_radii, context.rounded_device_rect(*clip_rect).to_type<int>(), CornerClip::Outside);
+            context.recording_painter().sample_under_corners(*m_corner_clipper_id, *m_corner_clip_radii, context.rounded_device_rect(overflow_clip_rect).to_type<int>(), CornerClip::Outside);
         }
     }
 }
 
 void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
 {
-    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground, PaintPhase::Outline))
         return;
 
-    // FIXME: Support more overflow variations.
     if (m_clipping_overflow) {
-        context.recording_painter().restore();
         m_clipping_overflow = false;
-    }
-    if (m_corner_clipper_id.has_value()) {
-        VERIFY(m_corner_clipper_id.has_value());
-        auto clip_rect = this->calculate_overflow_clipped_rect();
-        context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*clip_rect).to_type<int>());
-        m_corner_clipper_id = {};
+        if (m_corner_clip_radii.has_value()) {
+            VERIFY(m_corner_clipper_id.has_value());
+            context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*m_clip_rect).to_type<int>());
+            m_corner_clipper_id = {};
+        }
+        context.recording_painter().restore();
     }
 }
 

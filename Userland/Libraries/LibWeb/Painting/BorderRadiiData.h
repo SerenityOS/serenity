@@ -17,7 +17,7 @@ struct BorderRadiusData {
     CSSPixels horizontal_radius { 0 };
     CSSPixels vertical_radius { 0 };
 
-    Gfx::AntiAliasingPainter::CornerRadius as_corner(PaintContext& context) const;
+    Gfx::AntiAliasingPainter::CornerRadius as_corner(PaintContext const& context) const;
 
     inline operator bool() const
     {
@@ -71,7 +71,7 @@ struct BorderRadiiData {
         shrink(-top, -right, -bottom, -left);
     }
 
-    inline CornerRadii as_corners(PaintContext& context) const
+    inline CornerRadii as_corners(PaintContext const& context) const
     {
         return CornerRadii {
             top_left.as_corner(context),

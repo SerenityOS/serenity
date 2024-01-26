@@ -117,8 +117,6 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    Optional<CSSPixelRect> calculate_overflow_clipped_rect() const;
-
     void set_overflow_data(OverflowData data) { m_overflow_data = move(data); }
 
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
@@ -191,10 +189,16 @@ public:
     void set_transform_origin(CSSPixelPoint transform_origin) { m_transform_origin = transform_origin; }
     CSSPixelPoint const& transform_origin() const { return m_transform_origin; }
 
-protected:
-    explicit PaintableBox(Layout::Box const&);
+    CSSPixelRect compute_absolute_padding_rect_with_css_transform_applied() const;
 
     Optional<CSSPixelRect> get_clip_rect() const;
+
+    void set_clip_rect(Optional<CSSPixelRect> rect) { m_clip_rect = rect; }
+    void set_scroll_frame_id(int id) { m_scroll_frame_id = id; }
+    void set_corner_clip_radii(CornerRadii const& corner_radii) { m_corner_clip_radii = corner_radii; }
+
+protected:
+    explicit PaintableBox(Layout::Box const&);
 
     virtual void paint_border(PaintContext&) const;
     virtual void paint_backdrop_filter(PaintContext&) const;
@@ -215,10 +219,12 @@ private:
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;
 
-    Optional<CSSPixelRect> mutable m_clip_rect;
-
     mutable bool m_clipping_overflow { false };
     mutable Optional<u32> m_corner_clipper_id;
+
+    Optional<CSSPixelRect> m_clip_rect;
+    Optional<int> m_scroll_frame_id;
+    Optional<CornerRadii> m_corner_clip_radii;
 
     Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;
