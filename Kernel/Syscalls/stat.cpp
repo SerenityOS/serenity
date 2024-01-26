@@ -30,7 +30,7 @@ ErrorOr<FlatPtr> Process::sys$stat(Userspace<Syscall::SC_stat_params const*> use
     auto path = TRY(get_syscall_path_argument(params.path));
 
     CustodyBase base(params.dirfd, path->view());
-    auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(credentials(), path->view(), base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+    auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(vfs_root_context(), credentials(), path->view(), base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     auto statbuf = TRY(metadata.stat());
     TRY(copy_to_user(params.statbuf, &statbuf));
     return 0;

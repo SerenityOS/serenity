@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$mkdir(int dirfd, Userspace<char const*> user_path,
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
 
     CustodyBase base(dirfd, path->view());
-    TRY(VirtualFileSystem::the().mkdir(credentials(), path->view(), mode & ~umask(), base));
+    TRY(VirtualFileSystem::the().mkdir(vfs_root_context(), credentials(), path->view(), mode & ~umask(), base));
     return 0;
 }
 }

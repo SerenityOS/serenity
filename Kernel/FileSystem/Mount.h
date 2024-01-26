@@ -20,9 +20,12 @@ class Mount {
     AK_MAKE_NONCOPYABLE(Mount);
     AK_MAKE_NONMOVABLE(Mount);
     friend class VirtualFileSystem;
+    friend class VFSRootContext;
 
 public:
-    Mount(NonnullRefPtr<FileSystem>, RefPtr<Custody> host_custody, int flags);
+    // NOTE: This constructor is valid for VFSRootContext root inodes (as for the "/" directory)
+    Mount(NonnullRefPtr<Inode> source, int flags);
+
     Mount(NonnullRefPtr<Inode> source, NonnullRefPtr<Custody> host_custody, int flags);
 
     RefPtr<Inode const> host() const;

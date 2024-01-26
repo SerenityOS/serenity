@@ -29,7 +29,7 @@ public:
     static StorageManagement& the();
 
     bool determine_boot_device(StringView boot_argument);
-    NonnullRefPtr<FileSystem> root_filesystem() const;
+    ErrorOr<NonnullRefPtr<VFSRootContext>> create_first_vfs_root_context() const;
 
     static MinorNumber generate_storage_minor_number();
 
