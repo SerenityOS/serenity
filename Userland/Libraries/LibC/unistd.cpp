@@ -959,7 +959,7 @@ int fsopen(char const* fs_type, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int fsmount(int mount_fd, int source_fd, char const* target)
+int fsmount(int vfs_context_id, int mount_fd, int source_fd, char const* target)
 {
     if (!target) {
         errno = EFAULT;
@@ -967,6 +967,7 @@ int fsmount(int mount_fd, int source_fd, char const* target)
     }
 
     Syscall::SC_fsmount_params params {
+        vfs_context_id,
         mount_fd,
         { target, strlen(target) },
         source_fd,
@@ -975,7 +976,7 @@ int fsmount(int mount_fd, int source_fd, char const* target)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int bindmount(int source_fd, char const* target, int flags)
+int bindmount(int vfs_context_id, int source_fd, char const* target, int flags)
 {
     if (!target) {
         errno = EFAULT;
@@ -983,6 +984,7 @@ int bindmount(int source_fd, char const* target, int flags)
     }
 
     Syscall::SC_bindmount_params params {
+        vfs_context_id,
         { target, strlen(target) },
         source_fd,
         flags,
@@ -994,18 +996,22 @@ int bindmount(int source_fd, char const* target, int flags)
 int mount(int source_fd, char const* target, char const* fs_type, int flags)
 {
     if (flags & MS_BIND)
-        return bindmount(source_fd, target, flags);
+        return bindmount(-1, source_fd, target, flags);
 
     int mount_fd = fsopen(fs_type, flags);
     if (mount_fd < 0)
         return -1;
 
-    return fsmount(mount_fd, source_fd, target);
+    return fsmount(-1, mount_fd, source_fd, target);
 }
 
 int umount(char const* mountpoint)
 {
-    int rc = syscall(SC_umount, mountpoint, strlen(mountpoint));
+    Syscall::SC_umount_params params {
+        -1,
+        { mountpoint, strlen(mountpoint) },
+    };
+    int rc = syscall(SC_umount, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

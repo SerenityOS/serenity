@@ -434,7 +434,7 @@ public:
     ErrorOr<FlatPtr> sys$rmdir(Userspace<char const*> pathname, size_t path_length);
     ErrorOr<FlatPtr> sys$fsmount(Userspace<Syscall::SC_fsmount_params const*>);
     ErrorOr<FlatPtr> sys$fsopen(Userspace<Syscall::SC_fsopen_params const*>);
-    ErrorOr<FlatPtr> sys$umount(Userspace<char const*> mountpoint, size_t mountpoint_length);
+    ErrorOr<FlatPtr> sys$umount(Userspace<Syscall::SC_umount_params const*>);
     ErrorOr<FlatPtr> sys$chmod(Userspace<Syscall::SC_chmod_params const*>);
     ErrorOr<FlatPtr> sys$fchmod(int fd, mode_t);
     ErrorOr<FlatPtr> sys$chown(Userspace<Syscall::SC_chown_params const*>);
@@ -932,6 +932,15 @@ public:
 
 private:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
+
+    ErrorOr<NonnullRefPtr<VFSRootContext>> vfs_root_context_for_id(int id);
+    ErrorOr<NonnullRefPtr<VFSRootContext>> acquire_vfs_root_context_for_id_and_validate_path(bool& different_vfs_root_context, int id, StringView path);
+
+    struct MountTargetContext {
+        NonnullRefPtr<Custody> custody;
+        NonnullRefPtr<VFSRootContext> vfs_root_context;
+    };
+    ErrorOr<MountTargetContext> context_for_mount_operation(int vfs_root_context_id, StringView path);
 
     SpinlockProtected<Thread::ListInProcess, LockRank::None>& thread_list() { return m_thread_list; }
     SpinlockProtected<Thread::ListInProcess, LockRank::None> const& thread_list() const { return m_thread_list; }

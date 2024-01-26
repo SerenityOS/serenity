@@ -23,6 +23,7 @@
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/KBufferBuilder.h>
+#include <Kernel/Library/KLexicalPath.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -1206,6 +1207,67 @@ RefPtr<Custody> Process::executable()
 RefPtr<Custody const> Process::executable() const
 {
     return m_executable.with([](auto& executable) { return executable; });
+}
+
+ErrorOr<NonnullRefPtr<VFSRootContext>> Process::vfs_root_context_for_id(int id)
+{
+    if (id == -1)
+        return vfs_root_context();
+
+    // NOTE: ID 0 is reserved for the kernel VFS root context and is not
+    // addressable via the vfs root contexts list anyway.
+    // Because we checked for the special ID (-1), anything not above it
+    // is also considered illegal.
+    if (id == 0 || id < 0)
+        return EINVAL;
+
+    // NOTE: Jailed processes should not be able to specify any vfs root context
+    // besides their currently attached contexts.
+    // This is a security measure to prevent jailed processes from enumerating
+    // the list of VFSRootContexts.
+    if (is_currently_in_jail() && id != -1)
+        return EPERM;
+
+    return VirtualFileSystem::the().all_root_contexts_list(Badge<Process> {}).with([id](auto& list) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
+        for (auto& context : list) {
+            if (context.id() == static_cast<u64>(id))
+                return context;
+        }
+        return Error::from_errno(EDOM);
+    });
+}
+
+ErrorOr<NonnullRefPtr<VFSRootContext>> Process::acquire_vfs_root_context_for_id_and_validate_path(bool& different_vfs_root_context, int id, StringView path)
+{
+    // NOTE: We don't support mount operations in different VFSRootContext(s) other
+    // than the Process::current VFSRootContext when the target path
+    // is not absolute, as the path probably doesn't correlate to anything
+    // meaningful on the other VFSRootContext.
+    auto context = TRY(vfs_root_context_for_id(id));
+    return m_attached_vfs_root_context.with([&different_vfs_root_context, path, context](auto& current_context) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
+        VERIFY(current_context);
+        different_vfs_root_context = (current_context.ptr() != context.ptr());
+        if (!KLexicalPath::is_absolute(path) && different_vfs_root_context)
+            return Error::from_errno(EINVAL);
+        return context;
+    });
+}
+
+ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vfs_root_context_id, StringView path)
+{
+    bool different_vfs_root_context = false;
+    auto vfs_root_context = TRY(acquire_vfs_root_context_for_id_and_validate_path(different_vfs_root_context, vfs_root_context_id, path));
+    RefPtr<Custody> target_custody;
+    if (different_vfs_root_context) {
+        VERIFY(KLexicalPath::is_canonical(path));
+        auto vfs_root_context_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+            return custody;
+        });
+        target_custody = TRY(VirtualFileSystem::the().resolve_path(vfs_root_context, credentials(), path, vfs_root_context_custody));
+    } else {
+        target_custody = TRY(VirtualFileSystem::the().resolve_path(vfs_root_context, credentials(), path, current_directory()));
+    }
+    return MountTargetContext { *target_custody.release_nonnull(), *vfs_root_context };
 }
 
 ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, int dirfd)
