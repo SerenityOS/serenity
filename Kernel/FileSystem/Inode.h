@@ -72,7 +72,7 @@ public:
     virtual ErrorOr<void> chown(UserID, GroupID) = 0;
     virtual ErrorOr<void> truncate(u64) { return {}; }
 
-    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Credentials const&, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
+    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(VFSRootContext const&, Credentials const&, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
     virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 

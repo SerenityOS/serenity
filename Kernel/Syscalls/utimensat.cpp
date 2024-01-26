@@ -73,7 +73,7 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     auto base = TRY(custody_for_dirfd(params.dirfd));
     auto& atime = times[0];
     auto& mtime = times[1];
-    TRY(VirtualFileSystem::the().utimensat(credentials(), path->view(), *base, atime, mtime, follow_symlink));
+    TRY(VirtualFileSystem::the().utimensat(vfs_root_context(), credentials(), path->view(), *base, atime, mtime, follow_symlink));
     return 0;
 }
 
