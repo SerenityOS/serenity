@@ -67,6 +67,7 @@ public:
     SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>, LockRank::FileSystem>& all_file_systems_list(Badge<VFSRootContext>) { return m_file_systems_list; }
     SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>) { return m_root_contexts; }
     SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list(Badge<VFSRootContext>) { return m_root_contexts; }
+    SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list(Badge<Process>) { return m_root_contexts; }
 
     ErrorOr<void> mount(VFSRootContext&, MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
     ErrorOr<void> pivot_root_by_copying_mounted_fs_instance(VFSRootContext&, FileSystem& fs, int root_mount_flags);

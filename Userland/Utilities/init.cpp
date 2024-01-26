@@ -18,11 +18,11 @@
 
 static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
 {
-    TRY(Core::System::remount("/"sv, MS_NODEV | MS_NOSUID | MS_RDONLY));
-    TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
-    TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
-    TRY(Core::System::mount(-1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
-    TRY(Core::System::mount(-1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
+    TRY(Core::System::remount({}, "/"sv, MS_NODEV | MS_NOSUID | MS_RDONLY));
+    TRY(Core::System::mount({}, -1, "/proc"sv, "proc"sv, MS_NOSUID));
+    TRY(Core::System::mount({}, -1, "/sys"sv, "sys"sv, 0));
+    TRY(Core::System::mount({}, -1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
+    TRY(Core::System::mount({}, -1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
     // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
     TRY(Core::System::chmod("/tmp"sv, 01777));
     return {};
@@ -55,7 +55,7 @@ static ErrorOr<void> prepare_tmpfs_system_devicemap_directory()
 
     TRY(Core::System::mkdir("/tmp/system/"sv, 0755));
     TRY(Core::System::mkdir("/tmp/system/devicemap/"sv, 0755));
-    TRY(Core::System::mount(-1, "/tmp/system/devicemap/"sv, "ram"sv, MS_NOEXEC | MS_NOSUID | MS_NODEV));
+    TRY(Core::System::mount({}, -1, "/tmp/system/devicemap/"sv, "ram"sv, MS_NOEXEC | MS_NOSUID | MS_NODEV));
     TRY(Core::System::mkdir("/tmp/system/devicemap/nodes/"sv, 0755));
     TRY(Core::System::mkdir("/tmp/system/devicemap/nodes/block/"sv, 0755));
     TRY(Core::System::mkdir("/tmp/system/devicemap/nodes/char/"sv, 0755));
@@ -114,9 +114,9 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(Core::System::symlink("/proc/self/fd/2"sv, "/dev/stderr"sv));
     TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
     TRY(Core::System::mkdir("/dev/pts"sv, 0755));
-    TRY(Core::System::mount(-1, "/dev/pts"sv, "devpts"sv, 0));
+    TRY(Core::System::mount({}, -1, "/dev/pts"sv, "devpts"sv, 0));
     TRY(Core::System::mkdir("/dev/loop"sv, 0755));
-    TRY(Core::System::mount(-1, "/dev/loop"sv, "devloop"sv, 0));
+    TRY(Core::System::mount({}, -1, "/dev/loop"sv, "devloop"sv, 0));
 
     mode_t old_mask = umask(0);
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/devctl"sv, 0660, 2, 10));

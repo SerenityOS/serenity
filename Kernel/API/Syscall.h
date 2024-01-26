@@ -439,20 +439,28 @@ struct SC_fsopen_params {
 };
 
 struct SC_fsmount_params {
+    int vfs_root_context_id;
     int mount_fd;
     StringArgument target;
     int source_fd;
 };
 
 struct SC_bindmount_params {
+    int vfs_root_context_id;
     StringArgument target;
     int source_fd;
     int flags;
 };
 
 struct SC_remount_params {
+    int vfs_root_context_id;
     StringArgument target;
     int flags;
+};
+
+struct SC_umount_params {
+    int vfs_root_context_id;
+    StringArgument target;
 };
 
 struct SC_pledge_params {

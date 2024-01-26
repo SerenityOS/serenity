@@ -261,12 +261,13 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
     HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 
-ErrorOr<void> bindmount(int source_fd, StringView target, int flags)
+ErrorOr<void> bindmount(Optional<i32> vfs_context_id, int source_fd, StringView target, int flags)
 {
     if (target.is_null())
         return Error::from_errno(EFAULT);
 
     Syscall::SC_bindmount_params params {
+        vfs_context_id.value_or(-1),
         { target.characters_without_null_termination(), target.length() },
         source_fd,
         flags,
@@ -275,12 +276,13 @@ ErrorOr<void> bindmount(int source_fd, StringView target, int flags)
     HANDLE_SYSCALL_RETURN_VALUE("bindmount", rc, {});
 }
 
-ErrorOr<void> remount(StringView target, int flags)
+ErrorOr<void> remount(Optional<i32> vfs_context_id, StringView target, int flags)
 {
     if (target.is_null())
         return Error::from_errno(EFAULT);
 
     Syscall::SC_remount_params params {
+        vfs_context_id.value_or(-1),
         { target.characters_without_null_termination(), target.length() },
         flags
     };
@@ -288,21 +290,21 @@ ErrorOr<void> remount(StringView target, int flags)
     HANDLE_SYSCALL_RETURN_VALUE("remount", rc, {});
 }
 
-ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags)
+ErrorOr<void> mount(Optional<i32> vfs_context_id, int source_fd, StringView target, StringView fs_type, int flags)
 {
     if (target.is_null() || fs_type.is_null())
         return Error::from_errno(EFAULT);
 
     if (flags & MS_REMOUNT) {
-        TRY(remount(target, flags));
+        TRY(remount(vfs_context_id, target, flags));
         return {};
     }
     if (flags & MS_BIND) {
-        TRY(bindmount(source_fd, target, flags));
+        TRY(bindmount(vfs_context_id, source_fd, target, flags));
         return {};
     }
     int mount_fd = TRY(fsopen(fs_type, flags));
-    return fsmount(mount_fd, source_fd, target);
+    return fsmount(vfs_context_id, mount_fd, source_fd, target);
 }
 
 ErrorOr<int> fsopen(StringView fs_type, int flags)
@@ -318,12 +320,13 @@ ErrorOr<int> fsopen(StringView fs_type, int flags)
     HANDLE_SYSCALL_RETURN_VALUE("fsopen", rc, rc);
 }
 
-ErrorOr<void> fsmount(int mount_fd, int source_fd, StringView target)
+ErrorOr<void> fsmount(Optional<i32> vfs_context_id, int mount_fd, int source_fd, StringView target)
 {
     if (target.is_null())
         return Error::from_errno(EFAULT);
 
     Syscall::SC_fsmount_params params {
+        vfs_context_id.value_or(-1),
         mount_fd,
         { target.characters_without_null_termination(), target.length() },
         source_fd,
@@ -332,12 +335,16 @@ ErrorOr<void> fsmount(int mount_fd, int source_fd, StringView target)
     HANDLE_SYSCALL_RETURN_VALUE("fsmount", rc, {});
 }
 
-ErrorOr<void> umount(StringView mount_point)
+ErrorOr<void> umount(Optional<i32> vfs_context_id, StringView mount_point)
 {
     if (mount_point.is_null())
         return Error::from_errno(EFAULT);
 
-    int rc = syscall(SC_umount, mount_point.characters_without_null_termination(), mount_point.length());
+    Syscall::SC_umount_params params {
+        vfs_context_id.value_or(-1),
+        { mount_point.characters_without_null_termination(), mount_point.length() },
+    };
+    int rc = syscall(SC_umount, &params);
     HANDLE_SYSCALL_RETURN_VALUE("umount", rc, {});
 }
 
