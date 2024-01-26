@@ -212,7 +212,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<TTY> tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<TTY> tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -221,7 +221,11 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     }
 
     auto path_string = TRY(KString::try_create(path));
-    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
+
+    auto vfs_root_context_root_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+        return custody;
+    });
+    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, vfs_root_context, vfs_root_context_root_custody, nullptr, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -258,7 +262,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
 
 ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(StringView name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true));
+    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true, VFSRootContext::empty_context_for_kernel_processes()));
     auto& process = *process_and_first_thread.process;
     auto& thread = *process_and_first_thread.first_thread;
 
@@ -287,22 +291,22 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     Process::Name name {};
     Process::current().name().with([&name](auto& process_name) {
         name.store_characters(process_name.representable_view());
     });
-    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, current_directory, executable, tty, fork_parent));
+    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, move(vfs_root_context), current_directory, executable, tty, fork_parent));
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
 
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(vfs_root_context), move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
 
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -319,11 +323,12 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID 
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
+Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
     : m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_current_directory(move(current_directory))
     , m_creation_time(creation_time)
+    , m_attached_vfs_root_context(move(vfs_root_context))
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
@@ -342,6 +347,10 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
             dbgln("Created new process {}({})", process_name.representable_view(), this->pid().value());
         });
     }
+
+    m_attached_vfs_root_context.with([](auto& context) {
+        context->set_attached({});
+    });
 }
 
 ErrorOr<NonnullRefPtr<Thread>> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, Process* fork_parent)
@@ -737,9 +746,13 @@ siginfo_t Process::wait_info() const
 NonnullRefPtr<Custody> Process::current_directory()
 {
     return m_current_directory.with([&](auto& current_directory) -> NonnullRefPtr<Custody> {
-        if (!current_directory)
-            current_directory = VirtualFileSystem::the().root_custody();
-        return *current_directory;
+        return m_attached_vfs_root_context.with([&](auto& context) -> NonnullRefPtr<Custody> {
+            return context->root_custody().with([&](auto& custody) -> NonnullRefPtr<Custody> {
+                if (!current_directory)
+                    current_directory = custody;
+                return *current_directory;
+            });
+        });
     });
 }
 
@@ -793,7 +806,7 @@ ErrorOr<void> Process::dump_perfcore()
     RefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(*this, credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::the().open(*this, vfs_root_context(), credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;

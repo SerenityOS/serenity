@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,6 +22,7 @@
 #include <Kernel/FileSystem/Mount.h>
 #include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/UnveilNode.h>
+#include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -45,6 +47,8 @@ enum class AccessFlags {
 AK_ENUM_BITWISE_OPERATORS(AccessFlags);
 
 class VirtualFileSystem {
+    friend class StorageManagement;
+
 public:
     // Required to be at least 8 by POSIX
     // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/limits.h.html
@@ -53,51 +57,57 @@ public:
     static void initialize();
     static VirtualFileSystem& the();
 
+    static bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody);
+
     static ErrorOr<FileSystemInitializer const*> find_filesystem_type_initializer(StringView fs_type);
 
     VirtualFileSystem();
     ~VirtualFileSystem();
 
-    ErrorOr<void> mount_root(FileSystem&);
-    ErrorOr<void> mount(MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
-    ErrorOr<void> bind_mount(Custody& source, Custody& mount_point, int flags);
-    ErrorOr<void> remount(Custody& mount_point, int new_flags);
-    ErrorOr<void> unmount(Custody& mount_point);
-    ErrorOr<void> unmount(Inode& guest_inode, StringView custody_path);
+    SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>, LockRank::FileSystem>& all_file_systems_list(Badge<VFSRootContext>) { return m_file_systems_list; }
+    SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>) { return m_root_contexts; }
+    SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list(Badge<VFSRootContext>) { return m_root_contexts; }
 
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
+    ErrorOr<void> mount(VFSRootContext&, MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
+    ErrorOr<void> pivot_root_by_copying_mounted_fs_instance(VFSRootContext&, FileSystem& fs, int root_mount_flags);
+
+    ErrorOr<void> bind_mount(VFSRootContext&, Custody& source, Custody& mount_point, int flags);
+    ErrorOr<void> remount(VFSRootContext&, Custody& mount_point, int new_flags);
+    ErrorOr<void> unmount(VFSRootContext&, Custody& mount_point);
+    ErrorOr<void> unmount(VFSRootContext&, Inode& guest_inode, StringView custody_path);
+
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(VFSRootContext const&, Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, VFSRootContext const&, Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
     ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
-    ErrorOr<void> mkdir(Credentials const&, StringView path, mode_t mode, CustodyBase const& base);
-    ErrorOr<void> link(Credentials const&, StringView old_path, StringView new_path, CustodyBase const& base);
-    ErrorOr<void> unlink(Credentials const&, StringView path, CustodyBase const& base);
-    ErrorOr<void> symlink(Credentials const&, StringView target, StringView linkpath, CustodyBase const& base);
-    ErrorOr<void> rmdir(Credentials const&, StringView path, CustodyBase const& base);
-    ErrorOr<void> chmod(Credentials const&, StringView path, mode_t, CustodyBase const& base, int options = 0);
+    ErrorOr<void> mkdir(VFSRootContext const&, Credentials const&, StringView path, mode_t mode, CustodyBase const& base);
+    ErrorOr<void> link(VFSRootContext const&, Credentials const&, StringView old_path, StringView new_path, CustodyBase const& base);
+    ErrorOr<void> unlink(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base);
+    ErrorOr<void> symlink(VFSRootContext const&, Credentials const&, StringView target, StringView linkpath, CustodyBase const& base);
+    ErrorOr<void> rmdir(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base);
+    ErrorOr<void> chmod(VFSRootContext const&, Credentials const&, StringView path, mode_t, CustodyBase const& base, int options = 0);
     ErrorOr<void> chmod(Credentials const&, Custody&, mode_t);
-    ErrorOr<void> chown(Credentials const&, StringView path, UserID, GroupID, CustodyBase const& base, int options);
+    ErrorOr<void> chown(VFSRootContext const&, Credentials const&, StringView path, UserID, GroupID, CustodyBase const& base, int options);
     ErrorOr<void> chown(Credentials const&, Custody&, UserID, GroupID);
-    ErrorOr<void> access(Credentials const&, StringView path, int mode, CustodyBase const& base, AccessFlags);
-    ErrorOr<InodeMetadata> lookup_metadata(Credentials const&, StringView path, CustodyBase const& base, int options = 0);
-    ErrorOr<void> utime(Credentials const&, StringView path, CustodyBase const& base, time_t atime, time_t mtime);
-    ErrorOr<void> utimensat(Credentials const&, StringView path, CustodyBase const& base, timespec const& atime, timespec const& mtime, int options = 0);
-    ErrorOr<void> do_utimens(Credentials const& credentials, Custody& custody, timespec const& atime, timespec const& mtime);
-    ErrorOr<void> rename(Credentials const&, CustodyBase const& old_base, StringView oldpath, CustodyBase const& new_base, StringView newpath);
-    ErrorOr<void> mknod(Credentials const&, StringView path, mode_t, dev_t, CustodyBase const& base);
-    ErrorOr<NonnullRefPtr<Custody>> open_directory(Credentials const&, StringView path, CustodyBase const& base);
+    ErrorOr<void> access(VFSRootContext const&, Credentials const&, StringView path, int mode, CustodyBase const& base, AccessFlags);
+    ErrorOr<InodeMetadata> lookup_metadata(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, int options = 0);
+    ErrorOr<void> utime(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, time_t atime, time_t mtime);
+    ErrorOr<void> utimensat(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, timespec const& atime, timespec const& mtime, int options = 0);
+    ErrorOr<void> do_utimens(Credentials const&, Custody& custody, timespec const& atime, timespec const& mtime);
+    ErrorOr<void> rename(VFSRootContext const&, Credentials const&, CustodyBase const& old_base, StringView oldpath, CustodyBase const& new_base, StringView newpath);
+    ErrorOr<void> mknod(VFSRootContext const&, Credentials const&, StringView path, mode_t, dev_t, CustodyBase const& base);
+    ErrorOr<NonnullRefPtr<Custody>> open_directory(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base);
 
-    ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
+    ErrorOr<void> for_each_mount(VFSRootContext& context, Function<ErrorOr<void>(Mount const&)>) const;
 
     void sync_filesystems();
     void lock_all_filesystems();
 
     static void sync();
 
-    NonnullRefPtr<Custody> root_custody();
-    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
-    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Process const&, Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
-    ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Process const&, VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(VFSRootContext const&, Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 
 private:
     friend class OpenFileDescription;
@@ -108,20 +118,16 @@ private:
     ErrorOr<void> validate_path_against_process_veil(Custody const& path, int options);
     ErrorOr<void> validate_path_against_process_veil(StringView path, int options);
 
-    ErrorOr<void> add_file_system_to_mount_table(FileSystem& file_system, Custody& mount_point, int flags);
+    static void delete_mount_from_list(Mount& mount);
+    ErrorOr<void> remove_mount(Mount& mount, IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>& file_backed_fs_list);
+
+    static ErrorOr<NonnullRefPtr<FileSystem>> create_and_initialize_filesystem_from_mount_file(MountFile& mount_file);
+    static ErrorOr<NonnullRefPtr<FileSystem>> create_and_initialize_filesystem_from_mount_file_and_description(IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>& file_backed_fs_list, MountFile& mount_file, OpenFileDescription& source_description);
+    static ErrorOr<void> verify_mount_file_and_description_requirements(MountFile& mount_file, OpenFileDescription& source_description);
 
     ErrorOr<void> traverse_directory_inode(Inode&, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>);
 
-    static bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody);
-    bool mount_point_exists_at_custody(Custody& mount_point);
-
-    ErrorOr<void> apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)>);
-
-    RefPtr<Inode> m_root_inode;
-
-    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_root_custody {};
-
-    SpinlockProtected<IntrusiveList<&Mount::m_vfs_list_node>, LockRank::None> m_mounts {};
+    ErrorOr<void> apply_to_mount_for_host_custody(VFSRootContext&, Custody const& current_custody, Function<void(Mount&)>);
 
     // NOTE: The FileBackedFileSystem list is protected by a mutex because we need to scan it
     // to search for existing filesystems for already used block devices and therefore when doing
@@ -131,6 +137,8 @@ private:
     MutexProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>> m_file_backed_file_systems_list {};
 
     SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>, LockRank::FileSystem> m_file_systems_list {};
+
+    SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem> m_root_contexts {};
 };
 
 }

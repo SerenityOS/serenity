@@ -96,7 +96,11 @@ Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescrip
 ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
-    auto dump_directory = TRY(VirtualFileSystem::the().open_directory(Process::current().credentials(), output_directory, VirtualFileSystem::the().root_custody()));
+    auto current_vfs_root_context = Process::current().vfs_root_context();
+    auto current_vfs_root_context_root_custody = current_vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+        return custody;
+    });
+    auto dump_directory = TRY(VirtualFileSystem::the().open_directory(current_vfs_root_context, Process::current().credentials(), output_directory, *current_vfs_root_context_root_custody));
     auto dump_directory_metadata = dump_directory->inode().metadata();
     if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
         dbgln("Refusing to put coredump in sketchy directory '{}'", output_directory);
@@ -105,6 +109,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Pro
 
     auto process_credentials = process.credentials();
     return TRY(VirtualFileSystem::the().open(
+        current_vfs_root_context,
         Process::current().credentials(),
         KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,

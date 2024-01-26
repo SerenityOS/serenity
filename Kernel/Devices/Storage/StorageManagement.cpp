@@ -26,6 +26,7 @@
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/Storage/VirtIO/VirtIOBlockController.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
+#include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/Panic.h>
 #include <LibPartition/EBRPartitionTable.h>
@@ -42,6 +43,8 @@ static Atomic<u32> s_controller_id;
 static Atomic<u32> s_relative_ahci_controller_id;
 static Atomic<u32> s_relative_nvme_controller_id;
 static Atomic<u32> s_relative_sd_controller_id;
+
+static constexpr int root_mount_flags = 0;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
@@ -446,25 +449,40 @@ u32 StorageManagement::generate_controller_id()
     return s_controller_id.fetch_add(1);
 }
 
-NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
+ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_context() const
 {
+    auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs());
+
+    auto const* fs_type_initializer = TRY(VirtualFileSystem::find_filesystem_type_initializer("ext2"sv));
+    VERIFY(fs_type_initializer);
+    auto mount_file = TRY(MountFile::create(*fs_type_initializer, root_mount_flags));
+
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {
         dump_storage_devices_and_partitions();
         PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
-    auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
-    VERIFY(!description_or_error.is_error());
+    auto description = TRY(OpenFileDescription::try_create(boot_device_description.release_nonnull()));
 
-    Array<u8, PAGE_SIZE> mount_specific_data;
-    mount_specific_data.fill(0);
-    auto file_system = Ext2FS::try_create(description_or_error.release_value(), mount_specific_data.span()).release_value();
+    RefPtr<FileSystem> fs;
+    TRY(VirtualFileSystem::the().m_file_backed_file_systems_list.with_exclusive([&](auto& list) -> ErrorOr<void> {
+        fs = TRY(VirtualFileSystem::create_and_initialize_filesystem_from_mount_file_and_description(list, mount_file, description));
+        // NOTE: Fake a mounted count of 1 so the called VirtualFileSystem function in the
+        // next pivot_root logic block thinks everything is OK.
+        fs->mounted_count(Badge<StorageManagement> {}).with([](auto& mounted_count) {
+            mounted_count++;
+        });
+        list.append(static_cast<FileBackedFileSystem&>(*fs));
+        return {};
+    }));
+    VERIFY(fs);
 
-    if (auto result = file_system->initialize(); result.is_error()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
-    }
-    return file_system;
+    TRY(VirtualFileSystem::the().pivot_root_by_copying_mounted_fs_instance(vfs_root_context, *fs, root_mount_flags));
+    // NOTE: Return the mounted count to normal now we have it really mounted.
+    fs->mounted_count(Badge<StorageManagement> {}).with([](auto& mounted_count) {
+        mounted_count--;
+    });
+    return vfs_root_context;
 }
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(bool poll)
@@ -491,5 +509,4 @@ StorageManagement& StorageManagement::the()
 {
     return *s_the;
 }
-
 }

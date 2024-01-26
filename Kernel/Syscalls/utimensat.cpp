@@ -74,7 +74,7 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     auto& mtime = times[1];
 
     CustodyBase base(params.dirfd, path->view());
-    TRY(VirtualFileSystem::the().utimensat(credentials(), path->view(), base, atime, mtime, follow_symlink));
+    TRY(VirtualFileSystem::the().utimensat(vfs_root_context(), credentials(), path->view(), base, atime, mtime, follow_symlink));
     return 0;
 }
 

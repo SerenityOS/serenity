@@ -22,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$mknod(Userspace<Syscall::SC_mknod_params const*> u
     auto path = TRY(get_syscall_path_argument(params.path));
 
     CustodyBase base(params.dirfd, path->view());
-    TRY(VirtualFileSystem::the().mknod(credentials, path->view(), params.mode & ~umask(), params.dev, base));
+    TRY(VirtualFileSystem::the().mknod(vfs_root_context(), credentials, path->view(), params.mode & ~umask(), params.dev, base));
     return 0;
 }
 

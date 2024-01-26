@@ -13,6 +13,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -52,7 +53,7 @@ void Inode::sync()
     }
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& credentials, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(VFSRootContext const& vfs_root_context, Credentials const& credentials, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
@@ -64,7 +65,7 @@ ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& creden
 
     Array<u8, MAXPATHLEN> contents;
     auto read_bytes = TRY(read_until_filled_or_end(0, contents.size(), UserOrKernelBuffer::for_kernel_buffer(contents.data()), nullptr));
-    return VirtualFileSystem::the().resolve_path(credentials, StringView { contents.span().trim(read_bytes) }, base, out_parent, options, symlink_recursion_level);
+    return VirtualFileSystem::the().resolve_path(vfs_root_context, credentials, StringView { contents.span().trim(read_bytes) }, base, out_parent, options, symlink_recursion_level);
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)
