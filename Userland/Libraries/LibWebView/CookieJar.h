@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
+#include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <LibCore/DateTime.h>
 #include <LibSQL/Type.h>
@@ -54,15 +55,15 @@ public:
     void dump_cookies();
     Vector<Web::Cookie::Cookie> get_all_cookies();
     Vector<Web::Cookie::Cookie> get_all_cookies(URL const& url);
-    Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, ByteString const& name);
+    Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, StringView name);
 
 private:
     explicit CookieJar(PersistedStorage);
     explicit CookieJar(TransientStorage);
 
     static Optional<ByteString> canonicalize_domain(const URL& url);
-    static bool domain_matches(ByteString const& string, ByteString const& domain_string);
-    static bool path_matches(ByteString const& request_path, ByteString const& cookie_path);
+    static bool domain_matches(StringView string, StringView domain_string);
+    static bool path_matches(StringView request_path, StringView cookie_path);
     static ByteString default_path(const URL& url);
 
     enum class MatchingCookiesSpecMode {
@@ -71,7 +72,7 @@ private:
     };
 
     void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, ByteString canonicalized_domain, Web::Cookie::Source source);
-    Vector<Web::Cookie::Cookie> get_matching_cookies(const URL& url, ByteString const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
+    Vector<Web::Cookie::Cookie> get_matching_cookies(const URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
 
     void insert_cookie_into_database(Web::Cookie::Cookie const& cookie);
     void update_cookie_in_database(Web::Cookie::Cookie const& cookie);
