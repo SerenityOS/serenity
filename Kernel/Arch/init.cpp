@@ -5,6 +5,7 @@
  */
 
 #include <AK/Types.h>
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Boot/BootInfo.h>
@@ -217,29 +218,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #elif ARCH(RISCV64)
-    // FIXME: Get the actual memory map from the device tree.
-    static multiboot_memory_map_t mmap[] = {
-        {
-            // We currently can't get the actual size of firmware-reserved memory, so mark the first 0x20'0000 bytes as reserved.
-            // This reserved memory region should be large enough for now.
-            sizeof(multiboot_mmap_entry) - sizeof(u32),
-            0x8000'0000,
-            0x20'0000,
-            MULTIBOOT_MEMORY_RESERVED,
-        },
-        {
-            sizeof(multiboot_mmap_entry) - sizeof(u32),
-            0x8020'0000,
-            1 * GiB - 0x20'0000,
-            MULTIBOOT_MEMORY_AVAILABLE,
-        },
-    };
-
-    multiboot_memory_map = mmap;
-    multiboot_memory_map_count = array_size(mmap);
-    multiboot_modules = nullptr;
-    multiboot_modules_count = 0;
-
+    // FIXME: Take this from the flattened device tree (/chosen/bootargs)
     kernel_cmdline = "serial_debug"sv;
 #endif
 
@@ -307,6 +286,11 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
 
     InterruptManagement::initialize();
     ACPI::initialize();
+
+#if ARCH(RISCV64)
+    // FIXME: Unflatten the device tree and use it for device discovery
+    dump_fdt();
+#endif
 
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);

@@ -240,6 +240,21 @@ private:
     MemoryManager();
     ~MemoryManager();
 
+    struct GlobalData {
+        GlobalData();
+
+        SystemMemoryInfo system_memory_info;
+
+        Vector<NonnullOwnPtr<PhysicalRegion>> physical_regions;
+        OwnPtr<PhysicalRegion> physical_pages_region;
+
+        RegionTree region_tree;
+
+        Vector<UsedMemoryRange> used_memory_ranges;
+        Vector<PhysicalMemoryRange> physical_memory_ranges;
+        Vector<ContiguousReservedMemoryRange> reserved_memory_ranges;
+    };
+
     void initialize_physical_pages();
     void register_reserved_ranges();
 
@@ -251,6 +266,8 @@ private:
 
     void protect_kernel_image();
     void parse_memory_map();
+    void parse_memory_map_fdt(GlobalData&, u8 const* fdt_addr);
+    void parse_memory_map_multiboot(GlobalData&);
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 
@@ -285,21 +302,6 @@ private:
     //       and then never change.
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
-
-    struct GlobalData {
-        GlobalData();
-
-        SystemMemoryInfo system_memory_info;
-
-        Vector<NonnullOwnPtr<PhysicalRegion>> physical_regions;
-        OwnPtr<PhysicalRegion> physical_pages_region;
-
-        RegionTree region_tree;
-
-        Vector<UsedMemoryRange> used_memory_ranges;
-        Vector<PhysicalMemoryRange> physical_memory_ranges;
-        Vector<ContiguousReservedMemoryRange> reserved_memory_ranges;
-    };
 
     SpinlockProtected<GlobalData, LockRank::None> m_global_data;
 };
