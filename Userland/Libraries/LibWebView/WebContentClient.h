@@ -69,7 +69,7 @@ private:
     virtual void did_request_accept_dialog() override;
     virtual void did_request_dismiss_dialog() override;
     virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(AK::URL const&) override;
-    virtual Messages::WebContentClient::DidRequestNamedCookieResponse did_request_named_cookie(AK::URL const&, ByteString const&) override;
+    virtual Messages::WebContentClient::DidRequestNamedCookieResponse did_request_named_cookie(AK::URL const&, String const&) override;
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, Web::Cookie::Source) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
     virtual void did_update_cookie(Web::Cookie::Cookie const&) override;

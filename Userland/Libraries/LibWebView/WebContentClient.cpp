@@ -302,7 +302,7 @@ Messages::WebContentClient::DidRequestAllCookiesResponse WebContentClient::did_r
     return Vector<Web::Cookie::Cookie> {};
 }
 
-Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, ByteString const& name)
+Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, String const& name)
 {
     if (m_view.on_get_named_cookie)
         return m_view.on_get_named_cookie(url, name);

@@ -152,7 +152,7 @@ public:
     Function<void(i32 message_id)> on_received_console_message;
     Function<void(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)> on_received_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
-    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, ByteString const& name)> on_get_named_cookie;
+    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, String const& name)> on_get_named_cookie;
     Function<String(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void(Web::Cookie::Cookie const& cookie)> on_update_cookie;

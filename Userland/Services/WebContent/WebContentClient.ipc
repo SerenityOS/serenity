@@ -53,7 +53,7 @@ endpoint WebContentClient
 
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
-    did_request_named_cookie(URL url, ByteString name) => (Optional<Web::Cookie::Cookie> cookie)
+    did_request_named_cookie(URL url, String name) => (Optional<Web::Cookie::Cookie> cookie)
     did_request_cookie(URL url, Web::Cookie::Source source) => (String cookie)
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, Web::Cookie::Source source) => ()
     did_update_cookie(Web::Cookie::Cookie cookie) =|
