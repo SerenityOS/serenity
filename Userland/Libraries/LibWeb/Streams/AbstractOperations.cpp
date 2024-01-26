@@ -1091,19 +1091,14 @@ JS::GCPtr<ReadableStreamBYOBRequest> readable_byte_stream_controller_get_byob_re
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-clear-algorithms
 void readable_stream_default_controller_clear_algorithms(ReadableStreamDefaultController& controller)
 {
-    // FIXME: This AO can be invoked from within one of the algorithms below. If we clear them, it invokes SafeFunction's
-    //        destructor, which asserts we are not currently invoking the function (as it clears the storage). We need to
-    //        figure out how to delay this, as these algorithms may keep objects alive that can otherwise be GC'd.
-    (void)controller;
-
     // 1. Set controller.[[pullAlgorithm]] to undefined.
-    // controller.set_pull_algorithm({});
+    controller.set_pull_algorithm({});
 
     // 2. Set controller.[[cancelAlgorithm]] to undefined.
-    // controller.set_cancel_algorithm({});
+    controller.set_cancel_algorithm({});
 
     // 3. Set controller.[[strategySizeAlgorithm]] to undefined.
-    // controller.set_strategy_size_algorithm({});
+    controller.set_strategy_size_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-in-readable-state
@@ -1493,16 +1488,11 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-algorithms
 void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController& controller)
 {
-    // FIXME: This AO can be invoked from within one of the algorithms below. If we clear them, it invokes SafeFunction's
-    //        destructor, which asserts we are not currently invoking the function (as it clears the storage). We need to
-    //        figure out how to delay this, as these algorithms may keep objects alive that can otherwise be GC'd.
-    (void)controller;
-
     // 1. Set controller.[[pullAlgorithm]] to undefined.
-    // controller.set_pull_algorithm({});
+    controller.set_pull_algorithm({});
 
     // 2. Set controller.[[cancelAlgorithm]] to undefined.
-    // controller.set_cancel_algorithm({});
+    controller.set_cancel_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-pending-pull-intos
@@ -3247,22 +3237,17 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_ne
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-clear-algorithms
 void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController& controller)
 {
-    // FIXME: This AO can be invoked from within one of the algorithms below. If we clear them, it invokes SafeFunction's
-    //        destructor, which asserts we are not currently invoking the function (as it clears the storage). We need to
-    //        figure out how to delay this, as these algorithms may keep objects alive that can otherwise be GC'd.
-    (void)controller;
-
     // 1. Set controller.[[writeAlgorithm]] to undefined.
-    // controller.set_write_algorithm({});
+    controller.set_write_algorithm({});
 
     // 2. Set controller.[[closeAlgorithm]] to undefined.
-    // controller.set_close_algorithm({});
+    controller.set_close_algorithm({});
 
     // 3. Set controller.[[abortAlgorithm]] to undefined.
-    // controller.set_abort_algorithm({});
+    controller.set_abort_algorithm({});
 
     // 4. Set controller.[[strategySizeAlgorithm]] to undefined.
-    // controller.set_strategy_size_algorithm({});
+    controller.set_strategy_size_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-close
