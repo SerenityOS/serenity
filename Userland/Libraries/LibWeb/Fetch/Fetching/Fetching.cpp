@@ -1431,7 +1431,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                     // FIXME: Getting to the page client reliably is way too complicated, and going via the document won't work in workers.
                     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
                     if (!document)
-                        return ByteString::empty();
+                        return String {};
                     return document->page().client().page_did_request_cookie(http_request->current_url(), Cookie::Source::Http);
                 })();
 

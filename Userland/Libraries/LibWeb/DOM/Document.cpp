@@ -2006,7 +2006,7 @@ void Document::completely_finish_loading()
 
 String Document::cookie(Cookie::Source source)
 {
-    return MUST(String::from_byte_string(page().client().page_did_request_cookie(m_url, source)));
+    return page().client().page_did_request_cookie(m_url, source);
 }
 
 void Document::set_cookie(StringView cookie_string, Cookie::Source source)

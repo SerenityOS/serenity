@@ -468,7 +468,7 @@ Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL cons
     return client().did_request_named_cookie(url, name);
 }
 
-ByteString PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
+String PageClient::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
     auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(move(url), static_cast<u8>(source));
     if (!response) {
