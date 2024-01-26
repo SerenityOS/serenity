@@ -7,12 +7,13 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <Kernel/Prekernel/Prekernel.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_RISCV64()
 
 namespace Kernel::Memory {
 
-[[noreturn]] void init_page_tables_and_jump_to_init();
+[[noreturn]] void init_page_tables_and_jump_to_init(FlatPtr mhartid, PhysicalPtr fdt_phys_addr);
 
 }

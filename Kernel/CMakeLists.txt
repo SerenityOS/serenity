@@ -529,6 +529,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Firmware/ACPI/StaticParsing.cpp
 
         Arch/riscv64/boot.S
+        Arch/riscv64/CPU.cpp
         Arch/riscv64/CurrentTime.cpp
         Arch/riscv64/DebugOutput.cpp
         Arch/riscv64/Delay.cpp
@@ -573,6 +574,12 @@ set(AK_SOURCES
     ../AK/Error.cpp
     ../AK/Format.cpp
     ../AK/UUID.cpp
+)
+
+set(DT_SOURCES
+    ../Userland/Libraries/LibDeviceTree/DeviceTree.cpp
+    ../Userland/Libraries/LibDeviceTree/FlattenedDeviceTree.cpp
+    ../Userland/Libraries/LibDeviceTree/Validation.cpp
 )
 
 set(EDID_SOURCES
@@ -624,6 +631,7 @@ set(SOURCES
     ${KERNEL_SOURCES}
     ${GENERATED_SOURCES}
     ${AK_SOURCES}
+    ${DT_SOURCES}
     ${EDID_SOURCES}
     ${ELF_SOURCES}
     ${VT_SOURCES}
