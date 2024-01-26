@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,13 +53,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_
         VERIFY(!underlying_source_dict.type.has_value());
 
         // 2. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
-        auto size_algorithm = extract_size_algorithm(strategy);
+        auto size_algorithm = extract_size_algorithm(vm, strategy);
 
         // 3. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
         auto high_water_mark = TRY(extract_high_water_mark(strategy, 1));
 
         // 4. Perform ? SetUpReadableStreamDefaultControllerFromUnderlyingSource(this, underlyingSource, underlyingSourceDict, highWaterMark, sizeAlgorithm).
-        TRY(set_up_readable_stream_default_controller_from_underlying_source(*readable_stream, underlying_source, underlying_source_dict, high_water_mark, move(size_algorithm)));
+        TRY(set_up_readable_stream_default_controller_from_underlying_source(*readable_stream, underlying_source, underlying_source_dict, high_water_mark, size_algorithm));
     }
 
     return readable_stream;

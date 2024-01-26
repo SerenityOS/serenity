@@ -39,7 +39,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> WritableStream::construct_
     // Note: This AO configures slot values which are already specified in the class's field initializers.
 
     // 5. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
-    auto size_algorithm = extract_size_algorithm(strategy);
+    auto size_algorithm = extract_size_algorithm(vm, strategy);
 
     // 6. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
     auto high_water_mark = TRY(extract_high_water_mark(strategy, 1));

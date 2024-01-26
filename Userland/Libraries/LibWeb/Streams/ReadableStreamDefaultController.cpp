@@ -71,7 +71,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultCont
     reset_queue(*this);
 
     // 2. Let result be the result of performing this.[[cancelAlgorithm]], passing reason.
-    auto result = (*cancel_algorithm())(reason);
+    auto result = cancel_algorithm()->function()(reason);
 
     // 3. Perform ! ReadableStreamDefaultControllerClearAlgorithms(this).
     readable_stream_default_controller_clear_algorithms(*this);
@@ -138,6 +138,9 @@ void ReadableStreamDefaultController::visit_edges(Cell::Visitor& visitor)
     for (auto const& item : m_queue)
         visitor.visit(item.value);
     visitor.visit(m_stream);
+    visitor.visit(m_cancel_algorithm);
+    visitor.visit(m_pull_algorithm);
+    visitor.visit(m_strategy_size_algorithm);
 }
 
 }

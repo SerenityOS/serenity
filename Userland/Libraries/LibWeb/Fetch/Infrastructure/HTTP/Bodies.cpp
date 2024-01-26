@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/BodyInit.h>
@@ -55,14 +56,22 @@ JS::NonnullGCPtr<Body> Body::clone(JS::Realm& realm) const
     // FIXME: 2. Set body’s stream to out1.
     JS::GCPtr<Streams::ReadableStream> out2;
 
-    Streams::StartAlgorithm start_algorithm = []() { return JS::js_undefined(); };
-    Streams::PullAlgorithm pull_algorithm = [&realm]() { return WebIDL::create_resolved_promise(realm, JS::js_undefined()); };
-    Streams::CancelAlgorithm cancel_algorithm = [&realm](auto) { return WebIDL::create_resolved_promise(realm, JS::js_undefined()); };
+    auto start_algorithm = JS::create_heap_function(realm.heap(), []() -> WebIDL::ExceptionOr<JS::Value> {
+        return JS::js_undefined();
+    });
+
+    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    });
+
+    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    });
 
     if (m_stream->controller()->has<JS::NonnullGCPtr<Streams::ReadableStreamDefaultController>>()) {
-        out2 = Streams::create_readable_stream(realm, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm)).release_value_but_fixme_should_propagate_errors();
+        out2 = Streams::create_readable_stream(realm, start_algorithm, pull_algorithm, cancel_algorithm).release_value_but_fixme_should_propagate_errors();
     } else {
-        out2 = Streams::create_readable_byte_stream(realm, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm)).release_value_but_fixme_should_propagate_errors();
+        out2 = Streams::create_readable_byte_stream(realm, start_algorithm, pull_algorithm, cancel_algorithm).release_value_but_fixme_should_propagate_errors();
     }
 
     // 3. Return a body whose stream is out2 and other members are copied from body.

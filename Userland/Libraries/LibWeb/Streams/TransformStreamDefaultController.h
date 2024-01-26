@@ -24,11 +24,11 @@ public:
     WebIDL::ExceptionOr<void> error(Optional<JS::Value> reason = {});
     WebIDL::ExceptionOr<void> terminate();
 
-    auto& flush_algorithm() { return m_flush_algorithm; }
-    void set_flush_algorithm(Optional<FlushAlgorithm>&& value) { m_flush_algorithm = move(value); }
+    JS::GCPtr<FlushAlgorithm> flush_algorithm() { return m_flush_algorithm; }
+    void set_flush_algorithm(JS::GCPtr<FlushAlgorithm>&& value) { m_flush_algorithm = move(value); }
 
-    auto& transform_algorithm() { return m_transform_algorithm; }
-    void set_transform_algorithm(Optional<TransformAlgorithm>&& value) { m_transform_algorithm = move(value); }
+    JS::GCPtr<TransformAlgorithm> transform_algorithm() { return m_transform_algorithm; }
+    void set_transform_algorithm(JS::GCPtr<TransformAlgorithm>&& value) { m_transform_algorithm = move(value); }
 
     JS::GCPtr<TransformStream> stream() { return m_stream; }
     void set_stream(JS::GCPtr<TransformStream> stream) { m_stream = stream; }
@@ -39,10 +39,10 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://streams.spec.whatwg.org/#transformstreamdefaultcontroller-flushalgorithm
-    Optional<FlushAlgorithm> m_flush_algorithm;
+    JS::GCPtr<FlushAlgorithm> m_flush_algorithm;
 
     // https://streams.spec.whatwg.org/#transformstreamdefaultcontroller-transformalgorithm
-    Optional<TransformAlgorithm> m_transform_algorithm;
+    JS::GCPtr<TransformAlgorithm> m_transform_algorithm;
 
     // https://streams.spec.whatwg.org/#transformstreamdefaultcontroller-stream
     JS::GCPtr<TransformStream> m_stream;

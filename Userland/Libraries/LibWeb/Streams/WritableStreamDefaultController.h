@@ -24,11 +24,11 @@ public:
     JS::NonnullGCPtr<DOM::AbortSignal> signal() { return *m_signal; }
     void set_signal(JS::NonnullGCPtr<DOM::AbortSignal> value) { m_signal = value; }
 
-    auto& abort_algorithm() { return m_abort_algorithm; }
-    void set_abort_algorithm(Optional<AbortAlgorithm>&& value) { m_abort_algorithm = move(value); }
+    JS::GCPtr<AbortAlgorithm> abort_algorithm() { return m_abort_algorithm; }
+    void set_abort_algorithm(JS::GCPtr<AbortAlgorithm> value) { m_abort_algorithm = value; }
 
-    auto& close_algorithm() { return m_close_algorithm; }
-    void set_close_algorithm(Optional<CloseAlgorithm>&& value) { m_close_algorithm = move(value); }
+    JS::GCPtr<CloseAlgorithm> close_algorithm() { return m_close_algorithm; }
+    void set_close_algorithm(JS::GCPtr<CloseAlgorithm> value) { m_close_algorithm = value; }
 
     SinglyLinkedList<ValueWithSize>& queue() { return m_queue; }
 
@@ -41,14 +41,14 @@ public:
     size_t strategy_hwm() const { return m_strategy_hwm; }
     void set_strategy_hwm(size_t value) { m_strategy_hwm = value; }
 
-    auto& strategy_size_algorithm() { return m_strategy_size_algorithm; }
-    void set_strategy_size_algorithm(Optional<SizeAlgorithm>&& value) { m_strategy_size_algorithm = move(value); }
+    JS::GCPtr<SizeAlgorithm> strategy_size_algorithm() { return m_strategy_size_algorithm; }
+    void set_strategy_size_algorithm(JS::GCPtr<SizeAlgorithm> value) { m_strategy_size_algorithm = value; }
 
     JS::NonnullGCPtr<WritableStream> stream() { return *m_stream; }
     void set_stream(JS::NonnullGCPtr<WritableStream> value) { m_stream = value; }
 
-    auto& write_algorithm() { return m_write_algorithm; }
-    void set_write_algorithm(Optional<WriteAlgorithm>&& value) { m_write_algorithm = move(value); }
+    JS::GCPtr<WriteAlgorithm> write_algorithm() { return m_write_algorithm; }
+    void set_write_algorithm(JS::GCPtr<WriteAlgorithm> value) { m_write_algorithm = value; }
 
     WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> abort_steps(JS::Value reason);
     void error_steps();
@@ -60,11 +60,11 @@ private:
 
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-abortalgorithm
     // A promise-returning algorithm, taking one argument (the abort reason), which communicates a requested abort to the underlying sink
-    Optional<AbortAlgorithm> m_abort_algorithm;
+    JS::GCPtr<AbortAlgorithm> m_abort_algorithm;
 
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-closealgorithm
     // A promise-returning algorithm which communicates a requested close to the underlying sink
-    Optional<CloseAlgorithm> m_close_algorithm;
+    JS::GCPtr<CloseAlgorithm> m_close_algorithm;
 
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-queue
     // A list representing the stream’s internal queue of chunks
@@ -88,7 +88,7 @@ private:
 
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-strategysizealgorithm
     // An algorithm to calculate the size of enqueued chunks, as part of the stream’s queuing strategy
-    Optional<SizeAlgorithm> m_strategy_size_algorithm;
+    JS::GCPtr<SizeAlgorithm> m_strategy_size_algorithm;
 
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-stream
     // The WritableStream instance controlled
@@ -96,7 +96,7 @@ private:
 
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-writealgorithm
     // A promise-returning algorithm, taking one argument (the chunk to write), which writes data to the underlying sink
-    Optional<WriteAlgorithm> m_write_algorithm;
+    JS::GCPtr<WriteAlgorithm> m_write_algorithm;
 };
 
 }

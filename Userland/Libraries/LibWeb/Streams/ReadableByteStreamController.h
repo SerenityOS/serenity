@@ -94,8 +94,8 @@ public:
     Optional<u64> const& auto_allocate_chunk_size() { return m_auto_allocate_chunk_size; }
     void set_auto_allocate_chunk_size(Optional<u64> value) { m_auto_allocate_chunk_size = value; }
 
-    auto& cancel_algorithm() { return m_cancel_algorithm; }
-    void set_cancel_algorithm(Optional<CancelAlgorithm> value) { m_cancel_algorithm = move(value); }
+    JS::GCPtr<CancelAlgorithm> cancel_algorithm() { return m_cancel_algorithm; }
+    void set_cancel_algorithm(JS::GCPtr<CancelAlgorithm> value) { m_cancel_algorithm = value; }
 
     bool close_requested() const { return m_close_requested; }
     void set_close_requested(bool value) { m_close_requested = value; }
@@ -103,8 +103,8 @@ public:
     bool pull_again() const { return m_pull_again; }
     void set_pull_again(bool value) { m_pull_again = value; }
 
-    auto& pull_algorithm() { return m_pull_algorithm; }
-    void set_pull_algorithm(Optional<PullAlgorithm> value) { m_pull_algorithm = move(value); }
+    JS::GCPtr<PullAlgorithm> pull_algorithm() { return m_pull_algorithm; }
+    void set_pull_algorithm(JS::GCPtr<PullAlgorithm> value) { m_pull_algorithm = value; }
 
     bool pulling() const { return m_pulling; }
     void set_pulling(bool value) { m_pulling = value; }
@@ -148,7 +148,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-cancelalgorithm
     // A promise-returning algorithm, taking one argument (the cancel reason), which communicates a requested cancelation to the underlying source
-    Optional<CancelAlgorithm> m_cancel_algorithm;
+    JS::GCPtr<CancelAlgorithm> m_cancel_algorithm;
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-closerequested
     // A boolean flag indicating whether the stream has been closed by its underlying source, but still has chunks in its internal queue that have not yet been read
@@ -160,7 +160,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-pullalgorithm
     // A promise-returning algorithm that pulls data from the underlying source
-    Optional<PullAlgorithm> m_pull_algorithm;
+    JS::GCPtr<PullAlgorithm> m_pull_algorithm;
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-pulling
     // A boolean flag set to true while the underlying source's pull algorithm is executing and the returned promise has not yet fulfilled, used to prevent reentrant calls
