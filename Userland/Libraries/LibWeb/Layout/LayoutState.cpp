@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/SVGPathPaintable.h>
+#include <LibWeb/Painting/SVGSVGPaintable.h>
 #include <LibWeb/Painting/TextPaintable.h>
 
 namespace Web::Layout {
@@ -369,8 +371,70 @@ void LayoutState::resolve_layout_dependent_properties()
             }
 
             auto const& transform_origin = paintable_box.computed_values().transform_origin();
-            // FIXME: respect transform-box property
-            auto const& reference_box = paintable_box.absolute_border_box_rect();
+            // https://www.w3.org/TR/css-transforms-1/#transform-box
+            auto transform_box = paintable_box.computed_values().transform_box();
+            // For SVG elements without associated CSS layout box, the used value for content-box is fill-box and for
+            // border-box is stroke-box.
+            // FIXME: This currently detects any SVG element except the <svg> one. Is that correct?
+            //        And is it correct to use `else` below?
+            if (is<Painting::SVGPaintable>(paintable_box)) {
+                switch (transform_box) {
+                case CSS::TransformBox::ContentBox:
+                    transform_box = CSS::TransformBox::FillBox;
+                    break;
+                case CSS::TransformBox::BorderBox:
+                    transform_box = CSS::TransformBox::StrokeBox;
+                    break;
+                default:
+                    break;
+                }
+            }
+            // For elements with associated CSS layout box, the used value for fill-box is content-box and for
+            // stroke-box and view-box is border-box.
+            else {
+                switch (transform_box) {
+                case CSS::TransformBox::FillBox:
+                    transform_box = CSS::TransformBox::ContentBox;
+                    break;
+                case CSS::TransformBox::StrokeBox:
+                case CSS::TransformBox::ViewBox:
+                    transform_box = CSS::TransformBox::BorderBox;
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            CSSPixelRect reference_box = [&]() {
+                switch (transform_box) {
+                case CSS::TransformBox::ContentBox:
+                    // Uses the content box as reference box.
+                    // FIXME: The reference box of a table is the border box of its table wrapper box, not its table box.
+                    return paintable_box.absolute_rect();
+                case CSS::TransformBox::BorderBox:
+                    // Uses the border box as reference box.
+                    // FIXME: The reference box of a table is the border box of its table wrapper box, not its table box.
+                    return paintable_box.absolute_border_box_rect();
+                case CSS::TransformBox::FillBox:
+                    // Uses the object bounding box as reference box.
+                    // FIXME: For now we're using the content rect as an approximation.
+                    return paintable_box.absolute_rect();
+                case CSS::TransformBox::StrokeBox:
+                    // Uses the stroke bounding box as reference box.
+                    // FIXME: For now we're using the border rect as an approximation.
+                    return paintable_box.absolute_border_box_rect();
+                case CSS::TransformBox::ViewBox:
+                    // Uses the nearest SVG viewport as reference box.
+                    // FIXME: If a viewBox attribute is specified for the SVG viewport creating element:
+                    //  - The reference box is positioned at the origin of the coordinate system established by the viewBox attribute.
+                    //  - The dimension of the reference box is set to the width and height values of the viewBox attribute.
+                    auto* svg_paintable = paintable_box.first_ancestor_of_type<Painting::SVGSVGPaintable>();
+                    if (!svg_paintable)
+                        return paintable_box.absolute_border_box_rect();
+                    return svg_paintable->absolute_rect();
+                }
+                VERIFY_NOT_REACHED();
+            }();
             auto x = reference_box.left() + transform_origin.x.to_px(node, reference_box.width());
             auto y = reference_box.top() + transform_origin.y.to_px(node, reference_box.height());
             paintable_box.set_transform_origin({ x, y });
