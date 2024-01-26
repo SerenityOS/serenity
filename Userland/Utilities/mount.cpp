@@ -98,11 +98,11 @@ static bool mount_by_line(ByteString const& line)
     ErrorOr<void> error_or_void;
 
     if (flags & MS_BIND)
-        error_or_void = Core::System::bindmount(fd, mountpoint, flags & ~MS_BIND);
+        error_or_void = Core::System::bindmount({}, fd, mountpoint, flags & ~MS_BIND);
     else if (flags & MS_REMOUNT)
-        error_or_void = Core::System::remount(mountpoint, flags & ~MS_REMOUNT);
+        error_or_void = Core::System::remount({}, mountpoint, flags & ~MS_REMOUNT);
     else
-        error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
+        error_or_void = Core::System::mount({}, fd, mountpoint, fstype, flags);
 
     if (error_or_void.is_error()) {
         warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, error_or_void.error());
@@ -227,7 +227,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         int flags = !options.is_empty() ? parse_options(options) : 0;
         if (!(flags & MS_REMOUNT))
             return Error::from_string_literal("Expected valid source.");
-        TRY(Core::System::remount(mountpoint, flags & ~MS_REMOUNT));
+        TRY(Core::System::remount({}, mountpoint, flags & ~MS_REMOUNT));
         return 0;
     }
 
@@ -236,13 +236,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         int const fd = TRY(get_source_fd(source));
 
         if (flags & MS_BIND) {
-            TRY(Core::System::bindmount(fd, mountpoint, flags & ~MS_BIND));
+            TRY(Core::System::bindmount({}, fd, mountpoint, flags & ~MS_BIND));
         } else if (flags & MS_REMOUNT) {
-            TRY(Core::System::remount(mountpoint, flags & ~MS_REMOUNT));
+            TRY(Core::System::remount({}, mountpoint, flags & ~MS_REMOUNT));
         } else {
             if (fs_type.is_empty())
                 fs_type = "ext2"sv;
-            TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
+            TRY(Core::System::mount({}, fd, mountpoint, fs_type, flags));
         }
         return 0;
     }

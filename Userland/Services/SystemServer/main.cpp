@@ -102,12 +102,12 @@ static ErrorOr<void> determine_system_mode()
 
 static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
 {
-    TRY(Core::System::remount("/"sv, MS_NODEV | MS_NOSUID | MS_RDONLY));
+    TRY(Core::System::remount({}, "/"sv, MS_NODEV | MS_NOSUID | MS_RDONLY));
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
-    TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
-    TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
-    TRY(Core::System::mount(-1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
-    TRY(Core::System::mount(-1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
+    TRY(Core::System::mount({}, -1, "/proc"sv, "proc"sv, MS_NOSUID));
+    TRY(Core::System::mount({}, -1, "/sys"sv, "sys"sv, 0));
+    TRY(Core::System::mount({}, -1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
+    TRY(Core::System::mount({}, -1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
     // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
     TRY(Core::System::chmod("/tmp"sv, 01777));
     return {};
@@ -124,7 +124,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(Core::System::symlink("/proc/self/fd/2"sv, "/dev/stderr"sv));
     TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
     TRY(Core::System::mkdir("/dev/pts"sv, 0755));
-    TRY(Core::System::mount(-1, "/dev/pts"sv, "devpts"sv, 0));
+    TRY(Core::System::mount({}, -1, "/dev/pts"sv, "devpts"sv, 0));
 
     mode_t old_mask = umask(0);
     TRY(Core::System::create_char_device("/dev/devctl"sv, 0660, 2, 10));

@@ -16,6 +16,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(mount_point, "Mount point", "mountpoint");
     args_parser.parse(arguments);
 
-    TRY(Core::System::umount(mount_point));
+    TRY(Core::System::umount({}, mount_point));
     return 0;
 }
