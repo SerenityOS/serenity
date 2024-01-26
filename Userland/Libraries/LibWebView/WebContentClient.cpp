@@ -309,17 +309,17 @@ Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_
     return OptionalNone {};
 }
 
-Messages::WebContentClient::DidRequestCookieResponse WebContentClient::did_request_cookie(AK::URL const& url, u8 source)
+Messages::WebContentClient::DidRequestCookieResponse WebContentClient::did_request_cookie(AK::URL const& url, Web::Cookie::Source source)
 {
     if (m_view.on_get_cookie)
-        return m_view.on_get_cookie(url, static_cast<Web::Cookie::Source>(source));
+        return m_view.on_get_cookie(url, source);
     return String {};
 }
 
-void WebContentClient::did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, u8 source)
+void WebContentClient::did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
     if (m_view.on_set_cookie)
-        m_view.on_set_cookie(url, cookie, static_cast<Web::Cookie::Source>(source));
+        m_view.on_set_cookie(url, cookie, source);
 }
 
 void WebContentClient::did_update_cookie(Web::Cookie::Cookie const& cookie)
