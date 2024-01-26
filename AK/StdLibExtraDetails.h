@@ -636,6 +636,42 @@ struct __InvokeResult<F, Args...> {
 template<typename F, typename... Args>
 using InvokeResult = typename __InvokeResult<F, Args...>::type;
 
+template<typename Callable>
+struct EquivalentFunctionTypeImpl;
+
+template<template<typename> class Function, typename T, typename... Args>
+struct EquivalentFunctionTypeImpl<Function<T(Args...)>> {
+    using Type = T(Args...);
+};
+
+template<typename T, typename... Args>
+struct EquivalentFunctionTypeImpl<T(Args...)> {
+    using Type = T(Args...);
+};
+
+template<typename T, typename... Args>
+struct EquivalentFunctionTypeImpl<T (*)(Args...)> {
+    using Type = T(Args...);
+};
+
+template<typename L>
+struct EquivalentFunctionTypeImpl {
+    using Type = typename EquivalentFunctionTypeImpl<decltype(&L::operator())>::Type;
+};
+
+template<typename T, typename C, typename... Args>
+struct EquivalentFunctionTypeImpl<T (C::*)(Args...)> {
+    using Type = T(Args...);
+};
+
+template<typename T, typename C, typename... Args>
+struct EquivalentFunctionTypeImpl<T (C::*)(Args...) const> {
+    using Type = T(Args...);
+};
+
+template<typename Callable>
+using EquivalentFunctionType = typename EquivalentFunctionTypeImpl<Callable>::Type;
+
 }
 
 #if !USING_AK_GLOBALLY
@@ -651,6 +687,7 @@ using AK::Detail::Conditional;
 using AK::Detail::CopyConst;
 using AK::Detail::declval;
 using AK::Detail::DependentFalse;
+using AK::Detail::EquivalentFunctionType;
 using AK::Detail::FalseType;
 using AK::Detail::IdentityType;
 using AK::Detail::IndexSequence;
