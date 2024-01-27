@@ -1,4 +1,11 @@
-file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+file(GLOB CMD_SOURCES_CPP CONFIGURE_DEPENDS "*.cpp")
+file(GLOB CMD_SOURCES_JAKT CONFIGURE_DEPENDS "*.jakt")
+if (ENABLE_JAKT)
+    list(APPEND CMD_SOURCES ${CMD_SOURCES_CPP} ${CMD_SOURCES_JAKT})
+else()
+    list(APPEND CMD_SOURCES ${CMD_SOURCES_CPP})
+endif()
+
 list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false
@@ -15,6 +22,7 @@ list(APPEND RECOMMENDED_TARGETS
 
 foreach(CMD_SRC ${CMD_SOURCES})
     get_filename_component(CMD_NAME ${CMD_SRC} NAME_WLE)
+    get_filename_component(CMD_EXT ${CMD_SRC} LAST_EXT)
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
         set(TARGET_NAME "${CMD_NAME}-bin")
     else()
@@ -39,10 +47,14 @@ foreach(CMD_SRC ${CMD_SOURCES})
         )
     endif()
 
-    add_executable(${TARGET_NAME} ${CMD_SRC})
-    target_link_libraries(${TARGET_NAME} PRIVATE LibCore LibMain)
+    serenity_add_executable(${TARGET_NAME} ${CMD_SRC})
     serenity_set_implicit_links(${TARGET_NAME})
     set_target_properties(${TARGET_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    target_link_libraries(${TARGET_NAME} PRIVATE LibCore)
+    if(NOT ${CMD_EXT} EQUAL jakt)
+        target_link_libraries(${TARGET_NAME} PRIVATE LibMain)
+    endif()
+
     install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION bin OPTIONAL)
 
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
@@ -52,20 +64,6 @@ foreach(CMD_SRC ${CMD_SOURCES})
             endif()")
     endif()
 endforeach()
-
-if (ENABLE_JAKT)
-    add_jakt_executable(hello-jakt
-        MAIN_SOURCE hello-world.jakt
-    )
-    target_link_libraries(hello-jakt PRIVATE LibC)
-    set_target_properties(hello-jakt PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    install(TARGETS hello-jakt RUNTIME DESTINATION bin OPTIONAL)
-    serenity_component(
-        hello-jakt
-        RECOMMENDED
-        TARGETS hello-jakt
-    )
-endif()
 
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/egrep SYMBOLIC)")
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/fgrep SYMBOLIC)")

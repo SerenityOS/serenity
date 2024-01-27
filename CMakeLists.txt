@@ -49,13 +49,6 @@ if (NOT HACKSTUDIO_BUILD)
 
     # Host tools, required to generate files for the build
     find_package(Lagom CONFIG REQUIRED)
-
-    if (ENABLE_JAKT)
-        find_package(Jakt CONFIG REQUIRED
-            HINTS "${Lagom_DIR}/.."
-        )
-    endif()
-
 endif()
 
 # Meta target to run all code-gen steps in the build.
@@ -190,7 +183,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
 
-add_custom_target(components ALL)
+include(jakt)
+
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
 include(utils)
