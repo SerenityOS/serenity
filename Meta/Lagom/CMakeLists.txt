@@ -448,6 +448,7 @@ if (BUILD_LAGOM)
         Compress
         Crypto
         Cpp
+        DeviceTree
         DNS
         Diff
         Gemini
@@ -629,6 +630,7 @@ if (BUILD_LAGOM)
         lagom_utility(wasm SOURCES ../../Userland/Utilities/wasm.cpp LIBS LibFileSystem LibWasm LibLine LibMain LibJS)
         lagom_utility(xml SOURCES ../../Userland/Utilities/xml.cpp LIBS LibFileSystem LibMain LibXML)
         lagom_utility(xzcat SOURCES ../../Userland/Utilities/xzcat.cpp LIBS LibCompress LibMain)
+        lagom_utility(fdtdump SOURCES ../../Userland/Utilities/fdtdump.cpp LIBS LibDeviceTree LibMain)
 
         enable_testing()
         # LibTest
