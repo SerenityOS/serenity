@@ -1741,6 +1741,25 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_readable_stream(JS:
     return stream;
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-createreadablebytestream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_readable_byte_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm)
+{
+    // 1. Let stream be a new ReadableStream.
+    auto stream = realm.heap().allocate<ReadableStream>(realm, realm);
+
+    // 2. Perform ! InitializeReadableStream(stream).
+    initialize_readable_stream(*stream);
+
+    // 3. Let controller be a new ReadableByteStreamController.
+    auto controller = realm.heap().allocate<ReadableByteStreamController>(realm, realm);
+
+    // 4. Perform ? SetUpReadableByteStreamController(stream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm, 0, undefined).
+    TRY(set_up_readable_byte_stream_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), 0, JS::js_undefined()));
+
+    // 5. Return stream.
+    return stream;
+}
+
 // https://streams.spec.whatwg.org/#create-writable-stream
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> create_writable_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, WriteAlgorithm&& write_algorithm, CloseAlgorithm&& close_algorithm, AbortAlgorithm&& abort_algorithm, double high_water_mark, SizeAlgorithm&& size_algorithm)
 {
