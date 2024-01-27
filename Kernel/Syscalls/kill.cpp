@@ -45,7 +45,7 @@ ErrorOr<void> Process::do_killpg(ProcessGroupID pgrp, int signal)
     bool any_succeeded = false;
     ErrorOr<void> error;
 
-    TRY(Process::current().for_each_in_pgrp_in_same_jail(pgrp, [&](auto& process) -> ErrorOr<void> {
+    TRY(Process::current().for_each_in_pgrp_in_same_process_list(pgrp, [&](auto& process) -> ErrorOr<void> {
         group_was_empty = false;
 
         ErrorOr<void> res = do_kill(process, signal);
@@ -69,7 +69,7 @@ ErrorOr<void> Process::do_killall(int signal)
     ErrorOr<void> error;
 
     // Send the signal to all processes we have access to for.
-    TRY(Process::for_each_in_same_jail([&](auto& process) -> ErrorOr<void> {
+    TRY(Process::for_each_in_same_process_list([&](auto& process) -> ErrorOr<void> {
         ErrorOr<void> res;
         if (process.pid() == pid())
             res = do_killself(signal);
@@ -125,7 +125,7 @@ ErrorOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
         return 0;
     }
     VERIFY(pid_or_pgid >= 0);
-    auto peer = Process::from_pid_in_same_jail(pid_or_pgid);
+    auto peer = Process::from_pid_in_same_process_list(pid_or_pgid);
     if (!peer)
         return ESRCH;
     TRY(do_kill(*peer, signal));

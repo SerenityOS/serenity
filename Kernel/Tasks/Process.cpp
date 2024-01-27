@@ -35,6 +35,7 @@
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ScopedProcessList.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
 #include <Kernel/Time/TimerQueue.h>
@@ -65,9 +66,9 @@ SpinlockProtected<Process::AllProcessesList, LockRank::None>& Process::all_insta
     return *s_all_instances;
 }
 
-ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> callback)
+ErrorOr<void> Process::for_each_in_same_process_list(Function<ErrorOr<void>(Process&)> callback)
 {
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
+    return Process::current().m_scoped_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
         ErrorOr<void> result {};
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto const& list) {
@@ -90,10 +91,10 @@ ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> c
     });
 }
 
-ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Process&)> callback)
+ErrorOr<void> Process::for_each_child_in_same_process_list(Function<ErrorOr<void>(Process&)> callback)
 {
     ProcessID my_pid = pid();
-    return m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
+    return m_scoped_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
         ErrorOr<void> result {};
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto const& list) {
@@ -118,9 +119,9 @@ ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Proces
     });
 }
 
-ErrorOr<void> Process::for_each_in_pgrp_in_same_jail(ProcessGroupID pgid, Function<ErrorOr<void>(Process&)> callback)
+ErrorOr<void> Process::for_each_in_pgrp_in_same_process_list(ProcessGroupID pgid, Function<ErrorOr<void>(Process&)> callback)
 {
-    return m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
+    return m_scoped_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
         ErrorOr<void> result {};
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto const& list) {
@@ -583,9 +584,9 @@ bool Process::is_kcov_busy()
 }
 #endif
 
-RefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
+RefPtr<Process> Process::from_pid_in_same_process_list(ProcessID pid)
 {
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> RefPtr<Process> {
+    return Process::current().m_scoped_process_list.with([&](auto const& list_ptr) -> RefPtr<Process> {
         if (list_ptr) {
             return list_ptr->attached_processes().with([&](auto const& list) -> RefPtr<Process> {
                 for (auto& process : list) {
@@ -607,7 +608,7 @@ RefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
     });
 }
 
-RefPtr<Process> Process::from_pid_ignoring_jails(ProcessID pid)
+RefPtr<Process> Process::from_pid_ignoring_process_lists(ProcessID pid)
 {
     return all_instances().with([&](auto const& list) -> RefPtr<Process> {
         for (auto const& process : list) {
@@ -878,25 +879,20 @@ void Process::finalize()
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
     m_executable.with([](auto& executable) { executable = nullptr; });
-    m_attached_jail.with([](auto& jail) {
-        if (jail)
-            jail->detach({});
-        jail = nullptr;
-    });
     m_arguments.clear();
     m_environment.clear();
 
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
-        if (auto parent_process = Process::from_pid_ignoring_jails(ppid())) {
+        if (auto parent_process = Process::from_pid_ignoring_process_lists(ppid())) {
             if (parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 (void)parent_process->send_signal(SIGCHLD, this);
         }
     }
 
     if (!!ppid()) {
-        if (auto parent = Process::from_pid_ignoring_jails(ppid())) {
+        if (auto parent = Process::from_pid_ignoring_process_lists(ppid())) {
             parent->m_ticks_in_user_for_dead_children += m_ticks_in_user + m_ticks_in_user_for_dead_children;
             parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
         }
@@ -923,9 +919,9 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 {
     RefPtr<Process> waiter_process;
     if (auto* my_tracer = tracer())
-        waiter_process = Process::from_pid_ignoring_jails(my_tracer->tracer_pid());
+        waiter_process = Process::from_pid_ignoring_process_lists(my_tracer->tracer_pid());
     else
-        waiter_process = Process::from_pid_ignoring_jails(ppid());
+        waiter_process = Process::from_pid_ignoring_process_lists(ppid());
 
     if (waiter_process)
         waiter_process->m_wait_blocker_set.unblock(*this, flags, signal);
@@ -933,11 +929,12 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 
 void Process::remove_from_secondary_lists()
 {
-    m_jail_process_list.with([this](auto& list_ptr) {
+    m_scoped_process_list.with([this](auto& list_ptr) {
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto& list) {
                 list.remove(*this);
             });
+            list_ptr->detach({});
         }
     });
 }
@@ -1009,7 +1006,7 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
 {
     VERIFY(is_user_process());
     // Try to send it to the "obvious" main thread:
-    auto receiver_thread = Thread::from_tid_in_same_jail(pid().value());
+    auto receiver_thread = Thread::from_tid_in_same_process_list(pid().value());
     // If the main thread has died, there may still be other threads:
     if (!receiver_thread) {
         // The first one should be good enough.
@@ -1225,7 +1222,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> Process::vfs_root_context_for_id(int id)
     // besides their currently attached contexts.
     // This is a security measure to prevent jailed processes from enumerating
     // the list of VFSRootContexts.
-    if (is_currently_in_jail() && id != -1)
+    if (is_jailed() && id != -1)
         return EPERM;
 
     return VirtualFileSystem::the().all_root_contexts_list(Badge<Process> {}).with([id](auto& list) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {

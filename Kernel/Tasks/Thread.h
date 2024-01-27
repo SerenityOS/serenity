@@ -74,8 +74,8 @@ public:
     static ErrorOr<NonnullRefPtr<Thread>> create(NonnullRefPtr<Process>);
     ~Thread();
 
-    static RefPtr<Thread> from_tid_ignoring_jails(ThreadID);
-    static RefPtr<Thread> from_tid_in_same_jail(ThreadID);
+    static RefPtr<Thread> from_tid_ignoring_process_lists(ThreadID);
+    static RefPtr<Thread> from_tid_in_same_process_list(ThreadID);
     static void finalize_dying_threads();
 
     ThreadID tid() const { return m_tid; }
@@ -968,14 +968,14 @@ public:
     ErrorOr<NonnullRefPtr<Thread>> clone(NonnullRefPtr<Process>);
 
     template<IteratorFunction<Thread&> Callback>
-    static IterationDecision for_each_in_state_ignoring_jails(State, Callback);
+    static IterationDecision for_each_in_state_ignoring_process_lists(State, Callback);
     template<IteratorFunction<Thread&> Callback>
-    static IterationDecision for_each_ignoring_jails(Callback);
+    static IterationDecision for_each_ignoring_process_lists(Callback);
 
     template<VoidFunction<Thread&> Callback>
-    static IterationDecision for_each_in_state_ignoring_jails(State, Callback);
+    static IterationDecision for_each_in_state_ignoring_process_lists(State, Callback);
     template<VoidFunction<Thread&> Callback>
-    static IterationDecision for_each_ignoring_jails(Callback);
+    static IterationDecision for_each_ignoring_process_lists(Callback);
 
     static constexpr u32 default_kernel_stack_size = 65536;
     static constexpr u32 default_userspace_stack_size = 1 * MiB;
@@ -1273,7 +1273,7 @@ public:
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
 
 template<IteratorFunction<Thread&> Callback>
-inline IterationDecision Thread::for_each_ignoring_jails(Callback callback)
+inline IterationDecision Thread::for_each_ignoring_process_lists(Callback callback)
 {
     return Thread::all_instances().with([&](auto& list) -> IterationDecision {
         for (auto& thread : list) {
@@ -1286,7 +1286,7 @@ inline IterationDecision Thread::for_each_ignoring_jails(Callback callback)
 }
 
 template<IteratorFunction<Thread&> Callback>
-inline IterationDecision Thread::for_each_in_state_ignoring_jails(State state, Callback callback)
+inline IterationDecision Thread::for_each_in_state_ignoring_process_lists(State state, Callback callback)
 {
     return Thread::all_instances().with([&](auto& list) -> IterationDecision {
         for (auto& thread : list) {
@@ -1301,7 +1301,7 @@ inline IterationDecision Thread::for_each_in_state_ignoring_jails(State state, C
 }
 
 template<VoidFunction<Thread&> Callback>
-inline IterationDecision Thread::for_each_ignoring_jails(Callback callback)
+inline IterationDecision Thread::for_each_ignoring_process_lists(Callback callback)
 {
     return Thread::all_instances().with([&](auto& list) {
         for (auto& thread : list) {
@@ -1313,9 +1313,9 @@ inline IterationDecision Thread::for_each_ignoring_jails(Callback callback)
 }
 
 template<VoidFunction<Thread&> Callback>
-inline IterationDecision Thread::for_each_in_state_ignoring_jails(State state, Callback callback)
+inline IterationDecision Thread::for_each_in_state_ignoring_process_lists(State state, Callback callback)
 {
-    return for_each_in_state_ignoring_jails(state, [&](auto& thread) {
+    return for_each_in_state_ignoring_process_lists(state, [&](auto& thread) {
         callback(thread);
         return IterationDecision::Continue;
     });

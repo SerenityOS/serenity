@@ -56,7 +56,6 @@ If the process later attempts to use any system functionality it has previously 
 * `map_fixed`: [`mmap`(2)](help://man/2/mmap) with `MAP_FIXED` or `MAP_FIXED_NOREPLACE` (\*)
 * `mount`: [`mount`(2)](help://man/2/mount) Various filesystem mount related syscalls (\*)
 * `no_error`: Ignore requests of pledge elevation going forwards, this is useful for enforcing _execpromises_ while the child process wants to ask for more upfront (Note that the elevation requests are _not_ granted, merely ignored), this is similar to the `error` pledge in OpenBSD.
-* `jail`: Various jail-specific syscalls (\*)
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 
