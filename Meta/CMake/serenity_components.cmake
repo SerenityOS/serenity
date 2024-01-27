@@ -7,6 +7,7 @@ define_property(TARGET PROPERTY SERENITY_COMPONENT_DESCRIPTION BRIEF_DOCS "Seren
 define_property(TARGET PROPERTY SERENITY_COMPONENT_RECOMMENDED BRIEF_DOCS "SerenityOS component recommended (flag)" FULL_DOCS "-")
 define_property(TARGET PROPERTY SERENITY_COMPONENT_REQUIRED BRIEF_DOCS "SerenityOS component required (flag)" FULL_DOCS "-")
 define_property(TARGET PROPERTY SERENITY_COMPONENT_DEPENDS BRIEF_DOCS "SerenityOS component dependencies" FULL_DOCS "-")
+define_property(TARGET PROPERTY SERENITY_SKIP_BUILD BRIEF_DOCS "SerenityOS component target should skip build (flag)" FULL_DOCS "-")
 
 function(serenity_component name)
     cmake_parse_arguments(PARSE_ARGV 1 SERENITY_COMPONENT "RECOMMENDED;REQUIRED" "DESCRIPTION" "TARGETS;DEPENDS")
@@ -21,14 +22,19 @@ function(serenity_component name)
         SERENITY_COMPONENT_REQUIRED    "${SERENITY_COMPONENT_REQUIRED}"
         SERENITY_COMPONENT_DEPENDS     "${SERENITY_COMPONENT_DEPENDS}"
     )
+    set(static_should_disable_target TRUE)
+    if(BUILD_EVERYTHING OR "${BUILD_${NAME_UPPER}}" OR SERENITY_COMPONENT_REQUIRED)
+        set(static_should_disable_target FALSE)
+    endif()
+
+    set(should_disable_target $<BOOL:${static_should_disable_target}>)
     if(NOT "${SERENITY_COMPONENT_TARGETS}" STREQUAL "") # note: one component is /bin/false, which makes this tricky
         foreach(target IN LISTS SERENITY_COMPONENT_TARGETS)
             add_dependencies("Component${name}" "${target}")
+            set(should_disable_target $<OR:${should_disable_target},$<BOOL:$<TARGET_PROPERTY:${target},SERENITY_SKIP_BUILD>>>)
         endforeach()
     endif()
-    if(BUILD_EVERYTHING OR "${BUILD_${NAME_UPPER}}" OR SERENITY_COMPONENT_REQUIRED)
-        add_dependencies(components "Component${name}")
-    endif()
+    set_target_properties("Component${name}" PROPERTIES EXCLUDE_FROM_ALL ${should_disable_target})
     foreach(dependency IN LISTS SERENITY_COMPONENT_DEPENDS)
         add_dependencies("Component${name}" "Component${dependency}")
     endforeach()
