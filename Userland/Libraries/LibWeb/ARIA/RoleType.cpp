@@ -174,7 +174,7 @@ ErrorOr<NonnullOwnPtr<RoleType>> RoleType::build_role_object(Role role, bool foc
     case Role::complementary:
         return adopt_nonnull_own_or_enomem(new (nothrow) Complementary(data));
     case Role::composite:
-        return adopt_nonnull_own_or_enomem(new (nothrow) ContentInfo(data));
+        return adopt_nonnull_own_or_enomem(new (nothrow) Composite(data));
     case Role::contentinfo:
         return adopt_nonnull_own_or_enomem(new (nothrow) ContentInfo(data));
     case Role::definition:
