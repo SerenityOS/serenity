@@ -7,10 +7,12 @@
 #pragma once
 
 #include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/SVG/SVGViewport.h>
 
 namespace Web::SVG {
 
-class SVGSymbolElement final : public SVGGraphicsElement {
+class SVGSymbolElement final : public SVGGraphicsElement
+    , public SVGViewport {
     WEB_PLATFORM_OBJECT(SVGSymbolElement, SVGGraphicsElement);
     JS_DECLARE_ALLOCATOR(SVGSymbolElement);
 
@@ -19,7 +21,12 @@ public:
 
     void apply_presentational_hints(CSS::StyleProperties& style) const override;
 
-    Optional<ViewBox> view_box() const { return m_view_box; }
+    virtual Optional<ViewBox> view_box() const override { return m_view_box; }
+    virtual Optional<PreserveAspectRatio> preserve_aspect_ratio() const override
+    {
+        // FIXME: Support the `preserveAspectRatio` attribute on <symbol>.
+        return {};
+    }
 
 private:
     SVGSymbolElement(DOM::Document&, DOM::QualifiedName);

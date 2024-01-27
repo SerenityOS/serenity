@@ -232,19 +232,4 @@ Optional<float> SVGGraphicsElement::stroke_width() const
     return width.to_px(*layout_node(), scaled_viewport_size).to_double();
 }
 
-Optional<ViewBox> SVGGraphicsElement::view_box() const
-{
-    if (auto* svg_svg_element = shadow_including_first_ancestor_of_type<SVGSVGElement>()) {
-        if (svg_svg_element->view_box().has_value())
-            return svg_svg_element->view_box();
-    }
-
-    if (auto* svg_symbol_element = shadow_including_first_ancestor_of_type<SVGSymbolElement>()) {
-        if (svg_symbol_element->view_box().has_value())
-            return svg_symbol_element->view_box();
-    }
-
-    return {};
-}
-
 }
