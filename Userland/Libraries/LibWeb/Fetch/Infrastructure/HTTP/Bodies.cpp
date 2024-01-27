@@ -9,6 +9,8 @@
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/Task.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -46,13 +48,25 @@ void Body::visit_edges(Cell::Visitor& visitor)
 // https://fetch.spec.whatwg.org/#concept-body-clone
 JS::NonnullGCPtr<Body> Body::clone(JS::Realm& realm) const
 {
+    HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes };
+
     // To clone a body body, run these steps:
     // FIXME: 1. Let « out1, out2 » be the result of teeing body’s stream.
     // FIXME: 2. Set body’s stream to out1.
-    auto out2 = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
+    JS::GCPtr<Streams::ReadableStream> out2;
+
+    Streams::StartAlgorithm start_algorithm = []() { return JS::js_undefined(); };
+    Streams::PullAlgorithm pull_algorithm = [&realm]() { return WebIDL::create_resolved_promise(realm, JS::js_undefined()); };
+    Streams::CancelAlgorithm cancel_algorithm = [&realm](auto) { return WebIDL::create_resolved_promise(realm, JS::js_undefined()); };
+
+    if (m_stream->controller()->has<JS::NonnullGCPtr<Streams::ReadableStreamDefaultController>>()) {
+        out2 = Streams::create_readable_stream(realm, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm)).release_value_but_fixme_should_propagate_errors();
+    } else {
+        out2 = Streams::create_readable_byte_stream(realm, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm)).release_value_but_fixme_should_propagate_errors();
+    }
 
     // 3. Return a body whose stream is out2 and other members are copied from body.
-    return Body::create(realm.vm(), out2, m_source, m_length);
+    return Body::create(realm.vm(), *out2, m_source, m_length);
 }
 
 // https://fetch.spec.whatwg.org/#body-fully-read
