@@ -26,8 +26,7 @@ serenity_option(ENABLE_ACCELERATED_GRAPHICS ON CACHE BOOL "Enable use of acceler
 
 serenity_option(HACKSTUDIO_BUILD OFF CACHE BOOL "Automatically enabled when building from HackStudio")
 
-serenity_option(ENABLE_JAKT OFF CACHE BOOL "Enable building jakt files")
-serenity_option(JAKT_SOURCE_DIR "" CACHE STRING "Pre-existing jakt language source directory")
+serenity_option(ENABLE_JAKT ON CACHE BOOL "Enable building jakt files")
 
 serenity_option(SERENITY_CACHE_DIR "${PROJECT_BINARY_DIR}/../caches" CACHE PATH "Location of shared cache of downloaded files")
 serenity_option(ENABLE_NETWORK_DOWNLOADS ON CACHE BOOL "Allow downloads of required files. If OFF, required files must already be present in SERENITY_CACHE_DIR")
