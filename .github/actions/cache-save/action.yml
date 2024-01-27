@@ -43,6 +43,10 @@ inputs:
     description: 'Whether the toolchain prebuilt cache was hit'
     required: false
     default: false
+  jakt_prebuilt_hit:
+    description: 'Whether the jakt prebuilt cache was hit'
+    required: false
+    default: false
 
 runs:
   using: "composite"
@@ -55,6 +59,13 @@ runs:
       with:
         path: ${{ inputs.toolchain_prebuilt_path }}
         key: ${{ inputs.toolchain_prebuilt_primary_key }}
+
+    - name: 'Jakt Toolchain Prebuilt Cache'
+      uses: actions/cache/save@v4
+      if: ${{ github.event_name != 'pull_request' && !inputs.jakt_prebuilt_hit }}
+      with:
+          path: ${{ inputs.jakt_prebuilt_path }}
+          key: ${{ inputs.jakt_prebuilt_primary_key }}
 
     # FIXME: Remove manually built QEMU when we bump QEMU to >=8.1.x
     - name: 'AArch64 QEMU Cache'

@@ -84,6 +84,10 @@ jobs:
           ARCH: ${{ inputs.arch}}
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
+      - name: Build jakt toolchain
+        if: ${{ !steps.cache-restore.output.jakt_prebuilt_hit }}
+        run: ARCH="${{ matrix.arch }}" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh
+
       - name: Build AArch64 Qemu
         if: ${{ inputs.arch == 'aarch64' && !steps.cache-restore.outputs.qemu_cache_hit }}
         run: ${{ github.workspace }}/Toolchain/BuildQemu.sh
@@ -148,6 +152,8 @@ jobs:
           toolchain_prebuilt_path: ${{ steps.cache-restore.outputs.toolchain_prebuilt_path }}
           toolchain_prebuilt_primary_key: ${{ steps.cache-restore.outputs.toolchain_prebuilt_primary_key }}
           toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
+          jakt_prebuilt_primary_key: ${{ steps.cache-restore.outputs.jakt_prebuilt_primary_key }}
+          jakt_prebuilt_hit: ${{ steps.cache-restore.outputs.jakt_prebuilt_hit }}
 
       # === TEST ===
 
