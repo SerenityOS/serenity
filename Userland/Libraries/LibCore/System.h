@@ -49,6 +49,7 @@ namespace Core::System {
 #ifdef AK_OS_SERENITY
 ErrorOr<void> beep(u16 tone = 440, u16 milliseconds_duration = 200);
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
+ErrorOr<void> pledge_remove_capabilities(StringView removed_capabilities);
 ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<void> unveil_after_exec(StringView path, StringView permissions);
 ErrorOr<void> sendfd(int sockfd, int fd);

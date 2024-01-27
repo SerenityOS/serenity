@@ -460,7 +460,8 @@ public:
     ErrorOr<FlatPtr> sys$profiling_disable(pid_t);
     ErrorOr<FlatPtr> sys$profiling_free_buffer(pid_t);
     ErrorOr<FlatPtr> sys$futex(Userspace<Syscall::SC_futex_params const*>);
-    ErrorOr<FlatPtr> sys$pledge(Userspace<Syscall::SC_pledge_params const*>);
+    ErrorOr<FlatPtr> sys$pledge_set_capabilities(Userspace<Syscall::SC_pledge_set_capabilities_params const*>);
+    ErrorOr<FlatPtr> sys$pledge_remove_capabilities(Userspace<Syscall::SC_pledge_remove_capabilities_params const*>);
     ErrorOr<FlatPtr> sys$unveil(Userspace<Syscall::SC_unveil_params const*>);
     ErrorOr<FlatPtr> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     ErrorOr<FlatPtr> sys$perf_register_string(Userspace<char const*>, size_t);

@@ -134,7 +134,8 @@ enum class NeedsBigProcessLock {
     S(perf_event, NeedsBigProcessLock::Yes)                \
     S(perf_register_string, NeedsBigProcessLock::Yes)      \
     S(pipe, NeedsBigProcessLock::No)                       \
-    S(pledge, NeedsBigProcessLock::No)                     \
+    S(pledge_set_capabilities, NeedsBigProcessLock::No)    \
+    S(pledge_remove_capabilities, NeedsBigProcessLock::No) \
     S(poll, NeedsBigProcessLock::No)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)            \
     S(prctl, NeedsBigProcessLock::No)                      \
@@ -448,9 +449,13 @@ struct SC_umount_params {
     StringArgument target;
 };
 
-struct SC_pledge_params {
+struct SC_pledge_set_capabilities_params {
     StringArgument promises;
     StringArgument execpromises;
+};
+
+struct SC_pledge_remove_capabilities_params {
+    StringArgument removed_capabilities;
 };
 
 struct SC_unveil_params {

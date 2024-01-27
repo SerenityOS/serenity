@@ -1024,11 +1024,11 @@ int set_process_name(char const* name, size_t name_length)
 
 int pledge(char const* promises, char const* execpromises)
 {
-    Syscall::SC_pledge_params params {
+    Syscall::SC_pledge_set_capabilities_params params {
         { promises, promises ? strlen(promises) : 0 },
         { execpromises, execpromises ? strlen(execpromises) : 0 }
     };
-    int rc = syscall(SC_pledge, &params);
+    int rc = syscall(SC_pledge_set_capabilities, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

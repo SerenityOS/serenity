@@ -159,13 +159,22 @@ ErrorOr<void> beep(u16 tone, u16 milliseconds_duration)
     return {};
 }
 
+ErrorOr<void> pledge_remove_capabilities(StringView removed_capabilities)
+{
+    Syscall::SC_pledge_remove_capabilities_params params {
+        { removed_capabilities.characters_without_null_termination(), removed_capabilities.length() },
+    };
+    int rc = syscall(SC_pledge_remove_capabilities, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("pledge_remove_capabilities", rc, {});
+}
+
 ErrorOr<void> pledge(StringView promises, StringView execpromises)
 {
-    Syscall::SC_pledge_params params {
+    Syscall::SC_pledge_set_capabilities_params params {
         { promises.characters_without_null_termination(), promises.length() },
         { execpromises.characters_without_null_termination(), execpromises.length() },
     };
-    int rc = syscall(SC_pledge, &params);
+    int rc = syscall(SC_pledge_set_capabilities, &params);
     HANDLE_SYSCALL_RETURN_VALUE("pledge", rc, {});
 }
 

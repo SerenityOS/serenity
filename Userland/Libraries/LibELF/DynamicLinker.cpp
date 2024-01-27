@@ -347,11 +347,11 @@ static void drop_loader_promise(StringView promise_to_drop)
     s_loader_pledge_promises = s_loader_pledge_promises.replace(promise_to_drop, ""sv, ReplaceMode::All);
 
     auto extended_promises = ByteString::formatted("{} {}", s_main_program_pledge_promises, s_loader_pledge_promises);
-    Syscall::SC_pledge_params params {
+    Syscall::SC_pledge_set_capabilities_params params {
         { extended_promises.characters(), extended_promises.length() },
         { nullptr, 0 },
     };
-    int rc = syscall(SC_pledge, &params);
+    int rc = syscall(SC_pledge_set_capabilities, &params);
     if (rc < 0 && rc > -EMAXERRNO) {
         warnln("Failed to drop loader pledge promise: {}. errno={}", promise_to_drop, errno);
         _exit(1);
