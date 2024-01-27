@@ -109,6 +109,7 @@ void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamC
 bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamController const&);
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_readable_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm, Optional<double> high_water_mark = {}, Optional<SizeAlgorithm>&& size_algorithm = {});
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_readable_byte_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> create_writable_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, WriteAlgorithm&& write_algorithm, CloseAlgorithm&& close_algorithm, AbortAlgorithm&& abort_algorithm, double high_water_mark, SizeAlgorithm&& size_algorithm);
 void initialize_readable_stream(ReadableStream&);
 void initialize_writable_stream(WritableStream&);
