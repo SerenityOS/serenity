@@ -9,11 +9,13 @@
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/SVG/SVGViewport.h>
 #include <LibWeb/SVG/ViewBox.h>
 
 namespace Web::SVG {
 
-class SVGSVGElement final : public SVGGraphicsElement {
+class SVGSVGElement final : public SVGGraphicsElement
+    , public SVGViewport {
     WEB_PLATFORM_OBJECT(SVGSVGElement, SVGGraphicsElement);
     JS_DECLARE_ALLOCATOR(SVGSVGElement);
 
@@ -25,8 +27,8 @@ public:
     virtual bool requires_svg_container() const override { return false; }
     virtual bool is_svg_container() const override { return true; }
 
-    [[nodiscard]] Optional<ViewBox> view_box() const;
-    Optional<PreserveAspectRatio> const& preserve_aspect_ratio() const { return m_preserve_aspect_ratio; }
+    virtual Optional<ViewBox> view_box() const override;
+    virtual Optional<PreserveAspectRatio> preserve_aspect_ratio() const override { return m_preserve_aspect_ratio; }
 
     void set_fallback_view_box_for_svg_as_image(Optional<ViewBox>);
 

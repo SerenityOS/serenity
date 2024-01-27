@@ -68,7 +68,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     RecordingPainterStateSaver save_painter { context.recording_painter() };
 
     auto offset = context.floored_device_point(svg_element_rect.location()).to_type<int>().to_type<float>();
-    auto maybe_view_box = geometry_element.view_box();
+    auto maybe_view_box = svg_element->view_box();
 
     auto paint_transform = computed_transforms().svg_to_device_pixels_transform(context);
     Gfx::Path path = computed_path()->copy_transformed(paint_transform);

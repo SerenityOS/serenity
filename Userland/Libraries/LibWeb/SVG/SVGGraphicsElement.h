@@ -47,8 +47,6 @@ public:
 
     JS::GCPtr<SVG::SVGMaskElement const> mask() const;
 
-    Optional<ViewBox> view_box() const;
-
 protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
 
