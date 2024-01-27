@@ -169,6 +169,7 @@ cmd_with_target() {
         else
             TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/$TARGET_TOOLCHAIN/$TARGET"
         fi
+        JAKT_TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/jakt"
         SUPER_BUILD_DIR="$SERENITY_SOURCE_DIR/Build/superbuild-$TARGET$TARGET_TOOLCHAIN"
     else
         SUPER_BUILD_DIR="$BUILD_DIR"
@@ -250,6 +251,16 @@ build_toolchain() {
     fi
 }
 
+build_jakt() {
+    echo "build_jakt: $JAKT_TOOLCHAIN_DIR"
+
+    ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildJakt.sh )
+}
+
+ensure_jakt() {
+    [ -d "$JAKT_TOOLCHAIN_DIR" ] || build_jakt
+}
+
 ensure_toolchain() {
     if [ "$(cmake -P "$SERENITY_SOURCE_DIR"/Meta/CMake/cmake-version.cmake)" -ne 1 ]; then
         build_cmake
@@ -269,6 +280,7 @@ ensure_toolchain() {
         fi
     fi
 
+    ensure_jakt
 }
 
 confirm_rebuild_if_toolchain_exists() {

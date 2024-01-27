@@ -59,7 +59,11 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main'
           sudo apt-get update
-          sudo apt-get install -y clang-format-16 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip generate-ninja libegl1-mesa-dev
+          sudo apt-get install -y \
+            clang-format-16 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev \
+            libmpfr-dev libmpc-dev ninja-build optipng qemu-utils \
+            qemu-system-i386 unzip generate-ninja libegl1-mesa-dev \
+            clang-16 llvm-16 libclang-16-dev
           if ${{ matrix.arch == 'aarch64' }}; then
             # FIXME: Remove this when we no longer build our own Qemu binary.
             sudo apt-get install libgtk-3-dev libpixman-1-dev libsdl2-dev libslirp-dev
@@ -103,6 +107,10 @@ jobs:
       - name: Build toolchain
         if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
         run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
+
+      # NOTE: This should also be cached eventually :P
+      - name: Build jakt toolchain
+        run: ARCH="${{ matrix.arch }}" CXX=g++-12 ${{ github.workspace }}/Toolchain/BuildJakt.sh
 
       - name: Update toolchain cache
         uses: actions/cache/save@v4
