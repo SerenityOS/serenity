@@ -104,11 +104,17 @@ public:
 
     Optional<FlatPtr> get_addr() const
     {
-#ifdef __LP64__
-        return get_u64();
-#else
-        return get_u32();
-#endif
+        // Note: This makes the lambda dependent on the template parameter, which is necessary
+        //       for the `if constexpr` to not evaluate both branches.
+        auto fn = [&]<typename T>() -> Optional<T> {
+            if constexpr (IsSame<T, u64>) {
+                return get_u64();
+            } else {
+                return get_u32();
+            }
+        };
+
+        return fn.operator()<FlatPtr>();
     }
 
     Optional<bool> get_bool() const
