@@ -17,7 +17,7 @@ class BlockContainer : public Box {
 
 public:
     BlockContainer(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
-    BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
+    BlockContainer(DOM::Document&, DOM::Node*, NonnullOwnPtr<CSS::ComputedValues>);
     virtual ~BlockContainer() override;
 
     Painting::PaintableWithLines const* paintable_with_lines() const;

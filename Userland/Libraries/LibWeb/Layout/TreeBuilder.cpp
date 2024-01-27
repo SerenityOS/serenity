@@ -411,7 +411,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         // If the box does not overflow in the vertical axis, then it is centered vertically.
         // FIXME: Only apply alignment when box overflows
         auto flex_computed_values = parent.computed_values().clone_inherited_values();
-        auto& mutable_flex_computed_values = static_cast<CSS::MutableComputedValues&>(flex_computed_values);
+        auto& mutable_flex_computed_values = static_cast<CSS::MutableComputedValues&>(*flex_computed_values);
         mutable_flex_computed_values.set_display(CSS::Display { CSS::DisplayOutside::Block, CSS::DisplayInside::Flex });
         mutable_flex_computed_values.set_justify_content(CSS::JustifyContent::Center);
         mutable_flex_computed_values.set_flex_direction(CSS::FlexDirection::Column);
@@ -613,7 +613,7 @@ static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_
     VERIFY(!sequence.is_empty());
     auto& parent = *sequence.first()->parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
-    static_cast<CSS::MutableComputedValues&>(computed_values).set_display(display);
+    static_cast<CSS::MutableComputedValues&>(*computed_values).set_display(display);
     auto wrapper = parent.heap().template allocate_without_realm<WrapperBoxType>(parent.document(), nullptr, move(computed_values));
     for (auto& child : sequence) {
         parent.remove_child(*child);
@@ -699,8 +699,8 @@ Vector<JS::Handle<Box>> TreeBuilder::generate_missing_parents(NodeWithStyle& roo
         auto* nearest_sibling = table_box->next_sibling();
         auto& parent = *table_box->parent();
 
-        CSS::ComputedValues wrapper_computed_values = table_box->computed_values().clone_inherited_values();
-        table_box->transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
+        auto wrapper_computed_values = table_box->computed_values().clone_inherited_values();
+        table_box->transfer_table_box_computed_values_to_wrapper_computed_values(*wrapper_computed_values);
 
         auto wrapper = parent.heap().allocate_without_realm<TableWrapper>(parent.document(), nullptr, move(wrapper_computed_values));
 
@@ -731,12 +731,12 @@ static void fixup_row(Box& row_box, TableGrid const& table_grid, size_t row_inde
         if (table_grid.occupancy_grid().contains({ column_index, row_index }))
             continue;
 
-        auto row_computed_values = row_box.computed_values().clone_inherited_values();
-        auto& cell_computed_values = static_cast<CSS::MutableComputedValues&>(row_computed_values);
-        cell_computed_values.set_display(Web::CSS::Display { CSS::DisplayInternal::TableCell });
+        auto computed_values = row_box.computed_values().clone_inherited_values();
+        auto& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(*computed_values);
+        mutable_computed_values.set_display(Web::CSS::Display { CSS::DisplayInternal::TableCell });
         // Ensure that the cell (with zero content height) will have the same height as the row by setting vertical-align to middle.
-        cell_computed_values.set_vertical_align(CSS::VerticalAlign::Middle);
-        auto cell_box = row_box.heap().template allocate_without_realm<BlockContainer>(row_box.document(), nullptr, cell_computed_values);
+        mutable_computed_values.set_vertical_align(CSS::VerticalAlign::Middle);
+        auto cell_box = row_box.heap().template allocate_without_realm<BlockContainer>(row_box.document(), nullptr, move(computed_values));
         row_box.append_child(cell_box);
     }
 }

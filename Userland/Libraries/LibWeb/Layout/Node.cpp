@@ -259,12 +259,13 @@ bool Node::is_fixed_position() const
 
 NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> computed_style)
     : Node(document, node)
+    , m_computed_values(make<CSS::ComputedValues>())
 {
     m_has_style = true;
     apply_style(*computed_style);
 }
 
-NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, NonnullOwnPtr<CSS::ComputedValues> computed_values)
     : Node(document, node)
     , m_computed_values(move(computed_values))
 {
@@ -274,7 +275,7 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
 void NodeWithStyle::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& layer : m_computed_values.background_layers()) {
+    for (auto& layer : computed_values().background_layers()) {
         if (layer.background_image && layer.background_image->is_image())
             layer.background_image->as_image().visit_edges(visitor);
     }
@@ -306,7 +307,7 @@ static CSSPixels snap_a_length_as_a_border_width(double device_pixels_per_css_pi
 
 void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 {
-    auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
+    auto& computed_values = mutable_computed_values();
 
     // NOTE: color must be set first to ensure currentColor can be resolved in other properties (e.g. background-color).
     computed_values.set_color(computed_style.color_or_fallback(CSS::PropertyID::Color, *this, CSS::InitialValues::color()));
@@ -838,15 +839,15 @@ void NodeWithStyle::propagate_style_to_anonymous_wrappers()
     // the parent inherits style from *this* node, not the other way around.
     if (display().is_table_inside() && is<TableWrapper>(parent())) {
         auto& table_wrapper = *static_cast<TableWrapper*>(parent());
-        static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(table_wrapper.computed_values()))).inherit_from(m_computed_values);
-        transfer_table_box_computed_values_to_wrapper_computed_values(table_wrapper.m_computed_values);
+        static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(table_wrapper.computed_values()))).inherit_from(computed_values());
+        transfer_table_box_computed_values_to_wrapper_computed_values(table_wrapper.mutable_computed_values());
     }
 
     // Propagate style to all anonymous children (except table wrappers!)
     for_each_child_of_type<NodeWithStyle>([&](NodeWithStyle& child) {
         if (child.is_anonymous() && !is<TableWrapper>(child)) {
             auto& child_computed_values = static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(child.computed_values())));
-            child_computed_values.inherit_from(m_computed_values);
+            child_computed_values.inherit_from(computed_values());
         }
     });
 }
@@ -906,8 +907,8 @@ bool Node::is_inline_table() const
 
 JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
-    auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());
-    static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::DisplayOutside::Block, CSS::DisplayInside::Flow));
+    auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, computed_values().clone_inherited_values());
+    wrapper->mutable_computed_values().set_display(CSS::Display(CSS::DisplayOutside::Block, CSS::DisplayInside::Flow));
     return *wrapper;
 }
 
@@ -915,7 +916,7 @@ void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_valu
 {
     VERIFY(this->display().is_table_inside());
 
-    CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
+    auto& mutable_computed_values = this->mutable_computed_values();
     mutable_computed_values.set_position(CSS::InitialValues::position());
     mutable_computed_values.set_float(CSS::InitialValues::float_());
     mutable_computed_values.set_clear(CSS::InitialValues::clear());

@@ -206,8 +206,8 @@ class NodeWithStyle : public Node {
 public:
     virtual ~NodeWithStyle() override = default;
 
-    const CSS::ImmutableComputedValues& computed_values() const { return static_cast<const CSS::ImmutableComputedValues&>(m_computed_values); }
-    CSS::MutableComputedValues& mutable_computed_values() { return static_cast<CSS::MutableComputedValues&>(m_computed_values); }
+    CSS::ImmutableComputedValues const& computed_values() const { return static_cast<CSS::ImmutableComputedValues const&>(*m_computed_values); }
+    CSS::MutableComputedValues& mutable_computed_values() { return static_cast<CSS::MutableComputedValues&>(*m_computed_values); }
 
     void apply_style(const CSS::StyleProperties&);
 
@@ -223,13 +223,13 @@ public:
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
-    NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
+    NodeWithStyle(DOM::Document&, DOM::Node*, NonnullOwnPtr<CSS::ComputedValues>);
 
 private:
     void reset_table_box_computed_values_used_by_wrapper_to_init_values();
     void propagate_style_to_anonymous_wrappers();
 
-    CSS::ComputedValues m_computed_values;
+    NonnullOwnPtr<CSS::ComputedValues> m_computed_values;
     RefPtr<CSS::AbstractImageStyleValue const> m_list_style_image;
 };
 
@@ -246,7 +246,7 @@ protected:
     {
     }
 
-    NodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+    NodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, NonnullOwnPtr<CSS::ComputedValues> computed_values)
         : NodeWithStyle(document, node, move(computed_values))
     {
     }

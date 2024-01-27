@@ -755,7 +755,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         auto& block_container_state = m_state.get_mutable(block_container);
         if (!block_container_state.has_definite_width()) {
             auto width = greatest_child_width(block_container);
-            auto computed_values = block_container.computed_values();
+            auto const& computed_values = block_container.computed_values();
             // NOTE: Min and max constraints are not applied to a box that is being sized as intrinsic because
             //       according to css-sizing-3 spec:
             //       The min-content size of a box in each axis is the size it would have if it was a float given an

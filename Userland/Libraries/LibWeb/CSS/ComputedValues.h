@@ -285,7 +285,13 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
 }
 
 class ComputedValues {
+    AK_MAKE_NONCOPYABLE(ComputedValues);
+    AK_MAKE_NONMOVABLE(ComputedValues);
+
 public:
+    ComputedValues() = default;
+    ~ComputedValues() = default;
+
     AspectRatio aspect_ratio() const { return m_noninherited.aspect_ratio; }
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Length border_spacing_horizontal() const { return m_inherited.border_spacing_horizontal; }
@@ -411,10 +417,10 @@ public:
     CSS::MathStyle math_style() const { return m_inherited.math_style; }
     int math_depth() const { return m_inherited.math_depth; }
 
-    ComputedValues clone_inherited_values() const
+    NonnullOwnPtr<ComputedValues> clone_inherited_values() const
     {
-        ComputedValues clone;
-        clone.m_inherited = m_inherited;
+        auto clone = make<ComputedValues>();
+        clone->m_inherited = m_inherited;
         return clone;
     }
 

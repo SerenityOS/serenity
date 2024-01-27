@@ -13,7 +13,7 @@ TableWrapper::TableWrapper(DOM::Document& document, DOM::Node* node, NonnullRefP
 {
 }
 
-TableWrapper::TableWrapper(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+TableWrapper::TableWrapper(DOM::Document& document, DOM::Node* node, NonnullOwnPtr<CSS::ComputedValues> computed_values)
     : BlockContainer(document, node, move(computed_values))
 {
 }

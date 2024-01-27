@@ -56,7 +56,7 @@ public:
 
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
-    Box(DOM::Document&, DOM::Node*, CSS::ComputedValues);
+    Box(DOM::Document&, DOM::Node*, NonnullOwnPtr<CSS::ComputedValues>);
 
 private:
     virtual bool is_box() const final { return true; }

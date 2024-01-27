@@ -14,7 +14,7 @@ BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, Nonnull
 {
 }
 
-BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, NonnullOwnPtr<CSS::ComputedValues> computed_values)
     : Box(document, node, move(computed_values))
 {
 }

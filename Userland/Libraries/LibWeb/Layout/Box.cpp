@@ -19,7 +19,7 @@ Box::Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StylePrope
 {
 }
 
-Box::Box(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+Box::Box(DOM::Document& document, DOM::Node* node, NonnullOwnPtr<CSS::ComputedValues> computed_values)
     : NodeWithStyleAndBoxModelMetrics(document, node, move(computed_values))
 {
 }
