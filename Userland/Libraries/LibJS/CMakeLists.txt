@@ -4,7 +4,6 @@ set(SOURCES
     Bytecode/BasicBlock.cpp
     Bytecode/Builtins.cpp
     Bytecode/CodeGenerationError.cpp
-    Bytecode/CommonImplementations.cpp
     Bytecode/Executable.cpp
     Bytecode/Generator.cpp
     Bytecode/IdentifierTable.cpp
