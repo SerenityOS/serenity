@@ -96,6 +96,7 @@ protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
+    virtual bool event(QEvent*) override;
     virtual void resizeEvent(QResizeEvent*) override;
     virtual void moveEvent(QMoveEvent*) override;
     virtual void wheelEvent(QWheelEvent*) override;

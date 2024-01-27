@@ -61,7 +61,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView(web_content_options, webdriver_content_ipc_path, parent_client, page_index);
+    m_view = new WebContentView(this, web_content_options, webdriver_content_ipc_path, parent_client, page_index);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
 
