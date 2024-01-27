@@ -77,6 +77,7 @@ shared_library("LibGfx") {
     "ImageFormats/JPEGLoader.cpp",
     "ImageFormats/JPEGWriter.cpp",
     "ImageFormats/JPEGXLLoader.cpp",
+    "ImageFormats/PAMLoader.cpp",
     "ImageFormats/PBMLoader.cpp",
     "ImageFormats/PGMLoader.cpp",
     "ImageFormats/PNGLoader.cpp",
