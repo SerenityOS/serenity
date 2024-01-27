@@ -1,0 +1,27 @@
+From 4586a4b273e634e8b8751372f72b2903cbbde4fd Mon Sep 17 00:00:00 2001
+From: "Panagiotis \"Ivory\" Vasilopoulos" <git@n0toose.net>
+Date: Sat, 27 Jan 2024 14:39:23 +0100
+Subject: [PATCH] meson: remove ansi (for serenity)
+
+---
+ meson.build | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 3db0d09..0bd1e0b 100644
+--- a/meson.build
++++ b/meson.build
+@@ -21,10 +21,6 @@ libversion = '@0@.@1@.0'.format(soversion, interface_version, interface_age)
+ # C compiler. This is the cross compiler if we're cross-compiling
+ cc = meson.get_compiler('c')
+ 
+-if cc.get_id() == 'gcc' and cc.has_argument('-ansi')
+-  add_project_arguments('-ansi', language: 'c')
+-endif
+-
+ # Handle symbol visibility for Windows
+ fribidi_static_cargs = []
+ fribidi_build_cargs = []
+-- 
+2.43.0
+
