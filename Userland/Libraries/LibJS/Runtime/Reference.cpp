@@ -122,6 +122,10 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
             base_obj = realm.intrinsics().number_prototype();
         else if (m_base_value.is_boolean())
             base_obj = realm.intrinsics().boolean_prototype();
+        else if (m_base_value.is_bigint())
+            base_obj = realm.intrinsics().bigint_prototype();
+        else if (m_base_value.is_symbol())
+            base_obj = realm.intrinsics().symbol_prototype();
         else
             base_obj = TRY(m_base_value.to_object(vm));
 
