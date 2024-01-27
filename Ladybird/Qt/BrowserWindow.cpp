@@ -57,20 +57,22 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     m_tabs_container->setTabBarAutoHide(true);
 
     // Listen for DPI changes
-    setAttribute(Qt::WA_NativeWindow);
-    setAttribute(Qt::WA_DontCreateNativeAncestors);
     m_device_pixel_ratio = devicePixelRatio();
     m_current_screen = screen();
-    QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &BrowserWindow::device_pixel_ratio_changed);
-    QObject::connect(windowHandle(), &QWindow::screenChanged, this, [this](QScreen* screen) {
-        if (m_device_pixel_ratio != screen->devicePixelRatio())
-            device_pixel_ratio_changed(screen->devicePixelRatio());
-
-        // Listen for logicalDotsPerInchChanged signals on new screen
-        QObject::disconnect(m_current_screen, &QScreen::logicalDotsPerInchChanged, nullptr, nullptr);
-        m_current_screen = screen;
+    if (QT_VERSION < QT_VERSION_CHECK(6, 6, 0) || QGuiApplication::platformName() != "wayland") {
+        setAttribute(Qt::WA_NativeWindow);
+        setAttribute(Qt::WA_DontCreateNativeAncestors);
         QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &BrowserWindow::device_pixel_ratio_changed);
-    });
+        QObject::connect(windowHandle(), &QWindow::screenChanged, this, [this](QScreen* screen) {
+            if (m_device_pixel_ratio != devicePixelRatio())
+                device_pixel_ratio_changed(devicePixelRatio());
+
+            // Listen for logicalDotsPerInchChanged signals on new screen
+            QObject::disconnect(m_current_screen, &QScreen::logicalDotsPerInchChanged, nullptr, nullptr);
+            m_current_screen = screen;
+            QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &BrowserWindow::device_pixel_ratio_changed);
+        });
+    }
 
     auto* menu = menuBar()->addMenu("&File");
 
@@ -735,6 +737,18 @@ void BrowserWindow::copy_selected_text()
 
     auto* clipboard = QGuiApplication::clipboard();
     clipboard->setText(qstring_from_ak_string(text));
+}
+
+bool BrowserWindow::event(QEvent* event)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    if (event->type() == QEvent::DevicePixelRatioChange) {
+        if (m_device_pixel_ratio != devicePixelRatio())
+            device_pixel_ratio_changed(devicePixelRatio());
+    }
+#endif
+
+    return QMainWindow::event(event);
 }
 
 void BrowserWindow::resizeEvent(QResizeEvent* event)

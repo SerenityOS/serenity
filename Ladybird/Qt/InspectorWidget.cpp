@@ -10,6 +10,7 @@
 #include <LibWebView/InspectorClient.h>
 #include <QAction>
 #include <QCloseEvent>
+#include <QGuiApplication>
 #include <QMenu>
 #include <QVBoxLayout>
 #include <QWindow>
@@ -21,7 +22,7 @@ extern bool is_using_dark_system_theme(QWidget&);
 InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     : QWidget(tab, Qt::Window)
 {
-    m_inspector_view = new WebContentView({}, {});
+    m_inspector_view = new WebContentView(this, {}, {});
 
     if (is_using_dark_system_theme(*this))
         m_inspector_view->update_palette(WebContentView::PaletteMode::Dark);
@@ -126,20 +127,22 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view)
     resize(875, 825);
 
     // Listen for DPI changes
-    setAttribute(Qt::WA_NativeWindow);
-    setAttribute(Qt::WA_DontCreateNativeAncestors);
     m_device_pixel_ratio = devicePixelRatio();
     m_current_screen = screen();
-    QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &InspectorWidget::device_pixel_ratio_changed);
-    QObject::connect(windowHandle(), &QWindow::screenChanged, this, [this](QScreen* screen) {
-        if (m_device_pixel_ratio != screen->devicePixelRatio())
-            device_pixel_ratio_changed(screen->devicePixelRatio());
-
-        // Listen for logicalDotsPerInchChanged signals on new screen
-        QObject::disconnect(m_current_screen, &QScreen::logicalDotsPerInchChanged, nullptr, nullptr);
-        m_current_screen = screen;
+    if (QT_VERSION < QT_VERSION_CHECK(6, 6, 0) || QGuiApplication::platformName() != "wayland") {
+        setAttribute(Qt::WA_NativeWindow);
+        setAttribute(Qt::WA_DontCreateNativeAncestors);
         QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &InspectorWidget::device_pixel_ratio_changed);
-    });
+        QObject::connect(windowHandle(), &QWindow::screenChanged, this, [this](QScreen* screen) {
+            if (m_device_pixel_ratio != screen->devicePixelRatio())
+                device_pixel_ratio_changed(screen->devicePixelRatio());
+
+            // Listen for logicalDotsPerInchChanged signals on new screen
+            QObject::disconnect(m_current_screen, &QScreen::logicalDotsPerInchChanged, nullptr, nullptr);
+            m_current_screen = screen;
+            QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &InspectorWidget::device_pixel_ratio_changed);
+        });
+    }
 }
 
 InspectorWidget::~InspectorWidget() = default;
@@ -168,6 +171,18 @@ void InspectorWidget::device_pixel_ratio_changed(qreal dpi)
 {
     m_device_pixel_ratio = dpi;
     m_inspector_view->set_device_pixel_ratio(m_device_pixel_ratio);
+}
+
+bool InspectorWidget::event(QEvent* event)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    if (event->type() == QEvent::DevicePixelRatioChange) {
+        if (m_device_pixel_ratio != devicePixelRatio())
+            device_pixel_ratio_changed(devicePixelRatio());
+    }
+#endif
+
+    return QWidget::event(event);
 }
 
 void InspectorWidget::closeEvent(QCloseEvent* event)

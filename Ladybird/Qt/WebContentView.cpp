@@ -54,8 +54,9 @@ namespace Ladybird {
 
 bool is_using_dark_system_theme(QWidget&);
 
-WebContentView::WebContentView(WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client, size_t page_index)
-    : m_web_content_options(web_content_options)
+WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client, size_t page_index)
+    : QAbstractScrollArea(window)
+    , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     m_client_state.client = parent_client;
