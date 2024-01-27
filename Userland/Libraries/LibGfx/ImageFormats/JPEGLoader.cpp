@@ -1412,7 +1412,7 @@ static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>&
     return {};
 }
 
-static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct_8x8(i16* block_component)
 {
     static float const m0 = 2.0f * AK::cos(1.0f / 16.0f * 2.0f * AK::Pi<float>);
     static float const m1 = 2.0f * AK::cos(2.0f / 16.0f * 2.0f * AK::Pi<float>);
@@ -1429,6 +1429,144 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
     static float const s6 = AK::cos(6.0f / 16.0f * AK::Pi<float>) / 2.0f;
     static float const s7 = AK::cos(7.0f / 16.0f * AK::Pi<float>) / 2.0f;
 
+    for (u32 k = 0; k < 8; ++k) {
+        float const g0 = block_component[0 * 8 + k] * s0;
+        float const g1 = block_component[4 * 8 + k] * s4;
+        float const g2 = block_component[2 * 8 + k] * s2;
+        float const g3 = block_component[6 * 8 + k] * s6;
+        float const g4 = block_component[5 * 8 + k] * s5;
+        float const g5 = block_component[1 * 8 + k] * s1;
+        float const g6 = block_component[7 * 8 + k] * s7;
+        float const g7 = block_component[3 * 8 + k] * s3;
+
+        float const f0 = g0;
+        float const f1 = g1;
+        float const f2 = g2;
+        float const f3 = g3;
+        float const f4 = g4 - g7;
+        float const f5 = g5 + g6;
+        float const f6 = g5 - g6;
+        float const f7 = g4 + g7;
+
+        float const e0 = f0;
+        float const e1 = f1;
+        float const e2 = f2 - f3;
+        float const e3 = f2 + f3;
+        float const e4 = f4;
+        float const e5 = f5 - f7;
+        float const e6 = f6;
+        float const e7 = f5 + f7;
+        float const e8 = f4 + f6;
+
+        float const d0 = e0;
+        float const d1 = e1;
+        float const d2 = e2 * m1;
+        float const d3 = e3;
+        float const d4 = e4 * m2;
+        float const d5 = e5 * m3;
+        float const d6 = e6 * m4;
+        float const d7 = e7;
+        float const d8 = e8 * m5;
+
+        float const c0 = d0 + d1;
+        float const c1 = d0 - d1;
+        float const c2 = d2 - d3;
+        float const c3 = d3;
+        float const c4 = d4 + d8;
+        float const c5 = d5 + d7;
+        float const c6 = d6 - d8;
+        float const c7 = d7;
+        float const c8 = c5 - c6;
+
+        float const b0 = c0 + c3;
+        float const b1 = c1 + c2;
+        float const b2 = c1 - c2;
+        float const b3 = c0 - c3;
+        float const b4 = c4 - c8;
+        float const b5 = c8;
+        float const b6 = c6 - c7;
+        float const b7 = c7;
+
+        block_component[0 * 8 + k] = b0 + b7;
+        block_component[1 * 8 + k] = b1 + b6;
+        block_component[2 * 8 + k] = b2 + b5;
+        block_component[3 * 8 + k] = b3 + b4;
+        block_component[4 * 8 + k] = b3 - b4;
+        block_component[5 * 8 + k] = b2 - b5;
+        block_component[6 * 8 + k] = b1 - b6;
+        block_component[7 * 8 + k] = b0 - b7;
+    }
+    for (u32 l = 0; l < 8; ++l) {
+        float const g0 = block_component[l * 8 + 0] * s0;
+        float const g1 = block_component[l * 8 + 4] * s4;
+        float const g2 = block_component[l * 8 + 2] * s2;
+        float const g3 = block_component[l * 8 + 6] * s6;
+        float const g4 = block_component[l * 8 + 5] * s5;
+        float const g5 = block_component[l * 8 + 1] * s1;
+        float const g6 = block_component[l * 8 + 7] * s7;
+        float const g7 = block_component[l * 8 + 3] * s3;
+
+        float const f0 = g0;
+        float const f1 = g1;
+        float const f2 = g2;
+        float const f3 = g3;
+        float const f4 = g4 - g7;
+        float const f5 = g5 + g6;
+        float const f6 = g5 - g6;
+        float const f7 = g4 + g7;
+
+        float const e0 = f0;
+        float const e1 = f1;
+        float const e2 = f2 - f3;
+        float const e3 = f2 + f3;
+        float const e4 = f4;
+        float const e5 = f5 - f7;
+        float const e6 = f6;
+        float const e7 = f5 + f7;
+        float const e8 = f4 + f6;
+
+        float const d0 = e0;
+        float const d1 = e1;
+        float const d2 = e2 * m1;
+        float const d3 = e3;
+        float const d4 = e4 * m2;
+        float const d5 = e5 * m3;
+        float const d6 = e6 * m4;
+        float const d7 = e7;
+        float const d8 = e8 * m5;
+
+        float const c0 = d0 + d1;
+        float const c1 = d0 - d1;
+        float const c2 = d2 - d3;
+        float const c3 = d3;
+        float const c4 = d4 + d8;
+        float const c5 = d5 + d7;
+        float const c6 = d6 - d8;
+        float const c7 = d7;
+        float const c8 = c5 - c6;
+
+        float const b0 = c0 + c3;
+        float const b1 = c1 + c2;
+        float const b2 = c1 - c2;
+        float const b3 = c0 - c3;
+        float const b4 = c4 - c8;
+        float const b5 = c8;
+        float const b6 = c6 - c7;
+        float const b7 = c7;
+
+        block_component[l * 8 + 0] = b0 + b7;
+        block_component[l * 8 + 1] = b1 + b6;
+        block_component[l * 8 + 2] = b2 + b5;
+        block_component[l * 8 + 3] = b3 + b4;
+        block_component[l * 8 + 4] = b3 - b4;
+        block_component[l * 8 + 5] = b2 - b5;
+        block_component[l * 8 + 6] = b1 - b6;
+        block_component[l * 8 + 7] = b0 - b7;
+    }
+}
+
+static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             for (u32 component_i = 0; component_i < context.components.size(); component_i++) {
@@ -1438,140 +1576,7 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[macroblock_index];
                         auto* block_component = get_component(block, component_i);
-                        for (u32 k = 0; k < 8; ++k) {
-                            float const g0 = block_component[0 * 8 + k] * s0;
-                            float const g1 = block_component[4 * 8 + k] * s4;
-                            float const g2 = block_component[2 * 8 + k] * s2;
-                            float const g3 = block_component[6 * 8 + k] * s6;
-                            float const g4 = block_component[5 * 8 + k] * s5;
-                            float const g5 = block_component[1 * 8 + k] * s1;
-                            float const g6 = block_component[7 * 8 + k] * s7;
-                            float const g7 = block_component[3 * 8 + k] * s3;
-
-                            float const f0 = g0;
-                            float const f1 = g1;
-                            float const f2 = g2;
-                            float const f3 = g3;
-                            float const f4 = g4 - g7;
-                            float const f5 = g5 + g6;
-                            float const f6 = g5 - g6;
-                            float const f7 = g4 + g7;
-
-                            float const e0 = f0;
-                            float const e1 = f1;
-                            float const e2 = f2 - f3;
-                            float const e3 = f2 + f3;
-                            float const e4 = f4;
-                            float const e5 = f5 - f7;
-                            float const e6 = f6;
-                            float const e7 = f5 + f7;
-                            float const e8 = f4 + f6;
-
-                            float const d0 = e0;
-                            float const d1 = e1;
-                            float const d2 = e2 * m1;
-                            float const d3 = e3;
-                            float const d4 = e4 * m2;
-                            float const d5 = e5 * m3;
-                            float const d6 = e6 * m4;
-                            float const d7 = e7;
-                            float const d8 = e8 * m5;
-
-                            float const c0 = d0 + d1;
-                            float const c1 = d0 - d1;
-                            float const c2 = d2 - d3;
-                            float const c3 = d3;
-                            float const c4 = d4 + d8;
-                            float const c5 = d5 + d7;
-                            float const c6 = d6 - d8;
-                            float const c7 = d7;
-                            float const c8 = c5 - c6;
-
-                            float const b0 = c0 + c3;
-                            float const b1 = c1 + c2;
-                            float const b2 = c1 - c2;
-                            float const b3 = c0 - c3;
-                            float const b4 = c4 - c8;
-                            float const b5 = c8;
-                            float const b6 = c6 - c7;
-                            float const b7 = c7;
-
-                            block_component[0 * 8 + k] = b0 + b7;
-                            block_component[1 * 8 + k] = b1 + b6;
-                            block_component[2 * 8 + k] = b2 + b5;
-                            block_component[3 * 8 + k] = b3 + b4;
-                            block_component[4 * 8 + k] = b3 - b4;
-                            block_component[5 * 8 + k] = b2 - b5;
-                            block_component[6 * 8 + k] = b1 - b6;
-                            block_component[7 * 8 + k] = b0 - b7;
-                        }
-                        for (u32 l = 0; l < 8; ++l) {
-                            float const g0 = block_component[l * 8 + 0] * s0;
-                            float const g1 = block_component[l * 8 + 4] * s4;
-                            float const g2 = block_component[l * 8 + 2] * s2;
-                            float const g3 = block_component[l * 8 + 6] * s6;
-                            float const g4 = block_component[l * 8 + 5] * s5;
-                            float const g5 = block_component[l * 8 + 1] * s1;
-                            float const g6 = block_component[l * 8 + 7] * s7;
-                            float const g7 = block_component[l * 8 + 3] * s3;
-
-                            float const f0 = g0;
-                            float const f1 = g1;
-                            float const f2 = g2;
-                            float const f3 = g3;
-                            float const f4 = g4 - g7;
-                            float const f5 = g5 + g6;
-                            float const f6 = g5 - g6;
-                            float const f7 = g4 + g7;
-
-                            float const e0 = f0;
-                            float const e1 = f1;
-                            float const e2 = f2 - f3;
-                            float const e3 = f2 + f3;
-                            float const e4 = f4;
-                            float const e5 = f5 - f7;
-                            float const e6 = f6;
-                            float const e7 = f5 + f7;
-                            float const e8 = f4 + f6;
-
-                            float const d0 = e0;
-                            float const d1 = e1;
-                            float const d2 = e2 * m1;
-                            float const d3 = e3;
-                            float const d4 = e4 * m2;
-                            float const d5 = e5 * m3;
-                            float const d6 = e6 * m4;
-                            float const d7 = e7;
-                            float const d8 = e8 * m5;
-
-                            float const c0 = d0 + d1;
-                            float const c1 = d0 - d1;
-                            float const c2 = d2 - d3;
-                            float const c3 = d3;
-                            float const c4 = d4 + d8;
-                            float const c5 = d5 + d7;
-                            float const c6 = d6 - d8;
-                            float const c7 = d7;
-                            float const c8 = c5 - c6;
-
-                            float const b0 = c0 + c3;
-                            float const b1 = c1 + c2;
-                            float const b2 = c1 - c2;
-                            float const b3 = c0 - c3;
-                            float const b4 = c4 - c8;
-                            float const b5 = c8;
-                            float const b6 = c6 - c7;
-                            float const b7 = c7;
-
-                            block_component[l * 8 + 0] = b0 + b7;
-                            block_component[l * 8 + 1] = b1 + b6;
-                            block_component[l * 8 + 2] = b2 + b5;
-                            block_component[l * 8 + 3] = b3 + b4;
-                            block_component[l * 8 + 4] = b3 - b4;
-                            block_component[l * 8 + 5] = b2 - b5;
-                            block_component[l * 8 + 6] = b1 - b6;
-                            block_component[l * 8 + 7] = b0 - b7;
-                        }
+                        inverse_dct_8x8(block_component);
                     }
                 }
             }
