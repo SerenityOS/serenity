@@ -33,6 +33,7 @@
 #    include <LibCore/Account.h>
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
+#    include <sys/prctl.h>
 #    include <sys/ptrace.h>
 #    include <sys/sysmacros.h>
 #endif
@@ -148,6 +149,14 @@ namespace Core::System {
 #endif
 
 #ifdef AK_OS_SERENITY
+
+ErrorOr<void> enter_jail_mode()
+{
+    auto rc = prctl(PR_SET_JAILED, 0, 0, 0);
+    if (rc != 0)
+        return Error::from_syscall("prctl"sv, -rc);
+    return {};
+}
 
 ErrorOr<void> beep(u16 tone, u16 milliseconds_duration)
 {
@@ -1299,20 +1308,6 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
 
     TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
     return {};
-}
-
-ErrorOr<void> join_jail(u64 jail_index)
-{
-    Syscall::SC_jail_attach_params params { jail_index };
-    int rc = syscall(SC_jail_attach, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("jail_attach", rc, {});
-}
-
-ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags flags)
-{
-    Syscall::SC_jail_create_params params { 0, { jail_name.characters_without_null_termination(), jail_name.length() }, static_cast<int>(flags) };
-    int rc = syscall(SC_jail_create, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("jail_create", rc, static_cast<u64>(params.index));
 }
 #endif
 
