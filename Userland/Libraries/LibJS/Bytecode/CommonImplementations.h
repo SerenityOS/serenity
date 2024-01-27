@@ -84,6 +84,11 @@ inline ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& pro
 
     auto base_obj = TRY(base_object_for_get(vm, base_value));
 
+    // OPTIMIZATION: Fast path for the magical "length" property on Array objects.
+    if (base_obj->has_magical_length_property() && property == vm.names.length.as_string()) {
+        return Value { base_obj->indexed_properties().array_like_size() };
+    }
+
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
     auto& shape = base_obj->shape();
     if (&shape == cache.shape) {
