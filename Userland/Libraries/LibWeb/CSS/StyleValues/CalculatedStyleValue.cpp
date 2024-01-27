@@ -372,6 +372,8 @@ bool SumCalculationNode::equals(CalculationNode const& other) const
         return true;
     if (type() != other.type())
         return false;
+    if (m_values.size() != static_cast<SumCalculationNode const&>(other).m_values.size())
+        return false;
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (!m_values[i]->equals(*static_cast<SumCalculationNode const&>(other).m_values[i]))
             return false;
@@ -507,6 +509,8 @@ bool ProductCalculationNode::equals(CalculationNode const& other) const
     if (this == &other)
         return true;
     if (type() != other.type())
+        return false;
+    if (m_values.size() != static_cast<ProductCalculationNode const&>(other).m_values.size())
         return false;
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (!m_values[i]->equals(*static_cast<ProductCalculationNode const&>(other).m_values[i]))
@@ -736,6 +740,8 @@ bool MinCalculationNode::equals(CalculationNode const& other) const
         return true;
     if (type() != other.type())
         return false;
+    if (m_values.size() != static_cast<MinCalculationNode const&>(other).m_values.size())
+        return false;
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (!m_values[i]->equals(*static_cast<MinCalculationNode const&>(other).m_values[i]))
             return false;
@@ -830,6 +836,8 @@ bool MaxCalculationNode::equals(CalculationNode const& other) const
     if (this == &other)
         return true;
     if (type() != other.type())
+        return false;
+    if (m_values.size() != static_cast<MaxCalculationNode const&>(other).m_values.size())
         return false;
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (!m_values[i]->equals(*static_cast<MaxCalculationNode const&>(other).m_values[i]))
