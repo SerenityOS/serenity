@@ -57,6 +57,7 @@ ErrorOr<int> recvfd(int sockfd, int options);
 ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
 ErrorOr<void> mount(Optional<i32> vfs_context_id, int source_fd, StringView target, StringView fs_type, int flags);
 ErrorOr<void> bindmount(Optional<i32> vfs_context_id, int source_fd, StringView target, int flags);
+ErrorOr<void> copy_mount(Optional<i32> original_vfs_context_id, Optional<i32> target_vfs_context_id, StringView original_mountpoint, StringView target_mountpoint, int flags);
 ErrorOr<int> fsopen(StringView fs_type, int flags);
 ErrorOr<void> fsmount(Optional<i32> vfs_context_id, int mount_fd, int source_fd, StringView target_path);
 ErrorOr<void> remount(Optional<i32> vfs_context_id, StringView target, int flags);
