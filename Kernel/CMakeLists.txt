@@ -199,7 +199,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
     FileSystem/SysFS/Subsystems/Kernel/ConstantInformation.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Jails.cpp
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
@@ -282,7 +281,6 @@ set(KERNEL_SOURCES
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
     Security/Random.cpp
-    Security/Jail.cpp
     Security/UBSanitizer.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
@@ -309,7 +307,6 @@ set(KERNEL_SOURCES
     Syscalls/getuid.cpp
     Syscalls/hostname.cpp
     Syscalls/ioctl.cpp
-    Syscalls/jail.cpp
     Syscalls/keymap.cpp
     Syscalls/kill.cpp
     Syscalls/link.cpp
@@ -371,7 +368,7 @@ set(KERNEL_SOURCES
     Tasks/PowerStateSwitchTask.cpp
     Tasks/Process.cpp
     Tasks/ProcessGroup.cpp
-    Tasks/ProcessList.cpp
+    Tasks/ScopedProcessList.cpp
     Tasks/Scheduler.cpp
     Tasks/SyncTask.cpp
     Tasks/Thread.cpp

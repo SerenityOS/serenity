@@ -32,7 +32,6 @@ class Inode;
 class InodeIdentifier;
 class InodeWatcher;
 class MountFile;
-class Jail;
 class KBuffer;
 class KString;
 class LocalSocket;
@@ -49,6 +48,7 @@ class RAMFS;
 template<LockRank Rank>
 class RecursiveSpinlock;
 class Scheduler;
+class ScopedProcessList;
 class Socket;
 class StorageManagement;
 class SysFS;

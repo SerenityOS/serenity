@@ -24,7 +24,7 @@ ErrorOr<size_t> SysFSSystemBooleanVariable::write_bytes(off_t, size_t count, Use
     TRY(buffer.read(&value, 1));
 
     // NOTE: If we are in a jail, don't let the current process to change the variable.
-    if (Process::current().is_currently_in_jail())
+    if (Process::current().is_jailed())
         return Error::from_errno(EPERM);
 
     if (count != 1)

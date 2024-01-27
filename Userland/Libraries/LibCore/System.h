@@ -31,10 +31,6 @@
 #include <time.h>
 #include <utime.h>
 
-#ifdef AK_OS_SERENITY
-#    include <Kernel/API/Jail.h>
-#endif
-
 #if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 #    include <shadow.h>
 #endif
@@ -201,11 +197,6 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 #endif
 
 ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath, Optional<ReadonlySpan<StringView>> environment = {});
-
-#ifdef AK_OS_SERENITY
-ErrorOr<void> join_jail(u64 jail_index);
-ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags);
-#endif
 
 ErrorOr<int> socket(int domain, int type, int protocol);
 ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);
