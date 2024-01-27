@@ -169,9 +169,9 @@ public:
                     return sum;
                 };
 
-                for (u8 u {}; u < 7; ++u) {
+                for (u8 u {}; u < 8; ++u) {
                     double const cu = u == 0 ? inverse_sqrt_2 : 1;
-                    for (u8 v {}; v < 7; ++v) {
+                    for (u8 v {}; v < 8; ++v) {
                         auto const table_index = u * 8 + v;
 
                         double const cv = v == 0 ? inverse_sqrt_2 : 1;
