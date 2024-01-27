@@ -459,6 +459,7 @@ public:
     ErrorOr<FlatPtr> sys$kill_thread(pid_t tid, int signal);
     ErrorOr<FlatPtr> sys$rename(Userspace<Syscall::SC_rename_params const*>);
     ErrorOr<FlatPtr> sys$mknod(Userspace<Syscall::SC_mknod_params const*>);
+    ErrorOr<FlatPtr> sys$copy_mount(Userspace<Syscall::SC_copy_mount_params const*> user_params);
     ErrorOr<FlatPtr> sys$realpath(Userspace<Syscall::SC_realpath_params const*>);
     ErrorOr<FlatPtr> sys$getrandom(Userspace<void*>, size_t, unsigned int);
     ErrorOr<FlatPtr> sys$getkeymap(Userspace<Syscall::SC_getkeymap_params const*>);
