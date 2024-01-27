@@ -270,6 +270,22 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
     HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 
+ErrorOr<void> copy_mount(Optional<i32> original_vfs_context_id, Optional<i32> target_vfs_context_id, StringView original_mountpoint, StringView target_mountpoint, int flags)
+{
+    if (target_mountpoint.is_null() || original_mountpoint.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_copy_mount_params params {
+        original_vfs_context_id.value_or(-1),
+        target_vfs_context_id.value_or(-1),
+        { original_mountpoint.characters_without_null_termination(), original_mountpoint.length() },
+        { target_mountpoint.characters_without_null_termination(), target_mountpoint.length() },
+        flags,
+    };
+    int rc = syscall(SC_copy_mount, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("copy_mount", rc, {});
+}
+
 ErrorOr<void> bindmount(Optional<i32> vfs_context_id, int source_fd, StringView target, int flags)
 {
     if (target.is_null())

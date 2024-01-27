@@ -13,6 +13,35 @@
 
 namespace Kernel {
 
+ErrorOr<FlatPtr> Process::sys$copy_mount(Userspace<Syscall::SC_copy_mount_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    TRY(require_promise(Pledge::mount));
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
+        return EPERM;
+
+    auto params = TRY(copy_typed_from_user(user_params));
+
+    // NOTE: If some userspace program uses MS_REMOUNT, return EINVAL to indicate that we never want this
+    // flag to appear in the mount table...
+    if (params.flags & MS_REMOUNT || params.flags & MS_BIND)
+        return Error::from_errno(EINVAL);
+
+    auto original_path = TRY(try_copy_kstring_from_user(params.original_path));
+    auto target_path = TRY(try_copy_kstring_from_user(params.target_path));
+
+    auto mount_original_context = TRY(context_for_mount_operation(params.original_vfs_root_context_id, original_path->view()));
+    auto mount_target_context = TRY(context_for_mount_operation(params.target_vfs_root_context_id, target_path->view()));
+
+    TRY(VirtualFileSystem::the().copy_mount(
+        mount_original_context.custody,
+        mount_target_context.vfs_root_context,
+        mount_target_context.custody,
+        params.flags));
+    return 0;
+}
+
 ErrorOr<FlatPtr> Process::sys$fsopen(Userspace<Syscall::SC_fsopen_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);

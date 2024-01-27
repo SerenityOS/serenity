@@ -73,6 +73,7 @@ public:
     ErrorOr<void> pivot_root_by_copying_mounted_fs_instance(VFSRootContext&, FileSystem& fs, int root_mount_flags);
 
     ErrorOr<void> bind_mount(VFSRootContext&, Custody& source, Custody& mount_point, int flags);
+    ErrorOr<void> copy_mount(Custody& source, VFSRootContext& destination, Custody& mount_point, int flags);
     ErrorOr<void> remount(VFSRootContext&, Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(VFSRootContext&, Custody& mount_point);
     ErrorOr<void> unmount(VFSRootContext&, Inode& guest_inode, StringView custody_path);

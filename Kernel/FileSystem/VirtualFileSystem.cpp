@@ -202,6 +202,25 @@ ErrorOr<void> VirtualFileSystem::mount(VFSRootContext& context, MountFile& mount
     });
 }
 
+ErrorOr<void> VirtualFileSystem::copy_mount(Custody& original_custody, VFSRootContext& destination_context, Custody& new_mount_point, int flags)
+{
+    // NOTE: Don't allow moving mounts of inode which are not the root inode
+    // of a filesystem. This will prevent copying bindmounts, but the intention
+    // of this functionality was never to allow such thing.
+    if (&original_custody.inode() != &original_custody.inode().fs().root_inode())
+        return EINVAL;
+
+    // NOTE: If the user specified the root custody ("/") on the destination context
+    // then try to `pivot_root` the destination context root mount with the desired
+    // custody.
+    auto destination_context_root_custody = destination_context.root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> { return custody; });
+    if (&new_mount_point == destination_context_root_custody.ptr())
+        return pivot_root_by_copying_mounted_fs_instance(destination_context, original_custody.inode().fs(), flags);
+
+    TRY(destination_context.add_new_mount(VFSRootContext::DoBindMount::No, original_custody.inode(), new_mount_point, flags));
+    return {};
+}
+
 ErrorOr<void> VirtualFileSystem::bind_mount(VFSRootContext& context, Custody& source, Custody& mount_point, int flags)
 {
     return context.add_new_mount(VFSRootContext::DoBindMount::Yes, source.inode(), mount_point, flags);

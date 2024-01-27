@@ -63,6 +63,7 @@ enum class NeedsBigProcessLock {
     S(clock_settime, NeedsBigProcessLock::No)              \
     S(close, NeedsBigProcessLock::No)                      \
     S(connect, NeedsBigProcessLock::No)                    \
+    S(copy_mount, NeedsBigProcessLock::No)                 \
     S(create_inode_watcher, NeedsBigProcessLock::No)       \
     S(create_thread, NeedsBigProcessLock::No)              \
     S(dbgputstr, NeedsBigProcessLock::No)                  \
@@ -449,6 +450,14 @@ struct SC_remount_params {
 struct SC_umount_params {
     int vfs_root_context_id;
     StringArgument target;
+};
+
+struct SC_copy_mount_params {
+    int original_vfs_root_context_id;
+    int target_vfs_root_context_id;
+    StringArgument original_path;
+    StringArgument target_path;
+    int flags;
 };
 
 struct SC_pledge_params {
