@@ -116,8 +116,6 @@ enum class NeedsBigProcessLock {
     S(inode_watcher_remove_watch, NeedsBigProcessLock::No) \
     S(ioctl, NeedsBigProcessLock::No)                      \
     S(join_thread, NeedsBigProcessLock::No)                \
-    S(jail_create, NeedsBigProcessLock::No)                \
-    S(jail_attach, NeedsBigProcessLock::No)                \
     S(kill, NeedsBigProcessLock::No)                       \
     S(kill_thread, NeedsBigProcessLock::No)                \
     S(killpg, NeedsBigProcessLock::No)                     \
@@ -339,16 +337,6 @@ struct SC_setkeymap_params {
     u32 const* altgr_map;
     u32 const* shift_altgr_map;
     StringArgument map_name;
-};
-
-struct SC_jail_create_params {
-    u64 index;
-    StringArgument name;
-    int flags;
-};
-
-struct SC_jail_attach_params {
-    u64 index;
 };
 
 struct SC_getkeymap_params {

@@ -36,11 +36,8 @@ ErrorOr<size_t> SysFSSystemConstantInformation::read_bytes(off_t offset, size_t 
         return EINVAL;
     if (static_cast<size_t>(offset) >= m_constant_data_buffer->size())
         return 0;
-    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
-        if (my_jail && m_readable_by_jailed_processes == ReadableByJailedProcesses::No)
-            return Error::from_errno(EPERM);
-        return {};
-    }));
+    if (Process::current().is_jailed() && m_readable_by_jailed_processes == ReadableByJailedProcesses::No)
+        return Error::from_errno(EPERM);
     ssize_t nread = min(static_cast<off_t>(m_constant_data_buffer->size() - offset), static_cast<off_t>(count));
     TRY(buffer.write(m_constant_data_buffer->data() + offset, nread));
     return nread;

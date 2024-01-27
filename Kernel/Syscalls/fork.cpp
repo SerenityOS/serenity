@@ -12,6 +12,7 @@
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ScopedProcessList.h>
 
 namespace Kernel {
 
@@ -50,46 +51,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         });
     }));
 
-    // Note: We take the spinlock of Process::all_instances list because we need
-    // to ensure that when we take the jail spinlock of two processes that we don't
-    // run into a deadlock situation because both processes compete over each other Jail's
-    // spinlock. Such pattern of taking 3 spinlocks in the same order happens in
-    // Process::for_each* methods.
-    TRY(Process::all_instances().with([&](auto const&) -> ErrorOr<void> {
-        TRY(m_attached_jail.with([&](auto& parent_jail) -> ErrorOr<void> {
-            return child->m_attached_jail.with([&](auto& child_jail) -> ErrorOr<void> {
-                child_jail = parent_jail;
-                if (child_jail) {
-                    child_jail->attach_count().with([&](auto& attach_count) {
-                        attach_count++;
-                    });
-                }
-                return {};
-            });
-        }));
-        return {};
-    }));
-
-    ArmedScopeGuard remove_from_jail_process_list = [&]() {
-        m_jail_process_list.with([&](auto& list_ptr) {
-            if (list_ptr) {
-                list_ptr->attached_processes().with([&](auto& list) {
-                    list.remove(*child);
-                });
-            }
-        });
-    };
-    m_jail_process_list.with([&](auto& list_ptr) {
-        if (list_ptr) {
-            child->m_jail_process_list.with([&](auto& child_list_ptr) {
-                child_list_ptr = list_ptr;
-            });
-            list_ptr->attached_processes().with([&](auto& list) {
-                list.append(child);
-            });
-        }
-    });
-
     TRY(child->m_fds.with_exclusive([&](auto& child_fds) {
         return m_fds.with_exclusive([&](auto& parent_fds) {
             return child_fds.try_clone(parent_fds);
@@ -107,6 +68,9 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             child_protected_data.signal_trampoline = my_protected_data.signal_trampoline;
             child_protected_data.dumpable = my_protected_data.dumpable;
             child_protected_data.process_group = my_protected_data.process_group;
+            // NOTE: Propagate jailed property to child processes.
+            if (my_protected_data.jailed.was_set())
+                child_protected_data.jailed.set();
         });
     });
 
@@ -178,7 +142,15 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     }));
 
     thread_finalizer_guard.disarm();
-    remove_from_jail_process_list.disarm();
+
+    m_scoped_process_list.with([&](auto& list_ptr) {
+        if (list_ptr) {
+            child->m_scoped_process_list.with([&](auto& child_list_ptr) {
+                child_list_ptr = list_ptr;
+            });
+            list_ptr->attach(*child);
+        }
+    });
 
     Process::register_new(*child);
 
