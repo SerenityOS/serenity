@@ -162,19 +162,19 @@ public:
 
                 auto const sum_xy = [&](u8 u, u8 v) {
                     double sum {};
-                    for (u8 x {}; x < 8; ++x) {
-                        for (u8 y {}; y < 8; ++y)
-                            sum += component[x * 8 + y] * cosine_table[u * 8 + x] * cosine_table[v * 8 + y];
+                    for (u8 y {}; y < 8; ++y) {
+                        for (u8 x {}; x < 8; ++x)
+                            sum += component[y * 8 + x] * cosine_table[u * 8 + x] * cosine_table[v * 8 + y];
                     }
                     return sum;
                 };
 
-                for (u8 u {}; u < 8; ++u) {
-                    double const cu = u == 0 ? inverse_sqrt_2 : 1;
-                    for (u8 v {}; v < 8; ++v) {
-                        auto const table_index = u * 8 + v;
+                for (u8 v {}; v < 8; ++v) {
+                    double const cv = v == 0 ? inverse_sqrt_2 : 1;
+                    for (u8 u {}; u < 8; ++u) {
+                        auto const table_index = v * 8 + u;
 
-                        double const cv = v == 0 ? inverse_sqrt_2 : 1;
+                        double const cu = u == 0 ? inverse_sqrt_2 : 1;
 
                         // A.3.3 - FDCT and IDCT
                         double const fdct = cu * cv * sum_xy(u, v) / 4;
