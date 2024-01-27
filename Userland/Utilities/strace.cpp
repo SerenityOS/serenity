@@ -592,12 +592,20 @@ static void format_close(FormattedSyscallBuilder& builder, int fd)
     builder.add_arguments(fd);
 }
 
-static ErrorOr<void> format_pledge(FormattedSyscallBuilder& builder, Syscall::SC_pledge_params* params_p)
+static ErrorOr<void> format_pledge_set_capabilities(FormattedSyscallBuilder& builder, Syscall::SC_pledge_set_capabilities_params* params_p)
 {
     auto params = TRY(copy_from_process(params_p));
     builder.add_arguments(
         StringArgument { params.promises },
         StringArgument { params.execpromises });
+    return {};
+}
+
+static ErrorOr<void> format_pledge_remove_capabilities(FormattedSyscallBuilder& builder, Syscall::SC_pledge_remove_capabilities_params* params_p)
+{
+    auto params = TRY(copy_from_process(params_p));
+    builder.add_arguments(
+        StringArgument { params.removed_capabilities });
     return {};
 }
 
@@ -798,8 +806,11 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_open:
         TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
         break;
-    case SC_pledge:
-        TRY(format_pledge(builder, (Syscall::SC_pledge_params*)arg1));
+    case SC_pledge_set_capabilities:
+        TRY(format_pledge_set_capabilities(builder, (Syscall::SC_pledge_set_capabilities_params*)arg1));
+        break;
+    case SC_pledge_remove_capabilities:
+        TRY(format_pledge_remove_capabilities(builder, (Syscall::SC_pledge_remove_capabilities_params*)arg1));
         break;
     case SC_poll:
         TRY(format_poll(builder, (Syscall::SC_poll_params*)arg1));
