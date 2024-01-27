@@ -175,6 +175,8 @@ ErrorOr<NonnullOwnPtr<RoleType>> RoleType::build_role_object(Role role, bool foc
         return adopt_nonnull_own_or_enomem(new (nothrow) Complementary(data));
     case Role::composite:
         return adopt_nonnull_own_or_enomem(new (nothrow) ContentInfo(data));
+    case Role::contentinfo:
+        return adopt_nonnull_own_or_enomem(new (nothrow) ContentInfo(data));
     case Role::definition:
         return adopt_nonnull_own_or_enomem(new (nothrow) Definition(data));
     case Role::deletion:
@@ -241,6 +243,8 @@ ErrorOr<NonnullOwnPtr<RoleType>> RoleType::build_role_object(Role role, bool foc
         return adopt_nonnull_own_or_enomem(new (nothrow) MenuItemRadio(data));
     case Role::navigation:
         return adopt_nonnull_own_or_enomem(new (nothrow) Navigation(data));
+    case Role::none:
+        return adopt_nonnull_own_or_enomem(new (nothrow) Presentation(data));
     case Role::note:
         return adopt_nonnull_own_or_enomem(new (nothrow) Note(data));
     case Role::option:
@@ -282,6 +286,10 @@ ErrorOr<NonnullOwnPtr<RoleType>> RoleType::build_role_object(Role role, bool foc
         return adopt_nonnull_own_or_enomem(new (nothrow) Status(data));
     case Role::strong:
         return adopt_nonnull_own_or_enomem(new (nothrow) Strong(data));
+    case Role::subscript:
+        return adopt_nonnull_own_or_enomem(new (nothrow) Subscript(data));
+    case Role::superscript:
+        return adopt_nonnull_own_or_enomem(new (nothrow) Superscript(data));
     case Role::switch_:
         return adopt_nonnull_own_or_enomem(new (nothrow) Switch(data));
     case Role::tab:
