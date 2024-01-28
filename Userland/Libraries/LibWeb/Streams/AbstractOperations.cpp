@@ -1487,9 +1487,9 @@ void readable_byte_stream_controller_respond_in_closed_state(ReadableByteStreamC
     auto& stream = *controller.stream();
 
     // 4. If ! ReadableStreamHasBYOBReader(stream) is true,
-    if (readable_stream_has_default_reader(stream)) {
+    if (readable_stream_has_byob_reader(stream)) {
         // 1. While ! ReadableStreamGetNumReadIntoRequests(stream) > 0,
-        while (readable_stream_get_num_read_requests(stream) > 0) {
+        while (readable_stream_get_num_read_into_requests(stream) > 0) {
             // 1. Let pullIntoDescriptor be ! ReadableByteStreamControllerShiftPendingPullInto(controller).
             auto pull_into_descriptor = readable_byte_stream_controller_shift_pending_pull_into(controller);
 
