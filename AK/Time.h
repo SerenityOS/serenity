@@ -238,6 +238,12 @@ public:
     // Rounds towards -inf (it was the easiest to implement).
     [[nodiscard]] timeval to_timeval() const;
 
+    [[nodiscard]] constexpr i64 nanoseconds_within_second() const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        return m_nanoseconds;
+    }
+
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
@@ -492,7 +498,7 @@ public:
     [[nodiscard]] i64 nanoseconds() const { return m_offset.to_nanoseconds(); }
     // Never returns a point in the future, since fractional seconds are cut off.
     [[nodiscard]] i64 truncated_seconds() const { return m_offset.to_truncated_seconds(); }
-    [[nodiscard]] i64 nanoseconds_within_second() const { return to_timespec().tv_nsec; }
+    [[nodiscard]] i64 nanoseconds_within_second() const { return m_offset.nanoseconds_within_second(); }
 
     constexpr bool operator==(MonotonicTime const& other) const { return this->m_offset == other.m_offset; }
     constexpr int operator<=>(MonotonicTime const& other) const { return this->m_offset <=> other.m_offset; }
