@@ -416,6 +416,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         mutable_flex_computed_values.set_justify_content(CSS::JustifyContent::Center);
         mutable_flex_computed_values.set_flex_direction(CSS::FlexDirection::Column);
         mutable_flex_computed_values.set_height(CSS::Size::make_percentage(CSS::Percentage(100)));
+        mutable_flex_computed_values.set_min_height(parent.computed_values().min_height());
         auto flex_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(flex_computed_values));
 
         auto content_box_computed_values = parent.computed_values().clone_inherited_values();
