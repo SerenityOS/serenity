@@ -161,6 +161,8 @@ public:
     static CSS::TableLayout table_layout() { return CSS::TableLayout::Auto; }
     static QuotesData quotes() { return QuotesData { .type = QuotesData::Type::Auto }; }
     static CSS::TransformBox transform_box() { return CSS::TransformBox::ViewBox; }
+    static LengthPercentage x() { return CSS::Length::make_px(0); }
+    static LengthPercentage y() { return CSS::Length::make_px(0); }
 
     static CSS::MaskType mask_type() { return CSS::MaskType::Luminance; }
     static CSS::MathShift math_shift() { return CSS::MathShift::Normal; }
@@ -392,6 +394,8 @@ public:
     CSS::TextAnchor text_anchor() const { return m_inherited.text_anchor; }
     Optional<MaskReference> const& mask() const { return m_noninherited.mask; }
     CSS::MaskType mask_type() const { return m_noninherited.mask_type; }
+    LengthPercentage const& x() const { return m_noninherited.x; }
+    LengthPercentage const& y() const { return m_noninherited.y; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformBox const& transform_box() const { return m_noninherited.transform_box; }
@@ -545,6 +549,8 @@ protected:
 
         Optional<MaskReference> mask;
         CSS::MaskType mask_type { InitialValues::mask_type() };
+        LengthPercentage x { InitialValues::x() };
+        LengthPercentage y { InitialValues::x() };
     } m_noninherited;
 };
 
@@ -667,6 +673,8 @@ public:
     void set_outline_width(CSS::Length value) { m_noninherited.outline_width = value; }
     void set_mask(MaskReference value) { m_noninherited.mask = value; }
     void set_mask_type(CSS::MaskType value) { m_noninherited.mask_type = value; }
+    void set_x(LengthPercentage x) { m_noninherited.x = x; }
+    void set_y(LengthPercentage y) { m_noninherited.y = y; }
 
     void set_math_shift(CSS::MathShift value) { m_inherited.math_shift = value; }
     void set_math_style(CSS::MathStyle value) { m_inherited.math_style = value; }

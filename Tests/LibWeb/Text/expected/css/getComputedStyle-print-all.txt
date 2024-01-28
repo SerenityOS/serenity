@@ -166,4 +166,6 @@ white-space: normal
 width: auto
 word-spacing: normal
 word-wrap: normal
+x: 0px
+y: 0px
 z-index: auto
