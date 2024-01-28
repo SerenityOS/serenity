@@ -175,6 +175,7 @@ WebIDL::ExceptionOr<void> transform_stream_set_backpressure(TransformStream&, bo
 
 bool is_non_negative_number(JS::Value);
 bool can_transfer_array_buffer(JS::ArrayBuffer const& array_buffer);
+WebIDL::ExceptionOr<JS::Value> structured_clone(JS::Realm&, JS::Value value);
 
 JS::Value create_close_sentinel();
 bool is_close_sentinel(JS::Value);
