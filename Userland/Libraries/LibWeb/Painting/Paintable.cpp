@@ -158,7 +158,7 @@ CSSPixelPoint Paintable::box_type_agnostic_position() const
         auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*this);
         if (!inline_paintable.fragments().is_empty())
             return inline_paintable.fragments().first().absolute_rect().location();
-        VERIFY_NOT_REACHED();
+        return inline_paintable.bounding_rect().location();
     }
 
     CSSPixelPoint position;
