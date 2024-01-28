@@ -4243,6 +4243,27 @@ bool can_transfer_array_buffer(JS::ArrayBuffer const& array_buffer)
     return true;
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-cloneasuint8array
+WebIDL::ExceptionOr<JS::Value> clone_as_uint8_array(JS::Realm& realm, WebIDL::ArrayBufferView& view)
+{
+    auto& vm = realm.vm();
+
+    // 1. Assert: Type(O) is Object.
+    // 2. Assert: O has an [[ViewedArrayBuffer]] internal slot.
+
+    // 3. Assert: ! IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false.
+    VERIFY(!view.viewed_array_buffer()->is_detached());
+
+    // 4. Let buffer be ? CloneArrayBuffer(O.[[ViewedArrayBuffer]], O.[[ByteOffset]], O.[[ByteLength]], %ArrayBuffer%).
+    auto* buffer = TRY(JS::clone_array_buffer(vm, *view.viewed_array_buffer(), view.byte_offset(), view.byte_length()));
+
+    // 5. Let array be ! Construct(%Uint8Array%, « buffer »).
+    auto array = MUST(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), buffer));
+
+    // 5. Return array.
+    return array;
+}
+
 // https://streams.spec.whatwg.org/#abstract-opdef-structuredclone
 WebIDL::ExceptionOr<JS::Value> structured_clone(JS::Realm& realm, JS::Value value)
 {
