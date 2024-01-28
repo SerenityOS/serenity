@@ -47,9 +47,19 @@ JS::GCPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::Sty
 void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     Base::apply_presentational_hints(style);
+    auto parsing_context = CSS::Parser::ParsingContext { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
+
+    auto x_attribute = attribute(SVG::AttributeNames::x);
+    if (auto x_value = parse_css_value(parsing_context, x_attribute.value_or(String {}), CSS::PropertyID::X)) {
+        style.set_property(CSS::PropertyID::X, x_value.release_nonnull());
+    }
+
+    auto y_attribute = attribute(SVG::AttributeNames::y);
+    if (auto y_value = parse_css_value(parsing_context, y_attribute.value_or(String {}), CSS::PropertyID::Y)) {
+        style.set_property(CSS::PropertyID::Y, y_value.release_nonnull());
+    }
 
     auto width_attribute = attribute(SVG::AttributeNames::width);
-    auto parsing_context = CSS::Parser::ParsingContext { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
     if (auto width_value = parse_css_value(parsing_context, width_attribute.value_or(String {}), CSS::PropertyID::Width)) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
     } else if (width_attribute == "") {

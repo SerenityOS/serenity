@@ -285,9 +285,11 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 return size.to_px(node, reference_value);
             };
 
-            // FIXME: Support the x/y attributes to calculate the offset.
+            auto nested_viewport_x = descendant.computed_values().x().to_px(descendant, viewport_width);
+            auto nested_viewport_y = descendant.computed_values().y().to_px(descendant, viewport_height);
             auto nested_viewport_width = resolve_dimension(descendant, descendant.computed_values().width(), viewport_width);
             auto nested_viewport_height = resolve_dimension(descendant, descendant.computed_values().height(), viewport_height);
+            nested_viewport_state.set_content_offset({ nested_viewport_x, nested_viewport_y });
             nested_viewport_state.set_content_width(nested_viewport_width);
             nested_viewport_state.set_content_height(nested_viewport_height);
             nested_context.run(static_cast<Box const&>(descendant), layout_mode, available_space);
