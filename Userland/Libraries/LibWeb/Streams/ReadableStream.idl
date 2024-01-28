@@ -23,7 +23,7 @@ interface ReadableStream {
     ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
     // FIXME: ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
     // FIXME: Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
-    // FIXME: sequence<ReadableStream> tee();
+    sequence<ReadableStream> tee();
 
     // FIXME: async iterable<any>(optional ReadableStreamIteratorOptions options = {});
 };
