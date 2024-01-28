@@ -1581,6 +1581,61 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond(ReadableByteSt
     return readable_byte_stream_controller_respond_internal(controller, bytes_written);
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-with-new-view
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond_with_new_view(JS::Realm& realm, ReadableByteStreamController& controller, WebIDL::ArrayBufferView& view)
+{
+    // 1. Assert: controller.[[pendingPullIntos]] is not empty.
+    VERIFY(!controller.pending_pull_intos().is_empty());
+
+    // 2. Assert: ! IsDetachedBuffer(view.[[ViewedArrayBuffer]]) is false.
+    VERIFY(!view.viewed_array_buffer()->is_detached());
+
+    // 3. Let firstDescriptor be controller.[[pendingPullIntos]][0].
+    auto& first_descriptor = controller.pending_pull_intos().first();
+
+    // 4. Let state be controller.[[stream]].[[state]].
+    auto state = controller.stream()->state();
+
+    // 5. If state is "closed",
+    if (state == ReadableStream::State::Closed) {
+        // 1. If view.[[ByteLength]] is not 0, throw a TypeError exception.
+        if (view.byte_length() != 0)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Byte length is not zero for closed stream"sv };
+    }
+    // 6. Otherwise,
+    else {
+        // 1. Assert: state is "readable".
+        VERIFY(state == ReadableStream::State::Readable);
+
+        // 2. If view.[[ByteLength]] is 0, throw a TypeError exception.
+        if (view.byte_length() == 0)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Byte length is zero for stream which is not closed"sv };
+    }
+
+    // 7. If firstDescriptor’s byte offset + firstDescriptor’ bytes filled is not view.[[ByteOffset]], throw a RangeError exception.
+    if (first_descriptor.byte_offset + first_descriptor.bytes_filled != view.byte_offset())
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Byte offset is not aligned with the pull request's byte offset"sv };
+
+    // 8. If firstDescriptor’s buffer byte length is not view.[[ViewedArrayBuffer]].[[ByteLength]], throw a RangeError exception.
+    if (first_descriptor.buffer_byte_length != view.viewed_array_buffer()->byte_length())
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Buffer byte length is not aligned with the pull request's byte length"sv };
+
+    // 9. If firstDescriptor’s bytes filled + view.[[ByteLength]] > firstDescriptor’s byte length, throw a RangeError exception.
+    if (first_descriptor.bytes_filled + view.byte_length() > first_descriptor.byte_length)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Byte length is greater than the pull request's byte length"sv };
+
+    // 10. Let viewByteLength be view.[[ByteLength]].
+    auto view_byte_length = view.byte_length();
+
+    // 11. Set firstDescriptor’s buffer to ? TransferArrayBuffer(view.[[ViewedArrayBuffer]]).
+    first_descriptor.buffer = TRY(transfer_array_buffer(realm, *view.viewed_array_buffer()));
+
+    // 12. Perform ? ReadableByteStreamControllerRespondInternal(controller, viewByteLength).
+    TRY(readable_byte_stream_controller_respond_internal(controller, view_byte_length));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
 void readable_stream_default_controller_error(ReadableStreamDefaultController& controller, JS::Value error)
 {
