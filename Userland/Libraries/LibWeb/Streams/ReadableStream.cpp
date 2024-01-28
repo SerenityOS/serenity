@@ -108,6 +108,13 @@ WebIDL::ExceptionOr<ReadableStreamReader> ReadableStream::get_reader(ReadableStr
     return ReadableStreamReader { TRY(acquire_readable_stream_byob_reader(*this)) };
 }
 
+// https://streams.spec.whatwg.org/#readablestream-tee
+WebIDL::ExceptionOr<ReadableStreamPair> ReadableStream::tee()
+{
+    // To tee a ReadableStream stream, return ? ReadableStreamTee(stream, true).
+    return TRY(readable_stream_tee(realm(), *this, true));
+}
+
 void ReadableStream::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);

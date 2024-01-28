@@ -26,6 +26,23 @@ struct ReadableStreamGetReaderOptions {
     Optional<Bindings::ReadableStreamReaderMode> mode;
 };
 
+struct ReadableStreamPair {
+    // Define a couple container-like methods so this type may be used as the return type of the IDL `tee` implementation.
+    size_t size() const { return 2; }
+
+    JS::NonnullGCPtr<ReadableStream>& at(size_t index)
+    {
+        if (index == 0)
+            return first;
+        if (index == 1)
+            return second;
+        VERIFY_NOT_REACHED();
+    }
+
+    JS::NonnullGCPtr<ReadableStream> first;
+    JS::NonnullGCPtr<ReadableStream> second;
+};
+
 // https://streams.spec.whatwg.org/#readablestream
 class ReadableStream final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ReadableStream, Bindings::PlatformObject);
@@ -45,6 +62,7 @@ public:
     bool locked() const;
     WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value reason);
     WebIDL::ExceptionOr<ReadableStreamReader> get_reader(ReadableStreamGetReaderOptions const& = {});
+    WebIDL::ExceptionOr<ReadableStreamPair> tee();
 
     Optional<ReadableStreamController>& controller() { return m_controller; }
     void set_controller(Optional<ReadableStreamController> value) { m_controller = move(value); }

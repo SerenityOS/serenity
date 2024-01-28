@@ -238,6 +238,21 @@ bool readable_stream_has_default_reader(ReadableStream const& stream)
     return false;
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-tee
+WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_tee(JS::Realm& realm, ReadableStream& stream, bool)
+{
+    // 1. Assert: stream implements ReadableStream.
+    // 2. Assert: cloneForBranch2 is a boolean.
+
+    // 3. If stream.[[controller]] implements ReadableByteStreamController, return ? ReadableByteStreamTee(stream).
+    if (stream.controller()->has<JS::NonnullGCPtr<Streams::ReadableByteStreamController>>()) {
+        return realm.vm().throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Byte stream teeing");
+    }
+
+    // 4. Return ? ReadableStreamDefaultTee(stream, cloneForBranch2).
+    return realm.vm().throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Default stream teeing");
+}
+
 // https://streams.spec.whatwg.org/#make-size-algorithm-from-size-function
 JS::NonnullGCPtr<SizeAlgorithm> extract_size_algorithm(JS::VM& vm, QueuingStrategy const& strategy)
 {
