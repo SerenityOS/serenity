@@ -426,6 +426,7 @@ if (BUILD_LAGOM)
         Compress
         Crypto
         Cpp
+        DateTime
         DNS
         Diff
         Gemini
@@ -629,6 +630,7 @@ if (BUILD_LAGOM)
             JSSpecCompiler
             LibCrypto
             LibCompress
+            LibDateTime
             LibGL
             LibGfx
             LibIMAP
