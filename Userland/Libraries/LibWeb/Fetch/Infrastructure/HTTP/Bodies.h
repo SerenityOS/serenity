@@ -39,7 +39,7 @@ public:
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 
-    [[nodiscard]] JS::NonnullGCPtr<Body> clone(JS::Realm&) const;
+    [[nodiscard]] JS::NonnullGCPtr<Body> clone(JS::Realm&);
 
     WebIDL::ExceptionOr<void> fully_read(JS::Realm&, ProcessBodyCallback process_body, ProcessBodyErrorCallback process_body_error, TaskDestination task_destination) const;
 

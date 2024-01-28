@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/BodyInit.h>
@@ -47,32 +46,16 @@ void Body::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://fetch.spec.whatwg.org/#concept-body-clone
-JS::NonnullGCPtr<Body> Body::clone(JS::Realm& realm) const
+JS::NonnullGCPtr<Body> Body::clone(JS::Realm& realm)
 {
     HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes };
 
     // To clone a body body, run these steps:
-    // FIXME: 1. Let « out1, out2 » be the result of teeing body’s stream.
-    // FIXME: 2. Set body’s stream to out1.
-    JS::GCPtr<Streams::ReadableStream> out2;
+    // 1. Let « out1, out2 » be the result of teeing body’s stream.
+    auto [out1, out2] = m_stream->tee().release_value_but_fixme_should_propagate_errors();
 
-    auto start_algorithm = JS::create_heap_function(realm.heap(), []() -> WebIDL::ExceptionOr<JS::Value> {
-        return JS::js_undefined();
-    });
-
-    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
-    });
-
-    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
-    });
-
-    if (m_stream->controller()->has<JS::NonnullGCPtr<Streams::ReadableStreamDefaultController>>()) {
-        out2 = Streams::create_readable_stream(realm, start_algorithm, pull_algorithm, cancel_algorithm).release_value_but_fixme_should_propagate_errors();
-    } else {
-        out2 = Streams::create_readable_byte_stream(realm, start_algorithm, pull_algorithm, cancel_algorithm).release_value_but_fixme_should_propagate_errors();
-    }
+    // 2. Set body’s stream to out1.
+    m_stream = out1;
 
     // 3. Return a body whose stream is out2 and other members are copied from body.
     return Body::create(realm.vm(), *out2, m_source, m_length);
