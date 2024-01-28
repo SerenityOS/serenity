@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/AbortSignal.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/QueuingStrategy.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
@@ -3921,6 +3922,18 @@ bool can_transfer_array_buffer(JS::ArrayBuffer const& array_buffer)
 
     // 5. Return true.
     return true;
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-structuredclone
+WebIDL::ExceptionOr<JS::Value> structured_clone(JS::Realm& realm, JS::Value value)
+{
+    auto& vm = realm.vm();
+
+    // 1. Let serialized be ? StructuredSerialize(v).
+    auto serialized = TRY(HTML::structured_serialize(vm, value));
+
+    // 2. Return ? StructuredDeserialize(serialized, the current Realm).
+    return TRY(HTML::structured_deserialize(vm, serialized, realm, {}));
 }
 
 // https://streams.spec.whatwg.org/#close-sentinel
