@@ -64,13 +64,19 @@ ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm
         return base_value.as_object();
 
     // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
+    auto& realm = *vm.current_realm();
     if (base_value.is_string())
-        return vm.current_realm()->intrinsics().string_prototype();
+        return realm.intrinsics().string_prototype();
     if (base_value.is_number())
-        return vm.current_realm()->intrinsics().number_prototype();
+        return realm.intrinsics().number_prototype();
     if (base_value.is_boolean())
-        return vm.current_realm()->intrinsics().boolean_prototype();
+        return realm.intrinsics().boolean_prototype();
+    if (base_value.is_bigint())
+        return realm.intrinsics().bigint_prototype();
+    if (base_value.is_symbol())
+        return realm.intrinsics().symbol_prototype();
 
+    // NOTE: At this point this is guaranteed to throw (null or undefined).
     return base_value.to_object(vm);
 }
 
