@@ -23,6 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/usr/share/Welcome", "r"));
     TRY(Core::System::unveil("/bin/Help", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-welcome"sv));
