@@ -569,6 +569,9 @@ public:
     JS::GCPtr<HTML::SessionHistoryEntry> latest_entry() const { return m_latest_entry; }
     void set_latest_entry(JS::GCPtr<HTML::SessionHistoryEntry> e) { m_latest_entry = e; }
 
+    bool mute_iframe_load() const { return m_mute_iframe_load; }
+    void set_iframe_load_in_progress(bool b) { m_iframe_load_in_progress = b; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -674,6 +677,12 @@ private:
 
     // https://html.spec.whatwg.org/#page-showing
     bool m_page_showing { false };
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#iframe-load-in-progress
+    bool m_iframe_load_in_progress { false };
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#mute-iframe-load
+    bool m_mute_iframe_load { false };
 
     // Used by run_the_resize_steps().
     Gfx::IntSize m_last_viewport_size;

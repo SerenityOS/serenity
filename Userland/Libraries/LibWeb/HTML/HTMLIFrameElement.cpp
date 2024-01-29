@@ -189,14 +189,18 @@ void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
     // 2. Let childDocument be element's content navigable's active document.
     [[maybe_unused]] auto child_document = element.content_navigable()->active_document();
 
-    // FIXME: 3. If childDocument has its mute iframe load flag set, then return.
+    // 3. If childDocument has its mute iframe load flag set, then return.
+    if (child_document->mute_iframe_load())
+        return;
 
-    // FIXME: 4. Set childDocument's iframe load in progress flag.
+    // 4. Set childDocument's iframe load in progress flag.
+    child_document->set_iframe_load_in_progress(true);
 
     // 5. Fire an event named load at element.
     element.dispatch_event(DOM::Event::create(element.realm(), HTML::EventNames::load));
 
-    // FIXME: 6. Unset childDocument's iframe load in progress flag.
+    // 6. Unset childDocument's iframe load in progress flag.
+    child_document->set_iframe_load_in_progress(false);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
