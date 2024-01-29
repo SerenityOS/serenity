@@ -44,6 +44,16 @@
                     activates_on_selection: true
                 }
             }
+
+            @GUI::Widget {
+                name: "annotations_container"
+                visible: false
+                layout: @GUI::VerticalBoxLayout {}
+
+                @GUI::TableView {
+                    name: "annotations"
+                }
+            }
         }
     }
 

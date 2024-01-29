@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,6 +39,9 @@ private:
     HexEditorWidget() = default;
     void set_path(StringView);
     void update_title();
+    void update_side_panel_visibility();
+    void set_annotations_visible(bool visible);
+    void initialize_annotations_model();
     void set_search_results_visible(bool visible);
     void set_value_inspector_visible(bool visible);
     void update_inspector_values(size_t position);
@@ -67,6 +71,7 @@ private:
     RefPtr<GUI::Action> m_find_action;
     RefPtr<GUI::Action> m_goto_offset_action;
     RefPtr<GUI::Action> m_layout_toolbar_action;
+    RefPtr<GUI::Action> m_layout_annotations_action;
     RefPtr<GUI::Action> m_layout_search_results_action;
     RefPtr<GUI::Action> m_layout_value_inspector_action;
 
@@ -86,6 +91,8 @@ private:
     RefPtr<GUI::Widget> m_side_panel_container;
     RefPtr<GUI::Widget> m_value_inspector_container;
     RefPtr<GUI::TableView> m_value_inspector;
+    RefPtr<GUI::Widget> m_annotations_container;
+    RefPtr<GUI::TableView> m_annotations;
 
     bool m_value_inspector_little_endian { true };
     bool m_selecting_from_inspector { false };
