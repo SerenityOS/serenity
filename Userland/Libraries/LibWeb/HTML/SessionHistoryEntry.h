@@ -88,3 +88,13 @@ struct SessionHistoryEntry final : public JS::Cell {
 };
 
 }
+
+namespace AK {
+template<>
+struct Formatter<Web::HTML::SessionHistoryEntry::Pending> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::HTML::SessionHistoryEntry::Pending)
+    {
+        return builder.put_literal("Pending"sv);
+    }
+};
+}
