@@ -22,7 +22,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build gcc-12 g++-12 libstdc++-12-dev
       - name: "Install emscripten"
-        uses: mymindstorm/setup-emsdk@v13
+        uses: mymindstorm/setup-emsdk@v14
         with:
           version: 3.1.25
       - name: "Check versions"
