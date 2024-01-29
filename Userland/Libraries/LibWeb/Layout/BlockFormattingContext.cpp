@@ -455,6 +455,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
     auto const& computed_values = box.computed_values();
+    auto& box_used_values = m_state.get_mutable(box);
 
     // Then work out what the height is, based on box type and CSS properties.
     CSSPixels height = 0;
@@ -499,9 +500,12 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         // 3. Return the bigger value of size and the normal border box size the element would have
         //    according to the CSS specification.
         height = max(size, height);
+
+        // NOTE: The height of the root element when affected by this quirk is considered to be definite.
+        box_used_values.set_has_definite_height(true);
     }
 
-    m_state.get_mutable(box).set_content_height(height);
+    box_used_values.set_content_height(height);
 }
 
 void BlockFormattingContext::layout_inline_children(BlockContainer const& block_container, LayoutMode layout_mode, AvailableSpace const& available_space)
