@@ -13,6 +13,7 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/NumericInput.h>
+#include <LibGUI/TextEditor.h>
 
 class EditAnnotationDialog : public GUI::Dialog {
     C_OBJECT_ABSTRACT(EditAnnotationDialog)
@@ -32,6 +33,7 @@ private:
     RefPtr<GUI::NumericInput> m_start_offset;
     RefPtr<GUI::NumericInput> m_end_offset;
     RefPtr<GUI::ColorInput> m_background_color;
+    RefPtr<GUI::TextEditor> m_comments;
     RefPtr<GUI::Button> m_save_button;
     RefPtr<GUI::Button> m_cancel_button;
 };

@@ -55,6 +55,22 @@
     }
 
     @GUI::Widget {
+        layout: @GUI::VerticalBoxLayout {
+            margins: [4]
+        }
+        preferred_height: "fit"
+
+        @GUI::Label {
+            text: "Comments:"
+            text_alignment: "CenterLeft"
+        }
+
+        @GUI::TextEditor {
+            name: "comments"
+        }
+    }
+
+    @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
             margins: [4]
         }

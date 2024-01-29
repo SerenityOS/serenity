@@ -363,7 +363,11 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
 
         update();
         update_status();
+        set_tooltip(""_string);
+    } else {
+        set_tooltip(m_hovered_annotation.has_value() ? m_hovered_annotation->comments : ""_string);
     }
+    show_or_hide_tooltip();
 }
 
 void HexEditor::mouseup_event(GUI::MouseEvent& event)

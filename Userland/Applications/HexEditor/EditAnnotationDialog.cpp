@@ -50,11 +50,16 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
     m_start_offset = find_descendant_of_type_named<GUI::NumericInput>("start_offset");
     m_end_offset = find_descendant_of_type_named<GUI::NumericInput>("end_offset");
     m_background_color = find_descendant_of_type_named<GUI::ColorInput>("background_color");
+    m_comments = find_descendant_of_type_named<GUI::TextEditor>("comments");
     m_save_button = find_descendant_of_type_named<GUI::DialogButton>("save_button");
     m_cancel_button = find_descendant_of_type_named<GUI::DialogButton>("cancel_button");
 
     // FIXME: This could be specified in GML, but the GML doesn't like property setters that aren't `set_FOO()`.
     m_background_color->set_color_has_alpha_channel(false);
+    // FIXME: Move this to GML too.
+    m_comments->set_wrapping_mode(GUI::TextEditor::WrapAtWords);
+    // FIXME: `font_type: "Normal"` in GML once the compiler supports that.
+    m_comments->set_font(widget->font());
 
     // NOTE: The NumericInput stores an i64, so not all size_t values can fit. But I don't think we'll be
     //       hex-editing files larger than 9000 petabytes for the foreseeable future!
@@ -74,6 +79,7 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
             m_start_offset->set_value(m_annotation->start_offset);
             m_end_offset->set_value(m_annotation->end_offset);
             m_background_color->set_color(m_annotation->background_color);
+            m_comments->set_text(m_annotation->comments);
         },
         [this](Selection& selection) {
             set_title("Add Annotation"sv);
@@ -84,6 +90,7 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
             m_end_offset->set_value(selection.is_empty() ? selection.end : selection.end - 1);
             // Default to the most recently used annotation color.
             m_background_color->set_color(s_most_recent_color);
+            m_comments->clear();
         });
 
     m_save_button->on_click = [this](auto) {
@@ -93,6 +100,7 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
             .start_offset = min(start_offset, end_offset),
             .end_offset = max(start_offset, end_offset),
             .background_color = m_background_color->color(),
+            .comments = MUST(String::from_byte_string(m_comments->text())),
         };
         if (m_annotation.has_value()) {
             *m_annotation = move(result);
