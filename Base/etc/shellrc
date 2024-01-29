@@ -19,7 +19,6 @@ alias sdb=Debugger
 alias sm=SystemMonitor
 alias pv=Profiler
 alias ws=WebServer
-alias ue=UserspaceEmulator
 alias fe=FontEditor
 alias ss=Spreadsheet
 alias vp=VideoPlayer

@@ -295,7 +295,7 @@ Reader::LibraryData const* Reader::library_containing(FlatPtr address) const
 ByteString Reader::resolve_object_path(StringView name) const
 {
     // TODO: There are other places where similar method is implemented or would be useful.
-    //       (e.g. UserspaceEmulator, LibSymbolication, Profiler, and DynamicLinker itself)
+    //       (e.g. LibSymbolication, Profiler, and DynamicLinker itself)
     //       We should consider creating unified implementation in the future.
 
     if (name.starts_with('/') || !FileSystem::looks_like_shared_library(name)) {
