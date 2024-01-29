@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
+#include <LibDateTime/ISOCalendar.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
@@ -26,7 +27,7 @@ static auto const large_font = Gfx::BitmapFont::load_from_uri("resource://fonts/
 static auto const medium_font = Gfx::BitmapFont::load_from_uri("resource://fonts/PebbletonRegular14.font"sv);
 static auto const small_font = Gfx::BitmapFont::load_from_uri("resource://fonts/KaticaRegular10.font"sv);
 
-Calendar::Calendar(Core::DateTime date_time, Mode mode)
+Calendar::Calendar(DateTime::LocalDateTime date_time, Mode mode)
     : m_selected_date(date_time)
     , m_mode(mode)
 {
@@ -63,7 +64,8 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
         m_show_month_year = true;
     }
 
-    update_tiles(m_selected_date.year(), m_selected_date.month());
+    auto parts = m_selected_date.to_parts<DateTime::ISOCalendar>();
+    update_tiles(parts.year, parts.month);
 }
 
 void Calendar::set_grid(bool show)
@@ -318,14 +320,20 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
 {
     set_view_date(view_year, view_month);
 
-    auto now = Core::DateTime::now();
+    auto selected_date_parts = m_selected_date.to_parts<DateTime::ISOCalendar>();
+
+    auto now = DateTime::LocalDateTime::now().to_parts<DateTime::ISOCalendar>();
     unsigned months = mode() == Month ? 1 : 12;
     for (unsigned i = 0; i < months; i++) {
         if (mode() == Year)
             view_month = i + 1;
 
-        auto first_day_of_current_month = Core::DateTime::create(view_year, view_month, 1);
-        unsigned start_of_month = (first_day_of_current_month.weekday() - to_underlying(m_first_day_of_week) + 7) % 7;
+        auto maybe_first_day_of_current_month = DateTime::LocalDateTime::from_parts<DateTime::ISOCalendar>({ .year = static_cast<i32>(view_year), .month = static_cast<u8>(view_month), .day_of_month = 1 });
+        // Month appears to be broken; unlikely but let's not crash.
+        if (maybe_first_day_of_current_month.is_error())
+            continue;
+        auto const first_day_of_current_month = maybe_first_day_of_current_month.release_value().to_parts<DateTime::ISOCalendar>();
+        unsigned start_of_month = (first_day_of_current_month.weekday - 1 - to_underlying(m_first_day_of_week) + 7) % 7;
         unsigned days_from_previous_month_to_show = start_of_month == 0 ? 7 : start_of_month;
 
         for (unsigned j = 0; j < 42; j++) {
@@ -338,11 +346,11 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
                 month = (view_month - 1 == 0) ? 12 : view_month - 1;
                 year = (month == 12) ? view_year - 1 : view_year;
                 day = days_in_month(year, month) + j + 1 - days_from_previous_month_to_show;
-            } else if (j + 1 > days_from_previous_month_to_show + first_day_of_current_month.days_in_month()) {
+            } else if (j + 1 > days_from_previous_month_to_show + first_day_of_current_month.total_days_in_month()) {
                 // Day from next month.
                 month = (view_month + 1) > 12 ? 1 : view_month + 1;
                 year = (month == 1) ? view_year + 1 : view_year;
-                day = j + 1 - days_from_previous_month_to_show - first_day_of_current_month.days_in_month();
+                day = j + 1 - days_from_previous_month_to_show - first_day_of_current_month.total_days_in_month();
             } else {
                 // Day from current month.
                 month = view_month;
@@ -355,13 +363,13 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
             m_tiles[i][j].day = day;
             m_tiles[i][j].is_outside_selected_month = (month != view_month
                 || year != view_year);
-            m_tiles[i][j].is_selected = (year == m_selected_date.year()
-                && month == m_selected_date.month()
-                && day == m_selected_date.day()
+            m_tiles[i][j].is_selected = (static_cast<i32>(year) == selected_date_parts.year
+                && month == selected_date_parts.month
+                && day == selected_date_parts.day_of_month
                 && (mode() == Year ? !m_tiles[i][j].is_outside_selected_month : true));
-            m_tiles[i][j].is_today = (day == now.day()
-                && month == now.month()
-                && year == now.year());
+            m_tiles[i][j].is_today = (day == now.day_of_month
+                && month == now.month
+                && static_cast<i32>(year) == now.year);
         }
     }
     update();
@@ -761,9 +769,14 @@ void Calendar::mouseup_event(GUI::MouseEvent& event)
                 if (mode() == Year && m_tiles[i][j].is_outside_selected_month)
                     continue;
                 if (m_tiles[i][j].rect.contains(event.position())) {
+                    DateTime::ISOCalendar::InputParts new_selection_parts { .year = static_cast<i32>(m_tiles[i][j].year), .month = static_cast<u8>(m_tiles[i][j].month), .day_of_month = static_cast<u8>(m_tiles[i][j].day) };
+                    auto maybe_new_selection = DateTime::LocalDateTime::from_parts<DateTime::ISOCalendar>(new_selection_parts);
+                    if (maybe_new_selection.is_error())
+                        continue;
+
                     m_previous_selected_date = m_selected_date;
-                    m_selected_date = Core::DateTime::create(m_tiles[i][j].year, m_tiles[i][j].month, m_tiles[i][j].day);
-                    update_tiles(m_selected_date.year(), m_selected_date.month());
+                    m_selected_date = maybe_new_selection.release_value();
+                    update_tiles(new_selection_parts.year, new_selection_parts.month);
                     if (on_tile_click)
                         on_tile_click();
                 }
@@ -807,9 +820,10 @@ void Calendar::doubleclick_event(GUI::MouseEvent& event)
 {
     int months;
     mode() == Month ? months = 1 : months = 12;
+    auto previous_selected_day = m_previous_selected_date.to_parts<DateTime::ISOCalendar>().day_of_month;
     for (int i = 0; i < months; i++) {
         for (int j = 0; j < 42; j++) {
-            if (m_tiles[i][j].day != m_previous_selected_date.day())
+            if (m_tiles[i][j].day != previous_selected_day)
                 continue;
             if (mode() == Year && m_tiles[i][j].is_outside_selected_month)
                 continue;

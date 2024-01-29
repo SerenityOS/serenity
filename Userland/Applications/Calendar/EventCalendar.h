@@ -21,7 +21,7 @@ public:
     EventManager& event_manager() const { return *m_event_manager; }
 
 private:
-    EventCalendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
+    EventCalendar(DateTime::LocalDateTime date_time = DateTime::LocalDateTime::now(), Mode mode = Month);
 
     ErrorOr<void> save(FileSystemAccessClient::File& file);
     ErrorOr<void> load_file(FileSystemAccessClient::File& file);

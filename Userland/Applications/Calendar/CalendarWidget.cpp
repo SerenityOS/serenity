@@ -11,6 +11,7 @@
 #include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
+#include <LibDateTime/ISOCalendar.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -267,8 +268,10 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_add_event_action()
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_jump_to_action()
 {
     return GUI::Action::create("Jump to &Today", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv)), [&](const GUI::Action&) {
-        m_event_calendar->set_selected_date(Core::DateTime::now());
-        m_event_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
+        auto now = DateTime::LocalDateTime::now();
+        auto now_parts = now.to_parts<DateTime::ISOCalendar>();
+        m_event_calendar->set_selected_date(now);
+        m_event_calendar->update_tiles(now_parts.year, now_parts.month);
     });
 }
 

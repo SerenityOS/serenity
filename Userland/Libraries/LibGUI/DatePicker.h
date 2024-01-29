@@ -20,12 +20,12 @@ class DatePicker : public Dialog {
 public:
     virtual ~DatePicker() override = default;
 
-    static Optional<Core::DateTime> show(Window* parent_window, String title, Core::DateTime focused_date = Core::DateTime::now());
+    static Optional<DateTime::LocalDateTime> show(Window* parent_window, String title, DateTime::LocalDateTime focused_date = DateTime::LocalDateTime::now());
 
 private:
-    explicit DatePicker(Window* parent_window, String const& title, Core::DateTime focused_date = Core::DateTime::now());
+    explicit DatePicker(Window* parent_window, String const& title, DateTime::LocalDateTime focused_date = DateTime::LocalDateTime::now());
 
-    Core::DateTime m_selected_date;
+    DateTime::LocalDateTime m_selected_date;
     RefPtr<ComboBox> m_month_box;
     RefPtr<SpinBox> m_year_box;
 };

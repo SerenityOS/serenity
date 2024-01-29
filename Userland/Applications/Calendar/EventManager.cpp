@@ -8,11 +8,11 @@
 #include "EventManager.h"
 #include <AK/JsonParser.h>
 #include <LibConfig/Client.h>
+#include <LibDateTime/Format.h>
+#include <LibDateTime/ZonedDateTime.h>
 #include <LibFileSystemAccessClient/Client.h>
 
 namespace Calendar {
-
-static constexpr StringView DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"sv;
 
 EventManager::EventManager()
 {
@@ -56,8 +56,10 @@ ErrorOr<JsonArray> EventManager::serialize_events()
     JsonArray result;
     for (auto const& event : m_events) {
         JsonObject object;
-        object.set("start", JsonValue(event.start.to_byte_string(DATE_FORMAT)));
-        object.set("end", JsonValue(event.end.to_byte_string(DATE_FORMAT)));
+        // FIXME: The timezone is part of a Core::DateTime circumvention hack explained below.
+        //        Unless we want timezone information in the events, this should be removed eventually.
+        object.set("start", JsonValue(TRY(String::formatted("{}{:{0z}}", TRY(event.start.format(DateTime::ISO8601_SHORT_FORMAT)), DateTime::ZonedDateTime::now()))));
+        object.set("end", JsonValue(TRY(String::formatted("{}{:{0z}}", TRY(event.end.format(DateTime::ISO8601_SHORT_FORMAT)), DateTime::ZonedDateTime::now()))));
         object.set("summary", JsonValue(event.summary));
         TRY(result.append(object));
     }
@@ -69,24 +71,28 @@ ErrorOr<Vector<Event>> EventManager::deserialize_events(JsonArray const& json)
 {
     Vector<Event> result;
 
+    auto local_timezone = TRY(DateTime::ZonedDateTime::now().format("{0z}"sv));
+
     for (auto const& value : json.values()) {
         auto const& object = value.as_object();
         if (!object.has("summary"sv) || !object.has("start"sv) || !object.has("end"sv))
             continue;
 
         auto summary = TRY(String::from_byte_string(object.get("summary"sv).release_value().as_string()));
-        auto start = Core::DateTime::parse(DATE_FORMAT, object.get("start"sv).release_value().as_string());
+        // FIXME: Implement and use a Core::LocalDateTime parser.
+        //        Get rid of the timezone hack which is currently needed to prevent UTC-localtime adjustments.
+        auto start = Core::DateTime::parse("%Y-%m-%dT%H:%M:%S%z"sv, object.get("start"sv).release_value().as_string());
         if (!start.has_value())
             continue;
 
-        auto end = Core::DateTime::parse(DATE_FORMAT, object.get("end"sv).release_value().as_string());
+        auto end = Core::DateTime::parse("%Y-%m-%dT%H:%M:%S%z"sv, object.get("end"sv).release_value().as_string());
         if (!end.has_value())
             continue;
 
         Event event = {
             .summary = summary,
-            .start = start.release_value(),
-            .end = end.release_value(),
+            .start = DateTime::LocalDateTime { start.release_value() },
+            .end = DateTime::LocalDateTime { end.release_value() },
         };
         result.append(event);
     }

@@ -20,16 +20,16 @@ class AddEventDialog final : public GUI::Dialog {
 public:
     virtual ~AddEventDialog() override = default;
 
-    static void show(Core::DateTime date_time, EventManager& event_manager, Window* parent_window = nullptr)
+    static void show(DateTime::LocalDateTime date_time, EventManager& event_manager, Window* parent_window = nullptr)
     {
         auto dialog = AddEventDialog::construct(date_time, event_manager, parent_window);
         dialog->exec();
     }
 
-    ErrorOr<bool> add_event_to_calendar(Core::DateTime start_date_time, Core::DateTime end_date_time);
+    ErrorOr<bool> add_event_to_calendar(DateTime::LocalDateTime start_date_time, DateTime::LocalDateTime end_date_time);
 
 private:
-    AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window = nullptr);
+    AddEventDialog(DateTime::LocalDateTime date_time, EventManager& event_manager, Window* parent_window = nullptr);
 
     EventManager& m_event_manager;
 };

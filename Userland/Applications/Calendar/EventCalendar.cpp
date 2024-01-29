@@ -5,6 +5,7 @@
  */
 
 #include "EventCalendar.h"
+#include <LibDateTime/ISOCalendar.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
@@ -15,7 +16,7 @@ namespace Calendar {
 
 static constexpr int tile_breakpoint = 50;
 
-EventCalendar::EventCalendar(Core::DateTime date_time, Mode mode)
+EventCalendar::EventCalendar(DateTime::LocalDateTime date_time, Mode mode)
     : Calendar(date_time, mode)
     , m_event_manager(EventManager::create())
 {
@@ -31,11 +32,11 @@ void EventCalendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile,
     auto index = 0;
     auto font_height = font().x_height();
     for (auto const& event : m_event_manager->events()) {
-        auto start = event.start;
-        if (start.year() == tile.year && start.month() == tile.month && start.day() == tile.day) {
+        auto start = event.start.to_parts<DateTime::ISOCalendar>();
+        if (start.year == static_cast<i32>(tile.year) && start.month == tile.month && start.day_of_month == tile.day) {
             auto text_rect = tile.rect.translated(4, 4 + (font_height + 4) * ++index);
 
-            auto event_text = String::formatted("{} {}", start.to_byte_string("%H:%M"sv), event.summary);
+            auto event_text = String::formatted("{:{H}:{M}} {}", event.start, event.summary);
             if (event_text.is_error())
                 continue;
 

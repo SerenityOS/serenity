@@ -9,6 +9,8 @@
 #include "AddEventDialog.h"
 #include "AddEventWidget.h"
 #include <LibCore/DateTime.h>
+#include <LibDateTime/ISOCalendar.h>
+#include <LibDateTime/LocalDateTime.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
@@ -25,7 +27,7 @@
 
 namespace Calendar {
 
-AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
+AddEventDialog::AddEventDialog(DateTime::LocalDateTime date_time, EventManager& event_manager, Window* parent_window)
     : Dialog(parent_window)
     , m_event_manager(event_manager)
 {
@@ -34,14 +36,14 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     set_resizable(false);
     set_icon(parent_window->icon());
 
-    auto start_date_time = Core::DateTime::create(date_time.year(), date_time.month(), date_time.day(), 12, 0);
-    auto main_widget = MUST(AddEventWidget::create(this,
-        start_date_time, Core::DateTime::from_timestamp(start_date_time.timestamp() + (15 * 60))));
+    auto start_date_time = MUST(DateTime::ISOCalendar::with_time(date_time, 12, 0, 0));
+    auto end_date_time = MUST(DateTime::ISOCalendar::with_time(start_date_time, 12, 15, 0));
+    auto main_widget = MUST(AddEventWidget::create(this, start_date_time, end_date_time));
 
     set_main_widget(main_widget);
 }
 
-ErrorOr<bool> AddEventDialog::add_event_to_calendar(Core::DateTime start_date_time, Core::DateTime end_date_time)
+ErrorOr<bool> AddEventDialog::add_event_to_calendar(DateTime::LocalDateTime start_date_time, DateTime::LocalDateTime end_date_time)
 {
     if (end_date_time < start_date_time) {
         GUI::MessageBox::show_error(this, "The end date has to be after the start date."sv);

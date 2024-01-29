@@ -6,6 +6,8 @@
 
 #include "ClockWidget.h"
 #include <LibConfig/Client.h>
+#include <LibDateTime/Format.h>
+#include <LibDateTime/ISOCalendar.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -30,7 +32,7 @@ ClockWidget::ClockWidget()
         if (now != last_update_time) {
             tick_clock();
             last_update_time = now;
-            set_tooltip(MUST(Core::DateTime::now().to_string("%Y-%m-%d"sv)));
+            set_tooltip(MUST(DateTime::LocalDateTime::now().format(DateTime::ISO8601_DATE_FORMAT)));
         }
     });
     m_timer->start();
@@ -125,14 +127,14 @@ ClockWidget::ClockWidget()
 void ClockWidget::update_format(ByteString const& format)
 {
     m_time_format = format;
-    m_time_width = font().width(Core::DateTime::create(122, 2, 22, 22, 22, 22).to_byte_string(format));
+    m_time_width = static_cast<int>(font().width(MUST(DateTime::LocalDateTime::from_parts<DateTime::ISOCalendar>({ .year = 122, .month = 2, .day_of_month = 22, .hour = 22, .minute = 22, .second = 22 }).release_value().format(format))));
     set_fixed_size(m_time_width + 20, 21);
 }
 
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
-    auto time_text = Core::DateTime::now().to_byte_string(m_time_format);
+    auto time_text = MUST(DateTime::LocalDateTime::now().format(m_time_format));
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
 
@@ -202,8 +204,10 @@ void ClockWidget::jump_to_current_date()
 {
     if (m_calendar->mode() == GUI::Calendar::Year)
         m_calendar->toggle_mode();
-    m_calendar->set_selected_date(Core::DateTime::now());
-    m_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
+    auto current_date = DateTime::LocalDateTime::now();
+    auto current_date_parts = current_date.to_parts<DateTime::ISOCalendar>();
+    m_calendar->set_selected_date(current_date);
+    m_calendar->update_tiles(current_date_parts.year, current_date_parts.month);
     m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
 }
 

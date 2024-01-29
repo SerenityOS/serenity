@@ -9,15 +9,17 @@
 #include <Applications/ClockSettings/ClockSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
+#include <LibDateTime/Format.h>
+#include <LibDateTime/LocalDateTime.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 
-constexpr auto time_format_12h = "%I:%M %p"sv;
-constexpr auto time_format_12h_seconds = "%r"sv;
-constexpr auto time_format_24h = "%R"sv;
-constexpr auto time_format_24h_seconds = "%T"sv;
+constexpr auto time_format_12h = "{I}:{M}"sv;
+constexpr auto time_format_12h_seconds = "{I}:{M}:{S}"sv;
+constexpr auto time_format_24h = "{H}:{M}"sv;
+constexpr auto time_format_24h_seconds = "{H}:{M}:{S}"sv;
 
 ErrorOr<NonnullRefPtr<ClockSettingsWidget>> ClockSettingsWidget::try_create()
 {
@@ -128,5 +130,31 @@ void ClockSettingsWidget::update_time_format_string()
 
 void ClockSettingsWidget::update_clock_preview()
 {
-    m_clock_preview->set_text(Core::DateTime::now().to_string(m_time_format).release_value_but_fixme_should_propagate_errors());
+    // FIXME: This is a hack to prevent the settings from crashing in the AK format parser.
+    //        Ideally the parser would be more error-resilient.
+    // size_t level = 0;
+    // for (size_t i = 0; i < m_time_format.length(); ++i) {
+    //     auto chr = m_time_format[i];
+    //     if (chr == '{') {
+    //         // Skip escaped curlies
+    //         if (i < m_time_format.length() - 1 && m_time_format[i + 1] == '{')
+    //             ++i;
+    //         else
+    //             ++level;
+    //     }
+    //     if (chr == '}') {
+    //         if (i < m_time_format.length() - 1 && m_time_format[i + 1] == '}')
+    //             ++i;
+    //         else
+    //             --level;
+    //     }
+    // }
+    // if (level != 0)
+    //     return;
+
+    auto maybe_formatted = DateTime::LocalDateTime::now().format(m_time_format);
+    // If the user inputs a bogus format, don't update the preview.
+    if (maybe_formatted.is_error())
+        return;
+    m_clock_preview->set_text(maybe_formatted.release_value());
 }

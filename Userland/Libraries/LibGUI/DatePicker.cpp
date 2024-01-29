@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibDateTime/ISOCalendar.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/DatePicker.h>
@@ -15,7 +16,7 @@
 
 namespace GUI {
 
-DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTime focused_date)
+DatePicker::DatePicker(Window* parent_window, String const& title, DateTime::LocalDateTime focused_date)
     : Dialog(parent_window)
     , m_selected_date(focused_date)
 {
@@ -31,32 +32,43 @@ DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTim
     auto& calendar = *widget->find_descendant_of_type_named<GUI::Calendar>("calendar_view");
     calendar.on_tile_click = [&]() {
         m_selected_date = calendar.selected_date();
-        m_month_box->set_selected_index(m_selected_date.month() - 1, AllowCallback::No);
-        m_year_box->set_value(static_cast<int>(m_selected_date.year()), AllowCallback::No);
+        auto selected_date = m_selected_date.to_parts<DateTime::ISOCalendar>();
+        m_month_box->set_selected_index(selected_date.month - 1, AllowCallback::No);
+        m_year_box->set_value(static_cast<int>(selected_date.year), AllowCallback::No);
     };
     calendar.on_tile_doubleclick = [&]() {
         m_selected_date = calendar.selected_date();
         done(ExecResult::OK);
     };
+    auto focused_date_parts = focused_date.to_parts<DateTime::ISOCalendar>();
     calendar.set_selected_date(focused_date);
-    calendar.update_tiles(focused_date.year(), focused_date.month());
+    calendar.update_tiles(focused_date_parts.year, focused_date_parts.month);
 
     m_month_box = widget->find_descendant_of_type_named<GUI::ComboBox>("month_box");
     m_month_box->set_model(GUI::MonthListModel::create(GUI::MonthListModel::DisplayMode::Long));
-    m_month_box->set_selected_index(focused_date.month() - 1, AllowCallback::No);
+    m_month_box->set_selected_index(focused_date_parts.month - 1, AllowCallback::No);
     m_month_box->on_change = [&](ByteString const&, ModelIndex const& index) {
-        m_selected_date.set_time(static_cast<int>(m_selected_date.year()), index.row() + 1);
+        auto selected_date_parts = m_selected_date.to_parts<DateTime::ISOCalendar>();
+        selected_date_parts.month = index.row() + 1;
+        auto new_selection = DateTime::LocalDateTime::from_parts<DateTime::ISOCalendar>(DateTime::ISOCalendar::InputParts(selected_date_parts));
+        if (new_selection.is_error())
+            return;
+        m_selected_date = new_selection.release_value();
         calendar.set_selected_date(m_selected_date);
-        calendar.update_tiles(m_selected_date.year(), m_selected_date.month());
+        calendar.update_tiles(selected_date_parts.year, selected_date_parts.month);
         calendar.update();
     };
 
     m_year_box = widget->find_descendant_of_type_named<GUI::SpinBox>("year_box");
-    m_year_box->set_value(static_cast<int>(focused_date.year()), AllowCallback::No);
+    m_year_box->set_value(static_cast<int>(focused_date_parts.year), AllowCallback::No);
     m_year_box->on_change = [&](int year) {
-        m_selected_date.set_time(year, static_cast<int>(m_selected_date.month()));
+        auto selected_date_parts = m_selected_date.to_parts<DateTime::ISOCalendar>();
+        selected_date_parts.year = year;
+        auto new_selection = DateTime::LocalDateTime::from_parts<DateTime::ISOCalendar>(DateTime::ISOCalendar::InputParts(selected_date_parts));
+        if (new_selection.is_error())
+            return;
         calendar.set_selected_date(m_selected_date);
-        calendar.update_tiles(m_selected_date.year(), m_selected_date.month());
+        calendar.update_tiles(selected_date_parts.year, selected_date_parts.month);
         calendar.update();
     };
 
@@ -74,7 +86,7 @@ DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTim
     };
 }
 
-Optional<Core::DateTime> DatePicker::show(Window* parent_window, String title, Core::DateTime focused_date)
+Optional<DateTime::LocalDateTime> DatePicker::show(Window* parent_window, String title, DateTime::LocalDateTime focused_date)
 {
     auto box = DatePicker::construct(parent_window, title, focused_date);
     if (box->exec() == ExecResult::OK) {

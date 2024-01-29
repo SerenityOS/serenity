@@ -19,7 +19,7 @@ class AddEventWidget final : public GUI::Widget {
     C_OBJECT(AddEventWidget);
 
 public:
-    static ErrorOr<NonnullRefPtr<AddEventWidget>> create(AddEventDialog*, Core::DateTime start_time, Core::DateTime end_time);
+    static ErrorOr<NonnullRefPtr<AddEventWidget>> create(AddEventDialog*, DateTime::LocalDateTime start_time, DateTime::LocalDateTime end_time);
     virtual ~AddEventWidget() override = default;
 
 private:
@@ -30,8 +30,8 @@ private:
     void update_end_date();
     void update_duration();
 
-    Core::DateTime m_start_date_time;
-    Core::DateTime m_end_date_time;
+    DateTime::LocalDateTime m_start_date_time { DateTime::LocalDateTime::now() };
+    DateTime::LocalDateTime m_end_date_time { DateTime::LocalDateTime::now() };
 
     RefPtr<GUI::TextBox> m_start_date_box;
     RefPtr<GUI::TextBox> m_end_date_box;

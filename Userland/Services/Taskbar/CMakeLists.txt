@@ -15,5 +15,5 @@ set(SOURCES
 )
 
 serenity_bin(Taskbar)
-target_link_libraries(Taskbar PRIVATE LibCore LibGfx LibGUI LibDesktop LibConfig LibIPC LibMain)
+target_link_libraries(Taskbar PRIVATE LibCore LibDateTime LibGfx LibGUI LibDesktop LibConfig LibIPC LibMain)
 serenity_install_headers(Services/Taskbar)

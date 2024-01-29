@@ -12,6 +12,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/DateTime.h>
+#include <LibDateTime/LocalDateTime.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Window.h>
 
@@ -19,8 +20,8 @@ namespace Calendar {
 
 struct Event {
     String summary;
-    Core::DateTime start;
-    Core::DateTime end;
+    DateTime::LocalDateTime start;
+    DateTime::LocalDateTime end;
 };
 
 class EventManager {

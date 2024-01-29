@@ -156,5 +156,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI PRIVATE LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibThreading LibRegex LibConfig LibUnicode)
+target_link_libraries(LibGUI PRIVATE LibCore LibDateTime LibFileSystem LibGfx LibImageDecoderClient LibIPC LibThreading LibRegex LibConfig LibUnicode)
 target_link_libraries(LibGUI PUBLIC LibSyntax)

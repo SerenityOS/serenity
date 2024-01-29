@@ -5,6 +5,9 @@
  */
 
 #include "AddEventWidget.h"
+#include <LibDateTime/Format.h>
+#include <LibDateTime/ISOCalendar.h>
+#include <LibDateTime/LocalDateTime.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/DatePicker.h>
 #include <LibGUI/Dialog.h>
@@ -13,9 +16,7 @@
 
 namespace Calendar {
 
-static constexpr StringView DATE_FORMAT = "%Y-%m-%d"sv;
-
-ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* window, Core::DateTime start_time, Core::DateTime end_time)
+ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* window, DateTime::LocalDateTime start_time, DateTime::LocalDateTime end_time)
 {
     auto widget = TRY(try_create());
     widget->m_start_date_time = start_time;
@@ -32,14 +33,14 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
     pick_start_date_button.set_icon(calendar_date_icon);
     pick_start_date_button.on_click = [widget = widget, window = window](auto) {
         if (auto new_date = GUI::DatePicker::show(window, "Pick Start Date"_string, widget->m_start_date_time); new_date.has_value()) {
-            widget->m_start_date_time.set_date(new_date.value());
+            widget->m_start_date_time = new_date.value();
             if (widget->m_end_date_time < widget->m_start_date_time) {
-                widget->m_end_date_time.set_date(new_date.value());
+                widget->m_end_date_time = new_date.value();
                 widget->update_end_date();
             }
             widget->update_duration();
 
-            widget->m_start_date_box->set_text(MUST(widget->m_start_date_time.to_string(DATE_FORMAT)));
+            widget->m_start_date_box->set_text(MUST(widget->m_start_date_time.format(DateTime::ISO8601_DATE_FORMAT)));
         }
     };
 
@@ -52,14 +53,14 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
     pick_end_date_button.set_icon(calendar_date_icon);
     pick_end_date_button.on_click = [widget = widget, window = window](auto) {
         if (auto new_date = GUI::DatePicker::show(window, "Pick End Date"_string, widget->m_end_date_time); new_date.has_value()) {
-            widget->m_end_date_time.set_date(new_date.value());
+            widget->m_end_date_time = new_date.value();
             if (widget->m_end_date_time < widget->m_start_date_time) {
-                widget->m_start_date_time.set_date(new_date.value());
+                widget->m_start_date_time = new_date.value();
                 widget->update_start_date();
             }
             widget->update_duration();
 
-            widget->m_end_date_box->set_text(MUST(widget->m_end_date_time.to_string(DATE_FORMAT)));
+            widget->m_end_date_box->set_text(MUST(widget->m_end_date_time.format(DateTime::ISO8601_DATE_FORMAT)));
         }
     };
 
@@ -83,9 +84,12 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
     auto update_starting_input_values = [widget = widget]() {
         auto hour = widget->m_start_hour_box->value();
         auto minute = widget->m_start_minute_box->value();
-        widget->m_start_date_time.set_time_only(hour, minute);
+        auto new_start_time = DateTime::ISOCalendar::with_time(widget->m_start_date_time, hour, minute);
+        if (new_start_time.is_error())
+            return;
+        widget->m_start_date_time = new_start_time.release_value();
         if (widget->m_end_date_time < widget->m_start_date_time) {
-            widget->m_end_date_time.set_time_only(hour, minute);
+            widget->m_end_date_time = widget->m_start_date_time;
             widget->update_end_date();
         }
         widget->update_duration();
@@ -93,9 +97,12 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
     auto update_ending_input_values = [widget = widget]() {
         auto hour = widget->m_end_hour_box->value();
         auto minute = widget->m_end_minute_box->value();
-        widget->m_end_date_time.set_time_only(hour, minute);
+        auto new_end_time = DateTime::ISOCalendar::with_time(widget->m_end_date_time, hour, minute);
+        if (new_end_time.is_error())
+            return;
+        widget->m_end_date_time = new_end_time.release_value();
         if (widget->m_end_date_time < widget->m_start_date_time) {
-            widget->m_start_date_time.set_time_only(hour, minute);
+            widget->m_start_date_time = widget->m_end_date_time;
             widget->update_start_date();
         }
         widget->update_duration();
@@ -103,7 +110,7 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
     auto update_duration_input_values = [widget]() {
         auto hour = widget->m_duration_hour_box->value();
         auto minute = widget->m_duration_minute_box->value();
-        widget->m_end_date_time = Core::DateTime::from_timestamp(widget->m_start_date_time.timestamp() + (hour * 60 + minute) * 60);
+        widget->m_end_date_time = widget->m_start_date_time + Duration::from_seconds((hour * 60 + minute) * 60);
         widget->update_end_date();
     };
 
@@ -123,23 +130,25 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
 
 void AddEventWidget::update_start_date()
 {
-    m_start_date_box->set_text(MUST(m_start_date_time.to_string(DATE_FORMAT)));
-    m_start_hour_box->set_value(m_start_date_time.hour(), GUI::AllowCallback::No);
-    m_start_minute_box->set_value(m_start_date_time.minute(), GUI::AllowCallback::No);
+    m_start_date_box->set_text(MUST(m_start_date_time.format(DateTime::ISO8601_DATE_FORMAT)));
+    auto start_date_parts = m_start_date_time.to_parts<DateTime::ISOCalendar>();
+    m_start_hour_box->set_value(start_date_parts.hour, GUI::AllowCallback::No);
+    m_start_minute_box->set_value(start_date_parts.minute, GUI::AllowCallback::No);
 }
 
 void AddEventWidget::update_end_date()
 {
-    m_end_date_box->set_text(MUST(m_end_date_time.to_string(DATE_FORMAT)));
-    m_end_hour_box->set_value(m_end_date_time.hour(), GUI::AllowCallback::No);
-    m_end_minute_box->set_value(m_end_date_time.minute(), GUI::AllowCallback::No);
+    m_end_date_box->set_text(MUST(m_end_date_time.format(DateTime::ISO8601_DATE_FORMAT)));
+    auto end_date_parts = m_end_date_time.to_parts<DateTime::ISOCalendar>();
+    m_end_hour_box->set_value(end_date_parts.hour, GUI::AllowCallback::No);
+    m_end_minute_box->set_value(end_date_parts.minute, GUI::AllowCallback::No);
 }
 
 void AddEventWidget::update_duration()
 {
-    auto difference_in_seconds = m_end_date_time.timestamp() - m_start_date_time.timestamp();
-    auto hours = difference_in_seconds / (60 * 60);
-    auto minutes = (difference_in_seconds - hours * (60 * 60)) / 60;
+    auto difference = m_end_date_time - m_start_date_time;
+    auto hours = difference.to_truncated_seconds() / (60 * 60);
+    auto minutes = (difference.to_truncated_seconds() - hours * (60 * 60)) / 60;
 
     m_duration_hour_box->set_value(hours, GUI::AllowCallback::No);
     m_duration_minute_box->set_value(minutes, GUI::AllowCallback::No);
