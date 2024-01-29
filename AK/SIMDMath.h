@@ -89,20 +89,6 @@ ALWAYS_INLINE static f32x4 sqrt(f32x4 v)
 #endif
 }
 
-ALWAYS_INLINE static f32x4 rsqrt(f32x4 v)
-{
-#if ARCH(X86_64)
-    return __builtin_ia32_rsqrtps(v);
-#else
-    return f32x4 {
-        1.f / AK::sqrt(v[0]),
-        1.f / AK::sqrt(v[1]),
-        1.f / AK::sqrt(v[2]),
-        1.f / AK::sqrt(v[3]),
-    };
-#endif
-}
-
 }
 
 #pragma GCC diagnostic pop
