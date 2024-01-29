@@ -16,6 +16,7 @@
 #include <LibWeb/Internals/Internals.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 
 namespace Web::Internals {
 
@@ -51,6 +52,9 @@ JS::Object* Internals::hit_test(double x, double y)
     //       for stacking context traversal, might not exist if this call occurs between the tear_down_layout_tree()
     //       and update_layout() calls
     active_document->update_layout();
+    HashMap<Painting::PaintableBox const*, Painting::ViewportPaintable::ScrollFrame> scroll_frames;
+    // NOTE: Make sure that paintables have updated scroll offsets
+    active_document->paintable()->assign_scroll_frame_ids(scroll_frames);
     auto result = active_document->paintable_box()->hit_test({ x, y }, Painting::HitTestType::Exact);
     if (result.has_value()) {
         auto hit_tеsting_result = JS::Object::create(realm(), nullptr);
