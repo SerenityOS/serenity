@@ -110,6 +110,8 @@ struct Configuration {
     M(cursor_right_word)                       \
     M(cursor_right_nonspace_word)              \
     M(enter_search)                            \
+    M(search_character_backwards)              \
+    M(search_character_forwards)               \
     M(erase_character_backwards)               \
     M(erase_character_forwards)                \
     M(erase_to_beginning)                      \

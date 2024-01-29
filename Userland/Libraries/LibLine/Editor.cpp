@@ -156,6 +156,8 @@ void Editor::set_default_keybinds()
     register_key_input_callback(ctrl('K'), EDITOR_INTERNAL_FUNCTION(erase_to_end));
     register_key_input_callback(ctrl('L'), EDITOR_INTERNAL_FUNCTION(clear_screen));
     register_key_input_callback(ctrl('R'), EDITOR_INTERNAL_FUNCTION(enter_search));
+    register_key_input_callback(ctrl(']'), EDITOR_INTERNAL_FUNCTION(search_character_forwards));
+    register_key_input_callback(Key { ctrl(']'), Key::Alt }, EDITOR_INTERNAL_FUNCTION(search_character_backwards));
     register_key_input_callback(ctrl('T'), EDITOR_INTERNAL_FUNCTION(transpose_characters));
     register_key_input_callback('\n', EDITOR_INTERNAL_FUNCTION(finish));
 
