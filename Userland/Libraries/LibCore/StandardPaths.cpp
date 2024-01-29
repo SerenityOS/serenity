@@ -36,6 +36,9 @@ ByteString StandardPaths::home_directory()
 
 ByteString StandardPaths::desktop_directory()
 {
+    if (auto* desktop_directory = getenv("XDG_DESKTOP_DIR"))
+        return LexicalPath::canonicalized_path(desktop_directory);
+
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Desktop"sv);
@@ -44,6 +47,9 @@ ByteString StandardPaths::desktop_directory()
 
 ByteString StandardPaths::documents_directory()
 {
+    if (auto* documents_directory = getenv("XDG_DOCUMENTS_DIR"))
+        return LexicalPath::canonicalized_path(documents_directory);
+
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Documents"sv);
@@ -52,9 +58,49 @@ ByteString StandardPaths::documents_directory()
 
 ByteString StandardPaths::downloads_directory()
 {
+    if (auto* downloads_directory = getenv("XDG_DOWNLOAD_DIR"))
+        return LexicalPath::canonicalized_path(downloads_directory);
+
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Downloads"sv);
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
+}
+
+ByteString StandardPaths::music_directory()
+{
+    if (auto* music_directory = getenv("XDG_MUSIC_DIR"))
+        return LexicalPath::canonicalized_path(music_directory);
+
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/Music"sv);
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
+}
+
+ByteString StandardPaths::pictures_directory()
+{
+    if (auto* pictures_directory = getenv("XDG_PICTURES_DIR"))
+        return LexicalPath::canonicalized_path(pictures_directory);
+
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/Pictures"sv);
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
+}
+
+ByteString StandardPaths::videos_directory()
+{
+    if (auto* videos_directory = getenv("XDG_VIDEOS_DIR"))
+        return LexicalPath::canonicalized_path(videos_directory);
+
+    StringBuilder builder;
+    builder.append(home_directory());
+#if defined(AK_OS_MACOS)
+    builder.append("/Movies"sv);
+#else
+    builder.append("/Videos"sv);
+#endif
     return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 

@@ -18,6 +18,9 @@ public:
     static ByteString desktop_directory();
     static ByteString documents_directory();
     static ByteString downloads_directory();
+    static ByteString music_directory();
+    static ByteString pictures_directory();
+    static ByteString videos_directory();
     static ByteString tempfile_directory();
     static ByteString config_directory();
     static ByteString data_directory();
