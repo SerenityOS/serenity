@@ -83,6 +83,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
                 auto item_preferred_outer_cross_size = css_clamp(flex_container_inner_cross_size, item_min_cross_size, item_max_cross_size);
                 auto item_inner_cross_size = item_preferred_outer_cross_size - item.margins.cross_before - item.margins.cross_after - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after;
                 set_cross_size(item.box, item_inner_cross_size);
+                set_has_definite_cross_size(item);
             }
         }
     }
@@ -153,6 +154,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
         if (flex_container_computed_cross_size.is_auto()) {
             for (auto& item : m_flex_items) {
                 set_cross_size(item.box, item.cross_size.value());
+                set_has_definite_cross_size(item);
             }
         }
     }
@@ -375,6 +377,22 @@ bool FlexFormattingContext::is_cross_auto(Box const& box) const
 {
     auto& cross_length = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
     return cross_length.is_auto();
+}
+
+void FlexFormattingContext::set_has_definite_main_size(FlexItem& item)
+{
+    if (is_row_layout())
+        item.used_values.set_has_definite_width(true);
+    else
+        item.used_values.set_has_definite_height(true);
+}
+
+void FlexFormattingContext::set_has_definite_cross_size(FlexItem& item)
+{
+    if (is_row_layout())
+        item.used_values.set_has_definite_height(true);
+    else
+        item.used_values.set_has_definite_width(true);
 }
 
 void FlexFormattingContext::set_main_size(Box const& box, CSSPixels size)
@@ -978,6 +996,12 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
     for (auto& item : line.items) {
         item.main_size = item.target_main_size;
         set_main_size(item.box, item.target_main_size);
+
+        // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
+        // 1. If the flex container has a definite main size, then the post-flexing main sizes of its flex items are treated as definite.
+        // 2. If a flex item’s flex basis is definite, then its post-flexing main size is also definite.
+        if (has_definite_main_size(m_flex_container_state) || item.used_flex_basis_is_definite)
+            set_has_definite_main_size(item);
     }
 }
 
