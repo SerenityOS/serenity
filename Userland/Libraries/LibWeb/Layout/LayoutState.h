@@ -55,6 +55,9 @@ struct LayoutState {
         void set_indefinite_content_width();
         void set_indefinite_content_height();
 
+        void set_has_definite_width(bool has_definite_width) { m_has_definite_width = has_definite_width; }
+        void set_has_definite_height(bool has_definite_height) { m_has_definite_height = has_definite_height; }
+
         // NOTE: These are used by FlexFormattingContext to assign a temporary main size to items
         //       early on, so that descendants have something to resolve percentages against.
         void set_temporary_content_width(CSSPixels);
