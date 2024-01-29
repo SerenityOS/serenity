@@ -399,12 +399,10 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         for (auto const* ancestor = &this->layout_box(); ancestor; ancestor = ancestor->containing_block()) {
             auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->paintable_box()->transform());
             if (!affine_transform.is_identity()) {
-                // NOTE: Because the painting command executor applies CSS transform of the nearest stacking context
-                //       and the m_clip_rect is determined considering CSS transforms, here transform of the nearest
-                //       stacking context need to be compensated.
-                //       This adjustment ensures the transform is accounted for just once.
+                // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
+                //       with this transform in account, we need to remove the transform from the clip rect.
+                //       Otherwise, the transform will be applied twice to the clip rect.
                 overflow_clip_rect.translate_by(-affine_transform.translation().to_type<CSSPixels>());
-                break;
             }
         }
 
