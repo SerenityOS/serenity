@@ -1301,6 +1301,11 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
         component.sampling_factors.horizontal = subsample_factors >> 4;
         component.sampling_factors.vertical = subsample_factors & 0x0F;
 
+        if (component_count == 1) {
+            // 4.8.2 Minimum coded unit: "If the compressed image data is non-interleaved, the MCU is defined to be one data unit."
+            component.sampling_factors = { 1, 1 };
+        }
+
         dbgln_if(JPEG_DEBUG, "Component subsampling: {}, {}", component.sampling_factors.horizontal, component.sampling_factors.vertical);
 
         if (i == 0) {
