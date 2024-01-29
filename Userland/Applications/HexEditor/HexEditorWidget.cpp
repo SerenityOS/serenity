@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
+ * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,6 +28,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
@@ -50,6 +52,8 @@ ErrorOr<void> HexEditorWidget::setup()
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     m_editor = *find_descendant_of_type_named<::HexEditor::HexEditor>("editor");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_annotations = *find_descendant_of_type_named<GUI::TableView>("annotations");
+    m_annotations_container = *find_descendant_of_type_named<GUI::Widget>("annotations_container");
     m_search_results = *find_descendant_of_type_named<GUI::TableView>("search_results");
     m_search_results_container = *find_descendant_of_type_named<GUI::Widget>("search_results_container");
     m_side_panel_container = *find_descendant_of_type_named<GUI::Widget>("side_panel_container");
@@ -92,6 +96,16 @@ ErrorOr<void> HexEditorWidget::setup()
         m_redo_action->set_enabled(m_editor->undo_stack().can_redo());
     };
 
+    initialize_annotations_model();
+    m_annotations->set_activates_on_selection(true);
+    m_annotations->on_activation = [this](GUI::ModelIndex const& index) {
+        if (!index.is_valid())
+            return;
+        auto start_offset = m_annotations->model()->data(index, (GUI::ModelRole)AnnotationsModel::CustomRole::StartOffset).to_integer<size_t>();
+        m_editor->set_position(start_offset);
+        m_editor->update();
+    };
+
     m_search_results->set_activates_on_selection(true);
     m_search_results->on_activation = [this](const GUI::ModelIndex& index) {
         if (!index.is_valid())
@@ -117,6 +131,7 @@ ErrorOr<void> HexEditorWidget::setup()
             }
 
             set_path({});
+            initialize_annotations_model();
             window()->set_modified(false);
         }
     });
@@ -224,6 +239,11 @@ ErrorOr<void> HexEditorWidget::setup()
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
+    });
+
+    m_layout_annotations_action = GUI::Action::create_checkable("&Annotations", [&](auto& action) {
+        set_annotations_visible(action.is_checked());
+        Config::write_bool("HexEditor"sv, "Layout"sv, "ShowAnnotations"sv, action.is_checked());
     });
 
     m_layout_search_results_action = GUI::Action::create_checkable("&Search Results", [&](auto& action) {
@@ -500,6 +520,9 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
 
+    auto show_annotations = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowAnnotations"sv, false);
+    set_annotations_visible(show_annotations);
+
     auto show_search_results = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowSearchResults"sv, false);
     set_search_results_visible(show_search_results);
 
@@ -507,6 +530,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     set_value_inspector_visible(show_value_inspector);
 
     view_menu->add_action(*m_layout_toolbar_action);
+    view_menu->add_action(*m_layout_annotations_action);
     view_menu->add_action(*m_layout_search_results_action);
     view_menu->add_action(*m_layout_value_inspector_action);
     view_menu->add_separator();
@@ -601,6 +625,7 @@ void HexEditorWidget::open_file(ByteString const& filename, NonnullOwnPtr<Core::
     window()->set_modified(false);
     m_editor->open_file(move(file));
     set_path(filename);
+    initialize_annotations_model();
     GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
@@ -617,13 +642,34 @@ bool HexEditorWidget::request_close()
     return result == GUI::MessageBox::ExecResult::No;
 }
 
+void HexEditorWidget::update_side_panel_visibility()
+{
+    m_side_panel_container->set_visible(
+        m_annotations_container->is_visible()
+        || m_search_results_container->is_visible()
+        || m_value_inspector_container->is_visible());
+}
+
+void HexEditorWidget::set_annotations_visible(bool visible)
+{
+    m_layout_annotations_action->set_checked(visible);
+    m_annotations_container->set_visible(visible);
+    update_side_panel_visibility();
+}
+
+void HexEditorWidget::initialize_annotations_model()
+{
+    auto sorting_model = MUST(GUI::SortingProxyModel::create(m_editor->document().annotations()));
+    sorting_model->set_sort_role((GUI::ModelRole)AnnotationsModel::CustomRole::StartOffset);
+    sorting_model->sort(AnnotationsModel::Column::Start, GUI::SortOrder::Ascending);
+    m_annotations->set_model(sorting_model);
+}
+
 void HexEditorWidget::set_search_results_visible(bool visible)
 {
     m_layout_search_results_action->set_checked(visible);
     m_search_results_container->set_visible(visible);
-
-    // Ensure side panel container is visible if either search result or value inspector are turned on
-    m_side_panel_container->set_visible(visible || m_value_inspector_container->is_visible());
+    update_side_panel_visibility();
 }
 
 void HexEditorWidget::set_value_inspector_visible(bool visible)
@@ -633,9 +679,7 @@ void HexEditorWidget::set_value_inspector_visible(bool visible)
 
     m_layout_value_inspector_action->set_checked(visible);
     m_value_inspector_container->set_visible(visible);
-
-    // Ensure side panel container is visible if either search result or value inspector are turned on
-    m_side_panel_container->set_visible(visible || m_search_results_container->is_visible());
+    update_side_panel_visibility();
 }
 
 void HexEditorWidget::drag_enter_event(GUI::DragEvent& event)
