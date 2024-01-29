@@ -515,6 +515,21 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
             tm.tm_min += sign * minutes;
             break;
         }
+        case 'x': {
+            tm_represents_utc_time = true;
+            auto hours = parse_number();
+            int minutes;
+            if (string_lexer.consume_specific(':')) {
+                minutes = parse_number();
+            } else {
+                minutes = hours % 100;
+                hours = hours / 100;
+            }
+
+            tm.tm_hour -= hours;
+            tm.tm_min -= minutes;
+            break;
+        }
         case 'Z':
             parsed_time_zone = parse_time_zone_name(string_lexer);
             if (!parsed_time_zone.has_value())
