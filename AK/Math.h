@@ -503,23 +503,6 @@ constexpr T sqrt(T x)
 }
 
 template<FloatingPoint T>
-constexpr T rsqrt(T x)
-{
-#if ARCH(AARCH64)
-    AARCH64_INSTRUCTION(frsqrte, x);
-#elif ARCH(X86_64)
-    if constexpr (IsSame<T, float>) {
-        float res;
-        asm("rsqrtss %1, %0"
-            : "=x"(res)
-            : "x"(x));
-        return res;
-    }
-#endif
-    return (T)1. / sqrt(x);
-}
-
-template<FloatingPoint T>
 constexpr T cbrt(T x)
 {
     CONSTEXPR_STATE(cbrt, x);
