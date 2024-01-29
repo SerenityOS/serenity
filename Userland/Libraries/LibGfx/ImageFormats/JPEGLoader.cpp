@@ -798,12 +798,14 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
+            // FIXME: This is likely wrong for non-interleaved scans.
+            VERIFY(context.mblock_meta.hpadded_count % context.sampling_factors.horizontal == 0);
+            u32 number_of_mcus_decoded_so_far = ((vcursor / context.sampling_factors.vertical) * context.mblock_meta.hpadded_count + hcursor) / context.sampling_factors.horizontal;
 
             auto& huffman_stream = context.current_scan->huffman_stream;
 
             if (context.dc_restart_interval > 0) {
-                if (i != 0 && i % (context.dc_restart_interval * context.sampling_factors.vertical * context.sampling_factors.horizontal) == 0) {
+                if (number_of_mcus_decoded_so_far != 0 && number_of_mcus_decoded_so_far % context.dc_restart_interval == 0) {
                     reset_decoder(context);
 
                     // Restart markers are stored in byte boundaries. Advance the huffman stream cursor to
@@ -823,7 +825,7 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
 
             if (result.is_error()) {
                 if constexpr (JPEG_DEBUG) {
-                    dbgln("Failed to build Macroblock {}: {}", i, result.error());
+                    dbgln("Failed to build Macroblock {}: {}", number_of_mcus_decoded_so_far, result.error());
                     dbgln("Huffman stream byte offset {}", context.stream.byte_offset());
                 }
                 return result.release_error();
