@@ -530,6 +530,13 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
             tm.tm_min -= minutes;
             break;
         }
+        case 'X': {
+            if (!string_lexer.consume_specific('.'))
+                return {};
+            auto discarded = parse_number();
+            (void)discarded; // NOTE: the tm structure does not support sub second precision, so drop this value.
+            break;
+        }
         case 'Z':
             parsed_time_zone = parse_time_zone_name(string_lexer);
             if (!parsed_time_zone.has_value())
