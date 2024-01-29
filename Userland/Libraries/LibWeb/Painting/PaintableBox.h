@@ -195,6 +195,7 @@ public:
 
     void set_clip_rect(Optional<CSSPixelRect> rect) { m_clip_rect = rect; }
     void set_scroll_frame_id(int id) { m_scroll_frame_id = id; }
+    void set_enclosing_scroll_frame_offset(CSSPixelPoint offset) { m_enclosing_scroll_frame_offset = offset; }
     void set_corner_clip_radii(CornerRadii const& corner_radii) { m_corner_clip_radii = corner_radii; }
 
 protected:
@@ -207,6 +208,8 @@ protected:
 
     virtual CSSPixelRect compute_absolute_rect() const;
     virtual CSSPixelRect compute_absolute_paint_rect() const;
+
+    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const { return m_enclosing_scroll_frame_offset; }
 
 private:
     [[nodiscard]] virtual bool is_paintable_box() const final { return true; }
@@ -224,6 +227,7 @@ private:
 
     Optional<CSSPixelRect> m_clip_rect;
     Optional<int> m_scroll_frame_id;
+    Optional<CSSPixelPoint> m_enclosing_scroll_frame_offset;
     Optional<CornerRadii> m_corner_clip_radii;
 
     Optional<BordersDataWithElementKind> m_override_borders_data;

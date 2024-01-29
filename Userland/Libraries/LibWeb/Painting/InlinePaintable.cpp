@@ -182,15 +182,19 @@ void InlinePaintable::for_each_fragment(Callback callback) const
 
 Optional<HitTestResult> InlinePaintable::hit_test(CSSPixelPoint position, HitTestType type) const
 {
+    auto position_adjusted_by_scroll_offset = position;
+    if (m_enclosing_scroll_frame_offset.has_value())
+        position_adjusted_by_scroll_offset.translate_by(-m_enclosing_scroll_frame_offset.value());
+
     for (auto& fragment : m_fragments) {
         if (fragment.paintable().stacking_context())
             continue;
         auto fragment_absolute_rect = fragment.absolute_rect();
-        if (fragment_absolute_rect.contains(position)) {
+        if (fragment_absolute_rect.contains(position_adjusted_by_scroll_offset)) {
             if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
                 return result;
             return HitTestResult { const_cast<Paintable&>(fragment.paintable()),
-                fragment.text_index_at(position.x()) };
+                fragment.text_index_at(position_adjusted_by_scroll_offset.x()) };
         }
     }
 

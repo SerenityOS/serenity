@@ -82,9 +82,11 @@ void ViewportPaintable::assign_scroll_frame_ids(HashMap<Painting::PaintableBox c
                 if (paintable.is_paintable_box()) {
                     auto const& paintable_box = static_cast<PaintableBox const&>(paintable);
                     const_cast<PaintableBox&>(paintable_box).set_scroll_frame_id(scroll_frame_id->id);
+                    const_cast<PaintableBox&>(paintable_box).set_enclosing_scroll_frame_offset(scroll_frame_id->offset);
                 } else if (paintable.is_inline_paintable()) {
                     auto const& inline_paintable = static_cast<InlinePaintable const&>(paintable);
                     const_cast<InlinePaintable&>(inline_paintable).set_scroll_frame_id(scroll_frame_id->id);
+                    const_cast<InlinePaintable&>(inline_paintable).set_enclosing_scroll_frame_offset(scroll_frame_id->offset);
                 }
                 break;
             }
