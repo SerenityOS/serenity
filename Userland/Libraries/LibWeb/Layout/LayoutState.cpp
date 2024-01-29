@@ -509,7 +509,6 @@ void LayoutState::UsedValues::set_content_height(CSSPixels height)
         height = 0;
     }
     m_content_height = height;
-    m_has_definite_height = true;
 }
 
 void LayoutState::UsedValues::set_temporary_content_width(CSSPixels width)
