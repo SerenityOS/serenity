@@ -1134,14 +1134,6 @@ struct Formatter<Wasm::Wasi::Errno> : AK::Formatter<FormatString> {
     }
 };
 
-template<>
-struct Formatter<Empty> : AK::Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder&, Empty)
-    {
-        return {};
-    }
-};
-
 template<typename T>
 struct Formatter<Wasm::Wasi::Result<T>> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::Result<T> const& value)

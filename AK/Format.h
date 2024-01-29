@@ -14,6 +14,7 @@
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <AK/Variant.h>
 
 #ifndef KERNEL
 #    include <stdio.h>
@@ -797,6 +798,32 @@ struct Formatter<Optional<T>> : Formatter<FormatString> {
         if (optional.has_value())
             return Formatter<FormatString>::format(builder, "{}"sv, *optional);
         return builder.put_literal("None"sv);
+    }
+};
+
+template<>
+struct Formatter<Empty> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Empty)
+    {
+        return builder.put_literal("Empty"sv);
+    }
+};
+
+template<typename... Ts>
+requires(HasFormatter<Ts> && ...)
+struct Formatter<Variant<Ts...>> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(move(formatter))
+    {
+    }
+
+    ErrorOr<void> format(FormatBuilder& builder, Variant<Ts...> const& variant)
+    {
+        return variant.visit([&builder]<typename T>(T const& v) {
+            Formatter<T> formatter;
+            return formatter.format(builder, v);
+        });
     }
 };
 
