@@ -182,6 +182,7 @@ public:
         JPEGStream jpeg_stream { move(stream), move(buffer) };
 
         TRY(jpeg_stream.refill_buffer());
+        jpeg_stream.m_offset_from_start = 0;
         return jpeg_stream;
     }
 
@@ -205,8 +206,10 @@ public:
         auto const discarded_from_buffer = min(m_current_size - m_byte_offset, bytes);
         m_byte_offset += discarded_from_buffer;
 
-        if (discarded_from_buffer < bytes)
+        if (discarded_from_buffer < bytes) {
+            m_offset_from_start += bytes - discarded_from_buffer;
             TRY(m_stream->discard(bytes - discarded_from_buffer));
+        }
 
         return {};
     }
@@ -216,8 +219,10 @@ public:
         auto const copied = m_buffer.span().slice(m_byte_offset).copy_trimmed_to(bytes);
         m_byte_offset += copied;
 
-        if (copied < bytes.size())
+        if (copied < bytes.size()) {
+            m_offset_from_start += bytes.size() - copied;
             TRY(m_stream->read_until_filled(bytes.slice(copied)));
+        }
 
         return {};
     }
@@ -229,7 +234,7 @@ public:
 
     u64 byte_offset() const
     {
-        return m_byte_offset;
+        return m_offset_from_start + m_byte_offset;
     }
 
 private:
@@ -242,6 +247,8 @@ private:
     ErrorOr<void> refill_buffer()
     {
         VERIFY(m_byte_offset == m_current_size);
+
+        m_offset_from_start += m_byte_offset;
 
         m_current_size = TRY(m_stream->read_some(m_buffer.span())).size();
         if (m_current_size == 0)
@@ -259,6 +266,7 @@ private:
     Optional<u16> m_saved_marker {};
 
     Vector<u8> m_buffer {};
+    u64 m_offset_from_start { 0 };
     u64 m_byte_offset { buffer_size };
     u64 m_current_size { buffer_size };
 };
