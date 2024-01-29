@@ -189,8 +189,16 @@ static TraversalDecision for_each_in_subtree(Layout::Node const& node, Callback 
 
 void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
+    // NOTE: SVG doesn't have a "formatting context" in the spec, but this is the most
+    //       obvious way to drive SVG layout in our engine at the moment.
+
     auto& svg_viewport = dynamic_cast<SVG::SVGViewport const&>(*box.dom_node());
     auto& svg_box_state = m_state.get_mutable(box);
+
+    // NOTE: We consider all SVG root elements to have definite size in both axes.
+    //       I'm not sure if this is good or bad, but our viewport transform logic depends on it.
+    svg_box_state.set_has_definite_width(true);
+    svg_box_state.set_has_definite_height(true);
 
     auto viewbox = svg_viewport.view_box();
     // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
@@ -238,6 +246,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         svg_box_state.set_content_offset(svg_rect.location().to_type<CSSPixels>());
         svg_box_state.set_content_width(CSSPixels(svg_rect.width()));
         svg_box_state.set_content_height(CSSPixels(svg_rect.height()));
+        svg_box_state.set_has_definite_width(true);
+        svg_box_state.set_has_definite_height(true);
     }
 
     auto root_offset = svg_box_state.offset;
@@ -292,6 +302,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             nested_viewport_state.set_content_offset({ nested_viewport_x, nested_viewport_y });
             nested_viewport_state.set_content_width(nested_viewport_width);
             nested_viewport_state.set_content_height(nested_viewport_height);
+            nested_viewport_state.set_has_definite_width(true);
+            nested_viewport_state.set_has_definite_height(true);
             nested_context.run(static_cast<Box const&>(descendant), layout_mode, available_space);
             return TraversalDecision::SkipChildrenAndContinue;
         }
@@ -362,6 +374,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             graphics_box_state.set_content_offset(path_bounding_box.top_left());
             graphics_box_state.set_content_width(path_bounding_box.width());
             graphics_box_state.set_content_height(path_bounding_box.height());
+            graphics_box_state.set_has_definite_width(true);
+            graphics_box_state.set_has_definite_height(true);
             graphics_box_state.set_computed_svg_path(move(path));
         }
         return TraversalDecision::Continue;
@@ -385,6 +399,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             box_state.set_content_y(bounding_box.y());
             box_state.set_content_width(bounding_box.width());
             box_state.set_content_height(bounding_box.height());
+            box_state.set_has_definite_width(true);
+            box_state.set_has_definite_height(true);
         }
         return IterationDecision::Continue;
     });
