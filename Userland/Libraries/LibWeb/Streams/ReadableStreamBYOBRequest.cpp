@@ -39,6 +39,7 @@ void ReadableStreamBYOBRequest::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_view);
 }
 
+// https://streams.spec.whatwg.org/#rs-byob-request-respond
 WebIDL::ExceptionOr<void> ReadableStreamBYOBRequest::respond(WebIDL::UnsignedLongLong bytes_written)
 {
     // 1. If this.[[controller]] is undefined, throw a TypeError exception.
