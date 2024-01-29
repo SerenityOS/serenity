@@ -160,6 +160,8 @@ mkdir -p mnt/root
 mkdir -p mnt/home/anon
 mkdir -p mnt/home/anon/Desktop
 mkdir -p mnt/home/anon/Downloads
+mkdir -p mnt/home/anon/Music
+mkdir -p mnt/home/anon/Pictures
 mkdir -p mnt/home/nona
 # FIXME: Handle these test copies using CMake install rules
 rm -fr mnt/home/anon/Tests/js-tests mnt/home/anon/Tests/cpp-tests

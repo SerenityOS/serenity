@@ -1,7 +1,10 @@
 [
     { "name": "Root", "path": "/" },
     { "name": "Home", "path": "/home/anon" },
-    { "name": "Documents", "path": "/home/anon/Documents" },
     { "name": "Desktop", "path": "/home/anon/Desktop" },
-    { "name": "Downloads", "path": "/home/anon/Downloads" }
+    { "name": "Documents", "path": "/home/anon/Documents" },
+    { "name": "Downloads", "path": "/home/anon/Downloads" },
+    { "name": "Music", "path": "/home/anon/Music" },
+    { "name": "Pictures", "path": "/home/anon/Pictures" },
+    { "name": "Videos", "path": "/home/anon/Videos" }
 ]
