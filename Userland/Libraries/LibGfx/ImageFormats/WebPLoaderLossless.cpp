@@ -54,7 +54,7 @@ namespace {
 // WebP-lossless's CanonicalCodes are almost identical to deflate's.
 // One difference is that codes with a single element in webp-lossless consume 0 bits to produce that single element,
 // while they consume 1 bit in Compress::CanonicalCode. This class wraps Compress::CanonicalCode to handle the case
-// where the codes contain just a single element, and dispatch to Compress::CanonicalCode else.
+// where the codes contain just a single element, and dispatches to Compress::CanonicalCode else.
 class CanonicalCode {
 public:
     CanonicalCode()
