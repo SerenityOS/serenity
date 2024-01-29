@@ -9,6 +9,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -23,6 +24,7 @@ struct Annotation {
     size_t start_offset { 0 };
     size_t end_offset { 0 };
     Gfx::Color background_color { Color::from_argb(0xfffce94f) };
+    String comments {};
 
     bool operator==(Annotation const& other) const = default;
 };
