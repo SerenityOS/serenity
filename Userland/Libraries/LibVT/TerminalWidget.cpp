@@ -97,7 +97,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     set_pty_master_fd(ptm_fd);
 
     on_emoji_input = [this](auto emoji) {
-        inject_string(emoji);
+        emit(emoji.bytes().data(), emoji.length());
     };
 
     m_cursor_blink_timer = add<Core::Timer>();
