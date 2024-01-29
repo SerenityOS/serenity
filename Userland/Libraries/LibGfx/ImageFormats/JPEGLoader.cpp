@@ -1221,14 +1221,14 @@ static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& con
     return stream.discard(bytes_to_read);
 }
 
-static inline bool validate_luma_and_modify_context(Component const& luma, JPEGLoadingContext& context)
+static inline bool validate_sampling_factors_and_modify_context(SamplingFactors const& sampling_factors, JPEGLoadingContext& context)
 {
-    if ((luma.sampling_factors.horizontal == 1 || luma.sampling_factors.horizontal == 2) && (luma.sampling_factors.vertical == 1 || luma.sampling_factors.vertical == 2)) {
-        context.mblock_meta.hpadded_count += luma.sampling_factors.horizontal == 1 ? 0 : context.mblock_meta.hcount % 2;
-        context.mblock_meta.vpadded_count += luma.sampling_factors.vertical == 1 ? 0 : context.mblock_meta.vcount % 2;
+    if ((sampling_factors.horizontal == 1 || sampling_factors.horizontal == 2) && (sampling_factors.vertical == 1 || sampling_factors.vertical == 2)) {
+        context.mblock_meta.hpadded_count += sampling_factors.horizontal == 1 ? 0 : context.mblock_meta.hcount % 2;
+        context.mblock_meta.vpadded_count += sampling_factors.vertical == 1 ? 0 : context.mblock_meta.vcount % 2;
         context.mblock_meta.padded_total = context.mblock_meta.hpadded_count * context.mblock_meta.vpadded_count;
         // For easy reference to relevant sample factors.
-        context.sampling_factors = luma.sampling_factors;
+        context.sampling_factors = sampling_factors;
 
         return true;
     }
@@ -1306,7 +1306,7 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
         if (i == 0) {
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
-            if (!validate_luma_and_modify_context(component, context)) {
+            if (!validate_sampling_factors_and_modify_context(component.sampling_factors, context)) {
                 dbgln_if(JPEG_DEBUG, "Unsupported luma subsampling factors: horizontal: {}, vertical: {}",
                     component.sampling_factors.horizontal,
                     component.sampling_factors.vertical);
