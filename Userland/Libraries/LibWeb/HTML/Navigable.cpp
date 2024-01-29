@@ -1694,6 +1694,22 @@ void Navigable::reload()
     });
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#nav-stop
+void Navigable::stop_loading()
+{
+    // NOTE: See https://github.com/whatwg/html/issues/6905
+
+    // 1. Let document be navigable's active document.
+    auto& document = *active_document();
+
+    // 2. If document's unload counter is 0, and navigable's ongoing navigation is a navigation ID, then set the ongoing navigation for navigable to null.
+    if (document.unload_counter() == 0 && ongoing_navigation().has<String>())
+        set_ongoing_navigation({});
+
+    // 3. Abort a document and its descendants given document.
+    document.abort_a_document_and_its_descendants();
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-navigation-must-be-a-replace
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document)
 {

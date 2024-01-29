@@ -527,8 +527,8 @@ WebIDL::ExceptionOr<Document*> Document::open(Optional<String> const&, Optional<
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
         return WebIDL::InvalidStateError::create(realm(), "throw-on-dynamic-markup-insertion-counter greater than zero."_fly_string);
 
-    // FIXME: 3. Let entryDocument be the entry global object's associated Document.
-    auto& entry_document = *this;
+    // 3. Let entryDocument be the entry global object's associated Document.
+    auto& entry_document = verify_cast<HTML::Window>(HTML::entry_global_object()).associated_document();
 
     // 4. If document's origin is not same origin to entryDocument's origin, then throw a "SecurityError" DOMException.
     if (origin() != entry_document.origin())
@@ -546,16 +546,24 @@ WebIDL::ExceptionOr<Document*> Document::open(Optional<String> const&, Optional<
     if (m_active_parser_was_aborted)
         return this;
 
-    // FIXME: 8. If document's browsing context is non-null and there is an existing attempt to navigate document's browsing context, then stop document loading given document.
+    // 8. If document's node navigable is non-null and document's node navigable's ongoing navigation is a navigation ID, then stop loading document's node navigable.
+    if (navigable() && navigable()->ongoing_navigation().has<String>())
+        navigable()->stop_loading();
 
     // FIXME: 9. For each shadow-including inclusive descendant node of document, erase all event listeners and handlers given node.
 
     // FIXME 10. If document is the associated Document of document's relevant global object, then erase all event listeners and handlers given document's relevant global object.
 
-    // 11. Replace all with null within document, without firing any mutation events.
+    // FIXME: 11. Let oldFlag be the value of document's fire mutation events flag.
+
+    // FIXME: 12. Set document's fire mutation events flag to false.
+
+    // 13. Replace all with null within document, without firing any mutation events.
     replace_all(nullptr);
 
-    // 12. If document is fully active, then:
+    // 14. Set document's fire mutation events flag to oldFlag.
+
+    // 15. If document is fully active, then:
     if (is_fully_active()) {
         // 1. Let newURL be a copy of entryDocument's URL.
         auto new_url = entry_document.url();
@@ -563,27 +571,30 @@ WebIDL::ExceptionOr<Document*> Document::open(Optional<String> const&, Optional<
         if (&entry_document != this)
             new_url.set_fragment({});
 
-        // FIXME: 3. Run the URL and history update steps with document and newURL.
+        // 3. Run the URL and history update steps with document and newURL.
+        HTML::perform_url_and_history_update_steps(*this, new_url);
     }
 
-    // 13. Set document's is initial about:blank to false.
+    // 16. Set document's is initial about:blank to false.
     set_is_initial_about_blank(false);
 
-    // FIXME: 14. If document's iframe load in progress flag is set, then set document's mute iframe load flag.
+    // 17. If document's iframe load in progress flag is set, then set document's mute iframe load flag.
+    if (m_iframe_load_in_progress)
+        m_mute_iframe_load = true;
 
-    // 15. Set document to no-quirks mode.
+    // 18. Set document to no-quirks mode.
     set_quirks_mode(QuirksMode::No);
 
-    // 16. Create a new HTML parser and associate it with document. This is a script-created parser (meaning that it can be closed by the document.open() and document.close() methods, and that the tokenizer will wait for an explicit call to document.close() before emitting an end-of-file token). The encoding confidence is irrelevant.
+    // 19. Create a new HTML parser and associate it with document. This is a script-created parser (meaning that it can be closed by the document.open() and document.close() methods, and that the tokenizer will wait for an explicit call to document.close() before emitting an end-of-file token). The encoding confidence is irrelevant.
     m_parser = HTML::HTMLParser::create_for_scripting(*this);
 
-    // 17. Set the insertion point to point at just before the end of the input stream (which at this point will be empty).
+    // 20. Set the insertion point to point at just before the end of the input stream (which at this point will be empty).
     m_parser->tokenizer().update_insertion_point();
 
-    // 18. Update the current document readiness of document to "loading".
+    // 21. Update the current document readiness of document to "loading".
     update_readiness(HTML::DocumentReadyState::Loading);
 
-    // 19. Return document.
+    // 22. Return document.
     return this;
 }
 
