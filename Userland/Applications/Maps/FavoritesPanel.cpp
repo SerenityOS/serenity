@@ -61,8 +61,12 @@ void FavoritesPanel::load_favorites()
         double longitude = object.get_double_with_precision_loss("longitude"sv).release_value();
         return ByteString::formatted("{}\n{:.5}, {:.5}", name, latitude, longitude);
     });
-    favorites_fields.empend("latitude", "Latitude"_string, Gfx::TextAlignment::CenterLeft);
-    favorites_fields.empend("longitude", "Longitude"_string, Gfx::TextAlignment::CenterLeft);
+    favorites_fields.empend("latitude", "Latitude"_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) -> GUI::Variant {
+        return object.get_double_with_precision_loss("latitude"sv).release_value();
+    });
+    favorites_fields.empend("longitude", "Longitude"_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) -> GUI::Variant {
+        return object.get_double_with_precision_loss("longitude"sv).release_value();
+    });
     favorites_fields.empend("zoom", "Zoom"_string, Gfx::TextAlignment::CenterLeft);
     m_favorites_list->set_model(*GUI::JsonArrayModel::create(ByteString::formatted("{}/MapsFavorites.json", Core::StandardPaths::config_directory()), move(favorites_fields)));
     m_favorites_list->model()->invalidate();
@@ -136,11 +140,12 @@ void FavoritesPanel::favorites_changed()
     m_favorites_list->set_visible(model.row_count() > 0);
 
     Vector<Favorite> favorites;
-    for (int index = 0; index < model.row_count(); index++)
+    for (int index = 0; index < model.row_count(); index++) {
         favorites.append({ MUST(String::from_byte_string(model.index(index, 0).data().to_byte_string())),
             { model.index(index, 1).data().as_double(),
                 model.index(index, 2).data().as_double() },
             model.index(index, 3).data().to_i32() });
+    }
     on_favorites_change(favorites);
 }
 
