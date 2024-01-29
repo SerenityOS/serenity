@@ -14,7 +14,6 @@
 #include "Bitmap.h"
 #include "Font/Emoji.h"
 #include "Font/Font.h"
-#include "Gamma.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
