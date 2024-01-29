@@ -19,6 +19,9 @@
 #include <LibGfx/Palette.h>
 
 namespace Welcome {
+
+static String tips_file_path = "/usr/share/Welcome/tips.txt"_string;
+
 ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::create()
 {
     auto welcome_widget = TRY(WelcomeWidget::try_create());
@@ -79,8 +82,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     };
 
     if (auto result = open_and_parse_tips_file(); result.is_error()) {
-        auto path = TRY(String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory()));
-        auto error = TRY(String::formatted("Opening \"{}\" failed: {}", path, result.error()));
+        auto error = TRY(String::formatted("Opening \"{}\" failed: {}", tips_file_path, result.error()));
         m_tip_label->set_text(error);
         warnln(error);
     }
@@ -92,8 +94,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
 
 ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
 {
-    auto path = TRY(String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory()));
-    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open(tips_file_path, Core::File::OpenMode::Read));
     auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> buffer;
 
@@ -128,4 +129,5 @@ void WelcomeWidget::paint_event(GUI::PaintEvent& event)
     rect.set_x(rect.x() + static_cast<int>(ceilf(m_banner_font->bold_variant().width("Serenity"sv))));
     painter.draw_text(rect, "OS"sv, m_banner_font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().tray_text());
 }
+
 }
