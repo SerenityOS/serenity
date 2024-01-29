@@ -672,6 +672,10 @@ Layout::BlockContainer& PaintableWithLines::layout_box()
 
 Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestType type) const
 {
+    auto position_adjusted_by_scroll_offset = position;
+    if (enclosing_scroll_frame_offset().has_value())
+        position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
+
     if (!is_visible())
         return {};
 
@@ -680,7 +684,7 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
         return stacking_context()->hit_test(position, type);
     }
 
-    if (!absolute_border_box_rect().contains(position.x(), position.y()))
+    if (!absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y()))
         return {};
 
     for (auto* child = first_child(); child; child = child->next_sibling()) {
@@ -700,6 +704,10 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
 
 Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
 {
+    auto position_adjusted_by_scroll_offset = position;
+    if (enclosing_scroll_frame_offset().has_value())
+        position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
+
     if (!layout_box().children_are_inline() || m_fragments.is_empty())
         return PaintableBox::hit_test(position, type);
 
@@ -717,10 +725,10 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
         if (fragment.paintable().stacking_context())
             continue;
         auto fragment_absolute_rect = fragment.absolute_rect();
-        if (fragment_absolute_rect.contains(position)) {
+        if (fragment_absolute_rect.contains(position_adjusted_by_scroll_offset)) {
             if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
                 return result;
-            return HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.text_index_at(position.x()) };
+            return HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.text_index_at(position_adjusted_by_scroll_offset.x()) };
         }
 
         // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
@@ -728,11 +736,11 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
         // The best candidate is either the end of the line above, the beginning of the line below, or the beginning or end of the current line.
         // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
         // If we knew the direction of selection, we could make a better choice.
-        if (fragment_absolute_rect.bottom() - 1 <= position.y()) { // fully below the fragment
+        if (fragment_absolute_rect.bottom() - 1 <= position_adjusted_by_scroll_offset.y()) { // fully below the fragment
             last_good_candidate = HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.start() + fragment.length() };
-        } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
-            if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
-                if (!last_good_candidate.has_value()) {            // first fragment of the line
+        } else if (fragment_absolute_rect.top() <= position_adjusted_by_scroll_offset.y()) { // vertically within the fragment
+            if (position_adjusted_by_scroll_offset.x() < fragment_absolute_rect.left()) {    // left of the fragment
+                if (!last_good_candidate.has_value()) {                                      // first fragment of the line
                     last_good_candidate = HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.start() };
                 }
             } else { // right of the fragment
@@ -743,7 +751,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
 
     if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
-    if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
+    if (is_visible() && absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y()))
         return HitTestResult { const_cast<PaintableWithLines&>(*this) };
     return {};
 }
