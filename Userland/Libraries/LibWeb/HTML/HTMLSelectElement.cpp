@@ -323,9 +323,9 @@ void HTMLSelectElement::form_associated_element_was_inserted()
             auto options = list_of_options();
             if (options.size() > 0) {
                 options.at(0)->set_selected(true);
-                update_inner_text_element();
             }
         }
+        update_inner_text_element();
     });
 }
 
