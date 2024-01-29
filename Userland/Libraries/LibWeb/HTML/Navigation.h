@@ -132,6 +132,9 @@ public:
     bool focus_changed_during_ongoing_navigation() const { return m_focus_changed_during_ongoing_navigation; }
     void set_focus_changed_during_ongoing_navigation(bool b) { m_focus_changed_during_ongoing_navigation = b; }
 
+    HashMap<String, JS::NonnullGCPtr<NavigationAPIMethodTracker>> clone_upcoming_traverse_api_method_trackers() const { return m_upcoming_traverse_api_method_trackers; }
+    void reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::Value exception);
+
 private:
     explicit Navigation(JS::Realm&);
 
@@ -146,7 +149,6 @@ private:
     WebIDL::ExceptionOr<NavigationResult> perform_a_navigation_api_traversal(String key, NavigationOptions const&);
     void promote_an_upcoming_api_method_tracker_to_ongoing(Optional<String> destination_key);
     void resolve_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
-    void reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::Value exception);
     void clean_up(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
     void notify_about_the_committed_to_entry(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::NonnullGCPtr<NavigationHistoryEntry>);
 

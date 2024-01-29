@@ -8,6 +8,7 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/HTML/Navigable.h>
+#include <LibWeb/HTML/NavigationType.h>
 #include <LibWeb/HTML/SessionHistoryTraversalQueue.h>
 #include <LibWeb/HTML/VisibilityState.h>
 
@@ -49,7 +50,7 @@ public:
 
     HistoryStepResult apply_the_traverse_history_step(int, Optional<SourceSnapshotParams>, JS::GCPtr<Navigable>, UserNavigationInvolvement);
     HistoryStepResult apply_the_reload_history_step();
-    HistoryStepResult apply_the_push_or_replace_history_step(int step);
+    HistoryStepResult apply_the_push_or_replace_history_step(int step, HistoryHandlingBehavior);
     HistoryStepResult update_for_navigable_creation_or_destruction();
 
     int get_the_used_step(int step) const;
@@ -93,7 +94,8 @@ private:
         bool check_for_cancelation,
         Optional<SourceSnapshotParams>,
         JS::GCPtr<Navigable> initiator_to_check,
-        Optional<UserNavigationInvolvement> user_involvement_for_navigate_events);
+        Optional<UserNavigationInvolvement> user_involvement_for_navigate_events,
+        Optional<Bindings::NavigationType> navigation_type);
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>> get_session_history_entries_for_the_navigation_api(JS::NonnullGCPtr<Navigable>, int);
 
@@ -103,14 +105,17 @@ private:
     // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-session-history-entries
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>> m_session_history_entries;
 
-    // FIXME: https://html.spec.whatwg.org/multipage/document-sequences.html#tn-session-history-traversal-queue
-
     // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-running-nested-apply-history-step
     bool m_running_nested_apply_history_step { false };
+
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#is-closing
+    // NOTE: This is only ever set to true for top-level traversable navigables.
+    bool m_is_closing { false };
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#system-visibility-state
     VisibilityState m_system_visibility_state { VisibilityState::Visible };
 
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-session-history-traversal-queue
     SessionHistoryTraversalQueue m_session_history_traversal_queue;
 
     JS::NonnullGCPtr<Page> m_page;
@@ -122,6 +127,6 @@ struct BrowsingContextAndDocument {
 };
 
 WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(JS::NonnullGCPtr<Page> page);
-void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace);
+void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace, HistoryHandlingBehavior);
 
 }

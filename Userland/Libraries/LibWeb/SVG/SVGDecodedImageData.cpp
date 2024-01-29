@@ -84,6 +84,7 @@ ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> SVGDecodedImageData::create(JS::R
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
     navigable->set_ongoing_navigation({});
     navigable->active_document()->destroy();
+    navigable->set_has_been_destroyed();
     navigable->active_session_history_entry()->document_state->set_document(document);
 
     auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);

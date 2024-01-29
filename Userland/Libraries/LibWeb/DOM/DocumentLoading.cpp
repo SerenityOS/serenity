@@ -412,7 +412,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_media_document(
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
-JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params)
+JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams& navigation_params)
 {
     // To load a document given navigation params navigationParams, source snapshot params sourceSnapshotParams,
     // and origin initiatorOrigin, perform the following steps. They return a Document or null.

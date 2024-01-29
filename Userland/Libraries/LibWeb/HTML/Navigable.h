@@ -144,6 +144,8 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> evaluate_javascript_url(AK::URL const&, Origin const& new_document_origin, String navigation_id);
     WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
 
+    void inform_the_navigation_api_about_child_navigable_destruction();
+
     bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
 
     void reload();

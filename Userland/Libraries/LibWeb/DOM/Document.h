@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/LazyLoadingElement.h>
+#include <LibWeb/HTML/NavigationType.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -481,13 +482,23 @@ public:
     Vector<JS::Handle<HTML::Navigable>> inclusive_ancestor_navigables();
     Vector<JS::Handle<HTML::Navigable>> document_tree_child_navigables();
 
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
     void destroy();
+
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document-and-its-descendants
+    void destroy_a_document_and_its_descendants(JS::SafeFunction<void()> after_all_destruction = nullptr);
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
     void abort();
 
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#abort-a-document-and-its-descendants
+    void abort_a_document_and_its_descendants();
+
     // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document
     void unload(JS::GCPtr<Document> new_document = nullptr);
+
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document-and-its-descendants
+    void unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document = nullptr, JS::SafeFunction<void()> after_all_unloads = nullptr);
 
     // https://html.spec.whatwg.org/multipage/dom.html#active-parser
     JS::GCPtr<HTML::HTMLParser> active_parser();
@@ -535,7 +546,7 @@ public:
 
     HTML::SourceSnapshotParams snapshot_source_snapshot_params() const;
 
-    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, bool update_navigation_api = true);
+    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Bindings::NavigationType>, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, JS::GCPtr<HTML::SessionHistoryEntry> previous_entry_for_activation = nullptr);
 
     HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
 

@@ -93,6 +93,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -2752,59 +2753,82 @@ void Document::destroy()
 {
     page().client().page_did_destroy_document(*this);
 
-    // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
-    // 4. Abort document.
+    // 1. Assert: this is running as part of a task queued on document's relevant agent's event loop.
+
+    // 2. Abort document.
     abort();
 
-    // 2. Set document's salvageable state to false.
+    // 3. Set document's salvageable state to false.
     m_salvageable = false;
 
-    // 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+    // FIXME: 4. Let ports be the list of MessagePorts whose relevant global object's associated Document is document.
+    // FIXME: 5. For each port in ports, disentangle port.
+
+    // 6. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
     run_unloading_cleanup_steps();
 
-    // 5. Remove any tasks whose document is document from any task queue (without running those tasks).
+    // 7. Remove any tasks whose document is document from any task queue (without running those tasks).
     HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
         return task.document() == this;
     });
 
-    // 6. Set document's browsing context to null.
+    // 8. Set document's browsing context to null.
     m_browsing_context = nullptr;
 
-    // When a frame element stops being an active frame element, the user agent must destroy a child navigable given the element.
-    // A frame element is said to be an active frame element when it is in a document tree and its node document's browsing context is non-null.
-    for (auto& navigable_container : HTML::NavigableContainer::all_instances()) {
-        if (&navigable_container->document() == this) {
-            navigable_container->destroy_the_child_navigable();
-        }
-    }
-
-    // 7. Set document's node navigable's active session history entry's document state's document to null.
+    // 9. Set document's node navigable's active session history entry's document state's document to null.
     if (navigable()) {
         navigable()->active_session_history_entry()->document_state->set_document(nullptr);
     }
 
-    // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
+    // FIXME: 10. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
+    // FIXME: 11. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
+}
 
-    // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document-and-its-descendants
+void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> after_all_destruction)
+{
+    // To destroy a document and its descendants given a Document document and an optional set of steps afterAllDestruction,
+    //     perform the following steps in parallel:
+    Platform::EventLoopPlugin::the().deferred_invoke([this, after_all_destruction = move(after_all_destruction)]() mutable {
+        // 1. Let childNavigables be document's child navigables.
+        auto child_navigables = document_tree_child_navigables();
+
+        // 3. Let numberDestroyed be 0.
+        size_t number_destroyed = 0;
+
+        // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
+        //    given childNavigable's active window to perform the following steps:
+        for (auto& child_navigable : child_navigables) {
+            HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&number_destroyed, child_navigable = child_navigable.ptr()] {
+                // 1. Let incrementDestroyed be an algorithm step which increments numberDestroyed.
+                auto increment_destroyed = [&number_destroyed] { ++number_destroyed; };
+
+                // 2. Destroy a document and its descendants given childNavigable's active document and incrementDestroyed.
+                child_navigable->active_document()->destroy_a_document_and_its_descendants(move(increment_destroyed));
+            });
+        }
+
+        // 4. Wait until numberDestroyed equals childNavigable's size.
+        Platform::EventLoopPlugin::the().spin_until([&] {
+            return number_destroyed == child_navigables.size();
+        });
+
+        // 4. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), [after_all_destruction = move(after_all_destruction), this] {
+            // 1. Destroy document.
+            destroy();
+
+            // 2. If afterAllDestruction was given, then run it.
+            if (after_all_destruction)
+                after_all_destruction();
+        });
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
 void Document::abort()
 {
-    // 1. Abort the active documents of each of document's descendant navigables.
-    //    If this results in any of those Document objects having their salvageable state set to false,
-    //    then set document's salvageable state to false also.
-    for (auto navigable : descendant_navigables()) {
-        if (auto document = navigable->active_document()) {
-            // NOTE: This is not in the spec but we need to abort ongoing navigations in all descendandt navigables.
-            //       See https://github.com/whatwg/html/issues/9711
-            navigable->set_ongoing_navigation({});
-
-            document->abort();
-            if (!document->m_salvageable)
-                m_salvageable = false;
-        }
-    }
+    // 1. Assert: this is running as part of a task queued on document's relevant agent's event loop.
 
     // FIXME: 2. Cancel any instances of the fetch algorithm in the context of document,
     //           discarding any tasks queued for them, and discarding any further data received from the network for them.
@@ -2812,13 +2836,13 @@ void Document::abort()
     //           or any queued tasks or any network data getting discarded,
     //           then set document's salvageable state to false.
 
-    // 3. If document's navigation id is non-null, then:
+    // 3. If document's during-loading navigation ID for WebDriver BiDi is non-null, then:
     if (m_navigation_id.has_value()) {
         // 1. FIXME: Invoke WebDriver BiDi navigation aborted with document's browsing context,
         //           and new WebDriver BiDi navigation status whose whose id is document's navigation id,
         //           status is "canceled", and url is document's URL.
 
-        // 2. Set document's navigation id to null.
+        // 2. Set document's during-loading navigation ID for WebDriver BiDi to null.
         m_navigation_id = {};
     }
 
@@ -2833,6 +2857,33 @@ void Document::abort()
         // 3. Set document's salvageable state to false.
         m_salvageable = false;
     }
+}
+
+void Document::abort_a_document_and_its_descendants()
+{
+    // FIXME 1. Assert: this is running as part of a task queued on document's relevant agent's event loop.
+
+    // 2. Let descendantNavigables be document's descendant navigables.
+    auto descendant_navigables = this->descendant_navigables();
+
+    // 3. For each descendantNavigable of descendantNavigables, queue a global task on the navigation and traversal task source given descendantNavigable's active window to perform the following steps:
+    for (auto& descendant_navigable : descendant_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), [this, descendant_navigable = descendant_navigable.ptr()] {
+            // NOTE: This is not in the spec but we need to abort ongoing navigations in all descendant navigables.
+            //       See https://github.com/whatwg/html/issues/9711
+            descendant_navigable->set_ongoing_navigation({});
+
+            // 1. Abort descendantNavigable's active document.
+            descendant_navigable->active_document()->abort();
+
+            // 2. If descendantNavigable's active document's salvageable is false, then set document's salvageable to false.
+            if (!descendant_navigable->active_document()->m_salvageable)
+                m_salvageable = false;
+        });
+    }
+
+    // 4. Abort document.
+    abort();
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#active-parser
@@ -2933,6 +2984,46 @@ void Document::unload(JS::GCPtr<Document>)
     //            newDocument's previous document unload timing to unloadTimingInfo.
 
     did_stop_being_active_document_in_navigable();
+}
+
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document-and-its-descendants
+void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document, JS::SafeFunction<void()> after_all_unloads)
+{
+    // 1. FIXME: Assert: this is running within document's node navigable's traversable navigable's session history traversal queue.
+
+    // 2. Let childNavigables be document's child navigables.
+    auto child_navigables = document_tree_child_navigables();
+
+    // 2. Let numberUnloaded be 0.
+    size_t number_unloaded = 0;
+
+    // Spec FIXME: in what order?
+    // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
+    //    given childNavigable's active window to perform the following steps:
+    for (auto& child_navigable : child_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&number_unloaded, child_navigable = child_navigable.ptr()] {
+            // 1. Let incrementUnloaded be an algorithm step which increments numberUnloaded.
+            auto increment_unloaded = [&number_unloaded] { ++number_unloaded; };
+
+            // 2. Unload a document and its descendants given childNavigable's active document, null, and incrementUnloaded.
+            child_navigable->active_document()->unload_a_document_and_its_descendants(nullptr, move(increment_unloaded));
+        });
+    }
+
+    // 4. Wait until numberUnloaded equals childNavigable's size.
+    Platform::EventLoopPlugin::the().spin_until([&] {
+        return number_unloaded == child_navigables.size();
+    });
+
+    // 5. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), [this, new_document, after_all_unloads = move(after_all_unloads)] {
+        // 1. Unload document, passing along newDocument if it is not null.
+        unload(new_document);
+
+        // 2. If afterAllUnloads was given, then run it.
+        if (after_all_unloads)
+            after_all_unloads();
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use
@@ -3603,7 +3694,7 @@ void Document::restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHi
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-document-for-history-step-application
-void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api, bool update_navigation_api)
+void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Bindings::NavigationType> navigation_type, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api, JS::GCPtr<HTML::SessionHistoryEntry> previous_entry_for_activation)
 {
     // 1. Let documentIsNew be true if document's latest entry is null; otherwise false.
     auto document_is_new = !m_latest_entry;
@@ -3617,7 +3708,10 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     // 4. Set document's history object's length to scriptHistoryLength.
     history()->m_length = script_history_length;
 
-    // 5. If documentsEntryChanged is true, then:
+    // 5. Let navigation be history's relevant global object's navigation API.
+    auto navigation = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigation();
+
+    // 6. If documentsEntryChanged is true, then:
     // NOTE: documentsEntryChanged can be false for one of two reasons: either we are restoring from bfcache,
     //      or we are asynchronously finishing up a synchronous navigation which already synchronously set document's latest entry.
     //      The doNotReactivate argument distinguishes between these two cases.
@@ -3631,24 +3725,21 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
         // 3. Restore the history object state given document and entry.
         restore_the_history_object_state(entry);
 
-        // 4. Let navigation be history's relevant global object's navigation API.
-        auto navigation = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigation();
-
-        // 5. If documentIsNew is false, then:
+        // 4. If documentIsNew is false, then:
         if (!document_is_new) {
-            // AD HOC: Skip this in situations the spec steps don't account for
-            if (update_navigation_api) {
-                // 1. Update the navigation API entries for a same-document navigation given navigation, entry, and "traverse".
-                navigation->update_the_navigation_api_entries_for_a_same_document_navigation(entry, Bindings::NavigationType::Traverse);
-            }
+            // 1. Assert: navigationType is not null.
+            VERIFY(navigation_type.has_value());
 
-            // FIXME: 2. Fire an event named popstate at document's relevant global object, using PopStateEvent,
+            // 2. Update the navigation API entries for a same-document navigation given navigation, entry, and navigationType.
+            navigation->update_the_navigation_api_entries_for_a_same_document_navigation(entry, navigation_type.value());
+
+            // FIXME: 3. Fire an event named popstate at document's relevant global object, using PopStateEvent,
             //           with the state attribute initialized to document's history object's state and hasUAVisualTransition initialized to true
             //           if a visual transition, to display a cached rendered state of the latest entry, was done by the user agent.
 
-            // FIXME: 3. Restore persisted state given entry.
+            // FIXME: 4. Restore persisted state given entry.
 
-            // FIXME: 4. If oldURL's fragment is not equal to entry's URL's fragment, then queue a global task on the DOM manipulation task source
+            // FIXME: 5. If oldURL's fragment is not equal to entry's URL's fragment, then queue a global task on the DOM manipulation task source
             //           given document's relevant global object to fire an event named hashchange at document's relevant global object,
             //           using HashChangeEvent, with the oldURL attribute initialized to the serialization of oldURL and the newURL attribute
             //           initialized to the serialization of entry's URL.
@@ -3666,7 +3757,10 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
         }
     }
 
-    // 6. If documentIsNew is true, then:
+    // 7. FIXME: Implement spec steps for NavigationActivation
+    (void)previous_entry_for_activation;
+
+    // 8. If documentIsNew is true, then:
     if (document_is_new) {
         // FIXME: 1. Try to scroll to the fragment for document.
         // FIXME: According to the spec we should only scroll here if document has no parser or parsing has stopped.
@@ -3681,7 +3775,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     // 7. Otherwise, if documentsEntryChanged is false and doNotReactivate is false, then:
     // NOTE: This is for bfcache restoration
     if (!documents_entry_changed && !do_not_reactivate) {
-        // FIXME: 1. Assert: entriesForNavigationAPI is given.
+        // 1. Assert: entriesForNavigationAPI is given.
+        VERIFY(entries_for_navigation_api.has_value());
+
         // FIXME: 2. Reactivate document given entry and entriesForNavigationAPI.
     }
 }

@@ -135,7 +135,10 @@ ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> do
     static int next_id = 0;
     m_id = TRY(String::number(next_id++));
 
-    // 1. Let entry be a new session history entry, with
+    // 1. Assert: documentState's document is non-null.
+    VERIFY(document_state->document());
+
+    // 2. Let entry be a new session history entry, with
     JS::NonnullGCPtr<SessionHistoryEntry> entry = *heap().allocate_without_realm<SessionHistoryEntry>();
 
     // URL: document's URL
@@ -144,13 +147,13 @@ ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> do
     // document state: documentState
     entry->document_state = document_state;
 
-    // 2. Set navigable's current session history entry to entry.
+    // 3. Set navigable's current session history entry to entry.
     m_current_session_history_entry = entry;
 
-    // 3. Set navigable's active session history entry to entry.
+    // 4. Set navigable's active session history entry to entry.
     m_active_session_history_entry = entry;
 
-    // 4. Set navigable's parent to parent.
+    // 5. Set navigable's parent to parent.
     m_parent = parent;
 
     return {};
@@ -483,6 +486,7 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
         }
     }
 
+    // 7. Assert: this step is not reached.
     VERIFY_NOT_REACHED();
 }
 
@@ -1011,12 +1015,12 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
     bool allow_POST,
     Function<void()> completion_steps)
 {
+
     // FIXME: 1. Assert: this is running in parallel.
 
     // 2. Assert: if navigationParams is non-null, then navigationParams's response is non-null.
-    // NavigationParams' response field is NonnullGCPtr
     if (!navigation_params.has<Empty>())
-        VERIFY(navigation_params.has<NavigationParams>());
+        VERIFY(navigation_params.get<NavigationParams>().response != nullptr);
 
     // 3. Let currentBrowsingContext be navigable's active browsing context.
     [[maybe_unused]] auto current_browsing_context = active_browsing_context();
@@ -1035,7 +1039,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         // 2. Otherwise, if both of the following are true:
         //    - entry's URL's scheme is a fetch scheme; and
         //    - documentResource is null, or allowPOST is true and documentResource's request body is not failure (FIXME: check if request body is not failure)
-        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && (document_resource.has<Empty>() || allow_POST)) {
+        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && (document_resource.has<Empty>() || (allow_POST && document_resource.get<POSTResource>().request_body.has_value()))) {
             navigation_params = TRY(create_navigation_params_by_fetching(entry, this, source_snapshot_params, target_snapshot_params, csp_navigation_type, navigation_id));
         }
         // 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with:
@@ -1068,47 +1072,39 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         if (has_been_destroyed())
             return;
 
-        // 1. If navigable's ongoing navigation no longer equals navigationId, then run completionSteps and return.
+        // 1. If navigable's ongoing navigation no longer equals navigationId, then run completionSteps and abort these steps.
         if (navigation_id.has_value() && (!ongoing_navigation().has<String>() || ongoing_navigation().get<String>() != *navigation_id)) {
             completion_steps();
             return;
         }
 
-        // 2. Let failure be false.
-        auto failure = false;
+        // 2. Let saveExtraDocumentState be true.
+        // NOTE: Usually, in the cases where we end up populating entry's document state's document, we then want to save some of
+        //       the state from that Document into entry. This ensures that if there are future traversals to entry where its
+        //       document has been destroyed, we can use that state when creating a new Document.
+        //       However, in some specific cases, saving the state would be unhelpful. For those, we set
+        //       saveExtraDocumentState to false later in this algorithm.
+        auto save_extra_document_state = true;
 
-        // 3. If navigationParams is a non-fetch scheme navigation params, then set entry's document state's document to the result of
-        //    running attempt to create a non-fetch scheme document navigationParams
+        // 3. If navigationParams is a non-fetch scheme navigation params, then:
         if (navigation_params.has<NonFetchSchemeNavigationParams>()) {
-            // FIXME: https://github.com/whatwg/html/issues/9767
-            // We probably are expected to skip to steps 13 and 14 and return after doing this
+            // 1. Set entry's document state's document to the result of running attempt to create a non-fetch scheme document given navigationParams
             entry->document_state->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<NonFetchSchemeNavigationParams>()));
-            if (entry->document_state->document()) {
-                entry->document_state->set_ever_populated(true);
-            }
-            completion_steps();
-            return;
+
+            // 2. Set saveExtraDocumentState to false
+            save_extra_document_state = false;
         }
 
-        // 4. Otherwise, if navigationParams is null, then set failure to true.
-        if (navigation_params.has<Empty>()) {
-            failure = true;
-        }
+        // 4. Otherwise, if any of the following are true:
+        // - navigationParams is null;
+        // FIXME: - The result of should navigation response to navigation request of type in target be blocked by Content Security Policy? given navigationParams's request, navigationParams's response, navigationParams's policy container's CSP list, cspNavigationType, and navigable is "Blocked";
+        // FIXME: - navigationParams's reserved environment is non-null and the result of checking a navigation response's adherence to its embedder policy given navigationParams's response, navigable, and navigationParams's policy container's embedder policy is false; or
+        // FIXME: - the result of checking a navigation response's adherence to `X-Frame-Options` given navigationParams's response, navigable, navigationParams's policy container's CSP list, and navigationParams's origin is false,
+        else if (navigation_params.has<Empty>()) {
+            // then:
 
-        // FIXME: 5. Otherwise, if the result of should navigation response to navigation request of type in target be blocked by Content Security Policy? given navigationParams's request,
-        //    navigationParams's response, navigationParams's policy container's CSP list, cspNavigationType, and navigable is "Blocked", then set failure to true.
-
-        // FIXME: 6. Otherwise, if navigationParams's reserved environment is non-null and the result of checking a navigation response's adherence to its embedder policy given
-        //    navigationParams's response, navigable, and navigationParams's policy container's embedder policy is false, then set failure to true.
-
-        // FIXME: 7. Otherwise, if the result of checking a navigation response's adherence to `X-Frame-Options` given navigationParams's response, navigable,
-        //    navigationParams's policy container's CSP list, and navigationParams's origin is false, then set failure to true.
-
-        // 8. If failure is true, then:
-        if (failure) {
-            // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM, given navigable, null, and navTimingType.
-            //    The inline content should indicate to the user the sort of error that occurred.
-            // FIXME: Add error message to generated error page
+            // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM,
+            //    given navigable, null, and navTimingType. The inline content should indicate to the user the sort of error that occurred.
             auto error_html = load_error_page(entry->url).release_value_but_fixme_should_propagate_errors();
             entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
                 auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
@@ -1119,52 +1115,52 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             // 2. Set entry's document state's document's salvageable to false.
             entry->document_state->document()->set_salvageable(false);
 
-            // FIXME: 3. If navigationParams is not null, then:
+            // 3. Set saveExtraDocumentState to false.
+            save_extra_document_state = false;
+
+            // FIXME: 4. If navigationParams is not null, then:
             if (!navigation_params.has<Empty>()) {
                 // 1. FIXME: Run the environment discarding steps for navigationParams's reserved environment.
                 // 2. Invoke WebDriver BiDi navigation failed with currentBrowsingContext and a new WebDriver BiDi navigation status
                 //    whose id is navigationId, status is "canceled", and url is navigationParams's response's URL.
             }
         }
-        // FIXME: 9. Otherwise, if navigationParams's response's status is 204 or 205, then:
-        else if (navigation_params.get<NavigationParams>().response->status() == 204 || navigation_params.get<NavigationParams>().response->status() == 205) {
-            // 1. Run completionSteps.
-            completion_steps();
 
-            // 2. Return.
-            return;
+        // FIXME 5. Otherwise, if navigationParams's response has a `Content-Disposition` header specifying the attachment disposition type, then:
+
+        // 6. Otherwise, if navigationParams's response's status is not 204 and is not 205,
+        //    then set entry's document state's document to the result of loading a document given navigationParams, sourceSnapshotParams, and entry's document state's initiator origin.
+        else if (navigation_params.get<NavigationParams>().response->status() != 204 && navigation_params.get<NavigationParams>().response->status() != 205) {
+            entry->document_state->set_document(load_document(navigation_params.get<NavigationParams>()));
         }
-        // FIXME: 10. Otherwise, if navigationParams's response has a `Content-Disposition`
-        //            header specifying the attachment disposition type, then:
-        // 11. Otherwise:
-        else {
-            // 1. Let document be the result of loading a document given navigationParams, sourceSnapshotParams,
-            //    and entry's document state's initiator origin.
-            auto document = load_document(move(navigation_params.get<NavigationParams>()));
 
-            // 2. If document is null, then run completionSteps and return.
-            if (!document) {
-                completion_steps();
-                return;
+        // 7. If entry's document state's document is not null, then:
+        if (entry->document_state->document() != nullptr) {
+            // 1. Set entry's document state's ever populated to true.
+            entry->document_state->set_ever_populated(true);
+
+            // 2. If saveExtraDocumentState is true:
+            if (save_extra_document_state) {
+                // 1.  Let document be entry's document state's document.
+                auto& document = *entry->document_state->document();
+
+                // 2. Set entry's document state's origin to document's origin.
+                entry->document_state->set_origin(document.origin());
+
+                // FIXME: 3. If document's URL requires storing the policy container in history, then:
             }
 
-            // 3. Set entry's document state's document to document.
-            entry->document_state->set_document(document.ptr());
+            // 3. If entry's document state's request referrer is "client", and navigationParams is a navigation params (i.e., neither null nor a non-fetch scheme navigation params), then:
+            if (entry->document_state->request_referrer() == Fetch::Infrastructure::Request::Referrer::Client && navigation_params.has<NavigationParams>()) {
+                // 1. Assert: navigationParams's request is not null.
+                VERIFY(navigation_params.get<NavigationParams>().request != nullptr);
 
-            // 4. Set entry's document state's origin to document's origin.
-            entry->document_state->set_origin(document->origin());
+                // 2. Set entry's document state's request referrer to navigationParams's request's referrer.
+                entry->document_state->set_request_referrer(navigation_params.get<NavigationParams>().request->referrer());
+            }
         }
 
-        // FIXME: 12. If entry's document state's request referrer is "client", then set it to request's referrer.
-        //     https://github.com/whatwg/html/issues/9767
-        //     What is "request" here?
-
-        // 13. If entry's document state's document is not null, then set entry's document state's ever populated to true.
-        if (entry->document_state->document()) {
-            entry->document_state->set_ever_populated(true);
-        }
-
-        // 14. Run completionSteps.
+        // 8. Run completionSteps.
         completion_steps();
     });
 
@@ -1334,6 +1330,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         (void)navigation_api_state_for_firing;
 
         // FIXME: 5. If continue is false, then return.
+        dbgln("FIXME: didn't fire a push/replace/reload event because it gets nested!");
     }
 
     if (is_top_level_traversable()) {
@@ -1356,10 +1353,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
             return;
         }
 
-        // 3. Queue a global task on the navigation and traversal task source given navigable's active window to abort navigable's active document.
+        // 3. Queue a global task on the navigation and traversal task source given navigable's active window to abort a document and its descendants given navigable's active document.
         queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
             VERIFY(this->active_document());
-            this->active_document()->abort();
+            this->active_document()->abort_a_document_and_its_descendants();
         });
 
         // 4. Let documentState be a new document state with
@@ -1381,6 +1378,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
 
             // 2. Set documentState's about base URL to initiatorBaseURLSnapshot.
             document_state->set_about_base_url(initiator_base_url_snapshot);
+
+            // FIXME: This is a workaround. Should about:srcdoc create non-fetch scheme navigation params?
+            //        See https://github.com/whatwg/html/issues/10099
+            document_state->set_request_referrer(initiator_base_url_snapshot);
         }
 
         // 6. Let historyEntry be a new session history entry, with its URL set to url and its document state set to documentState.
@@ -1474,28 +1475,25 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
         script_history_length = script_history_index + 1;
     }
 
-    // 12. Set navigable's active session history entry to historyEntry.
+    // 12. Set navigable's active document's URL to url.
+    active_document()->set_url(url);
+
+    // 13. Set navigable's active session history entry to historyEntry.
     m_active_session_history_entry = history_entry;
 
-    // 13. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, and scriptHistoryLength.
-    // AD HOC: Skip updating the navigation api entries twice here
-    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index, {}, false);
-
-    // 14. Update the navigation API entries for a same-document navigation given navigation, historyEntry, and historyHandling.
-    navigation->update_the_navigation_api_entries_for_a_same_document_navigation(history_entry, navigation_type);
+    // 14. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, scriptHistoryLength , and historyHandling.
+    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index, navigation_type);
 
     // 15. Scroll to the fragment given navigable's active document.
-    // FIXME: Specification doesn't say when document url needs to update during fragment navigation
-    active_document()->set_url(url);
     active_document()->scroll_to_the_fragment();
 
     // 16. Let traversable be navigable's traversable navigable.
     auto traversable = traversable_navigable();
 
     // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_synchronous_navigation_steps(*this, [this, traversable, history_entry, entry_to_replace, navigation_id] {
+    traversable->append_session_history_synchronous_navigation_steps(*this, [this, traversable, history_entry, entry_to_replace, navigation_id, history_handling] {
         // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
-        finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
+        finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace, history_handling);
 
         // FIXME: 2. Invoke WebDriver BiDi fragment navigated with navigable's active browsing context and a new WebDriver BiDi
         //            navigation status whose id is navigationId, url is url, and status is "complete".
@@ -1604,7 +1602,7 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     };
 
     // 17. Return the result of loading an HTML document given navigationParams.
-    return load_document(move(navigation_params));
+    return load_document(navigation_params);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
@@ -1841,7 +1839,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     }
 
     // 10. Apply the push/replace history step targetStep to traversable.
-    traversable->apply_the_push_or_replace_history_step(target_step);
+    traversable->apply_the_push_or_replace_history_step(target_step, history_handling);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps
@@ -1905,12 +1903,11 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
     auto traversable = navigable->traversable_navigable();
 
     // 13. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_synchronous_navigation_steps(*navigable, [traversable, navigable, new_entry, entry_to_replace] {
-        // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
-        finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace);
+    traversable->append_session_history_synchronous_navigation_steps(*navigable, [traversable, navigable, new_entry, entry_to_replace, history_handling] {
+        // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace, and historyHandling.
+        finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace, history_handling);
     });
 
-    // FIXME: Implement synchronous session history steps.
     traversable->process_session_history_traversal_queue();
 }
 
@@ -2045,6 +2042,8 @@ void Navigable::inform_the_navigation_api_about_aborting_navigation()
 {
     // FIXME: 1. If this algorithm is running on navigable's active window's relevant agent's event loop, then continue on to the following steps.
     // Otherwise, queue a global task on the navigation and traversal task source given navigable's active window to run the following steps.
+    if (!active_window())
+        return;
 
     queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
         // 2. Let navigation be navigable's active window's navigation API.
@@ -2057,6 +2056,26 @@ void Navigable::inform_the_navigation_api_about_aborting_navigation()
         // 4. Abort the ongoing navigation given navigation.
         navigation->abort_the_ongoing_navigation();
     });
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#inform-the-navigation-api-about-child-navigable-destruction
+void Navigable::inform_the_navigation_api_about_child_navigable_destruction()
+{
+    // 1. Inform the navigation API about aborting navigation in navigable.
+    inform_the_navigation_api_about_aborting_navigation();
+
+    // 2. Let navigation be navigable's active window's navigation API.
+    auto navigation = active_window()->navigation();
+    auto& realm = relevant_realm(*navigation);
+
+    // 3. Let traversalAPIMethodTrackers to be clone of navigation's upcoming traverse API method trackers.
+    auto traversal_api_method_trackers = navigation->clone_upcoming_traverse_api_method_trackers();
+
+    // 4. For each apiMethodTracker of traversalAPIMethodTrackers:
+    //    reject the finished promise for apiMethodTracker with a new "AbortError" DOMException created in navigation's relevant realm.
+    for (auto const& pair : traversal_api_method_trackers) {
+        navigation->reject_the_finished_promise(pair.value, WebIDL::AbortError::create(realm, "Child navigable was destroyed"_fly_string));
+    }
 }
 
 void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig config)
