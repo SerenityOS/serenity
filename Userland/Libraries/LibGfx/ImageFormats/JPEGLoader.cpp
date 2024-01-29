@@ -1237,8 +1237,8 @@ static inline bool validate_sampling_factors_and_modify_context(SamplingFactors 
 
 static inline void set_macroblock_metadata(JPEGLoadingContext& context)
 {
-    context.mblock_meta.hcount = (context.frame.width + 7) / 8;
-    context.mblock_meta.vcount = (context.frame.height + 7) / 8;
+    context.mblock_meta.hcount = ceil_div<u32>(context.frame.width, 8);
+    context.mblock_meta.vcount = ceil_div<u32>(context.frame.height, 8);
     context.mblock_meta.hpadded_count = context.mblock_meta.hcount;
     context.mblock_meta.vpadded_count = context.mblock_meta.vcount;
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
