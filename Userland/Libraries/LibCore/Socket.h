@@ -20,6 +20,16 @@ namespace Core {
 /// classes. Sockets are non-seekable streams which can be read byte-wise.
 class Socket : public Stream {
 public:
+    enum class PreventSIGPIPE {
+        No,
+        Yes,
+    };
+
+    enum class SocketType {
+        Stream,
+        Datagram,
+    };
+
     Socket(Socket&&) = default;
     Socket& operator=(Socket&&) = default;
 
@@ -46,22 +56,16 @@ public:
     /// Conversely, set_notifications_enabled(true) will re-enable notifications.
     virtual void set_notifications_enabled(bool) { }
 
-    Function<void()> on_ready_to_read;
+    // FIXME: This will need to be updated when IPv6 socket arrives. Perhaps a
+    //        base class for all address types is appropriate.
+    static ErrorOr<IPv4Address> resolve_host(ByteString const&, SocketType);
 
-    enum class PreventSIGPIPE {
-        No,
-        Yes,
-    };
+    Function<void()> on_ready_to_read;
 
 protected:
     enum class SocketDomain {
         Local,
         Inet,
-    };
-
-    enum class SocketType {
-        Stream,
-        Datagram,
     };
 
     Socket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
@@ -70,9 +74,6 @@ protected:
     }
 
     static ErrorOr<int> create_fd(SocketDomain, SocketType);
-    // FIXME: This will need to be updated when IPv6 socket arrives. Perhaps a
-    //        base class for all address types is appropriate.
-    static ErrorOr<IPv4Address> resolve_host(ByteString const&, SocketType);
 
     static ErrorOr<void> connect_local(int fd, ByteString const& path);
     static ErrorOr<void> connect_inet(int fd, SocketAddress const&);

@@ -9,6 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibCore/Proxy.h>
+#include <LibCore/Socket.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
@@ -159,7 +160,9 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
     if (cache_level == CacheLevel::ResolveOnly) {
         return Core::deferred_invoke([host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string()] {
             dbgln("EnsureConnection: DNS-preload for {}", host);
-            (void)gethostbyname(host.characters());
+            auto resolved_host = Core::Socket::resolve_host(host, Core::Socket::SocketType::Stream);
+            if (resolved_host.is_error())
+                dbgln("EnsureConnection: DNS-preload failed for {}", host);
         });
     }
 
