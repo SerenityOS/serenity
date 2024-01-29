@@ -48,8 +48,6 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
   Examples:
     $NAME run x86_64 GNU smp=on
         Runs the image in QEMU passing "smp=on" to the kernel command line
-    $NAME run x86_64 GNU 'init=/bin/UserspaceEmulator init_args=/bin/SystemServer'
-        Runs the image in QEMU, and run the entire system through UserspaceEmulator (not fully supported yet)
     $NAME run
         Runs the image for the default TARGET x86_64 in QEMU
     $NAME run lagom js -A

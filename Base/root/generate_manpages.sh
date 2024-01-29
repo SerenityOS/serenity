@@ -20,7 +20,6 @@ exit_for_error()
 
 rm -rf generated_manpages 2> "$ERROR_FILE" || exit_for_error
 
-# FIXME: Add `UserspaceEmulator 1` back to this list after UE is functional on x86_64.
 for i in ( \
             (config 1) \
             (fortune 1) \

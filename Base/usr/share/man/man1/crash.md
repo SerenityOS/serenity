@@ -10,9 +10,8 @@ $ /usr/Tests/Kernel/crash [options]
 
 ## Description
 
-This program is used to test how the Serenity kernel or UserspaceEmulator
-handle userspace crashes, and can be used to simulate many different kinds
-of crashes.
+This program is used to test how the Serenity kernel handles userspace crashes,
+and can be used to simulate many different kinds of crashes.
 
 ## Options
 

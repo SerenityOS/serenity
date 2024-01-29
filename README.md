@@ -35,7 +35,7 @@ You can watch videos of the system being developed on YouTube:
 * Good POSIX compatibility ([LibC](Userland/Libraries/LibC/), Shell, syscalls, signals, pseudoterminals, filesystem notifications, standard Unix [utilities](Userland/Utilities/), ...)
 * POSIX-like virtual file systems (/proc, /dev, /sys, /tmp, ...) and ext2 file system
 * Network stack and applications with support for IPv4, TCP, UDP; DNS, HTTP, Gemini, IMAP, NTP
-* Profiling, debugging and other development tools (Kernel-supported profiling, detailed program analysis with software emulation in UserspaceEmulator, CrashReporter, interactive GUI playground, HexEditor, HackStudio IDE for C++ and more)
+* Profiling, debugging and other development tools (Kernel-supported profiling, CrashReporter, interactive GUI playground, HexEditor, HackStudio IDE for C++ and more)
 * [Libraries](Userland/Libraries/) for everything from cryptography to OpenGL, audio, JavaScript, GUI, playing chess, ...
 * Support for many common and uncommon file formats (PNG, JPEG, GIF, MP3, WAV, FLAC, ZIP, TAR, PDF, QOI, Gemini, ...)
 * Unified style and design philosophy, flexible theming system, [custom (bitmap and vector) fonts](https://fonts.serenityos.net/font-family)
