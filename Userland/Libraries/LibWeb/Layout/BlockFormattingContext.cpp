@@ -549,9 +549,8 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
                 used_width_px = min_width_px;
         }
         block_container_state.set_content_width(used_width_px);
-    }
-    if (!block_container_state.has_definite_height())
         block_container_state.set_content_height(context.automatic_content_height());
+    }
 }
 
 CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space)
@@ -774,9 +773,8 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
                 }
             }
             block_container_state.set_content_width(width);
-        }
-        if (!block_container_state.has_definite_height())
             block_container_state.set_content_height(bottom_of_lowest_margin_box);
+        }
     }
 }
 
