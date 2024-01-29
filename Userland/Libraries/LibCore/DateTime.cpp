@@ -515,9 +515,9 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
             break;
         }
         case 'z': {
-            tm_represents_utc_time = true;
             if (string_lexer.consume_specific('Z')) {
                 // UTC time
+                tm_represents_utc_time = true;
                 break;
             }
             int sign;
@@ -538,8 +538,8 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
                 hours = hours / 100;
             }
 
-            tm.tm_hour += sign * hours;
-            tm.tm_min += sign * minutes;
+            tm.tm_hour -= sign * hours;
+            tm.tm_min -= sign * minutes;
             break;
         }
         case 'x': {
