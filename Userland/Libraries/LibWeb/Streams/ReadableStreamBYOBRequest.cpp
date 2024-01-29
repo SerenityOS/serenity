@@ -60,4 +60,21 @@ WebIDL::ExceptionOr<void> ReadableStreamBYOBRequest::respond(WebIDL::UnsignedLon
     return readable_byte_stream_controller_respond(*m_controller, bytes_written);
 }
 
+// https://streams.spec.whatwg.org/#rs-byob-request-respond-with-new-view
+WebIDL::ExceptionOr<void> ReadableStreamBYOBRequest::respond_with_new_view(JS::Handle<WebIDL::ArrayBufferView> const& view)
+{
+    auto& realm = this->realm();
+
+    // 1. If this.[[controller]] is undefined, throw a TypeError exception.
+    if (!m_controller)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Controller is undefined"_string };
+
+    // 2. If ! IsDetachedBuffer(view.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+    if (view->viewed_array_buffer()->is_detached())
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Unable to respond with a detached ArrayBuffer"_string };
+
+    // 3. Return ? ReadableByteStreamControllerRespondWithNewView(this.[[controller]], view).
+    return TRY(readable_byte_stream_controller_respond_with_new_view(realm, *m_controller, *view));
+}
+
 }
