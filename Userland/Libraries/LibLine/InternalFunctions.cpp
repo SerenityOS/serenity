@@ -449,6 +449,69 @@ void Editor::enter_search()
     }
 }
 
+namespace {
+Optional<u32> read_unicode_char()
+{
+    // FIXME: It would be ideal to somehow communicate that the line editor is
+    // not operating in a normal mode and expects a character during the unicode
+    // read (cursor mode? change current cell? change prompt? Something else?)
+    StringBuilder builder;
+
+    for (int i = 0; i < 4; ++i) {
+        char c = 0;
+        auto nread = read(0, &c, 1);
+
+        if (nread <= 0)
+            return {};
+
+        builder.append(c);
+
+        Utf8View search_char_utf8_view { builder.string_view() };
+
+        if (search_char_utf8_view.validate())
+            return *search_char_utf8_view.begin();
+    }
+
+    return {};
+}
+}
+
+void Editor::search_character_forwards()
+{
+    auto optional_search_char = read_unicode_char();
+    if (not optional_search_char.has_value())
+        return;
+    u32 search_char = optional_search_char.value();
+
+    for (auto index = m_cursor + 1; index < m_buffer.size(); ++index) {
+        if (m_buffer[index] == search_char) {
+            m_cursor = index;
+            return;
+        }
+    }
+
+    fputc('\a', stderr);
+    fflush(stderr);
+}
+
+void Editor::search_character_backwards()
+{
+    auto optional_search_char = read_unicode_char();
+    if (not optional_search_char.has_value())
+        return;
+    u32 search_char = optional_search_char.value();
+
+    for (auto index = m_cursor; index > 0; --index) {
+        if (m_buffer[index - 1] == search_char) {
+            m_cursor = index - 1;
+            return;
+        }
+    }
+
+    fputc('\a', stderr);
+    fflush(stderr);
+}
+
 void Editor::transpose_words()
 {
     // A word here is contiguous alnums. `foo=bar baz` is three words.
