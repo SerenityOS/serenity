@@ -1425,7 +1425,7 @@ static void inverse_dct_8x8(i16* block_component)
     static float const m5 = 2.0f * AK::cos(3.0f / 16.0f * 2.0f * AK::Pi<float>);
     static float const m2 = m0 - m5;
     static float const m4 = m0 + m5;
-    static float const s0 = AK::cos(0.0f / 16.0f * AK::Pi<float>) * AK::rsqrt(8.0f);
+    static float const s0 = AK::cos(0.0f / 16.0f * AK::Pi<float>) / AK::sqrt(8.0f);
     static float const s1 = AK::cos(1.0f / 16.0f * AK::Pi<float>) / 2.0f;
     static float const s2 = AK::cos(2.0f / 16.0f * AK::Pi<float>) / 2.0f;
     static float const s3 = AK::cos(3.0f / 16.0f * AK::Pi<float>) / 2.0f;
