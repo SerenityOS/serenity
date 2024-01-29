@@ -161,14 +161,24 @@ static double parse_date_string(ByteString const& date_string)
     //        Both Chrome and Firefox seem to support "4/17/2019 11:08 PM +0000" with most parts
     //        being optional, however this is not clearly documented anywhere.
     static constexpr auto extra_formats = AK::Array {
-        "%a %b %d %Y %T GMT%z (%+)"sv, // "Tue Nov 07 2023 10:05:55 GMT-0500 (Eastern Standard Time)"
-        "%a, %d %b %Y %T %Z"sv,        // "Tue, 07 Nov 2023 15:05:55 GMT"
-        "%a %b %e %T %z %Y"sv,         // "Wed Apr 17 23:08:53 +0000 2019"
-        "%m/%e/%Y"sv,                  // "4/17/2019"
-        "%m/%e/%Y %R %z"sv,            // "12/05/2022 10:00 -0800"
-        "%Y/%m/%e %R"sv,               // "2014/11/14 13:05"
-        "%Y-%m-%e %R"sv,               // "2014-11-14 13:05"
-        "%B %e, %Y %T"sv,              //  "June 5, 2023 17:00:00"
+        "%a%t%b%t%d%t%Y%t%T%tGMT%z%t(%+)"sv,   // "Tue Nov 07 2023 10:05:55 GMT-0500 (Eastern Standard Time)"
+        "%a,%t%d%t%b%t%Y%t%T%t%Z"sv,           // "Tue, 07 Nov 2023 15:05:55 GMT"
+        "%a%t%b%t%e%t%T%t%z%t%Y"sv,            // "Wed Apr 17 23:08:53 +0000 2019"
+        "%m/%e/%Y"sv,                          // "4/17/2019"
+        "%m/%e/%Y%t%R%t%z"sv,                  // "12/05/2022 10:00 -0800"
+        "%Y/%m/%e%t%R"sv,                      // "2014/11/14 13:05"
+        "%Y-%m-%e%t%R"sv,                      // "2014-11-14 13:05"
+        "%B%t%e,%t%Y%t%T"sv,                   // "June 5, 2023 17:00:00"
+        "%b%t%d%t%Y%t%Z"sv,                    // "Jan 01 1970 GMT"
+        "%a%t%b%t%e%t%T%t%Y%t%z"sv,            // "Wed Apr 17 23:08:53 2019 +0000"
+        "%Y-%m-%e%t%R%z"sv,                    // "2021-07-01 03:00Z"
+        "%a,%t%e%t%b%t%Y%t%T%t%z"sv,           // "Wed, 17 Jan 2024 11:36:34 +0000"
+        "%a%t%b%t%e%t%Y%t%T%tGMT%t%x%t(%+)"sv, // "Sun Jan 21 2024 21:11:31 GMT 0100 (Central European Standard Time)"
+        "%Y-%m-%e%t%T"sv,                      // "2024-01-15 00:00:01"
+        "%a%t%b%t%e%t%Y%t%T%t%Z"sv,            // "Tue Nov 07 2023 10:05:55  UTC"
+        "%a%t%b%t%e%t%T%t%Y"sv,                // "Wed Apr 17 23:08:53 2019"
+        "%Y-%m-%eT%T%X%z"sv,                   // "2024-01-26T22:10:11.306+0000"
+        "%m/%e/%Y,%t%T%t%p"sv,                 // "1/27/2024, 9:28:30 AM"
     };
 
     for (auto const& format : extra_formats) {

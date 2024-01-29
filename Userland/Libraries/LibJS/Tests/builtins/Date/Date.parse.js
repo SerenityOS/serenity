@@ -14,6 +14,26 @@ test("basic functionality", () => {
     expect(Date.parse("+020000-01")).toBe(568971820800000);
     expect(Date.parse("+020000-01T00:00:00.000Z")).toBe(568971820800000);
 
+    const originalTimeZone = setTimeZone("UTC");
+
+    setTimeZone("America/Chicago");
+    expect(Date.parse("Jan 01 1970 GMT")).toBe(0);
+    expect(Date.parse("Wed Apr 17 23:08:53 2019 +0000")).toBe(1555542533000);
+    expect(Date.parse("2021-07-01 03:00Z")).toBe(1625108400000);
+    expect(Date.parse("2024-01-08 9:00Z")).toBe(1704704400000);
+    expect(Date.parse("Wed, 17 Jan 2024 11:36:34 +0000")).toBe(1705491394000);
+    expect(Date.parse("Sun Jan 21 2024 21:11:31 GMT 0100 (Central European Standard Time)")).toBe(
+        1705867891000
+    );
+    expect(Date.parse("2024-01-15 00:00:01")).toBe(1705298401000);
+    expect(Date.parse("Tue Nov 07 2023 10:05:55  UTC")).toBe(1699351555000);
+    expect(Date.parse("Wed Apr 17 23:08:53 2019")).toBe(1555560533000);
+    expect(Date.parse("2024-01-26T22:10:11.306+0000")).toBe(1706307011000); // FIXME: support sub-second precision
+    expect(Date.parse("1/27/2024, 9:28:30 AM")).toBe(1706369310000);
+
+    // FIXME: Create a scoped time zone helper when bytecode supports the `using` declaration.
+    setTimeZone(originalTimeZone);
+
     expect(Date.parse(2020)).toBe(1577836800000);
 
     expect(Date.parse("+1980")).toBe(NaN);
