@@ -12,6 +12,7 @@
 
 #if !defined(AK_OS_SERENITY)
 #    include <LibCore/Directory.h>
+#    include <LibCore/Environment.h>
 #    include <LibCore/SocketAddress.h>
 #    include <LibCore/StandardPaths.h>
 #    include <LibCore/System.h>
@@ -82,7 +83,7 @@ static ErrorOr<void> launch_server(ByteString const& socket_path, ByteString con
         server_fd = TRY(Core::System::dup(server_fd));
 
         auto takeover_string = ByteString::formatted("SQLServer:{}", server_fd);
-        TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
+        TRY(Core::Environment::set("SOCKET_TAKEOVER"sv, takeover_string, Core::Environment::Overwrite::Yes));
 
         ErrorOr<void> result;
         for (auto const& server_path : candidate_server_paths) {
