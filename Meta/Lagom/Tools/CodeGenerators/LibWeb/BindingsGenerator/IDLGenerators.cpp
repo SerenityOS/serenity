@@ -2309,7 +2309,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 
         function_generator.set("overload_set.distinguishing_argument_index", ByteString::number(distinguishing_argument_index));
         function_generator.append(R"~~~(
-        effective_overload_set.emplace(move(overloads), @overload_set.distinguishing_argument_index@);
+        effective_overload_set.emplace("@class_name@::@function.name:snakecase@"sv, move(overloads), @overload_set.distinguishing_argument_index@);
         break;
     }
 )~~~");
