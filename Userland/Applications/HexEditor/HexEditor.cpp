@@ -347,7 +347,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
 
     if (maybe_offset_data.has_value()) {
         set_override_cursor(Gfx::StandardCursor::IBeam);
-        m_hovered_annotation = m_document->closest_annotation_at(maybe_offset_data->offset);
+        m_hovered_annotation = m_document->annotations().closest_annotation_at(maybe_offset_data->offset);
     } else {
         set_override_cursor(Gfx::StandardCursor::None);
         m_hovered_annotation.clear();
@@ -631,7 +631,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 return;
 
             auto const cell = m_document->get(byte_position);
-            auto const annotation = m_document->closest_annotation_at(byte_position);
+            auto const annotation = m_document->annotations().closest_annotation_at(byte_position);
 
             Gfx::IntRect hex_display_rect_high_nibble {
                 frame_thickness() + offset_margin_width() + j * cell_width() + 2 * m_padding,
@@ -933,7 +933,7 @@ void HexEditor::show_delete_annotation_dialog(Annotation& annotation)
 {
     auto result = GUI::MessageBox::show(window(), "Delete this annotation?"sv, "Delete annotation?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
     if (result == GUI::Dialog::ExecResult::Yes) {
-        m_document->delete_annotation(annotation);
+        m_document->annotations().delete_annotation(annotation);
         update();
     }
 }

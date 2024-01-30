@@ -72,6 +72,8 @@ public:
     void show_edit_annotation_dialog(Annotation&);
     void show_delete_annotation_dialog(Annotation&);
 
+    HexDocument& document() { return *m_document; }
+
 protected:
     HexEditor();
 
