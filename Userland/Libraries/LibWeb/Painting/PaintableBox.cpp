@@ -684,7 +684,11 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
         return {};
 
     if (layout_box().is_viewport()) {
-        const_cast<ViewportPaintable&>(static_cast<ViewportPaintable const&>(*this)).build_stacking_context_tree_if_needed();
+        auto& viewport_paintable = const_cast<ViewportPaintable&>(static_cast<ViewportPaintable const&>(*this));
+        viewport_paintable.build_stacking_context_tree_if_needed();
+        HashMap<Painting::PaintableBox const*, Painting::ViewportPaintable::ScrollFrame> scroll_frames;
+        viewport_paintable.assign_scroll_frame_ids(scroll_frames);
+        viewport_paintable.assign_clip_rectangles();
         return stacking_context()->hit_test(position, type);
     }
 
