@@ -13,6 +13,8 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Window.h>
 
+namespace Run {
+
 class RunWindow final : public GUI::Window {
     C_OBJECT(RunWindow)
 public:
@@ -40,3 +42,5 @@ private:
     RefPtr<GUI::Button> m_browse_button;
     RefPtr<GUI::ComboBox> m_path_combo_box;
 };
+
+}

@@ -26,6 +26,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+namespace Run {
+
 RunWindow::RunWindow()
     : m_path_history()
     , m_path_history_model(GUI::ItemListModel<ByteString>::create(m_path_history))
@@ -41,7 +43,8 @@ RunWindow::RunWindow()
     set_resizable(false);
     set_minimizable(false);
 
-    auto main_widget = set_main_widget<Run::MainWidget>();
+    auto main_widget = MUST(Run::MainWidget::try_create());
+    set_main_widget(main_widget);
 
     m_icon_image_widget = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));
@@ -62,7 +65,7 @@ RunWindow::RunWindow()
         close();
     };
 
-    m_browse_button = *find_descendant_of_type_named<GUI::DialogButton>("browse_button");
+    m_browse_button = *main_widget->find_descendant_of_type_named<GUI::DialogButton>("browse_button");
     m_browse_button->on_click = [this](auto) {
         Optional<ByteString> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::Center);
         if (path.has_value())
@@ -188,4 +191,6 @@ ErrorOr<void> RunWindow::save_history()
         TRY(file->write_until_depleted(ByteString::formatted("{}\n", m_path_history[i]).bytes()));
 
     return {};
+}
+
 }
