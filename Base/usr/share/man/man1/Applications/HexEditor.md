@@ -7,8 +7,7 @@
 ## Synopsis
 
 ```**sh
-$ HexEditor 
-$ HexEditor file
+$ HexEditor [--annotations <path>] [file]
 ```
 
 ## Description
@@ -35,3 +34,11 @@ An option to copy as hex value, as text, or as C-code is available and can extra
 ![](HexEditor_Copy_Hex_Text_C_Code.png)
 
 Hex Editor's simple and straight-forward interface offers search, export, byte pattern insertions and statistics. 
+
+## Options
+
+* `-a`, `--annotations`: Path to an annotations file to load on startup
+
+## Arguments
+
+* `file`: File to open on startup 

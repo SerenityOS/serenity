@@ -27,8 +27,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     StringView filename;
+    StringView annotations_filename;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(annotations_filename, "Annotations file to load", "annotations", 'a', "path");
     args_parser.add_positional_argument(filename, "File to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -68,6 +70,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!response.is_error())
             hex_editor_widget->open_file(response.value().filename(), response.value().release_stream());
     }
+
+    if (!annotations_filename.is_empty())
+        hex_editor_widget->open_annotations_file(annotations_filename);
 
     return app->exec();
 }
