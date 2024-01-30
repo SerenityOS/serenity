@@ -5,6 +5,7 @@
  */
 
 #include "HelperProcess.h"
+#include <LibCore/Environment.h>
 
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
@@ -28,7 +29,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
         TRY(Core::System::close(ui_fd));
 
         auto takeover_string = TRY(String::formatted("WebContent:{}", wc_fd));
-        TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
+        TRY(Core::Environment::set("SOCKET_TAKEOVER"sv, takeover_string, Core::Environment::Overwrite::Yes));
 
         auto webcontent_fd_passing_socket_string = TRY(String::number(wc_fd_passing_fd));
 
@@ -116,7 +117,7 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteSt
         TRY(Core::System::close(ui_fd_passing_fd));
 
         auto takeover_string = TRY(String::formatted("{}:{}", server_name, server_fd));
-        TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
+        TRY(Core::Environment::set("SOCKET_TAKEOVER"sv, takeover_string, Core::Environment::Overwrite::Yes));
 
         auto fd_passing_socket_string = TRY(String::number(server_fd_passing_fd));
 
