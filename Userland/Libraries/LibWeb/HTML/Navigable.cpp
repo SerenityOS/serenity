@@ -2085,7 +2085,7 @@ void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig
     HashMap<Painting::PaintableBox const*, Painting::ViewportPaintable::ScrollFrame> scroll_frames;
     if (is_traversable()) {
         document->paintable()->assign_scroll_frame_ids(scroll_frames);
-        document->paintable()->assign_clip_rectangles(context);
+        document->paintable()->assign_clip_rectangles();
     }
 
     document->paintable()->paint_all_phases(context);

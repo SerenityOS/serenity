@@ -196,7 +196,7 @@ public:
     void set_clip_rect(Optional<CSSPixelRect> rect) { m_clip_rect = rect; }
     void set_scroll_frame_id(int id) { m_scroll_frame_id = id; }
     void set_enclosing_scroll_frame_offset(CSSPixelPoint offset) { m_enclosing_scroll_frame_offset = offset; }
-    void set_corner_clip_radii(CornerRadii const& corner_radii) { m_corner_clip_radii = corner_radii; }
+    void set_corner_clip_radii(BorderRadiiData const& corner_radii) { m_corner_clip_radii = corner_radii; }
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -228,7 +228,7 @@ private:
     Optional<CSSPixelRect> m_clip_rect;
     Optional<int> m_scroll_frame_id;
     Optional<CSSPixelPoint> m_enclosing_scroll_frame_offset;
-    Optional<CornerRadii> m_corner_clip_radii;
+    Optional<BorderRadiiData> m_corner_clip_radii;
 
     Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;

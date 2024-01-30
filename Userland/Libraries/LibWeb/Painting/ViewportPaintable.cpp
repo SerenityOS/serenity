@@ -95,7 +95,7 @@ void ViewportPaintable::assign_scroll_frame_ids(HashMap<Painting::PaintableBox c
     });
 }
 
-void ViewportPaintable::assign_clip_rectangles(PaintContext const& context)
+void ViewportPaintable::assign_clip_rectangles()
 {
     HashMap<Paintable const*, CSSPixelRect> clip_rects;
     // Calculate clip rects for all boxes that either have hidden overflow or a CSS clip property.
@@ -129,10 +129,9 @@ void ViewportPaintable::assign_clip_rectangles(PaintContext const& context)
         for (auto block = paintable_box.containing_block(); block; block = block->containing_block()) {
             if (auto containing_block_clip_rect = clip_rects.get(block->paintable()); containing_block_clip_rect.has_value()) {
                 auto border_radii_data = block->paintable_box()->normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
-                CornerRadii corner_radii = border_radii_data.as_corners(context);
-                if (corner_radii.has_any_radius()) {
+                if (border_radii_data.has_any_radius()) {
                     // FIXME: Border radii of all boxes in containing block chain should be taken into account instead of just the closest one.
-                    const_cast<PaintableBox&>(paintable_box).set_corner_clip_radii(corner_radii);
+                    const_cast<PaintableBox&>(paintable_box).set_corner_clip_radii(border_radii_data);
                 }
                 clip_rect = *containing_block_clip_rect;
                 break;
