@@ -688,10 +688,12 @@ bool EventHandler::focus_previous_element()
     return element;
 }
 
-constexpr bool should_ignore_keydown_event(u32 code_point)
+constexpr bool should_ignore_keydown_event(u32 code_point, u32 modifiers)
 {
+    if (modifiers & (KeyModifier::Mod_Ctrl | KeyModifier::Mod_Alt))
+        return true;
+
     // FIXME: There are probably also keys with non-zero code points that should be filtered out.
-    // FIXME: We should take the modifier keys into consideration somehow. This treats "Ctrl+C" as just "c".
     return code_point == 0 || code_point == 27;
 }
 
@@ -754,7 +756,8 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
                 m_edit_event_handler->handle_delete(*range);
                 return true;
             }
-            if (!should_ignore_keydown_event(code_point)) {
+            // FIXME: Text editing shortcut keys (copy/paste etc.) should be handled here.
+            if (!should_ignore_keydown_event(code_point, modifiers)) {
                 m_edit_event_handler->handle_delete(*range);
                 m_edit_event_handler->handle_insert(JS::NonnullGCPtr { *m_browsing_context->cursor_position() }, code_point);
                 m_browsing_context->increment_cursor_position_offset();
@@ -817,7 +820,8 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
             input_element.commit_pending_changes();
             return true;
         }
-        if (!should_ignore_keydown_event(code_point)) {
+        // FIXME: Text editing shortcut keys (copy/paste etc.) should be handled here.
+        if (!should_ignore_keydown_event(code_point, modifiers)) {
             m_edit_event_handler->handle_insert(JS::NonnullGCPtr { *m_browsing_context->cursor_position() }, code_point);
             m_browsing_context->increment_cursor_position_offset();
             return true;
