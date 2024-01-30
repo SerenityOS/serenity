@@ -849,30 +849,36 @@ bool Element::serializes_as_void() const
 // https://drafts.csswg.org/cssom-view/#dom-element-getboundingclientrect
 JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
-    // // NOTE: Ensure that layout is up-to-date before looking at metrics.
-    const_cast<Document&>(document()).update_layout();
-    VERIFY(document().navigable());
-    auto viewport_offset = document().navigable()->viewport_scroll_offset();
+    // 1. Let list be the result of invoking getClientRects() on element.
+    auto list = get_client_rects();
 
-    if (auto const* paintable_box = this->paintable_box()) {
-        auto absolute_rect = paintable_box->absolute_border_box_rect();
-        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
-        return Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>());
+    // 2. If the list is empty return a DOMRect object whose x, y, width and height members are zero.
+    if (list->length() == 0)
+        return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+
+    // 3. If all rectangles in list have zero width or height, return the first rectangle in list.
+    auto all_rectangle_has_zero_width_or_height = true;
+    for (auto i = 0u; i < list->length(); ++i) {
+        auto const& rect = list->item(i);
+        if (rect->width() != 0 && rect->height() != 0) {
+            all_rectangle_has_zero_width_or_height = false;
+            break;
+        }
     }
+    if (all_rectangle_has_zero_width_or_height)
+        return JS::NonnullGCPtr { *const_cast<Geometry::DOMRect*>(list->item(0)) };
 
-    auto const* paintable = this->paintable();
-    if (paintable && is<Painting::InlinePaintable>(*paintable)) {
-        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
-        auto absolute_rect = inline_paintable.bounding_rect();
-        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
-        return Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>());
+    // 4. Otherwise, return a DOMRect object describing the smallest rectangle that includes all of the rectangles in
+    //    list of which the height or width is not zero.
+    auto const* first_rect = list->item(0);
+    auto bounding_rect = Gfx::Rect { first_rect->x(), first_rect->y(), first_rect->width(), first_rect->height() };
+    for (auto i = 1u; i < list->length(); ++i) {
+        auto const& rect = list->item(i);
+        if (rect->width() == 0 || rect->height() == 0)
+            continue;
+        bounding_rect = bounding_rect.united({ rect->x(), rect->y(), rect->width(), rect->height() });
     }
-
-    if (paintable) {
-        dbgln("FIXME: Failed to get bounding client rect for element ({})", debug_description());
-    }
-
-    return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMRect::create(realm(), bounding_rect.to_type<float>());
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -883,22 +889,39 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
     const_cast<Document&>(document()).update_layout();
 
-    // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
-    if (!layout_node() || !layout_node()->is_box())
+    // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList
+    //    object and stop this algorithm.
+    if (!layout_node())
         return Geometry::DOMRectList::create(realm(), move(rects));
 
-    // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single DOMRect object that describes
-    // the bounding box of the element as defined by the SVG specification, applying the transforms that apply to the element and its ancestors.
+    // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single
+    //          DOMRect object that describes the bounding box of the element as defined by the SVG specification,
+    //          applying the transforms that apply to the element and its ancestors.
 
-    // FIXME: 3. Return a DOMRectList object containing DOMRect objects in content order, one for each box fragment,
+    // 3. Return a DOMRectList object containing DOMRect objects in content order, one for each box fragment,
     // describing its border area (including those with a height or width of zero) with the following constraints:
-    // - Apply the transforms that apply to the element and its ancestors.
-    // - If the element on which the method was invoked has a computed value for the display property of table
-    // or inline-table include both the table box and the caption box, if any, but not the anonymous container box.
-    // - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes are left in the final list.
+    // FIXME: - Apply the transforms that apply to the element and its ancestors.
+    // FIXME: - If the element on which the method was invoked has a computed value for the display property of table
+    //          or inline-table include both the table box and the caption box, if any, but not the anonymous container box.
+    // FIXME: - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes
+    //          are left in the final list.
+    const_cast<Document&>(document()).update_layout();
+    VERIFY(document().navigable());
+    auto viewport_offset = document().navigable()->viewport_scroll_offset();
+    auto const* paintable = this->paintable();
+    if (auto const* paintable_box = this->paintable_box()) {
+        auto absolute_rect = paintable_box->absolute_border_box_rect();
+        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
+        rects.append(Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>()));
+    } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
+        auto absolute_rect = inline_paintable.bounding_rect();
+        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
+        rects.append(Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>()));
+    } else if (paintable) {
+        dbgln("FIXME: Failed to get client rects for element ({})", debug_description());
+    }
 
-    auto bounding_rect = get_bounding_client_rect();
-    rects.append(*bounding_rect);
     return Geometry::DOMRectList::create(realm(), move(rects));
 }
 
