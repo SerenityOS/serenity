@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Directory.h>
+#include <LibCore/Environment.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/System.h>
@@ -137,7 +138,7 @@ ErrorOr<void> Service::change_privileges()
             dbgln("Failed to drop privileges (tried to change to GID={}, UID={}), due to {}\n", account.gid(), account.uid(), error_or_void.error());
             exit(1);
         }
-        TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
+        TRY(Core::Environment::set("HOME"sv, account.home_directory(), Core::Environment::Overwrite::Yes));
     }
     return {};
 }
@@ -216,13 +217,13 @@ ErrorOr<void> Service::spawn(int socket_fd)
 
         if (!m_sockets.is_empty()) {
             // The new descriptor is !CLOEXEC here.
-            TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, socket_takeover_builder.string_view(), true));
+            TRY(Core::Environment::set("SOCKET_TAKEOVER"sv, socket_takeover_builder.string_view(), Core::Environment::Overwrite::Yes));
         }
 
         TRY(change_privileges());
 
         TRY(m_environment.view().for_each_split_view(' ', SplitBehavior::Nothing, [&](auto env) {
-            return Core::System::putenv(env);
+            return Core::Environment::put(env);
         }));
 
         Vector<StringView, 10> arguments;
