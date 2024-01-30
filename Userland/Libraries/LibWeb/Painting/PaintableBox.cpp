@@ -676,6 +676,9 @@ Layout::BlockContainer& PaintableWithLines::layout_box()
 
 Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestType type) const
 {
+    if (clip_rect().has_value() && !clip_rect()->contains(position))
+        return {};
+
     auto position_adjusted_by_scroll_offset = position;
     if (enclosing_scroll_frame_offset().has_value())
         position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
@@ -712,6 +715,9 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
 
 Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
 {
+    if (clip_rect().has_value() && !clip_rect()->contains(position))
+        return {};
+
     auto position_adjusted_by_scroll_offset = position;
     if (enclosing_scroll_frame_offset().has_value())
         position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
