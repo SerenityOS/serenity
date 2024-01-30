@@ -18,12 +18,12 @@
 {
     // FIXME: Copy the fonts to the bundle or something
 
-    // Get from `Build/lagom/bin/MacPDF.app/Contents/MacOS/MacPDF` to `.`.
+    // Get from `Build/lagom/bin/MacPDF.app/Contents/MacOS/MacPDF` to `Build/lagom/Root/res`.
     NSString* source_root = [[NSBundle mainBundle] executablePath];
-    for (int i = 0; i < 7; ++i)
+    for (int i = 0; i < 5; ++i)
         source_root = [source_root stringByDeletingLastPathComponent];
     auto source_root_string = ByteString([source_root UTF8String]);
-    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Base/res", source_root_string))));
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Root/res", source_root_string))));
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification
