@@ -168,6 +168,21 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁮󠁯󠀴󠀶󠁿 - U+1F3F4 U+E006E U+E006F U+E0034 U+E0036 U+E007F NO-46 Vestland
 🏴󠁮󠁯󠀵󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0035 U+E0030 U+E007F NO-50 Trøndelag
 🏴󠁮󠁯󠀵󠀴󠁿 - U+1F3F4 U+E006E U+E006F U+E0035 U+E0034 U+E007F NO-54 Troms og Finnmark
+🏴󠁮󠁺󠁡󠁵󠁫󠁿 - U+1F3F4 U+E006E U+E007A U+E0061 U+E0075 U+E006B U+E007F NZ-AUK Auckland
+🏴󠁮󠁺󠁮󠁳󠁮󠁿 - U+1F3F4 U+E006E U+E007A U+E006E U+E0073 U+E006E U+E007F NZ-NSN Nelson
+🏴󠁮󠁺󠁯󠁴󠁡󠁿 - U+1F3F4 U+E006E U+E007A U+E006F U+E0074 U+E0061 U+E007F NZ-OTA Otago
+🏴󠁮󠁺󠁷󠁧󠁮󠁿 - U+1F3F4 U+E006E U+E007A U+E0077 U+E0067 U+E006E U+E007F NZ-WGN Wellington
+🏴󠁰󠁡󠀱󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0031 U+E007F         PA-1 Bocas del Toro
+🏴󠁰󠁡󠀲󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0032 U+E007F         PA-2 Coclé
+🏴󠁰󠁡󠀳󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0033 U+E007F         PA-3 Colón
+🏴󠁰󠁡󠀴󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0034 U+E007F         PA-4 Chiriquí
+🏴󠁰󠁡󠀵󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0035 U+E007F         PA-5 Darién
+🏴󠁰󠁡󠀶󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0036 U+E007F         PA-6 Herrera
+🏴󠁰󠁡󠀷󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0037 U+E007F         PA-7 Los Santos
+🏴󠁰󠁡󠀹󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0039 U+E007F         PA-9 Veraguas
+🏴󠁰󠁡󠀱󠀰󠁿 - U+1F3F4 U+E0070 U+E0061 U+E0031 U+E0030 U+E007F PA-10 West Panamá
+🏴󠁰󠁡󠁫󠁹󠁿 - U+1F3F4 U+E0070 U+E0061 U+E006B U+E0079 U+E007F PA-KY Guna Yala
+🏴󠁰󠁡󠁮󠁢󠁿 - U+1F3F4 U+E0070 U+E0061 U+E006E U+E0062 U+E007F PA-NB Ngöbe-Buglé
 🏴󠁳󠁥󠁭󠁿 - U+1F3F4 U+E0073 U+E0065 U+E006D U+E007F         SE-M  Skåne
 🏴󠁳󠁫󠁢󠁣󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E0063 U+E007F SK-BC Banská Bystrica
 🏴󠁳󠁫󠁢󠁬󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E006C U+E007F SK-BL Bratislava
