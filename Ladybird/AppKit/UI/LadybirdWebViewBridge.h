@@ -67,7 +67,7 @@ private:
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
-    virtual void create_client() override;
+    virtual void initialize_client(CreateNewClient) override;
 
     Vector<Web::DevicePixelRect> m_screen_rects;
     Gfx::IntRect m_viewport_rect;

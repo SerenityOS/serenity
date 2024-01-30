@@ -187,7 +187,7 @@ private:
     }
 
     void update_zoom() override { }
-    void create_client() override { }
+    void initialize_client(CreateNewClient) override { }
 
     virtual Web::DevicePixelRect viewport_rect() const override { return m_viewport_rect.to_type<Web::DevicePixels>(); }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override { return widget_position; }

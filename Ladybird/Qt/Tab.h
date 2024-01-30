@@ -28,7 +28,7 @@ class Tab final : public QWidget {
     Q_OBJECT
 
 public:
-    Tab(BrowserWindow* window, WebContentOptions const&, StringView webdriver_content_ipc_path);
+    Tab(BrowserWindow* window, WebContentOptions const&, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client = nullptr, size_t page_index = 0);
     virtual ~Tab() override;
 
     WebContentView& view() { return *m_view; }
