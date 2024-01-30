@@ -42,7 +42,7 @@ class WebContentView final
     , public WebView::ViewImplementation {
     Q_OBJECT
 public:
-    WebContentView(WebContentOptions const&, StringView webdriver_content_ipc_path);
+    WebContentView(WebContentOptions const&, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client = nullptr, size_t page_index = 0);
     virtual ~WebContentView() override;
 
     Function<String(const AK::URL&, Web::HTML::ActivateTab)> on_tab_open_request;
@@ -82,7 +82,7 @@ signals:
 
 private:
     // ^WebView::ViewImplementation
-    virtual void create_client() override;
+    virtual void initialize_client(CreateNewClient) override;
     virtual void update_zoom() override;
     virtual Web::DevicePixelRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;

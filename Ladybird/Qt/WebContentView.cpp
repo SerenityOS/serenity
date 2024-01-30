@@ -54,10 +54,13 @@ namespace Ladybird {
 
 bool is_using_dark_system_theme(QWidget&);
 
-WebContentView::WebContentView(WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
+WebContentView::WebContentView(WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client, size_t page_index)
     : m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
+    m_client_state.client = parent_client;
+    m_client_state.page_index = page_index;
+
     setMouseTracking(true);
     setAcceptDrops(true);
 
@@ -75,7 +78,7 @@ WebContentView::WebContentView(WebContentOptions const& web_content_options, Str
         update_viewport_rect();
     });
 
-    create_client();
+    initialize_client((parent_client == nullptr) ? CreateNewClient::Yes : CreateNewClient::No);
 
     on_did_layout = [this](auto content_size) {
         verticalScrollBar()->setMinimum(0);
@@ -599,14 +602,17 @@ void WebContentView::update_palette(PaletteMode mode)
     client().async_update_system_theme(make_system_theme_from_qt_palette(*this, mode));
 }
 
-void WebContentView::create_client()
+void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewClient create_new_client)
 {
-    m_client_state = {};
+    if (create_new_client == CreateNewClient::Yes) {
+        m_client_state = {};
 
-    auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
-    auto new_client = launch_web_content_process(*this, candidate_web_content_paths, m_web_content_options).release_value_but_fixme_should_propagate_errors();
+        auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
+        auto new_client = launch_web_content_process(*this, candidate_web_content_paths, m_web_content_options).release_value_but_fixme_should_propagate_errors();
 
-    m_client_state.client = new_client;
+        m_client_state.client = new_client;
+    }
+
     m_client_state.client->on_web_content_process_crash = [this] {
         Core::deferred_invoke([this] {
             handle_web_content_process_crash();

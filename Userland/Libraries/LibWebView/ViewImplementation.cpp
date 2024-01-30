@@ -334,7 +334,7 @@ void ViewImplementation::handle_web_content_process_crash()
     }
     m_repeated_crash_timer->restart();
 
-    create_client();
+    initialize_client();
     VERIFY(m_client_state.client);
 
     // Don't keep a stale backup bitmap around.

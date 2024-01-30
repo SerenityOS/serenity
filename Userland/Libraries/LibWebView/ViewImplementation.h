@@ -202,7 +202,11 @@ protected:
 
     void handle_resize();
 
-    virtual void create_client() { }
+    enum class CreateNewClient {
+        No,
+        Yes,
+    };
+    virtual void initialize_client(CreateNewClient = CreateNewClient::Yes) { }
 
     void handle_web_content_process_crash();
 
@@ -217,6 +221,7 @@ protected:
         String client_handle;
         SharedBitmap front_bitmap;
         SharedBitmap back_bitmap;
+        u64 page_index { 0 };
         i32 next_bitmap_id { 0 };
         bool has_usable_bitmap { false };
     } m_client_state;
