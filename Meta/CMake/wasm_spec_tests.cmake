@@ -22,7 +22,7 @@ if(INCLUDE_WASM_SPEC_TESTS)
 
     if(EXISTS ${WASM_SPEC_TEST_GZ_PATH} AND NOT EXISTS ${WASM_SPEC_TEST_PATH}/const_0.wasm)
         message(STATUS "Extracting the WebAssembly testsuite from ${WASM_SPEC_TEST_GZ_PATH}...")
-        extract_tar_path("${CMAKE_CURRENT_BINARY_DIR}" "${WASM_SPEC_TEST_GZ_PATH}" "testsuite-main/*.wast" "${WASM_SPEC_TEST_PATH}")
+        extract_path("${CMAKE_CURRENT_BINARY_DIR}" "${WASM_SPEC_TEST_GZ_PATH}" "testsuite-main/*.wast" "${WASM_SPEC_TEST_PATH}")
         file(MAKE_DIRECTORY ${WASM_SPEC_TEST_PATH})
         file(GLOB WASM_TESTS "${CMAKE_CURRENT_BINARY_DIR}/testsuite-main/*.wast")
         foreach(PATH ${WASM_TESTS})

@@ -18,7 +18,7 @@ if(INCLUDE_FLAC_SPEC_TESTS)
     endif()
 
     if(EXISTS ${FLAC_SPEC_TEST_GZ_PATH} AND NOT EXISTS ${FLAC_SPEC_TEST_PATH})
-        extract_tar_path(${FLAC_TEST_PATH} ${FLAC_SPEC_TEST_GZ_PATH} "flac-test-files-main/subset/*.flac" ${FLAC_SPEC_TEST_PATH})
+        extract_path(${FLAC_TEST_PATH} ${FLAC_SPEC_TEST_GZ_PATH} "flac-test-files-main/subset/*.flac" ${FLAC_SPEC_TEST_PATH})
         file(RENAME "${FLAC_TEST_PATH}/flac-test-files-main/subset" ${FLAC_SPEC_TEST_PATH})
         file(REMOVE "${FLAC_TEST_PATH}/flac-test-files-main")
     endif()
