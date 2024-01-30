@@ -182,7 +182,8 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             auto path = url.serialize_path();
             auto entry = QuickLaunchEntry::create_from_path(path);
             if (entry) {
-                auto result = update_entry(entry->name(), entry.release_nonnull());
+                auto entry_name = entry->name();
+                auto result = update_entry(entry_name, entry.release_nonnull());
                 if (result.is_error())
                     GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to add quick launch entry: {}", result.release_error()));
             }
