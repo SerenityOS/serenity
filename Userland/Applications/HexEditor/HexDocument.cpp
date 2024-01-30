@@ -9,6 +9,11 @@
 #include <AK/TypeCasts.h>
 #include <LibCore/File.h>
 
+HexDocument::HexDocument()
+    : m_annotations(make_ref_counted<AnnotationsModel>())
+{
+}
+
 void HexDocument::set(size_t position, u8 value)
 {
     auto unchanged_value = get_unchanged(position);
@@ -23,34 +28,6 @@ void HexDocument::set(size_t position, u8 value)
 bool HexDocument::is_dirty() const
 {
     return m_changes.size() > 0;
-}
-
-void HexDocument::add_annotation(Annotation annotation)
-{
-    m_annotations.append(move(annotation));
-}
-
-void HexDocument::delete_annotation(Annotation const& annotation)
-{
-    m_annotations.remove_first_matching([&](auto& other) {
-        return other == annotation;
-    });
-}
-
-Optional<Annotation&> HexDocument::closest_annotation_at(size_t position)
-{
-    // FIXME: If we end up with a lot of annotations, we'll need to store them and query them in a smarter way.
-    Optional<Annotation&> result;
-    for (auto& annotation : m_annotations) {
-        if (annotation.start_offset <= position && position <= annotation.end_offset) {
-            // If multiple annotations cover this position, use whichever starts latest. This would be the innermost one
-            // if they overlap fully rather than partially.
-            if (!result.has_value() || result->start_offset < annotation.start_offset)
-                result = annotation;
-        }
-    }
-
-    return result;
 }
 
 HexDocumentMemory::HexDocumentMemory(ByteBuffer&& buffer)

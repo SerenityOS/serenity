@@ -10,6 +10,7 @@ compile_gml(GoToOffsetWidget.gml GoToOffsetWidgetGML.cpp)
 compile_gml(HexEditorWidget.gml HexEditorWidgetGML.cpp)
 
 set(SOURCES
+    AnnotationsModel.cpp
     EditAnnotationDialog.cpp
     EditAnnotationWidgetGML.cpp
     FindDialog.cpp

@@ -104,9 +104,11 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
         };
         if (m_annotation.has_value()) {
             *m_annotation = move(result);
+            if (m_document)
+                m_document->annotations().invalidate();
         } else {
             if (m_document)
-                m_document->add_annotation(result);
+                m_document->annotations().add_annotation(result);
         }
         s_most_recent_color = m_background_color->color();
         done(ExecResult::OK);
