@@ -40,7 +40,6 @@ set(TZDB_ZONE_1970_PATH "${TZDB_PATH}/${TZDB_ZONE_1970_SOURCE}")
 
 function(extract_tzdb_file source path)
     if(EXISTS "${TZDB_ZIP_PATH}" AND NOT EXISTS "${path}")
-        message(STATUS "Extracting using cmake ${source}")
         file(ARCHIVE_EXTRACT INPUT "${TZDB_ZIP_PATH}" DESTINATION "${TZDB_PATH}" PATTERNS "${source}")
     endif()
 endfunction()
