@@ -5,6 +5,8 @@
  */
 
 #include "AnnotationsModel.h"
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 
 GUI::Variant AnnotationsModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
@@ -65,4 +67,58 @@ Optional<Annotation&> AnnotationsModel::closest_annotation_at(size_t position)
     }
 
     return result;
+}
+
+ErrorOr<void> AnnotationsModel::save_to_file(Core::File& file) const
+{
+    JsonArray array {};
+    array.ensure_capacity(m_annotations.size());
+
+    for (auto const& annotation : m_annotations) {
+        JsonObject object;
+        object.set("start_offset", annotation.start_offset);
+        object.set("end_offset", annotation.end_offset);
+        object.set("background_color", annotation.background_color.to_byte_string());
+        object.set("comments", annotation.comments.to_byte_string());
+        TRY(array.append(object));
+    }
+
+    auto json_string = array.to_byte_string();
+    TRY(file.write_until_depleted(json_string.bytes()));
+
+    return {};
+}
+
+ErrorOr<void> AnnotationsModel::load_from_file(Core::File& file)
+{
+    auto json_bytes = TRY(file.read_until_eof());
+    StringView json_string { json_bytes };
+    auto json = TRY(JsonValue::from_string(json_string));
+    if (!json.is_array())
+        return Error::from_string_literal("Failed to read annotations from file: Not a JSON array.");
+    auto& json_array = json.as_array();
+
+    Vector<Annotation> new_annotations;
+    TRY(new_annotations.try_ensure_capacity(json_array.size()));
+    TRY(json_array.try_for_each([&](JsonValue const& json_value) -> ErrorOr<void> {
+        if (!json_value.is_object())
+            return Error::from_string_literal("Failed to read annotation from file: Annotation not a JSON object.");
+        auto& json_object = json_value.as_object();
+        Annotation annotation;
+        if (auto start_offset = json_object.get_u64("start_offset"sv); start_offset.has_value())
+            annotation.start_offset = start_offset.value();
+        if (auto end_offset = json_object.get_u64("end_offset"sv); end_offset.has_value())
+            annotation.end_offset = end_offset.value();
+        if (auto background_color = json_object.get_byte_string("background_color"sv).map([](auto& string) { return Color::from_string(string); }); background_color.has_value())
+            annotation.background_color = background_color->value();
+        if (auto comments = json_object.get_byte_string("comments"sv); comments.has_value())
+            annotation.comments = MUST(String::from_byte_string(comments.value()));
+        new_annotations.append(annotation);
+
+        return {};
+    }));
+
+    m_annotations = move(new_annotations);
+    invalidate();
+    return {};
 }

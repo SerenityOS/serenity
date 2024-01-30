@@ -65,6 +65,9 @@ public:
     void delete_annotation(Annotation const&);
     Optional<Annotation&> closest_annotation_at(size_t position);
 
+    ErrorOr<void> save_to_file(Core::File&) const;
+    ErrorOr<void> load_from_file(Core::File&);
+
 private:
     Vector<Annotation> m_annotations;
 };
