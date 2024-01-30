@@ -676,6 +676,20 @@ void HexEditorWidget::open_file(ByteString const& filename, NonnullOwnPtr<Core::
     GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
+void HexEditorWidget::open_annotations_file(StringView filename)
+{
+    auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), filename);
+    if (response.is_error())
+        return;
+
+    auto result = m_editor->document().annotations().load_from_file(response.value().stream());
+    if (result.is_error()) {
+        GUI::MessageBox::show(window(), ByteString::formatted("Unable to load annotations: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
+        return;
+    }
+    m_annotations_path = filename;
+}
+
 bool HexEditorWidget::request_close()
 {
     if (!window()->is_modified())

@@ -26,6 +26,7 @@ class HexEditorWidget final : public GUI::Widget {
 public:
     virtual ~HexEditorWidget() override = default;
     void open_file(ByteString const& filename, NonnullOwnPtr<Core::File>);
+    void open_annotations_file(StringView filename);
     ErrorOr<void> initialize_menubar(GUI::Window&);
     bool request_close();
 
