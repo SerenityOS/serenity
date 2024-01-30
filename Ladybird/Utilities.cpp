@@ -8,6 +8,7 @@
 #include "Utilities.h"
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <LibCore/Environment.h>
 #include <LibCore/ResourceImplementationFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
@@ -45,8 +46,9 @@ static LexicalPath find_prefix(LexicalPath const& application_directory)
 void platform_init()
 {
     s_serenity_resource_root = [] {
-        auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
-        if (home != nullptr) {
+        auto home = Core::Environment::get("XDG_CONFIG_HOME"sv)
+                        .value_or_lazy_evaluated_optional([]() { return Core::Environment::get("HOME"sv); });
+        if (home.has_value()) {
             auto home_lagom = ByteString::formatted("{}/.lagom", home);
             if (FileSystem::is_directory(home_lagom))
                 return home_lagom;
