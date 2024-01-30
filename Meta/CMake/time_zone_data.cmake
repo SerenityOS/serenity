@@ -39,9 +39,7 @@ set(TZDB_ZONE_1970_SOURCE zone1970.tab)
 set(TZDB_ZONE_1970_PATH "${TZDB_PATH}/${TZDB_ZONE_1970_SOURCE}")
 
 function(extract_tzdb_file source path)
-    if(EXISTS "${TZDB_ZIP_PATH}" AND NOT EXISTS "${path}")
-        file(ARCHIVE_EXTRACT INPUT "${TZDB_ZIP_PATH}" DESTINATION "${TZDB_PATH}" PATTERNS "${source}")
-    endif()
+    extract_path("${TZDB_PATH}" "${TZDB_ZIP_PATH}" "${source}" "${path}")
 endfunction()
 
 if (ENABLE_TIME_ZONE_DATABASE_DOWNLOAD)
