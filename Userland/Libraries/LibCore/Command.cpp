@@ -9,6 +9,7 @@
 #include "Command.h"
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
+#include <LibCore/Environment.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
@@ -30,7 +31,7 @@ ErrorOr<OwnPtr<Command>> Command::create(StringView command, char const* const a
     posix_spawn_file_actions_adddup2(&file_actions, stdout_fds[1], STDOUT_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, stderr_fds[1], STDERR_FILENO);
 
-    auto pid = TRY(Core::System::posix_spawnp(command, &file_actions, nullptr, const_cast<char**>(arguments), System::environment()));
+    auto pid = TRY(Core::System::posix_spawnp(command, &file_actions, nullptr, const_cast<char**>(arguments), Core::Environment::raw_environ()));
 
     posix_spawn_file_actions_destroy(&file_actions);
     ArmedScopeGuard runner_kill { [&pid] { kill(pid, SIGKILL); } };

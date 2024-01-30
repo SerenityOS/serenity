@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@serenityos.org>
- * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2024, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -48,7 +48,6 @@ static int memfd_create(char const* name, unsigned int flags)
 #endif
 
 #if defined(AK_OS_MACOS)
-#    include <crt_externs.h>
 #    include <mach-o/dyld.h>
 #    include <sys/mman.h>
 #else
@@ -1747,15 +1746,6 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
     }
 
     return Error::from_errno(ENOENT);
-}
-
-char** environment()
-{
-#if defined(AK_OS_MACOS)
-    return *_NSGetEnviron();
-#else
-    return environ;
-#endif
 }
 
 ErrorOr<ByteString> current_executable_path()

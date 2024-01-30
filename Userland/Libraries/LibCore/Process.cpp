@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
- * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023-2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/Environment.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
@@ -100,9 +101,9 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
 
     pid_t pid;
     if (options.search_for_executable_in_path) {
-        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), System::environment()));
+        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
     } else {
-        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), System::environment()));
+        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
     }
     return Process { pid };
 }
