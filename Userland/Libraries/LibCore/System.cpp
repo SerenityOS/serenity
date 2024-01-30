@@ -15,6 +15,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/BeepInstruction.h>
+#include <LibCore/Environment.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -1273,18 +1274,12 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
 {
     Vector<StringView> exec_environment;
-    for (size_t i = 0; environ[i]; ++i) {
-        StringView env_view { environ[i], strlen(environ[i]) };
-        auto maybe_needle = env_view.find('=');
-
-        if (!maybe_needle.has_value())
-            continue;
-
+    for (auto entry : Environment::entries()) {
         // FIXME: Allow a custom selection of variables once ArgsParser supports options with optional parameters.
-        if (!preserve_env && env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
+        if (!preserve_env && entry.name != "TERM"sv)
             continue;
 
-        exec_environment.append(env_view);
+        exec_environment.append(entry.full_entry);
     }
 
     TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
@@ -1322,8 +1317,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
     if (environment.has_value()) {
         env_count = environment->size();
     } else {
-        for (size_t i = 0; environ[i]; ++i)
-            ++env_count;
+        env_count = Core::Environment::size();
     }
 
     auto environment_strings = TRY(FixedArray<Syscall::StringArgument>::create(env_count));
@@ -1332,8 +1326,9 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
             environment_strings[i] = { environment->at(i).characters_without_null_termination(), environment->at(i).length() };
         }
     } else {
-        for (size_t i = 0; i < env_count; ++i) {
-            environment_strings[i] = { environ[i], strlen(environ[i]) };
+        size_t i = 0;
+        for (auto entry : Core::Environment::entries()) {
+            environment_strings[i++] = { entry.full_entry.characters_without_null_termination(), entry.full_entry.length() };
         }
     }
     params.environment.strings = environment_strings.data();
