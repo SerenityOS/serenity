@@ -900,7 +900,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     // 3. Return a DOMRectList object containing DOMRect objects in content order, one for each box fragment,
     // describing its border area (including those with a height or width of zero) with the following constraints:
-    // FIXME: - Apply the transforms that apply to the element and its ancestors.
+    // - Apply the transforms that apply to the element and its ancestors.
     // FIXME: - If the element on which the method was invoked has a computed value for the display property of table
     //          or inline-table include both the table box and the caption box, if any, but not the anonymous container box.
     // FIXME: - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes
@@ -908,16 +908,27 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     const_cast<Document&>(document()).update_layout();
     VERIFY(document().navigable());
     auto viewport_offset = document().navigable()->viewport_scroll_offset();
+
+    Gfx::AffineTransform transform;
+    for (auto const* containing_block = this->layout_node(); containing_block; containing_block = containing_block->containing_block()) {
+        Gfx::AffineTransform containing_block_transform;
+        if (containing_block->paintable() && containing_block->paintable()->is_paintable_box()) {
+            auto const& containing_block_paintable_box = static_cast<Painting::PaintableBox const&>(*containing_block->paintable());
+            containing_block_transform = Gfx::extract_2d_affine_transform(containing_block_paintable_box.transform());
+        }
+        transform = transform.multiply(containing_block_transform);
+    }
+
     auto const* paintable = this->paintable();
     if (auto const* paintable_box = this->paintable_box()) {
         auto absolute_rect = paintable_box->absolute_border_box_rect();
         absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
-        rects.append(Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>()));
+        rects.append(Geometry::DOMRect::create(realm(), transform.map(absolute_rect.to_type<float>())));
     } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
         auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
         auto absolute_rect = inline_paintable.bounding_rect();
         absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
-        rects.append(Geometry::DOMRect::create(realm(), absolute_rect.to_type<float>()));
+        rects.append(Geometry::DOMRect::create(realm(), transform.map(absolute_rect.to_type<float>())));
     } else if (paintable) {
         dbgln("FIXME: Failed to get client rects for element ({})", debug_description());
     }
