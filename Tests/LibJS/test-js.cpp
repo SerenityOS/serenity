@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/System.h>
+#include <LibCore/Environment.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <stdlib.h>
@@ -95,14 +95,14 @@ TESTJS_GLOBAL_FUNCTION(set_time_zone, setTimeZone)
 {
     auto current_time_zone = JS::js_null();
 
-    if (auto const* time_zone = getenv("TZ"))
-        current_time_zone = JS::PrimitiveString::create(vm, StringView { time_zone, strlen(time_zone) });
+    if (auto time_zone = Core::Environment::get("TZ"sv); time_zone.has_value())
+        current_time_zone = JS::PrimitiveString::create(vm, *time_zone);
 
     if (auto time_zone = vm.argument(0); time_zone.is_null()) {
-        if (auto result = Core::System::unsetenv("TZ"sv); result.is_error())
+        if (auto result = Core::Environment::unset("TZ"sv); result.is_error())
             return vm.throw_completion<JS::InternalError>(MUST(String::formatted("Could not unset time zone: {}", result.error())));
     } else {
-        if (auto result = Core::System::setenv("TZ"sv, TRY(time_zone.to_string(vm)), true); result.is_error())
+        if (auto result = Core::Environment::set("TZ"sv, TRY(time_zone.to_string(vm)), Core::Environment::Overwrite::Yes); result.is_error())
             return vm.throw_completion<JS::InternalError>(MUST(String::formatted("Could not set time zone: {}", result.error())));
     }
 
