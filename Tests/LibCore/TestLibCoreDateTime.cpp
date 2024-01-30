@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/System.h>
+#include <LibCore/Environment.h>
 #include <LibTest/TestCase.h>
 #include <time.h>
 
@@ -16,8 +16,8 @@ class TimeZoneGuard {
 public:
     explicit TimeZoneGuard(StringView time_zone)
     {
-        if (auto const* current_time_zone = getenv("TZ"))
-            m_time_zone = MUST(String::from_utf8({ current_time_zone, strlen(current_time_zone) }));
+        if (auto current_time_zone = Core::Environment::get("TZ"sv); current_time_zone.has_value())
+            m_time_zone = MUST(String::from_utf8(*current_time_zone));
 
         update(time_zone);
     }
@@ -25,16 +25,16 @@ public:
     ~TimeZoneGuard()
     {
         if (m_time_zone.has_value())
-            TRY_OR_FAIL(Core::System::setenv("TZ"sv, *m_time_zone, true));
+            TRY_OR_FAIL(Core::Environment::set("TZ"sv, *m_time_zone, Core::Environment::Overwrite::Yes));
         else
-            TRY_OR_FAIL(Core::System::unsetenv("TZ"sv));
+            TRY_OR_FAIL(Core::Environment::unset("TZ"sv));
 
         tzset();
     }
 
     void update(StringView time_zone)
     {
-        TRY_OR_FAIL(Core::System::setenv("TZ"sv, time_zone, true));
+        TRY_OR_FAIL(Core::Environment::set("TZ"sv, time_zone, Core::Environment::Overwrite::Yes));
         tzset();
     }
 
