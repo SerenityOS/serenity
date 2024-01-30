@@ -223,9 +223,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 
 #if !defined(AK_OS_SERENITY)
     if (debugging_stats || !render_path.is_empty()) {
-        // Get from Build/lagom/bin/pdf to Base/res/fonts.
-        auto source_root = LexicalPath(MUST(Core::System::current_executable_path())).parent().parent().parent().parent().string();
-        Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(TRY(String::formatted("{}/Base/res", source_root))));
+        // Get from Build/lagom/bin/pdf to Build/lagom/Root/res.
+        auto source_root = LexicalPath(MUST(Core::System::current_executable_path())).parent().parent().string();
+        Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(TRY(String::formatted("{}/Root/res", source_root))));
     }
 #endif
 
