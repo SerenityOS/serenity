@@ -412,7 +412,9 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         if (m_corner_clip_radii.has_value()) {
             VERIFY(!m_corner_clipper_id.has_value());
             m_corner_clipper_id = context.allocate_corner_clipper_id();
-            context.recording_painter().sample_under_corners(*m_corner_clipper_id, *m_corner_clip_radii, context.rounded_device_rect(overflow_clip_rect).to_type<int>(), CornerClip::Outside);
+            auto corner_radii = m_corner_clip_radii->as_corners(context);
+            if (corner_radii.has_any_radius())
+                context.recording_painter().sample_under_corners(*m_corner_clipper_id, m_corner_clip_radii->as_corners(context), context.rounded_device_rect(overflow_clip_rect).to_type<int>(), CornerClip::Outside);
         }
     }
 }
@@ -426,7 +428,9 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
         m_clipping_overflow = false;
         if (m_corner_clip_radii.has_value()) {
             VERIFY(m_corner_clipper_id.has_value());
-            context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*m_clip_rect).to_type<int>());
+            auto corner_radii = m_corner_clip_radii->as_corners(context);
+            if (corner_radii.has_any_radius())
+                context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*m_clip_rect).to_type<int>());
             m_corner_clipper_id = {};
         }
         context.recording_painter().restore();
