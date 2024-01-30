@@ -53,6 +53,7 @@ private:
     ByteString m_path;
     ByteString m_name;
     ByteString m_extension;
+    ByteString m_annotations_path;
 
     int m_goto_history { 0 };
     String m_search_text;
@@ -64,6 +65,9 @@ private:
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
+    RefPtr<GUI::Action> m_open_annotations_action;
+    RefPtr<GUI::Action> m_save_annotations_action;
+    RefPtr<GUI::Action> m_save_annotations_as_action;
 
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;

@@ -175,6 +175,48 @@ ErrorOr<void> HexEditorWidget::setup()
         dbgln("Wrote document to {}", file.filename());
     });
 
+    m_open_annotations_action = GUI::Action::create("Load Annotations...", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        auto response = FileSystemAccessClient::Client::the().open_file(window(),
+            { .window_title = "Load annotations file"sv,
+                .requested_access = Core::File::OpenMode::Read,
+                .allowed_file_types = { { GUI::FileTypeFilter { "Annotations files", { { "annotations" } } }, GUI::FileTypeFilter::all_files() } } });
+        if (response.is_error())
+            return;
+
+        auto result = m_editor->document().annotations().load_from_file(response.value().stream());
+        if (result.is_error()) {
+            GUI::MessageBox::show(window(), ByteString::formatted("Unable to load annotations: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+        m_annotations_path = response.value().filename();
+    });
+    m_open_annotations_action->set_status_tip("Load annotations from a file"_string);
+
+    m_save_annotations_action = GUI::Action::create("Save Annotations", Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        if (m_annotations_path.is_empty())
+            return m_save_annotations_as_action->activate();
+
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_annotations_path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate);
+        if (response.is_error())
+            return;
+        auto file = response.release_value();
+        if (auto result = m_editor->document().annotations().save_to_file(file.stream()); result.is_error()) {
+            GUI::MessageBox::show(window(), ByteString::formatted("Unable to save annotations file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
+        }
+    });
+    m_save_annotations_action->set_status_tip("Save annotations to a file"_string);
+
+    m_save_annotations_as_action = GUI::Action::create("Save Annotations As...", Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, "annotations"sv, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate);
+        if (response.is_error())
+            return;
+        auto file = response.release_value();
+        if (auto result = m_editor->document().annotations().save_to_file(file.stream()); result.is_error()) {
+            GUI::MessageBox::show(window(), ByteString::formatted("Unable to save annotations file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
+        }
+    });
+    m_save_annotations_as_action->set_status_tip("Save annotations to a file with a new name"_string);
+
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         m_editor->undo();
     });
@@ -446,6 +488,10 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_action(*m_save_action);
     file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
+    file_menu->add_action(*m_open_annotations_action);
+    file_menu->add_action(*m_save_annotations_action);
+    file_menu->add_action(*m_save_annotations_as_action);
+    file_menu->add_separator();
     file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
@@ -626,6 +672,7 @@ void HexEditorWidget::open_file(ByteString const& filename, NonnullOwnPtr<Core::
     m_editor->open_file(move(file));
     set_path(filename);
     initialize_annotations_model();
+    m_annotations_path = "";
     GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
