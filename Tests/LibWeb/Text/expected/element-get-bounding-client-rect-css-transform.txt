@@ -1,0 +1,1 @@
+       {"x":68,"y":118,"width":100,"height":100,"top":118,"right":168,"bottom":218,"left":68}
