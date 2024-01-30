@@ -372,14 +372,6 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
         transformed_position.translate_by(-scroll_offset);
     }
 
-    // FIXME: Support more overflow variations.
-    if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (paintable().is_paintable_box()) {
-            if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                return {};
-        }
-    }
-
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
 
@@ -401,12 +393,6 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
             return TraversalDecision::Continue;
 
         auto const& paintable_box = verify_cast<PaintableBox>(paintable);
-
-        // FIXME: Support more overflow variations.
-        if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                return TraversalDecision::SkipChildrenAndContinue;
-        }
 
         auto const& z_index = paintable_box.computed_values().z_index();
         if (z_index.value_or(0) == 0 && paintable_box.is_positioned() && !paintable_box.stacking_context()) {
@@ -445,13 +431,6 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
             return TraversalDecision::Continue;
 
         auto const& paintable_box = verify_cast<PaintableBox>(paintable);
-
-        // FIXME: Support more overflow variations.
-        if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                return TraversalDecision::SkipChildrenAndContinue;
-        }
-
         if (paintable_box.is_floating()) {
             if (auto candidate = paintable_box.hit_test(transformed_position, type); candidate.has_value()) {
                 result = move(candidate);
@@ -470,13 +449,6 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
                 return TraversalDecision::Continue;
 
             auto const& paintable_box = verify_cast<PaintableBox>(paintable);
-
-            // FIXME: Support more overflow variations.
-            if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                    return TraversalDecision::SkipChildrenAndContinue;
-            }
-
             if (!paintable_box.is_absolutely_positioned() && !paintable_box.is_floating()) {
                 if (auto candidate = paintable_box.hit_test(transformed_position, type); candidate.has_value()) {
                     result = move(candidate);
