@@ -497,14 +497,25 @@ void PageClient::page_did_update_resource_count(i32 count_waiting)
     client().async_did_update_resource_count(count_waiting);
 }
 
-String PageClient::page_did_request_new_web_view(Web::HTML::ActivateTab activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index)
+PageClient::NewWebViewResult PageClient::page_did_request_new_web_view(Web::HTML::ActivateTab activate_tab, Web::HTML::WebViewHints hints, Web::HTML::TokenizedFeature::NoOpener no_opener)
 {
-    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestNewWebView>(activate_tab, hints, page_index);
+    auto& new_client = m_owner.create_page();
+
+    Optional<u64> page_id;
+    if (no_opener == Web::HTML::TokenizedFeature::NoOpener::Yes) {
+        // FIXME: Create an abstraction to let this WebContent process know about a new process we create?
+        // FIXME: For now, just create a new page in the same process anyway
+    }
+
+    page_id = new_client.m_id;
+
+    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestNewWebView>(activate_tab, hints, page_id);
     if (!response) {
         dbgln("WebContent client disconnected during DidRequestNewWebView. Exiting peacefully.");
         exit(0);
     }
-    return response->take_handle();
+
+    return { &new_client.page(), response->take_handle() };
 }
 
 void PageClient::page_did_request_activate_tab()

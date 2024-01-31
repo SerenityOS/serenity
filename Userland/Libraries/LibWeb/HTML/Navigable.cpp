@@ -412,17 +412,29 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
             if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
                 target_name = MUST(String::from_utf8(name));
 
+            auto create_new_traversable_closure = [this, window_type, no_opener, target_name](JS::GCPtr<BrowsingContext> opener) -> JS::NonnullGCPtr<Navigable> {
+                // FIXME: The popup state for window.open is calculated after this call (somehow?)
+                //        Probably want to deviate from the spec and pass the popup state in here
+                auto hints = WebViewHints {
+                    .popup = window_type != WindowType::ExistingOrNone,
+                };
+                auto [page, window_handle] = traversable_navigable()->page().client().page_did_request_new_web_view(ActivateTab::Yes, hints, no_opener);
+                auto traversable = TraversableNavigable::create_a_new_top_level_traversable(*page, opener, target_name).release_value_but_fixme_should_propagate_errors();
+                page->set_top_level_traversable(traversable);
+                traversable->set_window_handle(window_handle);
+                return traversable;
+            };
+            auto create_new_traversable = JS::create_heap_function(heap(), move(create_new_traversable_closure));
+
             // 7. If noopener is true, then set chosen to the result of creating a new top-level traversable given null and targetName.
             if (no_opener == TokenizedFeature::NoOpener::Yes) {
-                // FIXME: This should do something similar to RemoteBrowsingContext -- but RemoteTraversableNavigable instead
-                TODO();
+                chosen = create_new_traversable->function()(nullptr);
             }
 
             // 8. Otherwise:
             else {
                 // 1. Set chosen to the result of creating a new top-level traversable given currentNavigable's active browsing context and targetName.
-                // FIXME: Make this method return WebIDL::ExceptionOr<ChosenNavigable>
-                chosen = TraversableNavigable::create_a_new_top_level_traversable(traversable_navigable()->page(), active_browsing_context(), target_name).release_value_but_fixme_should_propagate_errors();
+                chosen = create_new_traversable->function()(active_browsing_context());
 
                 // FIXME: 2. If sandboxingFlagSet's sandboxed navigation browsing context flag is set,
                 //    then set chosen's active browsing context's one permitted sandboxed navigator to currentNavigable's active browsing context.

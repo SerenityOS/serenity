@@ -82,6 +82,9 @@ public:
     Page& page() { return m_page; }
     Page const& page() const { return m_page; }
 
+    String window_handle() const { return m_window_handle; }
+    void set_window_handle(String window_handle) { m_window_handle = move(window_handle); }
+
 private:
     TraversableNavigable(JS::NonnullGCPtr<Page>);
 
@@ -114,6 +117,8 @@ private:
     SessionHistoryTraversalQueue m_session_history_traversal_queue;
 
     JS::NonnullGCPtr<Page> m_page;
+
+    String m_window_handle;
 };
 
 struct BrowsingContextAndDocument {
