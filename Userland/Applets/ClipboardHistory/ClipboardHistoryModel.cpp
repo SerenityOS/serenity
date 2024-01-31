@@ -9,6 +9,7 @@
 #include "ClipboardHistoryModel.h"
 #include <AK/JsonParser.h>
 #include <AK/NumberFormat.h>
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
@@ -119,14 +120,14 @@ ErrorOr<void> ClipboardHistoryModel::invalidate_model_and_file()
     return {};
 }
 
-void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
+void ClipboardHistoryModel::add_item(GUI::Clipboard::DataAndType const& item)
 {
     m_history_items.remove_first_matching([&](ClipboardItem& existing) {
         return existing.data_and_type.data == item.data && existing.data_and_type.mime_type == item.mime_type;
     });
 
-    if (m_history_items.size() == m_history_limit) {
-        m_history_items.take_last();
+    if (m_history_items.size() >= m_history_limit) {
+        m_history_items.resize(m_history_limit - 1);
     }
 
     m_history_items.prepend({ item, Core::DateTime::now() });
@@ -198,6 +199,13 @@ ErrorOr<void> ClipboardHistoryModel::read_from_file(ByteString const& path)
                 return Error::from_string_literal("JSON entry is not an object.");
             TRY(m_history_items.try_append(TRY(ClipboardItem::from_json(item.as_object()))));
         }
+        // Ensure the data is how we expect: Limited to m_history_limit and sorted newest-to-oldest.
+        quick_sort(m_history_items, [](ClipboardItem const& a, ClipboardItem const& b) -> bool {
+            return a.time > b.time;
+        });
+        if (m_history_items.size() > m_history_limit)
+            m_history_items.resize(m_history_limit);
+
         return {};
     };
 
