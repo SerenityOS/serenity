@@ -250,7 +250,8 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [self setNeedsDisplay:YES];
     };
 
-    m_web_view_bridge->on_new_tab = [self](auto activate_tab) {
+    m_web_view_bridge->on_new_web_view = [self](auto activate_tab, auto, auto) {
+        // FIXME: Create a child tab that re-uses the ConnectionFromClient of the parent tab
         return [self.observer onCreateNewTab:"about:blank"sv activateTab:activate_tab];
     };
 

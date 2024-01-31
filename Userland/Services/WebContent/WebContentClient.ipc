@@ -7,6 +7,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/SelectItem.h>
+#include <LibWeb/HTML/WebViewHints.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWebView/Attribute.h>
 #include <LibWebView/SocketPair.h>
@@ -58,7 +59,7 @@ endpoint WebContentClient
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, Web::Cookie::Source source) => ()
     did_update_cookie(Web::Cookie::Cookie cookie) =|
     did_update_resource_count(i32 count_waiting) =|
-    did_request_new_tab(Web::HTML::ActivateTab activate_tab) => (String handle)
+    did_request_new_web_view(Web::HTML::ActivateTab activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index) => (String handle)
     did_request_activate_tab() =|
     did_close_browsing_context() =|
     did_request_restore_window() =|

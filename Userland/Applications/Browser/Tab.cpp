@@ -593,7 +593,8 @@ Tab::Tab(BrowserWindow& window)
         update_status();
     };
 
-    view().on_new_tab = [this](auto activate_tab) {
+    view().on_new_web_view = [this](auto activate_tab, auto, auto) {
+        // FIXME: Create a child tab that re-uses the ConnectionFromClient of the parent tab
         auto& tab = this->window().create_new_tab(URL("about:blank"), activate_tab);
         return tab.view().handle();
     };
