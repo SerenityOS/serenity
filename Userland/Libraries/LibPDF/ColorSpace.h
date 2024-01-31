@@ -112,7 +112,7 @@ private:
 
 class DeviceCMYKColorSpace final : public ColorSpace {
 public:
-    static NonnullRefPtr<DeviceCMYKColorSpace> the();
+    static ErrorOr<NonnullRefPtr<DeviceCMYKColorSpace>> the();
 
     ~DeviceCMYKColorSpace() override = default;
 
