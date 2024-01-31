@@ -65,6 +65,12 @@ PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
 {
     VERIFY(m_xref_table->has_object(index));
 
+    // PDF spec 1.7, Indirect Objects:
+    // "An indirect reference to an undefined object is not an error; it is simply treated as a reference to the null object."
+    // FIXME: Should this apply to the !has_object() case right above too?
+    if (!m_xref_table->is_object_in_use(index))
+        return nullptr;
+
     if (m_xref_table->is_object_compressed(index))
         // The object can be found in a object stream
         return parse_compressed_object_with_index(index);
