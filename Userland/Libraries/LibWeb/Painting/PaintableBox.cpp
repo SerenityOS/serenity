@@ -627,15 +627,11 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     // FIXME: Find a smarter way to do this?
     if (phase == PaintPhase::Foreground) {
         for (auto& fragment : fragments()) {
-            if (fragment.contained_by_inline_node())
-                continue;
             paint_text_shadow(context, fragment, fragment.shadows());
         }
     }
 
     for (auto const& fragment : m_fragments) {
-        if (fragment.contained_by_inline_node())
-            continue;
         auto fragment_absolute_rect = fragment.absolute_rect();
         auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
         if (context.should_show_line_box_borders()) {

@@ -42,9 +42,6 @@ public:
 
     CSSPixelRect selection_rect(Gfx::Font const&) const;
 
-    bool contained_by_inline_node() const { return m_contained_by_inline_node; }
-    void set_contained_by_inline_node() { m_contained_by_inline_node = true; }
-
     CSSPixels width() const { return m_size.width(); }
     CSSPixels height() const { return m_size.height(); }
 
