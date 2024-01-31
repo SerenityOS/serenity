@@ -26,4 +26,6 @@ set(SOURCES
     )
 
 serenity_lib(LibPDF pdf)
-target_link_libraries(LibPDF PRIVATE LibCompress LibIPC LibGfx LibTextCodec LibCrypto)
+target_link_libraries(LibPDF PRIVATE LibCompress LibCore LibIPC LibGfx LibTextCodec LibCrypto)
+
+include(${SerenityOS_SOURCE_DIR}/Meta/CMake/download_icc_profiles.cmake)

@@ -16,7 +16,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
-    // FIXME: Copy the fonts to the bundle or something
+    // FIXME: Copy fonts and icc file to the bundle or something
 
     // Get from `Build/lagom/bin/MacPDF.app/Contents/MacOS/MacPDF` to `Build/lagom/Root/res`.
     NSString* source_root = [[NSBundle mainBundle] executablePath];

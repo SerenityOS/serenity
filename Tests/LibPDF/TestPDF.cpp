@@ -6,7 +6,10 @@
 
 #include <AK/ByteString.h>
 #include <AK/Forward.h>
+#include <AK/LexicalPath.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/ResourceImplementationFile.h>
+#include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -293,6 +296,12 @@ TEST_CASE(postscript)
 
 TEST_CASE(render)
 {
+#if !defined(AK_OS_SERENITY)
+    // Get from Build/lagom/bin/TestPDF to Build/lagom/Root/res.
+    auto source_root = LexicalPath(MUST(Core::System::current_executable_path())).parent().parent().string();
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Root/res", source_root))));
+#endif
+
     auto file = MUST(Core::MappedFile::map("colorspaces.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
