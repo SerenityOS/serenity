@@ -5,6 +5,13 @@ test.xfail("assignment to function call", () => {
     }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
 });
 
+test.xfail("Postfix operator after function call", () => {
+    expect(() => {
+        function foo() {}
+        foo()++;
+    }).toThrow(ReferenceError);
+});
+
 test("assignment to function call in strict mode", () => {
     expect("'use strict'; foo() = 'foo'").toEval();
 });

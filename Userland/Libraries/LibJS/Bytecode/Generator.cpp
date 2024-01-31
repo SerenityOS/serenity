@@ -268,7 +268,10 @@ CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_l
         }
         return Optional<ReferenceRegisters> {};
     }
-    VERIFY_NOT_REACHED();
+    return CodeGenerationError {
+        &node,
+        "Unimplemented/invalid node used a reference"sv
+    };
 }
 
 CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const& node)
