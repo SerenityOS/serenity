@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
@@ -812,10 +813,18 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
             m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, (unsigned)node.data().bytes().size()));
             return true;
         }
-        if (key == KeyCode::Key_Return && is<HTML::HTMLInputElement>(node.editable_text_node_owner())) {
-            auto& input_element = static_cast<HTML::HTMLInputElement&>(*node.editable_text_node_owner());
-            input_element.commit_pending_changes();
-            return true;
+        if (key == KeyCode::Key_Return) {
+            if (is<HTML::HTMLInputElement>(node.editable_text_node_owner())) {
+                auto& input_element = static_cast<HTML::HTMLInputElement&>(*node.editable_text_node_owner());
+
+                if (auto* form = input_element.form()) {
+                    form->implicitly_submit_form().release_value_but_fixme_should_propagate_errors();
+                    return true;
+                }
+
+                input_element.commit_pending_changes();
+                return true;
+            }
         }
         if (!should_ignore_keydown_event(code_point)) {
             m_edit_event_handler->handle_insert(JS::NonnullGCPtr { *m_browsing_context->cursor_position() }, code_point);

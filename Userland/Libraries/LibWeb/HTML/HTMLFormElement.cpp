@@ -62,6 +62,34 @@ void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
         visitor.visit(element);
 }
 
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission
+WebIDL::ExceptionOr<void> HTMLFormElement::implicitly_submit_form()
+{
+    // If the user agent supports letting the user submit a form implicitly (for example, on some platforms hitting the
+    // "enter" key while a text control is focused implicitly submits the form), then doing so for a form, whose default
+    // button has activation behavior and is not disabled, must cause the user agent to fire a click event at that
+    // default button.
+    if (auto* default_button = this->default_button()) {
+        auto& default_button_element = default_button->form_associated_element_to_html_element();
+
+        if (default_button_element.has_activation_behavior() && default_button->enabled())
+            default_button_element.click();
+
+        return {};
+    }
+
+    // If the form has no submit button, then the implicit submission mechanism must perform the following steps:
+
+    // 1. If the form has more than one field that blocks implicit submission, then return.
+    if (number_of_fields_blocking_implicit_submission() > 1)
+        return {};
+
+    // 2. Submit the form element from the form element itself with userInvolvement set to "activation".
+    TRY(submit_form(*this, { .user_involvement = UserNavigationInvolvement::Activation }));
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
 WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElement> submitter, SubmitFormOptions options)
 {
@@ -1010,6 +1038,68 @@ WebIDL::ExceptionOr<JS::Value> HTMLFormElement::named_item_value(FlyString const
 
     // 6. Return the node in candidates.
     return node;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#default-button
+FormAssociatedElement* HTMLFormElement::default_button()
+{
+    // A form element's default button is the first submit button in tree order whose form owner is that form element.
+    FormAssociatedElement* default_button = nullptr;
+
+    root().for_each_in_subtree([&](auto& node) {
+        auto* form_associated_element = dynamic_cast<FormAssociatedElement*>(&node);
+        if (!form_associated_element)
+            return IterationDecision::Continue;
+
+        if (form_associated_element->form() == this && form_associated_element->is_submit_button()) {
+            default_button = form_associated_element;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return default_button;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#field-that-blocks-implicit-submission
+size_t HTMLFormElement::number_of_fields_blocking_implicit_submission() const
+{
+    // For the purpose of the previous paragraph, an element is a field that blocks implicit submission of a form
+    // element if it is an input element whose form owner is that form element and whose type attribute is in one of
+    // the following states: Text, Search, Telephone, URL, Email, Password, Date, Month, Week, Time,
+    // Local Date and Time, Number.
+    size_t count = 0;
+
+    for (auto element : m_associated_elements) {
+        if (!is<HTMLInputElement>(*element))
+            continue;
+
+        auto const& input = static_cast<HTMLInputElement&>(*element);
+        using enum HTMLInputElement::TypeAttributeState;
+
+        switch (input.type_state()) {
+        case Text:
+        case Search:
+        case Telephone:
+        case URL:
+        case Email:
+        case Password:
+        case Date:
+        case Month:
+        case Week:
+        case Time:
+        case LocalDateAndTime:
+        case Number:
+            ++count;
+            break;
+
+        default:
+            break;
+        }
+    };
+
+    return count;
 }
 
 }
