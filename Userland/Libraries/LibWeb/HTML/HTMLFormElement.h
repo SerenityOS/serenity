@@ -122,7 +122,7 @@ private:
     // https://html.spec.whatwg.org/multipage/forms.html#locked-for-reset
     bool m_locked_for_reset { false };
 
-    Vector<JS::GCPtr<HTMLElement>> m_associated_elements;
+    Vector<JS::NonnullGCPtr<HTMLElement>> m_associated_elements;
 
     // https://html.spec.whatwg.org/multipage/forms.html#past-names-map
     struct PastNameEntry {
