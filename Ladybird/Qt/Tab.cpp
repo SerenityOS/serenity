@@ -720,9 +720,10 @@ void Tab::location_edit_return_pressed()
 
 void Tab::open_file()
 {
-    auto filename = QFileDialog::getOpenFileName(this, "Open file", QDir::homePath(), "All Files (*.*)");
-    if (!filename.isNull())
-        navigate(ak_url_from_qstring(filename));
+    auto filename = QFileDialog::getOpenFileUrl(this, "Open file", QDir::homePath(), "All Files (*.*)");
+    if (filename.isValid()) {
+        navigate(ak_url_from_qurl(filename));
+    }
 }
 
 int Tab::tab_index()
