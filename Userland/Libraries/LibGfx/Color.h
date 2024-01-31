@@ -74,15 +74,6 @@ public:
     static constexpr Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
     static constexpr Color from_argb(unsigned argb) { return Color(argb); }
 
-    static constexpr Color from_cmyk(float c, float m, float y, float k)
-    {
-        auto r = static_cast<u8>(255.0f * (1.0f - c) * (1.0f - k));
-        auto g = static_cast<u8>(255.0f * (1.0f - m) * (1.0f - k));
-        auto b = static_cast<u8>(255.0f * (1.0f - y) * (1.0f - k));
-
-        return Color(r, g, b);
-    }
-
     static constexpr Color from_yuv(YUV const& yuv) { return from_yuv(yuv.y, yuv.u, yuv.v); }
     static constexpr Color from_yuv(float y, float u, float v)
     {
