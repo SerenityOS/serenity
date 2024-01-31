@@ -419,7 +419,11 @@ PDFErrorOr<void> Document::build_outline()
     if (!m_catalog->contains(CommonNames::Outlines))
         return {};
 
-    auto outline_dict = TRY(m_catalog->get_dict(this, CommonNames::Outlines));
+    auto outlines = TRY(resolve(m_catalog->get_value(CommonNames::Outlines)));
+    if (outlines.has<nullptr_t>())
+        return {};
+
+    auto outline_dict = cast_to<DictObject>(outlines);
     if (!outline_dict->contains(CommonNames::First))
         return {};
     if (!outline_dict->contains(CommonNames::Last))
