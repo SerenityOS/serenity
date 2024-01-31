@@ -75,6 +75,7 @@ public slots:
     void tab_favicon_changed(int index, QIcon const& icon);
     Tab& new_tab_from_url(AK::URL const&, Web::HTML::ActivateTab);
     Tab& new_tab_from_content(StringView html, Web::HTML::ActivateTab);
+    Tab& new_child_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
     void activate_tab(int index);
     void close_tab(int index);
     void close_current_tab();
@@ -101,6 +102,8 @@ private:
     virtual void closeEvent(QCloseEvent*) override;
 
     Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
+    Tab& create_new_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
+    void initialize_tab(Tab*);
 
     void debug_request(ByteString const& request, ByteString const& argument = "");
 

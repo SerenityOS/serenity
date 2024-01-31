@@ -402,6 +402,7 @@ set(SOURCES
     HTML/TraversableNavigable.cpp
     HTML/VideoTrack.cpp
     HTML/VideoTrackList.cpp
+    HTML/WebViewHints.cpp
     HTML/Window.cpp
     HTML/WindowEventHandlers.cpp
     HTML/WindowOrWorkerGlobalScope.cpp

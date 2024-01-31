@@ -77,6 +77,8 @@ public:
     };
     void update_palette(PaletteMode = PaletteMode::Default);
 
+    using ViewImplementation::client;
+
 signals:
     void urls_dropped(QList<QUrl> const&);
 

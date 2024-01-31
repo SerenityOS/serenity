@@ -328,10 +328,10 @@ void WebContentClient::did_update_cookie(Web::Cookie::Cookie const& cookie)
         m_view.on_update_cookie(cookie);
 }
 
-Messages::WebContentClient::DidRequestNewTabResponse WebContentClient::did_request_new_tab(Web::HTML::ActivateTab const& activate_tab)
+Messages::WebContentClient::DidRequestNewWebViewResponse WebContentClient::did_request_new_web_view(Web::HTML::ActivateTab const& activate_tab, Web::HTML::WebViewHints const& hints, Optional<u64> const& page_index)
 {
-    if (m_view.on_new_tab)
-        return m_view.on_new_tab(activate_tab);
+    if (m_view.on_new_web_view)
+        return m_view.on_new_web_view(activate_tab, hints, page_index);
     return String {};
 }
 

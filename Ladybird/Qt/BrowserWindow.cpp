@@ -483,6 +483,31 @@ Tab& BrowserWindow::new_tab_from_content(StringView html, Web::HTML::ActivateTab
     return tab;
 }
 
+Tab& BrowserWindow::new_child_tab(Web::HTML::ActivateTab activate_tab, Tab& parent, Web::HTML::WebViewHints hints, Optional<u64> page_index)
+{
+    return create_new_tab(activate_tab, parent, hints, page_index);
+}
+
+Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index)
+{
+    if (!page_index.has_value())
+        return create_new_tab(activate_tab);
+
+    // FIXME: Respect hints for:
+    //   popup: Create new window
+    //   width, height: size of window
+    //   screen_x, screen_y: positioning of window on the screen
+    auto* tab = new Tab(this, m_web_content_options, m_webdriver_content_ipc_path, parent.view().client(), page_index.value());
+
+    VERIFY(m_current_tab != nullptr);
+
+    m_tabs_container->addTab(tab, "New Tab");
+    if (activate_tab == Web::HTML::ActivateTab::Yes)
+        m_tabs_container->setCurrentWidget(tab);
+    initialize_tab(tab);
+    return *tab;
+}
+
 Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
 {
     auto* tab = new Tab(this, m_web_content_options, m_webdriver_content_ipc_path);
@@ -494,6 +519,13 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
     m_tabs_container->addTab(tab, "New Tab");
     if (activate_tab == Web::HTML::ActivateTab::Yes)
         m_tabs_container->setCurrentWidget(tab);
+    initialize_tab(tab);
+
+    return *tab;
+}
+
+void BrowserWindow::initialize_tab(Tab* tab)
+{
 
     QObject::connect(tab, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
@@ -506,9 +538,9 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
             new_tab_from_url(ak_url_from_qurl(urls[i]), Web::HTML::ActivateTab::No);
     });
 
-    tab->view().on_new_tab = [this](auto activate_tab) {
-        auto& tab = new_tab_from_url("about:blank"sv, activate_tab);
-        return tab.view().handle();
+    tab->view().on_new_web_view = [this, tab](auto activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index) {
+        auto& new_tab = new_child_tab(activate_tab, *tab, hints, page_index);
+        return new_tab.view().handle();
     };
 
     tab->view().on_tab_open_request = [this](auto url, auto activate_tab) {
@@ -553,7 +585,6 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
     };
 
     tab->focus_location_editor();
-    return *tab;
 }
 
 void BrowserWindow::activate_tab(int index)

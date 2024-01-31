@@ -112,7 +112,7 @@ public:
 
     Function<void(Gfx::IntSize)> on_did_layout;
     Function<void()> on_ready_to_paint;
-    Function<String(Web::HTML::ActivateTab)> on_new_tab;
+    Function<String(Web::HTML::ActivateTab, Web::HTML::WebViewHints, Optional<u64>)> on_new_web_view;
     Function<void()> on_activate_tab;
     Function<void()> on_close;
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;

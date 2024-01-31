@@ -497,9 +497,14 @@ void PageClient::page_did_update_resource_count(i32 count_waiting)
     client().async_did_update_resource_count(count_waiting);
 }
 
-String PageClient::page_did_request_new_tab(Web::HTML::ActivateTab activate_tab)
+String PageClient::page_did_request_new_web_view(Web::HTML::ActivateTab activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index)
 {
-    return client().did_request_new_tab(activate_tab);
+    auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestNewWebView>(activate_tab, hints, page_index);
+    if (!response) {
+        dbgln("WebContent client disconnected during DidRequestNewWebView. Exiting peacefully.");
+        exit(0);
+    }
+    return response->take_handle();
 }
 
 void PageClient::page_did_request_activate_tab()

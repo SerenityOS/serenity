@@ -157,6 +157,7 @@ source_set("HTML") {
     "TraversableNavigable.cpp",
     "VideoTrack.cpp",
     "VideoTrackList.cpp",
+    "WebViewHints.cpp",
     "Window.cpp",
     "WindowEventHandlers.cpp",
     "WindowOrWorkerGlobalScope.cpp",

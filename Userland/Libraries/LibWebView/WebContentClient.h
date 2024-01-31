@@ -10,6 +10,7 @@
 #include <LibIPC/ConnectionToServer.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/SelectItem.h>
+#include <LibWeb/HTML/WebViewHints.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
@@ -73,7 +74,7 @@ private:
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, Web::Cookie::Source) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
     virtual void did_update_cookie(Web::Cookie::Cookie const&) override;
-    virtual Messages::WebContentClient::DidRequestNewTabResponse did_request_new_tab(Web::HTML::ActivateTab const& activate_tab) override;
+    virtual Messages::WebContentClient::DidRequestNewWebViewResponse did_request_new_web_view(Web::HTML::ActivateTab const&, Web::HTML::WebViewHints const&, Optional<u64> const& page_index) override;
     virtual void did_request_activate_tab() override;
     virtual void did_close_browsing_context() override;
     virtual void did_update_resource_count(i32 count_waiting) override;

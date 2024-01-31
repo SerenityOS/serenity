@@ -32,6 +32,7 @@
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/SelectItem.h>
+#include <LibWeb/HTML/WebViewHints.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/PixelUnits.h>
 #include <LibWebView/SocketPair.h>
@@ -268,7 +269,7 @@ public:
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
-    virtual String page_did_request_new_tab(HTML::ActivateTab) { return {}; }
+    virtual String page_did_request_new_web_view(HTML::ActivateTab, HTML::WebViewHints, Optional<u64> = {}) { return {}; }
     virtual void page_did_request_activate_tab() { }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
