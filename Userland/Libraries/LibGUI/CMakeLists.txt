@@ -1,6 +1,6 @@
 compile_gml(DynamicWidgetContainerControls.gml DynamicWidgetContainerControls.cpp)
 
-stringify_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
+compile_gml(AboutDialog.gml AboutDialogGML.cpp)
 stringify_gml(DatePickerDialog.gml DatePickerDialogGML.h date_picker_dialog_gml)
 stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
@@ -10,6 +10,7 @@ stringify_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_di
 
 set(SOURCES
     AboutDialog.cpp
+    AboutDialogGML.cpp
     AbstractButton.cpp
     AbstractScrollableWidget.cpp
     AbstractSlider.cpp
@@ -146,7 +147,6 @@ set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowManagerClientEndpoint.h
     ../../Services/WindowServer/WindowManagerServerEndpoint.h
     ../../Services/WindowServer/WindowServerEndpoint.h
-    AboutDialogGML.h
     DatePickerDialogGML.h
     EmojiInputDialogGML.h
     FilePickerDialogGML.h
