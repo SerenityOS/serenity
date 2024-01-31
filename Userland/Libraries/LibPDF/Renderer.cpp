@@ -695,14 +695,14 @@ RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 {
-    state().stroke_color_space = DeviceCMYKColorSpace::the();
+    state().stroke_color_space = TRY(DeviceCMYKColorSpace::the());
     state().stroke_style = TRY(state().stroke_color_space->style(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 {
-    state().paint_color_space = DeviceCMYKColorSpace::the();
+    state().paint_color_space = TRY(DeviceCMYKColorSpace::the());
     state().paint_style = TRY(state().paint_color_space->style(args));
     return {};
 }

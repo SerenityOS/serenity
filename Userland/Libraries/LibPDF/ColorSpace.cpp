@@ -53,7 +53,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
     if (name == CommonNames::DeviceRGB)
         return DeviceRGBColorSpace::the();
     if (name == CommonNames::DeviceCMYK)
-        return DeviceCMYKColorSpace::the();
+        return TRY(DeviceCMYKColorSpace::the());
     if (name == CommonNames::Pattern)
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     VERIFY_NOT_REACHED();
@@ -134,7 +134,7 @@ Vector<float> DeviceRGBColorSpace::default_decode() const
     return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
-NonnullRefPtr<DeviceCMYKColorSpace> DeviceCMYKColorSpace::the()
+ErrorOr<NonnullRefPtr<DeviceCMYKColorSpace>> DeviceCMYKColorSpace::the()
 {
     static auto instance = adopt_ref(*new DeviceCMYKColorSpace());
     return instance;
