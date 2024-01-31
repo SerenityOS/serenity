@@ -309,7 +309,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     search_selected_text_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
     QObject::connect(search_selected_text_action, &QAction::triggered, this, [this]() {
         auto url = MUST(String::formatted(Settings::the()->search_engine().query_url, URL::percent_encode(*m_page_context_menu_search_text)));
-        m_window->new_tab(qstring_from_ak_string(url), Web::HTML::ActivateTab::Yes);
+        m_window->new_tab_from_url(AK::URL(url), Web::HTML::ActivateTab::Yes);
     });
 
     auto take_screenshot = [this](auto type) {
@@ -658,10 +658,9 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(QString const& url_qstring)
+void Tab::navigate(AK::URL const& url)
 {
-    auto url_string = ak_string_from_qstring(url_qstring);
-    view().load(url_string);
+    view().load(url);
 }
 
 void Tab::load_html(StringView html)
@@ -716,14 +715,14 @@ void Tab::copy_link_url(URL const& url)
 
 void Tab::location_edit_return_pressed()
 {
-    navigate(m_location_edit->text());
+    navigate(ak_url_from_qurl(m_location_edit->text()));
 }
 
 void Tab::open_file()
 {
     auto filename = QFileDialog::getOpenFileName(this, "Open file", QDir::homePath(), "All Files (*.*)");
     if (!filename.isNull())
-        navigate(filename);
+        navigate(ak_url_from_qstring(filename));
 }
 
 int Tab::tab_index()

@@ -21,3 +21,13 @@ QString qstring_from_ak_string(StringView ak_string)
 {
     return QString::fromUtf8(ak_string.characters_without_null_termination(), static_cast<qsizetype>(ak_string.length()));
 }
+
+AK::URL ak_url_from_qstring(QString const& qstring)
+{
+    return AK::URL(qstring.toUtf8().data());
+}
+
+AK::URL ak_url_from_qurl(QUrl const& qurl)
+{
+    return AK::URL(qurl.toString().toUtf8().data());
+}
