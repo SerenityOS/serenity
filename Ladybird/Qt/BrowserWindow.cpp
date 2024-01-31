@@ -381,10 +381,10 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
 
     QObject::connect(about_action, &QAction::triggered, this, [this] {
-        new_tab("about:version", Web::HTML::ActivateTab::Yes);
+        new_tab_from_url("about:version"sv, Web::HTML::ActivateTab::Yes);
     });
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
-        new_tab(Settings::the()->new_tab_page(), Web::HTML::ActivateTab::Yes);
+        new_tab_from_url(ak_url_from_qstring(Settings::the()->new_tab_page()), Web::HTML::ActivateTab::Yes);
     });
     QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
@@ -448,8 +448,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
 
     for (size_t i = 0; i < initial_urls.size(); ++i) {
-        auto url_string = qstring_from_ak_string(initial_urls[i].serialize());
-        new_tab(url_string, (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+        new_tab_from_url(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
     }
 
     setCentralWidget(m_tabs_container);
@@ -470,7 +469,7 @@ void BrowserWindow::debug_request(ByteString const& request, ByteString const& a
     m_current_tab->debug_request(request, argument);
 }
 
-Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_tab)
+Tab& BrowserWindow::new_tab_from_url(AK::URL const& url, Web::HTML::ActivateTab activate_tab)
 {
     auto& tab = create_new_tab(activate_tab);
     tab.navigate(url);
@@ -501,19 +500,19 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
 
     QObject::connect(&tab->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
         VERIFY(urls.size());
-        m_current_tab->navigate(urls[0].toString());
+        m_current_tab->navigate(ak_url_from_qurl(urls[0]));
 
         for (qsizetype i = 1; i < urls.size(); ++i)
-            new_tab(urls[i].toString(), Web::HTML::ActivateTab::No);
+            new_tab_from_url(ak_url_from_qurl(urls[i]), Web::HTML::ActivateTab::No);
     });
 
     tab->view().on_new_tab = [this](auto activate_tab) {
-        auto& tab = new_tab("about:blank", activate_tab);
+        auto& tab = new_tab_from_url("about:blank"sv, activate_tab);
         return tab.view().handle();
     };
 
     tab->view().on_tab_open_request = [this](auto url, auto activate_tab) {
-        auto& tab = new_tab(qstring_from_ak_string(url.to_byte_string()), activate_tab);
+        auto& tab = new_tab_from_url(url, activate_tab);
         return tab.view().handle();
     };
 
