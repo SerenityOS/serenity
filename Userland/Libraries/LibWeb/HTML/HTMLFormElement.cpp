@@ -214,14 +214,14 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
     //     Then, select the appropriate cell on that row based on method as given in the first cell of each column.
     //     Then, jump to the steps named in that cell and defined below the table.
 
-    // 	          | GET 	      | POST
+    //            | GET               | POST
     // ------------------------------------------------------
-    // http 	  | Mutate action URL |	Submit as entity body
-    // https 	  | Mutate action URL |	Submit as entity body
-    // ftp 	  | Get action URL    |	Get action URL
-    // javascript | Get action URL    |	Get action URL
-    // data 	  | Mutate action URL |	Get action URL
-    // mailto 	  | Mail with headers |	Mail as body
+    // http       | Mutate action URL | Submit as entity body
+    // https      | Mutate action URL | Submit as entity body
+    // ftp        | Get action URL    | Get action URL
+    // javascript | Get action URL    | Get action URL
+    // data       | Mutate action URL | Get action URL
+    // mailto     | Mail with headers | Mail as body
 
     // If scheme is not one of those listed in this table, then the behavior is not defined by this specification.
     // User agents should, in the absence of another specification defining this, act in a manner analogous to that defined
