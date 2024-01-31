@@ -128,6 +128,7 @@ CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_appl
         auto offset = block->paintable_box()->offset();
         auto affine_transform = Gfx::extract_2d_affine_transform(block->paintable_box()->transform());
         offset.translate_by(affine_transform.translation().to_type<CSSPixels>());
+        offset.translate_by(-block->paintable_box()->scroll_offset());
         rect.translate_by(offset);
     }
     auto affine_transform = Gfx::extract_2d_affine_transform(transform());
@@ -598,7 +599,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     bool should_clip_overflow = computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
     Optional<u32> corner_clip_id;
 
-    auto clip_box = context.rounded_device_rect(absolute_padding_box_rect());
+    auto clip_box = context.rounded_device_rect(compute_absolute_padding_rect_with_css_transform_applied());
 
     if (should_clip_overflow) {
         context.recording_painter().save();
