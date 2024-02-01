@@ -547,19 +547,22 @@ ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWrit
     return {};
 }
 
+ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context)
+{
+    context.fdct_and_quantization();
+    TRY(context.write_huffman_stream());
+    TRY(add_end_of_image(stream));
+    return {};
+}
+
 }
 
 ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
     TRY(add_headers(stream, context, options, bitmap.size()));
-
     TRY(context.initialize_mcu(bitmap));
-    context.fdct_and_quantization();
-
-    TRY(context.write_huffman_stream());
-
-    TRY(add_end_of_image(stream));
+    TRY(add_image(stream, context));
     return {};
 }
 
