@@ -486,14 +486,16 @@ ErrorOr<void> add_scan_header(Stream& stream)
     // B.2.3 - Scan header syntax
     TRY(stream.write_value<BigEndian<Marker>>(JPEG_SOS));
 
+    u16 const Ns = 3;
+
     // Ls - 6 + 2 × Ns
-    TRY(stream.write_value<BigEndian<u16>>(6 + 2 * 3));
+    TRY(stream.write_value<BigEndian<u16>>(6 + 2 * Ns));
 
     // Ns
-    TRY(stream.write_value<u8>(3));
+    TRY(stream.write_value<u8>(Ns));
 
-    // Encode 3 components
-    for (u8 i {}; i < 3; ++i) {
+    // Encode Ns components
+    for (u8 i {}; i < Ns; ++i) {
         // Csj
         TRY(stream.write_value<u8>(i + 1));
 
