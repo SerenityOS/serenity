@@ -397,8 +397,10 @@ ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& contex
     // B.2.2 - Frame header syntax
     TRY(stream.write_value<BigEndian<Marker>>(JPEG_SOF0));
 
-    // Lf = 8 + 3 × Nf, we only support a single image per frame so Nf = 3
-    TRY(stream.write_value<BigEndian<u16>>(17));
+    u16 const Nf = 3;
+
+    // Lf = 8 + 3 × Nf
+    TRY(stream.write_value<BigEndian<u16>>(8 + 3 * Nf));
 
     // P
     TRY(stream.write_value<u8>(8));
@@ -409,11 +411,11 @@ ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& contex
     // X
     TRY(stream.write_value<BigEndian<u16>>(bitmap.width()));
 
-    // Nf, as mentioned earlier, we only support Nf = 3
-    TRY(stream.write_value<u8>(3));
+    // Nf
+    TRY(stream.write_value<u8>(Nf));
 
-    // Encode 3 components
-    for (u8 i {}; i < 3; ++i) {
+    // Encode Nf components
+    for (u8 i {}; i < Nf; ++i) {
         // Ci
         TRY(stream.write_value<u8>(i + 1));
 
