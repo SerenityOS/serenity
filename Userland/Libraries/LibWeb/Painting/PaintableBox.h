@@ -198,6 +198,8 @@ public:
     void set_enclosing_scroll_frame_offset(CSSPixelPoint offset) { m_enclosing_scroll_frame_offset = offset; }
     void set_corner_clip_radii(BorderRadiiData const& corner_radii) { m_corner_clip_radii = corner_radii; }
 
+    Optional<int> scroll_frame_id() const { return m_scroll_frame_id; }
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 

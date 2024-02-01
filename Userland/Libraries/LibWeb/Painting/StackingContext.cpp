@@ -319,9 +319,13 @@ void StackingContext::paint(PaintContext& context) const
         }
     }
 
+    context.recording_painter().save();
+    if (paintable().is_paintable_box() && paintable_box().scroll_frame_id().has_value())
+        context.recording_painter().set_scroll_frame_id(*paintable_box().scroll_frame_id());
     context.recording_painter().push_stacking_context(push_stacking_context_params);
     paint_internal(context);
     context.recording_painter().pop_stacking_context();
+    context.recording_painter().restore();
 }
 
 template<typename Callback>
