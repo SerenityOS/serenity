@@ -251,35 +251,29 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM& vm, Value iterab
     // 3. Let list be a new empty List.
     Vector<String> list;
 
-    // 4. Let next be true.
-    GCPtr<Object> next;
+    // 4. Repeat,
+    while (true) {
+        // a. Let next be ? IteratorStepValue(iteratorRecord).
+        auto next = TRY(iterator_step_value(vm, iterator_record));
 
-    // 5. Repeat, while next is not false,
-    do {
-        // a. Set next to ? IteratorStep(iteratorRecord).
-        next = TRY(iterator_step(vm, iterator_record));
-
-        // b. If next is not false, then
-        if (next != nullptr) {
-            // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = TRY(iterator_value(vm, *next));
-
-            // ii. If Type(nextValue) is not String, then
-            if (!next_value.is_string()) {
-                // 1. Let error be ThrowCompletion(a newly created TypeError object).
-                auto error = vm.throw_completion<TypeError>(ErrorType::NotAString, next_value);
-
-                // 2. Return ? IteratorClose(iteratorRecord, error).
-                return iterator_close(vm, iterator_record, move(error));
-            }
-
-            // iii. Append nextValue to the end of the List list.
-            list.append(next_value.as_string().utf8_string());
+        // b. If next is DONE, then
+        if (!next.has_value()) {
+            // a. Return list.
+            return list;
         }
-    } while (next != nullptr);
 
-    // 6. Return list.
-    return list;
+        // c. If Type(next) is not String, then
+        if (!next->is_string()) {
+            // 1. Let error be ThrowCompletion(a newly created TypeError object).
+            auto error = vm.throw_completion<TypeError>(ErrorType::NotAString, *next);
+
+            // 2. Return ? IteratorClose(iteratorRecord, error).
+            return iterator_close(vm, iterator_record, move(error));
+        }
+
+        // iii. Append next to list.
+        list.append(next->as_string().utf8_string());
+    }
 }
 
 }
