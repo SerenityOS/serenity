@@ -122,7 +122,7 @@ struct PushStackingContext {
 
     void translate_by(Gfx::IntPoint const& offset)
     {
-        post_transform_translation.translate_by(offset);
+        source_paintable_rect.translate_by(offset);
     }
 };
 
