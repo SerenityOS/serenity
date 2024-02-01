@@ -517,12 +517,8 @@ ErrorOr<void> add_scan_header(Stream& stream)
     return {};
 }
 
-}
-
-ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
+ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWriter::Options const& options, IntSize size)
 {
-    JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
-
     context.set_luminance_quantization_table(s_default_luminance_quantization_table, options.quality);
     context.set_chrominance_quantization_table(s_default_chrominance_quantization_table, options.quality);
 
@@ -537,7 +533,7 @@ ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     if (options.icc_data.has_value())
         TRY(add_icc_data(stream, options.icc_data.value()));
 
-    TRY(add_frame_header(stream, context, bitmap.size()));
+    TRY(add_frame_header(stream, context, size));
 
     TRY(add_quantization_table(stream, context.luminance_quantization_table()));
     TRY(add_quantization_table(stream, context.chrominance_quantization_table()));
@@ -548,6 +544,15 @@ ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     TRY(add_huffman_table(stream, context.ac_chrominance_huffman_table));
 
     TRY(add_scan_header(stream));
+    return {};
+}
+
+}
+
+ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
+{
+    JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
+    TRY(add_headers(stream, context, options, bitmap.size()));
 
     TRY(context.initialize_mcu(bitmap));
     context.fdct_and_quantization();
