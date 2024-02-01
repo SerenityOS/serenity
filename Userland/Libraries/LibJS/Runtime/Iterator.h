@@ -76,6 +76,7 @@ ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_direct(VM&, Object&
 ThrowCompletionOr<NonnullGCPtr<IteratorRecord>> get_iterator_flattenable(VM&, Value, StringHandling);
 ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, IteratorRecord const&, Optional<Value> = {});
 ThrowCompletionOr<GCPtr<Object>> iterator_step(VM&, IteratorRecord const&);
+ThrowCompletionOr<Optional<Value>> iterator_step_value(VM&, IteratorRecord&);
 ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);
 ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);
 Completion iterator_close(VM&, IteratorRecord const&, Completion);
