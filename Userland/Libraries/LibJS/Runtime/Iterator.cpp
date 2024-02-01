@@ -332,31 +332,25 @@ NonnullGCPtr<Object> create_iterator_result_object(VM& vm, Value value, bool don
 }
 
 // 7.4.14 IteratorToList ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratortolist
-ThrowCompletionOr<MarkedVector<Value>> iterator_to_list(VM& vm, IteratorRecord const& iterator_record)
+ThrowCompletionOr<MarkedVector<Value>> iterator_to_list(VM& vm, IteratorRecord& iterator_record)
 {
     // 1. Let values be a new empty List.
     MarkedVector<Value> values(vm.heap());
 
-    // 2. Let next be true.
-    GCPtr<Object> next;
+    // 2. Repeat,
+    while (true) {
+        // a. Let next be ? IteratorStepValue(iteratorRecord).
+        auto next = TRY(iterator_step_value(vm, iterator_record));
 
-    // 3. Repeat, while next is not false,
-    do {
-        // a. Set next to ? IteratorStep(iteratorRecord).
-        next = TRY(iterator_step(vm, iterator_record));
-
-        // b. If next is not false, then
-        if (next) {
-            // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = TRY(iterator_value(vm, *next));
-
-            // ii. Append nextValue to values.
-            TRY_OR_THROW_OOM(vm, values.try_append(next_value));
+        // b. If next is DONE, then
+        if (!next.has_value()) {
+            // i. Return values.
+            return values;
         }
-    } while (next);
 
-    // 4. Return values.
-    return values;
+        // c. Append next to values.
+        values.append(next.release_value());
+    }
 }
 
 // Non-standard
@@ -365,13 +359,11 @@ Completion get_iterator_values(VM& vm, Value iterable, IteratorValueCallback cal
     auto iterator_record = TRY(get_iterator(vm, iterable, IteratorHint::Sync));
 
     while (true) {
-        auto next_object = TRY(iterator_step(vm, iterator_record));
-        if (!next_object)
+        auto next = TRY(iterator_step_value(vm, iterator_record));
+        if (!next.has_value())
             return {};
 
-        auto next_value = TRY(iterator_value(vm, *next_object));
-
-        if (auto completion = callback(next_value); completion.has_value())
+        if (auto completion = callback(next.release_value()); completion.has_value())
             return iterator_close(vm, iterator_record, completion.release_value());
     }
 }

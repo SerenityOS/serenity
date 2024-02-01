@@ -420,46 +420,27 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             // 3. Let n be 0.
             // 4. Repeat,
             while (true) {
-                ThrowCompletionOr<GCPtr<Object>> next { nullptr };
+                // a. Let next be DONE.
+                Optional<Value> next;
 
-                // a. If iteratorRecord.[[Done]] is false, then
+                // b. If iteratorRecord.[[Done]] is false, then
                 if (!iterator_record.done) {
-                    // i. Let next be Completion(IteratorStep(iteratorRecord)).
-                    next = iterator_step(vm, iterator_record);
-
-                    // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-                    // iii. ReturnIfAbrupt(next).
-                    if (next.is_error()) {
-                        iterator_record.done = true;
-                        return next.release_error();
-                    }
-
-                    // iv. If next is false, set iteratorRecord.[[Done]] to true.
-                    if (!next.value())
-                        iterator_record.done = true;
+                    // i. Set next to ? IteratorStepValue(iteratorRecord).
+                    next = TRY(iterator_step_value(vm, iterator_record));
                 }
 
-                // b. If iteratorRecord.[[Done]] is true, then
-                if (iterator_record.done) {
+                // c. If next is DONE, then
+                if (!next.has_value()) {
                     // NOTE: Step i. and ii. are handled below.
                     break;
                 }
 
-                // c. Let nextValue be Completion(IteratorValue(next)).
-                auto next_value = iterator_value(vm, *next.value());
+                // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
+                array->indexed_properties().append(next.release_value());
 
-                // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-                // e. ReturnIfAbrupt(nextValue).
-                if (next_value.is_error()) {
-                    iterator_record.done = true;
-                    return next_value.release_error();
-                }
-
-                // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-                array->indexed_properties().append(next_value.value());
-
-                // g. Set n to n + 1.
+                // e. Set n to n + 1.
             }
+
             value = array;
         }
         // SingleNameBinding : BindingIdentifier Initializer[opt]
@@ -470,32 +451,13 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 
             // 2. If iteratorRecord.[[Done]] is false, then
             if (!iterator_record.done) {
-                // a. Let next be Completion(IteratorStep(iteratorRecord)).
-                auto next = iterator_step(vm, iterator_record);
+                // a. Let next be ? IteratorStepValue(iteratorRecord).
+                auto next = TRY(iterator_step_value(vm, iterator_record));
 
-                // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-                // c. ReturnIfAbrupt(next).
-                if (next.is_error()) {
-                    iterator_record.done = true;
-                    return next.release_error();
-                }
-
-                // d. If next is false, set iteratorRecord.[[Done]] to true.
-                if (!next.value()) {
-                    iterator_record.done = true;
-                }
-                // e. Else,
-                else {
-                    // i. Set v to Completion(IteratorValue(next)).
-                    auto value_or_error = iterator_value(vm, *next.value());
-
-                    // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-                    // iii. ReturnIfAbrupt(v).
-                    if (value_or_error.is_throw_completion()) {
-                        iterator_record.done = true;
-                        return value_or_error.release_error();
-                    }
-                    value = value_or_error.release_value();
+                // b. If next is not DONE, then
+                if (next.has_value()) {
+                    // i. Set v to next.
+                    value = next.release_value();
                 }
             }
 
