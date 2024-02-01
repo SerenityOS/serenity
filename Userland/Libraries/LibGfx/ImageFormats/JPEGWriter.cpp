@@ -11,10 +11,16 @@
 #include <AK/Endian.h>
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/CMYKBitmap.h>
 
 namespace Gfx {
 
 namespace {
+
+enum Mode {
+    RGB,
+    CMYK,
+};
 
 // This is basically a BigEndianOutputBitStream, the only difference
 // is that it appends 0x00 after each 0xFF when it writes bits.
@@ -135,6 +141,51 @@ public:
         return {};
     }
 
+    ErrorOr<void> initialize_mcu(CMYKBitmap const& bitmap)
+    {
+        u64 const horizontal_macroblocks = ceil_div(bitmap.size().width(), 8);
+        u64 const vertical_macroblocks = ceil_div(bitmap.size().height(), 8);
+        TRY(m_macroblocks.try_resize(horizontal_macroblocks * vertical_macroblocks));
+
+        for (u16 y {}; y < bitmap.size().height(); ++y) {
+            u16 const vertical_macroblock_index = y / 8;
+            u16 const vertical_pixel_offset = y - vertical_macroblock_index * 8;
+
+            for (u16 x {}; x < bitmap.size().width(); ++x) {
+                u16 const horizontal_macroblock_index = x / 8;
+                u16 const horizontal_pixel_offset = x - horizontal_macroblock_index * 8;
+
+                auto& macroblock = m_macroblocks[vertical_macroblock_index * horizontal_macroblocks + horizontal_macroblock_index];
+                auto const pixel_offset = vertical_pixel_offset * 8 + horizontal_pixel_offset;
+
+                auto const original_pixel = bitmap.scanline(y)[x];
+
+                // To get YCCK, the CMY part is converted to RGB (ignoring the K component), and then the RGB is converted to YCbCr.
+                // r is `255 - c` (and similar for g/m b/y), but with the Adobe YCCK color transform marker, the CMY
+                // channels are stored inverted, which cancels out: 255 - (255 - x) == x.
+                // K is stored as-is (meaning it's inverted once for the color transform).
+                u8 r = original_pixel.c;
+                u8 g = original_pixel.m;
+                u8 b = original_pixel.y;
+                u8 k = 255 - original_pixel.k;
+
+                // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
+                // 7 - Conversion to and from RGB
+                auto const y_ = clamp(0.299 * r + 0.587 * g + 0.114 * b, 0, 255);
+                auto const cb = clamp(-0.1687 * r - 0.3313 * g + 0.5 * b + 128, 0, 255);
+                auto const cr = clamp(0.5 * r - 0.4187 * g - 0.0813 * b + 128, 0, 255);
+
+                // A.3.1 - Level shift
+                macroblock.r[pixel_offset] = y_ - 128;
+                macroblock.g[pixel_offset] = cb - 128;
+                macroblock.b[pixel_offset] = cr - 128;
+                macroblock.k[pixel_offset] = k - 128;
+            }
+        }
+
+        return {};
+    }
+
     static Array<double, 64> create_cosine_lookup_table()
     {
         static constexpr double pi_over_16 = AK::Pi<double> / 16;
@@ -149,7 +200,7 @@ public:
         return table;
     }
 
-    void fdct_and_quantization()
+    void fdct_and_quantization(Mode mode)
     {
         static auto cosine_table = create_cosine_lookup_table();
 
@@ -192,10 +243,12 @@ public:
             convert_one_component(macroblock.y, m_luminance_quantization_table);
             convert_one_component(macroblock.cb, m_chrominance_quantization_table);
             convert_one_component(macroblock.cr, m_chrominance_quantization_table);
+            if (mode == Mode::CMYK)
+                convert_one_component(macroblock.k, m_luminance_quantization_table);
         }
     }
 
-    ErrorOr<void> write_huffman_stream()
+    ErrorOr<void> write_huffman_stream(Mode mode)
     {
         for (auto& macroblock : m_macroblocks) {
             TRY(encode_dc(dc_luminance_huffman_table, macroblock.y, 0));
@@ -206,6 +259,11 @@ public:
 
             TRY(encode_dc(dc_chrominance_huffman_table, macroblock.cr, 2));
             TRY(encode_ac(ac_chrominance_huffman_table, macroblock.cr));
+
+            if (mode == Mode::CMYK) {
+                TRY(encode_dc(dc_luminance_huffman_table, macroblock.k, 3));
+                TRY(encode_ac(ac_luminance_huffman_table, macroblock.k));
+            }
         }
 
         TRY(m_bit_stream.align_to_byte_boundary(0xFF));
@@ -336,7 +394,7 @@ private:
     QuantizationTable m_chrominance_quantization_table {};
 
     Vector<Macroblock> m_macroblocks {};
-    Array<i16, 3> m_last_dc_values {};
+    Array<i16, 4> m_last_dc_values {};
 
     JPEGBigEndianOutputBitStream m_bit_stream;
 };
@@ -392,12 +450,12 @@ ErrorOr<void> add_icc_data(Stream& stream, ReadonlyBytes icc_data)
     return {};
 }
 
-ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& context, IntSize size)
+ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& context, IntSize size, Mode mode)
 {
     // B.2.2 - Frame header syntax
     TRY(stream.write_value<BigEndian<Marker>>(JPEG_SOF0));
 
-    u16 const Nf = 3;
+    u16 const Nf = mode == Mode::CMYK ? 4 : 3;
 
     // Lf = 8 + 3 × Nf
     TRY(stream.write_value<BigEndian<u16>>(8 + 3 * Nf));
@@ -423,9 +481,27 @@ ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& contex
         TRY(stream.write_value<u8>((1 << 4) | 1));
 
         // Tqi
-        TRY(stream.write_value<u8>((i == 0 ? context.luminance_quantization_table() : context.chrominance_quantization_table()).id));
+        TRY(stream.write_value<u8>((i == 0 || i == 3 ? context.luminance_quantization_table() : context.chrominance_quantization_table()).id));
     }
 
+    return {};
+}
+
+ErrorOr<void> add_ycck_color_transform_header(Stream& stream)
+{
+    // T-REC-T.872-201206-I!!PDF-E.pdf, 6.5.3 APP14 marker segment for colour encoding
+    TRY(stream.write_value<BigEndian<Marker>>(JPEG_APPN14));
+    TRY(stream.write_value<BigEndian<u16>>(14));
+
+    TRY(stream.write_until_depleted("Adobe\0"sv.bytes()));
+
+    // These values are ignored.
+    TRY(stream.write_value<u8>(0x64));
+    TRY(stream.write_value<BigEndian<u16>>(0x0000));
+    TRY(stream.write_value<BigEndian<u16>>(0x0000));
+
+    // YCCK
+    TRY(stream.write_value<u8>(0x2));
     return {};
 }
 
@@ -481,12 +557,12 @@ ErrorOr<void> add_huffman_table(Stream& stream, OutputHuffmanTable const& table)
     return {};
 }
 
-ErrorOr<void> add_scan_header(Stream& stream)
+ErrorOr<void> add_scan_header(Stream& stream, Mode mode)
 {
     // B.2.3 - Scan header syntax
     TRY(stream.write_value<BigEndian<Marker>>(JPEG_SOS));
 
-    u16 const Ns = 3;
+    u16 const Ns = mode == Mode::CMYK ? 4 : 3;
 
     // Ls - 6 + 2 × Ns
     TRY(stream.write_value<BigEndian<u16>>(6 + 2 * Ns));
@@ -501,7 +577,7 @@ ErrorOr<void> add_scan_header(Stream& stream)
 
         // Tdj and Taj
         // We're using 0 for luminance and 1 for chrominance
-        u8 const huffman_identifier = i > 0 ? 1 : 0;
+        u8 const huffman_identifier = i == 0 || i == 3 ? 0 : 1;
         TRY(stream.write_value<u8>((huffman_identifier << 4) | huffman_identifier));
     }
 
@@ -517,7 +593,7 @@ ErrorOr<void> add_scan_header(Stream& stream)
     return {};
 }
 
-ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWriter::Options const& options, IntSize size)
+ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWriter::Options const& options, IntSize size, Mode mode)
 {
     context.set_luminance_quantization_table(s_default_luminance_quantization_table, options.quality);
     context.set_chrominance_quantization_table(s_default_chrominance_quantization_table, options.quality);
@@ -533,7 +609,9 @@ ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWrit
     if (options.icc_data.has_value())
         TRY(add_icc_data(stream, options.icc_data.value()));
 
-    TRY(add_frame_header(stream, context, size));
+    if (mode == Mode::CMYK)
+        TRY(add_ycck_color_transform_header(stream));
+    TRY(add_frame_header(stream, context, size, mode));
 
     TRY(add_quantization_table(stream, context.luminance_quantization_table()));
     TRY(add_quantization_table(stream, context.chrominance_quantization_table()));
@@ -543,14 +621,14 @@ ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWrit
     TRY(add_huffman_table(stream, context.ac_luminance_huffman_table));
     TRY(add_huffman_table(stream, context.ac_chrominance_huffman_table));
 
-    TRY(add_scan_header(stream));
+    TRY(add_scan_header(stream, mode));
     return {};
 }
 
-ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context)
+ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context, Mode mode)
 {
-    context.fdct_and_quantization();
-    TRY(context.write_huffman_stream());
+    context.fdct_and_quantization(mode);
+    TRY(context.write_huffman_stream(mode));
     TRY(add_end_of_image(stream));
     return {};
 }
@@ -560,9 +638,18 @@ ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context)
 ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
-    TRY(add_headers(stream, context, options, bitmap.size()));
+    TRY(add_headers(stream, context, options, bitmap.size(), Mode::RGB));
     TRY(context.initialize_mcu(bitmap));
-    TRY(add_image(stream, context));
+    TRY(add_image(stream, context, Mode::RGB));
+    return {};
+}
+
+ErrorOr<void> JPEGWriter::encode(Stream& stream, CMYKBitmap const& bitmap, Options const& options)
+{
+    JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
+    TRY(add_headers(stream, context, options, bitmap.size(), Mode::CMYK));
+    TRY(context.initialize_mcu(bitmap));
+    TRY(add_image(stream, context, Mode::CMYK));
     return {};
 }
 
