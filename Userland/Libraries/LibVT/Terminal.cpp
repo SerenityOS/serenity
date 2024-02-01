@@ -1533,11 +1533,25 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     // Key event was not one of the above special cases,
     // attempt to treat it as a character...
     if (ctrl) {
-        if (code_point >= 'a' && code_point <= 'z') {
-            code_point = code_point - 'a' + 1;
-        } else if (code_point == '\\') {
-            code_point = 0x1c;
-        }
+        constexpr auto ESC = '\033';
+        constexpr auto NUL = 0;
+        constexpr auto DEL = 0x7f;
+
+        if (code_point >= '@' && code_point < DEL)
+            code_point &= 0x1f;
+        // Legacy aliases
+        else if (code_point == '2' || code_point == ' ')
+            // Ctrl+{2, Space, @, `} -> ^@ (NUL)
+            code_point = NUL;
+        else if (code_point >= '3' && code_point <= '7')
+            // Ctrl+3 -> ^[ (ESC), Ctrl+4 -> ^\, Ctrl+5 -> ^], Ctrl+6 -> ^^, Ctrl+7 -> ^_
+            code_point = ESC + (code_point - '3');
+        else if (code_point == '8')
+            // Ctrl+8 -> ^? (DEL)
+            code_point = DEL;
+        else if (code_point == '/')
+            // Ctrl+/ -> ^_
+            code_point = '_' & 0x1f;
     }
 
     // Alt modifier sends escape prefix.
