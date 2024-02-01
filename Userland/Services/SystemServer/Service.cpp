@@ -260,7 +260,7 @@ ErrorOr<void> Service::did_exit(int status)
         return {};
 
     auto run_time = m_run_timer.elapsed_time();
-    bool exited_successfully = WIFEXITED(status) == 0;
+    bool exited_successfully = WIFEXITED(status) && WEXITSTATUS(status) == 0;
 
     if (!exited_successfully && run_time < 1_sec) {
         switch (m_restart_attempts) {
