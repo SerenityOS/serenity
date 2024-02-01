@@ -392,7 +392,7 @@ ErrorOr<void> add_icc_data(Stream& stream, ReadonlyBytes icc_data)
     return {};
 }
 
-ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& context, Bitmap const& bitmap)
+ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& context, IntSize size)
 {
     // B.2.2 - Frame header syntax
     TRY(stream.write_value<BigEndian<Marker>>(JPEG_SOF0));
@@ -406,10 +406,10 @@ ErrorOr<void> add_frame_header(Stream& stream, JPEGEncodingContext const& contex
     TRY(stream.write_value<u8>(8));
 
     // Y
-    TRY(stream.write_value<BigEndian<u16>>(bitmap.height()));
+    TRY(stream.write_value<BigEndian<u16>>(size.height()));
 
     // X
-    TRY(stream.write_value<BigEndian<u16>>(bitmap.width()));
+    TRY(stream.write_value<BigEndian<u16>>(size.width()));
 
     // Nf
     TRY(stream.write_value<u8>(Nf));
@@ -537,7 +537,7 @@ ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     if (options.icc_data.has_value())
         TRY(add_icc_data(stream, options.icc_data.value()));
 
-    TRY(add_frame_header(stream, context, bitmap));
+    TRY(add_frame_header(stream, context, bitmap.size()));
 
     TRY(add_quantization_table(stream, context.luminance_quantization_table()));
     TRY(add_quantization_table(stream, context.chrominance_quantization_table()));
