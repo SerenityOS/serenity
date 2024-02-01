@@ -102,9 +102,8 @@ public:
     ErrorOr<void> initialize_mcu(Bitmap const& bitmap)
     {
         u64 const horizontal_macroblocks = ceil_div(bitmap.width(), 8);
-        m_vertical_macroblocks = ceil_div(bitmap.height(), 8);
-
-        TRY(m_macroblocks.try_resize(horizontal_macroblocks * m_vertical_macroblocks));
+        u64 const vertical_macroblocks = ceil_div(bitmap.height(), 8);
+        TRY(m_macroblocks.try_resize(horizontal_macroblocks * vertical_macroblocks));
 
         for (u16 y {}; y < bitmap.height(); ++y) {
             u16 const vertical_macroblock_index = y / 8;
@@ -338,8 +337,6 @@ private:
 
     Vector<Macroblock> m_macroblocks {};
     Array<i16, 3> m_last_dc_values {};
-
-    u64 m_vertical_macroblocks {};
 
     JPEGBigEndianOutputBitStream m_bit_stream;
 };
