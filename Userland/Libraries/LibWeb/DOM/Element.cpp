@@ -1241,17 +1241,13 @@ void Element::set_scroll_left(double x)
 
     // 8. If the element is the root element invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
     if (document.document_element() == this) {
-        // FIXME: Implement this in terms of invoking scroll() on window.
-        if (document.browsing_context() == &document.page().top_level_browsing_context())
-            document.page().client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        window->scroll(x, window->scroll_y());
         return;
     }
 
     // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
-        // FIXME: Implement this in terms of invoking scroll() on window.
-        if (document.browsing_context() == &document.page().top_level_browsing_context())
-            document.page().client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        window->scroll(x, window->scroll_y());
         return;
     }
 
