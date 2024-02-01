@@ -129,16 +129,18 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
         return Error::from_string_view("Can't save CMYK bitmaps yet, convert to RGB first with --convert-to-color-profile"sv);
     auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
 
-    auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
-    auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
+    auto stream = [out_path]() -> ErrorOr<NonnullOwnPtr<Core::OutputBufferedFile>> {
+        auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
+        return Core::OutputBufferedFile::create(move(output_stream));
+    };
 
     if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
+        TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
         return {};
     }
     if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
+        TRY(Gfx::PortableFormatWriter::encode(*TRY(stream()), *frame, { .format = format }));
         return {};
     }
 
@@ -152,7 +154,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     } else {
         return Error::from_string_view("can only write .bmp, .jpg, .png, .ppm, and .qoi"sv);
     }
-    TRY(buffered_stream->write_until_depleted(bytes));
+    TRY(TRY(stream())->write_until_depleted(bytes));
 
     return {};
 }
