@@ -125,14 +125,23 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
 
 static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality)
 {
-    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
-        return Error::from_string_view("Can't save CMYK bitmaps yet, convert to RGB first with --convert-to-color-profile"sv);
-    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
-
     auto stream = [out_path]() -> ErrorOr<NonnullOwnPtr<Core::OutputBufferedFile>> {
         auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
         return Core::OutputBufferedFile::create(move(output_stream));
     };
+
+    if (image.bitmap.has<RefPtr<Gfx::CMYKBitmap>>()) {
+        auto& cmyk_frame = image.bitmap.get<RefPtr<Gfx::CMYKBitmap>>();
+
+        if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
+            TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *cmyk_frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
+            return {};
+        }
+
+        return Error::from_string_view("Can save CMYK bitmaps only as .jpg, convert to RGB first with --convert-to-color-profile"sv);
+    }
+
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
 
     if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
         TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
