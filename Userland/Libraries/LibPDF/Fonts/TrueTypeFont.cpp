@@ -52,8 +52,8 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
 {
     auto style = renderer.state().paint_style;
 
-    // Account for the reversed font baseline
-    auto position = point.translated(0, -m_font->pixel_metrics().descent - m_font->baseline());
+    // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
+    auto position = point.translated(0, -m_font->pixel_metrics().ascent);
 
     if (style.has<Color>()) {
         painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
