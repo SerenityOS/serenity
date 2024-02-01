@@ -162,7 +162,8 @@ ErrorOr<void> LocalSocket::bind(Credentials const& credentials, Userspace<sockad
 
 ErrorOr<void> LocalSocket::connect(Credentials const& credentials, OpenFileDescription& description, Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
-    VERIFY(!m_bound);
+    if (m_bound)
+        return set_so_error(EISCONN);
 
     if (address_size > sizeof(sockaddr_un))
         return set_so_error(EINVAL);

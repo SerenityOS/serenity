@@ -140,3 +140,33 @@ TEST_CASE(tcp_bind_connect)
         sched_yield();
     }
 }
+
+TEST_CASE(socket_connect_after_bind)
+{
+    unlink("/tmp/tmp-client.test");
+    unlink("/tmp/tmp.test");
+
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    EXPECT(fd >= 0);
+
+    struct sockaddr_un addr {
+        .sun_family = AF_UNIX,
+        .sun_path = "/tmp/tmp-client.test",
+    };
+
+    int bound = bind(fd, (struct sockaddr*)&addr, sizeof(addr));
+    EXPECT_NE(bound, -1);
+
+    struct sockaddr_un server_sockaddr {
+        .sun_family = AF_UNIX,
+        .sun_path = "/tmp/tmp.test",
+    };
+    int connected = connect(fd, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr));
+    EXPECT_EQ(connected, -1);
+
+    int closed = close(fd);
+    EXPECT_EQ(closed, 0);
+
+    unlink("/tmp/tmp-client.test");
+    unlink("/tmp/tmp.test");
+}
