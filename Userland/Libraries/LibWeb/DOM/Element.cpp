@@ -1299,17 +1299,13 @@ void Element::set_scroll_top(double y)
 
     // 8. If the element is the root element invoke scroll() on window with scrollX on window as first argument and y as second argument, and terminate these steps.
     if (document.document_element() == this) {
-        // FIXME: Implement this in terms of invoking scroll() on window.
-        if (document.browsing_context() == &document.page().top_level_browsing_context())
-            document.page().client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        window->scroll(window->scroll_x(), y);
         return;
     }
 
     // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with scrollX as first argument and y as second argument, and terminate these steps.
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
-        // FIXME: Implement this in terms of invoking scroll() on window.
-        if (document.browsing_context() == &document.page().top_level_browsing_context())
-            document.page().client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        window->scroll(window->scroll_x(), y);
         return;
     }
 
