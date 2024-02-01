@@ -101,8 +101,8 @@ public:
 
     ErrorOr<void> initialize_mcu(Bitmap const& bitmap)
     {
-        u64 const horizontal_macroblocks = bitmap.width() / 8 + (bitmap.width() % 8 == 0 ? 0 : 1);
-        m_vertical_macroblocks = bitmap.height() / 8 + (bitmap.height() % 8 == 0 ? 0 : 1);
+        u64 const horizontal_macroblocks = ceil_div(bitmap.width(), 8);
+        m_vertical_macroblocks = ceil_div(bitmap.height(), 8);
 
         TRY(m_macroblocks.try_resize(horizontal_macroblocks * m_vertical_macroblocks));
 
