@@ -63,12 +63,12 @@ ThrowCompletionOr<NonnullGCPtr<Object>> WeakSetConstructor::construct(FunctionOb
 
     // 7. Let iteratorRecord be ? GetIterator(iterable, sync).
     // 8. Repeat,
-    //     a. Let next be ? IteratorStep(iteratorRecord).
-    //     c. Let nextValue be ? IteratorValue(next).
-    (void)TRY(get_iterator_values(vm, iterable, [&](Value next_value) -> Optional<Completion> {
-        // d. Let status be Completion(Call(adder, set, « nextValue »)).
-        // e. IfAbruptCloseIterator(status, iteratorRecord).
-        TRY(JS::call(vm, adder.as_function(), set, next_value));
+    (void)TRY(get_iterator_values(vm, iterable, [&](Value next) -> Optional<Completion> {
+        // a. Let next be ? IteratorStepValue(iteratorRecord).
+        // c. If next is DONE, return set.
+        // c. Let status be Completion(Call(adder, set, « nextValue »)).
+        // d. IfAbruptCloseIterator(status, iteratorRecord).
+        TRY(JS::call(vm, adder.as_function(), set, next));
         return {};
     }));
 

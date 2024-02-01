@@ -681,16 +681,11 @@ inline ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM& vm, Value it
     size_t index = 0;
 
     while (true) {
-        auto iterator_result = TRY(iterator_next(vm, iterator_record));
-
-        auto complete = TRY(iterator_complete(vm, iterator_result));
-
-        if (complete)
+        auto value = TRY(iterator_step_value(vm, iterator_record));
+        if (!value.has_value())
             return array;
 
-        auto value = TRY(iterator_value(vm, iterator_result));
-
-        MUST(array->create_data_property_or_throw(index, value));
+        MUST(array->create_data_property_or_throw(index, value.release_value()));
         index++;
     }
 }

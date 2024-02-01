@@ -241,17 +241,17 @@ ThrowCompletionOr<GroupsType> group_by(VM& vm, Value items, Value callback_funct
             return iterator_close(vm, iterator_record, move(error));
         }
 
-        // b. Let next be ? IteratorStep(iteratorRecord).
-        auto next = TRY(iterator_step(vm, iterator_record));
+        // b. Let next be ? IteratorStepValue(iteratorRecord).
+        auto next = TRY(iterator_step_value(vm, iterator_record));
 
-        // c. If next is false, then
-        if (!next) {
+        // c. If next is DONE, then
+        if (!next.has_value()) {
             // i. Return groups.
             return ThrowCompletionOr<GroupsType> { move(groups) };
         }
 
-        // d. Let value be ? IteratorValue(next).
-        auto value = TRY(iterator_value(vm, *next));
+        // d. Let value be next.
+        auto value = next.release_value();
 
         // e. Let key be Completion(Call(callbackfn, undefined, « value, 𝔽(k) »)).
         auto key = call(vm, callback_function, js_undefined(), value, Value(k));

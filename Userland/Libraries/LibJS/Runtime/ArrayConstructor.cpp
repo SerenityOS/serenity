@@ -197,11 +197,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
             // ii. Let Pk be ! ToString(𝔽(k)).
             auto property_key = PropertyKey { k };
 
-            // iii. Let next be ? IteratorStep(iteratorRecord).
-            auto next = TRY(iterator_step(vm, iterator));
+            // iii. Let next be ? IteratorStepValue(iteratorRecord).
+            auto next = TRY(iterator_step_value(vm, iterator));
 
-            // iv. If next is false, then
-            if (!next) {
+            // iv. If next is DONE, then
+            if (!next.has_value()) {
                 // 1. Perform ? Set(A, "length", 𝔽(k), true).
                 TRY(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
 
@@ -209,34 +209,31 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
                 return array;
             }
 
-            // v. Let nextValue be ? IteratorValue(next).
-            auto next_value = TRY(iterator_value(vm, *next));
-
             Value mapped_value;
 
-            // vi. If mapping is true, then
+            // v. If mapping is true, then
             if (mapfn) {
                 // 1. Let mappedValue be Completion(Call(mapfn, thisArg, « nextValue, 𝔽(k) »)).
-                auto mapped_value_or_error = JS::call(vm, *mapfn, this_arg, next_value, Value(k));
+                auto mapped_value_or_error = JS::call(vm, *mapfn, this_arg, next.release_value(), Value(k));
 
                 // 2. IfAbruptCloseIterator(mappedValue, iteratorRecord).
                 if (mapped_value_or_error.is_error())
                     return *TRY(iterator_close(vm, iterator, mapped_value_or_error.release_error()));
                 mapped_value = mapped_value_or_error.release_value();
             }
-            // vii. Else, let mappedValue be nextValue.
+            // vi. Else, let mappedValue be nextValue.
             else {
-                mapped_value = next_value;
+                mapped_value = next.release_value();
             }
 
-            // viii. Let defineStatus be Completion(CreateDataPropertyOrThrow(A, Pk, mappedValue)).
+            // vii. Let defineStatus be Completion(CreateDataPropertyOrThrow(A, Pk, mappedValue)).
             auto result_or_error = array->create_data_property_or_throw(property_key, mapped_value);
 
-            // IfAbruptCloseIterator(defineStatus, iteratorRecord).
+            // viii. IfAbruptCloseIterator(defineStatus, iteratorRecord).
             if (result_or_error.is_error())
                 return *TRY(iterator_close(vm, iterator, result_or_error.release_error()));
 
-            // x. Set k to k + 1.
+            // ix. Set k to k + 1.
         }
     }
 
