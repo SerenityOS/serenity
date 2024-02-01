@@ -602,6 +602,9 @@ public:
 
     Optional() = default;
 
+    template<SameAs<OptionalNone> V>
+    Optional(V) { }
+
     Optional(Optional<JS::Value> const& other)
     {
         if (other.has_value())
@@ -614,10 +617,18 @@ public:
     }
 
     template<typename U = JS::Value>
+    requires(!IsSame<OptionalNone, RemoveCVReference<U>>)
     explicit(!IsConvertible<U&&, JS::Value>) Optional(U&& value)
     requires(!IsSame<RemoveCVReference<U>, Optional<JS::Value>> && IsConstructible<JS::Value, U &&>)
         : m_value(forward<U>(value))
     {
+    }
+
+    template<SameAs<OptionalNone> V>
+    Optional& operator=(V)
+    {
+        clear();
+        return *this;
     }
 
     Optional& operator=(Optional const& other)
