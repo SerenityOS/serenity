@@ -46,23 +46,20 @@ inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVecto
         factor.append(ec - left_index[i]);
     }
 
-    Vector<FloatVector3> samples;
-    samples.resize(1u << x.size());
+    FloatVector3 sample_output {};
     // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
     Vector<unsigned> coordinates;
     coordinates.resize(x.size());
     for (size_t mask = 0; mask < (1u << x.size()); ++mask) {
-        for (size_t i = 0; i < x.size(); ++i)
+        float sample_weight = 1.0f;
+        for (size_t i = 0; i < x.size(); ++i) {
             coordinates[i] = left_index[i] + ((mask >> i) & 1u);
-        samples[mask] = sample(coordinates);
+            sample_weight *= ((mask >> i) & 1u) ? factor[i] : 1.0f - factor[i];
+        }
+        sample_output += sample(coordinates) * sample_weight;
     }
 
-    for (int i = static_cast<int>(x.size() - 1); i >= 0; --i) {
-        for (size_t mask = 0; mask < (1u << i); ++mask)
-            samples[mask] = mix(samples[mask], samples[mask | (1u << i)], factor[i]);
-    }
-
-    return samples[0];
+    return sample_output;
 }
 
 using S15Fixed16 = FixedPoint<16, i32>;

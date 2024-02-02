@@ -206,23 +206,22 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
         // then 2 by interpolating along y, then 1 by interpolating along x.
         // So for the general case, we create 2**N samples, and then for each coordinate, we cut the number of samples in half
         // by interpolating along that coordinate.
-        Vector<float> samples;
-        samples.resize(1 << m_domain.size());
+        // Instead of storing all the 2**N samples, we can calculate the product of weights for each corner,
+        // and sum up the weighted samples.
+        float sample_output = 0;
         // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
         Vector<int> coordinates;
         coordinates.resize(m_domain.size());
         for (size_t mask = 0; mask < (1u << m_domain.size()); ++mask) {
-            for (size_t i = 0; i < m_domain.size(); ++i)
+            float sample_weight = 1.0f;
+            for (size_t i = 0; i < m_domain.size(); ++i) {
                 coordinates[i] = m_left_index[i] + ((mask >> i) & 1u);
-            samples[mask] = sample(coordinates, r);
+                sample_weight *= ((mask >> i) & 1u) ? m_inputs[i] : (1.0f - m_inputs[i]);
+            }
+            sample_output += sample(coordinates, r) * sample_weight;
         }
 
-        for (int i = static_cast<int>(m_domain.size() - 1); i >= 0; --i) {
-            for (size_t mask = 0; mask < (1u << i); ++mask)
-                samples[mask] = mix(samples[mask], samples[mask | (1 << i)], m_inputs[i]);
-        }
-
-        float result = interpolate(samples[0], 0.0f, 255.0f, m_decode[r].lower, m_decode[r].upper);
+        float result = interpolate(sample_output, 0.0f, 255.0f, m_decode[r].lower, m_decode[r].upper);
         m_outputs[r] = clamp(result, m_range[r].lower, m_range[r].upper);
     }
 
