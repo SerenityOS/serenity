@@ -267,6 +267,10 @@ try_select_again:
             type |= NotificationType::Read;
         if (has_flag(revents, POLLOUT))
             type |= NotificationType::Write;
+        if (has_flag(revents, POLLHUP))
+            type |= NotificationType::HangUp;
+        if (has_flag(revents, POLLERR))
+            type |= NotificationType::Error;
         type &= notifier.type();
         if (type != NotificationType::None)
             ThreadEventQueue::current().post_event(notifier, make<NotifierActivationEvent>(notifier.fd(), type));
