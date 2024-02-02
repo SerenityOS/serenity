@@ -17,7 +17,7 @@ class AnimationTimeline : public Bindings::PlatformObject {
 
 public:
     Optional<double> current_time() const { return m_current_time; }
-    virtual WebIDL::ExceptionOr<void> set_current_time(Optional<double>);
+    virtual void set_current_time(Optional<double>);
 
     JS::GCPtr<DOM::Document> associated_document() const { return m_associated_document; }
     void set_associated_document(JS::GCPtr<DOM::Document>);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>.
+ * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +12,10 @@ namespace Web::Animations {
 
 JS_DEFINE_ALLOCATOR(AnimationTimeline);
 
-WebIDL::ExceptionOr<void> AnimationTimeline::set_current_time(Optional<double> value)
+void AnimationTimeline::set_current_time(Optional<double> value)
 {
     if (value == m_current_time)
-        return {};
+        return;
 
     if (m_is_monotonically_increasing && m_current_time.has_value()) {
         if (!value.has_value() || value.value() < m_current_time.value())
@@ -25,9 +25,7 @@ WebIDL::ExceptionOr<void> AnimationTimeline::set_current_time(Optional<double> v
     m_current_time = value;
 
     for (auto& animation : m_associated_animations)
-        TRY(animation->set_current_time(value));
-
-    return {};
+        animation->notify_timeline_time_did_change();
 }
 
 void AnimationTimeline::set_associated_document(JS::GCPtr<DOM::Document> document)
