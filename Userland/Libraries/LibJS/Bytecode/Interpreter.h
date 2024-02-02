@@ -53,6 +53,7 @@ public:
 
     Realm& realm();
     VM& vm() { return m_vm; }
+    VM const& vm() const { return m_vm; }
 
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
@@ -72,6 +73,10 @@ public:
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     ALWAYS_INLINE Value& saved_return_value() { return reg(Register::saved_return_value()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
+    Value reg(Register const& r) const { return registers()[r.index()]; }
+
+    [[nodiscard]] Value get(Operand) const;
+    void set(Operand, Value);
 
     auto& saved_lexical_environment_stack() { return call_frame().saved_lexical_environments; }
     auto& unwind_contexts() { return call_frame().unwind_contexts; }

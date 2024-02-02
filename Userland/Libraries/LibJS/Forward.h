@@ -312,6 +312,7 @@ class Executable;
 class Generator;
 class Instruction;
 class Interpreter;
+class Operand;
 class RegexTable;
 class Register;
 }
