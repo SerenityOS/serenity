@@ -189,7 +189,6 @@ struct LayoutState {
 
 private:
     void resolve_relative_positions();
-    void resolve_layout_dependent_properties();
 };
 
 }
