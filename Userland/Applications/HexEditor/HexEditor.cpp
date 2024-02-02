@@ -607,10 +607,13 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     size_t max_row = min(total_rows(), min_row + ceil_div(view_height, line_height())); // if above calculated rows, use calculated rows
 
     for (size_t row = min_row; row < max_row; row++) {
+        int row_text_y = frame_thickness() + m_padding + row * line_height();
+        int row_background_y = row_text_y - m_line_spacing / 2;
+
         // Paint offsets
         Gfx::IntRect side_offset_rect {
             frame_thickness() + m_padding,
-            static_cast<int>(frame_thickness() + m_padding + row * line_height()),
+            row_text_y,
             width() - width_occupied_by_vertical_scrollbar(),
             height() - height_occupied_by_horizontal_scrollbar()
         };
@@ -634,10 +637,10 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             auto const annotation = m_document->annotations().closest_annotation_at(byte_position);
 
             Gfx::IntRect hex_display_rect_high_nibble {
-                frame_thickness() + offset_margin_width() + column * cell_width() + 2 * m_padding,
-                frame_thickness() + m_padding + row * line_height(),
-                character_width(),
-                line_height() - m_line_spacing
+                static_cast<int>(frame_thickness() + offset_margin_width() + column * cell_width() + 2 * m_padding),
+                row_text_y,
+                static_cast<int>(character_width()),
+                static_cast<int>(line_height() - m_line_spacing),
             };
 
             Gfx::IntRect hex_display_rect_low_nibble {
@@ -648,10 +651,10 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             Gfx::IntRect background_rect {
-                frame_thickness() + offset_margin_width() + column * cell_width() + 1 * m_padding,
-                frame_thickness() + m_line_spacing / 2 + row * line_height(),
-                cell_width(),
-                line_height()
+                static_cast<int>(frame_thickness() + offset_margin_width() + column * cell_width() + 1 * m_padding),
+                row_background_y,
+                static_cast<int>(cell_width()),
+                static_cast<int>(line_height()),
             };
 
             auto line = String::formatted("{:02X}", cell.value).release_value_but_fixme_should_propagate_errors();
@@ -698,17 +701,17 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(background_rect, background_color_hex);
 
             Gfx::IntRect text_display_rect {
-                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding,
-                frame_thickness() + m_padding + row * line_height(),
-                character_width(),
-                line_height() - m_line_spacing
+                static_cast<int>(frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding),
+                row_text_y,
+                static_cast<int>(character_width()),
+                static_cast<int>(line_height() - m_line_spacing),
             };
 
             auto draw_cursor_rect = [&]() {
                 if (byte_position == m_position) {
                     Gfx::IntRect cursor_position_rect {
                         (m_edit_mode == EditMode::Hex) ? static_cast<int>(hex_display_rect_high_nibble.left() + m_cursor_at_low_nibble * character_width()) : text_display_rect.left(),
-                        static_cast<int>(frame_thickness() + m_line_spacing / 2 + row * line_height()),
+                        row_background_y,
                         static_cast<int>(character_width()),
                         static_cast<int>(line_height())
                     };
@@ -728,10 +731,10 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             Gfx::IntRect text_background_rect {
-                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding,
-                frame_thickness() + m_line_spacing / 2 + row * line_height(),
-                character_width(),
-                line_height()
+                static_cast<int>(frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding),
+                row_background_y,
+                static_cast<int>(character_width()),
+                static_cast<int>(line_height()),
             };
 
             painter.fill_rect(text_background_rect, background_color_text);
