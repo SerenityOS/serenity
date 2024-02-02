@@ -12,6 +12,15 @@
 
 namespace Web::Animations {
 
+// Sorted by composite order:
+// https://www.w3.org/TR/css-animations-2/#animation-composite-order
+enum class AnimationClass {
+    CSSAnimationWithOwningElement,
+    CSSTransition,
+    CSSAnimationWithoutOwningElement,
+    None,
+};
+
 // https://www.w3.org/TR/web-animations-1/#the-animation-interface
 class Animation : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Animation, DOM::EventTarget);
@@ -68,6 +77,9 @@ public:
     void effect_timing_changed(Badge<AnimationEffect>);
 
     virtual bool is_css_animation() const { return false; }
+
+    virtual AnimationClass animation_class() const { return AnimationClass::None; }
+    virtual Optional<int> class_specific_composite_order(JS::NonnullGCPtr<Animation>) const { return {}; }
 
 protected:
     Animation(JS::Realm&);
