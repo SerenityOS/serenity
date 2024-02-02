@@ -56,6 +56,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
@@ -470,6 +471,11 @@ void init_stage2(void*)
     // NOTE: Everything in the .ksyms section becomes read-only after this point.
     MM.protect_ksyms_after_init();
 
+    auto hostname_context_or_error = HostnameContext::create_initial();
+    if (hostname_context_or_error.is_error())
+        PANIC("init_stage2: Error creating initial hostname context: {}", hostname_context_or_error.error());
+    auto hostname_context = hostname_context_or_error.release_value();
+
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_text_after_init();
 
@@ -478,7 +484,8 @@ void init_stage2(void*)
 
     dmesgln("Running first user process: {}", userspace_init);
     dmesgln("Init (first) process args: {}", init_args);
-    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, move(first_process_vfs_context), tty0);
+
+    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, move(first_process_vfs_context), move(hostname_context), tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
 

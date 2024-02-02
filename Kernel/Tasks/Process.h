@@ -38,6 +38,7 @@
 #include <Kernel/Security/Credentials.h>
 #include <Kernel/Tasks/AtomicEdgeAction.h>
 #include <Kernel/Tasks/FutexQueue.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/Tasks/Thread.h>
@@ -46,7 +47,6 @@
 
 namespace Kernel {
 
-MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname();
 UnixDateTime kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
@@ -215,7 +215,7 @@ public:
     }
 
     static ErrorOr<ProcessAndFirstThread> create_kernel_process(StringView name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static ErrorOr<ProcessAndFirstThread> create_user_process(StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext>, RefPtr<TTY>);
+    static ErrorOr<ProcessAndFirstThread> create_user_process(StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext>, NonnullRefPtr<HostnameContext>, RefPtr<TTY>);
     static void register_new(Process&);
 
     ~Process();
@@ -278,6 +278,13 @@ public:
     NonnullRefPtr<VFSRootContext> vfs_root_context() const
     {
         return m_attached_vfs_root_context.with([](auto& context) -> NonnullRefPtr<VFSRootContext> {
+            return *context;
+        });
+    }
+
+    NonnullRefPtr<HostnameContext> hostname_context() const
+    {
+        return m_attached_hostname_context.with([](auto& context) -> NonnullRefPtr<HostnameContext> {
             return *context;
         });
     }
@@ -679,9 +686,9 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(StringView name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext>, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time);
-    static ErrorOr<ProcessAndFirstThread> create_with_forked_name(UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
-    static ErrorOr<ProcessAndFirstThread> create(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
+    Process(StringView name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext>, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time);
+    static ErrorOr<ProcessAndFirstThread> create_with_forked_name(UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
+    static ErrorOr<ProcessAndFirstThread> create(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
     ErrorOr<NonnullRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
     static ProcessID allocate_pid();
 
@@ -979,6 +986,8 @@ private:
     SpinlockProtected<RefPtr<ScopedProcessList>, LockRank::None> m_scoped_process_list;
 
     SpinlockProtected<RefPtr<VFSRootContext>, LockRank::Process> m_attached_vfs_root_context;
+
+    SpinlockProtected<RefPtr<HostnameContext>, LockRank::Process> m_attached_hostname_context;
 
     Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace"sv };
