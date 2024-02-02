@@ -62,6 +62,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
         move(generator.m_identifier_table),
         move(generator.m_string_table),
         move(generator.m_regex_table),
+        move(generator.m_constants),
         node.source_code(),
         generator.m_next_property_lookup_cache,
         generator.m_next_global_variable_cache,
