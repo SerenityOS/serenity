@@ -157,12 +157,10 @@ retry:
     add_fd_to_set(thread_data.wake_pipe_fds[0], read_fds);
 
     for (auto& notifier : thread_data.notifiers) {
-        if (notifier->type() == Notifier::Type::Read)
+        if (has_flag(notifier->type(), Notifier::Type::Read))
             add_fd_to_set(notifier->fd(), read_fds);
-        if (notifier->type() == Notifier::Type::Write)
+        if (has_flag(notifier->type(), Notifier::Type::Write))
             add_fd_to_set(notifier->fd(), write_fds);
-        if (notifier->type() == Notifier::Type::Exceptional)
-            TODO();
     }
 
     bool has_pending_events = ThreadEventQueue::current().has_pending_events();
@@ -257,12 +255,14 @@ try_select_again:
 
     // Handle file system notifiers by making them normal events.
     for (auto& notifier : thread_data.notifiers) {
-        if (notifier->type() == Notifier::Type::Read && FD_ISSET(notifier->fd(), &read_fds)) {
-            ThreadEventQueue::current().post_event(*notifier, make<NotifierActivationEvent>(notifier->fd()));
-        }
-        if (notifier->type() == Notifier::Type::Write && FD_ISSET(notifier->fd(), &write_fds)) {
-            ThreadEventQueue::current().post_event(*notifier, make<NotifierActivationEvent>(notifier->fd()));
-        }
+        auto type = NotificationType::None;
+        if (FD_ISSET(notifier->fd(), &read_fds))
+            type |= NotificationType::Read;
+        if (FD_ISSET(notifier->fd(), &write_fds))
+            type |= NotificationType::Write;
+        type &= notifier->type();
+        if (type != NotificationType::None)
+            ThreadEventQueue::current().post_event(*notifier, make<NotifierActivationEvent>(notifier->fd(), type));
     }
 }
 

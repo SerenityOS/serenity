@@ -27,6 +27,9 @@ void Notifier::set_enabled(bool enabled)
 {
     if (m_fd < 0)
         return;
+    if (enabled == m_is_enabled)
+        return;
+    m_is_enabled = enabled;
     if (enabled)
         Core::EventLoop::register_notifier({}, *this);
     else
@@ -39,6 +42,18 @@ void Notifier::close()
         return;
     set_enabled(false);
     m_fd = -1;
+}
+
+void Notifier::set_type(Type type)
+{
+    if (m_is_enabled) {
+        // FIXME: Directly communicate intent to the EventLoop.
+        set_enabled(false);
+        m_type = type;
+        set_enabled(true);
+    } else {
+        m_type = type;
+    }
 }
 
 void Notifier::event(Core::Event& event)
