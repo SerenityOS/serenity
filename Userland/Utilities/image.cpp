@@ -42,7 +42,7 @@ static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder,
     return LoadedImage { internal_format, move(bitmap), TRY(decoder->icc_data()) };
 }
 
-static ErrorOr<void> do_move_alpha_to_rgb(LoadedImage& image)
+static ErrorOr<void> move_alpha_to_rgb(LoadedImage& image)
 {
     if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
         return Error::from_string_view("Can't --move-alpha-to-rgb with CMYK bitmaps"sv);
@@ -67,7 +67,7 @@ static ErrorOr<void> do_move_alpha_to_rgb(LoadedImage& image)
     return {};
 }
 
-static ErrorOr<void> do_strip_alpha(LoadedImage& image)
+static ErrorOr<void> strip_alpha(LoadedImage& image)
 {
     if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
         return Error::from_string_view("Can't --strip-alpha with CMYK bitmaps"sv);
@@ -207,7 +207,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Options options = TRY(parse_options(move(arguments)));
+    Options options = TRY(parse_options(arguments));
 
     auto file = TRY(Core::MappedFile::map(options.in_path));
     auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
@@ -217,10 +217,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     LoadedImage image = TRY(load_image(*decoder, options.frame_index));
 
     if (options.move_alpha_to_rgb)
-        TRY(do_move_alpha_to_rgb(image));
+        TRY(move_alpha_to_rgb(image));
 
     if (options.strip_alpha)
-        TRY(do_strip_alpha(image));
+        TRY(strip_alpha(image));
 
     OwnPtr<Core::MappedFile> icc_file;
     if (!options.assign_color_profile_path.is_empty()) {
