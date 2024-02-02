@@ -116,12 +116,12 @@ static ErrorOr<void> read_whitespace(TContext& context)
         auto const byte = byte_or_error.value();
 
         if (byte == '#') {
-            stream.seek(-1, SeekMode::FromCurrentPosition).release_value_but_fixme_should_propagate_errors();
+            TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
             TRY(read_comment(context));
             continue;
         }
         if (byte != ' ' && byte != '\t' && byte != '\n' && byte != '\r') {
-            stream.seek(-1, SeekMode::FromCurrentPosition).release_value_but_fixme_should_propagate_errors();
+            TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
             if (is_first_char)
                 return Error::from_string_literal("Can't read whitespace from stream");
             break;
