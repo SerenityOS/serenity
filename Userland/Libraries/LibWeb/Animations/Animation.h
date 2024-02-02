@@ -63,6 +63,7 @@ public:
     Optional<double> convert_a_timeline_time_to_an_origin_relative_time(Optional<double>) const;
 
     JS::GCPtr<DOM::Document> document_for_timing() const;
+    void notify_timeline_time_did_change();
 
 protected:
     Animation(JS::Realm&);
@@ -92,6 +93,9 @@ private:
     void apply_any_pending_playback_rate();
     WebIDL::ExceptionOr<void> silently_set_current_time(Optional<double>);
     void update_finished_state(DidSeek, SynchronouslyNotify);
+
+    void run_pending_play_task();
+    void run_pending_pause_task();
 
     JS::NonnullGCPtr<WebIDL::Promise> current_ready_promise() const;
     JS::NonnullGCPtr<WebIDL::Promise> current_finished_promise() const;

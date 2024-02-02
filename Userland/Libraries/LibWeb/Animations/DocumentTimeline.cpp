@@ -41,21 +41,19 @@ Optional<double> DocumentTimeline::convert_a_timeline_time_to_an_origin_relative
 }
 
 // https://www.w3.org/TR/web-animations-1/#origin-time
-WebIDL::ExceptionOr<void> DocumentTimeline::set_current_time(Optional<double> current_time)
+void DocumentTimeline::set_current_time(Optional<double> current_time)
 {
     // A document timeline is a type of timeline that is associated with a document and whose current time is calculated
     // as a fixed offset from the now timestamp provided each time the update animations and send events procedure is
     // run. This fixed offset is referred to as the document timeline’s origin time.
     if (!current_time.has_value())
-        TRY(Base::set_current_time({}));
+        Base::set_current_time({});
     else
-        TRY(Base::set_current_time(current_time.value() - m_origin_time));
+        Base::set_current_time(current_time.value() - m_origin_time);
 
     // After a document timeline becomes active, it is monotonically increasing.
     if (!is_inactive())
         VERIFY(is_monotonically_increasing());
-
-    return {};
 }
 
 // https://www.w3.org/TR/web-animations-1/#document-timelines

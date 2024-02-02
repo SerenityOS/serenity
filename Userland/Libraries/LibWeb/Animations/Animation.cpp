@@ -11,6 +11,7 @@
 #include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
@@ -489,6 +490,23 @@ JS::GCPtr<DOM::Document> Animation::document_for_timing() const
     return m_timeline->associated_document();
 }
 
+void Animation::notify_timeline_time_did_change()
+{
+    update_finished_state(DidSeek::No, SynchronouslyNotify::Yes);
+
+    // Act on the pending play or pause task
+    if (m_pending_pause_task == TaskState::Scheduled) {
+        m_pending_pause_task = TaskState::None;
+        // FIXME:
+        // run_pending_pause_task();
+    }
+
+    if (m_pending_play_task == TaskState::Scheduled) {
+        m_pending_play_task = TaskState::None;
+        run_pending_play_task();
+    }
+}
+
 // https://www.w3.org/TR/web-animations-1/#associated-effect-end
 double Animation::associated_effect_end() const
 {
@@ -723,6 +741,76 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
         if (auto target = m_effect->target())
             target->invalidate_style();
     }
+}
+
+// Step 12 of https://www.w3.org/TR/web-animations-1/#playing-an-animation-section
+void Animation::run_pending_play_task()
+{
+    // 1. Assert that at least one of animation’s start time or hold time is resolved.
+    VERIFY(m_start_time.has_value() || m_hold_time.has_value());
+
+    // 2. Let ready time be the time value of the timeline associated with animation at the moment when animation became
+    //    ready.
+    // FIXME: Ideally we would save the time before the update_finished_state call in play_an_animation() and use that
+    //        as the ready time, as step 2 indicates, however at that point the timeline will not have had it's current
+    //        time updated by the Document, so the time we would save would be incorrect if there are no other
+    //        animations running.
+    auto ready_time = m_timeline->current_time();
+
+    // Note: The timeline being active is a precondition for this method to be called
+    VERIFY(ready_time.has_value());
+
+    // 3. Perform the steps corresponding to the first matching condition below, if any:
+
+    // -> If animation’s hold time is resolved,
+    if (m_hold_time.has_value()) {
+        // 1. Apply any pending playback rate on animation.
+        apply_any_pending_playback_rate();
+
+        // 2. Let new start time be the result of evaluating ready time - hold time / playback rate for animation. If
+        //    the playback rate is zero, let new start time be simply ready time.
+        auto new_start_time = m_playback_rate != 0.0 ? ready_time.value() - (m_hold_time.value() / m_playback_rate) : ready_time;
+
+        // 3. Set the start time of animation to new start time.
+        m_start_time = new_start_time;
+
+        // 4. If animation’s playback rate is not 0, make animation’s hold time unresolved.
+        if (m_playback_rate != 0.0)
+            m_hold_time = {};
+    }
+    // -> If animation’s start time is resolved and animation has a pending playback rate,
+    else if (m_start_time.has_value() && m_pending_playback_rate.has_value()) {
+        // 1. Let current time to match be the result of evaluating (ready time - start time) × playback rate for
+        //    animation.
+        auto current_time_to_match = (ready_time.value() - m_start_time.value()) * m_playback_rate;
+
+        // 2. Apply any pending playback rate on animation.
+        apply_any_pending_playback_rate();
+
+        // 3. If animation’s playback rate is zero, let animation’s hold time be current time to match.
+        if (m_playback_rate == 0.0)
+            m_hold_time = current_time_to_match;
+
+        // 4. Let new start time be the result of evaluating ready time - current time to match / playback rate for
+        //    animation. If the playback rate is zero, let new start time be simply ready time.
+        auto new_start_time = m_playback_rate != 0.0 ? ready_time.value() - (current_time_to_match / m_playback_rate) : ready_time;
+
+        // 5. Set the start time of animation to new start time.
+        m_start_time = new_start_time;
+    }
+
+    // 4. Resolve animation’s current ready promise with animation.
+    HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm()) };
+    WebIDL::resolve_promise(realm(), current_ready_promise(), this);
+
+    // 5. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
+    //    and the synchronously notify flag set to false.
+    update_finished_state(DidSeek::No, SynchronouslyNotify::No);
+}
+
+void Animation::run_pending_pause_task()
+{
+    // FIXME: Implement
 }
 
 JS::NonnullGCPtr<WebIDL::Promise> Animation::current_ready_promise() const
