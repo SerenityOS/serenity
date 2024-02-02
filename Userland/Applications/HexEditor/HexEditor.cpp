@@ -605,8 +605,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     size_t min_row = max(0, vertical_scrollbar().value() / line_height());              // if below 0 then use 0
     size_t max_row = min(total_rows(), min_row + ceil_div(view_height, line_height())); // if above calculated rows, use calculated rows
 
-    // paint offsets
     for (size_t row = min_row; row < max_row; row++) {
+        // Paint offsets
         Gfx::IntRect side_offset_rect {
             frame_thickness() + m_padding,
             static_cast<int>(frame_thickness() + m_padding + row * line_height()),
@@ -615,16 +615,15 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         };
 
         bool is_current_line = (m_position / bytes_per_row()) == row;
-        auto line = String::formatted("{:#08X}", row * bytes_per_row()).release_value_but_fixme_should_propagate_errors();
+        auto offset_text = String::formatted("{:#08X}", row * bytes_per_row()).release_value_but_fixme_should_propagate_errors();
         painter.draw_text(
             side_offset_rect,
-            line,
+            offset_text,
             is_current_line ? font().bold_variant() : font(),
             Gfx::TextAlignment::TopLeft,
             is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
-    }
 
-    for (size_t row = min_row; row < max_row; row++) {
+        // Paint bytes
         for (size_t column = 0; column < bytes_per_row(); column++) {
             auto byte_position = (row * bytes_per_row()) + column;
             if (byte_position >= m_document->size())
