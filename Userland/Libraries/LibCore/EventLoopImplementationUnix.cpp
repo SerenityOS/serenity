@@ -25,6 +25,21 @@ struct ThreadData;
 
 namespace {
 thread_local ThreadData* s_thread_data;
+
+short notification_type_to_poll_events(NotificationType type)
+{
+    short events = 0;
+    if (has_flag(type, NotificationType::Read))
+        events |= POLLIN;
+    if (has_flag(type, NotificationType::Write))
+        events |= POLLOUT;
+    return events;
+}
+
+bool has_flag(int value, int flag)
+{
+    return (value & flag) == flag;
+}
 }
 
 struct EventLoopTimer {
@@ -71,11 +86,19 @@ struct ThreadData {
 
 #endif
         VERIFY(rc == 0);
+
+        // The wake pipe informs us of POSIX signals as well as manual calls to wake()
+        VERIFY(poll_fds.size() == 0);
+        poll_fds.append({ .fd = wake_pipe_fds[0], .events = POLLIN, .revents = 0 });
+        notifier_by_index.append(nullptr);
     }
 
     // Each thread has its own timers, notifiers and a wake pipe.
     HashMap<int, NonnullOwnPtr<EventLoopTimer>> timers;
-    HashTable<Notifier*> notifiers;
+
+    Vector<pollfd> poll_fds;
+    HashMap<Notifier*, size_t> notifier_by_ptr;
+    Vector<Notifier*> notifier_by_index;
 
     // The wake pipe is used to notify another event loop that someone has called wake(), or a signal has been received.
     // wake() writes 0i32 into the pipe, signals write the signal number (guaranteed non-zero).
@@ -143,31 +166,12 @@ void EventLoopManagerUnix::wait_for_events(EventLoopImplementation::PumpMode mod
 {
     auto& thread_data = ThreadData::the();
 
-    fd_set read_fds {};
-    fd_set write_fds {};
 retry:
-    int max_fd = 0;
-    auto add_fd_to_set = [&max_fd](int fd, fd_set& set) {
-        FD_SET(fd, &set);
-        if (fd > max_fd)
-            max_fd = fd;
-    };
-
-    // The wake pipe informs us of POSIX signals as well as manual calls to wake()
-    add_fd_to_set(thread_data.wake_pipe_fds[0], read_fds);
-
-    for (auto& notifier : thread_data.notifiers) {
-        if (has_flag(notifier->type(), Notifier::Type::Read))
-            add_fd_to_set(notifier->fd(), read_fds);
-        if (has_flag(notifier->type(), Notifier::Type::Write))
-            add_fd_to_set(notifier->fd(), write_fds);
-    }
-
     bool has_pending_events = ThreadEventQueue::current().has_pending_events();
 
     // Figure out how long to wait at maximum.
     // This mainly depends on the PumpMode and whether we have pending events, but also the next expiring timer.
-    struct timeval timeout = { 0, 0 };
+    int timeout = 0;
     bool should_wait_forever = false;
     if (mode == EventLoopImplementation::PumpMode::WaitForEvents && !has_pending_events) {
         auto next_timer_expiration = get_next_timer_expiration();
@@ -176,7 +180,8 @@ retry:
             auto computed_timeout = next_timer_expiration.value() - now;
             if (computed_timeout.is_negative())
                 computed_timeout = Duration::zero();
-            timeout = computed_timeout.to_timeval();
+            i64 true_timeout = computed_timeout.to_milliseconds();
+            timeout = static_cast<i32>(min<i64>(AK::NumericLimits<i32>::max(), true_timeout));
         } else {
             should_wait_forever = true;
         }
@@ -184,19 +189,18 @@ retry:
 
 try_select_again:
     // select() and wait for file system events, calls to wake(), POSIX signals, or timer expirations.
-    int marked_fd_count = select(max_fd + 1, &read_fds, &write_fds, nullptr, should_wait_forever ? nullptr : &timeout);
+    ErrorOr<int> error_or_marked_fd_count = System::poll(thread_data.poll_fds, should_wait_forever ? -1 : timeout);
     // Because POSIX, we might spuriously return from select() with EINTR; just select again.
-    if (marked_fd_count < 0) {
-        int saved_errno = errno;
-        if (saved_errno == EINTR)
+    if (error_or_marked_fd_count.is_error()) {
+        if (error_or_marked_fd_count.error().code() == EINTR)
             goto try_select_again;
-        dbgln("EventLoopImplementationUnix::wait_for_events: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
+        dbgln("EventLoopImplementationUnix::wait_for_events: {}", error_or_marked_fd_count.error());
         VERIFY_NOT_REACHED();
     }
 
     // We woke up due to a call to wake() or a POSIX signal.
     // Handle signals and see whether we need to handle events as well.
-    if (FD_ISSET(thread_data.wake_pipe_fds[0], &read_fds)) {
+    if (has_flag(thread_data.poll_fds[0].revents, POLLIN)) {
         int wake_events[8];
         ssize_t nread;
         // We might receive another signal while read()ing here. The signal will go to the handle_signal properly,
@@ -250,19 +254,22 @@ try_select_again:
         }
     }
 
-    if (!marked_fd_count)
+    if (error_or_marked_fd_count.value() == 0)
         return;
 
     // Handle file system notifiers by making them normal events.
-    for (auto& notifier : thread_data.notifiers) {
-        auto type = NotificationType::None;
-        if (FD_ISSET(notifier->fd(), &read_fds))
+    for (size_t i = 1; i < thread_data.poll_fds.size(); ++i) {
+        auto& revents = thread_data.poll_fds[i].revents;
+        auto& notifier = *thread_data.notifier_by_index[i];
+
+        NotificationType type = NotificationType::None;
+        if (has_flag(revents, POLLIN))
             type |= NotificationType::Read;
-        if (FD_ISSET(notifier->fd(), &write_fds))
+        if (has_flag(revents, POLLOUT))
             type |= NotificationType::Write;
-        type &= notifier->type();
+        type &= notifier.type();
         if (type != NotificationType::None)
-            ThreadEventQueue::current().post_event(*notifier, make<NotifierActivationEvent>(notifier->fd(), type));
+            ThreadEventQueue::current().post_event(notifier, make<NotifierActivationEvent>(notifier.fd(), type));
     }
 }
 
@@ -337,7 +344,9 @@ void EventLoopImplementationUnix::notify_forked_and_in_child()
 {
     auto& thread_data = ThreadData::the();
     thread_data.timers.clear();
-    thread_data.notifiers.clear();
+    thread_data.poll_fds.clear();
+    thread_data.notifier_by_ptr.clear();
+    thread_data.notifier_by_index.clear();
     thread_data.initialize_wake_pipe();
     if (auto* info = signals_info<false>()) {
         info->signal_handlers.clear();
@@ -505,12 +514,34 @@ bool EventLoopManagerUnix::unregister_timer(int timer_id)
 
 void EventLoopManagerUnix::register_notifier(Notifier& notifier)
 {
-    ThreadData::the().notifiers.set(&notifier);
+    auto& thread_data = ThreadData::the();
+
+    thread_data.notifier_by_ptr.set(&notifier, thread_data.poll_fds.size());
+    thread_data.notifier_by_index.append(&notifier);
+    thread_data.poll_fds.append({
+        .fd = notifier.fd(),
+        .events = notification_type_to_poll_events(notifier.type()),
+        .revents = 0,
+    });
 }
 
 void EventLoopManagerUnix::unregister_notifier(Notifier& notifier)
 {
-    ThreadData::the().notifiers.remove(&notifier);
+    auto& thread_data = ThreadData::the();
+
+    auto it = thread_data.notifier_by_ptr.find(&notifier);
+    VERIFY(it != thread_data.notifier_by_ptr.end());
+
+    size_t notifier_index = it->value;
+    thread_data.notifier_by_ptr.remove(it);
+
+    if (notifier_index + 1 != thread_data.poll_fds.size()) {
+        swap(thread_data.poll_fds[notifier_index], thread_data.poll_fds.last());
+        swap(thread_data.notifier_by_index[notifier_index], thread_data.notifier_by_index.last());
+        thread_data.notifier_by_ptr.set(thread_data.notifier_by_index[notifier_index], notifier_index);
+    }
+    thread_data.poll_fds.take_last();
+    thread_data.notifier_by_index.take_last();
 }
 
 void EventLoopManagerUnix::did_post_event()
