@@ -168,77 +168,76 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     return {};
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
-{
-    Core::ArgsParser args_parser;
-
+struct Options {
     StringView in_path;
-    args_parser.add_positional_argument(in_path, "Path to input image file", "FILE");
-
     StringView out_path;
-    args_parser.add_option(out_path, "Path to output image file", "output", 'o', "FILE");
-
     bool no_output = false;
-    args_parser.add_option(no_output, "Do not write output (only useful for benchmarking image decoding)", "no-output", {});
-
     int frame_index = 0;
-    args_parser.add_option(frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
-
     bool move_alpha_to_rgb = false;
-    args_parser.add_option(move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
-
     bool ppm_ascii = false;
-    args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
-
     bool strip_alpha = false;
-    args_parser.add_option(strip_alpha, "Remove alpha channel", "strip-alpha", {});
-
     StringView assign_color_profile_path;
-    args_parser.add_option(assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
-
     StringView convert_color_profile_path;
-    args_parser.add_option(convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
-
     bool strip_color_profile = false;
-    args_parser.add_option(strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
-
     u8 quality = 75;
-    args_parser.add_option(quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
+};
 
+static ErrorOr<Options> parse_options(Main::Arguments arguments)
+{
+    Options options;
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(options.in_path, "Path to input image file", "FILE");
+    args_parser.add_option(options.out_path, "Path to output image file", "output", 'o', "FILE");
+    args_parser.add_option(options.no_output, "Do not write output (only useful for benchmarking image decoding)", "no-output", {});
+    args_parser.add_option(options.frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
+    args_parser.add_option(options.move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
+    args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
+    args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
+    args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
+    args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
+    args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
+    args_parser.add_option(options.quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
     args_parser.parse(arguments);
 
-    if (out_path.is_empty() ^ no_output)
+    if (options.out_path.is_empty() ^ options.no_output)
         return Error::from_string_view("exactly one of -o or --no-output is required"sv);
 
-    auto file = TRY(Core::MappedFile::map(in_path));
+    return options;
+}
+
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    Options options = TRY(parse_options(move(arguments)));
+
+    auto file = TRY(Core::MappedFile::map(options.in_path));
     auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
     if (!decoder)
         return Error::from_string_view("Failed to decode input file"sv);
 
-    LoadedImage image = TRY(load_image(*decoder, frame_index));
+    LoadedImage image = TRY(load_image(*decoder, options.frame_index));
 
-    if (move_alpha_to_rgb)
+    if (options.move_alpha_to_rgb)
         TRY(do_move_alpha_to_rgb(image));
 
-    if (strip_alpha)
+    if (options.strip_alpha)
         TRY(do_strip_alpha(image));
 
     OwnPtr<Core::MappedFile> icc_file;
-    if (!assign_color_profile_path.is_empty()) {
-        icc_file = TRY(Core::MappedFile::map(assign_color_profile_path));
+    if (!options.assign_color_profile_path.is_empty()) {
+        icc_file = TRY(Core::MappedFile::map(options.assign_color_profile_path));
         image.icc_data = icc_file->bytes();
     }
 
-    if (!convert_color_profile_path.is_empty())
-        icc_file = TRY(convert_image_profile(image, convert_color_profile_path, move(icc_file)));
+    if (!options.convert_color_profile_path.is_empty())
+        icc_file = TRY(convert_image_profile(image, options.convert_color_profile_path, move(icc_file)));
 
-    if (strip_color_profile)
+    if (options.strip_color_profile)
         image.icc_data.clear();
 
-    if (no_output)
+    if (options.no_output)
         return 0;
 
-    TRY(save_image(image, out_path, ppm_ascii, quality));
+    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality));
 
     return 0;
 }
