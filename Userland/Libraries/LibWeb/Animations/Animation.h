@@ -44,7 +44,7 @@ public:
     Bindings::AnimationReplaceState replace_state() const { return m_replace_state; }
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-pending
-    bool pending() const { return m_pending_pause_task != TaskState::None || m_pending_play_task != TaskState::None; }
+    bool pending() const { return m_pending_play_task == TaskState::Scheduled || m_pending_pause_task == TaskState::Scheduled; }
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-ready
     JS::NonnullGCPtr<JS::Object> ready() const { return *current_ready_promise()->promise(); }
@@ -66,8 +66,7 @@ protected:
 private:
     enum class TaskState {
         None,
-        Pending,
-        RunAsSoonAsReady,
+        Scheduled,
     };
 
     enum class DidSeek {

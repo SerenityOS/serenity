@@ -59,13 +59,9 @@ void Animation::set_effect(JS::GCPtr<AnimationEffect> new_effect)
         return;
 
     // 3. If animation has a pending pause task, reschedule that task to run as soon as animation is ready.
-    if (m_pending_pause_task == TaskState::Pending)
-        m_pending_pause_task = TaskState::RunAsSoonAsReady;
-
     // 4. If animation has a pending play task, reschedule that task to run as soon as animation is ready to play ne
     //    effect.
-    if (m_pending_play_task == TaskState::Pending)
-        m_pending_play_task = TaskState::RunAsSoonAsReady;
+    // Note: There is no real difference between "pending" and "as soon as possible", so this step is a no-op.
 
     // 5. If new effect is not null and if new effect is the associated effect of another animation, previous animation,
     //    run the procedure to set the associated effect of an animation (this procedure) on previous animation passing
@@ -155,7 +151,7 @@ void Animation::set_start_time(Optional<double> const& new_start_time)
 
     // 7. If animation has a pending play task or a pending pause task, cancel that task and resolve animation’s current
     //    ready promise with animation.
-    if (m_pending_play_task == TaskState::Pending || m_pending_pause_task == TaskState::Pending) {
+    if (pending()) {
         m_pending_play_task = TaskState::None;
         m_pending_pause_task = TaskState::None;
         WebIDL::resolve_promise(realm(), current_ready_promise(), this);
@@ -201,7 +197,7 @@ WebIDL::ExceptionOr<void> Animation::set_current_time(Optional<double> const& se
 
     // 2. If animation has a pending pause task, synchronously complete the pause operation by performing the following
     //    steps:
-    if (m_pending_pause_task == TaskState::Pending) {
+    if (m_pending_pause_task == TaskState::Scheduled) {
         // 1. Set animation’s hold time to seek time.
         m_hold_time = seek_time;
 
@@ -281,7 +277,7 @@ Bindings::AnimationPlayState Animation::play_state() const
     // -> Either of the following conditions are true:
     //    - animation has a pending pause task, or
     //    - both the start time of animation is unresolved and it does not have a pending play task,
-    if (m_pending_pause_task == TaskState::Pending || (!m_start_time.has_value() && m_pending_play_task == TaskState::None)) {
+    if (m_pending_pause_task == TaskState::Scheduled || (!m_start_time.has_value() && m_pending_play_task == TaskState::None)) {
         // → paused
         return Bindings::AnimationPlayState::Paused;
     }
