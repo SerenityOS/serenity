@@ -366,6 +366,7 @@ set(KERNEL_SOURCES
     Tasks/CrashHandler.cpp
     Tasks/FinalizerTask.cpp
     Tasks/FutexQueue.cpp
+    Tasks/HostnameContext.cpp
     Tasks/PerformanceEventBuffer.cpp
     Tasks/PowerStateSwitchTask.cpp
     Tasks/Process.cpp

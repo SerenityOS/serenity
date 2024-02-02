@@ -31,6 +31,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Credentials.h>
 #include <Kernel/Tasks/Coredump.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
@@ -54,12 +55,7 @@ static Atomic<pid_t> next_pid;
 static Singleton<SpinlockProtected<Process::AllProcessesList, LockRank::None>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
-static Singleton<MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>> s_hostname;
-
-MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname()
-{
-    return *s_hostname;
-}
+static RawPtr<HostnameContext> s_empty_kernel_hostname_context;
 
 SpinlockProtected<Process::AllProcessesList, LockRank::None>& Process::all_instances()
 {
@@ -160,9 +156,9 @@ UNMAP_AFTER_INIT void Process::initialize()
 {
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
 
-    // Note: This is called before scheduling is initialized, and before APs are booted.
-    //       So we can "safely" bypass the lock here.
-    reinterpret_cast<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>&>(hostname()).store_characters("courage"sv);
+    // NOTE: Initialize an empty hostname context for all kernel processes.
+    s_empty_kernel_hostname_context = &MUST(HostnameContext::create_with_name(""sv)).leak_ref();
+
     // NOTE: Just allocate the kernel version string here so we never have to worry
     // about OOM conditions in the uname syscall.
     g_version_string = MUST(KString::formatted("{}.{}-dev", SERENITY_MAJOR_REVISION, SERENITY_MINOR_REVISION)).leak_ptr();
@@ -214,7 +210,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<TTY> tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<TTY> tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -227,7 +223,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     auto vfs_root_context_root_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
         return custody;
     });
-    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, vfs_root_context, vfs_root_context_root_custody, nullptr, tty));
+    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, vfs_root_context, hostname_context, vfs_root_context_root_custody, nullptr, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -264,7 +260,8 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
 
 ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(StringView name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true, VFSRootContext::empty_context_for_kernel_processes()));
+    VERIFY(s_empty_kernel_hostname_context);
+    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true, VFSRootContext::empty_context_for_kernel_processes(), *s_empty_kernel_hostname_context));
     auto& process = *process_and_first_thread.process;
     auto& thread = *process_and_first_thread.first_thread;
 
@@ -293,22 +290,22 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     Process::Name name {};
     Process::current().name().with([&name](auto& process_name) {
         name.store_characters(process_name.representable_view());
     });
-    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, move(vfs_root_context), current_directory, executable, tty, fork_parent));
+    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, move(vfs_root_context), move(hostname_context), current_directory, executable, tty, fork_parent));
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
 
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(vfs_root_context), move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(vfs_root_context), move(hostname_context), move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
 
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -325,12 +322,13 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID 
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
+Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
     : m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_current_directory(move(current_directory))
     , m_creation_time(creation_time)
     , m_attached_vfs_root_context(move(vfs_root_context))
+    , m_attached_hostname_context(move(hostname_context))
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
@@ -351,6 +349,10 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
     }
 
     m_attached_vfs_root_context.with([](auto& context) {
+        context->set_attached({});
+    });
+
+    m_attached_hostname_context.with([](auto& context) {
         context->set_attached({});
     });
 }
@@ -881,6 +883,11 @@ void Process::finalize()
     m_executable.with([](auto& executable) { executable = nullptr; });
     m_arguments.clear();
     m_environment.clear();
+
+    m_attached_hostname_context.with([](auto& context) {
+        context->detach({});
+        context = nullptr;
+    });
 
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
