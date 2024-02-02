@@ -17,6 +17,7 @@ Executable::Executable(
     NonnullOwnPtr<IdentifierTable> identifier_table,
     NonnullOwnPtr<StringTable> string_table,
     NonnullOwnPtr<RegexTable> regex_table,
+    Vector<Value> constants,
     NonnullRefPtr<SourceCode const> source_code,
     size_t number_of_property_lookup_caches,
     size_t number_of_global_variable_caches,
@@ -28,6 +29,7 @@ Executable::Executable(
     , string_table(move(string_table))
     , identifier_table(move(identifier_table))
     , regex_table(move(regex_table))
+    , constants(move(constants))
     , source_code(move(source_code))
     , number_of_registers(number_of_registers)
     , is_strict_mode(is_strict_mode)

@@ -51,6 +51,7 @@ public:
         NonnullOwnPtr<IdentifierTable>,
         NonnullOwnPtr<StringTable>,
         NonnullOwnPtr<RegexTable>,
+        Vector<Value> constants,
         NonnullRefPtr<SourceCode const>,
         size_t number_of_property_lookup_caches,
         size_t number_of_global_variable_caches,
@@ -69,6 +70,7 @@ public:
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     NonnullOwnPtr<RegexTable> regex_table;
+    Vector<Value> constants;
 
     NonnullRefPtr<SourceCode const> source_code;
     size_t number_of_registers { 0 };

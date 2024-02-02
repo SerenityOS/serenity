@@ -241,6 +241,16 @@ public:
     [[nodiscard]] size_t next_environment_variable_cache() { return m_next_environment_variable_cache++; }
     [[nodiscard]] size_t next_property_lookup_cache() { return m_next_property_lookup_cache++; }
 
+    [[nodiscard]] Operand add_constant(Value value)
+    {
+        for (size_t i = 0; i < m_constants.size(); ++i) {
+            if (m_constants[i] == value)
+                return Operand(Operand::Type::Constant, i);
+        }
+        m_constants.append(value);
+        return Operand(Operand::Type::Constant, m_constants.size() - 1);
+    }
+
 private:
     enum class JumpType {
         Continue,
@@ -267,6 +277,7 @@ private:
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
     NonnullOwnPtr<RegexTable> m_regex_table;
+    Vector<Value> m_constants;
 
     u32 m_next_register { Register::reserved_register_count };
     u32 m_next_block { 1 };
