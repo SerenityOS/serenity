@@ -24,6 +24,9 @@ public:
 
     FlyString const& animation_name() const { return id(); }
 
+    virtual Animations::AnimationClass animation_class() const override;
+    virtual Optional<int> class_specific_composite_order(JS::NonnullGCPtr<Animations::Animation> other) const override;
+
 private:
     explicit CSSAnimation(JS::Realm&);
 
