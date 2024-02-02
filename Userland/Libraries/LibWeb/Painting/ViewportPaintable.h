@@ -26,6 +26,7 @@ public:
     };
     void assign_scroll_frame_ids(HashMap<Painting::PaintableBox const*, ScrollFrame>&) const;
     void assign_clip_rectangles();
+    void resolve_paint_only_properties();
 
 private:
     void build_stacking_context_tree();

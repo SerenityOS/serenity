@@ -63,6 +63,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -590,6 +591,9 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
     m_computed_css_values = move(new_computed_css_values);
     computed_css_values_changed();
 
+    if (invalidation.repaint && document().navigable())
+        document().navigable()->set_needs_to_resolve_paint_only_properties();
+
     if (!invalidation.rebuild_layout_tree && layout_node()) {
         // If we're keeping the layout tree, we can just apply the new style to the existing layout tree.
         layout_node()->apply_style(*m_computed_css_values);
@@ -908,6 +912,11 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     const_cast<Document&>(document()).update_layout();
     VERIFY(document().navigable());
     auto viewport_offset = document().navigable()->viewport_scroll_offset();
+
+    if (document().paintable()) {
+        // NOTE: Make sure CSS transforms are resolved before it is used to calculate the rect position.
+        const_cast<Painting::ViewportPaintable*>(document().paintable())->resolve_paint_only_properties();
+    }
 
     Gfx::AffineTransform transform;
     for (auto const* containing_block = this->layout_node(); containing_block; containing_block = containing_block->containing_block()) {

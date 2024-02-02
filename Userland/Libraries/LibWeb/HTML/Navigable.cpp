@@ -2082,6 +2082,11 @@ void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig
     context.set_should_paint_overlay(config.paint_overlay);
     context.set_has_focus(config.has_focus);
 
+    if (m_needs_to_resolve_paint_only_properties) {
+        document->paintable()->resolve_paint_only_properties();
+        m_needs_to_resolve_paint_only_properties = false;
+    }
+
     HashMap<Painting::PaintableBox const*, Painting::ViewportPaintable::ScrollFrame> scroll_frames;
     if (is_traversable()) {
         document->paintable()->assign_scroll_frame_ids(scroll_frames);
