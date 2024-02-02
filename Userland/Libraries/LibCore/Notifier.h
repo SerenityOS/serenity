@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibCore/Event.h>
 #include <LibCore/EventReceiver.h>
 
 namespace Core {
@@ -15,12 +16,7 @@ class Notifier final : public EventReceiver {
     C_OBJECT(Notifier);
 
 public:
-    enum class Type {
-        None,
-        Read,
-        Write,
-        Exceptional,
-    };
+    using Type = NotificationType;
 
     virtual ~Notifier() override;
 
@@ -32,7 +28,7 @@ public:
 
     int fd() const { return m_fd; }
     Type type() const { return m_type; }
-    void set_type(Type type) { m_type = type; }
+    void set_type(Type type);
 
     void event(Core::Event&) override;
 
@@ -40,6 +36,7 @@ private:
     Notifier(int fd, Type type, EventReceiver* parent = nullptr);
 
     int m_fd { -1 };
+    bool m_is_enabled { false };
     Type m_type { Type::None };
 };
 

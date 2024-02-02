@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
@@ -78,19 +79,30 @@ private:
     int m_timer_id;
 };
 
+enum class NotificationType {
+    None = 0,
+    Read = 1,
+    Write = 2,
+};
+
+AK_ENUM_BITWISE_OPERATORS(NotificationType);
+
 class NotifierActivationEvent final : public Event {
 public:
-    explicit NotifierActivationEvent(int fd)
+    explicit NotifierActivationEvent(int fd, NotificationType type)
         : Event(Event::NotifierActivation)
         , m_fd(fd)
+        , m_type(type)
     {
     }
     ~NotifierActivationEvent() = default;
 
     int fd() const { return m_fd; }
+    NotificationType type() const { return m_type; }
 
 private:
     int m_fd;
+    NotificationType m_type;
 };
 
 class ChildEvent final : public Event {

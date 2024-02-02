@@ -106,7 +106,7 @@ static void socket_notifier(CFSocketRef socket, CFSocketCallBackType notificatio
     // before dispatching the event, which allows it to be triggered again.
     CFSocketEnableCallBacks(socket, notification_type);
 
-    Core::NotifierActivationEvent event(notifier.fd());
+    Core::NotifierActivationEvent event(notifier.fd(), notifier.type());
     notifier.dispatch_event(event);
 
     // This manual process of enabling the callbacks also seems to require waking the event loop,
