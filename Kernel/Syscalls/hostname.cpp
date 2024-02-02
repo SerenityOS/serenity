@@ -14,17 +14,19 @@ ErrorOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
     TRY(require_promise(Pledge::stdio));
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    return hostname().with_shared([&](auto const& name) -> ErrorOr<FlatPtr> {
-        // NOTE: To be able to copy a null-terminated string, we need at most
-        // 65 characters to store and copy and not 64 here, to store the whole
-        // hostname string + null terminator.
-        FixedStringBuffer<UTSNAME_ENTRY_LEN> current_hostname {};
-        current_hostname.store_characters(name.representable_view());
-        auto name_view = current_hostname.representable_view();
-        if (size < (name_view.length() + 1))
-            return ENAMETOOLONG;
-        TRY(copy_to_user(buffer, name_view.characters_without_null_termination(), name_view.length() + 1));
-        return 0;
+    return m_attached_hostname_context.with([&](auto const& hostname_context_ptr) -> ErrorOr<FlatPtr> {
+        return hostname_context_ptr->buffer().with([&](auto const& name_buffer) -> ErrorOr<FlatPtr> {
+            // NOTE: To be able to copy a null-terminated string, we need at most
+            // 65 characters to store and copy and not 64 here, to store the whole
+            // hostname string + null terminator.
+            FixedStringBuffer<UTSNAME_ENTRY_LEN> current_hostname {};
+            current_hostname.store_characters(name_buffer.representable_view());
+            auto name_view = current_hostname.representable_view();
+            if (size < (name_view.length() + 1))
+                return ENAMETOOLONG;
+            TRY(copy_to_user(buffer, name_view.characters_without_null_termination(), name_view.length() + 1));
+            return 0;
+        });
     });
 }
 
@@ -37,8 +39,10 @@ ErrorOr<FlatPtr> Process::sys$sethostname(Userspace<char const*> buffer, size_t 
     if (!credentials->is_superuser())
         return EPERM;
     auto new_hostname = TRY(get_syscall_name_string_fixed_buffer<UTSNAME_ENTRY_LEN - 1>(buffer, length));
-    hostname().with_exclusive([&](auto& name) {
-        name.store_characters(new_hostname.representable_view());
+    m_attached_hostname_context.with([&](auto& hostname_context_ptr) {
+        hostname_context_ptr->buffer().with([&](auto& name_buffer) {
+            name_buffer.store_characters(new_hostname.representable_view());
+        });
     });
     return 0;
 }

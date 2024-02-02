@@ -27,6 +27,7 @@ class OpenFileDescription;
 class DisplayConnector;
 class FileSystem;
 class FutexQueue;
+class HostnameContext;
 class IPv4Socket;
 class Inode;
 class InodeIdentifier;
