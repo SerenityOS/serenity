@@ -636,7 +636,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             Gfx::IntRect hex_display_rect_high_nibble {
                 frame_thickness() + offset_margin_width() + column * cell_width() + 2 * m_padding,
                 frame_thickness() + m_padding + row * line_height(),
-                cell_width() / 2,
+                character_width(),
                 line_height() - m_line_spacing
             };
 
