@@ -16,6 +16,7 @@
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/MimeSniff/Resource.h>
 
 namespace Web::HTML {
 
@@ -181,7 +182,17 @@ void HTMLObjectElement::resource_did_load()
         // 1. Let binary be false.
         bool binary = false;
 
-        // FIXME: 2. If the type specified in the resource's Content-Type metadata is "text/plain", and the result of applying the rules for distinguishing if a resource is text or binary to the resource is that the resource is not text/plain, then set binary to true.
+        // 2. If the type specified in the resource's Content-Type metadata is "text/plain", and the result of applying the rules for distinguishing if a resource is text or binary to the resource is that the resource is not text/plain, then set binary to true.
+        if (it->value == "text/plain"sv) {
+            auto supplied_type = MimeSniff::MimeType::parse(it->value).release_value_but_fixme_should_propagate_errors();
+            auto computed_type = MimeSniff::Resource::sniff(resource()->encoded_data(), MimeSniff::SniffingConfiguration {
+                                                                                            .sniffing_context = MimeSniff::SniffingContext::TextOrBinary,
+                                                                                            .supplied_type = move(supplied_type),
+                                                                                        })
+                                     .release_value_but_fixme_should_propagate_errors();
+            if (computed_type.essence() != "text/plain"sv)
+                binary = true;
+        }
 
         // 3. If the type specified in the resource's Content-Type metadata is "application/octet-stream", then set binary to true.
         if (it->value == "application/octet-stream"sv)
