@@ -67,6 +67,34 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
     }
 }
 
+Value Interpreter::get(Operand op) const
+{
+    switch (op.type()) {
+    case Operand::Type::Register:
+        return reg(Register { op.index() });
+    case Operand::Type::Local:
+        return vm().running_execution_context().locals[op.index()];
+    case Operand::Type::Constant:
+        return current_executable().constants[op.index()];
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void Interpreter::set(Operand op, Value value)
+{
+    switch (op.type()) {
+    case Operand::Type::Register:
+        reg(Register { op.index() }) = value;
+        return;
+    case Operand::Type::Local:
+        vm().running_execution_context().locals[op.index()] = value;
+        return;
+    case Operand::Type::Constant:
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Environment> lexical_environment_override)
 {

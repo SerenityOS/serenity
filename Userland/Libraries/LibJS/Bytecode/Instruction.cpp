@@ -42,4 +42,10 @@ RefPtr<SourceCode> InstructionStreamIterator::source_code() const
     return m_executable ? m_executable->source_code.ptr() : nullptr;
 }
 
+Operand::Operand(Register reg)
+    : m_type(Type::Register)
+    , m_index(reg.index())
+{
+}
+
 }
