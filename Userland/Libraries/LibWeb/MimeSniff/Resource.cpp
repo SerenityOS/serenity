@@ -680,6 +680,8 @@ ErrorOr<void> Resource::context_specific_sniffing_algorithm(SniffingContext snif
         return rules_for_sniffing_audio_or_video_specifically();
     if (sniffing_context == SniffingContext::Font)
         return rules_for_sniffing_fonts_specifically();
+    if (sniffing_context == SniffingContext::TextOrBinary)
+        return rules_for_distinguishing_if_a_resource_is_text_or_binary();
 
     return {};
 }

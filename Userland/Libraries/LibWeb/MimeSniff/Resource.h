@@ -16,6 +16,10 @@ enum class SniffingContext {
     Image,
     AudioOrVideo,
     Font,
+
+    // Non-standard but used in cases where the spec expects us to only run
+    // https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource
+    TextOrBinary,
 };
 
 struct SniffingConfiguration {

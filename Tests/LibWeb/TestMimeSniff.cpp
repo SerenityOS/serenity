@@ -320,3 +320,13 @@ TEST_CASE(determine_computed_mime_type_in_a_font_context)
 
     EXPECT_EQ(mime_type, computed_mime_type.essence());
 }
+
+TEST_CASE(determine_computed_mime_type_given_text_or_binary_context)
+{
+    auto supplied_type = MUST(Web::MimeSniff::MimeType::create("text"_string, "plain"_string));
+    auto computed_mime_type = MUST(Web::MimeSniff::Resource::sniff("\x00"sv.bytes(), Web::MimeSniff::SniffingConfiguration {
+                                                                                         .sniffing_context = Web::MimeSniff::SniffingContext::TextOrBinary,
+                                                                                         .supplied_type = supplied_type,
+                                                                                     }));
+    EXPECT_EQ("application/octet-stream"sv, MUST(computed_mime_type.serialized()));
+}
