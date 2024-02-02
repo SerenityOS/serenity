@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/RedBlackTree.h>
 #include <LibWeb/Animations/AnimationEffect.h>
 #include <LibWeb/Bindings/KeyframeEffectPrototype.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValue.h>
-#include <LibWeb/DOM/Element.h>
 
 namespace Web::Animations {
 
@@ -58,6 +58,14 @@ class KeyframeEffect : public AnimationEffect {
     JS_DECLARE_ALLOCATOR(KeyframeEffect);
 
 public:
+    struct KeyFrameSet : public RefCounted<KeyFrameSet> {
+        struct UseInitial { };
+        struct ResolvedKeyFrame {
+            HashMap<CSS::PropertyID, Variant<UseInitial, NonnullRefPtr<CSS::StyleValue const>>> resolved_properties {};
+        };
+        RedBlackTree<u64, ResolvedKeyFrame> keyframes_by_key;
+    };
+
     static JS::NonnullGCPtr<KeyframeEffect> create(JS::Realm&);
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> construct_impl(
@@ -80,6 +88,9 @@ public:
     WebIDL::ExceptionOr<Vector<JS::Object*>> get_keyframes();
     WebIDL::ExceptionOr<void> set_keyframes(Optional<JS::Handle<JS::Object>> const&);
 
+    KeyFrameSet const* key_frame_set() { return m_key_frame_set; }
+    void set_key_frame_set(RefPtr<KeyFrameSet const> key_frame_set) { m_key_frame_set = key_frame_set; }
+
 private:
     KeyframeEffect(JS::Realm&);
 
@@ -100,6 +111,8 @@ private:
 
     // A cached version of m_keyframes suitable for returning from get_keyframes()
     Vector<JS::Object*> m_keyframe_objects {};
+
+    RefPtr<KeyFrameSet const> m_key_frame_set {};
 };
 
 }
