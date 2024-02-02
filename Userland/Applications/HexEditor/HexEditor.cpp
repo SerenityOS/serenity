@@ -606,16 +606,16 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     size_t max_row = min(total_rows(), min_row + ceil_div(view_height, line_height())); // if above calculated rows, use calculated rows
 
     // paint offsets
-    for (size_t i = min_row; i < max_row; i++) {
+    for (size_t row = min_row; row < max_row; row++) {
         Gfx::IntRect side_offset_rect {
             frame_thickness() + m_padding,
-            static_cast<int>(frame_thickness() + m_padding + i * line_height()),
+            static_cast<int>(frame_thickness() + m_padding + row * line_height()),
             width() - width_occupied_by_vertical_scrollbar(),
             height() - height_occupied_by_horizontal_scrollbar()
         };
 
-        bool is_current_line = (m_position / bytes_per_row()) == i;
-        auto line = String::formatted("{:#08X}", i * bytes_per_row()).release_value_but_fixme_should_propagate_errors();
+        bool is_current_line = (m_position / bytes_per_row()) == row;
+        auto line = String::formatted("{:#08X}", row * bytes_per_row()).release_value_but_fixme_should_propagate_errors();
         painter.draw_text(
             side_offset_rect,
             line,
@@ -624,9 +624,9 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
     }
 
-    for (size_t i = min_row; i < max_row; i++) {
-        for (size_t j = 0; j < bytes_per_row(); j++) {
-            auto byte_position = (i * bytes_per_row()) + j;
+    for (size_t row = min_row; row < max_row; row++) {
+        for (size_t column = 0; column < bytes_per_row(); column++) {
+            auto byte_position = (row * bytes_per_row()) + column;
             if (byte_position >= m_document->size())
                 return;
 
@@ -634,8 +634,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             auto const annotation = m_document->annotations().closest_annotation_at(byte_position);
 
             Gfx::IntRect hex_display_rect_high_nibble {
-                frame_thickness() + offset_margin_width() + j * cell_width() + 2 * m_padding,
-                frame_thickness() + m_padding + i * line_height(),
+                frame_thickness() + offset_margin_width() + column * cell_width() + 2 * m_padding,
+                frame_thickness() + m_padding + row * line_height(),
                 cell_width() / 2,
                 line_height() - m_line_spacing
             };
@@ -648,8 +648,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             Gfx::IntRect background_rect {
-                frame_thickness() + offset_margin_width() + j * cell_width() + 1 * m_padding,
-                frame_thickness() + m_line_spacing / 2 + i * line_height(),
+                frame_thickness() + offset_margin_width() + column * cell_width() + 1 * m_padding,
+                frame_thickness() + m_line_spacing / 2 + row * line_height(),
                 cell_width(),
                 line_height()
             };
@@ -698,8 +698,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(background_rect, background_color_hex);
 
             Gfx::IntRect text_display_rect {
-                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + j * character_width() + 4 * m_padding,
-                frame_thickness() + m_padding + i * line_height(),
+                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding,
+                frame_thickness() + m_padding + row * line_height(),
                 character_width(),
                 line_height() - m_line_spacing
             };
@@ -708,7 +708,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 if (byte_position == m_position) {
                     Gfx::IntRect cursor_position_rect {
                         (m_edit_mode == EditMode::Hex) ? static_cast<int>(hex_display_rect_high_nibble.left() + m_cursor_at_low_nibble * character_width()) : text_display_rect.left(),
-                        static_cast<int>(frame_thickness() + m_line_spacing / 2 + i * line_height()),
+                        static_cast<int>(frame_thickness() + m_line_spacing / 2 + row * line_height()),
                         static_cast<int>(character_width()),
                         static_cast<int>(line_height())
                     };
@@ -728,8 +728,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             Gfx::IntRect text_background_rect {
-                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + j * character_width() + 4 * m_padding,
-                frame_thickness() + m_line_spacing / 2 + i * line_height(),
+                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding,
+                frame_thickness() + m_line_spacing / 2 + row * line_height(),
                 character_width(),
                 line_height()
             };
