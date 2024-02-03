@@ -29,6 +29,12 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> animate(Optional<JS::Handle<JS::Object>> keyframes, Variant<Empty, double, KeyframeAnimationOptions> options = {});
     Vector<JS::NonnullGCPtr<Animation>> get_animations(GetAnimationsOptions options = {});
+
+    void associate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect);
+    void disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect);
+
+private:
+    Vector<JS::NonnullGCPtr<AnimationEffect>> m_associated_effects;
 };
 
 }
