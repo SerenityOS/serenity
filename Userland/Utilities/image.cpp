@@ -42,6 +42,21 @@ static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder,
     return LoadedImage { internal_format, move(bitmap), TRY(decoder->icc_data()) };
 }
 
+static ErrorOr<void> invert_cmyk(LoadedImage& image)
+{
+    if (!image.bitmap.has<RefPtr<Gfx::CMYKBitmap>>())
+        return Error::from_string_view("Can't --invert-cmyk with RGB bitmaps"sv);
+    auto& frame = image.bitmap.get<RefPtr<Gfx::CMYKBitmap>>();
+
+    for (auto& pixel : *frame) {
+        pixel.c = ~pixel.c;
+        pixel.m = ~pixel.m;
+        pixel.y = ~pixel.y;
+        pixel.k = ~pixel.k;
+    }
+    return {};
+}
+
 static ErrorOr<void> move_alpha_to_rgb(LoadedImage& image)
 {
     if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
@@ -173,6 +188,7 @@ struct Options {
     StringView out_path;
     bool no_output = false;
     int frame_index = 0;
+    bool invert_cmyk = false;
     bool move_alpha_to_rgb = false;
     bool strip_alpha = false;
     StringView assign_color_profile_path;
@@ -190,6 +206,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.out_path, "Path to output image file", "output", 'o', "FILE");
     args_parser.add_option(options.no_output, "Do not write output (only useful for benchmarking image decoding)", "no-output", {});
     args_parser.add_option(options.frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
+    args_parser.add_option(options.invert_cmyk, "Invert CMYK channels", "invert-cmyk", {});
     args_parser.add_option(options.move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
     args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
@@ -215,6 +232,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Error::from_string_view("Failed to decode input file"sv);
 
     LoadedImage image = TRY(load_image(*decoder, options.frame_index));
+
+    if (options.invert_cmyk)
+        TRY(invert_cmyk(image));
 
     if (options.move_alpha_to_rgb)
         TRY(move_alpha_to_rgb(image));
