@@ -37,13 +37,13 @@ float lerp_1d(ReadonlySpan<T> values, float x)
 // `sample()` gets a vector where 0 <= i'th coordinate < size(i) and should return the value of the look-up table at that position.
 inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVector3(Vector<unsigned> const&)> sample, Vector<float> const& x)
 {
-    Vector<unsigned, 4> left_index;
-    Vector<float, 4> factor;
+    unsigned left_index[x.size()];
+    float factor[x.size()];
     for (size_t i = 0; i < x.size(); ++i) {
         unsigned n = size(i) - 1;
         float ec = x[i] * n;
-        left_index.append(min(static_cast<unsigned>(ec), n - 1));
-        factor.append(ec - left_index[i]);
+        left_index[i] = min(static_cast<unsigned>(ec), n - 1);
+        factor[i] = ec - left_index[i];
     }
 
     FloatVector3 sample_output {};
