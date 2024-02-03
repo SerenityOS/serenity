@@ -1879,8 +1879,8 @@ void Document::scroll_to_the_fragment()
 void Document::scroll_to_the_beginning_of_the_document()
 {
     // FIXME: Actually implement this algorithm
-    if (auto browsing_context = this->browsing_context())
-        browsing_context->scroll_to({ 0, 0 });
+    if (auto navigable = this->navigable())
+        navigable->perform_scroll_of_viewport({ 0, 0 });
 }
 
 StringView Document::ready_state() const

@@ -121,8 +121,6 @@ public:
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
-    void scroll_to(CSSPixelPoint);
-
     JS::GCPtr<BrowsingContext> top_level_browsing_context() const;
 
     enum class WindowType {
