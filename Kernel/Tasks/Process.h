@@ -76,6 +76,7 @@ UnixDateTime kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(map_fixed) \
     __ENUMERATE_PLEDGE_PROMISE(getkeymap) \
     __ENUMERATE_PLEDGE_PROMISE(mount)     \
+    __ENUMERATE_PLEDGE_PROMISE(unshare)   \
     __ENUMERATE_PLEDGE_PROMISE(no_error)
 
 #define __ENUMERATE_PLEDGE_PROMISE(x) sizeof(#x) + 1 +
@@ -495,6 +496,8 @@ public:
     ErrorOr<FlatPtr> sys$remount(Userspace<Syscall::SC_remount_params const*> user_params);
     ErrorOr<FlatPtr> sys$bindmount(Userspace<Syscall::SC_bindmount_params const*> user_params);
     ErrorOr<FlatPtr> sys$archctl(int option, FlatPtr arg1);
+    ErrorOr<FlatPtr> sys$unshare_create(Userspace<Syscall::SC_unshare_create_params const*>);
+    ErrorOr<FlatPtr> sys$unshare_attach(Userspace<Syscall::SC_unshare_attach_params const*>);
 
     enum SockOrPeerName {
         SockName,
