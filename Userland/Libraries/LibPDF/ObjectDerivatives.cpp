@@ -150,15 +150,21 @@ ByteString StreamObject::to_byte_string(int indent) const
             }
         }
     } else {
-        auto string = encode_hex(bytes());
+        int const chars_per_line = 60;
+        int const bytes_per_line = chars_per_line / 2;
+        int const max_lines_to_print = 10;
+        int const max_bytes_to_print = max_lines_to_print * bytes_per_line;
+        auto string = encode_hex(bytes().trim(max_bytes_to_print));
         StringView view { string };
         while (view.length() > 60) {
-            builder.appendff("{}\n", view.substring_view(0, 60));
+            builder.appendff("{}\n", view.substring_view(0, chars_per_line));
             append_indent(builder, indent);
             view = view.substring_view(60);
         }
-
         builder.appendff("{}\n", view);
+
+        if (bytes().size() > max_bytes_to_print)
+            builder.appendff("... (and {} more bytes)\n", bytes().size() - max_bytes_to_print);
     }
 
     builder.append("endstream"sv);
