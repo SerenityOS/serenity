@@ -498,7 +498,6 @@ private:
         auto next_tag_offset = TRY(m_stream->tell());
 
         for (u16 i = 0; i < number_of_field; ++i) {
-            TRY(m_stream->seek(next_tag_offset));
             if (auto maybe_error = read_tag(); maybe_error.is_error() && TIFF_DEBUG)
                 dbgln("Unable to decode tag {}/{}", i + 1, number_of_field);
 
@@ -506,6 +505,7 @@ private:
             // IFD Entry
             // Size of tag(u16) + type(u16) + count(u32) + value_or_offset(u32) = 12
             next_tag_offset += 12;
+            TRY(m_stream->seek(next_tag_offset));
         }
 
         TRY(read_next_idf_offset());
