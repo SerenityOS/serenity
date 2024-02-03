@@ -449,6 +449,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
         visitor.visit(timeline);
 
     visitor.visit(m_list_of_available_images);
+
+    for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
+        visitor.visit(form_associated_element->form_associated_element_to_html_element());
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
@@ -3681,6 +3684,30 @@ void Document::disassociate_with_timeline(JS::NonnullGCPtr<Animations::Animation
 void Document::append_pending_animation_event(Web::DOM::Document::PendingAnimationEvent const& event)
 {
     m_pending_animation_event_queue.append(event);
+}
+
+void Document::element_id_changed(Badge<DOM::Element>)
+{
+    for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
+        form_associated_element->element_id_changed({});
+}
+
+void Document::element_with_id_was_added_or_removed(Badge<DOM::Element>)
+{
+    for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
+        form_associated_element->element_with_id_was_added_or_removed({});
+}
+
+void Document::add_form_associated_element_with_form_attribute(HTML::FormAssociatedElement& form_associated_element)
+{
+    m_form_associated_elements_with_form_attribute.append(&form_associated_element);
+}
+
+void Document::remove_form_associated_element_with_form_attribute(HTML::FormAssociatedElement& form_associated_element)
+{
+    m_form_associated_elements_with_form_attribute.remove_all_matching([&](auto* element) {
+        return element == &form_associated_element;
+    });
 }
 
 }
