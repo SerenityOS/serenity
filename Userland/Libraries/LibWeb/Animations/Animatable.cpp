@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibWeb/Animations/Animatable.h>
 #include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/DocumentTimeline.h>
@@ -56,14 +57,36 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> Animatable::animate(Optional<JS
 // https://www.w3.org/TR/web-animations-1/#dom-animatable-getanimations
 Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(Web::Animations::GetAnimationsOptions options)
 {
-    // FIXME: Implement this
+    // Returns the set of relevant animations for this object, or, if an options parameter is passed with subtree set to
+    // true, returns the set of relevant animations for a subtree for this object.
+
+    // The returned list is sorted using the composite order described for the associated animations of effects in
+    // §5.4.2 The effect stack.
+    if (!m_is_sorted_by_composite_order) {
+        quick_sort(m_associated_effects, [](JS::NonnullGCPtr<AnimationEffect>& a, JS::NonnullGCPtr<AnimationEffect>& b) {
+            auto& a_effect = verify_cast<KeyframeEffect>(*a);
+            auto& b_effect = verify_cast<KeyframeEffect>(*b);
+            return KeyframeEffect::composite_order(a_effect, b_effect) < 0;
+        });
+        m_is_sorted_by_composite_order = true;
+    }
+
+    // FIXME: Support subtree
     (void)options;
-    return {};
+
+    Vector<JS::NonnullGCPtr<Animation>> relevant_animations;
+    for (auto& effect : m_associated_effects) {
+        if (auto animation = effect->associated_animation(); animation && animation->is_relevant())
+            relevant_animations.append(*animation);
+    }
+
+    return relevant_animations;
 }
 
 void Animatable::associate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect)
 {
     m_associated_effects.append(effect);
+    m_is_sorted_by_composite_order = false;
 }
 
 void Animatable::disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect)
