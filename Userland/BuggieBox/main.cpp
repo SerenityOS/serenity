@@ -6,8 +6,11 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <Userland/Shell/Shell.h>
+
+static ErrorOr<int> symlinks_main(Main::Arguments arguments);
 
 #define ENUMERATE_UTILITIES(E, ALIAS) \
     ALIAS(b2sum, checksum)            \
@@ -16,6 +19,7 @@
     E(chmod)                          \
     E(chown)                          \
     E(cp)                             \
+    E(symlinks)                       \
     E(df)                             \
     E(env)                            \
     E(file)                           \
@@ -93,6 +97,22 @@ static constexpr Runner s_runners[] = {
 #undef RUNNER_ENTRY
 #undef ALIAS_RUNNER_ENTRY
 };
+
+ErrorOr<int> symlinks_main(Main::Arguments arguments)
+{
+    if (arguments.argc < 2) {
+        outln(stderr, "error: Creating symlinks require a path to the BuggieBox binary.");
+        return 1;
+    }
+
+    auto buggiebox_binary_path = arguments.strings[1];
+    for (auto& runner : s_runners) {
+        auto path = TRY(String::formatted("/bin/{}", runner.name));
+        if (Core::System::symlink(buggiebox_binary_path, path.bytes_as_string_view()).is_error())
+            outln(stderr, "warning: Failed to create symlink at {} to {}.", path, buggiebox_binary_path);
+    }
+    return 0;
+}
 
 static ErrorOr<int> run_program(Main::Arguments arguments, LexicalPath const& runbase, bool& found_runner)
 {
