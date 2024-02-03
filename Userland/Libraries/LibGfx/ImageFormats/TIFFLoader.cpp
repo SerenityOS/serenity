@@ -453,7 +453,6 @@ private:
             m_next_ifd = Optional<u32> { next_block_position };
         else
             m_next_ifd = OptionalNone {};
-        dbgln_if(TIFF_DEBUG, "Setting image file directory pointer to {}", m_next_ifd);
         return {};
     }
 
@@ -490,6 +489,8 @@ private:
 
         if (!m_next_ifd.has_value())
             return Error::from_string_literal("TIFFImageDecoderPlugin: Missing an Image File Directory");
+
+        dbgln_if(TIFF_DEBUG, "Reading image file directory at offset {}", m_next_ifd);
 
         TRY(m_stream->seek(m_next_ifd.value()));
 
@@ -597,7 +598,13 @@ private:
             return read_tiff_value(type, count, offset);
         }()));
 
-        TRY(handle_tag(m_metadata, tag, type, count, move(tiff_value)));
+        auto subifd_handler = [&](u32 ifd_offset) -> ErrorOr<void> {
+            m_next_ifd = ifd_offset;
+            TRY(read_next_image_file_directory());
+            return {};
+        };
+
+        TRY(handle_tag(move(subifd_handler), m_metadata, tag, type, count, move(tiff_value)));
 
         return {};
     }
