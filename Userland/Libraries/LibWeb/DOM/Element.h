@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/ARIA/ARIAMixin.h>
+#include <LibWeb/Animations/Animatable.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
@@ -67,7 +68,8 @@ class Element
     , public ChildNode<Element>
     , public NonDocumentTypeChildNode<Element>
     , public SlottableMixin
-    , public ARIA::ARIAMixin {
+    , public ARIA::ARIAMixin
+    , public Animations::Animatable {
     WEB_PLATFORM_OBJECT(Element, ParentNode);
 
 public:

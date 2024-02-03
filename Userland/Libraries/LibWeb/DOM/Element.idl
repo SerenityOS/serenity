@@ -1,3 +1,4 @@
+#import <Animations/Animatable.idl>
 #import <ARIA/ARIAMixin.idl>
 #import <DOM/Attr.idl>
 #import <DOM/ChildNode.idl>
@@ -105,3 +106,5 @@ Element includes InnerHTML;
 // https://www.w3.org/TR/wai-aria-1.2/#idl_element
 Element includes ARIAMixin;
 Element includes Slottable;
+// https://www.w3.org/TR/web-animations-1/#extensions-to-the-element-interface
+Element includes Animatable;
