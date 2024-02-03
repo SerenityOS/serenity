@@ -471,9 +471,6 @@ public:
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
     HTML::PolicyContainer policy_container() const;
 
-    // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
-    Vector<JS::Handle<HTML::BrowsingContext>> list_of_descendant_browsing_contexts() const;
-
     Vector<JS::Handle<HTML::Navigable>> descendant_navigables();
     Vector<JS::Handle<HTML::Navigable>> const descendant_navigables() const;
     Vector<JS::Handle<HTML::Navigable>> inclusive_descendant_navigables();
