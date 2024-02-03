@@ -1,4 +1,4 @@
-                                                          == Elements and Names ==
+                                                            == Elements and Names ==
 formy.length: 12
 elements.length: 12
 elements[0] === form.foo
@@ -32,3 +32,9 @@ Can we still use the same name?: true
 new hello is goodbye? false
 new hello is old hello? false
 new hello is newInput? true
+== Changing form attribute ==
+elements in changeForFormAttribute: 0
+elements in changeForFormAttribute: 1
+elements in changeForFormAttribute: 0
+elements in changeForFormAttribute: 1
+elements in changeForFormAttribute: 0

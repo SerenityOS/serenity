@@ -60,6 +60,9 @@
     <input type="text" name="hello">
 </form>
 
+<form id="changeForFormAttribute"></form>
+<input id="changeForFormAttributeInput" type="text" name="changeForFormAttribute" />
+
 <script src="../include.js"></script>
 <script>
     test(() => {
@@ -117,5 +120,23 @@
         println(`new hello is goodbye? ${changy.hello === goodbye}`);
         println(`new hello is old hello? ${changy.hello === hello}`);
         println(`new hello is newInput? ${changy.hello === newInput}`);
+
+        println("== Changing form attribute ==");
+        let changeForFormAttribute = document.getElementById("changeForFormAttribute");
+        let changeForFormAttributeInput = document.getElementById("changeForFormAttributeInput");
+
+        println(`elements in changeForFormAttribute: ${changeForFormAttribute.elements.length}`);
+
+        changeForFormAttributeInput.setAttribute("form", "changeForFormAttribute");
+        println(`elements in changeForFormAttribute: ${changeForFormAttribute.elements.length}`);
+
+        changeForFormAttributeInput.setAttribute("form", "hakuna matata");
+        println(`elements in changeForFormAttribute: ${changeForFormAttribute.elements.length}`);
+
+        changeForFormAttributeInput.setAttribute("form", "changeForFormAttribute");
+        println(`elements in changeForFormAttribute: ${changeForFormAttribute.elements.length}`);
+
+        changeForFormAttributeInput.removeAttribute("form");
+        println(`elements in changeForFormAttribute: ${changeForFormAttribute.elements.length}`);
     });
 </script>

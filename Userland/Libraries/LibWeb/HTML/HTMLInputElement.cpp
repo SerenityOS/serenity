@@ -833,9 +833,8 @@ void HTMLInputElement::did_lose_focus()
     commit_pending_changes();
 }
 
-void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLInputElement::form_associated_element_attribute_changed(FlyString const& name, Optional<String> const& value)
 {
-    HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::checked) {
         if (!value.has_value()) {
             // When the checked content attribute is removed, if the control does not have dirty checkedness,

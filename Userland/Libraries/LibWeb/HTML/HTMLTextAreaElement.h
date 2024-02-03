@@ -55,9 +55,6 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
-    // ^HTMLElement
-    virtual void attribute_changed(FlyString const&, Optional<String> const&) override;
-
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
@@ -65,6 +62,7 @@ public:
 
     virtual void form_associated_element_was_inserted() override;
     virtual void form_associated_element_was_removed(DOM::Node*) override;
+    virtual void form_associated_element_attribute_changed(FlyString const&, Optional<String> const&) override;
 
     virtual void children_changed() override;
 

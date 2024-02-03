@@ -72,13 +72,22 @@ void FormAssociatedElement::form_node_was_removed()
         reset_form_owner();
 }
 
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#association-of-controls-and-forms:category-listed-3
+void FormAssociatedElement::form_node_attribute_changed(FlyString const& name, Optional<String> const&)
+{
+    // When a listed form-associated element's form attribute is set, changed, or removed, then the user agent must
+    // reset the form owner of that element.
+    if (name == HTML::AttributeNames::form) {
+        reset_form_owner();
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#reset-the-form-owner
 void FormAssociatedElement::reset_form_owner()
 {
     auto& html_element = form_associated_element_to_html_element();
 
     // Although these aren't in the "reset form owner" algorithm, these here as they are triggers for this algorithm:
-    // FIXME: When a listed form-associated element's form attribute is set, changed, or removed, then the user agent must reset the form owner of that element.
     // FIXME: When a listed form-associated element has a form attribute and the ID of any of the elements in the tree changes, then the user agent must reset the form owner of that form-associated element.
     // FIXME: When a listed form-associated element has a form attribute and an element with an ID is inserted into or removed from the Document, then the user agent must reset the form owner of that form-associated element.
 

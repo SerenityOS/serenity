@@ -48,10 +48,8 @@ void HTMLObjectElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_image_request);
 }
 
-void HTMLObjectElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLObjectElement::form_associated_element_attribute_changed(FlyString const& name, Optional<String> const&)
 {
-    NavigableContainer::attribute_changed(name, value);
-
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
     // Whenever one of the following conditions occur:
     if (
