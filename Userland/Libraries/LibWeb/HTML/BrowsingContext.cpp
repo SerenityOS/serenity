@@ -352,8 +352,8 @@ void BrowsingContext::scroll_to(CSSPixelPoint position)
             active_document()->update_layout();
     }
 
-    if (this == &m_page->top_level_browsing_context())
-        m_page->client().page_did_request_scroll_to(position);
+    if (auto navigable = active_document()->navigable())
+        navigable->perform_scroll_of_viewport(position);
 }
 
 JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const

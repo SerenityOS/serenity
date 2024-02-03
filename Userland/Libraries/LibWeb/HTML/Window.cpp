@@ -1232,31 +1232,18 @@ double Window::scroll_y() const
     return 0;
 }
 
-// https://w3c.github.io/csswg-drafts/cssom-view/#perform-a-scroll
-static void perform_a_scroll(Page& page, double x, double y, JS::GCPtr<DOM::Node const> element, Bindings::ScrollBehavior behavior)
-{
-    // FIXME: 1. Abort any ongoing smooth scroll for box.
-    // 2. If the user agent honors the scroll-behavior property and one of the following are true:
-    // - behavior is "auto" and element is not null and its computed value of the scroll-behavior property is smooth
-    // - behavior is smooth
-    // ...then perform a smooth scroll of box to position. Once the position has finished updating, emit the scrollend
-    // event. Otherwise, perform an instant scroll of box to position. After an instant scroll emit the scrollend event.
-    // FIXME: Support smooth scrolling.
-    (void)element;
-    (void)behavior;
-    page.client().page_did_request_scroll_to({ x, y });
-}
-
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scroll
 void Window::scroll(ScrollToOptions const& options)
 {
     // 4. If there is no viewport, abort these steps.
-    auto top_level_traversable = page().top_level_traversable();
+    auto navigable = associated_document().navigable();
+    if (!navigable)
+        return;
 
     // 1. If invoked with one argument, follow these substeps:
 
     // 1. Let options be the argument.
-    auto viewport_rect = top_level_traversable->viewport_rect().to_type<float>();
+    auto viewport_rect = navigable->viewport_rect().to_type<float>();
 
     // 2. Let x be the value of the left dictionary member of options, if present, or the viewport’s current scroll
     //    position on the x axis otherwise.
@@ -1276,7 +1263,7 @@ void Window::scroll(ScrollToOptions const& options)
     // 6. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any.
     auto viewport_height = viewport_rect.height();
 
-    auto const document = top_level_traversable->active_document();
+    auto const document = navigable->active_document();
     VERIFY(document);
 
     // Make sure layout is up-to-date before looking at scrollable overflow metrics.
@@ -1314,8 +1301,7 @@ void Window::scroll(ScrollToOptions const& options)
 
     // 12. Perform a scroll of the viewport to position, document’s root element as the associated element, if there is
     //     one, or null otherwise, and the scroll behavior being the value of the behavior dictionary member of options.
-    auto element = JS::GCPtr<DOM::Node const> { document ? &document->root() : nullptr };
-    perform_a_scroll(page(), x, y, element, options.behavior);
+    navigable->perform_scroll_of_viewport({ x, y });
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scroll
