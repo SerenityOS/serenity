@@ -347,6 +347,7 @@ set(KERNEL_SOURCES
     Syscalls/umask.cpp
     Syscalls/uname.cpp
     Syscalls/unlink.cpp
+    Syscalls/unshare.cpp
     Syscalls/unveil.cpp
     Syscalls/utime.cpp
     Syscalls/utimensat.cpp
