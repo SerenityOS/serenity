@@ -340,6 +340,7 @@ class DOMStringMap;
 class ErrorEvent;
 class EventHandler;
 class EventLoop;
+class FormAssociatedElement;
 class FormDataEvent;
 class History;
 class HTMLAnchorElement;
