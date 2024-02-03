@@ -343,19 +343,6 @@ bool BrowsingContext::is_focused_context() const
     return &m_page->focused_context() == this;
 }
 
-void BrowsingContext::scroll_to(CSSPixelPoint position)
-{
-    // NOTE: Scrolling to a position requires up-to-date layout *unless* we're scrolling to (0, 0)
-    //       as (0, 0) is always guaranteed to be a valid scroll position.
-    if (!position.is_zero()) {
-        if (active_document())
-            active_document()->update_layout();
-    }
-
-    if (auto navigable = active_document()->navigable())
-        navigable->perform_scroll_of_viewport(position);
-}
-
 JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const
 {
     auto const* start = this;
