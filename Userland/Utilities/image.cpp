@@ -174,11 +174,11 @@ struct Options {
     bool no_output = false;
     int frame_index = 0;
     bool move_alpha_to_rgb = false;
-    bool ppm_ascii = false;
     bool strip_alpha = false;
     StringView assign_color_profile_path;
     StringView convert_color_profile_path;
     bool strip_color_profile = false;
+    bool ppm_ascii = false;
     u8 quality = 75;
 };
 
@@ -191,11 +191,11 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.no_output, "Do not write output (only useful for benchmarking image decoding)", "no-output", {});
     args_parser.add_option(options.frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
     args_parser.add_option(options.move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
-    args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
     args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
     args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
+    args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
     args_parser.add_option(options.quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
     args_parser.parse(arguments);
 
