@@ -276,7 +276,7 @@ public:
     };
     virtual NewWebViewResult page_did_request_new_web_view(HTML::ActivateTab, HTML::WebViewHints, HTML::TokenizedFeature::NoOpener) { return {}; }
     virtual void page_did_request_activate_tab() { }
-    virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
+    virtual void page_did_close_top_level_traversable() { }
 
     virtual void request_file(FileRequest) = 0;
 

@@ -8,10 +8,12 @@
 
 #pragma once
 
-#include "ConnectionFromClient.h"
+#include <AK/Vector.h>
+#include <AK/Weakable.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
+#include <WebContent/ConsoleGlobalEnvironmentExtensions.h>
 #include <WebContent/Forward.h>
 
 namespace WebContent {
@@ -19,7 +21,7 @@ namespace WebContent {
 class WebContentConsoleClient final : public JS::ConsoleClient
     , public Weakable<WebContentConsoleClient> {
 public:
-    WebContentConsoleClient(JS::Console&, JS::Realm&, ConnectionFromClient&);
+    WebContentConsoleClient(JS::Console&, JS::Realm&, PageClient&);
 
     void handle_input(ByteString const& js_source);
     void send_messages(i32 start_index);
@@ -35,7 +37,7 @@ private:
         m_current_message_style.append(';');
     }
 
-    ConnectionFromClient& m_client;
+    PageClient& m_client;
     JS::Handle<ConsoleGlobalEnvironmentExtensions> m_console_global_environment_extensions;
 
     void clear_output();

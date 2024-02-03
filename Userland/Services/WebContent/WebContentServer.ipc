@@ -11,96 +11,96 @@
 
 endpoint WebContentServer
 {
-    get_window_handle() => (String handle)
-    set_window_handle(String handle) =|
+    get_window_handle(u64 page_id) => (String handle)
+    set_window_handle(u64 page_id, String handle) =|
 
-    connect_to_webdriver(ByteString webdriver_ipc_path) =|
+    connect_to_webdriver(u64 page_id, ByteString webdriver_ipc_path) =|
 
-    update_system_theme(Core::AnonymousBuffer theme_buffer) =|
-    update_system_fonts(ByteString default_font_query, ByteString fixed_width_font_query, ByteString window_title_font_query) =|
-    update_screen_rects(Vector<Web::DevicePixelRect> rects, u32 main_screen_index) =|
+    update_system_theme(u64 page_id, Core::AnonymousBuffer theme_buffer) =|
+    update_system_fonts(u64 page_id, ByteString default_font_query, ByteString fixed_width_font_query, ByteString window_title_font_query) =|
+    update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> rects, u32 main_screen_index) =|
 
-    load_url(URL url) =|
-    load_html(ByteString html) =|
+    load_url(u64 page_id, URL url) =|
+    load_html(u64 page_id, ByteString html) =|
 
-    add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap back_bitmap) =|
-    ready_to_paint() =|
+    add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap back_bitmap) =|
+    ready_to_paint(u64 page_id) =|
 
-    set_viewport_rect(Web::DevicePixelRect rect) =|
+    set_viewport_rect(u64 page_id, Web::DevicePixelRect rect) =|
 
-    mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-    mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-    mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-    mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y) =|
-    doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_down(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_move(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_up(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
+    mouse_wheel(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y) =|
+    doubleclick(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
 
-    key_down(i32 key, u32 modifiers, u32 code_point) =|
-    key_up(i32 key, u32 modifiers, u32 code_point) =|
+    key_down(u64 page_id, i32 key, u32 modifiers, u32 code_point) =|
+    key_up(u64 page_id, i32 key, u32 modifiers, u32 code_point) =|
 
-    debug_request(ByteString request, ByteString argument) =|
-    get_source() =|
-    inspect_dom_tree() =|
-    inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) =|
-    inspect_accessibility_tree() =|
-    get_hovered_node_id() =|
-    js_console_input(ByteString js_source) =|
-    js_console_request_messages(i32 start_index) =|
+    debug_request(u64 page_id, ByteString request, ByteString argument) =|
+    get_source(u64 page_id) =|
+    inspect_dom_tree(u64 page_id) =|
+    inspect_dom_node(u64 page_id, i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element) =|
+    inspect_accessibility_tree(u64 page_id) =|
+    get_hovered_node_id(u64 page_id) =|
+    js_console_input(u64 page_id, ByteString js_source) =|
+    js_console_request_messages(u64 page_id, i32 start_index) =|
 
-    set_dom_node_text(i32 node_id, String text) =|
-    set_dom_node_tag(i32 node_id, String name) =|
-    add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> attributes) =|
-    replace_dom_node_attribute(i32 node_id, String name, Vector<WebView::Attribute> replacement_attributes) =|
-    create_child_element(i32 node_id) =|
-    create_child_text_node(i32 node_id) =|
-    clone_dom_node(i32 node_id) =|
-    remove_dom_node(i32 node_id) =|
-    get_dom_node_html(i32 node_id) =|
+    set_dom_node_text(u64 page_id, i32 node_id, String text) =|
+    set_dom_node_tag(u64 page_id, i32 node_id, String name) =|
+    add_dom_node_attributes(u64 page_id, i32 node_id, Vector<WebView::Attribute> attributes) =|
+    replace_dom_node_attribute(u64 page_id, i32 node_id, String name, Vector<WebView::Attribute> replacement_attributes) =|
+    create_child_element(u64 page_id, i32 node_id) =|
+    create_child_text_node(u64 page_id, i32 node_id) =|
+    clone_dom_node(u64 page_id, i32 node_id) =|
+    remove_dom_node(u64 page_id, i32 node_id) =|
+    get_dom_node_html(u64 page_id, i32 node_id) =|
 
-    take_document_screenshot() =|
-    take_dom_node_screenshot(i32 node_id) =|
+    take_document_screenshot(u64 page_id) =|
+    take_dom_node_screenshot(u64 page_id, i32 node_id) =|
 
-    dump_gc_graph() => (String json)
+    dump_gc_graph(u64 page_id) => (String json)
 
-    run_javascript(ByteString js_source) =|
+    run_javascript(u64 page_id, ByteString js_source) =|
 
-    dump_layout_tree() => (ByteString dump)
-    dump_paint_tree() => (ByteString dump)
-    dump_text() => (ByteString dump)
+    dump_layout_tree(u64 page_id) => (ByteString dump)
+    dump_paint_tree(u64 page_id) => (ByteString dump)
+    dump_text(u64 page_id) => (ByteString dump)
 
-    get_selected_text() => (ByteString selection)
-    select_all() =|
+    get_selected_text(u64 page_id) => (ByteString selection)
+    select_all(u64 page_id) =|
 
-    set_content_filters(Vector<String> filters) =|
-    set_autoplay_allowed_on_all_websites() =|
-    set_autoplay_allowlist(Vector<String> allowlist) =|
-    set_proxy_mappings(Vector<ByteString> proxies, HashMap<ByteString,size_t> mappings) =|
-    set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
-    set_has_focus(bool has_focus) =|
-    set_is_scripting_enabled(bool is_scripting_enabled) =|
-    set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) =|
+    set_content_filters(u64 page_id, Vector<String> filters) =|
+    set_autoplay_allowed_on_all_websites(u64 page_id) =|
+    set_autoplay_allowlist(u64 page_id, Vector<String> allowlist) =|
+    set_proxy_mappings(u64 page_id, Vector<ByteString> proxies, HashMap<ByteString,size_t> mappings) =|
+    set_preferred_color_scheme(u64 page_id, Web::CSS::PreferredColorScheme color_scheme) =|
+    set_has_focus(u64 page_id, bool has_focus) =|
+    set_is_scripting_enabled(u64 page_id, bool is_scripting_enabled) =|
+    set_device_pixels_per_css_pixel(u64 page_id, float device_pixels_per_css_pixel) =|
 
-    set_window_position(Web::DevicePixelPoint position) =|
-    set_window_size(Web::DevicePixelSize size) =|
+    set_window_position(u64 page_id, Web::DevicePixelPoint position) =|
+    set_window_size(u64 page_id, Web::DevicePixelSize size) =|
 
-    get_local_storage_entries() => (OrderedHashMap<String,String> entries)
-    get_session_storage_entries() => (OrderedHashMap<String,String> entries)
+    get_local_storage_entries(u64 page_id) => (OrderedHashMap<String,String> entries)
+    get_session_storage_entries(u64 page_id) => (OrderedHashMap<String,String> entries)
 
-    handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
+    handle_file_return(u64 page_id, i32 error, Optional<IPC::File> file, i32 request_id) =|
 
-    set_system_visibility_state(bool visible) =|
+    set_system_visibility_state(u64 page_id, bool visible) =|
 
-    alert_closed() =|
-    confirm_closed(bool accepted) =|
-    prompt_closed(Optional<String> response) =|
-    color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state) =|
-    select_dropdown_closed(Optional<String> value) =|
+    alert_closed(u64 page_id) =|
+    confirm_closed(u64 page_id, bool accepted) =|
+    prompt_closed(u64 page_id, Optional<String> response) =|
+    color_picker_update(u64 page_id, Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state) =|
+    select_dropdown_closed(u64 page_id, Optional<String> value) =|
 
-    toggle_media_play_state() =|
-    toggle_media_mute_state() =|
-    toggle_media_loop_state() =|
-    toggle_media_controls_state() =|
+    toggle_media_play_state(u64 page_id) =|
+    toggle_media_mute_state(u64 page_id) =|
+    toggle_media_loop_state(u64 page_id) =|
+    toggle_media_controls_state(u64 page_id) =|
 
-    set_user_style(String source) =|
+    set_user_style(u64 page_id, String source) =|
 
-    enable_inspector_prototype() =|
+    enable_inspector_prototype(u64 page_id) =|
 }

@@ -29,6 +29,11 @@ PageClient& PageHost::create_page()
     return *m_pages.get(m_next_id - 1).value();
 }
 
+void PageHost::remove_page(Badge<PageClient>, u64 index)
+{
+    m_pages.remove(index);
+}
+
 PageHost::~PageHost() = default;
 
 }

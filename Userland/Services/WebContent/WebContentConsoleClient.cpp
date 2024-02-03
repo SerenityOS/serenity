@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebContentConsoleClient.h"
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <LibJS/MarkupGenerator.h>
@@ -20,10 +19,12 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <WebContent/ConsoleGlobalEnvironmentExtensions.h>
+#include <WebContent/PageClient.h>
+#include <WebContent/WebContentConsoleClient.h>
 
 namespace WebContent {
 
-WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm& realm, ConnectionFromClient& client)
+WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm& realm, PageClient& client)
     : ConsoleClient(console)
     , m_client(client)
 {
@@ -58,25 +59,25 @@ void WebContentConsoleClient::report_exception(JS::Error const& exception, bool 
 void WebContentConsoleClient::print_html(ByteString const& line)
 {
     m_message_log.append({ .type = ConsoleOutput::Type::HTML, .data = line });
-    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+    m_client.did_output_js_console_message(m_message_log.size() - 1);
 }
 
 void WebContentConsoleClient::clear_output()
 {
     m_message_log.append({ .type = ConsoleOutput::Type::Clear, .data = "" });
-    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+    m_client.did_output_js_console_message(m_message_log.size() - 1);
 }
 
 void WebContentConsoleClient::begin_group(ByteString const& label, bool start_expanded)
 {
     m_message_log.append({ .type = start_expanded ? ConsoleOutput::Type::BeginGroup : ConsoleOutput::Type::BeginGroupCollapsed, .data = label });
-    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+    m_client.did_output_js_console_message(m_message_log.size() - 1);
 }
 
 void WebContentConsoleClient::end_group()
 {
     m_message_log.append({ .type = ConsoleOutput::Type::EndGroup, .data = "" });
-    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+    m_client.did_output_js_console_message(m_message_log.size() - 1);
 }
 
 void WebContentConsoleClient::send_messages(i32 start_index)
@@ -88,7 +89,7 @@ void WebContentConsoleClient::send_messages(i32 start_index)
         // then, by requesting with start_index=0. If we don't have any messages at all, that
         // is still a valid request, and we can just ignore it.
         if (start_index != 0)
-            m_client.did_misbehave("Requested non-existent console message index.");
+            m_client.console_peer_did_misbehave("Requested non-existent console message index.");
         return;
     }
 
@@ -121,7 +122,7 @@ void WebContentConsoleClient::send_messages(i32 start_index)
         messages.append(message.data);
     }
 
-    m_client.async_did_get_js_console_messages(start_index, message_types, messages);
+    m_client.did_get_js_console_messages(start_index, message_types, messages);
 }
 
 void WebContentConsoleClient::clear()

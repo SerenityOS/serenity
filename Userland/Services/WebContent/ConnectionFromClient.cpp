@@ -4,7 +4,7 @@
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
- * Copyright (c) 2023, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2023-2024, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +15,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
-#include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibWeb/ARIA/RoleType.h>
@@ -30,7 +28,6 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
@@ -49,7 +46,10 @@
 #include <WebContent/PageClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
-#include <pthread.h>
+
+#ifdef AK_OS_SERENITY
+#    include <pthread.h>
+#endif
 
 namespace WebContent {
 
@@ -75,43 +75,43 @@ PageClient const& ConnectionFromClient::page(u64 index) const
     return m_page_host->page(index);
 }
 
-Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle()
+Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle(u64 page_id)
 {
-    return page().page().top_level_browsing_context().window_handle();
+    return page(page_id).page().top_level_browsing_context().window_handle();
 }
 
-void ConnectionFromClient::set_window_handle(String const& handle)
+void ConnectionFromClient::set_window_handle(u64 page_id, String const& handle)
 {
-    page().page().top_level_browsing_context().set_window_handle(handle);
+    page(page_id).page().top_level_browsing_context().set_window_handle(handle);
 }
 
-void ConnectionFromClient::connect_to_webdriver(ByteString const& webdriver_ipc_path)
+void ConnectionFromClient::connect_to_webdriver(u64 page_id, ByteString const& webdriver_ipc_path)
 {
     // FIXME: Propagate this error back to the browser.
-    if (auto result = page().connect_to_webdriver(webdriver_ipc_path); result.is_error())
+    if (auto result = page(page_id).connect_to_webdriver(webdriver_ipc_path); result.is_error())
         dbgln("Unable to connect to the WebDriver process: {}", result.error());
 }
 
-void ConnectionFromClient::update_system_theme(Core::AnonymousBuffer const& theme_buffer)
+void ConnectionFromClient::update_system_theme(u64 page_id, Core::AnonymousBuffer const& theme_buffer)
 {
     Gfx::set_system_theme(theme_buffer);
     auto impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_buffer);
-    page().set_palette_impl(*impl);
+    page(page_id).set_palette_impl(*impl);
 }
 
-void ConnectionFromClient::update_system_fonts(ByteString const& default_font_query, ByteString const& fixed_width_font_query, ByteString const& window_title_font_query)
+void ConnectionFromClient::update_system_fonts(u64, ByteString const& default_font_query, ByteString const& fixed_width_font_query, ByteString const& window_title_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
     Gfx::FontDatabase::set_window_title_font_query(window_title_font_query);
 }
 
-void ConnectionFromClient::update_screen_rects(Vector<Web::DevicePixelRect> const& rects, u32 main_screen)
+void ConnectionFromClient::update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> const& rects, u32 main_screen)
 {
-    page().set_screen_rects(rects, main_screen);
+    page(page_id).set_screen_rects(rects, main_screen);
 }
 
-void ConnectionFromClient::load_url(const URL& url)
+void ConnectionFromClient::load_url(u64 page_id, const URL& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
@@ -125,32 +125,29 @@ void ConnectionFromClient::load_url(const URL& url)
     pthread_setname_np(pthread_self(), process_name.characters());
 #endif
 
-    page().page().load(url);
+    page(page_id).page().load(url);
 }
 
-void ConnectionFromClient::load_html(ByteString const& html)
+void ConnectionFromClient::load_html(u64 page_id, ByteString const& html)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}", html);
-    page().page().load_html(html);
+    page(page_id).page().load_html(html);
 }
 
-void ConnectionFromClient::set_viewport_rect(Web::DevicePixelRect const& rect)
+void ConnectionFromClient::set_viewport_rect(u64 page_id, Web::DevicePixelRect const& rect)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
-    page().set_viewport_rect(rect);
+    page(page_id).set_viewport_rect(rect);
 }
 
-void ConnectionFromClient::add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap)
+void ConnectionFromClient::add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap)
 {
-    m_backing_stores.front_bitmap_id = front_bitmap_id;
-    m_backing_stores.back_bitmap_id = back_bitmap_id;
-    m_backing_stores.front_bitmap = *const_cast<Gfx::ShareableBitmap&>(front_bitmap).bitmap();
-    m_backing_stores.back_bitmap = *const_cast<Gfx::ShareableBitmap&>(back_bitmap).bitmap();
+    page(page_id).add_backing_store(front_bitmap_id, front_bitmap, back_bitmap_id, back_bitmap);
 }
 
-void ConnectionFromClient::ready_to_paint()
+void ConnectionFromClient::ready_to_paint(u64 page_id)
 {
-    page().ready_to_paint();
+    page(page_id).ready_to_paint();
 }
 
 void ConnectionFromClient::process_next_input_event()
@@ -163,48 +160,37 @@ void ConnectionFromClient::process_next_input_event()
         [&](QueuedMouseEvent const& event) {
             switch (event.type) {
             case QueuedMouseEvent::Type::MouseDown:
-                report_finished_handling_input_event(page().page().handle_mousedown(
-                    event.position, event.screen_position,
-                    event.button, event.buttons, event.modifiers));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_mousedown(event.position, event.screen_position, event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseUp:
-                report_finished_handling_input_event(page().page().handle_mouseup(
-                    event.position, event.screen_position,
-                    event.button, event.buttons, event.modifiers));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_mouseup(event.position, event.screen_position, event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseMove:
                 // NOTE: We have to notify the client about coalesced MouseMoves,
                 //       so we do that by saying none of them were handled by the web page.
                 for (size_t i = 0; i < event.coalesced_event_count; ++i) {
-                    report_finished_handling_input_event(false);
+                    report_finished_handling_input_event(event.page_id, false);
                 }
-                report_finished_handling_input_event(page().page().handle_mousemove(
-                    event.position, event.screen_position,
-                    event.buttons, event.modifiers));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_mousemove(event.position, event.screen_position, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::DoubleClick:
-                report_finished_handling_input_event(page().page().handle_doubleclick(
-                    event.position, event.screen_position,
-                    event.button, event.buttons, event.modifiers));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_doubleclick(event.position, event.screen_position, event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseWheel:
                 for (size_t i = 0; i < event.coalesced_event_count; ++i) {
-                    report_finished_handling_input_event(false);
+                    report_finished_handling_input_event(event.page_id, false);
                 }
-                report_finished_handling_input_event(page().page().handle_mousewheel(
-                    event.position, event.screen_position,
-                    event.button, event.buttons, event.modifiers,
-                    event.wheel_delta_x, event.wheel_delta_y));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_mousewheel(event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y));
                 break;
             }
         },
         [&](QueuedKeyboardEvent const& event) {
             switch (event.type) {
             case QueuedKeyboardEvent::Type::KeyDown:
-                report_finished_handling_input_event(page().page().handle_keydown((KeyCode)event.key, event.modifiers, event.code_point));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_keydown((KeyCode)event.key, event.modifiers, event.code_point));
                 break;
             case QueuedKeyboardEvent::Type::KeyUp:
-                report_finished_handling_input_event(page().page().handle_keyup((KeyCode)event.key, event.modifiers, event.code_point));
+                report_finished_handling_input_event(event.page_id, page(event.page_id).page().handle_keyup((KeyCode)event.key, event.modifiers, event.code_point));
                 break;
             }
         });
@@ -213,7 +199,7 @@ void ConnectionFromClient::process_next_input_event()
         m_input_event_queue_timer->start();
 }
 
-void ConnectionFromClient::mouse_down(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+void ConnectionFromClient::mouse_down(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -223,10 +209,11 @@ void ConnectionFromClient::mouse_down(Web::DevicePixelPoint position, Web::Devic
             .button = button,
             .buttons = buttons,
             .modifiers = modifiers,
+            .page_id = page_id,
         });
 }
 
-void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, [[maybe_unused]] u32 button, u32 buttons, u32 modifiers)
+void ConnectionFromClient::mouse_move(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, [[maybe_unused]] u32 button, u32 buttons, u32 modifiers)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseMove,
@@ -235,12 +222,14 @@ void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::Devic
         .button = button,
         .buttons = buttons,
         .modifiers = modifiers,
+        .page_id = page_id,
     };
 
     // OPTIMIZATION: Coalesce with previous unprocessed event iff the previous event is also a MouseMove event.
     if (!m_input_event_queue.is_empty()
         && m_input_event_queue.tail().has<QueuedMouseEvent>()
-        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseMove) {
+        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseMove
+        && m_input_event_queue.tail().get<QueuedMouseEvent>().page_id == page_id) {
         event.coalesced_event_count = m_input_event_queue.tail().get<QueuedMouseEvent>().coalesced_event_count + 1;
         m_input_event_queue.tail() = event;
         return;
@@ -249,7 +238,7 @@ void ConnectionFromClient::mouse_move(Web::DevicePixelPoint position, Web::Devic
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::mouse_up(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+void ConnectionFromClient::mouse_up(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -259,10 +248,11 @@ void ConnectionFromClient::mouse_up(Web::DevicePixelPoint position, Web::DeviceP
             .button = button,
             .buttons = buttons,
             .modifiers = modifiers,
+            .page_id = page_id,
         });
 }
 
-void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y)
+void ConnectionFromClient::mouse_wheel(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseWheel,
@@ -273,12 +263,14 @@ void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::Devi
         .modifiers = modifiers,
         .wheel_delta_x = wheel_delta_x,
         .wheel_delta_y = wheel_delta_y,
+        .page_id = page_id,
     };
 
     // OPTIMIZATION: Coalesce with previous unprocessed event if the previous event is also a MouseWheel event.
     if (!m_input_event_queue.is_empty()
         && m_input_event_queue.tail().has<QueuedMouseEvent>()
-        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseWheel) {
+        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseWheel
+        && m_input_event_queue.tail().get<QueuedMouseEvent>().page_id == page_id) {
         auto const& last_event = m_input_event_queue.tail().get<QueuedMouseEvent>();
         event.coalesced_event_count = last_event.coalesced_event_count + 1;
         event.wheel_delta_x += last_event.wheel_delta_x;
@@ -290,7 +282,7 @@ void ConnectionFromClient::mouse_wheel(Web::DevicePixelPoint position, Web::Devi
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::doubleclick(Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+void ConnectionFromClient::doubleclick(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
@@ -300,10 +292,11 @@ void ConnectionFromClient::doubleclick(Web::DevicePixelPoint position, Web::Devi
             .button = button,
             .buttons = buttons,
             .modifiers = modifiers,
+            .page_id = page_id,
         });
 }
 
-void ConnectionFromClient::key_down(i32 key, u32 modifiers, u32 code_point)
+void ConnectionFromClient::key_down(u64 page_id, i32 key, u32 modifiers, u32 code_point)
 {
     enqueue_input_event(
         QueuedKeyboardEvent {
@@ -311,10 +304,11 @@ void ConnectionFromClient::key_down(i32 key, u32 modifiers, u32 code_point)
             .key = key,
             .modifiers = modifiers,
             .code_point = code_point,
+            .page_id = page_id,
         });
 }
 
-void ConnectionFromClient::key_up(i32 key, u32 modifiers, u32 code_point)
+void ConnectionFromClient::key_up(u64 page_id, i32 key, u32 modifiers, u32 code_point)
 {
     enqueue_input_event(
         QueuedKeyboardEvent {
@@ -322,6 +316,7 @@ void ConnectionFromClient::key_up(i32 key, u32 modifiers, u32 code_point)
             .key = key,
             .modifiers = modifiers,
             .code_point = code_point,
+            .page_id = page_id,
         });
 }
 
@@ -331,26 +326,26 @@ void ConnectionFromClient::enqueue_input_event(Variant<QueuedMouseEvent, QueuedK
     m_input_event_queue_timer->start();
 }
 
-void ConnectionFromClient::report_finished_handling_input_event(bool event_was_handled)
+void ConnectionFromClient::report_finished_handling_input_event(u64 page_id, bool event_was_handled)
 {
-    async_did_finish_handling_input_event(event_was_handled);
+    async_did_finish_handling_input_event(page_id, event_was_handled);
 }
 
-void ConnectionFromClient::debug_request(ByteString const& request, ByteString const& argument)
+void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request, ByteString const& argument)
 {
     if (request == "dump-session-history") {
-        auto const& traversable = page().page().top_level_traversable();
+        auto const& traversable = page(page_id).page().top_level_traversable();
         Web::dump_tree(*traversable);
     }
 
     if (request == "dump-dom-tree") {
-        if (auto* doc = page().page().top_level_browsing_context().active_document())
+        if (auto* doc = page(page_id).page().top_level_browsing_context().active_document())
             Web::dump_tree(*doc);
         return;
     }
 
     if (request == "dump-layout-tree") {
-        if (auto* doc = page().page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
             if (auto* viewport = doc->layout_node())
                 Web::dump_tree(*viewport);
         }
@@ -358,7 +353,7 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
     }
 
     if (request == "dump-paint-tree") {
-        if (auto* doc = page().page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
             if (auto* paintable = doc->paintable())
                 Web::dump_tree(*paintable);
         }
@@ -366,7 +361,7 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
     }
 
     if (request == "dump-stacking-context-tree") {
-        if (auto* doc = page().page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
             if (auto* viewport = doc->layout_node()) {
                 if (auto* stacking_context = viewport->paintable_box()->stacking_context())
                     stacking_context->dump();
@@ -376,7 +371,7 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
     }
 
     if (request == "dump-style-sheets") {
-        if (auto* doc = page().page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
                 if (auto result = Web::dump_sheet(sheet); result.is_error())
                     dbgln("Failed to dump style sheets: {}", result.error());
@@ -386,7 +381,7 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
     }
 
     if (request == "dump-all-resolved-styles") {
-        if (auto* doc = page().page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
             Queue<Web::DOM::Node*> elements_to_visit;
             elements_to_visit.enqueue(doc->document_element());
             while (!elements_to_visit.is_empty()) {
@@ -413,8 +408,8 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
 
     if (request == "set-line-box-borders") {
         bool state = argument == "on";
-        page().set_should_show_line_box_borders(state);
-        page().page().top_level_traversable()->set_needs_display(page().page().top_level_traversable()->viewport_rect());
+        page(page_id).set_should_show_line_box_borders(state);
+        page(page_id).page().top_level_traversable()->set_needs_display(page(page_id).page().top_level_traversable()->viewport_rect());
         return;
     }
 
@@ -429,59 +424,59 @@ void ConnectionFromClient::debug_request(ByteString const& request, ByteString c
     }
 
     if (request == "same-origin-policy") {
-        page().page().set_same_origin_policy_enabled(argument == "on");
+        page(page_id).page().set_same_origin_policy_enabled(argument == "on");
         return;
     }
 
     if (request == "scripting") {
-        page().page().set_is_scripting_enabled(argument == "on");
+        page(page_id).page().set_is_scripting_enabled(argument == "on");
         return;
     }
 
     if (request == "block-pop-ups") {
-        page().page().set_should_block_pop_ups(argument == "on");
+        page(page_id).page().set_should_block_pop_ups(argument == "on");
         return;
     }
 
     if (request == "dump-local-storage") {
-        if (auto* document = page().page().top_level_browsing_context().active_document())
+        if (auto* document = page(page_id).page().top_level_browsing_context().active_document())
             document->window().local_storage().release_value_but_fixme_should_propagate_errors()->dump();
         return;
     }
 
     if (request == "load-reference-page") {
-        if (auto* document = page().page().top_level_browsing_context().active_document()) {
+        if (auto* document = page(page_id).page().top_level_browsing_context().active_document()) {
             auto maybe_link = document->query_selector("link[rel=match]"sv);
             if (maybe_link.is_error() || !maybe_link.value()) {
                 // To make sure that we fail the ref-test if the link is missing, load the error page.
-                load_html("<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.");
+                load_html(page_id, "<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.");
             } else {
                 auto link = maybe_link.release_value();
                 auto url = document->parse_url(link->get_attribute_value(Web::HTML::AttributeNames::href));
-                load_url(url);
+                load_url(page_id, url);
             }
         }
         return;
     }
 }
 
-void ConnectionFromClient::get_source()
+void ConnectionFromClient::get_source(u64 page_id)
 {
-    if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_get_source(doc->url(), doc->source().to_byte_string());
+    if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
+        async_did_get_source(page_id, doc->url(), doc->source().to_byte_string());
     }
 }
 
-void ConnectionFromClient::inspect_dom_tree()
+void ConnectionFromClient::inspect_dom_tree(u64 page_id)
 {
-    if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_inspect_dom_tree(doc->dump_dom_tree_as_json().to_byte_string());
+    if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
+        async_did_inspect_dom_tree(page_id, doc->dump_dom_tree_as_json().to_byte_string());
     }
 }
 
-void ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
+void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
 {
-    auto& top_context = page().page().top_level_browsing_context();
+    auto& top_context = page(page_id).page().top_level_browsing_context();
 
     top_context.for_each_in_inclusive_subtree([&](auto& ctx) {
         if (ctx.active_document() != nullptr) {
@@ -493,7 +488,7 @@ void ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Sele
     Web::DOM::Node* node = Web::DOM::Node::from_unique_id(node_id);
     // Note: Nodes without layout (aka non-visible nodes, don't have style computed)
     if (!node || !node->layout_node()) {
-        async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+        async_did_inspect_dom_node(page_id, false, {}, {}, {}, {}, {});
         return;
     }
 
@@ -502,7 +497,7 @@ void ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Sele
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
         if (!element.computed_css_values()) {
-            async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+            async_did_inspect_dom_node(page_id, false, {}, {}, {}, {}, {});
             return;
         }
 
@@ -589,20 +584,20 @@ void ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Sele
         if (pseudo_element.has_value()) {
             auto pseudo_element_node = element.get_pseudo_element_node(pseudo_element.value());
             if (!pseudo_element_node) {
-                async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+                async_did_inspect_dom_node(page_id, false, {}, {}, {}, {}, {});
                 return;
             }
 
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
-            auto pseudo_element_style = MUST(page().page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element));
+            auto pseudo_element_style = MUST(page(page_id).page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element));
             ByteString computed_values = serialize_json(pseudo_element_style);
             ByteString resolved_values = "{}";
             ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
             ByteString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
 
-            async_did_inspect_dom_node(true, move(computed_values), move(resolved_values), move(custom_properties_json), move(node_box_sizing_json), {});
+            async_did_inspect_dom_node(page_id, true, move(computed_values), move(resolved_values), move(custom_properties_json), move(node_box_sizing_json), {});
             return;
         }
 
@@ -612,51 +607,51 @@ void ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Sele
         ByteString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
         ByteString aria_properties_state_json = serialize_aria_properties_state_json(element);
 
-        async_did_inspect_dom_node(true, move(computed_values), move(resolved_values), move(custom_properties_json), move(node_box_sizing_json), move(aria_properties_state_json));
+        async_did_inspect_dom_node(page_id, true, move(computed_values), move(resolved_values), move(custom_properties_json), move(node_box_sizing_json), move(aria_properties_state_json));
         return;
     }
 
-    async_did_inspect_dom_node(false, {}, {}, {}, {}, {});
+    async_did_inspect_dom_node(page_id, false, {}, {}, {}, {}, {});
 }
 
-void ConnectionFromClient::inspect_accessibility_tree()
+void ConnectionFromClient::inspect_accessibility_tree(u64 page_id)
 {
-    if (auto* doc = page().page().top_level_browsing_context().active_document()) {
-        async_did_inspect_accessibility_tree(doc->dump_accessibility_tree_as_json().to_byte_string());
+    if (auto* doc = page(page_id).page().top_level_browsing_context().active_document()) {
+        async_did_inspect_accessibility_tree(page_id, doc->dump_accessibility_tree_as_json().to_byte_string());
     }
 }
 
-void ConnectionFromClient::get_hovered_node_id()
+void ConnectionFromClient::get_hovered_node_id(u64 page_id)
 {
     i32 node_id = 0;
 
-    if (auto* document = page().page().top_level_browsing_context().active_document()) {
+    if (auto* document = page(page_id).page().top_level_browsing_context().active_document()) {
         if (auto* hovered_node = document->hovered_node())
             node_id = hovered_node->unique_id();
     }
 
-    async_did_get_hovered_node_id(node_id);
+    async_did_get_hovered_node_id(page_id, node_id);
 }
 
-void ConnectionFromClient::set_dom_node_text(i32 node_id, String const& text)
+void ConnectionFromClient::set_dom_node_text(u64 page_id, i32 node_id, String const& text)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || (!dom_node->is_text() && !dom_node->is_comment())) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
     auto& character_data = static_cast<Web::DOM::CharacterData&>(*dom_node);
     character_data.set_data(text);
 
-    async_did_finish_editing_dom_node(character_data.unique_id());
+    async_did_finish_editing_dom_node(page_id, character_data.unique_id());
 }
 
-void ConnectionFromClient::set_dom_node_tag(i32 node_id, String const& name)
+void ConnectionFromClient::set_dom_node_tag(u64 page_id, i32 node_id, String const& name)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || !dom_node->is_element() || !dom_node->parent()) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
@@ -673,14 +668,14 @@ void ConnectionFromClient::set_dom_node_tag(i32 node_id, String const& name)
     }
 
     element.parent()->replace_child(*new_element, element).release_value_but_fixme_should_propagate_errors();
-    async_did_finish_editing_dom_node(new_element->unique_id());
+    async_did_finish_editing_dom_node(page_id, new_element->unique_id());
 }
 
-void ConnectionFromClient::add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> const& attributes)
+void ConnectionFromClient::add_dom_node_attributes(u64 page_id, i32 node_id, Vector<WebView::Attribute> const& attributes)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || !dom_node->is_element()) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
@@ -689,14 +684,14 @@ void ConnectionFromClient::add_dom_node_attributes(i32 node_id, Vector<WebView::
     for (auto const& attribute : attributes)
         element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
 
-    async_did_finish_editing_dom_node(element.unique_id());
+    async_did_finish_editing_dom_node(page_id, element.unique_id());
 }
 
-void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes)
+void ConnectionFromClient::replace_dom_node_attribute(u64 page_id, i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || !dom_node->is_element()) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
@@ -713,62 +708,62 @@ void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const&
     if (should_remove_attribute)
         element.remove_attribute(name);
 
-    async_did_finish_editing_dom_node(element.unique_id());
+    async_did_finish_editing_dom_node(page_id, element.unique_id());
 }
 
-void ConnectionFromClient::create_child_element(i32 node_id)
+void ConnectionFromClient::create_child_element(u64 page_id, i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
     auto element = Web::DOM::create_element(dom_node->document(), Web::HTML::TagNames::div, Web::Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     dom_node->append_child(element).release_value_but_fixme_should_propagate_errors();
 
-    async_did_finish_editing_dom_node(element->unique_id());
+    async_did_finish_editing_dom_node(page_id, element->unique_id());
 }
 
-void ConnectionFromClient::create_child_text_node(i32 node_id)
+void ConnectionFromClient::create_child_text_node(u64 page_id, i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
     auto text_node = dom_node->heap().allocate<Web::DOM::Text>(dom_node->realm(), dom_node->document(), "text"_string);
     dom_node->append_child(text_node).release_value_but_fixme_should_propagate_errors();
 
-    async_did_finish_editing_dom_node(text_node->unique_id());
+    async_did_finish_editing_dom_node(page_id, text_node->unique_id());
 }
 
-void ConnectionFromClient::clone_dom_node(i32 node_id)
+void ConnectionFromClient::clone_dom_node(u64 page_id, i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || !dom_node->parent_node()) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
     auto dom_node_clone = dom_node->clone_node(nullptr, true);
     dom_node->parent_node()->insert_before(dom_node_clone, dom_node->next_sibling());
 
-    async_did_finish_editing_dom_node(dom_node_clone->unique_id());
+    async_did_finish_editing_dom_node(page_id, dom_node_clone->unique_id());
 }
 
-void ConnectionFromClient::remove_dom_node(i32 node_id)
+void ConnectionFromClient::remove_dom_node(u64 page_id, i32 node_id)
 {
-    auto* active_document = page().page().top_level_browsing_context().active_document();
+    auto* active_document = page(page_id).page().top_level_browsing_context().active_document();
     if (!active_document) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node) {
-        async_did_finish_editing_dom_node({});
+        async_did_finish_editing_dom_node(page_id, {});
         return;
     }
 
@@ -783,10 +778,10 @@ void ConnectionFromClient::remove_dom_node(i32 node_id)
     //        which really hurts performance.
     active_document->force_layout();
 
-    async_did_finish_editing_dom_node(previous_dom_node->unique_id());
+    async_did_finish_editing_dom_node(page_id, previous_dom_node->unique_id());
 }
 
-void ConnectionFromClient::get_dom_node_html(i32 node_id)
+void ConnectionFromClient::get_dom_node_html(u64 page_id, i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node)
@@ -797,120 +792,61 @@ void ConnectionFromClient::get_dom_node_html(i32 node_id)
     container->append_child(dom_node->clone_node(nullptr, true)).release_value_but_fixme_should_propagate_errors();
 
     auto html = container->inner_html().release_value_but_fixme_should_propagate_errors();
-    async_did_get_dom_node_html(move(html));
+    async_did_get_dom_node_html(page_id, move(html));
 }
 
-void ConnectionFromClient::initialize_js_console(Badge<PageClient>, Web::DOM::Document& document)
+void ConnectionFromClient::take_document_screenshot(u64 page_id)
 {
-    auto& realm = document.realm();
-    auto console_object = realm.intrinsics().console_object();
-    auto console_client = make<WebContentConsoleClient>(console_object->console(), document.realm(), *this);
-    console_object->console().set_client(*console_client);
-
-    VERIFY(document.browsing_context());
-    if (document.browsing_context()->is_top_level()) {
-        m_top_level_document_console_client = console_client->make_weak_ptr();
-    }
-
-    m_console_clients.set(&document, move(console_client));
-}
-
-void ConnectionFromClient::destroy_js_console(Badge<PageClient>, Web::DOM::Document& document)
-{
-    m_console_clients.remove(&document);
-}
-
-void ConnectionFromClient::js_console_input(ByteString const& js_source)
-{
-    if (m_top_level_document_console_client)
-        m_top_level_document_console_client->handle_input(js_source);
-}
-
-void ConnectionFromClient::run_javascript(ByteString const& js_source)
-{
-    auto* active_document = page().page().top_level_browsing_context().active_document();
-
-    if (!active_document)
-        return;
-
-    // This is partially based on "execute a javascript: URL request" https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
-
-    // Let settings be browsingContext's active document's relevant settings object.
-    auto& settings = active_document->relevant_settings_object();
-
-    // Let baseURL be settings's API base URL.
-    auto base_url = settings.api_base_url();
-
-    // Let script be the result of creating a classic script given scriptSource, settings, baseURL, and the default classic script fetch options.
-    // FIXME: This doesn't pass in "default classic script fetch options"
-    // FIXME: What should the filename be here?
-    auto script = Web::HTML::ClassicScript::create("(client connection run_javascript)", js_source, settings, move(base_url));
-
-    // Let evaluationStatus be the result of running the classic script script.
-    auto evaluation_status = script->run();
-
-    if (evaluation_status.is_error())
-        dbgln("Exception :(");
-}
-
-void ConnectionFromClient::js_console_request_messages(i32 start_index)
-{
-    if (m_top_level_document_console_client)
-        m_top_level_document_console_client->send_messages(start_index);
-}
-
-void ConnectionFromClient::take_document_screenshot()
-{
-    auto* document = page().page().top_level_browsing_context().active_document();
+    auto* document = page(page_id).page().top_level_browsing_context().active_document();
     if (!document || !document->document_element()) {
-        async_did_take_screenshot({});
+        async_did_take_screenshot(page_id, {});
         return;
     }
 
-    auto const& content_size = page().content_size();
+    auto const& content_size = page(page_id).content_size();
     Web::DevicePixelRect rect { { 0, 0 }, content_size };
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
-    page().paint(rect, *bitmap);
+    page(page_id).paint(rect, *bitmap);
 
-    async_did_take_screenshot(bitmap->to_shareable_bitmap());
+    async_did_take_screenshot(page_id, bitmap->to_shareable_bitmap());
 }
 
-void ConnectionFromClient::take_dom_node_screenshot(i32 node_id)
+void ConnectionFromClient::take_dom_node_screenshot(u64 page_id, i32 node_id)
 {
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || !dom_node->paintable_box()) {
-        async_did_take_screenshot({});
+        async_did_take_screenshot(page_id, {});
         return;
     }
 
-    auto rect = page().page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
+    auto rect = page(page_id).page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
-    page().paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
+    page(page_id).paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
 
-    async_did_take_screenshot(bitmap->to_shareable_bitmap());
+    async_did_take_screenshot(page_id, bitmap->to_shareable_bitmap());
 }
 
-Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_graph()
+Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_graph(u64)
 {
     auto gc_graph_json = Web::Bindings::main_thread_vm().heap().dump_graph();
     return MUST(String::from_byte_string(gc_graph_json.to_byte_string()));
 }
 
-Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
+Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text(u64 page_id)
 {
-    return page().page().focused_context().selected_text().to_byte_string();
+    return page(page_id).page().focused_context().selected_text().to_byte_string();
 }
 
-void ConnectionFromClient::select_all()
+void ConnectionFromClient::select_all(u64 page_id)
 {
-    page().page().focused_context().select_all();
+    page(page_id).page().focused_context().select_all();
 }
 
-Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_layout_tree()
+Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_layout_tree(u64 page_id)
 {
-    auto* document = page().page().top_level_browsing_context().active_document();
+    auto* document = page(page_id).page().top_level_browsing_context().active_document();
     if (!document)
         return ByteString { "(no DOM tree)" };
     document->update_layout();
@@ -922,9 +858,9 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
     return builder.to_byte_string();
 }
 
-Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_paint_tree()
+Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_paint_tree(u64 page_id)
 {
-    auto* document = page().page().top_level_browsing_context().active_document();
+    auto* document = page(page_id).page().top_level_browsing_context().active_document();
     if (!document)
         return ByteString { "(no DOM tree)" };
     document->update_layout();
@@ -938,9 +874,9 @@ Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_pai
     return builder.to_byte_string();
 }
 
-Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text()
+Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text(u64 page_id)
 {
-    auto* document = page().page().top_level_browsing_context().active_document();
+    auto* document = page(page_id).page().top_level_browsing_context().active_document();
     if (!document)
         return ByteString { "(no DOM tree)" };
     if (!document->body())
@@ -948,24 +884,24 @@ Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text()
     return document->body()->inner_text();
 }
 
-void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
+void ConnectionFromClient::set_content_filters(u64, Vector<String> const& filters)
 {
     Web::ContentFilter::the().set_patterns(filters).release_value_but_fixme_should_propagate_errors();
 }
 
-void ConnectionFromClient::set_autoplay_allowed_on_all_websites()
+void ConnectionFromClient::set_autoplay_allowed_on_all_websites(u64)
 {
     auto& autoplay_allowlist = Web::PermissionsPolicy::AutoplayAllowlist::the();
     autoplay_allowlist.enable_globally();
 }
 
-void ConnectionFromClient::set_autoplay_allowlist(Vector<String> const& allowlist)
+void ConnectionFromClient::set_autoplay_allowlist(u64, Vector<String> const& allowlist)
 {
     auto& autoplay_allowlist = Web::PermissionsPolicy::AutoplayAllowlist::the();
     autoplay_allowlist.enable_for_origins(allowlist).release_value_but_fixme_should_propagate_errors();
 }
 
-void ConnectionFromClient::set_proxy_mappings(Vector<ByteString> const& proxies, HashMap<ByteString, size_t> const& mappings)
+void ConnectionFromClient::set_proxy_mappings(u64, Vector<ByteString> const& proxies, HashMap<ByteString, size_t> const& mappings)
 {
     auto keys = mappings.keys();
     quick_sort(keys, [&](auto& a, auto& b) { return a.length() < b.length(); });
@@ -981,51 +917,51 @@ void ConnectionFromClient::set_proxy_mappings(Vector<ByteString> const& proxies,
     Web::ProxyMappings::the().set_mappings(proxies, move(sorted_mappings));
 }
 
-void ConnectionFromClient::set_preferred_color_scheme(Web::CSS::PreferredColorScheme const& color_scheme)
+void ConnectionFromClient::set_preferred_color_scheme(u64 page_id, Web::CSS::PreferredColorScheme const& color_scheme)
 {
-    page().set_preferred_color_scheme(color_scheme);
+    page(page_id).set_preferred_color_scheme(color_scheme);
 }
 
-void ConnectionFromClient::set_has_focus(bool has_focus)
+void ConnectionFromClient::set_has_focus(u64 page_id, bool has_focus)
 {
-    page().set_has_focus(has_focus);
+    page(page_id).set_has_focus(has_focus);
 }
 
-void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
+void ConnectionFromClient::set_is_scripting_enabled(u64 page_id, bool is_scripting_enabled)
 {
-    page().set_is_scripting_enabled(is_scripting_enabled);
+    page(page_id).set_is_scripting_enabled(is_scripting_enabled);
 }
 
-void ConnectionFromClient::set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel)
+void ConnectionFromClient::set_device_pixels_per_css_pixel(u64 page_id, float device_pixels_per_css_pixel)
 {
-    page().set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
+    page(page_id).set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
 }
 
-void ConnectionFromClient::set_window_position(Web::DevicePixelPoint position)
+void ConnectionFromClient::set_window_position(u64 page_id, Web::DevicePixelPoint position)
 {
-    page().set_window_position(position);
+    page(page_id).set_window_position(position);
 }
 
-void ConnectionFromClient::set_window_size(Web::DevicePixelSize size)
+void ConnectionFromClient::set_window_size(u64 page_id, Web::DevicePixelSize size)
 {
-    page().set_window_size(size);
+    page(page_id).set_window_size(size);
 }
 
-Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()
+Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries(u64 page_id)
 {
-    auto* document = page().page().top_level_browsing_context().active_document();
+    auto* document = page(page_id).page().top_level_browsing_context().active_document();
     auto local_storage = document->window().local_storage().release_value_but_fixme_should_propagate_errors();
     return local_storage->map();
 }
 
-Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClient::get_session_storage_entries()
+Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClient::get_session_storage_entries(u64 page_id)
 {
-    auto* document = page().page().top_level_browsing_context().active_document();
+    auto* document = page(page_id).page().top_level_browsing_context().active_document();
     auto session_storage = document->window().session_storage().release_value_but_fixme_should_propagate_errors();
     return session_storage->map();
 }
 
-void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
+void ConnectionFromClient::handle_file_return(u64, i32 error, Optional<IPC::File> const& file, i32 request_id)
 {
     auto file_request = m_requested_files.take(request_id);
 
@@ -1035,75 +971,90 @@ void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> con
     file_request.value().on_file_request_finish(error != 0 ? Error::from_errno(error) : ErrorOr<i32> { file->take_fd() });
 }
 
-void ConnectionFromClient::request_file(Web::FileRequest file_request)
+void ConnectionFromClient::request_file(u64 page_id, Web::FileRequest file_request)
 {
     i32 const id = last_id++;
 
     auto path = file_request.path();
     m_requested_files.set(id, move(file_request));
 
-    async_did_request_file(path, id);
+    async_did_request_file(page_id, path, id);
 }
 
-void ConnectionFromClient::set_system_visibility_state(bool visible)
+void ConnectionFromClient::set_system_visibility_state(u64 page_id, bool visible)
 {
-    page().page().top_level_traversable()->set_system_visibility_state(
+    page(page_id).page().top_level_traversable()->set_system_visibility_state(
         visible
             ? Web::HTML::VisibilityState::Visible
             : Web::HTML::VisibilityState::Hidden);
 }
 
-void ConnectionFromClient::alert_closed()
+void ConnectionFromClient::js_console_input(u64 page_id, ByteString const& js_source)
 {
-    page().page().alert_closed();
+    page(page_id).js_console_input(js_source);
 }
 
-void ConnectionFromClient::confirm_closed(bool accepted)
+void ConnectionFromClient::run_javascript(u64 page_id, ByteString const& js_source)
 {
-    page().page().confirm_closed(accepted);
+    page(page_id).run_javascript(js_source);
 }
 
-void ConnectionFromClient::prompt_closed(Optional<String> const& response)
+void ConnectionFromClient::js_console_request_messages(u64 page_id, i32 start_index)
 {
-    page().page().prompt_closed(response);
+    page(page_id).js_console_request_messages(start_index);
 }
 
-void ConnectionFromClient::color_picker_update(Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state)
+void ConnectionFromClient::alert_closed(u64 page_id)
 {
-    page().page().color_picker_update(picked_color, state);
+    page(page_id).page().alert_closed();
 }
 
-void ConnectionFromClient::select_dropdown_closed(Optional<String> const& value)
+void ConnectionFromClient::confirm_closed(u64 page_id, bool accepted)
 {
-    page().page().select_dropdown_closed(value);
+    page(page_id).page().confirm_closed(accepted);
 }
 
-void ConnectionFromClient::toggle_media_play_state()
+void ConnectionFromClient::prompt_closed(u64 page_id, Optional<String> const& response)
 {
-    page().page().toggle_media_play_state().release_value_but_fixme_should_propagate_errors();
+    page(page_id).page().prompt_closed(response);
 }
 
-void ConnectionFromClient::toggle_media_mute_state()
+void ConnectionFromClient::color_picker_update(u64 page_id, Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state)
 {
-    page().page().toggle_media_mute_state();
+    page(page_id).page().color_picker_update(picked_color, state);
 }
 
-void ConnectionFromClient::toggle_media_loop_state()
+void ConnectionFromClient::select_dropdown_closed(u64 page_id, Optional<String> const& value)
 {
-    page().page().toggle_media_loop_state().release_value_but_fixme_should_propagate_errors();
+    page(page_id).page().select_dropdown_closed(value);
 }
 
-void ConnectionFromClient::toggle_media_controls_state()
+void ConnectionFromClient::toggle_media_play_state(u64 page_id)
 {
-    page().page().toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
+    page(page_id).page().toggle_media_play_state().release_value_but_fixme_should_propagate_errors();
 }
 
-void ConnectionFromClient::set_user_style(String const& source)
+void ConnectionFromClient::toggle_media_mute_state(u64 page_id)
 {
-    page().page().set_user_style(source);
+    page(page_id).page().toggle_media_mute_state();
 }
 
-void ConnectionFromClient::enable_inspector_prototype()
+void ConnectionFromClient::toggle_media_loop_state(u64 page_id)
+{
+    page(page_id).page().toggle_media_loop_state().release_value_but_fixme_should_propagate_errors();
+}
+
+void ConnectionFromClient::toggle_media_controls_state(u64 page_id)
+{
+    page(page_id).page().toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
+}
+
+void ConnectionFromClient::set_user_style(u64 page_id, String const& source)
+{
+    page(page_id).page().set_user_style(source);
+}
+
+void ConnectionFromClient::enable_inspector_prototype(u64)
 {
     Web::HTML::Window::set_inspector_object_exposed(true);
 }

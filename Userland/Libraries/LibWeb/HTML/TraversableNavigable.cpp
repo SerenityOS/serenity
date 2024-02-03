@@ -890,7 +890,8 @@ void TraversableNavigable::destroy_top_level_traversable()
     // 3. Remove browsingContext.
     browsing_context->remove();
 
-    // FIXME: 4. Remove traversable from the user interface (e.g., close or hide its tab in a tabbed browser).
+    // 4. Remove traversable from the user interface (e.g., close or hide its tab in a tabbed browser).
+    page().client().page_did_close_top_level_traversable();
 
     // 5. Remove traversable from the user agent's top-level traversable set.
     user_agent_top_level_traversable_set().remove(this);

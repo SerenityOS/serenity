@@ -124,7 +124,11 @@ WebContentView::WebContentView(WebContentOptions const& web_content_options, Str
     };
 }
 
-WebContentView::~WebContentView() = default;
+WebContentView::~WebContentView()
+{
+    if (m_client_state.client)
+        m_client_state.client->unregister_view(m_client_state.page_index);
+}
 
 unsigned get_button_from_qt_event(QSinglePointEvent const& event)
 {
@@ -326,7 +330,7 @@ void WebContentView::mouseMoveEvent(QMouseEvent* event)
     Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    client().async_mouse_move(Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, 0, buttons, modifiers);
+    client().async_mouse_move(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, 0, buttons, modifiers);
 }
 
 void WebContentView::mousePressEvent(QMouseEvent* event)
@@ -342,7 +346,7 @@ void WebContentView::mousePressEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_down(Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
+    client().async_mouse_down(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
 }
 
 void WebContentView::mouseReleaseEvent(QMouseEvent* event)
@@ -367,7 +371,7 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_up(Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
+    client().async_mouse_up(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
 }
 
 void WebContentView::wheelEvent(QWheelEvent* event)
@@ -381,7 +385,7 @@ void WebContentView::wheelEvent(QWheelEvent* event)
 
         auto num_pixels = -event->pixelDelta();
         if (!num_pixels.isNull()) {
-            client().async_mouse_wheel(Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint(screen_position), button, buttons, modifiers, num_pixels.x(), num_pixels.y());
+            client().async_mouse_wheel(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint(screen_position), button, buttons, modifiers, num_pixels.x(), num_pixels.y());
         } else {
             auto num_degrees = -event->angleDelta();
             float delta_x = -num_degrees.x() / 120;
@@ -389,7 +393,7 @@ void WebContentView::wheelEvent(QWheelEvent* event)
             auto step_x = delta_x * QApplication::wheelScrollLines() * m_device_pixel_ratio;
             auto step_y = delta_y * QApplication::wheelScrollLines() * m_device_pixel_ratio;
             int scroll_step_size = verticalScrollBar()->singleStep();
-            client().async_mouse_wheel(Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint(screen_position), button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
+            client().async_mouse_wheel(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint(screen_position), button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
         }
         event->accept();
         return;
@@ -410,7 +414,7 @@ void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_doubleclick(Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
+    client().async_doubleclick(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
 }
 
 void WebContentView::dragEnterEvent(QDragEnterEvent* event)
@@ -443,7 +447,7 @@ void WebContentView::keyPressEvent(QKeyEvent* event)
 
     if (event->key() == Qt::Key_Backtab) {
         // NOTE: Qt transforms Shift+Tab into a "Backtab", so we undo that transformation here.
-        client().async_key_down(KeyCode::Key_Tab, Mod_Shift, '\t');
+        client().async_key_down(m_client_state.page_index, KeyCode::Key_Tab, Mod_Shift, '\t');
         return;
     }
 
@@ -451,7 +455,7 @@ void WebContentView::keyPressEvent(QKeyEvent* event)
     auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
-    client().async_key_down(keycode, modifiers, point);
+    client().async_key_down(m_client_state.page_index, keycode, modifiers, point);
 }
 
 void WebContentView::keyReleaseEvent(QKeyEvent* event)
@@ -460,17 +464,17 @@ void WebContentView::keyReleaseEvent(QKeyEvent* event)
     auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
-    client().async_key_up(keycode, modifiers, point);
+    client().async_key_up(m_client_state.page_index, keycode, modifiers, point);
 }
 
 void WebContentView::focusInEvent(QFocusEvent*)
 {
-    client().async_set_has_focus(true);
+    client().async_set_has_focus(m_client_state.page_index, true);
 }
 
 void WebContentView::focusOutEvent(QFocusEvent*)
 {
-    client().async_set_has_focus(false);
+    client().async_set_has_focus(m_client_state.page_index, false);
 }
 
 void WebContentView::paintEvent(QPaintEvent*)
@@ -517,23 +521,23 @@ void WebContentView::resizeEvent(QResizeEvent* event)
 void WebContentView::set_viewport_rect(Gfx::IntRect rect)
 {
     m_viewport_rect = rect;
-    client().async_set_viewport_rect(rect.to_type<Web::DevicePixels>());
+    client().async_set_viewport_rect(m_client_state.page_index, rect.to_type<Web::DevicePixels>());
 }
 
 void WebContentView::set_window_size(Gfx::IntSize size)
 {
-    client().async_set_window_size(size.to_type<Web::DevicePixels>());
+    client().async_set_window_size(m_client_state.page_index, size.to_type<Web::DevicePixels>());
 }
 
 void WebContentView::set_window_position(Gfx::IntPoint position)
 {
-    client().async_set_window_position(position.to_type<Web::DevicePixels>());
+    client().async_set_window_position(m_client_state.page_index, position.to_type<Web::DevicePixels>());
 }
 
 void WebContentView::set_device_pixel_ratio(double device_pixel_ratio)
 {
     m_device_pixel_ratio = device_pixel_ratio;
-    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    client().async_set_device_pixels_per_css_pixel(m_client_state.page_index, m_device_pixel_ratio * m_zoom_level);
     update_viewport_rect();
     handle_resize();
 }
@@ -549,20 +553,20 @@ void WebContentView::update_viewport_rect()
 
 void WebContentView::update_zoom()
 {
-    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    client().async_set_device_pixels_per_css_pixel(m_client_state.page_index, m_device_pixel_ratio * m_zoom_level);
     update_viewport_rect();
 }
 
 void WebContentView::showEvent(QShowEvent* event)
 {
     QAbstractScrollArea::showEvent(event);
-    client().async_set_system_visibility_state(true);
+    client().async_set_system_visibility_state(m_client_state.page_index, true);
 }
 
 void WebContentView::hideEvent(QHideEvent* event)
 {
     QAbstractScrollArea::hideEvent(event);
-    client().async_set_system_visibility_state(false);
+    client().async_set_system_visibility_state(m_client_state.page_index, false);
 }
 
 static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget, WebContentView::PaletteMode mode)
@@ -599,7 +603,7 @@ static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget, 
 
 void WebContentView::update_palette(PaletteMode mode)
 {
-    client().async_update_system_theme(make_system_theme_from_qt_palette(*this, mode));
+    client().async_update_system_theme(m_client_state.page_index, make_system_theme_from_qt_palette(*this, mode));
 }
 
 void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewClient create_new_client)
@@ -611,6 +615,8 @@ void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewCli
         auto new_client = launch_web_content_process(*this, candidate_web_content_paths, m_web_content_options).release_value_but_fixme_should_propagate_errors();
 
         m_client_state.client = new_client;
+    } else {
+        m_client_state.client->register_view(m_client_state.page_index, *this);
     }
 
     m_client_state.client->on_web_content_process_crash = [this] {
@@ -620,11 +626,11 @@ void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewCli
     };
 
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
-    client().async_set_window_handle(m_client_state.client_handle);
+    client().async_set_window_handle(m_client_state.page_index, m_client_state.client_handle);
 
-    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
+    client().async_set_device_pixels_per_css_pixel(m_client_state.page_index, m_device_pixel_ratio);
     update_palette();
-    client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
+    client().async_update_system_fonts(m_client_state.page_index, Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
     auto screens = QGuiApplication::screens();
 
@@ -640,11 +646,11 @@ void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewCli
         // NOTE: The first item in QGuiApplication::screens is always the primary screen.
         //       This is not specified in the documentation but QGuiApplication::primaryScreen
         //       always returns the first item in the list if it isn't empty.
-        client().async_update_screen_rects(screen_rects, 0);
+        client().async_update_screen_rects(m_client_state.page_index, screen_rects, 0);
     }
 
     if (!m_webdriver_content_ipc_path.is_empty())
-        client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
+        client().async_connect_to_webdriver(m_client_state.page_index, m_webdriver_content_ipc_path);
 }
 
 void WebContentView::update_cursor(Gfx::StandardCursor cursor)
@@ -749,7 +755,7 @@ bool WebContentView::event(QEvent* event)
 
 ErrorOr<String> WebContentView::dump_layout_tree()
 {
-    return String::from_byte_string(client().dump_layout_tree());
+    return String::from_byte_string(client().dump_layout_tree(m_client_state.page_index));
 }
 
 }

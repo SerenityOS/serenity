@@ -34,121 +34,103 @@ public:
 
     virtual void die() override;
 
-    void initialize_js_console(Badge<PageClient>, Web::DOM::Document& document);
-    void destroy_js_console(Badge<PageClient>, Web::DOM::Document& document);
-
-    void request_file(Web::FileRequest);
+    void request_file(u64 page_id, Web::FileRequest);
 
     Optional<int> fd() { return socket().fd(); }
 
     PageHost& page_host() { return *m_page_host; }
     PageHost const& page_host() const { return *m_page_host; }
 
-    auto& backing_stores() { return m_backing_stores; }
-
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    PageClient& page(u64 index = 0);
-    PageClient const& page(u64 index = 0) const;
+    PageClient& page(u64 index);
+    PageClient const& page(u64 index) const;
 
-    virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle() override;
-    virtual void set_window_handle(String const& handle) override;
-    virtual void connect_to_webdriver(ByteString const& webdriver_ipc_path) override;
-    virtual void update_system_theme(Core::AnonymousBuffer const&) override;
-    virtual void update_system_fonts(ByteString const&, ByteString const&, ByteString const&) override;
-    virtual void update_screen_rects(Vector<Web::DevicePixelRect> const&, u32) override;
-    virtual void load_url(URL const&) override;
-    virtual void load_html(ByteString const&) override;
-    virtual void set_viewport_rect(Web::DevicePixelRect const&) override;
-    virtual void mouse_down(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void mouse_move(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void mouse_up(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void mouse_wheel(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32, Web::DevicePixels, Web::DevicePixels) override;
-    virtual void doubleclick(Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void key_down(i32, u32, u32) override;
-    virtual void key_up(i32, u32, u32) override;
-    virtual void add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
-    virtual void ready_to_paint() override;
-    virtual void debug_request(ByteString const&, ByteString const&) override;
-    virtual void get_source() override;
-    virtual void inspect_dom_tree() override;
-    virtual void inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
-    virtual void inspect_accessibility_tree() override;
-    virtual void get_hovered_node_id() override;
+    virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle(u64 page_id) override;
+    virtual void set_window_handle(u64 page_id, String const& handle) override;
+    virtual void connect_to_webdriver(u64 page_id, ByteString const& webdriver_ipc_path) override;
+    virtual void update_system_theme(u64 page_id, Core::AnonymousBuffer const&) override;
+    virtual void update_system_fonts(u64 page_id, ByteString const&, ByteString const&, ByteString const&) override;
+    virtual void update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> const&, u32) override;
+    virtual void load_url(u64 page_id, URL const&) override;
+    virtual void load_html(u64 page_id, ByteString const&) override;
+    virtual void set_viewport_rect(u64 page_id, Web::DevicePixelRect const&) override;
+    virtual void mouse_down(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void mouse_move(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void mouse_up(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void mouse_wheel(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32, Web::DevicePixels, Web::DevicePixels) override;
+    virtual void doubleclick(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
+    virtual void key_down(u64 page_id, i32, u32, u32) override;
+    virtual void key_up(u64 page_id, i32, u32, u32) override;
+    virtual void add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
+    virtual void ready_to_paint(u64 page_id) override;
+    virtual void debug_request(u64 page_id, ByteString const&, ByteString const&) override;
+    virtual void get_source(u64 page_id) override;
+    virtual void inspect_dom_tree(u64 page_id) override;
+    virtual void inspect_dom_node(u64 page_id, i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
+    virtual void inspect_accessibility_tree(u64 page_id) override;
+    virtual void get_hovered_node_id(u64 page_id) override;
 
-    virtual void set_dom_node_text(i32 node_id, String const& text) override;
-    virtual void set_dom_node_tag(i32 node_id, String const& name) override;
-    virtual void add_dom_node_attributes(i32 node_id, Vector<WebView::Attribute> const& attributes) override;
-    virtual void replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes) override;
-    virtual void create_child_element(i32 node_id) override;
-    virtual void create_child_text_node(i32 node_id) override;
-    virtual void clone_dom_node(i32 node_id) override;
-    virtual void remove_dom_node(i32 node_id) override;
-    virtual void get_dom_node_html(i32 node_id) override;
+    virtual void set_dom_node_text(u64 page_id, i32 node_id, String const& text) override;
+    virtual void set_dom_node_tag(u64 page_id, i32 node_id, String const& name) override;
+    virtual void add_dom_node_attributes(u64 page_id, i32 node_id, Vector<WebView::Attribute> const& attributes) override;
+    virtual void replace_dom_node_attribute(u64 page_id, i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes) override;
+    virtual void create_child_element(u64 page_id, i32 node_id) override;
+    virtual void create_child_text_node(u64 page_id, i32 node_id) override;
+    virtual void clone_dom_node(u64 page_id, i32 node_id) override;
+    virtual void remove_dom_node(u64 page_id, i32 node_id) override;
+    virtual void get_dom_node_html(u64 page_id, i32 node_id) override;
 
-    virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
-    virtual Messages::WebContentServer::DumpPaintTreeResponse dump_paint_tree() override;
-    virtual Messages::WebContentServer::DumpTextResponse dump_text() override;
-    virtual void set_content_filters(Vector<String> const&) override;
-    virtual void set_autoplay_allowed_on_all_websites() override;
-    virtual void set_autoplay_allowlist(Vector<String> const& allowlist) override;
-    virtual void set_proxy_mappings(Vector<ByteString> const&, HashMap<ByteString, size_t> const&) override;
-    virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
-    virtual void set_has_focus(bool) override;
-    virtual void set_is_scripting_enabled(bool) override;
-    virtual void set_device_pixels_per_css_pixel(float) override;
-    virtual void set_window_position(Web::DevicePixelPoint) override;
-    virtual void set_window_size(Web::DevicePixelSize) override;
-    virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
-    virtual void set_system_visibility_state(bool visible) override;
+    virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree(u64 page_id) override;
+    virtual Messages::WebContentServer::DumpPaintTreeResponse dump_paint_tree(u64 page_id) override;
+    virtual Messages::WebContentServer::DumpTextResponse dump_text(u64 page_id) override;
+    virtual void set_content_filters(u64 page_id, Vector<String> const&) override;
+    virtual void set_autoplay_allowed_on_all_websites(u64 page_id) override;
+    virtual void set_autoplay_allowlist(u64 page_id, Vector<String> const& allowlist) override;
+    virtual void set_proxy_mappings(u64 page_id, Vector<ByteString> const&, HashMap<ByteString, size_t> const&) override;
+    virtual void set_preferred_color_scheme(u64 page_id, Web::CSS::PreferredColorScheme const&) override;
+    virtual void set_has_focus(u64 page_id, bool) override;
+    virtual void set_is_scripting_enabled(u64 page_id, bool) override;
+    virtual void set_device_pixels_per_css_pixel(u64 page_id, float) override;
+    virtual void set_window_position(u64 page_id, Web::DevicePixelPoint) override;
+    virtual void set_window_size(u64 page_id, Web::DevicePixelSize) override;
+    virtual void handle_file_return(u64 page_id, i32 error, Optional<IPC::File> const& file, i32 request_id) override;
+    virtual void set_system_visibility_state(u64 page_id, bool visible) override;
 
-    virtual void js_console_input(ByteString const&) override;
-    virtual void run_javascript(ByteString const&) override;
-    virtual void js_console_request_messages(i32) override;
+    virtual void js_console_input(u64 page_id, ByteString const&) override;
+    virtual void run_javascript(u64 page_id, ByteString const&) override;
+    virtual void js_console_request_messages(u64 page_id, i32) override;
 
-    virtual void alert_closed() override;
-    virtual void confirm_closed(bool accepted) override;
-    virtual void prompt_closed(Optional<String> const& response) override;
-    virtual void color_picker_update(Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state) override;
-    virtual void select_dropdown_closed(Optional<String> const& value) override;
+    virtual void alert_closed(u64 page_id) override;
+    virtual void confirm_closed(u64 page_id, bool accepted) override;
+    virtual void prompt_closed(u64 page_id, Optional<String> const& response) override;
+    virtual void color_picker_update(u64 page_id, Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state) override;
+    virtual void select_dropdown_closed(u64 page_id, Optional<String> const& value) override;
 
-    virtual void toggle_media_play_state() override;
-    virtual void toggle_media_mute_state() override;
-    virtual void toggle_media_loop_state() override;
-    virtual void toggle_media_controls_state() override;
+    virtual void toggle_media_play_state(u64 page_id) override;
+    virtual void toggle_media_mute_state(u64 page_id) override;
+    virtual void toggle_media_loop_state(u64 page_id) override;
+    virtual void toggle_media_controls_state(u64 page_id) override;
 
-    virtual void set_user_style(String const&) override;
+    virtual void set_user_style(u64 page_id, String const&) override;
 
-    virtual void enable_inspector_prototype() override;
+    virtual void enable_inspector_prototype(u64 page_id) override;
 
-    virtual void take_document_screenshot() override;
-    virtual void take_dom_node_screenshot(i32 node_id) override;
+    virtual void take_document_screenshot(u64 page_id) override;
+    virtual void take_dom_node_screenshot(u64 page_id, i32 node_id) override;
 
-    virtual Messages::WebContentServer::DumpGcGraphResponse dump_gc_graph() override;
+    virtual Messages::WebContentServer::DumpGcGraphResponse dump_gc_graph(u64 page_id) override;
 
-    virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
-    virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;
+    virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries(u64 page_id) override;
+    virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries(u64 page_id) override;
 
-    virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
-    virtual void select_all() override;
+    virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text(u64 page_id) override;
+    virtual void select_all(u64 page_id) override;
 
-    void report_finished_handling_input_event(bool event_was_handled);
+    void report_finished_handling_input_event(u64 page_id, bool event_was_handled);
 
     NonnullOwnPtr<PageHost> m_page_host;
-
-    struct BackingStores {
-        i32 front_bitmap_id { -1 };
-        i32 back_bitmap_id { -1 };
-        RefPtr<Gfx::Bitmap> front_bitmap;
-        RefPtr<Gfx::Bitmap> back_bitmap;
-    };
-    BackingStores m_backing_stores;
-
-    HashMap<Web::DOM::Document*, NonnullOwnPtr<WebContentConsoleClient>> m_console_clients;
-    WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;
-
-    JS::Handle<JS::GlobalObject> m_console_global_object;
 
     HashMap<int, Web::FileRequest> m_requested_files {};
     int last_id { 0 };
@@ -170,6 +152,7 @@ private:
         Web::DevicePixels wheel_delta_x {};
         Web::DevicePixels wheel_delta_y {};
         size_t coalesced_event_count { 0 };
+        u64 page_id { 0 };
     };
 
     struct QueuedKeyboardEvent {
@@ -181,6 +164,7 @@ private:
         i32 key {};
         u32 modifiers {};
         u32 code_point {};
+        u64 page_id { 0 };
     };
 
     void enqueue_input_event(Variant<QueuedMouseEvent, QueuedKeyboardEvent>);
