@@ -55,6 +55,9 @@ public:
 
     void set_form(HTMLFormElement*);
 
+    void element_id_changed(Badge<DOM::Document>);
+    void element_with_id_was_added_or_removed(Badge<DOM::Document>);
+
     bool enabled() const;
 
     void set_parser_inserted(Badge<HTMLParser>);

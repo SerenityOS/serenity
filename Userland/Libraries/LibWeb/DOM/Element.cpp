@@ -465,6 +465,8 @@ void Element::attribute_changed(FlyString const& name, Optional<String> const& v
             m_id = {};
         else
             m_id = value_or_empty;
+
+        document().element_id_changed({});
     } else if (name == HTML::AttributeNames::name) {
         if (!value.has_value())
             m_name = {};
@@ -1024,6 +1026,22 @@ int Element::client_height() const
     // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
     return paintable_box()->absolute_padding_box_rect().height().to_int();
+}
+
+void Element::inserted()
+{
+    Base::inserted();
+
+    if (m_id.has_value())
+        document().element_with_id_was_added_or_removed({});
+}
+
+void Element::removed_from(Node* node)
+{
+    Base::removed_from(node);
+
+    if (m_id.has_value())
+        document().element_with_id_was_added_or_removed({});
 }
 
 void Element::children_changed()

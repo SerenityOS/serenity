@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
@@ -73,23 +74,44 @@ void FormAssociatedElement::form_node_was_removed()
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#association-of-controls-and-forms:category-listed-3
-void FormAssociatedElement::form_node_attribute_changed(FlyString const& name, Optional<String> const&)
+void FormAssociatedElement::form_node_attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     // When a listed form-associated element's form attribute is set, changed, or removed, then the user agent must
     // reset the form owner of that element.
     if (name == HTML::AttributeNames::form) {
+        auto& html_element = form_associated_element_to_html_element();
+
+        if (value.has_value())
+            html_element.document().add_form_associated_element_with_form_attribute(*this);
+        else
+            html_element.document().remove_form_associated_element_with_form_attribute(*this);
+
         reset_form_owner();
     }
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#association-of-controls-and-forms:category-listed-4
+void FormAssociatedElement::element_id_changed(Badge<DOM::Document>)
+{
+    // When a listed form-associated element has a form attribute and the ID of any of the elements in the tree changes,
+    // then the user agent must reset the form owner of that form-associated element.
+    VERIFY(form_associated_element_to_html_element().has_attribute(HTML::AttributeNames::form));
+    reset_form_owner();
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#association-of-controls-and-forms:category-listed-5
+void FormAssociatedElement::element_with_id_was_added_or_removed(Badge<DOM::Document>)
+{
+    // When a listed form-associated element has a form attribute and an element with an ID is inserted into or removed
+    // from the Document, then the user agent must reset the form owner of that form-associated element.
+    VERIFY(form_associated_element_to_html_element().has_attribute(HTML::AttributeNames::form));
+    reset_form_owner();
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#reset-the-form-owner
 void FormAssociatedElement::reset_form_owner()
 {
     auto& html_element = form_associated_element_to_html_element();
-
-    // Although these aren't in the "reset form owner" algorithm, these here as they are triggers for this algorithm:
-    // FIXME: When a listed form-associated element has a form attribute and the ID of any of the elements in the tree changes, then the user agent must reset the form owner of that form-associated element.
-    // FIXME: When a listed form-associated element has a form attribute and an element with an ID is inserted into or removed from the Document, then the user agent must reset the form owner of that form-associated element.
 
     // 1. Unset element's parser inserted flag.
     m_parser_inserted = false;

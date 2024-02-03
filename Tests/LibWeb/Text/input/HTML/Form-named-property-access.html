@@ -63,6 +63,9 @@
 <form id="changeForFormAttribute"></form>
 <input id="changeForFormAttributeInput" type="text" name="changeForFormAttribute" />
 
+<input id="inputBeforeForm" type="text" form="formAfterInput" />
+<form id="formAfterInput"></form>
+
 <script src="../include.js"></script>
 <script>
     test(() => {
@@ -138,5 +141,10 @@
 
         changeForFormAttributeInput.removeAttribute("form");
         println(`elements in changeForFormAttribute: ${changeForFormAttribute.elements.length}`);
+
+        println("== Form element appears after a form-associated element ==");
+        let formAfterInput = document.getElementById("formAfterInput");
+        println(`elements in formAfterInput: ${formAfterInput.elements.length}`);
+        println(`typeof formAfterInput.inputBeforeForm: ${typeof formAfterInput.inputBeforeForm}`);
     });
 </script>

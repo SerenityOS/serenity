@@ -554,6 +554,12 @@ public:
     JS::GCPtr<HTML::SessionHistoryEntry> latest_entry() const { return m_latest_entry; }
     void set_latest_entry(JS::GCPtr<HTML::SessionHistoryEntry> e) { m_latest_entry = e; }
 
+    void element_id_changed(Badge<DOM::Element>);
+    void element_with_id_was_added_or_removed(Badge<DOM::Element>);
+
+    void add_form_associated_element_with_form_attribute(HTML::FormAssociatedElement&);
+    void remove_form_associated_element_with_form_attribute(HTML::FormAssociatedElement&);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -775,6 +781,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scripts-may-run-for-the-newly-created-document
     bool m_ready_to_run_scripts { false };
+
+    Vector<HTML::FormAssociatedElement*> m_form_associated_elements_with_form_attribute;
 };
 
 template<>
