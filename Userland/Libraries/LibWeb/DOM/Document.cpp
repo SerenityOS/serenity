@@ -2960,17 +2960,6 @@ bool Document::is_allowed_to_use_feature(PolicyControlledFeature feature) const
     return false;
 }
 
-void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>)
-{
-    tear_down_layout_tree();
-
-    auto observers_to_notify = m_document_observers.values();
-    for (auto& document_observer : observers_to_notify) {
-        if (document_observer->document_became_inactive())
-            document_observer->document_became_inactive()->function()();
-    }
-}
-
 void Document::did_stop_being_active_document_in_navigable()
 {
     tear_down_layout_tree();
