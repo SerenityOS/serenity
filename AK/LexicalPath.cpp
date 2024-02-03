@@ -72,6 +72,23 @@ bool LexicalPath::has_extension(StringView extension) const
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
 
+bool LexicalPath::is_canonical() const
+{
+    // FIXME: This can probably be done more efficiently.
+    // FIXME: Find a way to share this with KLexicalPath?
+    if (m_string.is_empty())
+        return false;
+    if (m_string.ends_with('/') && m_string.length() != 1)
+        return false;
+    if (m_string.starts_with("./"sv) || m_string.contains("/./"sv) || m_string.ends_with("/."sv))
+        return false;
+    if (m_string.starts_with("../"sv) || m_string.contains("/../"sv) || m_string.ends_with("/.."sv))
+        return false;
+    if (m_string.contains("//"sv))
+        return false;
+    return true;
+}
+
 bool LexicalPath::is_child_of(LexicalPath const& possible_parent) const
 {
     // Any relative path is a child of an absolute path.

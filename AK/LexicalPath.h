@@ -27,6 +27,7 @@ public:
     explicit LexicalPath(ByteString);
 
     bool is_absolute() const { return !m_string.is_empty() && m_string[0] == '/'; }
+    bool is_canonical() const;
     ByteString const& string() const { return m_string; }
 
     StringView dirname() const { return m_dirname; }
