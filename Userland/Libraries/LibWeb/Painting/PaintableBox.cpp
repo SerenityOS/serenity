@@ -599,12 +599,13 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     bool should_clip_overflow = computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
     Optional<u32> corner_clip_id;
 
-    auto clip_box = context.rounded_device_rect(compute_absolute_padding_rect_with_css_transform_applied());
-
+    auto clip_box = absolute_padding_box_rect();
+    if (enclosing_scroll_frame_offset().has_value())
+        clip_box.translate_by(enclosing_scroll_frame_offset().value());
     if (should_clip_overflow) {
         context.recording_painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
-        context.recording_painter().add_clip_rect(clip_box.to_type<int>());
+        context.recording_painter().add_clip_rect(context.rounded_device_rect(clip_box).to_type<int>());
         auto scroll_offset = context.rounded_device_point(this->scroll_offset());
         context.recording_painter().translate(-scroll_offset.to_type<int>());
 
@@ -617,7 +618,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         };
         if (corner_radii.has_any_radius()) {
             corner_clip_id = context.allocate_corner_clipper_id();
-            context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, clip_box.to_type<int>(), CornerClip::Outside);
+            context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, context.rounded_device_rect(clip_box).to_type<int>(), CornerClip::Outside);
         }
     }
 
