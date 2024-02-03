@@ -10,7 +10,6 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
@@ -68,8 +67,6 @@ UNMAP_AFTER_INIT void initialize()
     default:
         VERIFY_NOT_REACHED();
     }
-
-    PCIBusSysFSDirectory::initialize();
 
     // IRQ from pin-based interrupt should be set as reserved as soon as possible so that the PCI device
     // that chooses to use MSI(x) based interrupt can avoid sharing the IRQ with other devices.
