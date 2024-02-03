@@ -77,12 +77,12 @@ PageClient const& ConnectionFromClient::page(u64 index) const
 
 Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle(u64 page_id)
 {
-    return page(page_id).page().top_level_browsing_context().window_handle();
+    return page(page_id).page().top_level_traversable()->window_handle();
 }
 
 void ConnectionFromClient::set_window_handle(u64 page_id, String const& handle)
 {
-    page(page_id).page().top_level_browsing_context().set_window_handle(handle);
+    page(page_id).page().top_level_traversable()->set_window_handle(handle);
 }
 
 void ConnectionFromClient::connect_to_webdriver(u64 page_id, ByteString const& webdriver_ipc_path)
