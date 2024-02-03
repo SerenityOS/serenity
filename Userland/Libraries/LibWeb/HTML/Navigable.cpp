@@ -1983,6 +1983,17 @@ void Navigable::set_viewport_rect(CSSPixelRect const& rect)
     HTML::main_thread_event_loop().schedule();
 }
 
+void Navigable::perform_scroll_of_viewport(CSSPixelPoint position)
+{
+    auto viewport_rect = this->viewport_rect();
+    viewport_rect.set_location(position);
+    set_viewport_rect(viewport_rect);
+    set_needs_display();
+
+    if (is_traversable() && active_browsing_context())
+        active_browsing_context()->page().client().page_did_request_scroll_to(position);
+}
+
 void Navigable::set_size(CSSPixelSize size)
 {
     if (m_size == size)

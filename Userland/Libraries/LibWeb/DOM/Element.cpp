@@ -1711,11 +1711,10 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& target, Bindings:
             (void)behavior;
 
             // AD-HOC:
-            auto& page = document.navigable()->traversable_navigable()->page();
             // NOTE: Since calculated position is relative to the viewport, we need to add the viewport's position to it
-            //       before passing to page_did_request_scroll_to() that expects a position relative to the page.
+            //       before passing to perform_scroll_of_viewport() that expects a position relative to the page.
             position.set_y(position.y() + scrolling_box.y());
-            page.client().page_did_request_scroll_to(position);
+            document.navigable()->perform_scroll_of_viewport(position);
         }
         // If scrolling box is associated with an element
         else {
