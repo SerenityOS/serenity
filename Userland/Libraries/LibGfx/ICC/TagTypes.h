@@ -35,7 +35,7 @@ float lerp_1d(ReadonlySpan<T> values, float x)
 // Does multi-dimensional linear interpolation over a lookup table.
 // `size(i)` should returns the number of samples in the i'th dimension.
 // `sample()` gets a vector where 0 <= i'th coordinate < size(i) and should return the value of the look-up table at that position.
-inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVector3(Vector<unsigned> const&)> sample, Vector<float> const& x)
+inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVector3(ReadonlySpan<unsigned> const&)> sample, Vector<float> const& x)
 {
     unsigned left_index[x.size()];
     float factor[x.size()];
@@ -1077,7 +1077,7 @@ inline ErrorOr<FloatVector3> Lut16TagData::evaluate(ColorSpace input_space, Colo
     //  The first sequential byte of the entry contains the function value for the first output function,
     //  the second sequential byte of the entry contains the function value for the second output function,
     //  and so on until all the output functions have been supplied."
-    auto sample = [this](Vector<unsigned> const& coordinates) {
+    auto sample = [this](ReadonlySpan<unsigned> const& coordinates) {
         size_t stride = 3;
         size_t offset = 0;
         for (int i = coordinates.size() - 1; i >= 0; --i) {
@@ -1165,7 +1165,7 @@ inline ErrorOr<FloatVector3> Lut8TagData::evaluate(ColorSpace input_space, Color
     //  The first sequential byte of the entry contains the function value for the first output function,
     //  the second sequential byte of the entry contains the function value for the second output function,
     //  and so on until all the output functions have been supplied."
-    auto sample = [this](Vector<unsigned> const& coordinates) {
+    auto sample = [this](ReadonlySpan<unsigned> const& coordinates) {
         size_t stride = 3;
         size_t offset = 0;
         for (int i = coordinates.size() - 1; i >= 0; --i) {
@@ -1238,7 +1238,7 @@ inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_spac
             in_color.append(evaluate_curve(a_curves[c], color_u8[c] / 255.0f));
 
         auto const& clut = m_clut.value();
-        auto sample1 = [&clut]<typename T>(Vector<T> const& data, Vector<unsigned> const& coordinates) {
+        auto sample1 = [&clut]<typename T>(Vector<T> const& data, ReadonlySpan<unsigned> const& coordinates) {
             size_t stride = 3;
             size_t offset = 0;
             for (int i = coordinates.size() - 1; i >= 0; --i) {
@@ -1247,7 +1247,7 @@ inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_spac
             }
             return FloatVector3 { (float)data[offset], (float)data[offset + 1], (float)data[offset + 2] };
         };
-        auto sample = [&clut, &sample1](Vector<unsigned> const& coordinates) {
+        auto sample = [&clut, &sample1](ReadonlySpan<unsigned> const& coordinates) {
             return clut.values.visit(
                 [&](Vector<u8> const& v) { return sample1(v, coordinates) / 255.0f; },
                 [&](Vector<u16> const& v) { return sample1(v, coordinates) / 65535.0f; });

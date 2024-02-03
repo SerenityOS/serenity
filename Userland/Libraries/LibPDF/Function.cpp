@@ -28,7 +28,7 @@ public:
 private:
     SampledFunction(NonnullRefPtr<StreamObject>);
 
-    float sample(Vector<int> const& coordinates, size_t r) const
+    float sample(ReadonlySpan<int> const& coordinates, size_t r) const
     {
         // "For a function with multidimensional input (more than one input variable),
         //  the sample values in the first dimension vary fastest,
