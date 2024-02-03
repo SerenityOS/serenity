@@ -44,6 +44,10 @@
 #    include <ucred.h>
 #endif
 
+#ifdef AK_OS_SERENITY
+#    include <Kernel/API/Unshare.h>
+#endif
+
 namespace Core::System {
 
 #ifdef AK_OS_SERENITY
@@ -204,6 +208,11 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 #endif
 
 ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath, Optional<ReadonlySpan<StringView>> environment = {});
+
+#ifdef AK_OS_SERENITY
+ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags);
+ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index);
+#endif
 
 ErrorOr<int> socket(int domain, int type, int protocol);
 ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);

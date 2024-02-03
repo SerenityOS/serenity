@@ -1311,6 +1311,26 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 #endif
 
 #ifdef AK_OS_SERENITY
+ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags)
+{
+    Syscall::SC_unshare_create_params params {
+        static_cast<int>(type),
+        static_cast<int>(flags),
+    };
+    int rc = syscall(SC_unshare_create, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_create", rc, rc);
+}
+
+ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index)
+{
+    Syscall::SC_unshare_attach_params params {
+        static_cast<int>(type),
+        static_cast<int>(index),
+    };
+    int rc = syscall(SC_unshare_attach, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_attach", rc, {});
+}
+
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
 {
     Vector<StringView> exec_environment;
