@@ -49,7 +49,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
     }
 
     // 4. Let timing input be the result corresponding to the first matching condition from below.
-    EffectTiming timing_input;
+    KeyframeEffectOptions timing_input;
 
     //     If options is a KeyframeEffectOptions object,
     if (options.has<KeyframeEffectOptions>()) {
@@ -60,7 +60,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
     else {
         // Let timing input be a new EffectTiming object with all members set to their default values and duration set
         // to options.
-        timing_input = { .duration = options.get<double>() };
+        timing_input.duration = options.get<double>();
     }
 
     // 5. Call the procedure to update the timing properties of an animation effect of effect from timing input.
