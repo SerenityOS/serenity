@@ -13,7 +13,7 @@ tzdb_cache = cache_path + "TZDB/"
 
 if (enable_timezone_database_download) {
   download_file("timezone_database_download") {
-    version = "2023d"
+    version = "2024a"
     url =
         "https://data.iana.org/time-zones/releases/tzdata" + version + ".tar.gz"
     cache = tzdb_cache
