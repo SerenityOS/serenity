@@ -90,15 +90,15 @@ public:
         view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options));
 #endif
 
-        view->client().async_update_system_theme(move(theme));
-        view->client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
+        view->client().async_update_system_theme(0, move(theme));
+        view->client().async_update_system_fonts(0, Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
         view->m_viewport_rect = { { 0, 0 }, window_size };
-        view->client().async_set_viewport_rect(view->m_viewport_rect.to_type<Web::DevicePixels>());
-        view->client().async_set_window_size(window_size.to_type<Web::DevicePixels>());
+        view->client().async_set_viewport_rect(0, view->m_viewport_rect.to_type<Web::DevicePixels>());
+        view->client().async_set_window_size(0, window_size.to_type<Web::DevicePixels>());
 
         if (!web_driver_ipc_path.is_empty())
-            view->client().async_connect_to_webdriver(web_driver_ipc_path);
+            view->client().async_connect_to_webdriver(0, web_driver_ipc_path);
 
         view->m_client_state.client->on_web_content_process_crash = [] {
             warnln("\033[31;1mWebContent Crashed!!\033[0m");
@@ -116,7 +116,7 @@ public:
         VERIFY(!m_pending_screenshot);
 
         m_pending_screenshot = Core::Promise<RefPtr<Gfx::Bitmap>>::construct();
-        client().async_take_document_screenshot();
+        client().async_take_document_screenshot(0);
 
         auto screenshot = MUST(m_pending_screenshot->await());
         m_pending_screenshot = nullptr;
@@ -132,22 +132,22 @@ public:
 
     ErrorOr<String> dump_layout_tree()
     {
-        return String::from_byte_string(client().dump_layout_tree());
+        return String::from_byte_string(client().dump_layout_tree(0));
     }
 
     ErrorOr<String> dump_paint_tree()
     {
-        return String::from_byte_string(client().dump_paint_tree());
+        return String::from_byte_string(client().dump_paint_tree(0));
     }
 
     ErrorOr<String> dump_text()
     {
-        return String::from_byte_string(client().dump_text());
+        return String::from_byte_string(client().dump_text(0));
     }
 
     void clear_content_filters()
     {
-        client().async_set_content_filters({});
+        client().async_set_content_filters(0, {});
     }
 
 private:
@@ -157,7 +157,7 @@ private:
     {
         on_scroll_to_point = [this](auto position) {
             m_viewport_rect.set_location(position);
-            client().async_set_viewport_rect(m_viewport_rect.to_type<Web::DevicePixels>());
+            client().async_set_viewport_rect(0, m_viewport_rect.to_type<Web::DevicePixels>());
         };
 
         on_scroll_by_delta = [this](auto x_delta, auto y_delta) {

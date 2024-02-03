@@ -30,10 +30,16 @@ ViewImplementation::ViewImplementation()
         auto file = Core::File::open(path, Core::File::OpenMode::Read);
 
         if (file.is_error())
-            client().async_handle_file_return(file.error().code(), {}, request_id);
+            client().async_handle_file_return(page_id(), file.error().code(), {}, request_id);
         else
-            client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
+            client().async_handle_file_return(page_id(), 0, IPC::File(*file.value()), request_id);
     };
+}
+
+ViewImplementation::~ViewImplementation()
+{
+    if (m_client_state.client)
+        m_client_state.client->unregister_view(m_client_state.page_index);
 }
 
 WebContentClient& ViewImplementation::client()
@@ -48,6 +54,12 @@ WebContentClient const& ViewImplementation::client() const
     return *m_client_state.client;
 }
 
+u64 ViewImplementation::page_id() const
+{
+    VERIFY(m_client_state.client);
+    return m_client_state.page_index;
+}
+
 void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
 {
     if (m_client_state.back_bitmap.id == bitmap_id) {
@@ -59,18 +71,18 @@ void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id
             on_ready_to_paint();
     }
 
-    client().async_ready_to_paint();
+    client().async_ready_to_paint(page_id());
 }
 
 void ViewImplementation::load(AK::URL const& url)
 {
     m_url = url;
-    client().async_load_url(url);
+    client().async_load_url(page_id(), url);
 }
 
 void ViewImplementation::load_html(StringView html)
 {
-    client().async_load_html(html);
+    client().async_load_html(page_id(), html);
 }
 
 void ViewImplementation::load_empty_document()
@@ -102,12 +114,12 @@ void ViewImplementation::reset_zoom()
 
 void ViewImplementation::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
 {
-    client().async_set_preferred_color_scheme(color_scheme);
+    client().async_set_preferred_color_scheme(page_id(), color_scheme);
 }
 
 ByteString ViewImplementation::selected_text()
 {
-    return client().get_selected_text();
+    return client().get_selected_text(page_id());
 }
 
 Optional<String> ViewImplementation::selected_text_with_whitespace_collapsed()
@@ -120,27 +132,27 @@ Optional<String> ViewImplementation::selected_text_with_whitespace_collapsed()
 
 void ViewImplementation::select_all()
 {
-    client().async_select_all();
+    client().async_select_all(page_id());
 }
 
 void ViewImplementation::get_source()
 {
-    client().async_get_source();
+    client().async_get_source(page_id());
 }
 
 void ViewImplementation::inspect_dom_tree()
 {
-    client().async_inspect_dom_tree();
+    client().async_inspect_dom_tree(page_id());
 }
 
 void ViewImplementation::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> pseudo_element)
 {
-    client().async_inspect_dom_node(node_id, move(pseudo_element));
+    client().async_inspect_dom_node(page_id(), node_id, move(pseudo_element));
 }
 
 void ViewImplementation::inspect_accessibility_tree()
 {
-    client().async_inspect_accessibility_tree();
+    client().async_inspect_accessibility_tree(page_id());
 }
 
 void ViewImplementation::clear_inspected_dom_node()
@@ -150,117 +162,117 @@ void ViewImplementation::clear_inspected_dom_node()
 
 void ViewImplementation::get_hovered_node_id()
 {
-    client().async_get_hovered_node_id();
+    client().async_get_hovered_node_id(page_id());
 }
 
 void ViewImplementation::set_dom_node_text(i32 node_id, String text)
 {
-    client().async_set_dom_node_text(node_id, move(text));
+    client().async_set_dom_node_text(page_id(), node_id, move(text));
 }
 
 void ViewImplementation::set_dom_node_tag(i32 node_id, String name)
 {
-    client().async_set_dom_node_tag(node_id, move(name));
+    client().async_set_dom_node_tag(page_id(), node_id, move(name));
 }
 
 void ViewImplementation::add_dom_node_attributes(i32 node_id, Vector<Attribute> attributes)
 {
-    client().async_add_dom_node_attributes(node_id, move(attributes));
+    client().async_add_dom_node_attributes(page_id(), node_id, move(attributes));
 }
 
 void ViewImplementation::replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes)
 {
-    client().async_replace_dom_node_attribute(node_id, move(name), move(replacement_attributes));
+    client().async_replace_dom_node_attribute(page_id(), node_id, move(name), move(replacement_attributes));
 }
 
 void ViewImplementation::create_child_element(i32 node_id)
 {
-    client().async_create_child_element(node_id);
+    client().async_create_child_element(page_id(), node_id);
 }
 
 void ViewImplementation::create_child_text_node(i32 node_id)
 {
-    client().async_create_child_text_node(node_id);
+    client().async_create_child_text_node(page_id(), node_id);
 }
 
 void ViewImplementation::clone_dom_node(i32 node_id)
 {
-    client().async_clone_dom_node(node_id);
+    client().async_clone_dom_node(page_id(), node_id);
 }
 
 void ViewImplementation::remove_dom_node(i32 node_id)
 {
-    client().async_remove_dom_node(node_id);
+    client().async_remove_dom_node(page_id(), node_id);
 }
 
 void ViewImplementation::get_dom_node_html(i32 node_id)
 {
-    client().async_get_dom_node_html(node_id);
+    client().async_get_dom_node_html(page_id(), node_id);
 }
 
 void ViewImplementation::debug_request(ByteString const& request, ByteString const& argument)
 {
-    client().async_debug_request(request, argument);
+    client().async_debug_request(page_id(), request, argument);
 }
 
 void ViewImplementation::run_javascript(StringView js_source)
 {
-    client().async_run_javascript(js_source);
+    client().async_run_javascript(page_id(), js_source);
 }
 
 void ViewImplementation::js_console_input(ByteString const& js_source)
 {
-    client().async_js_console_input(js_source);
+    client().async_js_console_input(page_id(), js_source);
 }
 
 void ViewImplementation::js_console_request_messages(i32 start_index)
 {
-    client().async_js_console_request_messages(start_index);
+    client().async_js_console_request_messages(page_id(), start_index);
 }
 
 void ViewImplementation::alert_closed()
 {
-    client().async_alert_closed();
+    client().async_alert_closed(page_id());
 }
 
 void ViewImplementation::confirm_closed(bool accepted)
 {
-    client().async_confirm_closed(accepted);
+    client().async_confirm_closed(page_id(), accepted);
 }
 
 void ViewImplementation::prompt_closed(Optional<String> response)
 {
-    client().async_prompt_closed(move(response));
+    client().async_prompt_closed(page_id(), move(response));
 }
 
 void ViewImplementation::color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state)
 {
-    client().async_color_picker_update(picked_color, state);
+    client().async_color_picker_update(page_id(), picked_color, state);
 }
 
 void ViewImplementation::select_dropdown_closed(Optional<String> value)
 {
-    client().async_select_dropdown_closed(value);
+    client().async_select_dropdown_closed(page_id(), value);
 }
 
 void ViewImplementation::toggle_media_play_state()
 {
-    client().async_toggle_media_play_state();
+    client().async_toggle_media_play_state(page_id());
 }
 
 void ViewImplementation::toggle_media_mute_state()
 {
-    client().async_toggle_media_mute_state();
+    client().async_toggle_media_mute_state(page_id());
 }
 
 void ViewImplementation::toggle_media_loop_state()
 {
-    client().async_toggle_media_loop_state();
+    client().async_toggle_media_loop_state(page_id());
 }
 
 void ViewImplementation::toggle_media_controls_state()
 {
-    client().async_toggle_media_controls_state();
+    client().async_toggle_media_controls_state(page_id());
 }
 
 void ViewImplementation::handle_resize()
@@ -315,9 +327,9 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
     auto& back_bitmap = m_client_state.back_bitmap;
 
     if (front_bitmap.id != old_front_bitmap_id || back_bitmap.id != old_back_bitmap_id) {
-        client().async_add_backing_store(front_bitmap.id, front_bitmap.bitmap->to_shareable_bitmap(), back_bitmap.id,
+        client().async_add_backing_store(page_id(), front_bitmap.id, front_bitmap.bitmap->to_shareable_bitmap(), back_bitmap.id,
             back_bitmap.bitmap->to_shareable_bitmap());
-        client().async_set_viewport_rect(viewport_rect);
+        client().async_set_viewport_rect(page_id(), viewport_rect);
     }
 }
 
@@ -397,7 +409,7 @@ NonnullRefPtr<Core::Promise<LexicalPath>> ViewImplementation::take_screenshot(Sc
 
     case ScreenshotType::Full:
         m_pending_screenshot = promise;
-        client().async_take_document_screenshot();
+        client().async_take_document_screenshot(page_id());
         break;
     }
 
@@ -416,7 +428,7 @@ NonnullRefPtr<Core::Promise<LexicalPath>> ViewImplementation::take_dom_node_scre
     }
 
     m_pending_screenshot = promise;
-    client().async_take_dom_node_screenshot(node_id);
+    client().async_take_dom_node_screenshot(page_id(), node_id);
 
     return promise;
 }
@@ -435,7 +447,7 @@ void ViewImplementation::did_receive_screenshot(Badge<WebContentClient>, Gfx::Sh
 
 ErrorOr<LexicalPath> ViewImplementation::dump_gc_graph()
 {
-    auto gc_graph_json = client().dump_gc_graph();
+    auto gc_graph_json = client().dump_gc_graph(page_id());
 
     LexicalPath path { Core::StandardPaths::tempfile_directory() };
     path = path.append(TRY(Core::DateTime::now().to_string("gc-graph-%Y-%m-%d-%H-%M-%S.json"sv)));
@@ -448,7 +460,7 @@ ErrorOr<LexicalPath> ViewImplementation::dump_gc_graph()
 
 void ViewImplementation::set_user_style_sheet(String source)
 {
-    client().async_set_user_style(move(source));
+    client().async_set_user_style(page_id(), move(source));
 }
 
 void ViewImplementation::use_native_user_style_sheet()
@@ -459,7 +471,7 @@ void ViewImplementation::use_native_user_style_sheet()
 
 void ViewImplementation::enable_inspector_prototype()
 {
-    client().async_enable_inspector_prototype();
+    client().async_enable_inspector_prototype(page_id());
 }
 
 }

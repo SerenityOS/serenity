@@ -42,9 +42,9 @@ OutOfProcessWebView::OutOfProcessWebView()
         auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), path);
 
         if (file.is_error())
-            client().async_handle_file_return(file.error().code(), {}, request_id);
+            client().async_handle_file_return(m_client_state.page_index, file.error().code(), {}, request_id);
         else
-            client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
+            client().async_handle_file_return(m_client_state.page_index, 0, IPC::File(file.value().stream()), request_id);
     };
 
     on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
@@ -95,16 +95,16 @@ void OutOfProcessWebView::initialize_client(WebView::ViewImplementation::CreateN
     };
 
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
-    client().async_set_window_handle(m_client_state.client_handle);
+    client().async_set_window_handle(m_client_state.page_index, m_client_state.client_handle);
 
-    client().async_update_system_theme(Gfx::current_system_theme_buffer());
-    client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
+    client().async_update_system_theme(m_client_state.page_index, Gfx::current_system_theme_buffer());
+    client().async_update_system_fonts(m_client_state.page_index, Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
     Vector<Web::DevicePixelRect> screen_rects;
     for (auto const& screen_rect : GUI::Desktop::the().rects()) {
         screen_rects.append(screen_rect.to_type<Web::DevicePixels>());
     }
-    client().async_update_screen_rects(screen_rects, GUI::Desktop::the().main_screen_index());
+    client().async_update_screen_rects(m_client_state.page_index, screen_rects, GUI::Desktop::the().main_screen_index());
 }
 
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
@@ -141,7 +141,7 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     Super::resize_event(event);
-    client().async_set_viewport_rect(Web::DevicePixelRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
+    client().async_set_viewport_rect(m_client_state.page_index, Web::DevicePixelRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
     handle_resize();
 }
 
@@ -162,7 +162,7 @@ Gfx::IntPoint OutOfProcessWebView::to_widget_position(Gfx::IntPoint content_posi
 
 void OutOfProcessWebView::update_zoom()
 {
-    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    client().async_set_device_pixels_per_css_pixel(m_client_state.page_index, m_device_pixel_ratio * m_zoom_level);
     // FIXME: Refactor this into separate update_viewport_rect() + request_repaint() like in Ladybird
     handle_resize();
 }
@@ -213,7 +213,7 @@ void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     Super::theme_change_event(event);
-    client().async_update_system_theme(Gfx::current_system_theme_buffer());
+    client().async_update_system_theme(m_client_state.page_index, Gfx::current_system_theme_buffer());
 }
 
 void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
@@ -222,77 +222,77 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
     for (auto const& screen_rect : event.rects()) {
         screen_rects.append(screen_rect.to_type<Web::DevicePixels>());
     }
-    client().async_update_screen_rects(screen_rects, event.main_screen_index());
+    client().async_update_screen_rects(m_client_state.page_index, screen_rects, event.main_screen_index());
 }
 
 void OutOfProcessWebView::did_scroll()
 {
-    client().async_set_viewport_rect(visible_content_rect().to_type<Web::DevicePixels>());
+    client().async_set_viewport_rect(m_client_state.page_index, visible_content_rect().to_type<Web::DevicePixels>());
 }
 
 ByteString OutOfProcessWebView::dump_layout_tree()
 {
-    return client().dump_layout_tree();
+    return client().dump_layout_tree(m_client_state.page_index);
 }
 
 OrderedHashMap<String, String> OutOfProcessWebView::get_local_storage_entries()
 {
-    return client().get_local_storage_entries();
+    return client().get_local_storage_entries(m_client_state.page_index);
 }
 
 OrderedHashMap<String, String> OutOfProcessWebView::get_session_storage_entries()
 {
-    return client().get_session_storage_entries();
+    return client().get_session_storage_entries(m_client_state.page_index);
 }
 
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
-    client().async_set_content_filters(move(filters));
+    client().async_set_content_filters(m_client_state.page_index, move(filters));
 }
 
 void OutOfProcessWebView::set_autoplay_allowed_on_all_websites()
 {
-    client().async_set_autoplay_allowed_on_all_websites();
+    client().async_set_autoplay_allowed_on_all_websites(m_client_state.page_index);
 }
 
 void OutOfProcessWebView::set_autoplay_allowlist(Vector<String> allowlist)
 {
-    client().async_set_autoplay_allowlist(move(allowlist));
+    client().async_set_autoplay_allowlist(m_client_state.page_index, move(allowlist));
 }
 
 void OutOfProcessWebView::set_proxy_mappings(Vector<ByteString> proxies, HashMap<ByteString, size_t> mappings)
 {
-    client().async_set_proxy_mappings(move(proxies), move(mappings));
+    client().async_set_proxy_mappings(m_client_state.page_index, move(proxies), move(mappings));
 }
 
 void OutOfProcessWebView::connect_to_webdriver(ByteString const& webdriver_ipc_path)
 {
-    client().async_connect_to_webdriver(webdriver_ipc_path);
+    client().async_connect_to_webdriver(m_client_state.page_index, webdriver_ipc_path);
 }
 
 void OutOfProcessWebView::set_window_position(Gfx::IntPoint position)
 {
-    client().async_set_window_position(position.to_type<Web::DevicePixels>());
+    client().async_set_window_position(m_client_state.page_index, position.to_type<Web::DevicePixels>());
 }
 
 void OutOfProcessWebView::set_window_size(Gfx::IntSize size)
 {
-    client().async_set_window_size(size.to_type<Web::DevicePixels>());
+    client().async_set_window_size(m_client_state.page_index, size.to_type<Web::DevicePixels>());
 }
 
 void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)
 {
-    client().async_set_has_focus(true);
+    client().async_set_has_focus(m_client_state.page_index, true);
 }
 
 void OutOfProcessWebView::focusout_event(GUI::FocusEvent&)
 {
-    client().async_set_has_focus(false);
+    client().async_set_has_focus(m_client_state.page_index, false);
 }
 
 void OutOfProcessWebView::set_system_visibility_state(bool visible)
 {
-    client().async_set_system_visibility_state(visible);
+    client().async_set_system_visibility_state(m_client_state.page_index, visible);
 }
 
 void OutOfProcessWebView::show_event(GUI::ShowEvent&)
@@ -328,10 +328,10 @@ void OutOfProcessWebView::process_next_input_event()
         [this](GUI::KeyEvent const& event) {
             switch (event.type()) {
             case GUI::Event::Type::KeyDown:
-                client().async_key_down(event.key(), event.modifiers(), event.code_point());
+                client().async_key_down(m_client_state.page_index, event.key(), event.modifiers(), event.code_point());
                 break;
             case GUI::Event::Type::KeyUp:
-                client().async_key_up(event.key(), event.modifiers(), event.code_point());
+                client().async_key_up(m_client_state.page_index, event.key(), event.modifiers(), event.code_point());
                 break;
             default:
                 dbgln("Unrecognized key event type in OOPWV input event queue: {}", event.type());
@@ -343,22 +343,22 @@ void OutOfProcessWebView::process_next_input_event()
             auto screen_position = (event.position() + (window()->position() + relative_position())).to_type<Web::DevicePixels>();
             switch (event.type()) {
             case GUI::Event::Type::MouseDown:
-                client().async_mouse_down(position, screen_position, event.button(), event.buttons(), event.modifiers());
+                client().async_mouse_down(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             case GUI::Event::Type::MouseUp:
-                client().async_mouse_up(position, screen_position, event.button(), event.buttons(), event.modifiers());
+                client().async_mouse_up(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             case GUI::Event::Type::MouseMove:
-                client().async_mouse_move(position, screen_position, event.button(), event.buttons(), event.modifiers());
+                client().async_mouse_move(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             case GUI::Event::Type::MouseWheel: {
                 // FIXME: This wheel delta step size multiplier is used to remain the old scroll behaviour, in future use system step size.
                 constexpr int scroll_step_size = 24;
-                client().async_mouse_wheel(position, screen_position, event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x() * scroll_step_size, event.wheel_delta_y() * scroll_step_size);
+                client().async_mouse_wheel(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x() * scroll_step_size, event.wheel_delta_y() * scroll_step_size);
                 break;
             }
             case GUI::Event::Type::MouseDoubleClick:
-                client().async_doubleclick(position, screen_position, event.button(), event.buttons(), event.modifiers());
+                client().async_doubleclick(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             default:
                 dbgln("Unrecognized mouse event type in OOPWV input event queue: {}", event.type());

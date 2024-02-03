@@ -65,6 +65,17 @@ public:
 
     void ready_to_paint();
 
+    void add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap);
+
+    void initialize_js_console(Web::DOM::Document& document);
+    void destroy_js_console(Web::DOM::Document& document);
+    void js_console_input(ByteString const& js_source);
+    void run_javascript(ByteString const& js_source);
+    void js_console_request_messages(i32 start_index);
+    void did_output_js_console_message(i32 message_index);
+    void console_peer_did_misbehave(char const* reason);
+    void did_get_js_console_messages(i32 start_index, Vector<ByteString> message_types, Vector<ByteString> messages);
+
     virtual double device_pixels_per_css_pixel() const override { return m_device_pixels_per_css_pixel; }
 
 private:
@@ -120,7 +131,7 @@ private:
     virtual void page_did_update_resource_count(i32) override;
     virtual NewWebViewResult page_did_request_new_web_view(Web::HTML::ActivateTab, Web::HTML::WebViewHints, Web::HTML::TokenizedFeature::NoOpener) override;
     virtual void page_did_request_activate_tab() override;
-    virtual void page_did_close_browsing_context(Web::HTML::BrowsingContext const&) override;
+    virtual void page_did_close_top_level_traversable() override;
     virtual void request_file(Web::FileRequest) override;
     virtual void page_did_request_color_picker(Color current_color) override;
     virtual void page_did_request_select_dropdown(Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items) override;
@@ -167,6 +178,19 @@ private:
 #ifdef HAS_ACCELERATED_GRAPHICS
     OwnPtr<AccelGfx::Context> m_accelerated_graphics_context;
 #endif
+
+    struct BackingStores {
+        i32 front_bitmap_id { -1 };
+        i32 back_bitmap_id { -1 };
+        RefPtr<Gfx::Bitmap> front_bitmap;
+        RefPtr<Gfx::Bitmap> back_bitmap;
+    };
+    BackingStores m_backing_stores;
+
+    HashMap<Web::DOM::Document*, NonnullOwnPtr<WebContentConsoleClient>> m_console_clients;
+    WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;
+
+    JS::Handle<JS::GlobalObject> m_console_global_object;
 };
 
 }

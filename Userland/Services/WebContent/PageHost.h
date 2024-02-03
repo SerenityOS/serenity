@@ -28,6 +28,7 @@ public:
 
     PageClient& page(u64 index) { return *m_pages.find(index)->value; }
     PageClient& create_page();
+    void remove_page(Badge<PageClient>, u64 index);
 
     ConnectionFromClient& client() const { return m_client; }
 

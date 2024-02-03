@@ -25,7 +25,7 @@ namespace WebView {
 
 class ViewImplementation {
 public:
-    virtual ~ViewImplementation() { }
+    virtual ~ViewImplementation();
 
     struct DOMNodeProperties {
         String computed_style_json;
@@ -192,6 +192,7 @@ protected:
 
     WebContentClient& client();
     WebContentClient const& client() const;
+    u64 page_id() const;
     virtual void update_zoom() = 0;
 
     enum class WindowResizeInProgress {
