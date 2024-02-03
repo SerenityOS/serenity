@@ -305,7 +305,7 @@ void Navigable::set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#the-rules-for-choosing-a-navigable
-Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab)
+Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab activate_tab)
 {
     // NOTE: Implementation for step 7 here.
     JS::GCPtr<Navigable> same_name_navigable = nullptr;
@@ -412,13 +412,13 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
             if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
                 target_name = MUST(String::from_utf8(name));
 
-            auto create_new_traversable_closure = [this, window_type, no_opener, target_name](JS::GCPtr<BrowsingContext> opener) -> JS::NonnullGCPtr<Navigable> {
+            auto create_new_traversable_closure = [this, window_type, no_opener, target_name, activate_tab](JS::GCPtr<BrowsingContext> opener) -> JS::NonnullGCPtr<Navigable> {
                 // FIXME: The popup state for window.open is calculated after this call (somehow?)
                 //        Probably want to deviate from the spec and pass the popup state in here
                 auto hints = WebViewHints {
                     .popup = window_type != WindowType::ExistingOrNone,
                 };
-                auto [page, window_handle] = traversable_navigable()->page().client().page_did_request_new_web_view(ActivateTab::Yes, hints, no_opener);
+                auto [page, window_handle] = traversable_navigable()->page().client().page_did_request_new_web_view(activate_tab, hints, no_opener);
                 auto traversable = TraversableNavigable::create_a_new_top_level_traversable(*page, opener, target_name).release_value_but_fixme_should_propagate_errors();
                 page->set_top_level_traversable(traversable);
                 traversable->set_window_handle(window_handle);

@@ -529,7 +529,7 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
 Messages::WebDriverClient::GetWindowHandleResponse WebDriverConnection::get_window_handle()
 {
-    return m_page_client.page().top_level_browsing_context().window_handle();
+    return m_page_client.page().top_level_traversable()->window_handle();
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
@@ -578,11 +578,10 @@ Messages::WebDriverClient::NewWindowResponse WebDriverConnection::new_window(Jso
     //    is "window", and the implementation supports multiple browsing contexts in separate OS windows, the
     //    created browsing context should be in a new OS window. In all other cases the details of how the browsing
     //    context is presented to the user are implementation defined.
-    // FIXME: Reuse code of window.open() instead of calling choose_a_browsing_context
-    auto [browsing_context, window_type] = m_page_client.page().top_level_browsing_context().choose_a_browsing_context("_blank"sv, Web::HTML::TokenizedFeature::NoOpener::Yes, Web::HTML::ActivateTab::No);
+    auto [navigable, window_type] = m_page_client.page().top_level_traversable()->choose_a_navigable("_blank"sv, Web::HTML::TokenizedFeature::NoOpener::Yes, Web::HTML::ActivateTab::No);
 
     // 6. Let handle be the associated window handle of the newly created window.
-    auto handle = browsing_context->window_handle();
+    auto handle = navigable->traversable_navigable()->window_handle();
 
     // 7. Let type be "tab" if the newly created window shares an OS-level window with the current browsing context, or "window" otherwise.
     auto type = "tab"sv;
