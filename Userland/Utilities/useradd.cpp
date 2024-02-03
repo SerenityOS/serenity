@@ -143,11 +143,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         home = home_path;
 
     if (create_home_dir) {
+        bool existed = false;
         auto mkdir_error = Core::System::mkdir(home, 0700);
         if (mkdir_error.is_error()) {
             int code = mkdir_error.release_error().code();
             warnln("Failed to create directory {}: {}", home, strerror(code));
-            return 12;
+
+            if (code != EEXIST)
+                return 12;
+            existed = true;
         }
 
         auto chown_error = Core::System::chown(home, static_cast<uid_t>(uid), static_cast<gid_t>(gid));
@@ -155,7 +159,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             int code = chown_error.release_error().code();
             warnln("Failed to change owner of {} to {}:{}: {}", home, uid, gid, strerror(code));
 
-            if (rmdir(home.characters()) < 0) {
+            if (!existed && rmdir(home.characters()) < 0) {
                 warnln("Failed to remove directory {}: {}", home, strerror(errno));
             }
 
