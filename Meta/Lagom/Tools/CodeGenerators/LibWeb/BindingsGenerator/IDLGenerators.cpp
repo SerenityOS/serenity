@@ -5,7 +5,7 @@
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
- * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +28,7 @@ static bool is_platform_object(Type const& type)
     // might simply need to add another type here.
     static constexpr Array types = {
         "AbortSignal"sv,
+        "Animation"sv,
         "AnimationEffect"sv,
         "AnimationTimeline"sv,
         "Attr"sv,
