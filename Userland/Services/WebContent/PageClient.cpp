@@ -77,7 +77,7 @@ PageClient::PageClient(PageHost& owner, u64 id)
             dbgln("Failed to create AccelGfx context: {}", context.error());
             VERIFY_NOT_REACHED();
         }
-        m_accelerated_graphics_context = AccelGfx::Context::create().release_value();
+        m_accelerated_graphics_context = context.release_value();
     }
 #endif
 }
