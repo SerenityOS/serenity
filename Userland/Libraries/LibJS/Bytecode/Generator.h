@@ -103,9 +103,9 @@ public:
         No
     };
     CodeGenerationErrorOr<Optional<ReferenceRegisters>> emit_load_from_reference(JS::ASTNode const&, CollectRegisters);
-    CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
-    CodeGenerationErrorOr<void> emit_store_to_reference(ReferenceRegisters const&);
-    CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
+    CodeGenerationErrorOr<Optional<Operand>> emit_store_to_reference(JS::ASTNode const&);
+    CodeGenerationErrorOr<Optional<Operand>> emit_store_to_reference(ReferenceRegisters const&);
+    CodeGenerationErrorOr<Optional<Operand>> emit_delete_reference(JS::ASTNode const&);
 
     CodeGenerationErrorOr<ReferenceRegisters> emit_super_reference(MemberExpression const&);
 

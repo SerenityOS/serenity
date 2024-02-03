@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
@@ -18,6 +18,7 @@
 #include <LibJS/Bytecode/CodeGenerationError.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
+#include <LibJS/Bytecode/Operand.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/ClassFieldDefinition.h>
@@ -54,7 +55,7 @@ public:
     // NOTE: This is here to stop ASAN complaining about mismatch between new/delete sizes in ASTNodeWithTailArray.
     void operator delete(void* ptr) { ::operator delete(ptr); }
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const;
     virtual void dump(int indent) const;
 
     [[nodiscard]] SourceRange source_range() const;
@@ -173,8 +174,8 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const;
 
     DeprecatedFlyString const& label() const { return m_label; }
     DeprecatedFlyString& label() { return m_label; }
@@ -202,7 +203,7 @@ class IterationStatement : public Statement {
 public:
     using Statement::Statement;
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const;
 
 private:
     virtual bool is_iteration_statement() const final { return true; }
@@ -214,7 +215,7 @@ public:
         : Statement(move(source_range))
     {
     }
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 };
 
 class ErrorStatement final : public Statement {
@@ -234,7 +235,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     Expression const& expression() const { return m_expression; }
 
@@ -297,7 +298,7 @@ public:
 
     Vector<NonnullRefPtr<Statement const>> const& children() const { return m_children; }
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     void add_var_scoped_declaration(NonnullRefPtr<Declaration const> variables);
     void add_lexical_declaration(NonnullRefPtr<Declaration const> variables);
@@ -385,7 +386,7 @@ public:
 
     virtual void dump(int indent) const override;
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     bool has_bound_name(DeprecatedFlyString const& name) const;
     Vector<ImportEntry> const& entries() const { return m_entries; }
@@ -482,7 +483,7 @@ public:
 
     virtual void dump(int indent) const override;
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     bool has_export(DeprecatedFlyString const& export_name) const;
 
@@ -670,7 +671,7 @@ public:
     void set_is_global() { m_is_global = true; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     virtual bool is_identifier() const override { return true; }
@@ -752,7 +753,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
@@ -778,8 +779,8 @@ public:
 
     virtual void dump(int indent) const override;
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name, Optional<Bytecode::Operand> preferred_dst = {}) const;
 
     bool has_name() const { return !name().is_empty(); }
 
@@ -810,7 +811,7 @@ public:
     bool is_yield_from() const { return m_is_yield_from; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     RefPtr<Expression const> m_argument;
@@ -826,7 +827,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_argument;
@@ -843,7 +844,7 @@ public:
     Expression const* argument() const { return m_argument; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     RefPtr<Expression const> m_argument;
@@ -864,7 +865,7 @@ public:
     Statement const* alternate() const { return m_alternate; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_predicate;
@@ -885,8 +886,8 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_test;
@@ -906,8 +907,8 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_test;
@@ -927,7 +928,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_object;
@@ -951,8 +952,8 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     RefPtr<ASTNode const> m_init;
@@ -975,8 +976,8 @@ public:
     Expression const& rhs() const { return *m_rhs; }
     Statement const& body() const { return *m_body; }
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -999,8 +1000,8 @@ public:
     Expression const& rhs() const { return *m_rhs; }
     Statement const& body() const { return *m_body; }
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1019,8 +1020,8 @@ public:
     {
     }
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1065,7 +1066,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     BinaryOp m_op;
@@ -1090,7 +1091,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     LogicalOp m_op;
@@ -1118,7 +1119,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     UnaryOp m_op;
@@ -1135,7 +1136,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     Vector<NonnullRefPtr<Expression const>> m_expressions;
@@ -1161,7 +1162,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     virtual Value value() const override { return Value(m_value); }
 
@@ -1178,7 +1179,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     virtual Value value() const override { return m_value; }
 
@@ -1195,7 +1196,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     ByteString m_value;
@@ -1210,7 +1211,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     StringView value() const { return m_value; }
 
@@ -1228,7 +1229,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     virtual Value value() const override { return js_null(); }
 };
@@ -1246,7 +1247,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     regex::Parser::Result const& parsed_regex() const { return m_parsed_regex; }
     ByteString const& parsed_pattern() const { return m_parsed_pattern; }
@@ -1391,7 +1392,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     virtual bool is_super_expression() const override { return true; }
 };
@@ -1414,8 +1415,8 @@ public:
     RefPtr<FunctionExpression const> constructor() const { return m_constructor; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name, Optional<Bytecode::Operand> preferred_dst = {}) const;
 
     bool has_name() const { return m_name; }
 
@@ -1443,7 +1444,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
@@ -1471,7 +1472,7 @@ public:
     }
 
     virtual void dump(int) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_expression;
@@ -1487,7 +1488,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_target;
@@ -1500,7 +1501,7 @@ public:
     {
     }
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 };
 
 struct CallExpressionArgument {
@@ -1530,7 +1531,7 @@ public:
     static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     Expression const& callee() const { return m_callee; }
 
@@ -1598,7 +1599,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     Vector<CallExpression::Argument> const m_arguments;
@@ -1643,7 +1644,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     AssignmentOp m_op;
@@ -1667,7 +1668,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     virtual bool is_update_expression() const override { return true; }
@@ -1727,7 +1728,7 @@ public:
     DeclarationKind declaration_kind() const { return m_declaration_kind; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     Vector<NonnullRefPtr<VariableDeclarator const>> const& declarations() const { return m_declarations; }
 
@@ -1813,7 +1814,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     virtual bool is_object_expression() const override { return true; }
@@ -1832,7 +1833,7 @@ public:
     Vector<RefPtr<Expression const>> const& elements() const { return m_elements; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     virtual bool is_array_expression() const override { return true; }
@@ -1856,7 +1857,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     Vector<NonnullRefPtr<Expression const>> const& expressions() const { return m_expressions; }
     Vector<NonnullRefPtr<Expression const>> const& raw_strings() const { return m_raw_strings; }
@@ -1876,7 +1877,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> const m_tag;
@@ -1894,7 +1895,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     bool is_computed() const { return m_computed; }
     Expression const& object() const { return *m_object; }
@@ -1946,7 +1947,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     Expression const& base() const { return *m_base; }
     Vector<Reference> const& references() const { return m_references; }
@@ -1970,7 +1971,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     Type m_type;
@@ -1986,7 +1987,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     virtual bool is_import_call() const override { return true; }
@@ -2006,7 +2007,7 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_test;
@@ -2055,7 +2056,7 @@ public:
     BlockStatement const* finalizer() const { return m_finalizer; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<BlockStatement const> m_block;
@@ -2074,7 +2075,7 @@ public:
     Expression const& argument() const { return m_argument; }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     NonnullRefPtr<Expression const> m_argument;
@@ -2105,8 +2106,8 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&, Optional<Bytecode::Operand> preferred_dst = {}) const;
 
     void add_case(NonnullRefPtr<SwitchCase const> switch_case) { m_cases.append(move(switch_case)); }
 
@@ -2124,7 +2125,7 @@ public:
     }
 
     DeprecatedFlyString const& target_label() const { return m_target_label; }
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
 private:
     DeprecatedFlyString m_target_label;
@@ -2138,7 +2139,7 @@ public:
     {
     }
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
     DeprecatedFlyString const& target_label() const { return m_target_label; }
 
@@ -2153,7 +2154,7 @@ public:
     {
     }
 
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 };
 
 class SyntheticReferenceExpression final : public Expression {

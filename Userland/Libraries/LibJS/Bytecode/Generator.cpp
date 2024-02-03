@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#define FIXME_NEWBC (void)
+
 #include <AK/TemporaryChange.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
@@ -36,7 +38,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
         // NOTE: This doesn't have to handle received throw/return completions, as GeneratorObject::resume_abrupt
         //       will not enter the generator from the SuspendedStart state and immediately completes the generator.
     }
-    TRY(node.generate_bytecode(generator));
+    FIXME_NEWBC TRY(node.generate_bytecode(generator));
     if (generator.is_in_generator_or_async_function()) {
         // Terminate all unterminated blocks with yield return
         for (auto& block : generator.m_root_basic_blocks) {
@@ -184,7 +186,7 @@ CodeGenerationErrorOr<Generator::ReferenceRegisters> Generator::emit_super_refer
         // SuperProperty : super [ Expression ]
         // 3. Let propertyNameReference be ? Evaluation of Expression.
         // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
-        TRY(expression.property().generate_bytecode(*this));
+        FIXME_NEWBC TRY(expression.property().generate_bytecode(*this));
         computed_property_value_register = allocate_register();
         emit<Bytecode::Op::Store>(*computed_property_value_register);
     }
@@ -211,7 +213,7 @@ CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_l
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
-        TRY(identifier.generate_bytecode(*this));
+        FIXME_NEWBC TRY(identifier.generate_bytecode(*this));
         return Optional<ReferenceRegisters> {};
     }
     if (is<MemberExpression>(node)) {
@@ -234,12 +236,12 @@ CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_l
 
             return super_reference;
         } else {
-            TRY(expression.object().generate_bytecode(*this));
+            FIXME_NEWBC TRY(expression.object().generate_bytecode(*this));
             if (expression.is_computed()) {
                 auto object_reg = allocate_register();
                 emit<Bytecode::Op::Store>(object_reg);
 
-                TRY(expression.property().generate_bytecode(*this));
+                FIXME_NEWBC TRY(expression.property().generate_bytecode(*this));
                 Optional<Register> property_reg {};
                 if (collect_registers == CollectRegisters::Yes) {
                     property_reg = allocate_register();
@@ -275,12 +277,12 @@ CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_l
     };
 }
 
-CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const& node)
+CodeGenerationErrorOr<Optional<Operand>> Generator::emit_store_to_reference(JS::ASTNode const& node)
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
         emit_set_variable(identifier);
-        return {};
+        return Optional<Operand> {};
     }
     if (is<MemberExpression>(node)) {
         // NOTE: The value is in the accumulator, so we have to store that away first.
@@ -305,13 +307,13 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
                 emit<Bytecode::Op::PutByIdWithThis>(super_reference.base, super_reference.this_value, identifier_table_ref, Bytecode::Op::PropertyKind::KeyValue, next_property_lookup_cache());
             }
         } else {
-            TRY(expression.object().generate_bytecode(*this));
+            FIXME_NEWBC TRY(expression.object().generate_bytecode(*this));
 
             auto object_reg = allocate_register();
             emit<Bytecode::Op::Store>(object_reg);
 
             if (expression.is_computed()) {
-                TRY(expression.property().generate_bytecode(*this));
+                FIXME_NEWBC TRY(expression.property().generate_bytecode(*this));
                 auto property_reg = allocate_register();
                 emit<Bytecode::Op::Store>(property_reg);
                 emit<Bytecode::Op::Load>(value_reg);
@@ -332,7 +334,7 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
             }
         }
 
-        return {};
+        return Optional<Operand> {};
     }
 
     return CodeGenerationError {
@@ -341,16 +343,16 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
     };
 }
 
-CodeGenerationErrorOr<void> Generator::emit_store_to_reference(ReferenceRegisters const& reference_registers)
+CodeGenerationErrorOr<Optional<Operand>> Generator::emit_store_to_reference(ReferenceRegisters const& reference_registers)
 {
     if (reference_registers.base == reference_registers.this_value)
         emit<Bytecode::Op::PutByValue>(reference_registers.base, reference_registers.referenced_name.value());
     else
         emit<Bytecode::Op::PutByValueWithThis>(reference_registers.base, reference_registers.referenced_name.value(), reference_registers.this_value);
-    return {};
+    return Optional<Operand> {};
 }
 
-CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& node)
+CodeGenerationErrorOr<Optional<Operand>> Generator::emit_delete_reference(JS::ASTNode const& node)
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
@@ -358,7 +360,7 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
             emit<Bytecode::Op::LoadImmediate>(Value(false));
         else
             emit<Bytecode::Op::DeleteVariable>(intern_identifier(identifier.string()));
-        return {};
+        return Optional<Operand> {};
     }
 
     if (is<MemberExpression>(node)) {
@@ -375,16 +377,16 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
                 emit<Bytecode::Op::DeleteByIdWithThis>(super_reference.this_value, identifier_table_ref);
             }
 
-            return {};
+            return Optional<Operand> {};
         }
 
-        TRY(expression.object().generate_bytecode(*this));
+        FIXME_NEWBC TRY(expression.object().generate_bytecode(*this));
 
         if (expression.is_computed()) {
             auto object_reg = allocate_register();
             emit<Bytecode::Op::Store>(object_reg);
 
-            TRY(expression.property().generate_bytecode(*this));
+            FIXME_NEWBC TRY(expression.property().generate_bytecode(*this));
             emit<Bytecode::Op::DeleteByValue>(object_reg);
         } else if (expression.property().is_identifier()) {
             auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
@@ -396,7 +398,7 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
                 "Unimplemented non-computed member expression"sv
             };
         }
-        return {};
+        return Optional<Operand> {};
     }
 
     // Though this will have no deletion effect, we still have to evaluate the node as it can have side effects.
@@ -405,13 +407,13 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
     // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
     // 1. Let ref be the result of evaluating UnaryExpression.
     // 2. ReturnIfAbrupt(ref).
-    TRY(node.generate_bytecode(*this));
+    FIXME_NEWBC TRY(node.generate_bytecode(*this));
 
     // 3. If ref is not a Reference Record, return true.
     emit<Bytecode::Op::LoadImmediate>(Value(true));
 
     // NOTE: The rest of the steps are handled by Delete{Variable,ByValue,Id}.
-    return {};
+    return Optional<Operand> {};
 }
 
 void Generator::emit_set_variable(JS::Identifier const& identifier, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Op::EnvironmentMode mode)
@@ -561,7 +563,7 @@ CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_functi
     if (is<FunctionExpression>(expression)) {
         auto const& function_expression = static_cast<FunctionExpression const&>(expression);
         if (!function_expression.has_name()) {
-            TRY(function_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
+            FIXME_NEWBC TRY(function_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
             return {};
         }
     }
@@ -569,12 +571,12 @@ CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_functi
     if (is<ClassExpression>(expression)) {
         auto const& class_expression = static_cast<ClassExpression const&>(expression);
         if (!class_expression.has_name()) {
-            TRY(class_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
+            FIXME_NEWBC TRY(class_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
             return {};
         }
     }
 
-    TRY(expression.generate_bytecode(*this));
+    FIXME_NEWBC TRY(expression.generate_bytecode(*this));
     return {};
 }
 
