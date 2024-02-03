@@ -126,9 +126,6 @@ public:
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
     virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
-    // ^HTMLElement
-    virtual void attribute_changed(FlyString const&, Optional<String> const&) override;
-
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
     virtual bool is_listed() const override { return true; }
@@ -152,6 +149,7 @@ public:
 
     virtual void form_associated_element_was_inserted() override;
     virtual void form_associated_element_was_removed(DOM::Node*) override;
+    virtual void form_associated_element_attribute_changed(FlyString const&, Optional<String> const&) override;
 
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label

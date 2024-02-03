@@ -37,7 +37,7 @@ class HTMLImageElement final
 public:
     virtual ~HTMLImageElement() override;
 
-    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
+    virtual void form_associated_element_attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     String alt() const { return get_attribute_value(HTML::AttributeNames::alt); }
     String src() const { return get_attribute_value(HTML::AttributeNames::src); }
