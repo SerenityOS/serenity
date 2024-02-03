@@ -2705,27 +2705,6 @@ Vector<JS::Handle<HTML::Navigable>> Document::document_tree_child_navigables()
     return navigables;
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
-Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
-{
-    // 1. Let list be an empty list.
-    Vector<JS::Handle<HTML::BrowsingContext>> list;
-
-    // 2. For each browsing context container container,
-    //    whose nested browsing context is non-null and whose shadow-including root is d, in shadow-including tree order:
-
-    // NOTE: We already store our browsing contexts in a tree structure, so we can simply collect all the descendants
-    //       of this document's browsing context.
-    if (browsing_context()) {
-        browsing_context()->for_each_in_subtree([&](auto& context) {
-            list.append(JS::make_handle(context));
-            return IterationDecision::Continue;
-        });
-    }
-
-    return list;
-}
-
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unloading-document-cleanup-steps
 void Document::run_unloading_cleanup_steps()
 {
