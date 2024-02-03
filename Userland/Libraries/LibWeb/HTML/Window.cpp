@@ -1217,7 +1217,9 @@ double Window::scroll_x() const
 {
     // The scrollX attribute must return the x-coordinate, relative to the initial containing block origin,
     // of the left of the viewport, or zero if there is no viewport.
-    return page().top_level_traversable()->viewport_scroll_offset().x().to_double();
+    if (auto const navigable = associated_document().navigable())
+        return navigable->viewport_rect().x().to_double();
+    return 0;
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrolly
@@ -1225,7 +1227,9 @@ double Window::scroll_y() const
 {
     // The scrollY attribute must return the y-coordinate, relative to the initial containing block origin,
     // of the top of the viewport, or zero if there is no viewport.
-    return page().top_level_traversable()->viewport_scroll_offset().y().to_double();
+    if (auto const navigable = associated_document().navigable())
+        return navigable->viewport_rect().y().to_double();
+    return 0;
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#perform-a-scroll
