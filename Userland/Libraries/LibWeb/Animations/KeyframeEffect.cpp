@@ -543,6 +543,45 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
     return processed_keyframes;
 }
 
+// https://www.w3.org/TR/css-animations-2/#keyframe-processing
+void KeyframeEffect::generate_initial_and_final_frames(RefPtr<KeyFrameSet> keyframe_set, HashTable<CSS::PropertyID> const& animated_properties)
+{
+    // 1. Find or create the initial keyframe, a keyframe with a keyframe offset of 0%, default timing function
+    //    as its keyframe timing function, and default composite as its keyframe composite.
+    KeyFrameSet::ResolvedKeyFrame* initial_keyframe;
+    if (auto existing_keyframe = keyframe_set->keyframes_by_key.find(0)) {
+        initial_keyframe = existing_keyframe;
+    } else {
+        keyframe_set->keyframes_by_key.insert(0, {});
+        initial_keyframe = keyframe_set->keyframes_by_key.find(0);
+    }
+
+    // 2. For any property in animated properties that is not otherwise present in a keyframe with an offset of
+    //    0% or one that would be positioned earlier in the used keyframe order, add the computed value of that
+    //    property on element to initial keyframe’s keyframe values.
+    for (auto property : animated_properties) {
+        if (!initial_keyframe->resolved_properties.contains(property))
+            initial_keyframe->resolved_properties.set(property, KeyFrameSet::UseInitial {});
+    }
+
+    // 3. If initial keyframe’s keyframe values is not empty, prepend initial keyframe to keyframes.
+
+    // 4. Repeat for final keyframe, using an offset of 100%, considering keyframes positioned later in the used
+    //    keyframe order, and appending to keyframes.
+    KeyFrameSet::ResolvedKeyFrame* final_keyframe;
+    if (auto existing_keyframe = keyframe_set->keyframes_by_key.find(100 * AnimationKeyFrameKeyScaleFactor)) {
+        final_keyframe = existing_keyframe;
+    } else {
+        keyframe_set->keyframes_by_key.insert(100 * AnimationKeyFrameKeyScaleFactor, {});
+        final_keyframe = keyframe_set->keyframes_by_key.find(100 * AnimationKeyFrameKeyScaleFactor);
+    }
+
+    for (auto property : animated_properties) {
+        if (!final_keyframe->resolved_properties.contains(property))
+            final_keyframe->resolved_properties.set(property, KeyFrameSet::UseInitial {});
+    }
+}
+
 JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
 {
     return realm.heap().allocate<KeyframeEffect>(realm, realm);
@@ -736,6 +775,25 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::
     //        https://www.w3.org/TR/web-animations-1/#calculating-computed-keyframes. For now, just compute the
     //        missing keyframe offsets
     compute_missing_keyframe_offsets(m_keyframes);
+
+    auto keyframe_set = adopt_ref(*new KeyFrameSet);
+    HashTable<CSS::PropertyID> animated_properties;
+
+    for (auto& keyframe : m_keyframes) {
+        Animations::KeyframeEffect::KeyFrameSet::ResolvedKeyFrame resolved_keyframe;
+
+        auto key = static_cast<u64>(keyframe.computed_offset.value() * 100 * AnimationKeyFrameKeyScaleFactor);
+
+        for (auto const& [property_id, property_value] : keyframe.parsed_properties()) {
+            animated_properties.set(property_id);
+            resolved_keyframe.resolved_properties.set(property_id, property_value);
+        }
+
+        keyframe_set->keyframes_by_key.insert(key, resolved_keyframe);
+    }
+
+    generate_initial_and_final_frames(keyframe_set, animated_properties);
+    m_key_frame_set = keyframe_set;
 
     return {};
 }

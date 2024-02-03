@@ -58,6 +58,8 @@ class KeyframeEffect : public AnimationEffect {
     JS_DECLARE_ALLOCATOR(KeyframeEffect);
 
 public:
+    constexpr static double AnimationKeyFrameKeyScaleFactor = 1000.0; // 0..100000
+
     struct KeyFrameSet : public RefCounted<KeyFrameSet> {
         struct UseInitial { };
         struct ResolvedKeyFrame {
@@ -65,6 +67,7 @@ public:
         };
         RedBlackTree<u64, ResolvedKeyFrame> keyframes_by_key;
     };
+    static void generate_initial_and_final_frames(RefPtr<KeyFrameSet>, HashTable<CSS::PropertyID> const& animated_properties);
 
     static JS::NonnullGCPtr<KeyframeEffect> create(JS::Realm&);
 
