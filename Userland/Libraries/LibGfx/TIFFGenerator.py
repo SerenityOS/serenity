@@ -148,8 +148,9 @@ known_tags: List[Tag] = [
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
 
-HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(ExifMetadata& metadata, u16 tag,"
-                                 " {namespace}Type type, u32 count, Vector<{namespace}Value>&& value)")
+HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(Function<ErrorOr<void>(u32)>&& subifd_handler, "
+                                 "ExifMetadata& metadata, u16 tag, {namespace}Type type, u32 count, "
+                                 "Vector<{namespace}Value>&& value)")
 HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
 
@@ -478,6 +479,12 @@ def generate_tag_handler(tag: Tag) -> str:
         }}
 """
 
+    handle_subifd = ''
+    if TIFFType.IFD in tag.types:
+        if tag.counts != [1]:
+            raise RuntimeError("Accessing `value[0]` in the C++ code might fail!")
+        handle_subifd = f'TRY(subifd_handler(value[0].get<{tiff_type_to_cpp(TIFFType.IFD)}>()));'
+
     output = fR"""    case {tag.id}:
         // {tag.name}
 
@@ -485,6 +492,7 @@ def generate_tag_handler(tag: Tag) -> str:
 
         {pre_condition}
         {check_value}
+        {handle_subifd}
         metadata.add_entry("{tag.name}"sv, move(value));
         break;
 """
