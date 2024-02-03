@@ -35,6 +35,7 @@ public:
 
 private:
     Vector<JS::NonnullGCPtr<AnimationEffect>> m_associated_effects;
+    bool m_is_sorted_by_composite_order { true };
 };
 
 }
