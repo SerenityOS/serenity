@@ -183,6 +183,9 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
         if (node) {
             // FIXME: Support wheel events in nested browsing contexts.
             if (is<HTML::HTMLIFrameElement>(*node)) {
+                auto& iframe = static_cast<HTML::HTMLIFrameElement&>(*node);
+                auto position_in_iframe = position.translated(compute_mouse_event_offset({}, paintable->layout_node()));
+                iframe.nested_browsing_context()->event_handler().handle_mousewheel(position_in_iframe, screen_position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y);
                 return false;
             }
 
@@ -195,9 +198,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
             if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, screen_position, page_offset, client_offset, offset, wheel_delta_x, wheel_delta_y, button, buttons, modifiers).release_value_but_fixme_should_propagate_errors())) {
-                auto& page = m_browsing_context->page();
-                if (m_browsing_context == &page.top_level_browsing_context())
-                    page.client().page_did_request_scroll(wheel_delta_x, wheel_delta_y);
+                m_browsing_context->active_window()->scroll_by(wheel_delta_x, wheel_delta_y);
             }
 
             handled_event = true;
