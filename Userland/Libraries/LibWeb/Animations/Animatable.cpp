@@ -61,4 +61,14 @@ Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(Web::Animations::
     return {};
 }
 
+void Animatable::associate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect)
+{
+    m_associated_effects.append(effect);
+}
+
+void Animatable::disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect)
+{
+    m_associated_effects.remove_first_matching([&](auto element) { return effect == element; });
+}
+
 }

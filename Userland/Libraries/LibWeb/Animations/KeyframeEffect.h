@@ -82,7 +82,7 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> construct_impl(JS::Realm&, JS::NonnullGCPtr<KeyframeEffect> source);
 
     DOM::Element* target() const override { return m_target_element; }
-    void set_target(DOM::Element* target) { m_target_element = target; }
+    void set_target(DOM::Element* target);
 
     Optional<String> pseudo_element() const { return m_target_pseudo_selector; }
     void set_pseudo_element(Optional<String>);
@@ -98,6 +98,7 @@ public:
 
 private:
     KeyframeEffect(JS::Realm&);
+    virtual ~KeyframeEffect() override;
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
