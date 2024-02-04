@@ -172,9 +172,29 @@ u32 ProcessorBase<T>::smp_wake_n_idle_processors(u32)
 }
 
 template<typename T>
-void ProcessorBase<T>::initialize_context_switching(Thread&)
+void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
 {
-    TODO_RISCV64();
+    VERIFY(initial_thread.process().is_kernel_process());
+
+    m_scheduler_initialized = true;
+
+    // FIXME: Figure out if we need to call {pre_,post_,}init_finished once riscv64 supports SMP
+    Processor::set_current_in_scheduler(true);
+
+    auto& regs = initial_thread.regs();
+    asm volatile(
+        "mv sp, %[new_sp] \n"
+
+        "addi sp, sp, -32 \n"
+        "sd %[from_to_thread], 0(sp) \n"
+        "sd %[from_to_thread], 8(sp) \n"
+
+        "jr %[new_ip] \n" ::[new_sp] "r"(regs.sp()),
+        [new_ip] "r"(regs.ip()),
+        [from_to_thread] "r"(&initial_thread)
+        : "t0");
+
+    VERIFY_NOT_REACHED();
 }
 
 template<typename T>
