@@ -1959,6 +1959,27 @@ void StyleComputer::absolutize_values(StyleProperties& style) const
     style.set_line_height({}, line_height);
 }
 
+void StyleComputer::resolve_effective_overflow_values(StyleProperties& style) const
+{
+    // https://www.w3.org/TR/css-overflow-3/#overflow-control
+    // The visible/clip values of overflow compute to auto/hidden (respectively) if one of overflow-x or
+    // overflow-y is neither visible nor clip.
+    auto overflow_x = value_id_to_overflow(style.property(PropertyID::OverflowX)->to_identifier());
+    auto overflow_y = value_id_to_overflow(style.property(PropertyID::OverflowY)->to_identifier());
+    auto overflow_x_is_visible_or_clip = overflow_x == Overflow::Visible || overflow_x == Overflow::Clip;
+    auto overflow_y_is_visible_or_clip = overflow_y == Overflow::Visible || overflow_y == Overflow::Clip;
+    if (!overflow_x_is_visible_or_clip || !overflow_y_is_visible_or_clip) {
+        if (overflow_x == CSS::Overflow::Visible)
+            style.set_property(CSS::PropertyID::OverflowX, IdentifierStyleValue::create(CSS::ValueID::Auto), nullptr);
+        if (overflow_x == CSS::Overflow::Clip)
+            style.set_property(CSS::PropertyID::OverflowX, IdentifierStyleValue::create(CSS::ValueID::Hidden), nullptr);
+        if (overflow_y == CSS::Overflow::Visible)
+            style.set_property(CSS::PropertyID::OverflowY, IdentifierStyleValue::create(CSS::ValueID::Auto), nullptr);
+        if (overflow_y == CSS::Overflow::Clip)
+            style.set_property(CSS::PropertyID::OverflowY, IdentifierStyleValue::create(CSS::ValueID::Hidden), nullptr);
+    }
+}
+
 enum class BoxTypeTransformation {
     None,
     Blockify,
@@ -2138,6 +2159,9 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
 
     // 6. Run automatic box type transformations
     transform_box_type_if_needed(style, element, pseudo_element);
+
+    // 7. Resolve effective overflow values
+    resolve_effective_overflow_values(style);
 
     return style;
 }
