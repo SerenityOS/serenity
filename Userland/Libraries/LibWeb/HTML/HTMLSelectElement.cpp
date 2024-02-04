@@ -299,8 +299,8 @@ void HTMLSelectElement::activation_behavior(DOM::Event const&)
     // Request select dropdown
     auto weak_element = make_weak_ptr<HTMLSelectElement>();
     auto rect = get_bounding_client_rect();
-    auto position = document().browsing_context()->to_top_level_position(Web::CSSPixelPoint { rect->x(), rect->y() });
-    document().browsing_context()->top_level_browsing_context()->page().did_request_select_dropdown(weak_element, position, CSSPixels(rect->width()), items);
+    auto position = document().navigable()->to_top_level_position(Web::CSSPixelPoint { rect->x(), rect->y() });
+    document().page().did_request_select_dropdown(weak_element, position, CSSPixels(rect->width()), items);
     set_is_open(true);
 }
 
