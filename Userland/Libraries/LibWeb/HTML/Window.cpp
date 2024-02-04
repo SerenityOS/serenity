@@ -395,7 +395,9 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         }
 
         // 6. If urlRecord matches about:blank, then perform the URL and history update steps given targetNavigable's active document and urlRecord.
-        if (url_matches_about_blank(url_record)) {
+        // FIXME: If we only perform the URL and history update steps here, we never fire the load event for the new window/tab.
+        //        This breaks WPT. See #23067
+        if (false && url_matches_about_blank(url_record)) {
             perform_url_and_history_update_steps(*target_navigable->active_document(), url_record);
         }
 
