@@ -23,8 +23,8 @@ class AnimationPlaybackEvent : public DOM::Event {
     JS_DECLARE_ALLOCATOR(AnimationPlaybackEvent);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<AnimationPlaybackEvent> create(JS::Realm&, FlyString const& event_name, AnimationPlaybackEventInit const& event_init = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AnimationPlaybackEvent>> construct_impl(JS::Realm&, FlyString const& event_name, AnimationPlaybackEventInit const& event_init);
+    [[nodiscard]] static JS::NonnullGCPtr<AnimationPlaybackEvent> create(JS::Realm&, FlyString const& type, AnimationPlaybackEventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AnimationPlaybackEvent>> construct_impl(JS::Realm&, FlyString const& type, AnimationPlaybackEventInit const& event_init);
 
     virtual ~AnimationPlaybackEvent() override = default;
 
@@ -35,7 +35,7 @@ public:
     void set_timeline_time(Optional<double> timeline_time) { m_timeline_time = timeline_time; }
 
 private:
-    AnimationPlaybackEvent(JS::Realm&, FlyString const& event_name, AnimationPlaybackEventInit const& event_init);
+    AnimationPlaybackEvent(JS::Realm&, FlyString const& type, AnimationPlaybackEventInit const& event_init);
 
     virtual void initialize(JS::Realm&) override;
 
