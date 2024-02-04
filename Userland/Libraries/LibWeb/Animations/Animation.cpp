@@ -300,6 +300,15 @@ Bindings::AnimationPlayState Animation::play_state() const
     return Bindings::AnimationPlayState::Running;
 }
 
+// https://www.w3.org/TR/web-animations-1/#animation-relevant
+bool Animation::is_relevant() const
+{
+    // An animation is relevant if:
+    // - Its associated effect is current or in effect, and
+    // - Its replace state is not removed.
+    return (m_effect->is_current() || m_effect->is_in_effect()) && replace_state() != Bindings::AnimationReplaceState::Removed;
+}
+
 // https://www.w3.org/TR/web-animations-1/#replaceable-animation
 bool Animation::is_replaceable() const
 {

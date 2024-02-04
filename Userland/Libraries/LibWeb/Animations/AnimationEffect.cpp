@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/AnimationEffect.h>
+#include <LibWeb/Animations/AnimationTimeline.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -262,6 +263,46 @@ Optional<double> AnimationEffect::active_time_using_fill(Bindings::FillMode fill
     // -> Otherwise (the local time is unresolved),
     //    Return an unresolved time value.
     return {};
+}
+
+// https://www.w3.org/TR/web-animations-1/#in-play
+bool AnimationEffect::is_in_play() const
+{
+    // An animation effect is in play if all of the following conditions are met:
+    // - the animation effect is in the active phase, and
+    // - the animation effect is associated with an animation that is not finished.
+    return is_in_the_active_phase() && m_associated_animation && !m_associated_animation->is_finished();
+}
+
+// https://www.w3.org/TR/web-animations-1/#current
+bool AnimationEffect::is_current() const
+{
+    // An animation effect is current if any of the following conditions are true:
+
+    // - the animation effect is in play, or
+    if (is_in_play())
+        return true;
+
+    if (auto animation = m_associated_animation) {
+        auto playback_rate = animation->playback_rate();
+
+        // - the animation effect is associated with an animation with a playback rate > 0 and the animation effect is
+        //   in the before phase, or
+        if (playback_rate > 0.0 && is_in_the_before_phase())
+            return true;
+
+        // - the animation effect is associated with an animation with a playback rate < 0 and the animation effect is
+        //   in the after phase, or
+        if (playback_rate < 0.0 && is_in_the_after_phase())
+            return true;
+
+        // - the animation effect is associated with an animation not in the idle play state with a non-null associated
+        //   timeline that is not monotonically increasing.
+        if (animation->play_state() != Bindings::AnimationPlayState::Idle && animation->timeline() && !animation->timeline()->is_monotonically_increasing())
+            return true;
+    }
+
+    return false;
 }
 
 // https://www.w3.org/TR/web-animations-1/#in-effect

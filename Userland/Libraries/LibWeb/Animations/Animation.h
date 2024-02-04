@@ -50,6 +50,8 @@ public:
 
     Bindings::AnimationPlayState play_state() const;
 
+    bool is_relevant() const;
+
     bool is_replaceable() const;
     Bindings::AnimationReplaceState replace_state() const { return m_replace_state; }
 
