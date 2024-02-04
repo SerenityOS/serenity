@@ -264,6 +264,14 @@ Optional<double> AnimationEffect::active_time_using_fill(Bindings::FillMode fill
     return {};
 }
 
+// https://www.w3.org/TR/web-animations-1/#in-effect
+bool AnimationEffect::is_in_effect() const
+{
+    // An animation effect is in effect if its active time, as calculated according to the procedure in
+    // §4.8.3.1 Calculating the active time, is not unresolved.
+    return active_time().has_value();
+}
+
 // https://www.w3.org/TR/web-animations-1/#before-active-boundary-time
 double AnimationEffect::before_active_boundary_time() const
 {

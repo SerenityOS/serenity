@@ -10,6 +10,7 @@
 #include <LibWeb/Animations/AnimationPlaybackEvent.h>
 #include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/CSSAnimation.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
@@ -295,6 +296,44 @@ Bindings::AnimationPlayState Animation::play_state() const
     // -> Otherwise,
     //    → running
     return Bindings::AnimationPlayState::Running;
+}
+
+// https://www.w3.org/TR/web-animations-1/#replaceable-animation
+bool Animation::is_replaceable() const
+{
+    // An animation is replaceable if all of the following conditions are true:
+
+    // - The existence of the animation is not prescribed by markup. That is, it is not a CSS animation with an owning
+    //   element, nor a CSS transition with an owning element.
+    // FIXME: Check for transitions
+    if (is_css_animation() && static_cast<CSS::CSSAnimation const*>(this)->owning_element())
+        return false;
+
+    // - The animation's play state is finished.
+    if (play_state() != Bindings::AnimationPlayState::Finished)
+        return false;
+
+    // - The animation's replace state is not removed.
+    if (replace_state() == Bindings::AnimationReplaceState::Removed)
+        return false;
+
+    // - The animation is associated with a monotonically increasing timeline.
+    if (!m_timeline || !m_timeline->is_monotonically_increasing())
+        return false;
+
+    // - The animation has an associated effect.
+    if (!m_effect)
+        return false;
+
+    // - The animation's associated effect is in effect.
+    if (!m_effect->is_in_effect())
+        return false;
+
+    // - The animation's associated effect has an effect target.
+    if (!m_effect->target())
+        return false;
+
+    return true;
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-animation-play
