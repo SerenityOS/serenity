@@ -174,7 +174,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
     // 17. If result.[[Type]] is normal, then
     if (!eval_result.is_throw_completion()) {
         // a. Set result to the result of evaluating body.
-        auto maybe_executable = Bytecode::compile(vm, program, FunctionKind::Normal, "ShadowRealmEval"sv);
+        auto maybe_executable = Bytecode::compile(vm, program, {}, FunctionKind::Normal, "ShadowRealmEval"sv);
         if (maybe_executable.is_error())
             result = maybe_executable.release_error();
         else {

@@ -1099,7 +1099,7 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
         if constexpr (!IsCallableWithArguments<T, Completion>) {
             // a. Let result be the result of evaluating asyncBody.
             // FIXME: Cache this executable somewhere.
-            auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
+            auto maybe_executable = Bytecode::compile(vm, async_body, {}, FunctionKind::Async, "AsyncBlockStart"sv);
             if (maybe_executable.is_error())
                 result = maybe_executable.release_error();
             else
@@ -1196,7 +1196,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             if (!parameter.default_value)
                 continue;
             if (parameter.bytecode_executable.is_null()) {
-                auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, ByteString::formatted("default parameter #{} for {}", default_parameter_index++, m_name)));
+                auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, {}, FunctionKind::Normal, ByteString::formatted("default parameter #{} for {}", default_parameter_index++, m_name)));
                 const_cast<FunctionParameter&>(parameter).bytecode_executable = executable;
                 m_default_parameter_bytecode_executables.append(move(executable));
             } else {
@@ -1218,7 +1218,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
     if (!m_bytecode_executable) {
         if (!m_ecmascript_code->bytecode_executable())
-            const_cast<Statement&>(*m_ecmascript_code).set_bytecode_executable(TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name)));
+            const_cast<Statement&>(*m_ecmascript_code).set_bytecode_executable(TRY(Bytecode::compile(vm, *m_ecmascript_code, m_formal_parameters, m_kind, m_name)));
         m_bytecode_executable = m_ecmascript_code->bytecode_executable();
     }
 

@@ -367,7 +367,7 @@ inline ThrowCompletionOr<void> set_variable(
     return {};
 }
 
-inline Value new_function(VM& vm, FunctionExpression const& function_node, Optional<IdentifierTableIndex> const& lhs_name, Optional<Register> const& home_object)
+inline Value new_function(VM& vm, FunctionExpression const& function_node, Optional<IdentifierTableIndex> const& lhs_name, Optional<Operand> const& home_object)
 {
     Value value;
 
@@ -381,7 +381,7 @@ inline Value new_function(VM& vm, FunctionExpression const& function_node, Optio
     }
 
     if (home_object.has_value()) {
-        auto home_object_value = vm.bytecode_interpreter().reg(home_object.value());
+        auto home_object_value = vm.bytecode_interpreter().get(home_object.value());
         static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(&home_object_value.as_object());
     }
 

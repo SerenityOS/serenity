@@ -711,7 +711,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
         Completion result;
 
-        auto maybe_executable = Bytecode::compile(vm, m_ecmascript_code, FunctionKind::Normal, "ShadowRealmEval"sv);
+        auto maybe_executable = Bytecode::compile(vm, m_ecmascript_code, {}, FunctionKind::Normal, "ShadowRealmEval"sv);
         if (maybe_executable.is_error())
             result = maybe_executable.release_error();
         else {

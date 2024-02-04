@@ -39,6 +39,44 @@ namespace JS::Bytecode {
 
 bool g_dump_bytecode = false;
 
+static ByteString format_operand(StringView name, Operand operand, Bytecode::Executable const& executable)
+{
+    StringBuilder builder;
+    builder.appendff("\033[32m{}\033[0m:", name);
+    switch (operand.type()) {
+    case Operand::Type::Register:
+        builder.appendff("\033[33mreg{}\033[0m", operand.index());
+        break;
+    case Operand::Type::Local:
+        // FIXME: Show local name.
+        builder.appendff("\033[34mloc{}\033[0m", operand.index());
+        break;
+    case Operand::Type::Constant: {
+        builder.append("\033[36m"sv);
+        auto value = executable.constants[operand.index()];
+        if (value.is_empty())
+            builder.append("<Empty>"sv);
+        else if (value.is_boolean())
+            builder.appendff("Bool({})", value.as_bool() ? "true"sv : "false"sv);
+        else if (value.is_int32())
+            builder.appendff("Int32({})", value.as_i32());
+        else if (value.is_double())
+            builder.appendff("Double({})", value.as_double());
+        else if (value.is_undefined())
+            builder.append("Undefined"sv);
+        else if (value.is_null())
+            builder.append("Null"sv);
+        else
+            builder.appendff("Value: {}", value);
+        builder.append("\033[0m"sv);
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    return builder.to_byte_string();
+}
+
 NonnullOwnPtr<CallFrame> CallFrame::create(size_t register_count)
 {
     size_t allocation_size = sizeof(CallFrame) + sizeof(Value) * register_count;
@@ -67,7 +105,7 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
     }
 }
 
-Value Interpreter::get(Operand op) const
+ALWAYS_INLINE Value Interpreter::get(Operand op) const
 {
     switch (op.type()) {
     case Operand::Type::Register:
@@ -77,10 +115,10 @@ Value Interpreter::get(Operand op) const
     case Operand::Type::Constant:
         return current_executable().constants[op.index()];
     }
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
-void Interpreter::set(Operand op, Value value)
+ALWAYS_INLINE void Interpreter::set(Operand op, Value value)
 {
     switch (op.type()) {
     case Operand::Type::Register:
@@ -92,7 +130,7 @@ void Interpreter::set(Operand op, Value value)
     case Operand::Type::Constant:
         VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
@@ -144,7 +182,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
 
     // 13. If result.[[Type]] is normal, then
     if (result.type() == Completion::Type::Normal) {
-        auto executable_result = JS::Bytecode::Generator::generate(vm, script);
+        auto executable_result = JS::Bytecode::Generator::generate(vm, script, {});
 
         if (executable_result.is_error()) {
             if (auto error_string = executable_result.error().to_string(); error_string.is_error())
@@ -220,10 +258,9 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-void Interpreter::run_bytecode()
+FLATTEN void Interpreter::run_bytecode()
 {
     auto* locals = vm().running_execution_context().locals.data();
-    auto* registers = this->registers().data();
     auto& accumulator = this->accumulator();
     for (;;) {
     start:
@@ -239,45 +276,32 @@ void Interpreter::run_bytecode()
             auto& instruction = *pc;
 
             switch (instruction.type()) {
-            case Instruction::Type::GetLocal: {
-                auto& local = locals[static_cast<Op::GetLocal const&>(instruction).index()];
-                if (local.is_empty()) {
-                    auto const& variable_name = vm().running_execution_context().function->local_variables_names()[static_cast<Op::GetLocal const&>(instruction).index()];
-                    result = vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name);
-                    break;
-                }
-                accumulator = local;
-                break;
-            }
             case Instruction::Type::SetLocal:
-                locals[static_cast<Op::SetLocal const&>(instruction).index()] = accumulator;
+                locals[static_cast<Op::SetLocal const&>(instruction).index()] = get(static_cast<Op::SetLocal const&>(instruction).src());
                 break;
-            case Instruction::Type::Load:
-                accumulator = registers[static_cast<Op::Load const&>(instruction).src().index()];
+            case Instruction::Type::Mov:
+                set(static_cast<Op::Mov const&>(instruction).dst(), get(static_cast<Op::Mov const&>(instruction).src()));
                 break;
-            case Instruction::Type::Store:
-                registers[static_cast<Op::Store const&>(instruction).dst().index()] = accumulator;
-                break;
-            case Instruction::Type::LoadImmediate:
-                accumulator = static_cast<Op::LoadImmediate const&>(instruction).value();
-                break;
+            case Instruction::Type::End:
+                accumulator = get(static_cast<Op::End const&>(instruction).value());
+                return;
             case Instruction::Type::Jump:
                 m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 goto start;
-            case Instruction::Type::JumpConditional:
-                if (accumulator.to_boolean())
-                    m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+            case Instruction::Type::JumpIf:
+                if (get(static_cast<Op::JumpIf const&>(instruction).condition()).to_boolean())
+                    m_current_block = &static_cast<Op::JumpIf const&>(instruction).true_target()->block();
                 else
-                    m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
+                    m_current_block = &static_cast<Op::JumpIf const&>(instruction).false_target()->block();
                 goto start;
             case Instruction::Type::JumpNullish:
-                if (accumulator.is_nullish())
+                if (get(static_cast<Op::JumpNullish const&>(instruction).condition()).is_nullish())
                     m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 else
                     m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
                 goto start;
             case Instruction::Type::JumpUndefined:
-                if (accumulator.is_undefined())
+                if (get(static_cast<Op::JumpUndefined const&>(instruction).condition()).is_undefined())
                     m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 else
                     m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
@@ -458,9 +482,9 @@ void Interpreter::leave_unwind_context()
     unwind_contexts().take_last();
 }
 
-void Interpreter::catch_exception()
+void Interpreter::catch_exception(Operand dst)
 {
-    accumulator() = reg(Register::exception());
+    set(dst, reg(Register::exception()));
     reg(Register::exception()) = {};
     auto& context = unwind_contexts().last();
     VERIFY(!context.handler_called);
@@ -476,9 +500,9 @@ void Interpreter::enter_object_environment(Object& object)
     vm().running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
 }
 
-ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, ReadonlySpan<FunctionParameter> parameters, FunctionKind kind, DeprecatedFlyString const& name)
 {
-    auto executable_result = Bytecode::Generator::generate(vm, node, kind);
+    auto executable_result = Bytecode::Generator::generate(vm, node, parameters, kind);
     if (executable_result.is_error())
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
@@ -533,19 +557,32 @@ ByteString Instruction::to_byte_string(Bytecode::Executable const& executable) c
 
 namespace JS::Bytecode::Op {
 
-ThrowCompletionOr<void> Load::execute_impl(Bytecode::Interpreter&) const
+static void dump_object(Object& o, HashTable<Object const*>& seen, int indent = 0)
 {
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
+    if (seen.contains(&o))
+        return;
+    seen.set(&o);
+    for (auto& it : o.shape().property_table()) {
+        auto value = o.get_direct(it.value.offset);
+        dbgln("{}  {} -> {}", String::repeated(' ', indent).release_value(), it.key.to_display_string(), value);
+        if (value.is_object()) {
+            dump_object(value.as_object(), seen, indent + 2);
+        }
+    }
 }
 
-ThrowCompletionOr<void> LoadImmediate::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> Dump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
+    auto value = interpreter.get(m_value);
+    dbgln("(DUMP) {}: {}", m_text, value);
+    if (value.is_object()) {
+        HashTable<Object const*> seen;
+        dump_object(value.as_object(), seen);
+    }
+    return {};
 }
 
-ThrowCompletionOr<void> Store::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> End::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
     __builtin_unreachable();
@@ -575,14 +612,17 @@ static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
     ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
     {                                                                                           \
         auto& vm = interpreter.vm();                                                            \
-        auto lhs = interpreter.reg(m_lhs_reg);                                                  \
-        auto rhs = interpreter.accumulator();                                                   \
-        interpreter.accumulator() = TRY(op_snake_case(vm, lhs, rhs));                           \
+        auto lhs = interpreter.get(m_lhs);                                                      \
+        auto rhs = interpreter.get(m_rhs);                                                      \
+        interpreter.set(m_dst, TRY(op_snake_case(vm, lhs, rhs)));                               \
         return {};                                                                              \
     }                                                                                           \
-    ByteString OpTitleCase::to_byte_string_impl(Bytecode::Executable const&) const              \
+    ByteString OpTitleCase::to_byte_string_impl(Bytecode::Executable const& executable) const   \
     {                                                                                           \
-        return ByteString::formatted(#OpTitleCase " {}", m_lhs_reg);                            \
+        return ByteString::formatted(#OpTitleCase " {}, {}, {}",                                \
+            format_operand("dst"sv, m_dst, executable),                                         \
+            format_operand("lhs"sv, m_lhs, executable),                                         \
+            format_operand("rhs"sv, m_rhs, executable));                                        \
     }
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
@@ -601,12 +641,14 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
     ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
     {                                                                                           \
         auto& vm = interpreter.vm();                                                            \
-        interpreter.accumulator() = TRY(op_snake_case(vm, interpreter.accumulator()));          \
+        interpreter.set(dst(), TRY(op_snake_case(vm, interpreter.get(src()))));                 \
         return {};                                                                              \
     }                                                                                           \
-    ByteString OpTitleCase::to_byte_string_impl(Bytecode::Executable const&) const              \
+    ByteString OpTitleCase::to_byte_string_impl(Bytecode::Executable const& executable) const   \
     {                                                                                           \
-        return #OpTitleCase;                                                                    \
+        return ByteString::formatted(#OpTitleCase " {}, {}",                                    \
+            format_operand("dst"sv, dst(), executable),                                         \
+            format_operand("src"sv, src(), executable));                                        \
     }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
@@ -614,7 +656,7 @@ JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = BigInt::create(vm, m_bigint);
+    interpreter.set(dst(), BigInt::create(vm, m_bigint));
     return {};
 }
 
@@ -625,7 +667,7 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
         auto& value = interpreter.reg(Register(m_elements[0].index() + i));
         array->indexed_properties().put(i, value, default_attributes);
     }
-    interpreter.accumulator() = array;
+    interpreter.set(dst(), array);
     return {};
 }
 
@@ -634,33 +676,33 @@ ThrowCompletionOr<void> NewPrimitiveArray::execute_impl(Bytecode::Interpreter& i
     auto array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t i = 0; i < m_values.size(); i++)
         array->indexed_properties().put(i, m_values[i], default_attributes);
-    interpreter.accumulator() = array;
+    interpreter.set(dst(), array);
     return {};
 }
 
-ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> ArrayAppend::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    return append(interpreter.vm(), interpreter.reg(m_lhs), interpreter.accumulator(), m_is_spread);
+    return append(interpreter.vm(), interpreter.get(dst()), interpreter.get(src()), m_is_spread);
 }
 
 ThrowCompletionOr<void> ImportCall::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto specifier = interpreter.reg(m_specifier);
-    auto options_value = interpreter.reg(m_options);
-    interpreter.accumulator() = TRY(perform_import_call(vm, specifier, options_value));
+    auto specifier = interpreter.get(m_specifier);
+    auto options_value = interpreter.get(m_options);
+    interpreter.set(dst(), TRY(perform_import_call(vm, specifier, options_value)));
     return {};
 }
 
 ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(iterator_to_array(interpreter.vm(), interpreter.accumulator()));
+    interpreter.set(dst(), TRY(iterator_to_array(interpreter.vm(), interpreter.get(iterator()))));
     return {};
 }
 
 ThrowCompletionOr<void> NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = PrimitiveString::create(interpreter.vm(), interpreter.current_executable().get_string(m_string));
+    interpreter.set(dst(), PrimitiveString::create(interpreter.vm(), interpreter.current_executable().get_string(m_string)));
     return {};
 }
 
@@ -668,32 +710,34 @@ ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpret
 {
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
-
-    interpreter.accumulator() = Object::create(realm, realm.intrinsics().object_prototype());
+    interpreter.set(dst(), Object::create(realm, realm.intrinsics().object_prototype()));
     return {};
 }
 
 ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = new_regexp(
-        interpreter.vm(),
-        interpreter.current_executable().regex_table->get(m_regex_index),
-        interpreter.current_executable().get_string(m_source_index),
-        interpreter.current_executable().get_string(m_flags_index));
+    interpreter.set(dst(),
+        new_regexp(
+            interpreter.vm(),
+            interpreter.current_executable().regex_table->get(m_regex_index),
+            interpreter.current_executable().get_string(m_source_index),
+            interpreter.current_executable().get_string(m_flags_index)));
     return {};
 }
 
-#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                    \
-    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                   \
-    {                                                                                                                                \
-        auto& vm = interpreter.vm();                                                                                                 \
-        auto& realm = *vm.current_realm();                                                                                           \
-        interpreter.accumulator() = ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string));           \
-        return {};                                                                                                                   \
-    }                                                                                                                                \
-    ByteString New##ErrorName::to_byte_string_impl(Bytecode::Executable const& executable) const                                     \
-    {                                                                                                                                \
-        return ByteString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string)); \
+#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                      \
+    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                     \
+    {                                                                                                                  \
+        auto& vm = interpreter.vm();                                                                                   \
+        auto& realm = *vm.current_realm();                                                                             \
+        interpreter.set(dst(), ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string))); \
+        return {};                                                                                                     \
+    }                                                                                                                  \
+    ByteString New##ErrorName::to_byte_string_impl(Bytecode::Executable const& executable) const                       \
+    {                                                                                                                  \
+        return ByteString::formatted("New" #ErrorName " {}, {}",                                                       \
+            format_operand("dst"sv, m_dst, executable),                                                                \
+            executable.string_table->get(m_error_string));                                                             \
     }
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DEFINE_NEW_BUILTIN_ERROR_OP)
@@ -703,35 +747,32 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
-    auto from_object = interpreter.reg(m_from_object);
+    auto from_object = interpreter.get(m_from_object);
 
     auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
 
     HashTable<PropertyKey> excluded_names;
     for (size_t i = 0; i < m_excluded_names_count; ++i) {
-        excluded_names.set(TRY(interpreter.reg(m_excluded_names[i]).to_property_key(vm)));
+        excluded_names.set(TRY(interpreter.get(m_excluded_names[i]).to_property_key(vm)));
     }
 
     TRY(to_object->copy_data_properties(vm, from_object, excluded_names));
 
-    interpreter.accumulator() = to_object;
+    interpreter.set(dst(), to_object);
     return {};
 }
 
 ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto string = TRY(interpreter.accumulator().to_primitive_string(vm));
-    interpreter.reg(m_lhs) = PrimitiveString::create(vm, interpreter.reg(m_lhs).as_string(), string);
+    auto string = TRY(interpreter.get(src()).to_primitive_string(vm));
+    interpreter.set(dst(), PrimitiveString::create(vm, interpreter.get(dst()).as_string(), string));
     return {};
 }
 
 ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(get_variable(
-        interpreter,
-        interpreter.current_executable().get_identifier(m_identifier),
-        interpreter.current_executable().environment_variable_caches[m_cache_index]));
+    interpreter.set(dst(), TRY(get_variable(interpreter, interpreter.current_executable().get_identifier(m_identifier), interpreter.current_executable().environment_variable_caches[m_cache_index])));
     return {};
 }
 
@@ -741,24 +782,15 @@ ThrowCompletionOr<void> GetCalleeAndThisFromEnvironment::execute_impl(Bytecode::
         interpreter,
         interpreter.current_executable().get_identifier(m_identifier),
         interpreter.current_executable().environment_variable_caches[m_cache_index]));
-    interpreter.reg(m_callee_reg) = callee_and_this.callee;
-    interpreter.reg(m_this_reg) = callee_and_this.this_value;
+    interpreter.set(m_callee, callee_and_this.callee);
+    interpreter.set(m_this_value, callee_and_this.this_value);
     return {};
 }
 
 ThrowCompletionOr<void> GetGlobal::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(get_global(
-        interpreter,
-        interpreter.current_executable().get_identifier(m_identifier),
-        interpreter.current_executable().global_variable_caches[m_cache_index]));
+    interpreter.set(dst(), TRY(get_global(interpreter, interpreter.current_executable().get_identifier(m_identifier), interpreter.current_executable().global_variable_caches[m_cache_index])));
     return {};
-}
-
-ThrowCompletionOr<void> GetLocal::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -766,7 +798,7 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
     auto& vm = interpreter.vm();
     auto const& string = interpreter.current_executable().get_identifier(m_identifier);
     auto reference = TRY(vm.resolve_binding(string));
-    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    interpreter.set(dst(), Value(TRY(reference.delete_(vm))));
     return {};
 }
 
@@ -783,14 +815,14 @@ ThrowCompletionOr<void> CreateLexicalEnvironment::execute_impl(Bytecode::Interpr
 
 ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto object = TRY(interpreter.accumulator().to_object(interpreter.vm()));
+    auto object = TRY(interpreter.get(m_object).to_object(interpreter.vm()));
     interpreter.enter_object_environment(*object);
     return {};
 }
 
 ThrowCompletionOr<void> Catch::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.catch_exception();
+    interpreter.catch_exception(dst());
     return {};
 }
 
@@ -806,7 +838,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
     TRY(set_variable(vm,
         name,
-        interpreter.accumulator(),
+        interpreter.get(src()),
         m_mode,
         m_initialization_mode,
         interpreter.current_executable().environment_variable_caches[m_cache_index]));
@@ -821,18 +853,18 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter&) const
 
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto base_value = interpreter.accumulator();
+    auto base_value = interpreter.get(base());
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, base_value, cache));
+    interpreter.set(dst(), TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, base_value, cache)));
     return {};
 }
 
 ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto base_value = interpreter.accumulator();
-    auto this_value = interpreter.reg(m_this_value);
+    auto base_value = interpreter.get(m_base);
+    auto this_value = interpreter.get(m_this_value);
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, this_value, cache));
+    interpreter.set(dst(), TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, this_value, cache)));
     return {};
 }
 
@@ -840,9 +872,9 @@ ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& inte
 {
     auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(m_property);
-    auto base_value = interpreter.accumulator();
+    auto base_value = interpreter.get(m_base);
     auto private_reference = make_private_reference(vm, base_value, name);
-    interpreter.accumulator() = TRY(private_reference.get_value(vm));
+    interpreter.set(dst(), TRY(private_reference.get_value(vm)));
     return {};
 }
 
@@ -850,70 +882,65 @@ ThrowCompletionOr<void> HasPrivateId::execute_impl(Bytecode::Interpreter& interp
 {
     auto& vm = interpreter.vm();
 
-    if (!interpreter.accumulator().is_object())
+    auto base = interpreter.get(m_base);
+    if (!base.is_object())
         return vm.throw_completion<TypeError>(ErrorType::InOperatorWithObject);
 
     auto private_environment = vm.running_execution_context().private_environment;
     VERIFY(private_environment);
     auto private_name = private_environment->resolve_private_identifier(interpreter.current_executable().get_identifier(m_property));
-    interpreter.accumulator() = Value(interpreter.accumulator().as_object().private_element_find(private_name) != nullptr);
+    interpreter.set(dst(), Value(base.as_object().private_element_find(private_name) != nullptr));
     return {};
 }
 
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
-    auto value = interpreter.accumulator();
-    auto base = interpreter.reg(m_base);
+    auto value = interpreter.get(m_src);
+    auto base = interpreter.get(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
     TRY(put_by_property_key(vm, base, base, value, name, m_kind, &cache));
-    interpreter.accumulator() = value;
     return {};
 }
 
 ThrowCompletionOr<void> PutByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
-    auto value = interpreter.accumulator();
-    auto base = interpreter.reg(m_base);
+    auto value = interpreter.get(m_src);
+    auto base = interpreter.get(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, name, m_kind, &cache));
-    interpreter.accumulator() = value;
+    TRY(put_by_property_key(vm, base, interpreter.get(m_this_value), value, name, m_kind, &cache));
     return {};
 }
 
 ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
-    auto value = interpreter.accumulator();
-    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto value = interpreter.get(m_src);
+    auto object = TRY(interpreter.get(m_base).to_object(vm));
     auto name = interpreter.current_executable().get_identifier(m_property);
     auto private_reference = make_private_reference(vm, object, name);
     TRY(private_reference.put_value(vm, value));
-    interpreter.accumulator() = value;
     return {};
 }
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto base_value = interpreter.accumulator();
-    interpreter.accumulator() = TRY(Bytecode::delete_by_id(interpreter, base_value, m_property));
+    auto base_value = interpreter.get(m_base);
+    interpreter.set(dst(), TRY(Bytecode::delete_by_id(interpreter, base_value, m_property)));
     return {};
 }
 
 ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto base_value = interpreter.accumulator();
+    auto base_value = interpreter.get(m_base);
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { base_value, identifier, interpreter.reg(m_this_value), strict };
-    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    auto reference = Reference { base_value, identifier, interpreter.get(m_this_value), strict };
+    interpreter.set(dst(), Value(TRY(reference.delete_(vm))));
     return {};
 }
 
@@ -932,7 +959,7 @@ ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& 
         auto& vm = interpreter.vm();
         cached_this_value = TRY(vm.resolve_this_binding());
     }
-    interpreter.accumulator() = cached_this_value;
+    interpreter.set(dst(), cached_this_value);
     return {};
 }
 
@@ -948,24 +975,30 @@ ThrowCompletionOr<void> ResolveSuperBase::execute_impl(Bytecode::Interpreter& in
     VERIFY(env.has_super_binding());
 
     // 3. Let baseValue be ? env.GetSuperBase().
-    interpreter.accumulator() = TRY(env.get_super_base());
+    interpreter.set(dst(), TRY(env.get_super_base()));
 
     return {};
 }
 
 ThrowCompletionOr<void> GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = interpreter.vm().get_new_target();
+    interpreter.set(dst(), interpreter.vm().get_new_target());
     return {};
 }
 
 ThrowCompletionOr<void> GetImportMeta::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = interpreter.vm().get_import_meta();
+    interpreter.set(dst(), interpreter.vm().get_import_meta());
     return {};
 }
 
-ThrowCompletionOr<void> JumpConditional::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> JumpIf::execute_impl(Bytecode::Interpreter&) const
+{
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
+}
+
+ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
     __builtin_unreachable();
@@ -977,7 +1010,7 @@ ThrowCompletionOr<void> JumpNullish::execute_impl(Bytecode::Interpreter&) const
     __builtin_unreachable();
 }
 
-ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> Mov::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
     __builtin_unreachable();
@@ -1012,58 +1045,61 @@ static ThrowCompletionOr<Value> dispatch_builtin_call(Bytecode::Interpreter& int
 
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto callee = interpreter.reg(m_callee);
+    auto callee = interpreter.get(m_callee);
 
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
 
     if (m_builtin.has_value() && m_argument_count == Bytecode::builtin_argument_count(m_builtin.value()) && interpreter.realm().get_builtin_value(m_builtin.value()) == callee) {
-        interpreter.accumulator() = TRY(dispatch_builtin_call(interpreter, m_builtin.value(), m_first_argument));
+        interpreter.set(dst(), TRY(dispatch_builtin_call(interpreter, m_builtin.value(), m_first_argument)));
         return {};
     }
 
-    interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, interpreter.registers().slice(m_first_argument.index(), m_argument_count)));
+    interpreter.set(dst(), TRY(perform_call(interpreter, interpreter.get(m_this_value), call_type(), callee, interpreter.registers().slice(m_first_argument.index(), m_argument_count))));
     return {};
 }
 
 ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto callee = interpreter.reg(m_callee);
+    auto callee = interpreter.get(m_callee);
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
-    auto argument_values = argument_list_evaluation(interpreter.vm(), interpreter.accumulator());
-    interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, move(argument_values)));
+    auto argument_values = argument_list_evaluation(interpreter.vm(), interpreter.get(arguments()));
+    interpreter.set(dst(), TRY(perform_call(interpreter, interpreter.get(m_this_value), call_type(), callee, move(argument_values))));
     return {};
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
 ThrowCompletionOr<void> SuperCallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(super_call_with_argument_array(interpreter.vm(), interpreter.accumulator(), m_is_synthetic));
+    interpreter.set(dst(), TRY(super_call_with_argument_array(interpreter.vm(), interpreter.get(arguments()), m_is_synthetic)));
     return {};
 }
 
 ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = new_function(vm, m_function_node, m_lhs_name, m_home_object);
+    interpreter.set(dst(), new_function(vm, m_function_node, m_lhs_name, m_home_object));
     return {};
 }
 
 ThrowCompletionOr<void> Return::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.do_return(interpreter.accumulator().value_or(js_undefined()));
+    if (m_value.has_value())
+        interpreter.do_return(interpreter.get(*m_value));
+    else
+        interpreter.do_return(js_undefined());
     return {};
 }
 
 ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto old_value = interpreter.accumulator();
+    auto old_value = interpreter.get(dst());
 
     // OPTIMIZATION: Fast path for Int32 values.
     if (old_value.is_int32()) {
         auto integer_value = old_value.as_i32();
         if (integer_value != NumericLimits<i32>::max()) [[likely]] {
-            interpreter.accumulator() = Value { integer_value + 1 };
+            interpreter.set(dst(), Value { integer_value + 1 });
             return {};
         }
     }
@@ -1071,43 +1107,55 @@ ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpret
     old_value = TRY(old_value.to_numeric(vm));
 
     if (old_value.is_number())
-        interpreter.accumulator() = Value(old_value.as_double() + 1);
+        interpreter.set(dst(), Value(old_value.as_double() + 1));
     else
-        interpreter.accumulator() = BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+        interpreter.set(dst(), BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 })));
     return {};
 }
 
 ThrowCompletionOr<void> Decrement::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto old_value = TRY(interpreter.accumulator().to_numeric(vm));
+    auto old_value = interpreter.get(dst());
+
+    old_value = TRY(old_value.to_numeric(vm));
 
     if (old_value.is_number())
-        interpreter.accumulator() = Value(old_value.as_double() - 1);
+        interpreter.set(dst(), Value(old_value.as_double() - 1));
     else
-        interpreter.accumulator() = BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+        interpreter.set(dst(), BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 })));
     return {};
 }
 
 ThrowCompletionOr<void> Throw::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    return throw_completion(interpreter.accumulator());
+    return throw_completion(interpreter.get(src()));
 }
 
 ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    if (!interpreter.accumulator().is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_string_without_side_effects());
+    auto src = interpreter.get(m_src);
+    if (!src.is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, src.to_string_without_side_effects());
     return {};
 }
 
 ThrowCompletionOr<void> ThrowIfNullish::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto value = interpreter.accumulator();
+    auto value = interpreter.get(m_src);
     if (value.is_nullish())
         return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
+    return {};
+}
+
+ThrowCompletionOr<void> ThrowIfTDZ::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto value = interpreter.get(m_src);
+    if (value.is_empty())
+        return vm.throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, value.to_string_without_side_effects());
     return {};
 }
 
@@ -1143,7 +1191,8 @@ ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interprete
 
 ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto yielded_value = interpreter.accumulator().value_or(js_undefined());
+    auto yielded_value = interpreter.get(m_value).value_or(js_undefined());
+
     auto object = Object::create(interpreter.realm(), nullptr);
     object->define_direct_property("result", yielded_value, JS::default_attributes);
 
@@ -1156,12 +1205,13 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
 
     object->define_direct_property("isAwait", Value(false), JS::default_attributes);
     interpreter.do_return(object);
+
     return {};
 }
 
 ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto yielded_value = interpreter.accumulator().value_or(js_undefined());
+    auto yielded_value = interpreter.get(m_argument).value_or(js_undefined());
     auto object = Object::create(interpreter.realm(), nullptr);
     object->define_direct_property("result", yielded_value, JS::default_attributes);
     // FIXME: If we get a pointer, which is not accurately representable as a double
@@ -1174,67 +1224,53 @@ ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) 
 
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(get_by_value(interpreter.vm(), interpreter.reg(m_base), interpreter.accumulator()));
+    interpreter.set(dst(), TRY(get_by_value(interpreter.vm(), interpreter.get(m_base), interpreter.get(m_property))));
     return {};
 }
 
 ThrowCompletionOr<void> GetByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-
-    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
-    auto property_key_value = interpreter.accumulator();
-
-    auto object = TRY(interpreter.reg(m_base).to_object(vm));
-
+    auto property_key_value = interpreter.get(m_property);
+    auto object = TRY(interpreter.get(m_base).to_object(vm));
     auto property_key = TRY(property_key_value.to_property_key(vm));
-
-    interpreter.accumulator() = TRY(object->internal_get(property_key, interpreter.reg(m_this_value)));
+    interpreter.set(dst(), TRY(object->internal_get(property_key, interpreter.get(m_this_value))));
     return {};
 }
 
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-
-    auto value = interpreter.accumulator();
-    TRY(put_by_value(vm, interpreter.reg(m_base), interpreter.reg(m_property), interpreter.accumulator(), m_kind));
-    interpreter.accumulator() = value;
-
+    auto value = interpreter.get(m_src);
+    TRY(put_by_value(vm, interpreter.get(m_base), interpreter.get(m_property), value, m_kind));
     return {};
 }
 
 ThrowCompletionOr<void> PutByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-
-    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
-    auto value = interpreter.accumulator();
-
-    auto base = interpreter.reg(m_base);
-
-    auto property_key = m_kind != PropertyKind::Spread ? TRY(interpreter.reg(m_property).to_property_key(vm)) : PropertyKey {};
-    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, property_key, m_kind));
-    interpreter.accumulator() = value;
+    auto value = interpreter.get(m_src);
+    auto base = interpreter.get(m_base);
+    auto property_key = m_kind != PropertyKind::Spread ? TRY(interpreter.get(m_property).to_property_key(vm)) : PropertyKey {};
+    TRY(put_by_property_key(vm, base, interpreter.get(m_this_value), value, property_key, m_kind));
     return {};
 }
 
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto base_value = interpreter.reg(m_base);
-    auto property_key_value = interpreter.accumulator();
-    interpreter.accumulator() = TRY(delete_by_value(interpreter, base_value, property_key_value));
+    auto base_value = interpreter.get(m_base);
+    auto property_key_value = interpreter.get(m_property);
+    interpreter.set(dst(), TRY(delete_by_value(interpreter, base_value, property_key_value)));
 
     return {};
 }
 
 ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
-    auto property_key_value = interpreter.accumulator();
-    auto base_value = interpreter.reg(m_base);
-    auto this_value = interpreter.reg(m_this_value);
-    interpreter.accumulator() = TRY(delete_by_value_with_this(interpreter, base_value, property_key_value, this_value));
+    auto property_key_value = interpreter.get(m_property);
+    auto base_value = interpreter.get(m_base);
+    auto this_value = interpreter.get(m_this_value);
+    interpreter.set(dst(), TRY(delete_by_value_with_this(interpreter, base_value, property_key_value, this_value)));
 
     return {};
 }
@@ -1242,21 +1278,21 @@ ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interprete
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = TRY(get_iterator(vm, interpreter.accumulator(), m_hint));
+    interpreter.set(dst(), TRY(get_iterator(vm, interpreter.get(iterable()), m_hint)));
     return {};
 }
 
 ThrowCompletionOr<void> GetObjectFromIteratorRecord::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.reg(m_iterator_record).as_object());
-    interpreter.reg(m_object) = iterator_record.iterator;
+    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
+    interpreter.set(m_object, iterator_record.iterator);
     return {};
 }
 
 ThrowCompletionOr<void> GetNextMethodFromIteratorRecord::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.reg(m_iterator_record).as_object());
-    interpreter.reg(m_next_method) = iterator_record.next_method;
+    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
+    interpreter.set(m_next_method, iterator_record.next_method);
     return {};
 }
 
@@ -1264,21 +1300,21 @@ ThrowCompletionOr<void> GetMethod::execute_impl(Bytecode::Interpreter& interpret
 {
     auto& vm = interpreter.vm();
     auto identifier = interpreter.current_executable().get_identifier(m_property);
-    auto method = TRY(interpreter.accumulator().get_method(vm, identifier));
-    interpreter.accumulator() = method ?: js_undefined();
+    auto method = TRY(interpreter.get(m_object).get_method(vm, identifier));
+    interpreter.set(dst(), method ?: js_undefined());
     return {};
 }
 
 ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(get_object_property_iterator(interpreter.vm(), interpreter.accumulator()));
+    interpreter.set(dst(), TRY(get_object_property_iterator(interpreter.vm(), interpreter.get(object()))));
     return {};
 }
 
 ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto& iterator = verify_cast<IteratorRecord>(interpreter.accumulator().as_object());
+    auto& iterator = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
@@ -1288,7 +1324,7 @@ ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> AsyncIteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto& iterator = verify_cast<IteratorRecord>(interpreter.accumulator().as_object());
+    auto& iterator = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY(async_iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
@@ -1298,15 +1334,17 @@ ThrowCompletionOr<void> AsyncIteratorClose::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto& iterator = verify_cast<IteratorRecord>(interpreter.accumulator().as_object());
-
-    interpreter.accumulator() = TRY(iterator_next(vm, iterator));
+    auto& iterator_record = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
+    interpreter.set(dst(), TRY(iterator_next(vm, iterator_record)));
     return {};
 }
 
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(new_class(interpreter.vm(), interpreter.accumulator(), m_class_expression, m_lhs_name));
+    Value super_class;
+    if (m_super_class.has_value())
+        super_class = interpreter.get(m_super_class.value());
+    interpreter.set(dst(), TRY(new_class(interpreter.vm(), super_class, m_class_expression, m_lhs_name)));
     return {};
 }
 
@@ -1314,21 +1352,13 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
 ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = TRY(typeof_variable(vm, interpreter.current_executable().get_identifier(m_identifier)));
-    return {};
-}
-
-ThrowCompletionOr<void> TypeofLocal::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    auto& vm = interpreter.vm();
-    auto const& value = vm.running_execution_context().local(m_index);
-    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
+    interpreter.set(dst(), TRY(typeof_variable(vm, interpreter.current_executable().get_identifier(m_identifier))));
     return {};
 }
 
 ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(interpreter.accumulator().to_numeric(interpreter.vm()));
+    interpreter.set(dst(), TRY(interpreter.get(src()).to_numeric(interpreter.vm())));
     return {};
 }
 
@@ -1342,103 +1372,115 @@ ThrowCompletionOr<void> BlockDeclarationInstantiation::execute_impl(Bytecode::In
     return {};
 }
 
-ByteString Load::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Mov::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("Load {}", m_src);
+    return ByteString::formatted("Mov {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("src"sv, m_src, executable));
 }
 
-ByteString LoadImmediate::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString NewBigInt::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("LoadImmediate {}", m_value);
+    return ByteString::formatted("NewBigInt {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        m_bigint.to_base_deprecated(10));
 }
 
-ByteString Store::to_byte_string_impl(Bytecode::Executable const&) const
-{
-    return ByteString::formatted("Store {}", m_dst);
-}
-
-ByteString NewBigInt::to_byte_string_impl(Bytecode::Executable const&) const
-{
-    return ByteString::formatted("NewBigInt \"{}\"", m_bigint.to_base_deprecated(10));
-}
-
-ByteString NewArray::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString NewArray::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
-    builder.append("NewArray"sv);
+    builder.appendff("NewArray {}", format_operand("dst"sv, dst(), executable));
     if (m_element_count != 0) {
-        builder.appendff(" [{}-{}]", m_elements[0], m_elements[1]);
+        builder.appendff(", [{}-{}]", format_operand("from"sv, m_elements[0], executable), format_operand("to"sv, m_elements[1], executable));
     }
     return builder.to_byte_string();
 }
 
-ByteString NewPrimitiveArray::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString NewPrimitiveArray::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("NewPrimitiveArray {}"sv, m_values.span());
+    return ByteString::formatted("NewPrimitiveArray {}, {}"sv,
+        format_operand("dst"sv, dst(), executable),
+        m_values.span());
 }
 
-ByteString Append::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ArrayAppend::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    if (m_is_spread)
-        return ByteString::formatted("Append lhs: **{}", m_lhs);
-    return ByteString::formatted("Append lhs: {}", m_lhs);
+    return ByteString::formatted("Append {}, {}{}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("src"sv, src(), executable),
+        m_is_spread ? " **"sv : ""sv);
 }
 
-ByteString IteratorToArray::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString IteratorToArray::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "IteratorToArray";
+    return ByteString::formatted("IteratorToArray {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("iterator"sv, iterator(), executable));
 }
 
 ByteString NewString::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("NewString {} (\"{}\")", m_string, executable.string_table->get(m_string));
+    return ByteString::formatted("NewString {}, \"{}\"",
+        format_operand("dst"sv, dst(), executable),
+        executable.string_table->get(m_string));
 }
 
-ByteString NewObject::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString NewObject::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "NewObject";
+    return ByteString::formatted("NewObject {}", format_operand("dst"sv, dst(), executable));
 }
 
 ByteString NewRegExp::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("NewRegExp source:{} (\"{}\") flags:{} (\"{}\")", m_source_index, executable.get_string(m_source_index), m_flags_index, executable.get_string(m_flags_index));
+    return ByteString::formatted("NewRegExp {}, source:{} (\"{}\") flags:{} (\"{}\")",
+        format_operand("dst"sv, dst(), executable),
+        m_source_index, executable.get_string(m_source_index), m_flags_index, executable.get_string(m_flags_index));
 }
 
-ByteString CopyObjectExcludingProperties::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString CopyObjectExcludingProperties::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
-    builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
+    builder.appendff("CopyObjectExcludingProperties {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("from"sv, m_from_object, executable));
     if (m_excluded_names_count != 0) {
         builder.append(" excluding:["sv);
-        builder.join(", "sv, ReadonlySpan<Register>(m_excluded_names, m_excluded_names_count));
+        for (size_t i = 0; i < m_excluded_names_count; ++i) {
+            if (i != 0)
+                builder.append(", "sv);
+            builder.append(format_operand("#"sv, m_excluded_names[i], executable));
+        }
         builder.append(']');
     }
     return builder.to_byte_string();
 }
 
-ByteString ConcatString::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ConcatString::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("ConcatString {}", m_lhs);
+    return ByteString::formatted("ConcatString {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("src"sv, src(), executable));
 }
 
 ByteString GetCalleeAndThisFromEnvironment::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetCalleeAndThisFromEnvironment {} -> callee: {}, this:{} ", executable.identifier_table->get(m_identifier), m_callee_reg, m_this_reg);
+    return ByteString::formatted("GetCalleeAndThisFromEnvironment {}, {} <- {}",
+        format_operand("callee"sv, m_callee, executable),
+        format_operand("this"sv, m_this_value, executable),
+        executable.identifier_table->get(m_identifier));
 }
 
 ByteString GetVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    return ByteString::formatted("GetVariable {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        executable.identifier_table->get(m_identifier));
 }
 
 ByteString GetGlobal::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetGlobal {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
-}
-
-ByteString GetLocal::to_byte_string_impl(Bytecode::Executable const&) const
-{
-    return ByteString::formatted("GetLocal {}", m_index);
+    return ByteString::formatted("GetGlobal {}, {}", format_operand("dst"sv, dst(), executable),
+        executable.identifier_table->get(m_identifier));
 }
 
 ByteString DeleteVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
@@ -1457,21 +1499,27 @@ ByteString CreateVariable::to_byte_string_impl(Bytecode::Executable const& execu
     return ByteString::formatted("CreateVariable env:{} immutable:{} global:{} {} ({})", mode_string, m_is_immutable, m_is_global, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-ByteString EnterObjectEnvironment::to_byte_string_impl(Executable const&) const
+ByteString EnterObjectEnvironment::to_byte_string_impl(Executable const& executable) const
 {
-    return ByteString::formatted("EnterObjectEnvironment");
+    return ByteString::formatted("EnterObjectEnvironment {}",
+        format_operand("object"sv, m_object, executable));
 }
 
 ByteString SetVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto initialization_mode_name = m_initialization_mode == InitializationMode::Initialize ? "Initialize" : "Set";
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
-    return ByteString::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
+    return ByteString::formatted("SetVariable {}, {}, env:{} init:{}",
+        executable.identifier_table->get(m_identifier),
+        format_operand("src"sv, src(), executable),
+        mode_string, initialization_mode_name);
 }
 
-ByteString SetLocal::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString SetLocal::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("SetLocal {}", m_index);
+    return ByteString::formatted("SetLocal {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("src"sv, src(), executable));
 }
 
 static StringView property_kind_to_string(PropertyKind kind)
@@ -1496,49 +1544,83 @@ static StringView property_kind_to_string(PropertyKind kind)
 ByteString PutById::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = property_kind_to_string(m_kind);
-    return ByteString::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted("PutById {}, {}, {}, kind:{}",
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property),
+        format_operand("src"sv, m_src, executable),
+        kind);
 }
 
 ByteString PutByIdWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = property_kind_to_string(m_kind);
-    return ByteString::formatted("PutByIdWithThis kind:{} base:{}, property:{} ({}) this_value:{}", kind, m_base, m_property, executable.identifier_table->get(m_property), m_this_value);
+    return ByteString::formatted("PutByIdWithThis {}, {}, {}, {}, kind:{}",
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property),
+        format_operand("src"sv, m_src, executable),
+        format_operand("this"sv, m_this_value, executable),
+        kind);
 }
 
 ByteString PutPrivateById::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = property_kind_to_string(m_kind);
-    return ByteString::formatted("PutPrivateById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted(
+        "PutPrivateById {}, {}, {}, kind:{} ",
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property),
+        format_operand("src"sv, m_src, executable),
+        kind);
 }
 
 ByteString GetById::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted("GetById {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property));
 }
 
 ByteString GetByIdWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetByIdWithThis {} ({}) this_value:{}", m_property, executable.identifier_table->get(m_property), m_this_value);
+    return ByteString::formatted("GetByIdWithThis {}, {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property),
+        format_operand("this"sv, m_this_value, executable));
 }
 
 ByteString GetPrivateById::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetPrivateById {} ({})", m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted("GetPrivateById {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property));
 }
 
 ByteString HasPrivateId::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("HasPrivateId {} ({})", m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted("HasPrivateId {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property));
 }
 
 ByteString DeleteById::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("DeleteById {} ({})", m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted("DeleteById {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property));
 }
 
 ByteString DeleteByIdWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("DeleteByIdWithThis {} ({}) this_value:{}", m_property, executable.identifier_table->get(m_property), m_this_value);
+    return ByteString::formatted("DeleteByIdWithThis {}, {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        executable.identifier_table->get(m_property),
+        format_operand("this"sv, m_this_value, executable));
 }
 
 ByteString Jump::to_byte_string_impl(Bytecode::Executable const&) const
@@ -1548,25 +1630,31 @@ ByteString Jump::to_byte_string_impl(Bytecode::Executable const&) const
     return ByteString::formatted("Jump <empty>");
 }
 
-ByteString JumpConditional::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString JumpIf::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto true_string = m_true_target.has_value() ? ByteString::formatted("{}", *m_true_target) : "<empty>";
     auto false_string = m_false_target.has_value() ? ByteString::formatted("{}", *m_false_target) : "<empty>";
-    return ByteString::formatted("JumpConditional true:{} false:{}", true_string, false_string);
+    return ByteString::formatted("JumpIf {}, \033[32mtrue\033[0m:{} \033[32mfalse\033[0m:{}",
+        format_operand("condition"sv, m_condition, executable),
+        true_string, false_string);
 }
 
-ByteString JumpNullish::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString JumpNullish::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto true_string = m_true_target.has_value() ? ByteString::formatted("{}", *m_true_target) : "<empty>";
     auto false_string = m_false_target.has_value() ? ByteString::formatted("{}", *m_false_target) : "<empty>";
-    return ByteString::formatted("JumpNullish null:{} nonnull:{}", true_string, false_string);
+    return ByteString::formatted("JumpNullish {}, null:{} nonnull:{}",
+        format_operand("condition"sv, m_condition, executable),
+        true_string, false_string);
 }
 
-ByteString JumpUndefined::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString JumpUndefined::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto true_string = m_true_target.has_value() ? ByteString::formatted("{}", *m_true_target) : "<empty>";
     auto false_string = m_false_target.has_value() ? ByteString::formatted("{}", *m_false_target) : "<empty>";
-    return ByteString::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
+    return ByteString::formatted("JumpUndefined {}, undefined:{} defined:{}",
+        format_operand("condition"sv, m_condition, executable),
+        true_string, false_string);
 }
 
 static StringView call_type_to_string(CallType type)
@@ -1585,57 +1673,94 @@ static StringView call_type_to_string(CallType type)
 ByteString Call::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto type = call_type_to_string(m_type);
-    if (m_builtin.has_value())
-        return ByteString::formatted("Call{} callee:{}, this:{}, first_arg:{} (builtin {})", type, m_callee, m_this_value, m_first_argument, m_builtin.value());
-    if (m_expression_string.has_value())
-        return ByteString::formatted("Call{} callee:{}, this:{}, first_arg:{} ({})", type, m_callee, m_this_value, m_first_argument, executable.get_string(m_expression_string.value()));
-    return ByteString::formatted("Call{} callee:{}, this:{}, first_arg:{}", type, m_callee, m_first_argument, m_this_value);
+    if (m_builtin.has_value()) {
+        return ByteString::formatted("Call{} {}, {}, {}, first_arg:{} (builtin {})",
+            type,
+            format_operand("dst"sv, m_dst, executable),
+            format_operand("callee"sv, m_callee, executable),
+            format_operand("this"sv, m_this_value, executable),
+            m_first_argument,
+            m_builtin.value());
+    }
+    if (m_expression_string.has_value()) {
+        return ByteString::formatted("Call{} {}, {}, {}, first_arg:{} ({})",
+            type,
+            format_operand("dst"sv, m_dst, executable),
+            format_operand("callee"sv, m_callee, executable),
+            format_operand("this"sv, m_this_value, executable),
+            m_first_argument,
+            executable.get_string(m_expression_string.value()));
+    }
+    return ByteString::formatted("Call{} {}, {}, {}, first_arg:{}",
+        type,
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("callee"sv, m_callee, executable),
+        format_operand("this"sv, m_this_value, executable),
+        m_first_argument);
 }
 
 ByteString CallWithArgumentArray::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto type = call_type_to_string(m_type);
+    StringBuilder builder;
+    builder.appendff("CallWithArgumentArray{} {}, {}, {}, {}",
+        type,
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("callee"sv, m_callee, executable),
+        format_operand("this"sv, m_this_value, executable),
+        format_operand("arguments"sv, m_arguments, executable));
+
     if (m_expression_string.has_value())
-        return ByteString::formatted("CallWithArgumentArray{} callee:{}, this:{}, arguments:[...acc] ({})", type, m_callee, m_this_value, executable.get_string(m_expression_string.value()));
-    return ByteString::formatted("CallWithArgumentArray{} callee:{}, this:{}, arguments:[...acc]", type, m_callee, m_this_value);
+        builder.appendff(" ({})", executable.get_string(m_expression_string.value()));
+    return builder.to_byte_string();
 }
 
-ByteString SuperCallWithArgumentArray::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString SuperCallWithArgumentArray::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "SuperCallWithArgumentArray arguments:[...acc]"sv;
+    return ByteString::formatted("SuperCallWithArgumentArray {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("arguments"sv, m_arguments, executable));
 }
 
-ByteString NewFunction::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString NewFunction::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
-    builder.append("NewFunction"sv);
+    builder.appendff("NewFunction {}",
+        format_operand("dst"sv, m_dst, executable));
     if (m_function_node.has_name())
         builder.appendff(" name:{}"sv, m_function_node.name());
     if (m_lhs_name.has_value())
-        builder.appendff(" lhs_name:{}"sv, m_lhs_name.value());
+        builder.appendff(" lhs_name:{}"sv, executable.get_identifier(m_lhs_name.value()));
     if (m_home_object.has_value())
-        builder.appendff(" home_object:{}"sv, m_home_object.value());
+        builder.appendff(", {}"sv, format_operand("home_object"sv, m_home_object.value(), executable));
     return builder.to_byte_string();
 }
 
-ByteString NewClass::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString NewClass::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
     auto name = m_class_expression.name();
-    builder.appendff("NewClass '{}'"sv, name.is_null() ? ""sv : name);
+    builder.appendff("NewClass {}",
+        format_operand("dst"sv, m_dst, executable));
+    if (m_super_class.has_value())
+        builder.appendff(", {}", format_operand("super_class"sv, *m_super_class, executable));
+    if (!name.is_empty())
+        builder.appendff(", {}", name);
     if (m_lhs_name.has_value())
-        builder.appendff(" lhs_name:{}"sv, m_lhs_name.value());
+        builder.appendff(", lhs_name:{}"sv, m_lhs_name.value());
     return builder.to_byte_string();
 }
 
-ByteString Return::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Return::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
+    if (m_value.has_value())
+        return ByteString::formatted("Return {}", format_operand("value"sv, m_value.value(), executable));
     return "Return";
 }
 
-ByteString Increment::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Increment::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "Increment";
+    return ByteString::formatted("Increment {}", format_operand("dst"sv, m_dst, executable));
 }
 
 ByteString Decrement::to_byte_string_impl(Bytecode::Executable const&) const
@@ -1643,19 +1768,28 @@ ByteString Decrement::to_byte_string_impl(Bytecode::Executable const&) const
     return "Decrement";
 }
 
-ByteString Throw::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Throw::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "Throw";
+    return ByteString::formatted("Throw {}",
+        format_operand("src"sv, m_src, executable));
 }
 
-ByteString ThrowIfNotObject::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ThrowIfNotObject::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "ThrowIfNotObject";
+    return ByteString::formatted("ThrowIfNotObject {}",
+        format_operand("src"sv, m_src, executable));
 }
 
-ByteString ThrowIfNullish::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ThrowIfNullish::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "ThrowIfNullish";
+    return ByteString::formatted("ThrowIfNullish {}",
+        format_operand("src"sv, m_src, executable));
+}
+
+ByteString ThrowIfTDZ::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("ThrowIfTDZ {}",
+        format_operand("src"sv, m_src, executable));
 }
 
 ByteString EnterUnwindContext::to_byte_string_impl(Bytecode::Executable const&) const
@@ -1683,122 +1817,168 @@ ByteString ContinuePendingUnwind::to_byte_string_impl(Bytecode::Executable const
     return ByteString::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
 }
 
-ByteString Yield::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Yield::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    if (m_continuation_label.has_value())
-        return ByteString::formatted("Yield continuation:@{}", m_continuation_label->block().name());
-    return ByteString::formatted("Yield return");
+    if (m_continuation_label.has_value()) {
+        return ByteString::formatted("Yield continuation:@{}, {}",
+            m_continuation_label->block().name(),
+            format_operand("value"sv, m_value, executable));
+    }
+    return ByteString::formatted("Yield return {}",
+        format_operand("value"sv, m_value, executable));
 }
 
-ByteString Await::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Await::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("Await continuation:@{}", m_continuation_label.block().name());
+    return ByteString::formatted("Await {}, continuation:@{}",
+        format_operand("argument"sv, m_argument, executable),
+        m_continuation_label.block().name());
 }
 
-ByteString GetByValue::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString GetByValue::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetByValue base:{}", m_base);
+    return ByteString::formatted("GetByValue {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        format_operand("property"sv, m_property, executable));
 }
 
-ByteString GetByValueWithThis::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString GetByValueWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetByValueWithThis base:{} this_value:{}", m_base, m_this_value);
+    return ByteString::formatted("GetByValueWithThis {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
+        format_operand("property"sv, m_property, executable));
 }
 
-ByteString PutByValue::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString PutByValue::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = property_kind_to_string(m_kind);
-    return ByteString::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
+    return ByteString::formatted("PutByValue {}, {}, {}, kind:{}",
+        format_operand("base"sv, m_base, executable),
+        format_operand("property"sv, m_property, executable),
+        format_operand("src"sv, m_src, executable),
+        kind);
 }
 
-ByteString PutByValueWithThis::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString PutByValueWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = property_kind_to_string(m_kind);
-    return ByteString::formatted("PutByValueWithThis kind:{} base:{}, property:{} this_value:{}", kind, m_base, m_property, m_this_value);
+    return ByteString::formatted("PutByValueWithThis {}, {}, {}, {}, kind:{}",
+        format_operand("base"sv, m_base, executable),
+        format_operand("property"sv, m_property, executable),
+        format_operand("src"sv, m_src, executable),
+        format_operand("this"sv, m_this_value, executable),
+        kind);
 }
 
-ByteString DeleteByValue::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString DeleteByValue::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("DeleteByValue base:{}", m_base);
+    return ByteString::formatted("DeleteByValue {}, {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("base"sv, m_base, executable),
+        format_operand("property"sv, m_property, executable));
 }
 
-ByteString DeleteByValueWithThis::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString DeleteByValueWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("DeleteByValueWithThis base:{} this_value:{}", m_base, m_this_value);
+    return ByteString::formatted("DeleteByValueWithThis {}, {}, {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("base"sv, m_base, executable),
+        format_operand("property"sv, m_property, executable),
+        format_operand("this"sv, m_this_value, executable));
 }
 
-ByteString GetIterator::to_byte_string_impl(Executable const&) const
+ByteString GetIterator::to_byte_string_impl(Executable const& executable) const
 {
     auto hint = m_hint == IteratorHint::Sync ? "sync" : "async";
-    return ByteString::formatted("GetIterator hint:{}", hint);
+    return ByteString::formatted("GetIterator {}, {}, hint:{}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("iterable"sv, m_iterable, executable),
+        hint);
 }
 
 ByteString GetMethod::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetMethod {} ({})", m_property, executable.identifier_table->get(m_property));
+    return ByteString::formatted("GetMethod {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("object"sv, m_object, executable),
+        executable.identifier_table->get(m_property));
 }
 
-ByteString GetObjectPropertyIterator::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString GetObjectPropertyIterator::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "GetObjectPropertyIterator";
+    return ByteString::formatted("GetObjectPropertyIterator {}, {}",
+        format_operand("dst"sv, dst(), executable),
+        format_operand("object"sv, object(), executable));
 }
 
-ByteString IteratorClose::to_byte_string_impl(Bytecode::Executable const&) const
-{
-    if (!m_completion_value.has_value())
-        return ByteString::formatted("IteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
-
-    auto completion_value_string = m_completion_value->to_string_without_side_effects();
-    return ByteString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
-}
-
-ByteString AsyncIteratorClose::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString IteratorClose::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     if (!m_completion_value.has_value())
-        return ByteString::formatted("AsyncIteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
+        return ByteString::formatted("IteratorClose {}, completion_type={} completion_value=<empty>",
+            format_operand("iterator_record"sv, m_iterator_record, executable),
+            to_underlying(m_completion_type));
 
     auto completion_value_string = m_completion_value->to_string_without_side_effects();
-    return ByteString::formatted("AsyncIteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
+    return ByteString::formatted("IteratorClose {}, completion_type={} completion_value={}",
+        format_operand("iterator_record"sv, m_iterator_record, executable),
+        to_underlying(m_completion_type), completion_value_string);
 }
 
-ByteString IteratorNext::to_byte_string_impl(Executable const&) const
+ByteString AsyncIteratorClose::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "IteratorNext";
+    if (!m_completion_value.has_value()) {
+        return ByteString::formatted("AsyncIteratorClose {}, completion_type:{} completion_value:<empty>",
+            format_operand("iterator_record"sv, m_iterator_record, executable),
+            to_underlying(m_completion_type));
+    }
+
+    return ByteString::formatted("AsyncIteratorClose {}, completion_type:{}, completion_value:{}",
+        format_operand("iterator_record"sv, m_iterator_record, executable),
+        to_underlying(m_completion_type), m_completion_value);
 }
 
-ByteString ResolveThisBinding::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString IteratorNext::to_byte_string_impl(Executable const& executable) const
 {
-    return "ResolveThisBinding"sv;
+    return ByteString::formatted("IteratorNext {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("iterator_record"sv, m_iterator_record, executable));
 }
 
-ByteString ResolveSuperBase::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ResolveThisBinding::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "ResolveSuperBase"sv;
+    return ByteString::formatted("ResolveThisBinding {}", format_operand("dst"sv, m_dst, executable));
 }
 
-ByteString GetNewTarget::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ResolveSuperBase::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "GetNewTarget"sv;
+    return ByteString::formatted("ResolveSuperBase {}",
+        format_operand("dst"sv, m_dst, executable));
 }
 
-ByteString GetImportMeta::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString GetNewTarget::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "GetImportMeta"sv;
+    return ByteString::formatted("GetNewTarget {}", format_operand("dst"sv, m_dst, executable));
+}
+
+ByteString GetImportMeta::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("GetImportMeta {}", format_operand("dst"sv, m_dst, executable));
 }
 
 ByteString TypeofVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    return ByteString::formatted("TypeofVariable {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        executable.identifier_table->get(m_identifier));
 }
 
-ByteString TypeofLocal::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ToNumeric::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("TypeofLocal {}", m_index);
-}
-
-ByteString ToNumeric::to_byte_string_impl(Bytecode::Executable const&) const
-{
-    return "ToNumeric"sv;
+    return ByteString::formatted("ToNumeric {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("src"sv, m_src, executable));
 }
 
 ByteString BlockDeclarationInstantiation::to_byte_string_impl(Bytecode::Executable const&) const
@@ -1806,24 +1986,43 @@ ByteString BlockDeclarationInstantiation::to_byte_string_impl(Bytecode::Executab
     return "BlockDeclarationInstantiation"sv;
 }
 
-ByteString ImportCall::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString ImportCall::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("ImportCall specifier:{} options:{}"sv, m_specifier, m_options);
+    return ByteString::formatted("ImportCall {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("specifier"sv, m_specifier, executable),
+        format_operand("options"sv, m_options, executable));
 }
 
-ByteString Catch::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString Catch::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "Catch"sv;
+    return ByteString::formatted("Catch {}",
+        format_operand("dst"sv, m_dst, executable));
 }
 
-ByteString GetObjectFromIteratorRecord::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString GetObjectFromIteratorRecord::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetObjectFromIteratorRecord object:{} <- iterator_record:{}", m_object, m_iterator_record);
+    return ByteString::formatted("GetObjectFromIteratorRecord {}, {}",
+        format_operand("object"sv, m_object, executable),
+        format_operand("iterator_record"sv, m_iterator_record, executable));
 }
 
-ByteString GetNextMethodFromIteratorRecord::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString GetNextMethodFromIteratorRecord::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetNextMethodFromIteratorRecord next_method:{} <- iterator_record:{}", m_next_method, m_iterator_record);
+    return ByteString::formatted("GetNextMethodFromIteratorRecord {}, {}",
+        format_operand("next_method"sv, m_next_method, executable),
+        format_operand("iterator_record"sv, m_iterator_record, executable));
+}
+
+ByteString End::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("End {}", format_operand("value"sv, m_value, executable));
+}
+
+ByteString Dump::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("Dump '{}', {}", m_text,
+        format_operand("value"sv, m_value, executable));
 }
 
 }
