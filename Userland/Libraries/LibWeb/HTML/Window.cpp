@@ -76,10 +76,10 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(Window);
 
 // https://html.spec.whatwg.org/#run-the-animation-frame-callbacks
-void run_animation_frame_callbacks(DOM::Document& document, double)
+void run_animation_frame_callbacks(DOM::Document& document, double now)
 {
     // FIXME: Bring this closer to the spec.
-    document.window().animation_frame_callback_driver().run();
+    document.window().animation_frame_callback_driver().run(now);
 }
 
 class IdleCallback : public RefCounted<IdleCallback> {
@@ -1409,8 +1409,7 @@ double Window::device_pixel_ratio() const
 i32 Window::request_animation_frame(WebIDL::CallbackType& callback)
 {
     // FIXME: Make this fully spec compliant. Currently implements a mix of 'requestAnimationFrame()' and 'run the animation frame callbacks'.
-    auto now = HighResolutionTime::unsafe_shared_current_time();
-    return m_animation_frame_callback_driver.add([this, now, callback = JS::make_handle(callback)](auto) {
+    return m_animation_frame_callback_driver.add([this, callback = JS::make_handle(callback)](double now) {
         // 3. Invoke callback, passing now as the only argument, and if an exception is thrown, report the exception.
         auto result = WebIDL::invoke_callback(*callback, {}, JS::Value(now));
         if (result.is_error())
