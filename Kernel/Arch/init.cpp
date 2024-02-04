@@ -21,6 +21,7 @@
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
@@ -442,6 +443,7 @@ void init_stage2(void*)
     (void)MemoryDevice::must_create().leak_ref();
     (void)ZeroDevice::must_create().leak_ref();
     (void)FullDevice::must_create().leak_ref();
+    (void)FUSEDevice::must_create().leak_ref();
     (void)RandomDevice::must_create().leak_ref();
     (void)SelfTTYDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
