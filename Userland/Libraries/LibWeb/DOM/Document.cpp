@@ -181,7 +181,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     // 7. If browsingContext's active document's is initial about:blank is true,
     //    and browsingContext's active document's origin is same origin-domain with navigationParams's origin,
     //    then set window to browsingContext's active window.
-    if (browsing_context->still_on_its_initial_about_blank_document()
+    // FIXME: still_on_its_initial_about_blank_document() is not in the spec anymore.
+    //        However, replacing this with the spec-mandated is_initial_about_blank() results in the browsing context
+    //        holding an incorrect active document for the replace from initial about:blank to the real document.
+    //        See #22293 for more details.
+    if (false
         && (browsing_context->active_document() && browsing_context->active_document()->origin().is_same_origin(navigation_params.origin))) {
         window = browsing_context->active_window();
     }
