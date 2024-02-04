@@ -139,6 +139,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(Core::System::create_char_device("/dev/console"sv, 0666, 5, 1));
     TRY(Core::System::create_char_device("/dev/ptmx"sv, 0666, 5, 2));
     TRY(Core::System::create_char_device("/dev/tty"sv, 0666, 5, 0));
+    TRY(Core::System::create_char_device("/dev/fuse"sv, 0666, 10, 229));
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
     TRY(Core::System::create_block_device("/dev/kcov"sv, 0666, 30, 0));
 #endif
