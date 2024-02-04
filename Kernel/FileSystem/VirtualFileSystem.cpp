@@ -163,7 +163,7 @@ ErrorOr<void> VirtualFileSystem::add_file_system_to_mount_table(FileSystem& file
     });
 }
 
-ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescription* source_description, Custody& mount_point, int flags)
+ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescription* source_description, Custody& mount_point, int flags, ProcessID pid)
 {
     auto const& file_system_initializer = mount_file.file_system_initializer();
     if (!source_description) {
@@ -173,7 +173,7 @@ ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescriptio
             return ENOTSUP;
         RefPtr<FileSystem> fs;
         TRY(mount_file.mount_file_system_specific_data().with_exclusive([&](auto& mount_specific_data) -> ErrorOr<void> {
-            fs = TRY(file_system_initializer.create(mount_specific_data->bytes()));
+            fs = TRY(file_system_initializer.create(pid, mount_specific_data->bytes()));
             return {};
         }));
         VERIFY(fs);
