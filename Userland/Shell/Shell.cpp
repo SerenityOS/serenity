@@ -2054,8 +2054,6 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     auto invariant_offset = object.get_u64("invariant_offset"sv).value_or(0);
                     if (!object.get_bool("treat_as_code"sv).value_or(false)) {
                         completion_text = do_escape(EscapeMode::Bareword, completion_text, static_offset, invariant_offset);
-                        trailing_text = escape_token(trailing_text, EscapeMode::Bareword);
-                        display_text = escape_token(display_text, EscapeMode::Bareword);
                     }
                     Line::CompletionSuggestion suggestion { move(completion_text), move(trailing_text), move(display_text) };
 
