@@ -104,6 +104,7 @@ public:
     double active_duration() const;
     Optional<double> active_time() const;
     Optional<double> active_time_using_fill(Bindings::FillMode) const;
+    bool is_in_effect() const;
 
     double before_active_boundary_time() const;
     double after_active_boundary_time() const;

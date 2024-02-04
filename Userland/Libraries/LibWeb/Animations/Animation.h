@@ -50,6 +50,7 @@ public:
 
     Bindings::AnimationPlayState play_state() const;
 
+    bool is_replaceable() const;
     Bindings::AnimationReplaceState replace_state() const { return m_replace_state; }
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-pending
