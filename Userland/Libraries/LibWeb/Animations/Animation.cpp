@@ -344,12 +344,12 @@ Optional<double> Animation::convert_a_timeline_time_to_an_origin_relative_time(O
 
     // 5. If there is no procedure to convert a timeline time to an origin-relative time for the timeline associated
     //    with animation, return an unresolved time value.
-    if (!m_timeline->can_convert_a_timeline_time_to_an_original_relative_time())
+    if (!m_timeline->can_convert_a_timeline_time_to_an_origin_relative_time())
         return {};
 
     // 6. Return the result of converting timeline time to an origin-relative time using the procedure defined for the
     //    timeline associated with animation.
-    return m_timeline->convert_a_timeline_time_to_an_original_relative_time(timeline_time);
+    return m_timeline->convert_a_timeline_time_to_an_origin_relative_time(timeline_time);
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-document-for-timing
