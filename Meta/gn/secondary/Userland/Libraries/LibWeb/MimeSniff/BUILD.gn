@@ -1,5 +1,8 @@
 source_set("MimeSniff") {
   configs += [ "//Userland/Libraries/LibWeb:configs" ]
   deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
-  sources = [ "MimeType.cpp" ]
+  sources = [
+    "MimeType.cpp",
+    "Resource.cpp",
+  ]
 }
