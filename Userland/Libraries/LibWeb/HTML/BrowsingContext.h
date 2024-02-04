@@ -121,25 +121,6 @@ public:
 
     JS::GCPtr<BrowsingContext> top_level_browsing_context() const;
 
-    enum class WindowType {
-        ExistingOrNone,
-        NewAndUnrestricted,
-        NewWithNoOpener,
-    };
-
-    struct ChosenBrowsingContext {
-        JS::GCPtr<BrowsingContext> browsing_context;
-        WindowType window_type;
-    };
-
-    ChosenBrowsingContext choose_a_browsing_context(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab = ActivateTab::Yes);
-
-    HTML::NavigableContainer* container() { return m_container; }
-    HTML::NavigableContainer const* container() const { return m_container; }
-
-    CSSPixelPoint to_top_level_position(CSSPixelPoint);
-    CSSPixelRect to_top_level_rect(CSSPixelRect const&);
-
     JS::GCPtr<DOM::Position> cursor_position() const { return m_cursor_position; }
     void set_cursor_position(JS::NonnullGCPtr<DOM::Position>);
     bool increment_cursor_position_offset();
@@ -153,14 +134,6 @@ public:
     void did_edit(Badge<EditEventHandler>);
 
     JS::GCPtr<DOM::Node> currently_focused_area();
-
-    Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& session_history() { return m_session_history; }
-    Vector<JS::NonnullGCPtr<SessionHistoryEntry>> const& session_history() const { return m_session_history; }
-
-    size_t session_history_index() const { return *m_session_history_index; }
-
-    // https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
-    bool still_on_its_initial_about_blank_document() const;
 
     BrowsingContextGroup* group();
     void set_group(BrowsingContextGroup*);
@@ -178,11 +151,8 @@ public:
 
     void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
 
-    String const& name() const { return m_name; }
-    void set_name(String name) { m_name = move(name); }
-
 private:
-    explicit BrowsingContext(JS::NonnullGCPtr<Page>, HTML::NavigableContainer*);
+    explicit BrowsingContext(JS::NonnullGCPtr<Page>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -190,41 +160,31 @@ private:
 
     JS::NonnullGCPtr<Page> m_page;
 
+    // FIXME: Move EventHandler to Navigable
     Web::EventHandler m_event_handler;
 
-    // https://html.spec.whatwg.org/multipage/history.html#current-entry
-    SessionHistoryEntry& current_entry() { return m_session_history[*m_session_history_index]; }
-    SessionHistoryEntry const& current_entry() const { return m_session_history[*m_session_history_index]; }
-    Optional<size_t> m_session_history_index { 0 };
-
-    // https://html.spec.whatwg.org/multipage/history.html#session-history
-    Vector<JS::NonnullGCPtr<SessionHistoryEntry>> m_session_history;
-
-    // https://html.spec.whatwg.org/multipage/browsers.html#creator-url
-    Optional<AK::URL> m_creator_url;
-
-    // https://html.spec.whatwg.org/multipage/browsers.html#creator-base-url
-    Optional<AK::URL> m_creator_base_url;
-
-    // https://html.spec.whatwg.org/multipage/browsers.html#creator-origin
-    Optional<HTML::Origin> m_creator_origin;
-
-    JS::GCPtr<HTML::NavigableContainer> m_container;
-
-    // https://w3c.github.io/webdriver/#dfn-window-handles
-    String m_window_handle;
-
-    // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
-
-    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
-    TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
 
     // https://html.spec.whatwg.org/multipage/browsers.html#opener-browsing-context
     JS::GCPtr<BrowsingContext> m_opener_browsing_context;
 
-    String m_name;
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#opener-origin-at-creation
+    Optional<HTML::Origin> m_opener_origin_at_creation;
 
+    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
+    TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
+
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#is-auxiliary
+    bool m_is_auxiliary { false };
+
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#browsing-context-initial-url
+    Optional<AK::URL> m_initial_url;
+
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#virtual-browsing-context-group-id
+    u64 m_virtual_browsing_context_group_id = { 0 };
+
+    // FIXME: Move cursor tracking to Navigable
     JS::GCPtr<DOM::Position> m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
