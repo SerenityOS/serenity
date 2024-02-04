@@ -591,6 +591,12 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
         m_current_finished_promise = WebIDL::create_promise(realm());
         m_current_finished_promise_resolved = false;
     }
+
+    // Invalidate the style of our target element, if applicable
+    if (m_effect) {
+        if (auto target = m_effect->target())
+            target->invalidate_style();
+    }
 }
 
 JS::NonnullGCPtr<WebIDL::Promise> Animation::current_ready_promise() const
