@@ -465,7 +465,7 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
 
         // -> If playback rate > 0 and unconstrained current time is greater than or equal to associated effect end,
         auto associated_effect_end = this->associated_effect_end();
-        if (m_playback_rate > 0.0 && unconstrained_current_time.value() > associated_effect_end) {
+        if (m_playback_rate > 0.0 && unconstrained_current_time.value() >= associated_effect_end) {
             // If did seek is true, let the hold time be the value of unconstrained current time.
             if (did_seek == DidSeek::Yes) {
                 m_hold_time = unconstrained_current_time;
