@@ -43,11 +43,11 @@ struct AnimationFrameCallbackDriver {
         return true;
     }
 
-    void run()
+    void run(double now)
     {
         auto taken_callbacks = move(m_callbacks);
         for (auto& [id, callback] : taken_callbacks)
-            callback(id);
+            callback(now);
     }
 
     bool has_callbacks() const
