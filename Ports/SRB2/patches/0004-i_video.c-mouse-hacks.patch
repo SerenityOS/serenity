@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Refrag <R3FR4GYT@gmail.com>
+Date: Sun, 4 Feb 2024 17:45:17 +0100
+Subject: [PATCH] i_video.c: Mouse hacks
+
+This patch works aroud the SDL relative mouse implementation as it is not implemented in the port.
+SRB2 relies on it quite heavily to make the mouse work, not having this unfortunately means that the mouse doesn't reset back to the center and will get stuck at the window borders. Ultimately, we would want this relative mouse implementation to have a proper mouse support.
+Removing the calls to the SDL relative mouse felt like the best option for now as otherwise the console gets spammed with this "No relative mode implementation available" messsage.
+---
+ src/sdl/i_video.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/sdl/i_video.c b/src/sdl/i_video.c
+index 590d7d142..18002f94c 100644
+--- a/src/sdl/i_video.c
++++ b/src/sdl/i_video.c
+@@ -402,8 +402,8 @@ static void SDLdoGrabMouse(void)
+ {
+ 	SDL_ShowCursor(SDL_DISABLE);
+ 	SDL_SetWindowGrab(window, SDL_TRUE);
+-	if (SDL_SetRelativeMouseMode(SDL_TRUE) == 0) // already warps mouse if successful
+-		wrapmouseok = SDL_TRUE; // TODO: is wrapmouseok or HalfWarpMouse needed anymore?
++	//if (SDL_SetRelativeMouseMode(SDL_TRUE) == 0) // already warps mouse if successful
++	wrapmouseok = SDL_TRUE; // TODO: is wrapmouseok or HalfWarpMouse needed anymore?
+ }
+ 
+ static void SDLdoUngrabMouse(void)
+@@ -411,7 +411,7 @@ static void SDLdoUngrabMouse(void)
+ 	SDL_ShowCursor(SDL_ENABLE);
+ 	SDL_SetWindowGrab(window, SDL_FALSE);
+ 	wrapmouseok = SDL_FALSE;
+-	SDL_SetRelativeMouseMode(SDL_FALSE);
++	//SDL_SetRelativeMouseMode(SDL_FALSE);
+ }
+ 
+ void SDLforceUngrabMouse(void)
+@@ -701,8 +701,8 @@ static void Impl_HandleMouseMotionEvent(SDL_MouseMotionEvent evt)
+ 
+ 		// If using relative mouse mode, don't post an event_t just now,
+ 		// add on the offsets so we can make an overall event later.
+-		if (SDL_GetRelativeMouseMode())
+-		{
++		//if (SDL_GetRelativeMouseMode())
++		//{
+ 			if (SDL_GetMouseFocus() == window && SDL_GetKeyboardFocus() == window)
+ 			{
+ 				mousemovex += evt.xrel;
+@@ -711,7 +711,7 @@ static void Impl_HandleMouseMotionEvent(SDL_MouseMotionEvent evt)
+ 			}
+ 			firstmove = false;
+ 			return;
+-		}
++		//}
+ 
+ 		// If the event is from warping the pointer to middle
+ 		// of the screen then ignore it.
