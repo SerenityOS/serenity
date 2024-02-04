@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
