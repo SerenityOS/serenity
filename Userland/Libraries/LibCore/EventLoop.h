@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
@@ -102,5 +103,17 @@ private:
 };
 
 void deferred_invoke(ESCAPING Function<void()>);
+
+template<typename T>
+requires(IsSpecializationOf<InvokeResult<T&>, Coroutine>)
+auto run_async_in_new_event_loop(T&& function)
+{
+    Core::EventLoop loop;
+    auto coro = function();
+    loop.spin_until([&] {
+        return coro.await_ready();
+    });
+    return coro.await_resume();
+}
 
 }

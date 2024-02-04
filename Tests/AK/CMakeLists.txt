@@ -20,6 +20,7 @@ set(AK_TEST_SOURCES
     TestCircularDeque.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
+    TestCoroutine.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
     TestDoublyLinkedList.cpp
