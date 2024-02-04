@@ -30,7 +30,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentTimeline>> DocumentTimeline::constr
 }
 
 // https://www.w3.org/TR/web-animations-1/#ref-for-timeline-time-to-origin-relative-time
-Optional<double> DocumentTimeline::convert_a_timeline_time_to_an_original_relative_time(Optional<double> timeline_time)
+Optional<double> DocumentTimeline::convert_a_timeline_time_to_an_origin_relative_time(Optional<double> timeline_time)
 {
     // To convert a timeline time, timeline time, to an origin-relative time for a document timeline, timeline, return
     // the sum of the timeline time and timeline’s origin time. If timeline is inactive, return an unresolved time

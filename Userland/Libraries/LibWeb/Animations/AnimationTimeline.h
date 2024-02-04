@@ -26,8 +26,8 @@ public:
     bool is_monotonically_increasing() const { return m_is_monotonically_increasing; }
 
     // https://www.w3.org/TR/web-animations-1/#timeline-time-to-origin-relative-time
-    virtual Optional<double> convert_a_timeline_time_to_an_original_relative_time(Optional<double>) { VERIFY_NOT_REACHED(); }
-    virtual bool can_convert_a_timeline_time_to_an_original_relative_time() const { return false; }
+    virtual Optional<double> convert_a_timeline_time_to_an_origin_relative_time(Optional<double>) { VERIFY_NOT_REACHED(); }
+    virtual bool can_convert_a_timeline_time_to_an_origin_relative_time() const { return false; }
 
     void associate_with_animation(JS::NonnullGCPtr<Animation> value) { m_associated_animations.set(value); }
     void disassociate_with_animation(JS::NonnullGCPtr<Animation> value) { m_associated_animations.remove(value); }
