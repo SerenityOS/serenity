@@ -14,7 +14,7 @@
 
 #define ENUMERATE_BYTECODE_OPS(O)      \
     O(Add)                             \
-    O(Append)                          \
+    O(ArrayAppend)                     \
     O(AsyncIteratorClose)              \
     O(Await)                           \
     O(BitwiseAnd)                      \
@@ -37,6 +37,8 @@
     O(DeleteByValueWithThis)           \
     O(DeleteVariable)                  \
     O(Div)                             \
+    O(Dump)                            \
+    O(End)                             \
     O(EnterUnwindContext)              \
     O(EnterObjectEnvironment)          \
     O(Exp)                             \
@@ -55,7 +57,6 @@
     O(GetPrivateById)                  \
     O(GetVariable)                     \
     O(GetGlobal)                       \
-    O(GetLocal)                        \
     O(GreaterThan)                     \
     O(GreaterThanEquals)               \
     O(HasPrivateId)                    \
@@ -67,7 +68,7 @@
     O(IteratorNext)                    \
     O(IteratorToArray)                 \
     O(Jump)                            \
-    O(JumpConditional)                 \
+    O(JumpIf)                          \
     O(JumpNullish)                     \
     O(JumpUndefined)                   \
     O(LeaveLexicalEnvironment)         \
@@ -75,11 +76,10 @@
     O(LeftShift)                       \
     O(LessThan)                        \
     O(LessThanEquals)                  \
-    O(Load)                            \
-    O(LoadImmediate)                   \
     O(LooselyEquals)                   \
     O(LooselyInequals)                 \
     O(Mod)                             \
+    O(Mov)                             \
     O(Mul)                             \
     O(NewArray)                        \
     O(NewBigInt)                       \
@@ -103,7 +103,6 @@
     O(ScheduleJump)                    \
     O(SetVariable)                     \
     O(SetLocal)                        \
-    O(Store)                           \
     O(StrictlyEquals)                  \
     O(StrictlyInequals)                \
     O(Sub)                             \
@@ -111,10 +110,10 @@
     O(Throw)                           \
     O(ThrowIfNotObject)                \
     O(ThrowIfNullish)                  \
+    O(ThrowIfTDZ)                      \
     O(ToNumeric)                       \
     O(Typeof)                          \
     O(TypeofVariable)                  \
-    O(TypeofLocal)                     \
     O(UnaryMinus)                      \
     O(UnaryPlus)                       \
     O(UnsignedRightShift)              \

@@ -89,7 +89,7 @@ public:
 
     void enter_unwind_context();
     void leave_unwind_context();
-    void catch_exception();
+    void catch_exception(Operand dst);
 
     void enter_object_environment(Object&);
 
@@ -130,6 +130,6 @@ private:
 
 extern bool g_dump_bytecode;
 
-ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
+ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM&, ASTNode const&, ReadonlySpan<FunctionParameter>, JS::FunctionKind kind, DeprecatedFlyString const& name);
 
 }

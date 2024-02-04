@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,9 +30,12 @@ public:
         Function,
         Block,
     };
-    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate(VM&, ASTNode const&, FunctionKind = FunctionKind::Normal);
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate(VM&, ASTNode const&, ReadonlySpan<FunctionParameter> parameters, FunctionKind = FunctionKind::Normal);
 
     Register allocate_register();
+
+    void set_local_initialized(u32 local_index);
+    [[nodiscard]] bool is_local_initialized(u32 local_index) const;
 
     class SourceLocationScope {
     public:
@@ -77,11 +80,11 @@ public:
     }
 
     template<typename OpType, typename... Args>
-    void emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
+    void emit_with_extra_operand_slots(size_t extra_operand_slots, Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
 
-        size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_register_slots * sizeof(Register), alignof(void*));
+        size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_operand_slots * sizeof(Operand), alignof(void*));
         size_t slot_offset = m_current_basic_block->size();
         grow(size_to_allocate);
         void* slot = m_current_basic_block->data() + slot_offset;
@@ -92,30 +95,29 @@ public:
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
     }
 
-    struct ReferenceRegisters {
-        Register base;                      // [[Base]]
-        Optional<Register> referenced_name; // [[ReferencedName]]
-        Register this_value;                // [[ThisValue]]
+    struct ReferenceOperands {
+        Optional<Operand> base {};                                       // [[Base]]
+        Optional<Operand> referenced_name {};                            // [[ReferencedName]] as an operand
+        Optional<IdentifierTableIndex> referenced_identifier {};         // [[ReferencedName]] as an identifier
+        Optional<IdentifierTableIndex> referenced_private_identifier {}; // [[ReferencedName]] as a private identifier
+        Optional<Operand> this_value {};                                 // [[ThisValue]]
+        Optional<Operand> loaded_value {};                               // Loaded value, if we've performed a load.
     };
 
-    enum class CollectRegisters {
-        Yes,
-        No
-    };
-    CodeGenerationErrorOr<Optional<ReferenceRegisters>> emit_load_from_reference(JS::ASTNode const&, CollectRegisters);
-    CodeGenerationErrorOr<Optional<Operand>> emit_store_to_reference(JS::ASTNode const&);
-    CodeGenerationErrorOr<Optional<Operand>> emit_store_to_reference(ReferenceRegisters const&);
+    CodeGenerationErrorOr<ReferenceOperands> emit_load_from_reference(JS::ASTNode const&, Optional<Operand> preferred_dst = {});
+    CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&, Operand value);
+    CodeGenerationErrorOr<void> emit_store_to_reference(ReferenceOperands const&, Operand value);
     CodeGenerationErrorOr<Optional<Operand>> emit_delete_reference(JS::ASTNode const&);
 
-    CodeGenerationErrorOr<ReferenceRegisters> emit_super_reference(MemberExpression const&);
+    CodeGenerationErrorOr<ReferenceOperands> emit_super_reference(MemberExpression const&);
 
-    void emit_set_variable(JS::Identifier const& identifier, Bytecode::Op::SetVariable::InitializationMode initialization_mode = Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode mode = Bytecode::Op::EnvironmentMode::Lexical);
+    void emit_set_variable(JS::Identifier const& identifier, Operand value, Bytecode::Op::SetVariable::InitializationMode initialization_mode = Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode mode = Bytecode::Op::EnvironmentMode::Lexical);
 
-    void push_home_object(Register);
+    void push_home_object(Operand);
     void pop_home_object();
-    void emit_new_function(JS::FunctionExpression const&, Optional<IdentifierTableIndex> lhs_name);
+    void emit_new_function(Operand dst, JS::FunctionExpression const&, Optional<IdentifierTableIndex> lhs_name);
 
-    CodeGenerationErrorOr<void> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name);
+    CodeGenerationErrorOr<Optional<Operand>> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name, Optional<Operand> preferred_dst = {});
 
     void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_continuable_scope();
@@ -231,21 +233,28 @@ public:
         m_boundaries.take_last();
     }
 
-    void emit_get_by_id(IdentifierTableIndex);
-    void emit_get_by_id_with_this(IdentifierTableIndex, Register);
+    void emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex);
 
-    void emit_iterator_value();
-    void emit_iterator_complete();
+    void emit_get_by_id_with_this(Operand dst, Operand base, IdentifierTableIndex, Operand this_value);
+
+    void emit_iterator_value(Operand dst, Operand result);
+    void emit_iterator_complete(Operand dst, Operand result);
 
     [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
     [[nodiscard]] size_t next_environment_variable_cache() { return m_next_environment_variable_cache++; }
     [[nodiscard]] size_t next_property_lookup_cache() { return m_next_property_lookup_cache++; }
 
-    [[nodiscard]] Operand add_constant(Value value)
+    enum class DeduplicateConstant {
+        Yes,
+        No,
+    };
+    [[nodiscard]] Operand add_constant(Value value, DeduplicateConstant deduplicate_constant = DeduplicateConstant::Yes)
     {
-        for (size_t i = 0; i < m_constants.size(); ++i) {
-            if (m_constants[i] == value)
-                return Operand(Operand::Type::Constant, i);
+        if (deduplicate_constant == DeduplicateConstant::Yes) {
+            for (size_t i = 0; i < m_constants.size(); ++i) {
+                if (m_constants[i] == value)
+                    return Operand(Operand::Type::Constant, i);
+            }
         }
         m_constants.append(value);
         return Operand(Operand::Type::Constant, m_constants.size() - 1);
@@ -288,7 +297,9 @@ private:
     Vector<LabelableScope> m_continuable_scopes;
     Vector<LabelableScope> m_breakable_scopes;
     Vector<BlockBoundaryType> m_boundaries;
-    Vector<Register> m_home_objects;
+    Vector<Operand> m_home_objects;
+
+    HashTable<u32> m_initialized_locals;
 };
 
 }
