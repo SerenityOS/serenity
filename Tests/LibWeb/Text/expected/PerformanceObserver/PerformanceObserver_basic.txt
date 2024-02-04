@@ -7,8 +7,8 @@ list instanceof PerformanceObserverEntryList: true
 allEntries instanceof Array: true
 allEntries.length === 3: true
 allEntries[0] === startMark: true
-allEntries[1] === endMark: true
-allEntries[2] === measureMark: true
+allEntries[1] === measureMark: true
+allEntries[2] === endMark: true
 markEntries instanceof Array: true
 markEntries.length === 2: true
 markEntries[0] === startMark: true
