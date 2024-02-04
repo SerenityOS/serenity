@@ -226,7 +226,6 @@ set(SOURCES
     Geometry/DOMRect.cpp
     Geometry/DOMRectList.cpp
     Geometry/DOMRectReadOnly.cpp
-    HTML/AbstractBrowsingContext.cpp
     HTML/AnimatedBitmapDecodedImageData.cpp
     HTML/AttributeNames.cpp
     HTML/AudioTrack.cpp
@@ -374,7 +373,6 @@ set(SOURCES
     HTML/PluginArray.cpp
     HTML/PotentialCORSRequest.cpp
     HTML/PromiseRejectionEvent.cpp
-    HTML/RemoteBrowsingContext.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
     HTML/Scripting/ExceptionReporter.cpp

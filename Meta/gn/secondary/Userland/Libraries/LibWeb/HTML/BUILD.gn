@@ -11,7 +11,6 @@ source_set("HTML") {
     "//Userland/Libraries/LibWeb:all_generated",
   ]
   sources = [
-    "AbstractBrowsingContext.cpp",
     "AnimatedBitmapDecodedImageData.cpp",
     "AttributeNames.cpp",
     "AudioTrack.cpp",
@@ -140,7 +139,6 @@ source_set("HTML") {
     "PluginArray.cpp",
     "PotentialCORSRequest.cpp",
     "PromiseRejectionEvent.cpp",
-    "RemoteBrowsingContext.cpp",
     "SelectItem.cpp",
     "SessionHistoryEntry.cpp",
     "SharedImageRequest.cpp",

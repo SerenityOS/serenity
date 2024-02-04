@@ -10,17 +10,14 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/Range.h>
-#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/DocumentState.h>
-#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
-#include <LibWeb/HTML/RemoteBrowsingContext.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
@@ -29,7 +26,6 @@
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BreakNode.h>
-#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
@@ -515,7 +511,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 {
     // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
     // a boolean noopener are as follows:
-    JS::GCPtr<AbstractBrowsingContext> matching_name_in_tree = nullptr;
+    JS::GCPtr<BrowsingContext> matching_name_in_tree = nullptr;
     top_level_browsing_context()->for_each_in_subtree([&](auto& context) {
         if (context.name() == name) {
             matching_name_in_tree = &context;
@@ -526,7 +522,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     });
 
     // 1. Let chosen be null.
-    JS::GCPtr<AbstractBrowsingContext> chosen = nullptr;
+    JS::GCPtr<BrowsingContext> chosen = nullptr;
 
     // 2. Let windowType be "existing or none".
     auto window_type = WindowType::ExistingOrNone;

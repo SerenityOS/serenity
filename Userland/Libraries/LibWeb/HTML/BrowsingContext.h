@@ -16,7 +16,6 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/DOM/Position.h>
-#include <LibWeb/HTML/AbstractBrowsingContext.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/NavigableContainer.h>
@@ -31,10 +30,9 @@
 
 namespace Web::HTML {
 
-class BrowsingContext final
-    : public AbstractBrowsingContext
+class BrowsingContext final : public JS::Cell
     , public Weakable<BrowsingContext> {
-    JS_CELL(BrowsingContext, AbstractBrowsingContext);
+    JS_CELL(BrowsingContext, JS::Cell);
     JS_DECLARE_ALLOCATOR(BrowsingContext);
 
 public:
@@ -107,8 +105,8 @@ public:
     DOM::Document const* active_document() const;
     DOM::Document* active_document();
 
-    virtual HTML::WindowProxy* window_proxy() override;
-    virtual HTML::WindowProxy const* window_proxy() const override;
+    HTML::WindowProxy* window_proxy();
+    HTML::WindowProxy const* window_proxy() const;
 
     void set_window_proxy(JS::GCPtr<WindowProxy>);
 
@@ -130,7 +128,7 @@ public:
     };
 
     struct ChosenBrowsingContext {
-        JS::GCPtr<AbstractBrowsingContext> browsing_context;
+        JS::GCPtr<BrowsingContext> browsing_context;
         WindowType window_type;
     };
 
@@ -175,10 +173,13 @@ public:
 
     bool has_been_discarded() const { return m_has_been_discarded; }
 
-    Optional<AK::URL> const& creator_url() const { return m_creator_url; }
+    JS::GCPtr<BrowsingContext> opener_browsing_context() const { return m_opener_browsing_context; }
+    void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
 
-    virtual String const& window_handle() const override { return m_window_handle; }
-    virtual void set_window_handle(String handle) override { m_window_handle = move(handle); }
+    void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
+
+    String const& name() const { return m_name; }
+    void set_name(String name) { m_name = move(name); }
 
 private:
     explicit BrowsingContext(JS::NonnullGCPtr<Page>, HTML::NavigableContainer*);
@@ -215,6 +216,14 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
+    TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#opener-browsing-context
+    JS::GCPtr<BrowsingContext> m_opener_browsing_context;
+
+    String m_name;
 
     JS::GCPtr<DOM::Position> m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;

@@ -27,6 +27,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebDriver/Contexts.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
