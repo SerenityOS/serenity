@@ -281,6 +281,9 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                 //        implemented in Navigable::choose_a_navigable:
                 //
                 //        https://html.spec.whatwg.org/multipage/document-sequences.html#the-rules-for-choosing-a-navigable
+
+                auto top_level_position = m_browsing_context->active_document()->navigable()->to_top_level_position(position);
+
                 if (JS::GCPtr<HTML::HTMLAnchorElement const> link = node->enclosing_link_element()) {
                     JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context->active_document();
                     auto href = link->href();
@@ -289,13 +292,13 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                     if (button == GUI::MouseButton::Middle) {
                         m_browsing_context->page().client().page_did_middle_click_link(url, link->target().to_byte_string(), modifiers);
                     } else if (button == GUI::MouseButton::Secondary) {
-                        m_browsing_context->page().client().page_did_request_link_context_menu(m_browsing_context->to_top_level_position(position), url, link->target().to_byte_string(), modifiers);
+                        m_browsing_context->page().client().page_did_request_link_context_menu(top_level_position, url, link->target().to_byte_string(), modifiers);
                     }
                 } else if (button == GUI::MouseButton::Secondary) {
                     if (is<HTML::HTMLImageElement>(*node)) {
                         auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
                         auto image_url = image_element.document().parse_url(image_element.src());
-                        m_browsing_context->page().client().page_did_request_image_context_menu(m_browsing_context->to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
+                        m_browsing_context->page().client().page_did_request_image_context_menu(top_level_position, image_url, "", modifiers, image_element.bitmap());
                     } else if (is<HTML::HTMLMediaElement>(*node)) {
                         auto& media_element = verify_cast<HTML::HTMLMediaElement>(*node);
 
@@ -308,9 +311,9 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                             .is_looping = media_element.has_attribute(HTML::AttributeNames::loop),
                         };
 
-                        m_browsing_context->page().did_request_media_context_menu(media_element.unique_id(), m_browsing_context->to_top_level_position(position), "", modifiers, move(menu));
+                        m_browsing_context->page().did_request_media_context_menu(media_element.unique_id(), top_level_position, "", modifiers, move(menu));
                     } else {
-                        m_browsing_context->page().client().page_did_request_context_menu(m_browsing_context->to_top_level_position(position));
+                        m_browsing_context->page().client().page_did_request_context_menu(top_level_position);
                     }
                 }
             }
@@ -534,7 +537,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
     if (hovered_node_changed) {
         JS::GCPtr<HTML::HTMLElement const> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
         if (hovered_html_element && hovered_html_element->title().has_value()) {
-            page.client().page_did_enter_tooltip_area(m_browsing_context->to_top_level_position(position), hovered_html_element->title()->to_byte_string());
+            page.client().page_did_enter_tooltip_area(m_browsing_context->active_document()->navigable()->to_top_level_position(position), hovered_html_element->title()->to_byte_string());
         } else {
             page.client().page_did_leave_tooltip_area();
         }
