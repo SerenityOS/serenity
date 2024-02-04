@@ -23,7 +23,6 @@ void AnimationTimeline::set_current_time(Optional<double> value)
     }
 
     m_current_time = value;
-
     for (auto& animation : m_associated_animations)
         animation->notify_timeline_time_did_change();
 }
