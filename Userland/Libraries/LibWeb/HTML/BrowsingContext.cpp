@@ -24,7 +24,6 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
-#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
@@ -124,7 +123,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     auto& vm = group->vm();
 
     // 1. Let browsingContext be a new browsing context.
-    JS::NonnullGCPtr<BrowsingContext> browsing_context = *vm.heap().allocate_without_realm<BrowsingContext>(page, nullptr);
+    JS::NonnullGCPtr<BrowsingContext> browsing_context = *vm.heap().allocate_without_realm<BrowsingContext>(page);
 
     // 2. Let unsafeContextCreationTime be the unsafe shared current time.
     [[maybe_unused]] auto unsafe_context_creation_time = HighResolutionTime::unsafe_shared_current_time();
@@ -273,10 +272,9 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     return BrowsingContext::BrowsingContextAndDocument { browsing_context, document };
 }
 
-BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page, HTML::NavigableContainer* container)
+BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page)
     : m_page(page)
     , m_event_handler({}, *this)
-    , m_container(container)
 {
     m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
         if (!is_focused_context())
@@ -295,9 +293,6 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
 
     visitor.visit(m_page);
-    for (auto& entry : m_session_history)
-        visitor.visit(entry);
-    visitor.visit(m_container);
     visitor.visit(m_cursor_position);
     visitor.visit(m_window_proxy);
     visitor.visit(m_group);
@@ -306,6 +301,7 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_last_child);
     visitor.visit(m_next_sibling);
     visitor.visit(m_previous_sibling);
+    visitor.visit(m_opener_browsing_context);
 
     m_event_handler.visit_edges(visitor);
 }
@@ -370,28 +366,6 @@ JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const
 
     // 4. Return navigable's active browsing context.
     return navigable->active_browsing_context();
-}
-
-CSSPixelRect BrowsingContext::to_top_level_rect(CSSPixelRect const& a_rect)
-{
-    auto rect = a_rect;
-    rect.set_location(to_top_level_position(a_rect.location()));
-    return rect;
-}
-
-CSSPixelPoint BrowsingContext::to_top_level_position(CSSPixelPoint a_position)
-{
-    auto position = a_position;
-    for (auto ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (ancestor->is_top_level())
-            break;
-        if (!ancestor->container())
-            return {};
-        if (!ancestor->container()->paintable())
-            return {};
-        position.translate_by(ancestor->container()->paintable()->box_type_agnostic_position());
-    }
-    return position;
 }
 
 void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> position)
@@ -504,150 +478,6 @@ JS::GCPtr<DOM::Node> BrowsingContext::currently_focused_area()
 
     // 5. Return candidate.
     return candidate;
-}
-
-// https://html.spec.whatwg.org/#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_context(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab)
-{
-    // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
-    // a boolean noopener are as follows:
-    JS::GCPtr<BrowsingContext> matching_name_in_tree = nullptr;
-    top_level_browsing_context()->for_each_in_subtree([&](auto& context) {
-        if (context.name() == name) {
-            matching_name_in_tree = &context;
-            return IterationDecision::Break;
-        }
-
-        return IterationDecision::Continue;
-    });
-
-    // 1. Let chosen be null.
-    JS::GCPtr<BrowsingContext> chosen = nullptr;
-
-    // 2. Let windowType be "existing or none".
-    auto window_type = WindowType::ExistingOrNone;
-
-    // 3. Let sandboxingFlagSet be current's active document's active sandboxing flag set.
-    auto sandboxing_flag_set = active_document()->active_sandboxing_flag_set();
-
-    // 4. If name is the empty string or an ASCII case-insensitive match for "_self", then set chosen to current.
-    if (name.is_empty() || Infra::is_ascii_case_insensitive_match(name, "_self"sv)) {
-        chosen = this;
-    }
-
-    // 5. Otherwise, if name is an ASCII case-insensitive match for "_parent", set chosen to current's parent browsing
-    //    context, if any, and current otherwise.
-    else if (Infra::is_ascii_case_insensitive_match(name, "_parent"sv)) {
-        if (auto parent = this->parent())
-            chosen = parent;
-        else
-            chosen = this;
-    }
-
-    // 6. Otherwise, if name is an ASCII case-insensitive match for "_top", set chosen to current's top-level browsing
-    //    context, if any, and current otherwise.
-    else if (Infra::is_ascii_case_insensitive_match(name, "_top"sv)) {
-        chosen = top_level_browsing_context();
-    }
-
-    // 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank", there exists a browsing context
-    //    whose name is the same as name, current is familiar with that browsing context, and the user agent
-    //    determines that the two browsing contexts are related enough that it is ok if they reach each other,
-    //    set chosen to that browsing context. If there are multiple matching browsing contexts, the user agent
-    //    should set chosen to one in some arbitrary consistent manner, such as the most recently opened, most
-    //    recently focused, or more closely related.
-    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv) && matching_name_in_tree) {
-        chosen = matching_name_in_tree;
-    } else {
-        // 8. Otherwise, a new browsing context is being requested, and what happens depends on the user agent's
-        //    configuration and abilities — it is determined by the rules given for the first applicable option from
-        //    the following list:
-
-        // --> If current's active window does not have transient activation and the user agent has been configured to
-        //     not show popups (i.e., the user agent has a "popup blocker" enabled)
-        VERIFY(m_page);
-        if (!active_window()->has_transient_activation() && m_page->should_block_pop_ups()) {
-            // FIXME: The user agent may inform the user that a popup has been blocked.
-            dbgln("Pop-up blocked!");
-        }
-
-        // --> If sandboxingFlagSet has the sandboxed auxiliary navigation browsing context flag set
-        else if (has_flag(sandboxing_flag_set, SandboxingFlagSet::SandboxedAuxiliaryNavigation)) {
-            // FIXME: The user agent may report to a developer console that a popup has been blocked.
-            dbgln("Pop-up blocked!");
-        }
-
-        // --> If the user agent has been configured such that in this instance it will create a new browsing context
-        else if (true) { // FIXME: When is this the case?
-            // 1. Set windowType to "new and unrestricted".
-            window_type = WindowType::NewAndUnrestricted;
-
-            // 2. If current's top-level browsing context's active document's cross-origin opener policy's value is
-            //    "same-origin" or "same-origin-plus-COEP", then:
-            if (top_level_browsing_context()->active_document()->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOrigin || top_level_browsing_context()->active_document()->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOriginPlusCOEP) {
-                // 1. Let currentDocument be current's active document.
-                auto* current_document = top_level_browsing_context()->active_document();
-
-                // 2. If currentDocument's origin is not same origin with currentDocument's relevant settings object's
-                //    top-level origin, then set noopener to true, name to "_blank", and windowType to "new with no opener".
-                if (!current_document->origin().is_same_origin(current_document->relevant_settings_object().top_level_origin)) {
-                    no_opener = TokenizedFeature::NoOpener::Yes;
-                    name = "_blank"sv;
-                    window_type = WindowType::NewWithNoOpener;
-                }
-            }
-
-            // 3. If noopener is true, then set chosen to the result of creating a new top-level browsing context.
-            if (no_opener == TokenizedFeature::NoOpener::Yes) {
-                // FIXME: This is completely wrong, but all of this should be removed in favor of choose_a_navigable
-                chosen = this;
-            }
-
-            // 4. Otherwise:
-            else {
-                // 1. Set chosen to the result of creating a new auxiliary browsing context with current.
-                // FIXME: We have no concept of auxiliary browsing context
-                chosen = HTML::create_a_new_top_level_browsing_context_and_document(*m_page).release_value_but_fixme_should_propagate_errors().browsing_context;
-
-                // 2. If sandboxingFlagSet's sandboxed navigation browsing context flag is set, then current must be
-                //    set as chosen's one permitted sandboxed navigator.
-                // FIXME: We have no concept of one permitted sandboxed navigator
-            }
-
-            // 5. If sandboxingFlagSet's sandbox propagates to auxiliary browsing contexts flag is set, then all the
-            //    flags that are set in sandboxingFlagSet must be set in chosen's popup sandboxing flag set.
-            // FIXME: Our BrowsingContexts do not have SandboxingFlagSets yet, only documents do
-
-            // 6. If name is not an ASCII case-insensitive match for "_blank", then set chosen's name to name.
-            if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
-                chosen->set_name(String::from_utf8(name).release_value_but_fixme_should_propagate_errors());
-        }
-
-        // --> If the user agent has been configured such that in this instance t will reuse current
-        else if (false) { // FIXME: When is this the case?
-            // Set chosen to current.
-            chosen = *this;
-        }
-
-        // --> If the user agent has been configured such that in this instance it will not find a browsing context
-        else if (false) { // FIXME: When is this the case?
-            // Do nothing.
-        }
-    }
-
-    // 9. Return chosen and windowType.
-    return { chosen.ptr(), window_type };
-}
-
-// https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
-bool BrowsingContext::still_on_its_initial_about_blank_document() const
-{
-    // A browsing context browsingContext is still on its initial about:blank Document
-    // if browsingContext's session history's size is 1
-    // and browsingContext's session history[0]'s document's is initial about:blank is true.
-    return m_session_history.size() == 1
-        && m_session_history[0]->document_state->document()
-        && m_session_history[0]->document_state->document()->is_initial_about_blank();
 }
 
 DOM::Document const* BrowsingContext::active_document() const
