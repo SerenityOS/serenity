@@ -51,6 +51,18 @@ bool url_matches_about_blank(AK::URL const& url)
         && url.host().has<Empty>();
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:srcdoc
+bool url_matches_about_srcdoc(AK::URL const& url)
+{
+    // A URL matches about:srcdoc if its scheme is "about", its path contains a single string "srcdoc", its query is null, its username and password are the empty string, and its host is null.
+    return url.scheme() == "about"sv
+        && url.serialize_path() == "srcdoc"sv
+        && !url.query().has_value()
+        && url.raw_username().is_empty()
+        && url.raw_password().is_empty()
+        && url.host().has<Empty>();
+}
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin
 HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin)
 {

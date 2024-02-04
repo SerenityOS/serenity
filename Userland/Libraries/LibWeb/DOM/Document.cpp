@@ -910,11 +910,18 @@ JS::GCPtr<HTML::HTMLBaseElement const> Document::first_base_element_with_href_in
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fallback-base-url
 AK::URL Document::fallback_base_url() const
 {
-    // FIXME: 1. If document is an iframe srcdoc document, then return the document base URL of document's browsing context's container document.
+    // 1. If document is an iframe srcdoc document, then:
+    if (HTML::url_matches_about_srcdoc(m_url)) {
+        // 1. Assert: document's about base URL is non-null.
+        VERIFY(m_about_base_url.has_value());
 
-    // 2. If document's URL is about:blank, and document's browsing context's creator base URL is non-null, then return that creator base URL.
-    if (m_url == "about:blank"sv && browsing_context() && browsing_context()->creator_url().has_value())
-        return browsing_context()->creator_url().value();
+        // 2. Return document's about base URL.
+        return m_about_base_url.value();
+    }
+
+    // 2. If document's URL matches about:blank and document's about base URL is non-null, then return document's about base URL.
+    if (HTML::url_matches_about_blank(m_url) && m_about_base_url.has_value())
+        return m_about_base_url.value();
 
     // 3. Return document's URL.
     return m_url;
