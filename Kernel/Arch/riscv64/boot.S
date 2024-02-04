@@ -16,8 +16,8 @@ start:
   // Don't touch a0/a1 as we expect those registers to contain the hart ID
   // and a pointer to the Flattened Fevice Tree.
 
-  // Set sstatus to a known state (which includes disabling supervisor interrupts).
-  csrw sstatus, zero
+  // Clear sstatus.SIE, which disables all interrupts in supervisor mode.
+  csrci sstatus, 1 << 1
 
   // Also, disable all interrupts sources and mark them as non-pending.
   csrw sie, zero
