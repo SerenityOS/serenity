@@ -26,6 +26,8 @@ class Bitmap;
 using ByteBuffer = Detail::ByteBuffer<32>;
 class CircularBuffer;
 class ConstrainedStream;
+template<typename T>
+class Coroutine;
 class CountingStream;
 class DeprecatedFlyString;
 class ByteString;
@@ -163,6 +165,7 @@ using AK::ByteString;
 using AK::CircularBuffer;
 using AK::CircularQueue;
 using AK::ConstrainedStream;
+using AK::Coroutine;
 using AK::CountingStream;
 using AK::DeprecatedFlyString;
 using AK::DeprecatedStringCodePointIterator;
