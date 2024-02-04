@@ -295,7 +295,7 @@ StringView ProcessorBase<T>::platform_string()
 template<typename T>
 void ProcessorBase<T>::set_thread_specific_data(VirtualAddress)
 {
-    TODO_RISCV64();
+    // FIXME: Add support for thread-local storage on RISC-V
 }
 
 template<typename T>
