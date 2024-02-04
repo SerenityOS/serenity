@@ -3820,7 +3820,92 @@ void Document::update_animations_and_send_events(Optional<double> const& timesta
 // https://www.w3.org/TR/web-animations-1/#remove-replaced-animations
 void Document::remove_replaced_animations()
 {
-    // FIXME: Implement this
+    // When asked to remove replaced animations for a Document, doc, then for every animation, animation, that:
+    // - has an associated animation effect whose effect target is a descendant of doc, and
+    // - is replaceable, and
+    // - has a replace state of active, and
+    // - for which there exists for each target property of every animation effect associated with animation, an
+    //   animation effect associated with a replaceable animation with a higher composite order than animation that
+    //   includes the same target property
+
+    Vector<JS::NonnullGCPtr<Animations::Animation>> replaceable_animations;
+    for (auto const& timeline : m_associated_animation_timelines) {
+        for (auto const& animation : timeline->associated_animations()) {
+            if (!animation->effect() || !animation->effect()->target() || &animation->effect()->target()->document() != this)
+                continue;
+
+            if (!animation->is_replaceable())
+                continue;
+
+            if (animation->replace_state() != Bindings::AnimationReplaceState::Active)
+                continue;
+
+            // Composite order is only defined for KeyframeEffects
+            if (!animation->effect()->is_keyframe_effect())
+                continue;
+
+            replaceable_animations.append(animation);
+        }
+    }
+
+    quick_sort(replaceable_animations, [](JS::NonnullGCPtr<Animations::Animation>& a, JS::NonnullGCPtr<Animations::Animation>& b) {
+        VERIFY(a->effect()->is_keyframe_effect());
+        VERIFY(b->effect()->is_keyframe_effect());
+        auto& a_effect = *static_cast<Animations::KeyframeEffect*>(a->effect().ptr());
+        auto& b_effect = *static_cast<Animations::KeyframeEffect*>(b->effect().ptr());
+        return Animations::KeyframeEffect::composite_order(a_effect, b_effect) < 0;
+    });
+
+    // Lower value = higher priority
+    HashMap<CSS::PropertyID, size_t> highest_property_composite_orders;
+    for (int i = replaceable_animations.size() - 1; i >= 0; i--) {
+        auto animation = replaceable_animations[i];
+        bool has_any_highest_priority_property = false;
+
+        for (auto const& property : animation->effect()->target_properties()) {
+            if (!highest_property_composite_orders.contains(property)) {
+                has_any_highest_priority_property = true;
+                highest_property_composite_orders.set(property, i);
+            }
+        }
+
+        if (!has_any_highest_priority_property) {
+            // perform the following steps:
+
+            // - Set animation’s replace state to removed.
+            animation->set_replace_state(Bindings::AnimationReplaceState::Removed);
+
+            // - Create an AnimationPlaybackEvent, removeEvent.
+            // - Set removeEvent’s type attribute to remove.
+            // - Set removeEvent’s currentTime attribute to the current time of animation.
+            // - Set removeEvent’s timelineTime attribute to the current time of the timeline with which animation is
+            //   associated.
+            Animations::AnimationPlaybackEventInit init;
+            init.current_time = animation->current_time();
+            init.timeline_time = animation->timeline()->current_time();
+            auto remove_event = Animations::AnimationPlaybackEvent::create(realm(), HTML::EventNames::remove, init);
+
+            // - If animation has a document for timing, then append removeEvent to its document for timing's pending
+            //   animation event queue along with its target, animation. For the scheduled event time, use the result of
+            //   applying the procedure to convert timeline time to origin-relative time to the current time of the
+            //   timeline with which animation is associated.
+            if (auto document = animation->document_for_timing()) {
+                PendingAnimationEvent pending_animation_event {
+                    remove_event,
+                    animation,
+                    animation->timeline()->convert_a_timeline_time_to_an_origin_relative_time(init.timeline_time),
+                };
+                document->append_pending_animation_event(pending_animation_event);
+            }
+            //   Otherwise, queue a task to dispatch removeEvent at animation. The task source for this task is the DOM
+            //   manipulation task source.
+            else {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm().global_object(), [animation, remove_event]() {
+                    animation->dispatch_event(remove_event);
+                });
+            }
+        }
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter

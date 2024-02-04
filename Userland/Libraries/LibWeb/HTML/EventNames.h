@@ -81,6 +81,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(ratechange)               \
     __ENUMERATE_HTML_EVENT(readystatechange)         \
     __ENUMERATE_HTML_EVENT(rejectionhandled)         \
+    __ENUMERATE_HTML_EVENT(remove)                   \
     __ENUMERATE_HTML_EVENT(removetrack)              \
     __ENUMERATE_HTML_EVENT(reset)                    \
     __ENUMERATE_HTML_EVENT(resize)                   \

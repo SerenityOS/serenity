@@ -142,6 +142,7 @@ public:
     Optional<double> transformed_progress() const;
 
     virtual DOM::Element* target() const { return {}; }
+    virtual bool is_keyframe_effect() const { return false; }
 
 protected:
     AnimationEffect(JS::Realm&);

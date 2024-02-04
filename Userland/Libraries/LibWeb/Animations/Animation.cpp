@@ -345,6 +345,20 @@ bool Animation::is_replaceable() const
     return true;
 }
 
+void Animation::set_replace_state(Bindings::AnimationReplaceState value)
+{
+    m_replace_state = value;
+
+    if (value == Bindings::AnimationReplaceState::Removed) {
+        // Remove the associated effect from its target, if applicable
+        if (m_effect && m_effect->target())
+            m_effect->target()->disassociate_with_effect(*m_effect);
+
+        // Remove this animation from its timeline
+        m_timeline->disassociate_with_animation(*this);
+    }
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-play
 WebIDL::ExceptionOr<void> Animation::play()
 {

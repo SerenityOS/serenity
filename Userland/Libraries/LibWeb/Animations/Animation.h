@@ -54,6 +54,7 @@ public:
 
     bool is_replaceable() const;
     Bindings::AnimationReplaceState replace_state() const { return m_replace_state; }
+    void set_replace_state(Bindings::AnimationReplaceState value);
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-pending
     bool pending() const { return m_pending_play_task == TaskState::Scheduled || m_pending_pause_task == TaskState::Scheduled; }

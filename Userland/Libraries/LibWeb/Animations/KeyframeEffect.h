@@ -96,6 +96,8 @@ public:
     KeyFrameSet const* key_frame_set() { return m_key_frame_set; }
     void set_key_frame_set(RefPtr<KeyFrameSet const> key_frame_set) { m_key_frame_set = key_frame_set; }
 
+    virtual bool is_keyframe_effect() const override { return true; }
+
 private:
     KeyframeEffect(JS::Realm&);
     virtual ~KeyframeEffect() override;
