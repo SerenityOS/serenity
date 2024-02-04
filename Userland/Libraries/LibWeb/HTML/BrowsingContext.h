@@ -236,7 +236,8 @@ HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_
 
 SandboxingFlagSet determine_the_creation_sandboxing_flags(BrowsingContext const&, JS::GCPtr<DOM::Element> embedder);
 
-// FIXME: Find a better home for this
+// FIXME: Find a better home for these
 bool url_matches_about_blank(AK::URL const& url);
+bool url_matches_about_srcdoc(AK::URL const& url);
 
 }
