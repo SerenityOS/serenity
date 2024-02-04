@@ -817,7 +817,7 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::
     compute_missing_keyframe_offsets(m_keyframes);
 
     auto keyframe_set = adopt_ref(*new KeyFrameSet);
-    HashTable<CSS::PropertyID> animated_properties;
+    m_target_properties.clear();
 
     for (auto& keyframe : m_keyframes) {
         Animations::KeyframeEffect::KeyFrameSet::ResolvedKeyFrame resolved_keyframe;
@@ -825,14 +825,14 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::
         auto key = static_cast<u64>(keyframe.computed_offset.value() * 100 * AnimationKeyFrameKeyScaleFactor);
 
         for (auto const& [property_id, property_value] : keyframe.parsed_properties()) {
-            animated_properties.set(property_id);
+            m_target_properties.set(property_id);
             resolved_keyframe.resolved_properties.set(property_id, property_value);
         }
 
         keyframe_set->keyframes_by_key.insert(key, resolved_keyframe);
     }
 
-    generate_initial_and_final_frames(keyframe_set, animated_properties);
+    generate_initial_and_final_frames(keyframe_set, m_target_properties);
     m_key_frame_set = keyframe_set;
 
     return {};

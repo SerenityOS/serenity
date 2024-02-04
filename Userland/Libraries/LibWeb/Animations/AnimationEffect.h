@@ -141,6 +141,8 @@ public:
     Optional<double> current_iteration() const;
     Optional<double> transformed_progress() const;
 
+    HashTable<CSS::PropertyID> const& target_properties() const { return m_target_properties; }
+
     virtual DOM::Element* target() const { return {}; }
     virtual bool is_keyframe_effect() const { return false; }
 
@@ -183,6 +185,10 @@ protected:
     // Used for calculating transitions in StyleComputer
     Phase m_previous_phase { Phase::Idle };
     double m_previous_current_iteration { 0.0 };
+
+    // https://www.w3.org/TR/web-animations-1/#target-property
+    // Note: Only modified by child classes
+    HashTable<CSS::PropertyID> m_target_properties;
 };
 
 }
