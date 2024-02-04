@@ -61,6 +61,7 @@ public:
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-finished
     JS::NonnullGCPtr<JS::Object> finished() const { return *current_finished_promise()->promise(); }
+    bool is_finished() const { return m_is_finished; }
 
     enum class AutoRewind {
         Yes,
@@ -155,7 +156,7 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#current-finished-promise
     mutable JS::GCPtr<WebIDL::Promise> m_current_finished_promise;
-    bool m_current_finished_promise_resolved { false };
+    bool m_is_finished { false };
 
     // https://www.w3.org/TR/web-animations-1/#pending-play-task
     TaskState m_pending_play_task { TaskState::None };
