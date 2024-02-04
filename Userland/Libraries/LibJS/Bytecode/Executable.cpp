@@ -41,17 +41,11 @@ Executable::~Executable() = default;
 
 void Executable::dump() const
 {
-    dbgln("\033[33;1mJS::Bytecode::Executable\033[0m ({})", name);
+    warnln("\033[37;1mJS bytecode executable\033[0m \"{}\"", name);
     for (auto& block : basic_blocks)
         block->dump(*this);
-    if (!string_table->is_empty()) {
-        outln();
-        string_table->dump();
-    }
-    if (!identifier_table->is_empty()) {
-        outln();
-        identifier_table->dump();
-    }
+
+    warnln("");
 }
 
 }
