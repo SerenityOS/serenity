@@ -291,7 +291,11 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
         if (absolute_x < hex_start_x || absolute_y < hex_start_y)
             return {};
 
-        auto byte_x = (absolute_x - hex_start_x) / cell_width();
+        auto hex_text_start_x = hex_start_x + m_padding;
+        auto hex_text_end_x = hex_end_x - m_padding;
+        absolute_x = clamp(absolute_x, hex_text_start_x, hex_text_end_x);
+
+        auto byte_x = (absolute_x - hex_text_start_x) / cell_width();
         auto byte_y = (absolute_y - hex_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
@@ -306,7 +310,11 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
         if (absolute_x < hex_start_x || absolute_y < hex_start_y)
             return {};
 
-        auto byte_x = (absolute_x - text_start_x) / character_width();
+        auto text_text_start_x = text_start_x + m_padding;
+        auto text_text_end_x = text_end_x - m_padding;
+        absolute_x = clamp(absolute_x, text_text_start_x, text_text_end_x);
+
+        auto byte_x = (absolute_x - text_text_start_x) / character_width();
         auto byte_y = (absolute_y - text_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
