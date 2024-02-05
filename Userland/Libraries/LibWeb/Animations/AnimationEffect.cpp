@@ -83,12 +83,11 @@ ComputedEffectTiming AnimationEffect::get_computed_timing() const
             .easing = m_easing_function,
         },
 
-        // FIXME:
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
+        end_time(),
+        active_duration(),
+        local_time(),
+        transformed_progress(),
+        current_iteration(),
     };
 }
 
