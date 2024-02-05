@@ -589,6 +589,13 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
+    int offset_area_start_x = frame_thickness();
+    int offset_area_text_start_x = offset_area_start_x + m_padding;
+    int hex_area_start_x = offset_area_start_x + offset_area_width();
+    int hex_area_text_start_x = hex_area_start_x + m_padding;
+    int text_area_start_x = hex_area_start_x + hex_area_width();
+    int text_area_text_start_x = text_area_start_x + m_padding;
+
     Gfx::IntRect offset_clip_rect {
         0,
         vertical_scrollbar().value(),
@@ -598,8 +605,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(offset_clip_rect, palette().ruler());
     painter.draw_line(offset_clip_rect.top_right(), offset_clip_rect.bottom_right(), palette().ruler_border());
 
-    painter.draw_line({ offset_area_width() + hex_area_width(), 0 },
-        { offset_area_width() + hex_area_width(), vertical_scrollbar().value() + (height() - height_occupied_by_horizontal_scrollbar()) },
+    painter.draw_line({ text_area_start_x, 0 },
+        { text_area_start_x, vertical_scrollbar().value() + (height() - height_occupied_by_horizontal_scrollbar()) },
         palette().ruler_border());
 
     size_t view_height = (height() - height_occupied_by_horizontal_scrollbar());
@@ -612,7 +619,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
         // Paint offsets
         Gfx::IntRect side_offset_rect {
-            frame_thickness() + m_padding,
+            offset_area_text_start_x,
             row_text_y,
             width() - width_occupied_by_vertical_scrollbar(),
             height() - height_occupied_by_horizontal_scrollbar()
@@ -637,7 +644,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             auto const annotation = m_document->annotations().closest_annotation_at(byte_position);
 
             Gfx::IntRect hex_display_rect_high_nibble {
-                static_cast<int>(frame_thickness() + offset_margin_width() + column * cell_width() + 2 * m_padding),
+                static_cast<int>(hex_area_text_start_x + column * cell_width()),
                 row_text_y,
                 static_cast<int>(character_width()),
                 static_cast<int>(line_height() - m_line_spacing),
@@ -651,7 +658,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             Gfx::IntRect background_rect {
-                static_cast<int>(frame_thickness() + offset_margin_width() + column * cell_width() + 1 * m_padding),
+                static_cast<int>(hex_display_rect_high_nibble.x() - character_width() / 2),
                 row_background_y,
                 static_cast<int>(cell_width()),
                 static_cast<int>(line_height()),
@@ -701,7 +708,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(background_rect, background_color_hex);
 
             Gfx::IntRect text_display_rect {
-                static_cast<int>(frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding),
+                static_cast<int>(text_area_text_start_x + column * character_width()),
                 row_text_y,
                 static_cast<int>(character_width()),
                 static_cast<int>(line_height() - m_line_spacing),
@@ -731,7 +738,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             Gfx::IntRect text_background_rect {
-                static_cast<int>(frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + column * character_width() + 4 * m_padding),
+                static_cast<int>(text_area_text_start_x + column * character_width()),
                 row_background_y,
                 static_cast<int>(character_width()),
                 static_cast<int>(line_height()),
