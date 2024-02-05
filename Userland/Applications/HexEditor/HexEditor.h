@@ -110,9 +110,8 @@ private:
     size_t line_height() const { return font().pixel_size_rounded_up() + m_line_spacing; }
     size_t character_width() const { return font().glyph_fixed_width(); }
     size_t cell_width() const { return character_width() * 3; }
-    size_t offset_margin_width() const { return 80; }
 
-    int offset_area_width() const { return offset_margin_width() + m_padding; }
+    int offset_area_width() const { return m_padding + font().width_rounded_up("0X12345678"sv) + m_padding; }
     int hex_area_width() const { return m_padding + m_bytes_per_row * cell_width() + m_padding; }
     int text_area_width() const { return m_padding + m_bytes_per_row * character_width() + m_padding; }
 
