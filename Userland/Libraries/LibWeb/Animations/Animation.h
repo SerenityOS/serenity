@@ -72,6 +72,7 @@ public:
     };
     WebIDL::ExceptionOr<void> play();
     WebIDL::ExceptionOr<void> play_an_animation(AutoRewind);
+    WebIDL::ExceptionOr<void> pause();
 
     Optional<double> convert_an_animation_time_to_timeline_time(Optional<double>) const;
     Optional<double> convert_a_timeline_time_to_an_origin_relative_time(Optional<double>) const;
