@@ -83,6 +83,7 @@ protected:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void theme_change_event(GUI::ThemeChangeEvent&) override;
 
 private:
     size_t m_line_spacing { 4 };
