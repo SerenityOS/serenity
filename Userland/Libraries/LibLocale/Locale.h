@@ -139,7 +139,11 @@ bool is_type_identifier(StringView);
 Optional<LanguageID> parse_unicode_language_id(StringView);
 Optional<LocaleID> parse_unicode_locale_id(StringView);
 
-void canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true);
+enum class RemoveTrue {
+    No,
+    Yes,
+};
+[[nodiscard]] String canonicalize_unicode_extension_values(StringView key, String const& value, RemoveTrue);
 Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 
 StringView default_locale();
