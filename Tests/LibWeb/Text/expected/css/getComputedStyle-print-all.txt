@@ -81,7 +81,7 @@ grid-row-start: auto
 grid-template-areas: 
 grid-template-columns: 
 grid-template-rows: 
-height: auto
+height: 1411px
 image-rendering: auto
 inset-block-end: auto
 inset-block-start: auto
