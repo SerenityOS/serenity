@@ -72,10 +72,37 @@ OwnPtr<Heading> Heading::parse(LineIterator& lines)
             break;
     }
 
-    if (!level || indent + level >= line.length() || line[indent + level] != ' ' || level > 6)
+    // Only the opening sequence of #s is an empty ATX heading (example 79)
+    if (indent + level == line.length()) {
+        ++lines;
+        return make<Heading>(Text::parse(""sv), level);
+    }
+
+    // At least one space or tab is required between the # characters and the
+    // heading’s contents, unless the heading is empty. (example 64)
+    if (!level
+        || (line[indent + level] != ' ' && line[indent + level] != '\t')
+        || level > 6)
         return {};
 
-    StringView title_view = line.substring_view(indent + level + 1);
+    size_t last = line.length() - 1;
+    for (; last > indent + level; --last) {
+        if (line[last] != '#' && line[last] != ' ' && line[last] != '\t')
+            break;
+    }
+
+    // Only whitespace between the opening and closing sequence of #s is an
+    // empty ATX heading (example 79)
+    if (last == indent + level) {
+        ++lines;
+        return make<Heading>(Text::parse(""sv), level);
+    }
+
+    // The closing sequence must be preceded by a space or tab (example 75)
+    if (last != line.length() - 1 && line[last + 1] != ' ' && line[last + 1] != '\t')
+        last = line.length() - 1;
+
+    StringView title_view = line.substring_view(indent + level + 1, last - indent - level);
     auto text = Text::parse(title_view);
     auto heading = make<Heading>(move(text), level);
 
