@@ -567,6 +567,12 @@ void HexEditor::context_menu_event(GUI::ContextMenuEvent& event)
     m_context_menu->popup(event.screen_position());
 }
 
+void HexEditor::theme_change_event(GUI::ThemeChangeEvent&)
+{
+    set_font(Gfx::FontDatabase::default_fixed_width_font());
+    update_content_size();
+}
+
 void HexEditor::update_status()
 {
     if (on_status_change)
