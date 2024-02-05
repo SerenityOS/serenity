@@ -17,16 +17,16 @@ steps:
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
         set -e
-        sudo apt-get purge -y clang-12 clang-13 clang-14 gcc-10
+        sudo apt-get purge -y clang-13 clang-14 clang-15 gcc-11
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main'
         sudo apt-get update
-        sudo apt-get install ccache gcc-12 g++-12 clang-15 libstdc++-12-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libssl-dev libegl1-mesa-dev
+        sudo apt-get install ccache clang-17 clang++-17 lld-17 ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libssl-dev libegl1-mesa-dev
 
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
 
         wget https://github.com/WebAssembly/wabt/releases/download/1.0.23/wabt-1.0.23-ubuntu.tar.gz
         tar -xzf ./wabt-1.0.23-ubuntu.tar.gz
@@ -37,5 +37,5 @@ steps:
     # macOS ships an ancient Bash 3.x by default
     - script: |
         set -e
-        brew install coreutils bash ninja wabt ccache unzip qt llvm@15
+        brew install coreutils bash ninja wabt ccache unzip qt llvm@17
       displayName: 'Install Dependencies'
