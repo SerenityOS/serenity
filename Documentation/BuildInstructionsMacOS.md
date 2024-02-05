@@ -30,9 +30,9 @@ brew install x86_64-elf-gdb
 If you have Xcode version 14.2 or older, also install a newer host compiler from homebrew. Xcode 14.3 is known to work.
 
 ```console
-brew install llvm@15
+brew install llvm@18
 # OR
-brew install gcc@12
+brew install gcc@13
 ```
 
 # Notes

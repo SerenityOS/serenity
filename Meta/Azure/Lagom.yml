@@ -25,15 +25,15 @@ jobs:
 
     - name: host-cc
       ${{ if eq(parameters.os, 'macOS') }}:
-        value: $(brew --prefix llvm@15)/bin/clang
+        value: $(brew --prefix llvm@18)/bin/clang
       ${{ if not(eq(parameters.os, 'macOS')) }}:
-        value: gcc-12
+        value: gcc-13
 
     - name: host-cxx
       ${{ if eq(parameters.os, 'macOS') }}:
-        value: $(brew --prefix llvm@15)/bin/clang++
+        value: $(brew --prefix llvm@18)/bin/clang++
       ${{ if not(eq(parameters.os, 'macOS')) }}:
-        value: g++-12
+        value: g++-13
 
     - name: ndk_version # only relevant for Android
       value: '25.2.9519653'

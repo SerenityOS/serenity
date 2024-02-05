@@ -48,7 +48,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build unzip gcc-12 g++-12 jq wget
+          sudo apt-get install -y ninja-build unzip gcc-13 g++-13 jq wget
           test -e /opt/wabt-1.0.27 || (
             cd /tmp
             wget https://github.com/WebAssembly/wabt/releases/download/1.0.27/wabt-1.0.27-ubuntu.tar.gz
@@ -68,7 +68,7 @@ jobs:
           pip install -r libjs-test262/requirements.txt
 
       - name: Check versions
-        run: set +e; g++ --version; g++-12 --version; python --version; python3 --version; ninja --version
+        run: set +e; g++ --version; g++-13 --version; python --version; python3 --version; ninja --version
 
       - name: TimeZoneData cache
         uses: actions/cache@v4
@@ -98,8 +98,8 @@ jobs:
         run: |
           env PATH="/opt/wabt-1.0.27/bin:$PATH" \
             cmake -GNinja -B Build \
-              -DCMAKE_C_COMPILER=gcc-12 \
-              -DCMAKE_CXX_COMPILER=g++-12 \
+              -DCMAKE_C_COMPILER=gcc-13 \
+              -DCMAKE_CXX_COMPILER=g++-13 \
               -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
               -DINCLUDE_WASM_SPEC_TESTS=ON \
               -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} \

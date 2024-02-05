@@ -56,14 +56,14 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler clang clang-15 clang-16 /opt/homebrew/opt/llvm/bin/clang
+    find_newest_compiler clang clang-15 clang-16 clang-17 clang-18 /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/clang/clang++}"
         return
     fi
 
-    find_newest_compiler egcc gcc gcc-12 gcc-13 /usr/local/bin/gcc-{12,13} /opt/homebrew/bin/gcc-{12,13}
+    find_newest_compiler egcc gcc gcc-12 gcc-13 gcc-14 /usr/local/bin/gcc-{12,13,14} /opt/homebrew/bin/gcc-{12,13,14}
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/gcc/g++}"
