@@ -5,10 +5,10 @@
  */
 
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibTest/TestCase.h>
-#include <string.h>
 
 class ParserResult {
 public:
@@ -110,6 +110,40 @@ TEST_CASE(bool_option)
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, true);
+}
+
+TEST_CASE(string_option)
+{
+    ByteString string_option;
+
+    // short option
+    auto parser_result = run_parser({ "app"sv, "-d"sv, "foo"sv }, [&](auto& parser) {
+        parser.add_option(string_option, "dummy", nullptr, 'd', "DUMMY");
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(string_option, "foo");
+
+    // short option, not given
+    string_option = "";
+    parser_result = run_parser({ "app"sv, "-d"sv }, [&](auto& parser) {
+        parser.add_option(string_option, "dummy", nullptr, 'd', "DUMMY");
+    });
+    EXPECT_EQ(parser_result.result, false);
+
+    // long option
+    string_option = "";
+    parser_result = run_parser({ "app"sv, "--dummy"sv, "foo"sv }, [&](auto& parser) {
+        parser.add_option(string_option, "dummy", "dummy", {}, "DUMMY");
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(string_option, "foo");
+
+    // long option, not given
+    string_option = "";
+    parser_result = run_parser({ "app"sv, "--dummy"sv }, [&](auto& parser) {
+        parser.add_option(string_option, "dummy", "dummy", {}, "DUMMY");
+    });
+    EXPECT_EQ(parser_result.result, false);
 }
 
 TEST_CASE(positional_string_argument)
@@ -314,6 +348,169 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
         parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
     });
     EXPECT_EQ(parser_result.result, false);
+}
+
+TEST_CASE(combination_of_bool_and_string_short_options_with_positional_vector_string)
+{
+    // #22759: Positional arguments were sometimes incorrectly not shifted, leading to an incorrect parse.
+
+    // Bool options (given), string options (given) and one positional argument (given)
+    // Expected: all arguments fill as given
+    bool bool_opt1 = false;
+    bool bool_opt2 = false;
+    ByteString string_opt1;
+    ByteString string_opt2;
+    Vector<StringView> positionals;
+
+    auto parser_result = run_parser({ "app"sv, "-b"sv, "-c"sv, "-d"sv, "foo"sv, "-e"sv, "bar"sv, "one"sv }, [&](auto& parser) {
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
+        parser.add_option(string_opt1, "string_opt1", nullptr, 'd', "D");
+        parser.add_option(string_opt2, "string_opt2", nullptr, 'e', "E");
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(string_opt1, "foo");
+    EXPECT_EQ(string_opt2, "bar");
+    EXPECT_EQ(positionals.size(), 1u);
+    if (positionals.size() == 1u) {
+        EXPECT_EQ(positionals[0], "one");
+    }
+
+    // Bool options (given), string options (given) and one positional argument (given)
+    // one bool option after positional
+    // Expected: all arguments fill as given
+    bool_opt1 = false;
+    bool_opt2 = false;
+    string_opt1 = "";
+    string_opt2 = "";
+    positionals = {};
+
+    parser_result = run_parser({ "app"sv, "-c"sv, "-d"sv, "foo"sv, "-e"sv, "bar"sv, "one"sv, "-b"sv }, [&](auto& parser) {
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
+        parser.add_option(string_opt1, "string_opt1", nullptr, 'd', "D");
+        parser.add_option(string_opt2, "string_opt2", nullptr, 'e', "E");
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(string_opt1, "foo");
+    EXPECT_EQ(string_opt2, "bar");
+    EXPECT_EQ(positionals.size(), 1u);
+    if (positionals.size() == 1u) {
+        EXPECT_EQ(positionals[0], "one");
+    }
+
+    // Bool options (given), string options (given) and one positional argument (given)
+    // one string and one bool option after positional
+    // Expected: all arguments fill as given
+    bool_opt1 = false;
+    bool_opt2 = false;
+    string_opt1 = "";
+    string_opt2 = "";
+    positionals = {};
+
+    parser_result = run_parser({ "app"sv, "-c"sv, "-e"sv, "bar"sv, "one"sv, "-d"sv, "foo"sv, "-b"sv }, [&](auto& parser) {
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
+        parser.add_option(string_opt1, "string_opt1", nullptr, 'd', "D");
+        parser.add_option(string_opt2, "string_opt2", nullptr, 'e', "E");
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(string_opt1, "foo");
+    EXPECT_EQ(string_opt2, "bar");
+    EXPECT_EQ(positionals.size(), 1u);
+    if (positionals.size() == 1u) {
+        EXPECT_EQ(positionals[0], "one");
+    }
+
+    // Bool options (given), string options (given) and two positional arguments (given)
+    // positional arguments are separated by options
+    // Expected: all arguments fill as given
+    bool_opt1 = false;
+    bool_opt2 = false;
+    string_opt1 = "";
+    string_opt2 = "";
+    positionals = {};
+
+    parser_result = run_parser({ "app"sv, "-b"sv, "-d"sv, "foo"sv, "one"sv, "-c"sv, "-e"sv, "bar"sv, "two"sv }, [&](auto& parser) {
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
+        parser.add_option(string_opt1, "string_opt1", nullptr, 'd', "D");
+        parser.add_option(string_opt2, "string_opt2", nullptr, 'e', "E");
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(string_opt1, "foo");
+    EXPECT_EQ(string_opt2, "bar");
+    EXPECT_EQ(positionals.size(), 2u);
+    if (positionals.size() == 2u) {
+        EXPECT_EQ(positionals[0], "one");
+        EXPECT_EQ(positionals[1], "two");
+    }
+
+    // Bool options (given), string options (given) and two positional arguments (given)
+    // positional arguments are separated and followed by options
+    // Expected: all arguments fill as given
+    bool_opt1 = false;
+    bool_opt2 = false;
+    string_opt1 = "";
+    string_opt2 = "";
+    positionals = {};
+
+    parser_result = run_parser({ "app"sv, "one"sv, "-b"sv, "-d"sv, "foo"sv, "two"sv, "-c"sv, "-e"sv, "bar"sv }, [&](auto& parser) {
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
+        parser.add_option(string_opt1, "string_opt1", nullptr, 'd', "D");
+        parser.add_option(string_opt2, "string_opt2", nullptr, 'e', "E");
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(string_opt1, "foo");
+    EXPECT_EQ(string_opt2, "bar");
+    EXPECT_EQ(positionals.size(), 2u);
+    if (positionals.size() == 2u) {
+        EXPECT_EQ(positionals[0], "one");
+        EXPECT_EQ(positionals[1], "two");
+    }
+
+    // Bool options (given), string options (given) and two positional arguments (given)
+    // positional arguments are separated and followed by options, variation on options order
+    // Expected: all arguments fill as given
+    bool_opt1 = false;
+    bool_opt2 = false;
+    string_opt1 = "";
+    string_opt2 = "";
+    positionals = {};
+
+    parser_result = run_parser({ "app"sv, "one"sv, "-d"sv, "foo"sv, "-b"sv, "two"sv, "-e"sv, "bar"sv, "-c"sv }, [&](auto& parser) {
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
+        parser.add_option(string_opt1, "string_opt1", nullptr, 'd', "D");
+        parser.add_option(string_opt2, "string_opt2", nullptr, 'e', "E");
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+    });
+    EXPECT_EQ(parser_result.result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(string_opt1, "foo");
+    EXPECT_EQ(string_opt2, "bar");
+    EXPECT_EQ(positionals.size(), 2u);
+    if (positionals.size() == 2u) {
+        EXPECT_EQ(positionals[0], "one");
+        EXPECT_EQ(positionals[1], "two");
+    }
 }
 
 TEST_CASE(stop_on_first_non_option)

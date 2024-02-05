@@ -239,7 +239,7 @@ void OptionParser::shift_argv()
 {
     // We've just parsed an option (which perhaps has a value).
     // Put the option (along with its value, if any) in front of other arguments.
-    if (m_consumed_args == 0 || m_skipped_arguments == 0) {
+    if (m_consumed_args == 0 && m_skipped_arguments == 0) {
         // Nothing to do!
         return;
     }
@@ -253,6 +253,12 @@ void OptionParser::shift_argv()
     m_args.slice(m_arg_index, m_consumed_args).copy_to(buffer_bytes);
     m_args.slice(m_arg_index - m_skipped_arguments, m_skipped_arguments).copy_to(m_args.slice(m_arg_index + m_consumed_args - m_skipped_arguments));
     buffer_bytes.slice(0, m_consumed_args).copy_to(m_args.slice(m_arg_index - m_skipped_arguments, m_consumed_args));
+
+    // m_arg_index took into account m_skipped_arguments (both are inc in find_next_option)
+    // so now we have to make m_arg_index point to the beginning of skipped arguments
+    m_arg_index -= m_skipped_arguments;
+    // and let's forget about skipped arguments
+    m_skipped_arguments = 0;
 }
 
 bool OptionParser::find_next_option()
