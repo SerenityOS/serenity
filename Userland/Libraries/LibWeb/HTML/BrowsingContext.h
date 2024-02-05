@@ -144,7 +144,7 @@ public:
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
 
-    bool has_been_discarded() const { return m_has_been_discarded; }
+    bool has_navigable_been_destroyed() const;
 
     JS::GCPtr<BrowsingContext> opener_browsing_context() const { return m_opener_browsing_context; }
     void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
@@ -197,8 +197,6 @@ private:
     JS::GCPtr<BrowsingContext> m_last_child;
     JS::GCPtr<BrowsingContext> m_next_sibling;
     JS::GCPtr<BrowsingContext> m_previous_sibling;
-
-    bool m_has_been_discarded { false };
 };
 
 HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin);

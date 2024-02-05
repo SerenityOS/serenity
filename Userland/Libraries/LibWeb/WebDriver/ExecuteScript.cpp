@@ -115,9 +115,9 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm
     if (is<HTML::WindowProxy>(value.as_object())) {
         auto const& window_proxy = static_cast<HTML::WindowProxy&>(value.as_object());
 
-        // If the associated browsing context of the WindowProxy object in value has been discarded, return error with
+        // If the associated browsing context of the WindowProxy object in value has been destroyed, return error with
         // error code stale element reference.
-        if (window_proxy.associated_browsing_context()->has_been_discarded())
+        if (window_proxy.associated_browsing_context()->has_navigable_been_destroyed())
             return ExecuteScriptResultType::BrowsingContextDiscarded;
 
         // Otherwise return success with data set to WindowProxy reference object for value.
