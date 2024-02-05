@@ -132,6 +132,7 @@ public:
 
 protected:
     AnimationEffect(JS::Realm&);
+    virtual ~AnimationEffect() = default;
 
     virtual void initialize(JS::Realm&) override;
 
