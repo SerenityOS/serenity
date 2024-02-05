@@ -48,15 +48,15 @@ inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVecto
 
     FloatVector3 sample_output {};
     // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
-    Vector<unsigned> coordinates;
-    coordinates.resize(x.size());
+    unsigned coordinates[x.size()];
+    ReadonlySpan<unsigned> coordinates_span { coordinates, x.size() };
     for (size_t mask = 0; mask < (1u << x.size()); ++mask) {
         float sample_weight = 1.0f;
         for (size_t i = 0; i < x.size(); ++i) {
             coordinates[i] = left_index[i] + ((mask >> i) & 1u);
             sample_weight *= ((mask >> i) & 1u) ? factor[i] : 1.0f - factor[i];
         }
-        sample_output += sample(coordinates) * sample_weight;
+        sample_output += sample(coordinates_span) * sample_weight;
     }
 
     return sample_output;
