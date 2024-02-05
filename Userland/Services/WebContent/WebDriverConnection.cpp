@@ -1833,8 +1833,8 @@ Messages::WebDriverClient::PrintPageResponse WebDriverConnection::print_page()
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 Messages::WebDriverClient::EnsureTopLevelBrowsingContextIsOpenResponse WebDriverConnection::ensure_top_level_browsing_context_is_open()
 {
-    // A browsing context is said to be no longer open if it has been discarded.
-    if (m_page_client.page().top_level_browsing_context().has_been_discarded())
+    // A browsing context is said to be no longer open if its navigable has been destroyed.
+    if (m_page_client.page().top_level_browsing_context().has_navigable_been_destroyed())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found"sv);
     return JsonValue {};
 }
@@ -1901,7 +1901,7 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::wait_for_navigation_to
         return {};
 
     // 2. If the current browsing context is no longer open, return success with data null.
-    if (m_page_client.page().top_level_browsing_context().has_been_discarded())
+    if (m_page_client.page().top_level_browsing_context().has_navigable_been_destroyed())
         return {};
 
     // FIXME: 3. Start a timer. If this algorithm has not completed before timer reaches the session’s session page load timeout in milliseconds, return an error with error code timeout.
