@@ -547,16 +547,19 @@ Vector<Certificate> TLSv12::parse_pem_certificate(ReadonlyBytes certificate_pem_
     return { move(certificate) };
 }
 
-static String s_default_ca_certificate_path;
+static Vector<ByteString> s_default_ca_certificate_paths;
 
-void DefaultRootCACertificates::set_default_certificate_path(String path)
+void DefaultRootCACertificates::set_default_certificate_paths(Span<ByteString> paths)
 {
-    s_default_ca_certificate_path = move(path);
+    s_default_ca_certificate_paths.clear();
+    s_default_ca_certificate_paths.ensure_capacity(paths.size());
+    for (auto& path : paths)
+        s_default_ca_certificate_paths.unchecked_append(path);
 }
 
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
-    auto load_result = load_certificates(s_default_ca_certificate_path);
+    auto load_result = load_certificates(s_default_ca_certificate_paths);
     if (load_result.is_error()) {
         dbgln("Failed to load CA Certificates: {}", load_result.error());
         return;
@@ -571,7 +574,7 @@ DefaultRootCACertificates& DefaultRootCACertificates::the()
     return s_the;
 }
 
-ErrorOr<Vector<Certificate>> DefaultRootCACertificates::load_certificates(StringView custom_cert_path)
+ErrorOr<Vector<Certificate>> DefaultRootCACertificates::load_certificates(Span<ByteString> custom_cert_paths)
 {
     auto cacert_file_or_error = Core::File::open("/etc/cacert.pem"sv, Core::File::OpenMode::Read);
     ByteBuffer data;
@@ -588,9 +591,11 @@ ErrorOr<Vector<Certificate>> DefaultRootCACertificates::load_certificates(String
         TRY(data.try_append(TRY(user_cert_file->read_until_eof())));
     }
 
-    if (!custom_cert_path.is_empty() && FileSystem::exists(custom_cert_path)) {
-        auto custom_cert_file = TRY(Core::File::open(custom_cert_path, Core::File::OpenMode::Read));
-        TRY(data.try_append(TRY(custom_cert_file->read_until_eof())));
+    for (auto& custom_cert_path : custom_cert_paths) {
+        if (FileSystem::exists(custom_cert_path)) {
+            auto custom_cert_file = TRY(Core::File::open(custom_cert_path, Core::File::OpenMode::Read));
+            TRY(data.try_append(TRY(custom_cert_file->read_until_eof())));
+        }
     }
 
     return TRY(parse_pem_root_certificate_authorities(data));

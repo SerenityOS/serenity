@@ -21,13 +21,13 @@
 #include <RequestServer/HttpsProtocol.h>
 
 // FIXME: Share b/w RequestServer and WebSocket
-ErrorOr<String> find_certificates(StringView serenity_resource_root)
+ErrorOr<ByteString> find_certificates(StringView serenity_resource_root)
 {
-    auto cert_path = TRY(String::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root));
+    auto cert_path = ByteString::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root);
     if (!FileSystem::exists(cert_path)) {
         auto app_dir = LexicalPath::dirname(TRY(Core::System::current_executable_path()));
 
-        cert_path = TRY(String::formatted("{}/cacert.pem", LexicalPath(app_dir).parent()));
+        cert_path = ByteString::formatted("{}/cacert.pem", LexicalPath(app_dir).parent());
         if (!FileSystem::exists(cert_path))
             return Error::from_string_view("Don't know how to load certs!"sv);
     }
@@ -40,14 +40,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int fd_passing_socket { -1 };
     StringView serenity_resource_root;
+    Vector<ByteString> certificates;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(fd_passing_socket, "File descriptor of the fd passing socket", "fd-passing-socket", 'c', "fd-passing-socket");
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
     args_parser.parse(arguments);
 
     // Ensure the certificates are read out here.
-    DefaultRootCACertificates::set_default_certificate_path(TRY(find_certificates(serenity_resource_root)));
+    if (certificates.is_empty())
+        certificates.append(TRY(find_certificates(serenity_resource_root)));
+    DefaultRootCACertificates::set_default_certificate_paths(certificates.span());
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;

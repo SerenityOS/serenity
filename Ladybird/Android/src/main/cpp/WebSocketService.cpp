@@ -17,13 +17,13 @@
 #include <WebSocket/ConnectionFromClient.h>
 
 // FIXME: Share b/w RequestServer and WebSocket
-ErrorOr<String> find_certificates(StringView serenity_resource_root)
+ErrorOr<ByteString> find_certificates(StringView serenity_resource_root)
 {
-    auto cert_path = TRY(String::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root));
+    auto cert_path = ByteString::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root);
     if (!FileSystem::exists(cert_path)) {
         auto app_dir = LexicalPath::dirname(TRY(Core::System::current_executable_path()));
 
-        cert_path = TRY(String::formatted("{}/cacert.pem", LexicalPath(app_dir).parent()));
+        cert_path = ByteString::formatted("{}/cacert.pem", LexicalPath(app_dir).parent());
         if (!FileSystem::exists(cert_path))
             return Error::from_string_view("Don't know how to load certs!"sv);
     }
@@ -33,7 +33,7 @@ ErrorOr<String> find_certificates(StringView serenity_resource_root)
 ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 {
     // Ensure the certificates are read out here.
-    DefaultRootCACertificates::set_default_certificate_path(TRY(find_certificates(s_serenity_resource_root)));
+    DefaultRootCACertificates::set_default_certificate_paths(Vector { TRY(find_certificates(s_serenity_resource_root)) });
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;

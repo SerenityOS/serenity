@@ -17,6 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio inet unix rpath sendfd recvfd"));
 
     // Ensure the certificates are read out here.
+    // FIXME: Allow specifying extra certificates on the command line, or in other configuration.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
