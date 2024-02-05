@@ -377,6 +377,11 @@ void VirtualConsole::terminal_history_changed(int)
     // Do nothing, I guess?
 }
 
+void VirtualConsole::terminal_did_perform_possibly_partial_clear()
+{
+    // Do nothing, we're not going to hit this anyway.
+}
+
 void VirtualConsole::emit(u8 const* data, size_t size)
 {
     for (size_t i = 0; i < size; i++)

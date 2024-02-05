@@ -48,4 +48,22 @@
             text: "Confirm exit when process is active"
         }
     }
+
+    @GUI::GroupBox {
+        title: "Auto-mark behavior"
+        preferred_height: "fit"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [8]
+        }
+
+        @GUI::RadioButton {
+            name: "automark_off"
+            text: "Do not auto-mark"
+        }
+
+        @GUI::RadioButton {
+            name: "automark_on_interactive_prompt"
+            text: "Auto-mark on interactive shell prompts"
+        }
+    }
 }

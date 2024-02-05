@@ -55,6 +55,14 @@ public:
     BellMode bell_mode() { return m_bell_mode; }
     void set_bell_mode(BellMode bm) { m_bell_mode = bm; }
 
+    enum class AutoMarkMode {
+        MarkNothing,
+        MarkInteractiveShellPrompt,
+    };
+
+    AutoMarkMode auto_mark_mode() { return m_auto_mark_mode; }
+    void set_auto_mark_mode(AutoMarkMode am) { m_auto_mark_mode = am; }
+
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
     ByteString selected_text() const;
@@ -77,10 +85,14 @@ public:
     GUI::Action& copy_action() { return *m_copy_action; }
     GUI::Action& paste_action() { return *m_paste_action; }
     GUI::Action& clear_including_history_action() { return *m_clear_including_history_action; }
+    GUI::Action& clear_to_previous_mark_action() { return *m_clear_to_previous_mark_action; }
 
     void copy();
     void paste();
     void clear_including_history();
+    void clear_to_previous_mark();
+
+    void set_startup_process_id(pid_t pid) { m_startup_process_id = pid; }
 
     const StringView color_scheme_name() const { return m_color_scheme_name; }
 
@@ -133,6 +145,7 @@ private:
     virtual void set_window_progress(int value, int max) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int delta) override;
+    virtual void terminal_did_perform_possibly_partial_clear() override;
     virtual void emit(u8 const*, size_t) override;
 
     // ^GUI::Clipboard::ClipboardClient
@@ -163,6 +176,8 @@ private:
 
     void update_cached_font_metrics();
 
+    void handle_pty_owner_change(pid_t new_owner);
+
     VT::Terminal m_terminal;
 
     VT::Range m_selection;
@@ -182,6 +197,8 @@ private:
     bool m_show_bold_text_as_bright { true };
 
     ByteString m_color_scheme_name;
+
+    AutoMarkMode m_auto_mark_mode { AutoMarkMode::MarkInteractiveShellPrompt };
 
     BellMode m_bell_mode { BellMode::Visible };
     bool m_alt_key_held { false };
@@ -229,6 +246,7 @@ private:
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_clear_including_history_action;
+    RefPtr<GUI::Action> m_clear_to_previous_mark_action;
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Menu> m_context_menu_for_hyperlink;
@@ -237,6 +255,9 @@ private:
 
     Gfx::IntPoint m_left_mousedown_position;
     VT::Position m_left_mousedown_position_buffer;
+
+    bool m_startup_process_owns_pty { false };
+    pid_t m_startup_process_id { -1 };
 };
 
 }

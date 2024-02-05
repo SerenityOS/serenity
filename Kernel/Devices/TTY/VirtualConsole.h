@@ -99,6 +99,7 @@ private:
     virtual void set_window_progress(int, int) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int) override;
+    virtual void terminal_did_perform_possibly_partial_clear() override;
     virtual void emit(u8 const*, size_t) override;
     virtual void set_cursor_shape(VT::CursorShape) override;
     virtual void set_cursor_blinking(bool) override;

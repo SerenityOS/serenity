@@ -69,8 +69,18 @@ void TerminalWidget::set_pty_master_fd(int fd)
             set_pty_master_fd(-1);
             return;
         }
+
         for (ssize_t i = 0; i < nread; ++i)
             m_terminal.on_input(buffer[i]);
+
+        auto owned_by_startup_process = m_startup_process_owns_pty;
+        auto pgrp = tcgetpgrp(m_ptm_fd);
+        m_startup_process_owns_pty = pgrp == m_startup_process_id;
+        if (m_startup_process_owns_pty != owned_by_startup_process) {
+            // pty owner state changed, handle it.
+            handle_pty_owner_change(pgrp);
+        }
+
         flush_dirty_lines();
     };
 }
@@ -140,11 +150,16 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
         clear_including_history();
     });
 
+    m_clear_to_previous_mark_action = GUI::Action::create("Clear &Previous Command", { Mod_Ctrl | Mod_Shift, Key_U }, [this](auto&) {
+        clear_to_previous_mark();
+    });
+
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(copy_action());
     m_context_menu->add_action(paste_action());
     m_context_menu->add_separator();
     m_context_menu->add_action(clear_including_history_action());
+    m_context_menu->add_action(clear_to_previous_mark_action());
 
     update_copy_action();
     update_paste_action();
@@ -1035,6 +1050,22 @@ void TerminalWidget::terminal_history_changed(int delta)
         m_selection.offset_row(delta);
 }
 
+void TerminalWidget::terminal_did_perform_possibly_partial_clear()
+{
+    // Just pretend the whole terminal was cleared.
+    // Force an update by resizing slightly and then back to the original size.
+    winsize ws;
+    for (ssize_t offset = 1; offset >= 0; --offset) {
+        ws.ws_col = m_terminal.columns() - offset;
+        ws.ws_row = m_terminal.rows() - offset;
+        if (m_ptm_fd != -1) {
+            if (ioctl(m_ptm_fd, TIOCSWINSZ, &ws) < 0) {
+                perror("ioctl(TIOCSWINSZ)");
+            }
+        }
+    }
+}
+
 void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
 {
     auto pixel_size = widget_size_for_font(font());
@@ -1218,6 +1249,15 @@ void TerminalWidget::clear_including_history()
     m_terminal.clear_including_history();
 }
 
+void TerminalWidget::clear_to_previous_mark()
+{
+    auto marks = m_terminal.marks().values();
+    size_t offset = m_startup_process_owns_pty ? 2 : 1; // If the shell is the active process, we have an extra mark.
+    if (marks.size() < offset)
+        return;
+    m_terminal.clear_to_mark(marks[marks.size() - offset]);
+}
+
 void TerminalWidget::scroll_to_bottom()
 {
     m_scrollbar->set_value(m_scrollbar->max());
@@ -1373,6 +1413,13 @@ ByteString TerminalWidget::stringify_cursor_shape(VT::CursorShape cursor_shape)
         return "None";
     }
     VERIFY_NOT_REACHED();
+}
+
+void TerminalWidget::handle_pty_owner_change(pid_t new_owner)
+{
+    if (m_auto_mark_mode == AutoMarkMode::MarkInteractiveShellPrompt && new_owner == m_startup_process_id) {
+        m_terminal.mark_cursor();
+    }
 }
 
 }

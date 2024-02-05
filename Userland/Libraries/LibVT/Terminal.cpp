@@ -35,6 +35,7 @@ void Terminal::clear()
     for (size_t i = 0; i < rows(); ++i)
         active_buffer()[i]->clear();
     set_cursor(0, 0);
+    m_client.terminal_did_perform_possibly_partial_clear();
 }
 
 void Terminal::clear_history()
@@ -44,6 +45,68 @@ void Terminal::clear_history()
     m_history.clear();
     m_history_start = 0;
     m_client.terminal_history_changed(-previous_history_size);
+}
+
+void Terminal::clear_to_mark(Mark mark)
+{
+    auto cursor_row = this->cursor_row();
+    ScopeGuard send_sigwinch = [&] {
+        set_cursor(cursor_row, 1);
+        mark_cursor();
+        m_client.terminal_did_perform_possibly_partial_clear();
+    };
+    m_valid_marks.remove(mark);
+
+    {
+        auto it = active_buffer().rbegin();
+        size_t row = m_rows - 1;
+        // Skip to the cursor line.
+        for (size_t i = this->cursor_row() + 1; i < active_buffer().size(); ++i, row--)
+            ++it;
+        for (; it != active_buffer().rend(); ++it, row--) {
+            auto& line = *it;
+            auto line_mark = line->mark();
+            auto is_target_line = line_mark == mark;
+            if (line_mark.has_value())
+                m_valid_marks.remove(*line_mark);
+            line->clear();
+            if (is_target_line) {
+                cursor_row = row;
+                return;
+            }
+        }
+    }
+
+    // If the mark is not found, go through the history.
+    auto it = AK::find_if(
+        m_history.rbegin(),
+        m_history.rend(),
+        [mark](auto& line) {
+            return line->mark() == mark;
+        });
+    auto index = it == m_history.rend() ? 0 : m_history.size() - it.index();
+    m_client.terminal_history_changed(m_history.size() - index);
+    auto count = m_history.size() - index;
+    for (size_t i = 0; i < count; ++i) {
+        if (auto mark = m_history[index + i]->mark(); mark.has_value())
+            m_valid_marks.remove(*mark);
+    }
+    m_history.remove(index, count);
+    cursor_row = 0;
+}
+
+void Terminal::mark_cursor()
+{
+    static u32 next_mark_id { 0 };
+
+    auto& line = active_buffer()[cursor_row()];
+    if (line->mark().has_value()) {
+        return;
+    }
+
+    auto mark = Mark(next_mark_id++);
+    line->set_marked(mark);
+    m_valid_marks.set(mark);
 }
 #endif
 

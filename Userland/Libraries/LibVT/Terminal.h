@@ -17,6 +17,7 @@
 
 #ifndef KERNEL
 #    include <AK/ByteString.h>
+#    include <AK/HashTable.h>
 #    include <LibVT/Attribute.h>
 #    include <LibVT/Line.h>
 #else
@@ -49,6 +50,7 @@ public:
     virtual void set_window_progress(int value, int max) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed(int delta) = 0;
+    virtual void terminal_did_perform_possibly_partial_clear() = 0;
     virtual void emit(u8 const*, size_t) = 0;
     virtual void set_cursor_shape(CursorShape) = 0;
     virtual void set_cursor_blinking(bool) = 0;
@@ -85,8 +87,12 @@ public:
     }
 
 #ifndef KERNEL
+    void mark_cursor();
+    OrderedHashTable<Mark> const& marks() const { return m_valid_marks; }
+
     void clear();
     void clear_history();
+    void clear_to_mark(Mark);
 #else
     virtual void clear() = 0;
     virtual void clear_history() = 0;
@@ -438,6 +444,7 @@ protected:
 #ifndef KERNEL
     ByteString m_current_window_title;
     Vector<ByteString> m_title_stack;
+    OrderedHashTable<Mark> m_valid_marks;
 #endif
 
 #ifndef KERNEL
