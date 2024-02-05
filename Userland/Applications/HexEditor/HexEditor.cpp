@@ -235,9 +235,9 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
 void HexEditor::set_bytes_per_row(size_t bytes_per_row)
 {
     m_bytes_per_row = bytes_per_row;
-    auto newWidth = offset_margin_width() + (m_bytes_per_row * cell_width()) + 2 * m_padding + (m_bytes_per_row * character_width()) + 4 * m_padding;
-    auto newHeight = total_rows() * line_height() + 2 * m_padding;
-    set_content_size({ static_cast<int>(newWidth), static_cast<int>(newHeight) });
+    auto new_width = offset_area_width() + hex_area_width() + text_area_width();
+    auto new_height = total_rows() * line_height() + 2 * m_padding;
+    set_content_size({ static_cast<int>(new_width), static_cast<int>(new_height) });
     update();
 }
 
@@ -246,9 +246,9 @@ void HexEditor::set_content_length(size_t length)
     if (length == m_content_length)
         return;
     m_content_length = length;
-    auto newWidth = offset_margin_width() + (m_bytes_per_row * cell_width()) + 2 * m_padding + (m_bytes_per_row * character_width()) + 4 * m_padding;
-    auto newHeight = total_rows() * line_height() + 2 * m_padding;
-    set_content_size({ static_cast<int>(newWidth), static_cast<int>(newHeight) });
+    auto new_width = offset_area_width() + hex_area_width() + text_area_width();
+    auto new_height = total_rows() * line_height() + 2 * m_padding;
+    set_content_size({ static_cast<int>(new_width), static_cast<int>(new_height) });
 }
 
 Optional<u8> HexEditor::get_byte(size_t position)
@@ -276,14 +276,14 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
     auto absolute_x = horizontal_scrollbar().value() + position.x();
     auto absolute_y = vertical_scrollbar().value() + position.y();
 
-    auto hex_start_x = frame_thickness() + m_address_bar_width;
+    auto hex_start_x = frame_thickness() + offset_area_width();
     auto hex_start_y = frame_thickness() + m_padding;
-    auto hex_end_x = static_cast<int>(hex_start_x + bytes_per_row() * cell_width());
+    auto hex_end_x = hex_start_x + hex_area_width();
     auto hex_end_y = static_cast<int>(hex_start_y + m_padding + total_rows() * line_height());
 
-    auto text_start_x = static_cast<int>(frame_thickness() + m_address_bar_width + 2 * m_padding + bytes_per_row() * cell_width());
+    auto text_start_x = hex_start_x + hex_area_width();
     auto text_start_y = frame_thickness() + m_padding;
-    auto text_end_x = static_cast<int>(text_start_x + bytes_per_row() * character_width());
+    auto text_end_x = text_start_x + text_area_width();
     auto text_end_y = static_cast<int>(text_start_y + m_padding + total_rows() * line_height());
 
     // Hexadecimal display
@@ -390,7 +390,7 @@ void HexEditor::scroll_position_into_view(size_t position)
     size_t y = position / bytes_per_row();
     size_t x = position % bytes_per_row();
     Gfx::IntRect rect {
-        static_cast<int>(frame_thickness() + offset_margin_width() + x * cell_width() + 2 * m_padding),
+        static_cast<int>(frame_thickness() + offset_area_width() + m_padding + x * cell_width()),
         static_cast<int>(frame_thickness() + m_padding + y * line_height()),
         static_cast<int>(cell_width()),
         static_cast<int>(line_height() - m_line_spacing)
@@ -590,15 +590,14 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     Gfx::IntRect offset_clip_rect {
         0,
         vertical_scrollbar().value(),
-        m_address_bar_width - m_padding,
+        offset_area_width(),
         height() - height_occupied_by_horizontal_scrollbar() //(total_rows() * line_height()) + 5
     };
     painter.fill_rect(offset_clip_rect, palette().ruler());
     painter.draw_line(offset_clip_rect.top_right(), offset_clip_rect.bottom_right(), palette().ruler_border());
 
-    auto margin_and_hex_width = static_cast<int>(offset_margin_width() + m_bytes_per_row * cell_width() + 3 * m_padding);
-    painter.draw_line({ margin_and_hex_width, 0 },
-        { margin_and_hex_width, vertical_scrollbar().value() + (height() - height_occupied_by_horizontal_scrollbar()) },
+    painter.draw_line({ offset_area_width() + hex_area_width(), 0 },
+        { offset_area_width() + hex_area_width(), vertical_scrollbar().value() + (height() - height_occupied_by_horizontal_scrollbar()) },
         palette().ruler_border());
 
     size_t view_height = (height() - height_occupied_by_horizontal_scrollbar());
