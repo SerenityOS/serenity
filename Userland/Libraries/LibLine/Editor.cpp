@@ -644,12 +644,38 @@ ErrorOr<void> Editor::resized()
 {
     m_was_resized = true;
     m_previous_num_columns = m_num_columns;
+    auto old_origin_row = m_origin_row;
+    auto old_origin_column = m_origin_column;
+
     get_terminal_size();
 
     if (!m_has_origin_reset_scheduled) {
         // Reset the origin, but make sure it doesn't blow up if we can't read it
         if (set_origin(false)) {
+            // The origin we have right now actually points to where the cursor should be (in the middle of the buffer somewhere)
+            // Find the "true" origin.
+            auto current_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
+            auto lines = m_cached_prompt_metrics.lines_with_addition(current_buffer_metrics, m_num_columns);
+            auto offset = m_cached_prompt_metrics.offset_with_addition(current_buffer_metrics, m_num_columns);
+            if (lines > m_origin_row)
+                m_origin_row = 1;
+            else
+                m_origin_row -= lines - 1; // the prompt and the origin share a line.
+
+            if (offset > m_origin_column)
+                m_origin_column = 1;
+            else
+                m_origin_column -= offset;
+
+            set_origin(m_origin_row, m_origin_column);
+
             TRY(handle_resize_event(false));
+            if (old_origin_column != m_origin_column || old_origin_row != m_origin_row) {
+                m_expected_origin_changed = true;
+                deferred_invoke([this] {
+                    (void)refresh_display();
+                });
+            }
         } else {
             deferred_invoke([this] { handle_resize_event(true).release_value_but_fixme_should_propagate_errors(); });
             m_has_origin_reset_scheduled = true;
@@ -1365,8 +1391,9 @@ ErrorOr<void> Editor::refresh_display()
     // Someone changed the window size, figure it out
     // and react to it, we might need to redraw.
     if (m_was_resized) {
-        if (m_previous_num_columns != m_num_columns) {
+        if (m_expected_origin_changed || m_previous_num_columns != m_num_columns) {
             // We need to cleanup and redo everything.
+            m_expected_origin_changed = false;
             m_cached_prompt_valid = false;
             m_refresh_needed = true;
             swap(m_previous_num_columns, m_num_columns);
