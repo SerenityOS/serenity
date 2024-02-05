@@ -20,13 +20,13 @@ These instructions assume the OS installed is Ubuntu 22.04 (Jammy), so they migh
 ```shell
 sudo add-apt-repository ppa:canonical-server/server-backports
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
+sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main'
 apt update
-apt install git build-essential make cmake clang-format-15 gcc-12 g++-12 libstdc++-12-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
+apt install git build-essential make cmake clang-format-16 gcc-13 g++-13 libstdc++-13-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
 ```
-### Force usage of GCC 12
+### Force usage of GCC 13
 ```shell
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 ```
 ### Create a new user account named 'runner'
 ```shell

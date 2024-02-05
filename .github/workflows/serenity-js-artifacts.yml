@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies Ubuntu
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build unzip gcc-12 g++-12
+          sudo apt-get install -y ninja-build unzip gcc-13 g++-13
         if: ${{ matrix.os == 'ubuntu-22.04' }}
 
       - name: Install dependencies macOS
@@ -45,7 +45,7 @@ jobs:
 
       - name: Check versions Ubuntu
         run: |
-          ninja --version; gcc-12 --version; g++-12 --version
+          ninja --version; gcc-13 --version; g++-13 --version
         if: ${{ matrix.os == 'ubuntu-22.04' }}
 
       - name: Check versions macOS
@@ -80,8 +80,8 @@ jobs:
       - name: Create build directory Ubuntu
         run: |
           cmake -S Meta/Lagom -B Build -G Ninja \
-            -DCMAKE_C_COMPILER=gcc-12 \
-            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_C_COMPILER=gcc-13 \
+            -DCMAKE_CXX_COMPILER=g++-13 \
             -DBUILD_LAGOM=ON
         if: ${{ matrix.os == 'ubuntu-22.04' }}
 
