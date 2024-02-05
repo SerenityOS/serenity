@@ -102,7 +102,6 @@ private:
     RefPtr<GUI::Action> m_edit_annotation_action;
     RefPtr<GUI::Action> m_delete_annotation_action;
 
-    static constexpr int m_address_bar_width = 90;
     static constexpr int m_padding = 5;
 
     void scroll_position_into_view(size_t position);
@@ -112,6 +111,10 @@ private:
     size_t character_width() const { return font().glyph_width('W'); }
     size_t cell_width() const { return character_width() * 3; }
     size_t offset_margin_width() const { return 80; }
+
+    int offset_area_width() const { return offset_margin_width() + m_padding; }
+    int hex_area_width() const { return m_padding + m_bytes_per_row * cell_width() + m_padding; }
+    int text_area_width() const { return m_padding + m_bytes_per_row * character_width() + m_padding; }
 
     struct OffsetData {
         size_t offset;
