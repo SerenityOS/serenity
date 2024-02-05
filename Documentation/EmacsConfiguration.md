@@ -15,6 +15,10 @@ CompileFlags:
     - "-UNO_TLS"
     - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0"
     - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0/x86_64-pc-serenity"
+
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
 ```
 
 You will need to change `/path/to/serenity` and change `13.1.0` to
