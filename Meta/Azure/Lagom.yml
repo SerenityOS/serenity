@@ -15,7 +15,7 @@ jobs:
       ${{ if eq(parameters.os, 'Linux') }}:
         value: ubuntu-22.04
       ${{ if or(eq(parameters.os, 'macOS'), eq(parameters.os, 'Android')) }}:
-        value: macos-12
+        value: macos-13
 
     - name: toolchain
       ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
