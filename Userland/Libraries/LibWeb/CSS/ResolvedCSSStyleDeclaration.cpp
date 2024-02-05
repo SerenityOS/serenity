@@ -270,11 +270,21 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         // -> padding-top
         // -> width
         // -> A resolved value special case property like height defined in another specification
-        // FIXME: If the property applies to the element or pseudo-element and the resolved value of the
-        //    display property is not none or contents, then the resolved value is the used value.
-        //    Otherwise the resolved value is the computed value.
-    case PropertyID::Height:
+    case PropertyID::Height: {
+        // If the property applies to the element or pseudo-element and the resolved value of the
+        // display property is not none or contents, then the resolved value is the used value.
+        // Otherwise the resolved value is the computed value.
+        auto const& display = layout_node.computed_values().display();
+        if (!display.is_none() && !display.is_contents() && layout_node.paintable()) {
+            if (layout_node.paintable()->is_paintable_box()) {
+                auto const& paintable_box = static_cast<Painting::PaintableBox const&>(*layout_node.paintable());
+                auto const used_height = paintable_box.content_height();
+                return style_value_for_size(Size::make_px(used_height));
+            }
+            dbgln("FIXME: Support getting used height for ({})", layout_node.debug_description());
+        }
         return style_value_for_size(layout_node.computed_values().height());
+    }
     case PropertyID::MarginBlockEnd:
         return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().margin(), LogicalSide::BlockEnd);
     case PropertyID::MarginBlockStart:
