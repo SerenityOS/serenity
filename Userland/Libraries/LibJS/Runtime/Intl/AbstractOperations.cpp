@@ -481,13 +481,21 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 
         // iii. If Type(optionsValue) is String, then
         if (options_value.has_value()) {
-            // 1. Let optionsValue be the string optionsValue after performing the algorithm steps to transform Unicode extension values to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
-            // 2. Let optionsValue be the string optionsValue after performing the algorithm steps to replace Unicode extension values with their canonical form per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
+            // 1. Let ukey be the ASCII-lowercase of key.
+            // NOTE: `key` is always lowercase, and this step is likely to be removed:
+            //       https://github.com/tc39/ecma402/pull/846#discussion_r1428263375
+
+            // 2. Let optionsUValue be the ASCII-lowercase of optionsValue.
+            // NOTE: LibLocale performs this transformation itself.
+
+            // 3. Set optionsValue to the String value resulting from canonicalizing optionsUValue as a value of key ukey per Unicode Technical Standard #35 Part 1 Core, Annex C LocaleId Canonicalization Section 5 Canonicalizing Syntax, Processing LocaleIds.
             options_value = ::Locale::canonicalize_unicode_extension_values(key, *options_value, ::Locale::RemoveTrue::Yes);
 
-            // 3. If optionsValue is the empty String, then
+            // 4. NOTE: It is recommended that implementations use the 'u' extension data in common/bcp47 provided by the Common Locale Data Repository (available at https://cldr.unicode.org/).
+
+            // 5. If optionsValue is the empty String, then
             if (options_value->is_empty()) {
-                // a. Let optionsValue be "true".
+                // a. Set optionsValue to "true".
                 options_value = "true"_string;
             }
         }
