@@ -288,9 +288,6 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
 
     // Hexadecimal display
     if (absolute_x >= hex_start_x && absolute_x <= hex_end_x && absolute_y >= hex_start_y && absolute_y <= hex_end_y) {
-        if (absolute_x < hex_start_x || absolute_y < hex_start_y)
-            return {};
-
         auto hex_text_start_x = hex_start_x + m_padding;
         auto hex_text_end_x = hex_end_x - m_padding;
         absolute_x = clamp(absolute_x, hex_text_start_x, hex_text_end_x);
@@ -307,9 +304,6 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
 
     // Text display
     if (absolute_x >= text_start_x && absolute_x <= text_end_x && absolute_y >= text_start_y && absolute_y <= text_end_y) {
-        if (absolute_x < hex_start_x || absolute_y < hex_start_y)
-            return {};
-
         auto text_text_start_x = text_start_x + m_padding;
         auto text_text_end_x = text_end_x - m_padding;
         absolute_x = clamp(absolute_x, text_text_start_x, text_text_end_x);
