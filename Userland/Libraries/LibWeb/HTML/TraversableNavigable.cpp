@@ -888,7 +888,11 @@ void TraversableNavigable::destroy_top_level_traversable()
     }
 
     // 3. Remove browsingContext.
-    browsing_context->remove();
+    if (!browsing_context) {
+        dbgln("TraversableNavigable::destroy_top_level_traversable: No browsing context?");
+    } else {
+        browsing_context->remove();
+    }
 
     // 4. Remove traversable from the user interface (e.g., close or hide its tab in a tabbed browser).
     page().client().page_did_close_top_level_traversable();
