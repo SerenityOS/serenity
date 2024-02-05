@@ -13,6 +13,7 @@
 # performance-noexcept-move-constructor: The project does not use exceptions, so there are no such optimizations available
 # performance-no-int-to-ptr: This rule flags every pointer to integer cast, which gets quite noisy. Should only be enabled on a case-by-case basis
 # readability-braces-around-statements: Redundant braces around single-line conditions is against project style
+# readability-function-cognitive-complexity: Most regular contributors seem to turn this one off anyway. Violations are hard to fix as well
 # readability-magic-numbers: This check is very noisy in the codebase, especially in AK.
 # readability-named-parameter: We frequently omit parameter names to work around -Wunused-parameter
 # FIXME: readability-uppercase-literal-suffix: Enable this check, the rationale is solid but the findings are numerous
@@ -38,6 +39,7 @@ Checks: >
   -performance-noexcept-move-constructor,
   -performance-no-int-to-ptr,
   -readability-braces-around-statements,
+  -readability-function-cognitive-complexity,
   -readability-identifier-length,
   -readability-magic-numbers,
   -readability-named-parameter,
@@ -53,5 +55,3 @@ CheckOptions:
     value: true
   - key: readability-implicit-bool-conversion.AllowPointerConditions
     value: true
-  - key: readability-function-cognitive-complexity.Threshold
-    value: 100 # FIXME: Lower this (30? 50?), and refactor complex functions
