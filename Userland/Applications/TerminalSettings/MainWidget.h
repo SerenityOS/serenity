@@ -29,12 +29,16 @@ private:
     void write_back_settings() const;
 
     static VT::TerminalWidget::BellMode parse_bell(StringView bell_string);
+    static VT::TerminalWidget::AutoMarkMode parse_automark_mode(StringView automark_mode);
     static ByteString stringify_bell(VT::TerminalWidget::BellMode bell_mode);
+    static ByteString stringify_automark_mode(VT::TerminalWidget::AutoMarkMode automark_mode);
 
     VT::TerminalWidget::BellMode m_bell_mode { VT::TerminalWidget::BellMode::Disabled };
+    VT::TerminalWidget::AutoMarkMode m_automark_mode { VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt };
     bool m_confirm_close { true };
 
     VT::TerminalWidget::BellMode m_original_bell_mode;
+    VT::TerminalWidget::AutoMarkMode m_original_automark_mode;
     bool m_orignal_confirm_close { true };
 };
 }

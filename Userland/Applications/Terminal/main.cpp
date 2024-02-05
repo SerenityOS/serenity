@@ -284,6 +284,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_obey_widget_min_size(false);
 
     auto terminal = window->set_main_widget<VT::TerminalWidget>(ptm_fd, true);
+    terminal->set_startup_process_id(shell_pid);
+
     terminal->on_command_exit = [&] {
         app->quit(0);
     };
@@ -307,6 +309,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::Disabled);
     } else {
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::Visible);
+    }
+
+    auto automark = Config::read_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, "MarkInteractiveShellPrompt"sv);
+    if (automark == "MarkNothing") {
+        terminal->set_auto_mark_mode(VT::TerminalWidget::AutoMarkMode::MarkNothing);
+    } else {
+        terminal->set_auto_mark_mode(VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt);
     }
 
     auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv)).value_or(VT::CursorShape::Block);
@@ -399,6 +408,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_fullscreen(!window->is_fullscreen());
     }));
     view_menu->add_action(terminal->clear_including_history_action());
+    view_menu->add_action(terminal->clear_to_previous_mark_action());
 
     auto adjust_font_size = [&](float adjustment, Gfx::Font::AllowInexactSizeMatch preference) {
         auto& font = terminal->font();

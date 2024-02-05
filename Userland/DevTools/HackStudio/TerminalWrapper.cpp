@@ -42,6 +42,8 @@ ErrorOr<void> TerminalWrapper::run_command(ByteString const& command, Optional<B
     m_pid = TRY(Core::System::fork());
 
     if (m_pid > 0) {
+        m_terminal_widget->set_startup_process_id(m_pid);
+
         if (wait_for_exit == WaitForExit::Yes) {
             GUI::Application::the()->event_loop().spin_until([this]() {
                 return m_child_exited;
