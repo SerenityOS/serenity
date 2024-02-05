@@ -451,10 +451,16 @@ void WebContentView::keyPressEvent(QKeyEvent* event)
         return;
     }
 
+    auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
+    if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
+        // This ensures consistent behavior between systems that treat Enter as '\n' and '\r\n'
+        client().async_key_down(m_client_state.page_index, KeyCode::Key_Return, modifiers, '\n');
+        return;
+    }
+
     auto text = event->text();
     auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
-    auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
     client().async_key_down(m_client_state.page_index, keycode, modifiers, point);
 }
 
