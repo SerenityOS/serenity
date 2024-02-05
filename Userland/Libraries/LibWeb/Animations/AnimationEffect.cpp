@@ -240,8 +240,8 @@ Optional<double> AnimationEffect::active_time_using_fill(Bindings::FillMode fill
 
         // -> If the fill mode is forwards or both,
         if (fill_mode == Bindings::FillMode::Forwards || fill_mode == Bindings::FillMode::Both) {
-            // Return the result of evaluating max(local time - start delay - active duration, 0).
-            return max(local_time().value() - m_start_delay - active_duration(), 0.0);
+            // Return the result of evaluating max(min(local time - start delay, active duration), 0).
+            return max(min(local_time().value() - m_start_delay, active_duration()), 0.0);
         }
 
         // -> Otherwise,
