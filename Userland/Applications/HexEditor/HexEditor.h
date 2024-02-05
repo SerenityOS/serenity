@@ -108,7 +108,7 @@ private:
 
     size_t total_rows() const { return ceil_div(m_content_length, m_bytes_per_row); }
     size_t line_height() const { return font().pixel_size_rounded_up() + m_line_spacing; }
-    size_t character_width() const { return font().glyph_width('W'); }
+    size_t character_width() const { return font().glyph_fixed_width(); }
     size_t cell_width() const { return character_width() * 3; }
     size_t offset_margin_width() const { return 80; }
 
