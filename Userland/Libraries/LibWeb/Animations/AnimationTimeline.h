@@ -31,7 +31,7 @@ public:
 
     void associate_with_animation(JS::NonnullGCPtr<Animation> value) { m_associated_animations.set(value); }
     void disassociate_with_animation(JS::NonnullGCPtr<Animation> value) { m_associated_animations.remove(value); }
-    HashTable<JS::NonnullGCPtr<Animation>> const& associated_animations() const;
+    HashTable<JS::NonnullGCPtr<Animation>> const& associated_animations() const { return m_associated_animations; }
 
 protected:
     AnimationTimeline(JS::Realm&);
