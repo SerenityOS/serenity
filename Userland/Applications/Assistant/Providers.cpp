@@ -224,6 +224,9 @@ void FileProvider::build_filesystem_cache()
                         return IterationDecision::Continue;
 
                     auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
+                    if (access(full_path.characters(), R_OK) != 0)
+                        return IterationDecision::Continue;
+
                     m_full_path_cache.append(full_path);
 
                     if (S_ISDIR(st.st_mode)) {
