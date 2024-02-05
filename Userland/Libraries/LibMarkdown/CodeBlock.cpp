@@ -91,10 +91,10 @@ RecursionDecision CodeBlock::walk(Visitor& visitor) const
 static Regex<ECMA262> open_fence_re("^ {0,3}(([\\`\\~])\\2{2,})\\s*([\\*_]*)\\s*([^\\*_\\s]*).*$");
 static Regex<ECMA262> close_fence_re("^ {0,3}(([\\`\\~])\\2{2,})\\s*$");
 
-static Optional<int> line_block_prefix(StringView const& line)
+static Optional<size_t> line_block_prefix(StringView const& line)
 {
-    int characters = 0;
-    int indents = 0;
+    size_t characters = 0;
+    size_t indents = 0;
 
     for (char ch : line) {
         if (indents == 4)
@@ -179,6 +179,7 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
 OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
 {
     StringBuilder builder;
+    u32 blank_lines_after_last_chunk = 0;
 
     while (true) {
         if (lines.is_end())
@@ -186,11 +187,26 @@ OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
         StringView line = *lines;
 
         auto prefix_length = line_block_prefix(line);
-        if (!prefix_length.has_value())
+
+        if (!prefix_length.has_value() || prefix_length.value() == line.length()) {
+            // An indented code block is composed of one or more indented chunks
+            // separated by blank lines. (example 111 and 117)
+            if (line == ""sv || line.is_whitespace()) {
+                ++lines;
+                ++blank_lines_after_last_chunk;
+                continue;
+            }
+
             break;
+        }
 
         line = line.substring_view(prefix_length.value());
         ++lines;
+
+        if (blank_lines_after_last_chunk) {
+            builder.append_repeated('\n', blank_lines_after_last_chunk);
+            blank_lines_after_last_chunk = 0;
+        }
 
         builder.append(line);
         builder.append('\n');
