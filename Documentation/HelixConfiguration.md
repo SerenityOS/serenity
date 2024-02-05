@@ -6,6 +6,10 @@ The following `.clangd` should be placed in the project root:
 CompileFlags:
   CompilationDatabase: Build/x86_64 # Or whatever architecture you're targeting, e.g. aarch64
   Add: [-D__serenity__]
+
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
 ```
 
 You also need to configure the clangd server to detect headers properly from the Serenity toolchain. To do this, create a `.helix/languages.toml` file in the project root:

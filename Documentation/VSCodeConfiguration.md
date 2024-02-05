@@ -25,7 +25,14 @@ Depending on which configuration you use most, set the CompilationDatabase confi
 CompileFlags:
   Add: [-D__serenity__]
   CompilationDatabase: Build/x86_64
+  
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
 ```
+
+The UnusedIncludes and MissingIncludes flags are used to disable the [Include Cleaner](https://clangd.llvm.org/design/include-cleaner) feature of newer clangd releases.
+It can be re-enabled if you don't mind the noisy inlay hints and problems in the problem view.
 
 Run ``./Meta/serenity.sh run`` at least once to generate the ``compile_commands.json`` file.
 
