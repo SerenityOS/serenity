@@ -232,13 +232,20 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     return true;
 }
 
-void HexEditor::set_bytes_per_row(size_t bytes_per_row)
+void HexEditor::update_content_size()
 {
-    m_bytes_per_row = bytes_per_row;
     auto new_width = offset_area_width() + hex_area_width() + text_area_width();
     auto new_height = total_rows() * line_height() + 2 * m_padding;
     set_content_size({ static_cast<int>(new_width), static_cast<int>(new_height) });
     update();
+}
+
+void HexEditor::set_bytes_per_row(size_t bytes_per_row)
+{
+    if (bytes_per_row == m_bytes_per_row)
+        return;
+    m_bytes_per_row = bytes_per_row;
+    update_content_size();
 }
 
 void HexEditor::set_content_length(size_t length)
@@ -246,9 +253,7 @@ void HexEditor::set_content_length(size_t length)
     if (length == m_content_length)
         return;
     m_content_length = length;
-    auto new_width = offset_area_width() + hex_area_width() + text_area_width();
-    auto new_height = total_rows() * line_height() + 2 * m_padding;
-    set_content_size({ static_cast<int>(new_width), static_cast<int>(new_height) });
+    update_content_size();
 }
 
 Optional<u8> HexEditor::get_byte(size_t position)
