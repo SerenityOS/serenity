@@ -442,6 +442,7 @@ private:
     // Exact position before our prompt in the terminal.
     size_t m_origin_row { 0 };
     size_t m_origin_column { 0 };
+    bool m_expected_origin_changed { false };
     bool m_has_origin_reset_scheduled { false };
 
     OwnPtr<SuggestionDisplay> m_suggestion_display;
