@@ -594,7 +594,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         height() - height_occupied_by_horizontal_scrollbar() //(total_rows() * line_height()) + 5
     };
     painter.fill_rect(offset_clip_rect, palette().ruler());
-    painter.draw_line(offset_clip_rect.top_right(), offset_clip_rect.bottom_right().translated(-1), palette().ruler_border());
+    painter.draw_line(offset_clip_rect.top_right(), offset_clip_rect.bottom_right(), palette().ruler_border());
 
     auto margin_and_hex_width = static_cast<int>(offset_margin_width() + m_bytes_per_row * cell_width() + 3 * m_padding);
     painter.draw_line({ margin_and_hex_width, 0 },
