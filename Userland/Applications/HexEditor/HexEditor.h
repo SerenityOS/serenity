@@ -125,7 +125,8 @@ private:
     ErrorOr<void> hex_mode_keydown_event(GUI::KeyEvent&);
     ErrorOr<void> text_mode_keydown_event(GUI::KeyEvent&);
 
-    void set_content_length(size_t); // I might make this public if I add fetching data on demand.
+    void set_content_length(size_t);
+    void update_content_size();
     void update_status();
     void did_change();
     ErrorOr<void> did_complete_action(size_t position, u8 old_value, u8 new_value);
