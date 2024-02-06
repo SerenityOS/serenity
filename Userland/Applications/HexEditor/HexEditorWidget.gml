@@ -20,24 +20,32 @@
             name: "editor"
         }
 
-        @GUI::VerticalSplitter {
+        @GUI::DynamicWidgetContainer {
             name: "side_panel_container"
             visible: false
+            section_label: "Panels"
+            config_domain: "HexEditor"
+            preferred_height: "grow"
+            show_controls: false
 
-            @GUI::Widget {
+            @GUI::DynamicWidgetContainer {
                 name: "search_results_container"
+                section_label: "Search Results"
+                config_domain: "HexEditor"
+                preferred_height: "grow"
                 visible: false
-                layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::TableView {
                     name: "search_results"
                 }
             }
 
-            @GUI::Widget {
+            @GUI::DynamicWidgetContainer {
                 name: "value_inspector_container"
+                section_label: "Value Inspector"
+                config_domain: "HexEditor"
+                preferred_height: "grow"
                 visible: false
-                layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::TableView {
                     name: "value_inspector"
@@ -45,10 +53,12 @@
                 }
             }
 
-            @GUI::Widget {
+            @GUI::DynamicWidgetContainer {
                 name: "annotations_container"
+                section_label: "Annotations"
+                config_domain: "HexEditor"
+                preferred_height: "grow"
                 visible: false
-                layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::TableView {
                     name: "annotations"
