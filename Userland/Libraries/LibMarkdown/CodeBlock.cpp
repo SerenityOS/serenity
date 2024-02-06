@@ -117,7 +117,7 @@ static Optional<size_t> line_block_prefix(StringView const& line)
     return {};
 }
 
-OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section)
+OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section, bool is_interrupting_paragraph)
 {
     if (lines.is_end())
         return {};
@@ -125,6 +125,10 @@ OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section
     StringView line = *lines;
     if (open_fence_re.match(line).success)
         return parse_backticks(lines, current_section);
+
+    // An indented code block cannot interrupt a paragraph (example 113)
+    if (is_interrupting_paragraph)
+        return {};
 
     if (line_block_prefix(line).has_value())
         return parse_indent(lines);

@@ -68,9 +68,19 @@ RecursionDecision ContainerBlock::walk(Visitor& visitor) const
 }
 
 template<class CodeBlock>
-static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, Heading* current_section)
+static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, Heading* current_section, bool is_interrupting_paragraph)
 {
-    OwnPtr<CodeBlock> block = CodeBlock::parse(lines, current_section);
+    OwnPtr<CodeBlock> block = CodeBlock::parse(lines, current_section, is_interrupting_paragraph);
+    if (!block)
+        return false;
+    blocks.append(block.release_nonnull());
+    return true;
+}
+
+template<class BlockType>
+static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, bool is_interrupting_paragraph)
+{
+    OwnPtr<BlockType> block = BlockType::parse(lines, is_interrupting_paragraph);
     if (!block)
         return false;
     blocks.append(block.release_nonnull());
@@ -119,6 +129,8 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
             has_blank_lines = has_blank_lines || has_trailing_blank_lines;
         }
 
+        bool is_interrupting_paragraph = not paragraph_text.is_empty();
+
         bool heading = false;
         if ((heading = try_parse_block<Heading>(lines, blocks)))
             current_section = dynamic_cast<Heading*>(blocks.last().ptr());
@@ -126,9 +138,9 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
         bool any = heading
             || try_parse_block<Table>(lines, blocks)
             || try_parse_block<HorizontalRule>(lines, blocks)
-            || try_parse_block<List>(lines, blocks)
             // CodeBlock needs to know the current section's name for proper indentation
-            || try_parse_block<CodeBlock>(lines, blocks, current_section)
+            || try_parse_block<CodeBlock>(lines, blocks, current_section, is_interrupting_paragraph)
+            || try_parse_block<List>(lines, blocks, is_interrupting_paragraph)
             || try_parse_block<CommentBlock>(lines, blocks)
             || try_parse_block<BlockQuote>(lines, blocks);
 
