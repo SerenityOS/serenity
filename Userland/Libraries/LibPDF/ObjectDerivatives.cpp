@@ -5,6 +5,7 @@
  */
 
 #include <AK/Hex.h>
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/ObjectDerivatives.h>
 
@@ -135,6 +136,9 @@ ByteString StreamObject::to_byte_string(int indent) const
     if (bytes().size())
         percentage_ascii = ascii_count * 100 / bytes().size();
     bool is_mostly_text = percentage_ascii > 95;
+
+    if (dict()->contains(CommonNames::Subtype) && dict()->get_name(CommonNames::Subtype)->name() == "Image")
+        is_mostly_text = false;
 
     if (is_mostly_text) {
         for (size_t i = 0; i < bytes().size(); ++i) {
