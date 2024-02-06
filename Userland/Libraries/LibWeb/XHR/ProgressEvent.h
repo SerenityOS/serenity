@@ -29,8 +29,8 @@ public:
     virtual ~ProgressEvent() override;
 
     bool length_computable() const { return m_length_computable; }
-    u64 loaded() const { return m_loaded; }
-    u64 total() const { return m_total; }
+    WebIDL::UnsignedLongLong loaded() const { return m_loaded; }
+    WebIDL::UnsignedLongLong total() const { return m_total; }
 
 private:
     ProgressEvent(JS::Realm&, FlyString const& event_name, ProgressEventInit const& event_init);
@@ -38,8 +38,8 @@ private:
     virtual void initialize(JS::Realm&) override;
 
     bool m_length_computable { false };
-    u64 m_loaded { 0 };
-    u64 m_total { 0 };
+    WebIDL::UnsignedLongLong m_loaded { 0 };
+    WebIDL::UnsignedLongLong m_total { 0 };
 };
 
 }
