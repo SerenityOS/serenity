@@ -24,7 +24,7 @@ interface Animation : EventTarget {
     // FIXME: attribute EventHandler oncancel;
     // FIXME: attribute EventHandler onremove;
 
-    // FIXME: undefined cancel();
+    undefined cancel();
     undefined finish();
     undefined play();
     undefined pause();

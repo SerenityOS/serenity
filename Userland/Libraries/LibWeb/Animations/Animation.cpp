@@ -359,6 +359,66 @@ void Animation::set_replace_state(Bindings::AnimationReplaceState value)
     }
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-animation-cancel
+void Animation::cancel()
+{
+    auto& realm = this->realm();
+
+    // 1. If animation’s play state is not idle, perform the following steps:
+    if (play_state() != Bindings::AnimationPlayState::Idle) {
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
+
+        // 1. Run the procedure to reset an animation’s pending tasks on animation.
+        reset_an_animations_pending_tasks();
+
+        // 2. Reject the current finished promise with a DOMException named "AbortError".
+        auto dom_exception = WebIDL::AbortError::create(realm, "Animation was cancelled"_fly_string);
+        WebIDL::reject_promise(realm, current_finished_promise(), dom_exception);
+
+        // 3. Set the [[PromiseIsHandled]] internal slot of the current finished promise to true.
+        WebIDL::mark_promise_as_handled(current_finished_promise());
+
+        // 4. Let current finished promise be a new promise in the relevant Realm of animation.
+        m_current_finished_promise = WebIDL::create_promise(realm);
+
+        // 5. Create an AnimationPlaybackEvent, cancelEvent.
+        // 6. Set cancelEvent’s type attribute to cancel.
+        // 7. Set cancelEvent’s currentTime to null.
+        // 8. Let timeline time be the current time of the timeline with which animation is associated. If animation is
+        //    not associated with an active timeline, let timeline time be an unresolved time value.
+        // 9. Set cancelEvent’s timelineTime to timeline time. If timeline time is unresolved, set it to null.
+        AnimationPlaybackEventInit init;
+        init.timeline_time = m_timeline && !m_timeline->is_inactive() ? m_timeline->current_time() : Optional<double> {};
+        auto cancel_event = AnimationPlaybackEvent::create(realm, HTML::EventNames::cancel, init);
+
+        // 10. If animation has a document for timing, then append cancelEvent to its document for timing's pending
+        //     animation event queue along with its target, animation. If animation is associated with an active
+        //     timeline that defines a procedure to convert timeline times to origin-relative time, let the scheduled
+        //     event time be the result of applying that procedure to timeline time. Otherwise, the scheduled event time
+        //     is an unresolved time value.
+        //     Otherwise, queue a task to dispatch cancelEvent at animation. The task source for this task is the DOM
+        //     manipulation task source.
+        if (auto document = document_for_timing()) {
+            Optional<double> scheduled_event_time;
+            if (m_timeline && !m_timeline->is_inactive() && m_timeline->can_convert_a_timeline_time_to_an_origin_relative_time())
+                scheduled_event_time = m_timeline->convert_a_timeline_time_to_an_origin_relative_time(m_timeline->current_time());
+            document->append_pending_animation_event({ cancel_event, *this, scheduled_event_time });
+        } else {
+            HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm.global_object(), [this, cancel_event]() {
+                dispatch_event(cancel_event);
+            });
+        }
+    }
+
+    // 2. Make animation’s hold time unresolved.
+    m_hold_time = {};
+
+    // 3. Make animation’s start time unresolved.
+    m_start_time = {};
+
+    invalidate_effect();
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-finish
 WebIDL::ExceptionOr<void> Animation::finish()
 {
@@ -959,6 +1019,36 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
     }
 
     invalidate_effect();
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-reset-an-animations-pending-tasks
+void Animation::reset_an_animations_pending_tasks()
+{
+    auto& realm = this->realm();
+
+    // 1. If animation does not have a pending play task or a pending pause task, abort this procedure.
+    if (!pending())
+        return;
+
+    // 2. If animation has a pending play task, cancel that task.
+    m_pending_play_task = TaskState::None;
+
+    // 3. If animation has a pending pause task, cancel that task.
+    m_pending_pause_task = TaskState::None;
+
+    // 4. Apply any pending playback rate on animation.
+    apply_any_pending_playback_rate();
+
+    // 5. Reject animation’s current ready promise with a DOMException named "AbortError".
+    auto dom_exception = WebIDL::AbortError::create(realm, "Animation was cancelled"_fly_string);
+    WebIDL::reject_promise(realm, current_ready_promise(), dom_exception);
+
+    // 6. Set the [[PromiseIsHandled]] internal slot of animation’s current ready promise to true.
+    WebIDL::mark_promise_as_handled(current_ready_promise());
+
+    // 7. Let animation’s current ready promise be the result of creating a new resolved Promise object with value
+    //    animation in the relevant Realm of animation.
+    m_current_ready_promise = WebIDL::create_resolved_promise(realm, this);
 }
 
 // Step 12 of https://www.w3.org/TR/web-animations-1/#playing-an-animation-section

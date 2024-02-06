@@ -70,6 +70,7 @@ public:
         Yes,
         No,
     };
+    void cancel();
     WebIDL::ExceptionOr<void> finish();
     WebIDL::ExceptionOr<void> play();
     WebIDL::ExceptionOr<void> play_an_animation(AutoRewind);
@@ -118,6 +119,7 @@ private:
     void apply_any_pending_playback_rate();
     WebIDL::ExceptionOr<void> silently_set_current_time(Optional<double>);
     void update_finished_state(DidSeek, SynchronouslyNotify);
+    void reset_an_animations_pending_tasks();
 
     void run_pending_play_task();
     void run_pending_pause_task();
