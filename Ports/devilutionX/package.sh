@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='devilutionX'
-version='1.5.1'
+version='1.5.2'
 useconfigure='true'
 files=(
-    "https://github.com/diasurgical/devilutionX/archive/refs/tags/${version}.tar.gz#9d88dec4df58e391940b77edb86f356b34e2c085c5e3191262fa6276d745d1cb"
+    "https://github.com/diasurgical/devilutionX/archive/refs/tags/${version}.tar.gz#c046fd23778729ce77e7f6fd1c66ba7c3e1b32a1472821c3485f0d8bd4f3b4aa"
 )
 depends=(
     'bzip2'
