@@ -64,6 +64,7 @@ public:
     void add_annotation(Annotation);
     void delete_annotation(Annotation const&);
     Optional<Annotation&> closest_annotation_at(size_t position);
+    Optional<Annotation&> get_annotation(GUI::ModelIndex const& index);
 
     ErrorOr<void> save_to_file(Core::File&) const;
     ErrorOr<void> load_from_file(Core::File&);

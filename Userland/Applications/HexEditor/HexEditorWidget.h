@@ -17,6 +17,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/DynamicWidgetContainer.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -97,8 +98,13 @@ private:
     RefPtr<GUI::DynamicWidgetContainer> m_side_panel_container;
     RefPtr<GUI::Widget> m_value_inspector_container;
     RefPtr<GUI::TableView> m_value_inspector;
+
     RefPtr<GUI::Widget> m_annotations_container;
     RefPtr<GUI::TableView> m_annotations;
+    RefPtr<GUI::SortingProxyModel> m_annotations_sorting_model;
+    RefPtr<GUI::Menu> m_annotations_context_menu;
+    RefPtr<GUI::Action> m_edit_annotation_action;
+    RefPtr<GUI::Action> m_delete_annotation_action;
 
     bool m_value_inspector_little_endian { true };
     bool m_selecting_from_inspector { false };
