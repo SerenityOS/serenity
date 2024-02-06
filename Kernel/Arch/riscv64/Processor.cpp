@@ -198,9 +198,136 @@ void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
 }
 
 template<typename T>
-void ProcessorBase<T>::switch_context(Thread*&, Thread*&)
+void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
-    TODO_RISCV64();
+    VERIFY(!m_in_irq);
+    VERIFY(m_in_critical == 1);
+
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+
+    // m_in_critical is restored in enter_thread_context
+    from_thread->save_critical(m_in_critical);
+
+    // clang-format off
+    asm volatile(
+        // Store a RegisterState of from_thread on from_thread's stack
+        "addi sp, sp, -(34 * 8) \n"
+
+        "sd x1, 0*8(sp) \n"
+        // sp
+        "sd x3, 2*8(sp) \n"
+        "sd x4, 3*8(sp) \n"
+        "sd x5, 4*8(sp) \n"
+        "sd x6, 5*8(sp) \n"
+        "sd x7, 6*8(sp) \n"
+        "sd x8, 7*8(sp) \n"
+        "sd x9, 8*8(sp) \n"
+        "sd x10, 9*8(sp) \n"
+        "sd x11, 10*8(sp) \n"
+        "sd x12, 11*8(sp) \n"
+        "sd x13, 12*8(sp) \n"
+        "sd x14, 13*8(sp) \n"
+        "sd x15, 14*8(sp) \n"
+        "sd x16, 15*8(sp) \n"
+        "sd x17, 16*8(sp) \n"
+        "sd x18, 17*8(sp) \n"
+        "sd x19, 18*8(sp) \n"
+        "sd x20, 19*8(sp) \n"
+        "sd x21, 20*8(sp) \n"
+        "sd x22, 21*8(sp) \n"
+        "sd x23, 22*8(sp) \n"
+        "sd x24, 23*8(sp) \n"
+        "sd x25, 24*8(sp) \n"
+        "sd x26, 25*8(sp) \n"
+        "sd x27, 26*8(sp) \n"
+        "sd x28, 27*8(sp) \n"
+        "sd x29, 28*8(sp) \n"
+        "sd x30, 29*8(sp) \n"
+        "sd x31, 30*8(sp) \n"
+
+        // Store current sp as from_thread's sp.
+        "sd sp, %[from_sp] \n"
+
+        // Set from_thread's pc to label "1"
+        "la t0, 1f \n"
+        "sd t0, %[from_ip] \n"
+
+        // Switch to to_thread's stack
+        "ld sp, %[to_sp] \n"
+
+        // Store from_thread, to_thread, to_ip on to_thread's stack
+        "addi sp, sp, -(4 * 8) \n"
+        "ld a0, %[from_thread] \n"
+        "sd a0, 0*8(sp) \n"
+        "ld a1, %[to_thread] \n"
+        "sd a1, 1*8(sp) \n"
+        "ld s1, %[to_ip] \n"
+        "sd s1, 2*8(sp) \n"
+
+        // enter_thread_context(from_thread, to_thread)
+        "call enter_thread_context \n"
+
+        // Jump to to_ip
+        "jr s1 \n"
+
+        // A thread enters here when they were already scheduled at least once
+        "1: \n"
+        "addi sp, sp, (4 * 8) \n"
+
+        // Restore the RegisterState of to_thread
+        "ld x1, 0*8(sp) \n"
+        // sp
+        "ld x3, 2*8(sp) \n"
+        "ld x4, 3*8(sp) \n"
+        "ld x5, 4*8(sp) \n"
+        "ld x6, 5*8(sp) \n"
+        "ld x7, 6*8(sp) \n"
+        "ld x8, 7*8(sp) \n"
+        "ld x9, 8*8(sp) \n"
+        "ld x10, 9*8(sp) \n"
+        "ld x11, 10*8(sp) \n"
+        "ld x12, 11*8(sp) \n"
+        "ld x13, 12*8(sp) \n"
+        "ld x14, 13*8(sp) \n"
+        "ld x15, 14*8(sp) \n"
+        "ld x16, 15*8(sp) \n"
+        "ld x17, 16*8(sp) \n"
+        "ld x18, 17*8(sp) \n"
+        "ld x19, 18*8(sp) \n"
+        "ld x20, 19*8(sp) \n"
+        "ld x21, 20*8(sp) \n"
+        "ld x22, 21*8(sp) \n"
+        "ld x23, 22*8(sp) \n"
+        "ld x24, 23*8(sp) \n"
+        "ld x25, 24*8(sp) \n"
+        "ld x26, 25*8(sp) \n"
+        "ld x27, 26*8(sp) \n"
+        "ld x28, 27*8(sp) \n"
+        "ld x29, 28*8(sp) \n"
+        "ld x30, 29*8(sp) \n"
+        "ld x31, 30*8(sp) \n"
+
+        "addi sp, sp, -(4 * 8) \n"
+        "ld t0, 0*8(sp) \n"
+        "sd t0, %[from_thread] \n"
+        "ld t0, 1*8(sp) \n"
+        "sd t0, %[to_thread] \n"
+
+        "addi sp, sp, (34 * 8) + (4 * 8) \n"
+        :
+        [from_ip] "=m"(from_thread->regs().pc),
+        [from_sp] "=m"(from_thread->regs().x[1]),
+        "=m"(from_thread),
+        "=m"(to_thread)
+
+        : [to_ip] "m"(to_thread->regs().pc),
+        [to_sp] "m"(to_thread->regs().x[1]),
+        [from_thread] "m"(from_thread),
+        [to_thread] "m"(to_thread)
+        : "memory", "t0", "s1", "a0", "a1");
+    // clang-format on
+
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
 extern "C" FlatPtr do_init_context(Thread*, u32)
