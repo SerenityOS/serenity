@@ -153,6 +153,10 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
     auto style = matches[2].view.string_view();
     auto language = matches[3].view.string_view();
 
+    size_t fence_indent = 0;
+    while (fence_indent < line.length() && line[fence_indent] == ' ')
+        ++fence_indent;
+
     ++lines;
 
     StringBuilder builder;
@@ -169,7 +173,14 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
             if (close_fence[0] == fence[0] && close_fence.length() >= fence.length())
                 break;
         }
-        builder.append(line);
+
+        // If the opening fence is indented, content lines will have equivalent
+        // opening indentation removed, if present. (example 131, 132 and 133)
+        size_t offset = 0;
+        while (offset < line.length() && offset < fence_indent && line[offset] == ' ')
+            ++offset;
+
+        builder.append(line.substring_view(offset));
         builder.append('\n');
     }
 
