@@ -8,16 +8,14 @@
 
 #include <AK/FlyString.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::XHR {
 
-// FIXME: All the "u32"s should be "u64"s, however LibJS doesn't currently support constructing values with u64,
-//        and the IDL parser doesn't properly parse "unsigned long long".
-
 struct ProgressEventInit : public DOM::EventInit {
     bool length_computable { false };
-    u32 loaded { 0 };
-    u32 total { 0 };
+    WebIDL::UnsignedLongLong loaded { 0 };
+    WebIDL::UnsignedLongLong total { 0 };
 };
 
 class ProgressEvent final : public DOM::Event {
