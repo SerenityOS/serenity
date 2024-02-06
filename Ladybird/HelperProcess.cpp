@@ -61,6 +61,11 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 arguments.append("--use-gpu-painting"sv);
             if (web_content_options.wait_for_debugger == Ladybird::WaitForDebugger::Yes)
                 arguments.append("--wait-for-debugger"sv);
+            Vector<ByteString> certificate_args;
+            for (auto const& certificate : web_content_options.certificates) {
+                certificate_args.append(ByteString::formatted("--certificate={}", certificate));
+                arguments.append(certificate_args.last().view());
+            }
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
             if (!result.is_error())
@@ -92,7 +97,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
 }
 
 template<typename Client>
-ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String> candidate_server_paths, StringView serenity_resource_root, StringView server_name)
+ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String> candidate_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates, StringView server_name)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -125,9 +130,16 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String
                 path.bytes_as_string_view(),
                 "--fd-passing-socket"sv,
                 fd_passing_socket_string,
-                "--serenity-resource-root"sv,
-                serenity_resource_root,
             };
+            if (!serenity_resource_root.is_empty()) {
+                arguments.append("--serenity-resource-root"sv);
+                arguments.append(serenity_resource_root);
+            }
+            Vector<ByteString> certificate_args;
+            for (auto const& certificate : certificates) {
+                certificate_args.append(ByteString::formatted("--certificate={}", certificate));
+                arguments.append(certificate_args.last().view());
+            }
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
             if (!result.is_error())
@@ -153,20 +165,20 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String
 
 ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(ReadonlySpan<String> candidate_image_decoder_paths)
 {
-    return launch_generic_server_process<ImageDecoderClient::Client>(candidate_image_decoder_paths, ""sv, "ImageDecoder"sv);
+    return launch_generic_server_process<ImageDecoderClient::Client>(candidate_image_decoder_paths, ""sv, {}, "ImageDecoder"sv);
 }
 
-ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<String> candidate_web_worker_paths)
+ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<String> candidate_web_worker_paths, Vector<ByteString> const& certificates)
 {
-    return launch_generic_server_process<Web::HTML::WebWorkerClient>(candidate_web_worker_paths, ""sv, "WebWorker"sv);
+    return launch_generic_server_process<Web::HTML::WebWorkerClient>(candidate_web_worker_paths, ""sv, certificates, "WebWorker"sv);
 }
 
-ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root)
+ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
 {
-    return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, "RequestServer"sv);
+    return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, certificates, "RequestServer"sv);
 }
 
-ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> launch_web_socket_process(ReadonlySpan<String> candidate_web_socket_paths, StringView serenity_resource_root)
+ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> launch_web_socket_process(ReadonlySpan<String> candidate_web_socket_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
 {
-    return launch_generic_server_process<Protocol::WebSocketClient>(candidate_web_socket_paths, serenity_resource_root, "WebSocket"sv);
+    return launch_generic_server_process<Protocol::WebSocketClient>(candidate_web_socket_paths, serenity_resource_root, certificates, "WebSocket"sv);
 }

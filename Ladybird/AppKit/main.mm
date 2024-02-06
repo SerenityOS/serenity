@@ -41,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
     Vector<StringView> raw_urls;
+    Vector<ByteString> certificates;
     StringView webdriver_content_ipc_path;
     bool use_gpu_painting = false;
     bool debug_web_content = false;
@@ -51,6 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
     args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content", 0);
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
@@ -73,6 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::WebContentOptions web_content_options {
         .command_line = MUST(command_line_builder.to_string()),
         .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
+        .certificates = move(certificates),
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,

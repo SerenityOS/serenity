@@ -52,8 +52,8 @@ WebViewBridge::WebViewBridge(Vector<Web::DevicePixelRect> screen_rects, float de
             on_scroll(to_widget_position(position));
     };
 
-    on_request_worker_agent = []() {
-        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
+    on_request_worker_agent = [this]() {
+        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), m_web_content_options.certificates));
         return worker_client->dup_sockets();
     };
 }

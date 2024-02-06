@@ -105,6 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<StringView> raw_urls;
     StringView webdriver_content_ipc_path;
+    Vector<ByteString> certificates;
     bool enable_callgrind_profiling = false;
     bool disable_sql_database = false;
     bool enable_qt_networking = false;
@@ -120,6 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(enable_qt_networking, "Enable Qt as the backend networking service", "enable-qt-networking", 0);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
     args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content", 0);
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
     RefPtr<WebView::Database> database;
@@ -148,6 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::WebContentOptions web_content_options {
         .command_line = MUST(command_line_builder.to_string()),
         .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
+        .certificates = move(certificates),
         .enable_callgrind_profiling = enable_callgrind_profiling ? Ladybird::EnableCallgrindProfiling::Yes : Ladybird::EnableCallgrindProfiling::No,
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,

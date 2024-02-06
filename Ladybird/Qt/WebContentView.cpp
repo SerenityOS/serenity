@@ -119,8 +119,8 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
         QToolTip::hideText();
     };
 
-    on_request_worker_agent = []() {
-        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
+    on_request_worker_agent = [this]() {
+        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), m_web_content_options.certificates));
         return worker_client->dup_sockets();
     };
 }

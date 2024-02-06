@@ -26,7 +26,7 @@
 #include <LibWebView/WebSocketClientAdapter.h>
 #include <WebWorker/ConnectionFromClient.h>
 
-static ErrorOr<void> initialize_lagom_networking();
+static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -34,10 +34,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int fd_passing_socket { -1 };
     StringView serenity_resource_root;
+    Vector<ByteString> certificates;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(fd_passing_socket, "File descriptor of the fd passing socket", "fd-passing-socket", 'c', "fd-passing-socket");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
     platform_init();
@@ -47,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
 
-    TRY(initialize_lagom_networking());
+    TRY(initialize_lagom_networking(certificates));
 
     VERIFY(fd_passing_socket >= 0);
 
@@ -59,14 +61,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return event_loop.exec();
 }
 
-static ErrorOr<void> initialize_lagom_networking()
+static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates)
 {
     auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
-    auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
+    auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root, certificates));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
 
     auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
-    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root));
+    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root, certificates));
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
 
     return {};

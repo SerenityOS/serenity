@@ -38,6 +38,7 @@ enum class WaitForDebugger {
 struct WebContentOptions {
     String command_line;
     String executable_path;
+    Vector<ByteString> certificates;
     EnableCallgrindProfiling enable_callgrind_profiling { EnableCallgrindProfiling::No };
     EnableGPUPainting enable_gpu_painting { EnableGPUPainting::No };
     IsLayoutTestMode is_layout_test_mode { IsLayoutTestMode::No };

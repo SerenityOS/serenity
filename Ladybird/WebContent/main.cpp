@@ -47,7 +47,7 @@
 
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
-static ErrorOr<void> initialize_lagom_networking();
+static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -78,6 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView command_line {};
     StringView executable_path {};
+    Vector<ByteString> certificates;
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
     bool use_lagom_networking = false;
@@ -87,6 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_option(command_line, "Chrome process command line", "command-line", 0, "command_line");
     args_parser.add_option(executable_path, "Chrome process executable path", "executable-path", 0, "executable_path");
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
@@ -112,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else
 #endif
     {
-        TRY(initialize_lagom_networking());
+        TRY(initialize_lagom_networking(certificates));
     }
 
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
@@ -196,14 +198,14 @@ static ErrorOr<void> load_autoplay_allowlist()
     return {};
 }
 
-static ErrorOr<void> initialize_lagom_networking()
+static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates)
 {
     auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
-    auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
+    auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root, certificates));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
 
     auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
-    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root));
+    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root, certificates));
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
 
     return {};
