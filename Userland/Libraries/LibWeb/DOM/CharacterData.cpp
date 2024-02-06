@@ -98,7 +98,7 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
     // 9. For each live range whose end node is node and end offset is greater than offset but less than or equal to offset plus count, set its end offset to offset.
     for (auto& range : Range::live_ranges()) {
         if (range->end_container() == this && range->end_offset() > offset && range->end_offset() <= (offset + count))
-            TRY(range->set_end(*range->end_container(), range->end_offset()));
+            TRY(range->set_end(*range->end_container(), offset));
     }
 
     // 10. For each live range whose start node is node and start offset is greater than offset plus count, increase its start offset by data’s length and decrease it by count.
