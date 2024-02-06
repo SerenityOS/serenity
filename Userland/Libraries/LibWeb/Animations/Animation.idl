@@ -30,7 +30,7 @@ interface Animation : EventTarget {
     undefined pause();
     // FIXME: undefined updatePlaybackRate(double playbackRate);
     // FIXME: undefined reverse();
-    // FIXME: undefined persist();
+    undefined persist();
     // FIXME: [CEReactions] undefined commitStyles();
 };
 

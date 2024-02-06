@@ -700,6 +700,13 @@ WebIDL::ExceptionOr<void> Animation::pause()
     return {};
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-animation-persist
+void Animation::persist()
+{
+    // Sets this animation’s replace state to persisted.
+    set_replace_state(Bindings::AnimationReplaceState::Persisted);
+}
+
 // https://www.w3.org/TR/web-animations-1/#animation-time-to-timeline-time
 Optional<double> Animation::convert_an_animation_time_to_timeline_time(Optional<double> time) const
 {
