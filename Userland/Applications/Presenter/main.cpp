@@ -8,6 +8,7 @@
 #include "PresenterWidget.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
@@ -24,6 +25,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     argument_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::create(arguments));
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/Presenter.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
+
     auto window = GUI::Window::construct();
     window->set_title("Presenter");
     window->set_icon(GUI::Icon::default_icon("app-presenter"sv).bitmap_for_size(16));

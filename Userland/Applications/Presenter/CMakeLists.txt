@@ -14,4 +14,4 @@ set(SOURCES
     SlideObject.cpp
 )
 serenity_app(Presenter ICON app-presenter)
-target_link_libraries(Presenter PRIVATE LibWebView LibGUI LibGfx LibFileSystemAccessClient LibCore LibMain)
+target_link_libraries(Presenter PRIVATE LibWebView LibGUI LibGfx LibFileSystemAccessClient LibCore LibDesktop LibMain)
