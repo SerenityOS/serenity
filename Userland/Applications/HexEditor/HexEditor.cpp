@@ -952,7 +952,18 @@ void HexEditor::show_edit_annotation_dialog(Annotation& annotation)
 
 void HexEditor::show_delete_annotation_dialog(Annotation& annotation)
 {
-    auto result = GUI::MessageBox::show(window(), "Delete this annotation?"sv, "Delete annotation?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+    StringBuilder builder;
+    builder.append("Delete '"sv);
+    Utf8View comments_first_line { annotation.comments.bytes_as_string_view().find_first_split_view('\n') };
+    auto const max_annotation_text_length = 40;
+    if (comments_first_line.length() <= max_annotation_text_length) {
+        builder.append(comments_first_line.as_string());
+    } else {
+        builder.appendff("{}...", comments_first_line.unicode_substring_view(0, max_annotation_text_length));
+    }
+    builder.append("'?"sv);
+
+    auto result = GUI::MessageBox::show(window(), builder.string_view(), "Delete annotation?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
     if (result == GUI::Dialog::ExecResult::Yes) {
         m_document->annotations().delete_annotation(annotation);
         update();
