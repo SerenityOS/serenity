@@ -70,6 +70,7 @@ public:
         Yes,
         No,
     };
+    WebIDL::ExceptionOr<void> finish();
     WebIDL::ExceptionOr<void> play();
     WebIDL::ExceptionOr<void> play_an_animation(AutoRewind);
     WebIDL::ExceptionOr<void> pause();

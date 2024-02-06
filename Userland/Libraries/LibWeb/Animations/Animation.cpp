@@ -359,6 +359,71 @@ void Animation::set_replace_state(Bindings::AnimationReplaceState value)
     }
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-animation-finish
+WebIDL::ExceptionOr<void> Animation::finish()
+{
+    // 1. If animation’s effective playback rate is zero, or if animation’s effective playback rate > 0 and associated
+    //    effect end is infinity, throw an "InvalidStateError" DOMException and abort these steps.
+    auto effective_playback_rate = this->effective_playback_rate();
+    if (effective_playback_rate == 0.0)
+        return WebIDL::InvalidStateError::create(realm(), "Animation with a playback rate of 0 cannot be finished"_fly_string);
+    if (effective_playback_rate > 0.0 && isinf(associated_effect_end()))
+        return WebIDL::InvalidStateError::create(realm(), "Animation with no end cannot be finished"_fly_string);
+
+    // 2. Apply any pending playback rate to animation.
+    apply_any_pending_playback_rate();
+
+    // 3. Set limit as follows:
+    //    -> If playback rate > 0,
+    //       Let limit be associated effect end.
+    //    -> Otherwise,
+    //       Let limit be zero.
+    auto playback_rate = this->playback_rate();
+    auto limit = playback_rate > 0.0 ? associated_effect_end() : 0.0;
+
+    // 4. Silently set the current time to limit.
+    TRY(silently_set_current_time(limit));
+
+    // 5. If animation’s start time is unresolved and animation has an associated active timeline, let the start time be
+    //    the result of evaluating timeline time - (limit / playback rate) where timeline time is the current time value
+    //    of the associated timeline.
+    if (!m_start_time.has_value() && m_timeline && !m_timeline->is_inactive())
+        m_start_time = m_timeline->current_time().value() - (limit / playback_rate);
+
+    // 6. If there is a pending pause task and start time is resolved,
+    auto should_resolve_ready_promise = false;
+    if (m_pending_pause_task == TaskState::Scheduled && m_start_time.has_value()) {
+        // 1. Let the hold time be unresolved.
+        // Note: Typically the hold time will already be unresolved except in the case when the animation was previously
+        //       idle.
+        m_hold_time = {};
+
+        // 2. Cancel the pending pause task.
+        m_pending_pause_task = TaskState::None;
+
+        // 3. Resolve the current ready promise of animation with animation.
+        should_resolve_ready_promise = true;
+    }
+
+    // 7. If there is a pending play task and start time is resolved, cancel that task and resolve the current ready
+    //    promise of animation with animation.
+    if (m_pending_play_task == TaskState::Scheduled && m_start_time.has_value()) {
+        m_pending_play_task = TaskState::None;
+        should_resolve_ready_promise = true;
+    }
+
+    if (should_resolve_ready_promise) {
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm()) };
+        WebIDL::resolve_promise(realm(), current_ready_promise(), this);
+    }
+
+    // 8. Run the procedure to update an animation’s finished state for animation with the did seek flag set to true,
+    //    and the synchronously notify flag set to true.
+    update_finished_state(DidSeek::Yes, SynchronouslyNotify::Yes);
+
+    return {};
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-play
 WebIDL::ExceptionOr<void> Animation::play()
 {
