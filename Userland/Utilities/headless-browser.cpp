@@ -62,7 +62,7 @@ static StringView s_current_test_path;
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, String const& command_line, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No)
+    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, String const& command_line, StringView web_driver_ipc_path, Ladybird::IsLayoutTestMode is_layout_test_mode = Ladybird::IsLayoutTestMode::No, Vector<ByteString> const& certificates = {})
     {
 #if defined(AK_OS_SERENITY)
         auto database = TRY(WebView::Database::create());
@@ -73,16 +73,18 @@ public:
 
         auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
-        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView(move(database), move(cookie_jar))));
+        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView(move(database), move(cookie_jar), certificates)));
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
         (void)command_line;
+        (void)certificates;
         (void)is_layout_test_mode;
 #else
         Ladybird::WebContentOptions web_content_options {
             .command_line = command_line,
             .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
+            .certificates = certificates,
             .is_layout_test_mode = is_layout_test_mode,
         };
 
@@ -151,9 +153,10 @@ public:
     }
 
 private:
-    HeadlessWebContentView(NonnullRefPtr<WebView::Database> database, WebView::CookieJar cookie_jar)
+    HeadlessWebContentView(NonnullRefPtr<WebView::Database> database, WebView::CookieJar cookie_jar, Vector<ByteString> certificates)
         : m_database(move(database))
         , m_cookie_jar(move(cookie_jar))
+        , m_certificates(move(certificates))
     {
         on_scroll_to_point = [this](auto position) {
             m_viewport_rect.set_location(position);
@@ -176,11 +179,12 @@ private:
             m_cookie_jar.set_cookie(url, cookie, source);
         };
 
-        on_request_worker_agent = []() {
+        on_request_worker_agent = [this]() {
 #if defined(AK_OS_SERENITY)
             auto worker_client = MUST(Web::HTML::WebWorkerClient::try_create());
+            (void)this;
 #else
-            auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
+            auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), m_certificates));
 #endif
             return worker_client->dup_sockets();
         };
@@ -199,6 +203,7 @@ private:
 
     NonnullRefPtr<WebView::Database> m_database;
     WebView::CookieJar m_cookie_jar;
+    Vector<ByteString> m_certificates;
 };
 
 static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, int screenshot_timeout)
@@ -598,6 +603,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool is_layout_test_mode = false;
     StringView test_root_path;
     ByteString test_glob;
+    Vector<ByteString> certificates;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
@@ -610,6 +616,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -632,7 +639,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringBuilder command_line_builder;
     command_line_builder.join(' ', arguments.strings);
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, MUST(command_line_builder.to_string()), web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No));
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, MUST(command_line_builder.to_string()), web_driver_ipc_path, is_layout_test_mode ? Ladybird::IsLayoutTestMode::Yes : Ladybird::IsLayoutTestMode::No, certificates));
 
     if (!test_root_path.is_empty()) {
         test_glob = ByteString::formatted("*{}*", test_glob);
