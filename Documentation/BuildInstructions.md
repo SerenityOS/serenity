@@ -125,7 +125,8 @@ start Serenity, `curl` will be available.
 
 Ports might also have additional dependencies. Most prominently, you may need:
 `autoconf`, `automake`, `bison`, `flex`, `gettext`, `gperf`, `help2man`, `imagemagick` (specifically "convert"),
-`libgpg-error-dev`, `libtool`, `lzip`, `meson`, `nasm` (or another assembler), `qt6-base-dev`, `rename`, `zip`.
+`libgpg-error-dev`, `libtool`, `lzip`, `meson`, `nasm` (or another assembler), `python3-packaging`, `qt6-base-dev`,
+`rename`, `zip`.
 
 For select ports you might need slightly more exotic dependencies such as:
 - `file` (version 5.44 exactly, for file)
