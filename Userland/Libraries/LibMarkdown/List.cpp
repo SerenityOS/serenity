@@ -85,7 +85,7 @@ RecursionDecision List::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
-OwnPtr<List> List::parse(LineIterator& lines)
+OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
 {
     Vector<OwnPtr<ContainerBlock>> items;
 
@@ -124,8 +124,12 @@ OwnPtr<List> List::parse(LineIterator& lines)
                     auto maybe_start_number = line.substring_view(offset, i - offset).to_number<size_t>();
                     if (!maybe_start_number.has_value())
                         break;
-                    if (first)
+                    if (first) {
                         start_number = maybe_start_number.value();
+                        // Only ordered lists starting with 1 can iterrupt a paragraph (example 304)
+                        if (is_interrupting_paragraph && start_number != 1)
+                            return {};
+                    }
                     appears_ordered = true;
                     offset = i + 1;
                 }
