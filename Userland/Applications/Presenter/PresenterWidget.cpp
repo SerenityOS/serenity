@@ -8,6 +8,7 @@
 #include "PresenterWidget.h"
 #include "Presentation.h"
 #include <LibCore/MimeData.h>
+#include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -118,6 +119,9 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     update_slides_actions();
 
     auto help_menu = window->add_menu("&Help"_string);
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Presenter.md"), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Presenter"_string, GUI::Icon::default_icon("app-presenter"sv)));
 
     return {};
