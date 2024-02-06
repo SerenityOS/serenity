@@ -60,6 +60,14 @@
                 preferred_height: "grow"
                 visible: false
 
+                @GUI::ToolbarContainer {
+                    name: "annotations_toolbar_container"
+
+                    @GUI::Toolbar {
+                        name: "annotations_toolbar"
+                    }
+                }
+
                 @GUI::TableView {
                     name: "annotations"
                 }

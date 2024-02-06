@@ -109,6 +109,36 @@ ErrorOr<void> HexEditorWidget::setup()
         m_editor->update();
     };
 
+    m_annotations_context_menu = GUI::Menu::construct();
+    m_edit_annotation_action = GUI::Action::create(
+        "&Edit Annotation",
+        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation.png"sv)),
+        [this](GUI::Action&) {
+            if (m_annotations->selection().is_empty())
+                return;
+            auto index = m_annotations_sorting_model->map_to_source(m_annotations->selection().first());
+            auto& annotation = m_editor->document().annotations().get_annotation(index).value();
+            m_editor->show_edit_annotation_dialog(annotation);
+        },
+        this);
+    m_annotations_context_menu->add_action(*m_edit_annotation_action);
+    m_delete_annotation_action = GUI::Action::create(
+        "&Delete Annotation",
+        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-remove.png"sv)),
+        [this](GUI::Action&) {
+            if (m_annotations->selection().is_empty())
+                return;
+            auto index = m_annotations_sorting_model->map_to_source(m_annotations->selection().first());
+            auto& annotation = m_editor->document().annotations().get_annotation(index).value();
+            m_editor->show_delete_annotation_dialog(annotation);
+        },
+        this);
+    m_annotations_context_menu->add_action(*m_delete_annotation_action);
+    m_annotations->on_context_menu_request = [this](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
+        if (index.is_valid())
+            m_annotations_context_menu->popup(event.screen_position());
+    };
+
     m_search_results->set_activates_on_selection(true);
     m_search_results->on_activation = [this](const GUI::ModelIndex& index) {
         if (!index.is_valid())
@@ -326,6 +356,17 @@ ErrorOr<void> HexEditorWidget::setup()
         set_value_inspector_visible(action.is_checked());
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowValueInspector"sv, action.is_checked());
     });
+
+    auto& annotations_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("annotations_toolbar");
+    annotations_toolbar.add_action(*m_open_annotations_action);
+    annotations_toolbar.add_action(*m_save_annotations_action);
+    annotations_toolbar.add_action(*m_save_annotations_as_action);
+    annotations_toolbar.add_separator();
+    annotations_toolbar.add_action(GUI::Action::create(
+        "&Add Annotation",
+        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv)),
+        [this](GUI::Action&) { m_editor->show_create_annotation_dialog(); },
+        this));
 
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
@@ -723,10 +764,10 @@ void HexEditorWidget::set_annotations_visible(bool visible)
 
 void HexEditorWidget::initialize_annotations_model()
 {
-    auto sorting_model = MUST(GUI::SortingProxyModel::create(m_editor->document().annotations()));
-    sorting_model->set_sort_role((GUI::ModelRole)AnnotationsModel::CustomRole::StartOffset);
-    sorting_model->sort(AnnotationsModel::Column::Start, GUI::SortOrder::Ascending);
-    m_annotations->set_model(sorting_model);
+    m_annotations_sorting_model = MUST(GUI::SortingProxyModel::create(m_editor->document().annotations()));
+    m_annotations_sorting_model->set_sort_role((GUI::ModelRole)AnnotationsModel::CustomRole::StartOffset);
+    m_annotations_sorting_model->sort(AnnotationsModel::Column::Start, GUI::SortOrder::Ascending);
+    m_annotations->set_model(m_annotations_sorting_model);
 }
 
 void HexEditorWidget::set_search_results_visible(bool visible)

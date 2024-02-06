@@ -69,6 +69,13 @@ Optional<Annotation&> AnnotationsModel::closest_annotation_at(size_t position)
     return result;
 }
 
+Optional<Annotation&> AnnotationsModel::get_annotation(GUI::ModelIndex const& index)
+{
+    if (index.row() < 0 || index.row() >= row_count())
+        return {};
+    return m_annotations.at(index.row());
+}
+
 ErrorOr<void> AnnotationsModel::save_to_file(Core::File& file) const
 {
     JsonArray array {};
