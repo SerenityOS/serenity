@@ -487,6 +487,8 @@ public:
 };
 
 class RecordingPainter {
+    AK_MAKE_NONCOPYABLE(RecordingPainter);
+
 public:
     void fill_rect(Gfx::IntRect const& rect, Color color);
 

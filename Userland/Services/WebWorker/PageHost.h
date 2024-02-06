@@ -28,7 +28,7 @@ public:
     virtual Web::DevicePixelRect screen_rect() const override;
     virtual double device_pixels_per_css_pixel() const override;
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override;
-    virtual void paint(Web::DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override;
+    virtual NonnullOwnPtr<Web::Painting::RecordingPainter> paint(Web::DevicePixelRect const&, Web::PaintOptions = {}) override;
     virtual void request_file(Web::FileRequest) override;
 
 private:

@@ -12,11 +12,7 @@
 #include <LibGfx/Rect.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PixelUnits.h>
-#include <WebContent/Forward.h>
-
-#ifdef HAS_ACCELERATED_GRAPHICS
-#    include <LibAccelGfx/Context.h>
-#endif
+#include <WebContent/RenderLoopExecutor.h>
 
 namespace WebContent {
 
@@ -35,7 +31,7 @@ public:
 
     ErrorOr<void> connect_to_webdriver(ByteString const& webdriver_ipc_path);
 
-    virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&, Web::PaintOptions = {}) override;
+    virtual NonnullOwnPtr<Web::Painting::RecordingPainter> paint(Web::DevicePixelRect const& content_rect, Web::PaintOptions = {}) override;
 
     void set_palette_impl(Gfx::PaletteImpl&);
     void set_viewport_rect(Web::DevicePixelRect const&);
@@ -175,22 +171,12 @@ private:
 
     RefPtr<WebDriverConnection> m_webdriver;
 
-#ifdef HAS_ACCELERATED_GRAPHICS
-    OwnPtr<AccelGfx::Context> m_accelerated_graphics_context;
-#endif
-
-    struct BackingStores {
-        i32 front_bitmap_id { -1 };
-        i32 back_bitmap_id { -1 };
-        RefPtr<Gfx::Bitmap> front_bitmap;
-        RefPtr<Gfx::Bitmap> back_bitmap;
-    };
-    BackingStores m_backing_stores;
-
     HashMap<Web::DOM::Document*, NonnullOwnPtr<WebContentConsoleClient>> m_console_clients;
     WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;
 
     JS::Handle<JS::GlobalObject> m_console_global_object;
+
+    RenderLoopExecutor m_render_loop_executor;
 };
 
 }

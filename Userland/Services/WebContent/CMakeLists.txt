@@ -16,6 +16,7 @@ set(SOURCES
     ConnectionFromClient.cpp
     ConsoleGlobalEnvironmentExtensions.cpp
     ImageCodecPluginSerenity.cpp
+    RenderLoopExecutor.cpp
     PageClient.cpp
     PageHost.cpp
     WebContentConsoleClient.cpp
@@ -31,7 +32,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(WebContent)
-target_link_libraries(WebContent PRIVATE LibCore LibFileSystem LibIPC LibGfx LibAudio LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain)
+target_link_libraries(WebContent PRIVATE LibCore LibFileSystem LibIPC LibGfx LibAudio LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain LibThreading)
 link_with_locale_data(WebContent)
 
 if (HAS_ACCELERATED_GRAPHICS)

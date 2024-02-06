@@ -37,6 +37,7 @@
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
@@ -807,7 +808,9 @@ void ConnectionFromClient::take_document_screenshot(u64 page_id)
     Web::DevicePixelRect rect { { 0, 0 }, content_size };
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
-    page(page_id).paint(rect, *bitmap);
+    auto recording_painter = page(page_id).paint(rect);
+    Web::Painting::PaintingCommandExecutorCPU painting_command_executor(*bitmap);
+    recording_painter->execute(painting_command_executor);
 
     async_did_take_screenshot(page_id, bitmap->to_shareable_bitmap());
 }
@@ -823,7 +826,9 @@ void ConnectionFromClient::take_dom_node_screenshot(u64 page_id, i32 node_id)
     auto rect = page(page_id).page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
-    page(page_id).paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
+    auto recording_painter = page(page_id).paint(rect);
+    Web::Painting::PaintingCommandExecutorCPU painting_command_executor(*bitmap);
+    recording_painter->execute(painting_command_executor);
 
     async_did_take_screenshot(page_id, bitmap->to_shareable_bitmap());
 }

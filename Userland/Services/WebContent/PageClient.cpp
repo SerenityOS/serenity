@@ -20,7 +20,6 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWebView/Attribute.h>
@@ -30,10 +29,6 @@
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebDriverConnection.h>
-
-#ifdef HAS_ACCELERATED_GRAPHICS
-#    include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
-#endif
 
 namespace WebContent {
 
@@ -53,36 +48,20 @@ PageClient::PageClient(PageHost& owner, u64 id)
     : m_owner(owner)
     , m_page(Web::Page::create(Web::Bindings::main_thread_vm(), *this))
     , m_id(id)
+    , m_render_loop_executor(s_use_gpu_painter)
 {
     setup_palette();
+    m_render_loop_executor.start();
 
     m_repaint_timer = Web::Platform::Timer::create_single_shot(0, [this] {
-        if (!m_backing_stores.back_bitmap) {
-            return;
-        }
-
-        auto& back_bitmap = *m_backing_stores.back_bitmap;
         auto viewport_rect = page().css_to_device_rect(page().top_level_traversable()->viewport_rect());
-        paint(viewport_rect, back_bitmap);
+        auto recording_painter = paint(viewport_rect);
 
-        auto& backing_stores = m_backing_stores;
-        swap(backing_stores.front_bitmap, backing_stores.back_bitmap);
-        swap(backing_stores.front_bitmap_id, backing_stores.back_bitmap_id);
-
-        m_paint_state = PaintState::WaitingForClient;
-        client().async_did_paint(m_id, viewport_rect.to_type<int>(), backing_stores.front_bitmap_id);
+        m_render_loop_executor.paint(move(recording_painter), [this, viewport_rect](i32 front_bitmap_id) {
+            m_paint_state = PaintState::WaitingForClient;
+            client().async_did_paint(m_id, viewport_rect.to_type<int>(), front_bitmap_id);
+        });
     });
-
-#ifdef HAS_ACCELERATED_GRAPHICS
-    if (s_use_gpu_painter) {
-        auto context = AccelGfx::Context::create();
-        if (context.is_error()) {
-            dbgln("Failed to create AccelGfx context: {}", context.error());
-            VERIFY_NOT_REACHED();
-        }
-        m_accelerated_graphics_context = context.release_value();
-    }
-#endif
 }
 
 void PageClient::schedule_repaint()
@@ -98,6 +77,8 @@ void PageClient::schedule_repaint()
 
 void PageClient::ready_to_paint()
 {
+    m_render_loop_executor.ready_to_paint();
+
     auto old_paint_state = exchange(m_paint_state, PaintState::Ready);
 
     if (old_paint_state == PaintState::PaintWhenReady)
@@ -106,10 +87,7 @@ void PageClient::ready_to_paint()
 
 void PageClient::add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap)
 {
-    m_backing_stores.front_bitmap_id = front_bitmap_id;
-    m_backing_stores.back_bitmap_id = back_bitmap_id;
-    m_backing_stores.front_bitmap = *const_cast<Gfx::ShareableBitmap&>(front_bitmap).bitmap();
-    m_backing_stores.back_bitmap = *const_cast<Gfx::ShareableBitmap&>(back_bitmap).bitmap();
+    m_render_loop_executor.add_backing_store(front_bitmap_id, front_bitmap, back_bitmap_id, back_bitmap);
 }
 
 void PageClient::visit_edges(JS::Cell::Visitor& visitor)
@@ -187,35 +165,20 @@ Web::Layout::Viewport* PageClient::layout_root()
     return document->layout_node();
 }
 
-void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
+NonnullOwnPtr<Web::Painting::RecordingPainter> PageClient::paint(Web::DevicePixelRect const& content_rect, Web::PaintOptions paint_options)
 {
-    Web::Painting::RecordingPainter recording_painter;
+    NonnullOwnPtr<Web::Painting::RecordingPainter> recording_painter = make<Web::Painting::RecordingPainter>();
 
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
-    recording_painter.fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
+    recording_painter->fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
 
     Web::HTML::Navigable::PaintConfig paint_config;
     paint_config.paint_overlay = paint_options.paint_overlay == Web::PaintOptions::PaintOverlay::Yes;
     paint_config.should_show_line_box_borders = m_should_show_line_box_borders;
     paint_config.has_focus = m_has_focus;
-    page().top_level_traversable()->paint(recording_painter, paint_config);
+    page().top_level_traversable()->paint(*recording_painter, paint_config);
 
-    if (s_use_gpu_painter) {
-#ifdef HAS_ACCELERATED_GRAPHICS
-        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(*m_accelerated_graphics_context, target);
-        recording_painter.execute(painting_command_executor);
-#else
-        static bool has_warned_about_configuration = false;
-
-        if (!has_warned_about_configuration) {
-            warnln("\033[31;1mConfigured to use GPU painter, but current platform does not have accelerated graphics\033[0m");
-            has_warned_about_configuration = true;
-        }
-#endif
-    } else {
-        Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
-        recording_painter.execute(painting_command_executor);
-    }
+    return recording_painter;
 }
 
 void PageClient::set_viewport_rect(Web::DevicePixelRect const& rect)

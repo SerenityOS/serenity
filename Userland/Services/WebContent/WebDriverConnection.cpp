@@ -37,6 +37,8 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
+#include <LibWeb/Painting/RecordingPainter.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -1781,7 +1783,11 @@ Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_scre
     auto root_rect = calculate_absolute_rect_of_element(m_page_client.page(), *document->document_element());
 
     auto encoded_string = TRY(Web::WebDriver::capture_element_screenshot(
-        [&](auto const& rect, auto& bitmap) { m_page_client.paint(rect.template to_type<Web::DevicePixels>(), bitmap); },
+        [&](auto const& rect, auto& bitmap) {
+            auto recording_painter = m_page_client.paint(rect.template to_type<Web::DevicePixels>());
+            Web::Painting::PaintingCommandExecutorCPU painting_command_executor(bitmap);
+            recording_painter->execute(painting_command_executor);
+        },
         m_page_client.page(),
         *document->document_element(),
         root_rect));
@@ -1814,7 +1820,11 @@ Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::ta
     auto element_rect = calculate_absolute_rect_of_element(m_page_client.page(), *element);
 
     auto encoded_string = TRY(Web::WebDriver::capture_element_screenshot(
-        [&](auto const& rect, auto& bitmap) { m_page_client.paint(rect.template to_type<Web::DevicePixels>(), bitmap); },
+        [&](auto const& rect, auto& bitmap) {
+            auto recording_painter = m_page_client.paint(rect.template to_type<Web::DevicePixels>());
+            Web::Painting::PaintingCommandExecutorCPU painting_command_executor(bitmap);
+            recording_painter->execute(painting_command_executor);
+        },
         m_page_client.page(),
         *element,
         element_rect));

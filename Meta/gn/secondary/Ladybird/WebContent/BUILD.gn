@@ -54,6 +54,7 @@ executable("WebContent") {
     "//Userland/Services/WebContent/ConsoleGlobalEnvironmentExtensions.cpp",
     "//Userland/Services/WebContent/PageClient.cpp",
     "//Userland/Services/WebContent/PageHost.cpp",
+    "//Userland/Services/WebContent/RenderLoopExecutor.cpp",
     "//Userland/Services/WebContent/WebContentConsoleClient.cpp",
     "//Userland/Services/WebContent/WebDriverConnection.cpp",
     "main.cpp",

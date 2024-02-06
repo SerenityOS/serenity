@@ -47,7 +47,7 @@ public:
     virtual double device_pixels_per_css_pixel() const override { return 1.0; }
     virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
     virtual void request_file(FileRequest) override { }
-    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override { }
+    virtual NonnullOwnPtr<Web::Painting::RecordingPainter> paint(DevicePixelRect const&, Web::PaintOptions = {}) override { VERIFY_NOT_REACHED(); }
 
 private:
     explicit SVGPageClient(Page& host_page)

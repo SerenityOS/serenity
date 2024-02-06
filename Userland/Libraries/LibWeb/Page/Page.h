@@ -228,7 +228,7 @@ public:
     virtual DevicePixelRect screen_rect() const = 0;
     virtual double device_pixels_per_css_pixel() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
-    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, PaintOptions = {}) = 0;
+    virtual NonnullOwnPtr<Web::Painting::RecordingPainter> paint(DevicePixelRect const&, PaintOptions = {}) = 0;
     virtual void page_did_change_title(ByteString const&) { }
     virtual void page_did_request_navigate_back() { }
     virtual void page_did_request_navigate_forward() { }
