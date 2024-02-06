@@ -199,6 +199,8 @@ public:
     void set_corner_clip_radii(BorderRadiiData const& corner_radii) { m_corner_clip_radii = corner_radii; }
 
     Optional<int> scroll_frame_id() const { return m_scroll_frame_id; }
+    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const { return m_enclosing_scroll_frame_offset; }
+    Optional<CSSPixelRect> clip_rect() const { return m_clip_rect; }
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -210,9 +212,6 @@ protected:
 
     virtual CSSPixelRect compute_absolute_rect() const;
     virtual CSSPixelRect compute_absolute_paint_rect() const;
-
-    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const { return m_enclosing_scroll_frame_offset; }
-    Optional<CSSPixelRect> clip_rect() const { return m_clip_rect; }
 
 private:
     [[nodiscard]] virtual bool is_paintable_box() const final { return true; }
