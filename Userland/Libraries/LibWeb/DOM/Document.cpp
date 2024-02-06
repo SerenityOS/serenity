@@ -3710,4 +3710,36 @@ void Document::remove_form_associated_element_with_form_attribute(HTML::FormAsso
     });
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-document-elementfrompoint
+Element const* Document::element_from_point(double x, double y)
+{
+    // 1. If either argument is negative, x is greater than the viewport width excluding the size of a rendered scroll
+    //    bar (if any), or y is greater than the viewport height excluding the size of a rendered scroll bar (if any), or
+    //    there is no viewport associated with the document, return null and terminate these steps.
+    auto viewport_rect = this->viewport_rect();
+    CSSPixelPoint position { x, y };
+    // FIXME: This should account for the size of the scroll bar.
+    if (x < 0 || y < 0 || position.x() > viewport_rect.width() || position.y() > viewport_rect.height())
+        return nullptr;
+
+    // Ensure the layout tree exists prior to hit testing.
+    update_layout();
+
+    // 2. If there is a box in the viewport that would be a target for hit testing at coordinates x,y, when applying the transforms
+    //    that apply to the descendants of the viewport, return the associated element and terminate these steps.
+    if (auto const* paintable_box = this->paintable_box(); paintable_box) {
+        if (auto result = paintable_box->hit_test(position, Painting::HitTestType::Exact); result.has_value()) {
+            if (auto* dom_node = result->dom_node(); dom_node && dom_node->is_element())
+                return static_cast<Element const*>(dom_node);
+        }
+    }
+
+    // 3. If the document has a root element, return the root element and terminate these steps.
+    if (auto const* document_root_element = first_child_of_type<Element>(); document_root_element)
+        return document_root_element;
+
+    // 4. Return null.
+    return nullptr;
+}
+
 }

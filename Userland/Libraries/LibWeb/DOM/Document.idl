@@ -116,6 +116,9 @@ interface Document : Node {
 
     // https://www.w3.org/TR/web-animations-1/#extensions-to-the-document-interface
     readonly attribute DocumentTimeline timeline;
+
+    // https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface
+    Element? elementFromPoint(double x, double y);
 };
 
 dictionary ElementCreationOptions {
