@@ -16,6 +16,7 @@
 #include <AK/LexicalPath.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/DynamicWidgetContainer.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -93,7 +94,7 @@ private:
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
     RefPtr<GUI::TableView> m_search_results;
     RefPtr<GUI::Widget> m_search_results_container;
-    RefPtr<GUI::Widget> m_side_panel_container;
+    RefPtr<GUI::DynamicWidgetContainer> m_side_panel_container;
     RefPtr<GUI::Widget> m_value_inspector_container;
     RefPtr<GUI::TableView> m_value_inspector;
     RefPtr<GUI::Widget> m_annotations_container;

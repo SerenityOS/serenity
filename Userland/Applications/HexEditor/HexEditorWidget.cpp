@@ -56,9 +56,12 @@ ErrorOr<void> HexEditorWidget::setup()
     m_annotations_container = *find_descendant_of_type_named<GUI::Widget>("annotations_container");
     m_search_results = *find_descendant_of_type_named<GUI::TableView>("search_results");
     m_search_results_container = *find_descendant_of_type_named<GUI::Widget>("search_results_container");
-    m_side_panel_container = *find_descendant_of_type_named<GUI::Widget>("side_panel_container");
+    m_side_panel_container = *find_descendant_of_type_named<GUI::DynamicWidgetContainer>("side_panel_container");
     m_value_inspector_container = *find_descendant_of_type_named<GUI::Widget>("value_inspector_container");
     m_value_inspector = *find_descendant_of_type_named<GUI::TableView>("value_inspector");
+
+    // FIXME: Set this in GML once the compiler supports it.
+    m_side_panel_container->set_container_with_individual_order(true);
 
     m_value_inspector->on_activation = [this](GUI::ModelIndex const& index) {
         if (!index.is_valid())
