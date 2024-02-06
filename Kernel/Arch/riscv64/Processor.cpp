@@ -215,9 +215,63 @@ void ProcessorBase<T>::assume_context(Thread&, InterruptsState)
 }
 
 template<typename T>
-FlatPtr ProcessorBase<T>::init_context(Thread&, bool)
+FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
 {
-    TODO_RISCV64();
+    VERIFY(g_scheduler_lock.is_locked());
+    if (leave_crit) {
+        // Leave the critical section we set up in Process::exec,
+        // but because we still have the scheduler lock we should end up with 1
+        VERIFY(in_critical() == 2);
+        m_in_critical = 1; // leave it without triggering anything or restoring flags
+    }
+
+    u64 kernel_stack_top = thread.kernel_stack_top();
+
+    // Add a random offset between 0-256 (16-byte aligned)
+    kernel_stack_top -= round_up_to_power_of_two(get_fast_random<u8>(), 16);
+
+    u64 stack_top = kernel_stack_top;
+
+    auto& thread_regs = thread.regs();
+
+    // Push a RegisterState and TrapFrame onto the stack, which will be popped of the stack and restored into the
+    // state of the processor by restore_previous_context.
+    stack_top -= sizeof(RegisterState);
+    RegisterState& frame = *reinterpret_cast<RegisterState*>(stack_top);
+    memcpy(frame.x, thread_regs.x, sizeof(thread_regs.x));
+
+    // We don't overwrite the return address register if it's not 0, since that means this thread's register state was already initialized with
+    // an existing return address register value (e.g. it was fork()'ed), so we assume exit_kernel_thread is already saved as previous RA on the
+    // stack somewhere.
+    if (frame.x[0] == 0x0) {
+        // x1 is the return address register for the riscv64 ABI, so this will return to exit_kernel_thread when main thread function returns.
+        frame.x[0] = FlatPtr(&exit_kernel_thread);
+    }
+    frame.sepc = thread_regs.pc;
+    frame.set_userspace_sp(thread_regs.sp());
+    frame.sstatus = thread_regs.sstatus;
+
+    // Push a TrapFrame onto the stack
+    stack_top -= sizeof(TrapFrame);
+    TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
+    trap.regs = &frame;
+    trap.next_trap = nullptr;
+
+    if constexpr (CONTEXT_SWITCH_DEBUG) {
+        dbgln("init_context {} ({}) set up to execute at ip={}, sp={}, stack_top={}",
+            thread,
+            VirtualAddress(&thread),
+            VirtualAddress(thread_regs.pc),
+            VirtualAddress(thread_regs.sp()),
+            VirtualAddress(stack_top));
+    }
+
+    // This make sure the thread first executes thread_context_first_enter, which will actually call restore_previous_context
+    // which restores the context set up above.
+    thread_regs.set_sp(stack_top);
+    thread_regs.set_ip(FlatPtr(&thread_context_first_enter));
+
+    return stack_top;
 }
 
 // FIXME: Figure out if we can fully share this code with x86.
