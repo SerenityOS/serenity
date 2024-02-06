@@ -249,26 +249,26 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     }
 
     // CFF spec, "Table 22 Charset ID"
-    Vector<DeprecatedFlyString> charset;
+    Vector<DeprecatedFlyString> charset_names;
     switch (charset_offset) {
     case 0:
         dbgln_if(CFF_DEBUG, "CFF predefined charset ISOAdobe");
         // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
         for (SID sid = 1; sid <= 228; sid++)
-            TRY(charset.try_append(resolve_sid(sid, strings)));
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
         break;
     case 1:
         dbgln_if(CFF_DEBUG, "CFF predefined charset Expert");
         for (SID sid : s_predefined_charset_expert)
-            TRY(charset.try_append(resolve_sid(sid, strings)));
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
         break;
     case 2:
         dbgln_if(CFF_DEBUG, "CFF predefined charset Expert Subset");
         for (SID sid : s_predefined_charset_expert_subset)
-            TRY(charset.try_append(resolve_sid(sid, strings)));
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
         break;
     default:
-        charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size(), strings));
+        charset_names = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size(), strings));
         break;
     }
 
@@ -285,7 +285,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
             TRY(cff->add_glyph(0, move(glyphs[0])));
             continue;
         }
-        auto const& name = charset[i - 1];
+        auto const& name = charset_names[i - 1];
         TRY(cff->add_glyph(name, move(glyphs[i])));
     }
     cff->consolidate_glyphs();
@@ -302,10 +302,10 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 encoding->set(0, ".notdef");
                 continue;
             }
-            if (i >= encoding_codes.size() || i >= charset.size())
+            if (i >= encoding_codes.size() || i >= charset_names.size())
                 break;
             auto code = encoding_codes[i - 1];
-            auto char_name = charset[i - 1];
+            auto char_name = charset_names[i - 1];
             encoding->set(code, char_name);
         }
         for (auto const& entry : encoding_supplemental)
