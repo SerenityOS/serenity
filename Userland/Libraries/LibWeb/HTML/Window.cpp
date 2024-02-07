@@ -48,6 +48,7 @@
 #include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
@@ -395,9 +396,11 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         }
 
         // 6. If urlRecord matches about:blank, then perform the URL and history update steps given targetNavigable's active document and urlRecord.
-        // FIXME: If we only perform the URL and history update steps here, we never fire the load event for the new window/tab.
-        //        This breaks WPT. See #23067
-        if (false && url_matches_about_blank(url_record)) {
+        if (url_matches_about_blank(url_record)) {
+            // AD-HOC: Mark the initial about:blank for the new window as load complete
+            // FIXME: We do this other places too when creating a new about:blank document. Perhaps it's worth a spec issue?
+            HTML::HTMLParser::the_end(*target_navigable->active_document());
+
             perform_url_and_history_update_steps(*target_navigable->active_document(), url_record);
         }
 
