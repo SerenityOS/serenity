@@ -1331,7 +1331,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
         // -> file state, https://url.spec.whatwg.org/#file-state
         case State::File:
             // 1. Set url’s scheme to "file".
-            url->m_scheme = String::from_utf8("file"sv).release_value_but_fixme_should_propagate_errors();
+            url->m_scheme = "file"_string;
 
             // 2. Set url’s host to the empty string.
             url->m_host = String {};
