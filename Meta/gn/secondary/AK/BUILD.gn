@@ -363,6 +363,7 @@ write_cmake_config("ak_debug_gen") {
     "WASM_TRACE_DEBUG=",
     "WASM_VALIDATOR_DEBUG=",
     "WEBDRIVER_DEBUG=",
+    "WEBDRIVER_ROUTE_DEBUG=",
     "WEBGL_CONTEXT_DEBUG=",
     "WEBP_DEBUG=",
     "WEBSERVER_DEBUG=",

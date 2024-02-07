@@ -530,6 +530,10 @@
 #    cmakedefine01 WEBDRIVER_DEBUG
 #endif
 
+#ifndef WEBDRIVER_ROUTE_DEBUG
+#    cmakedefine01 WEBDRIVER_ROUTE_DEBUG
+#endif
+
 #ifndef WEBGL_CONTEXT_DEBUG
 #    cmakedefine01 WEBGL_CONTEXT_DEBUG
 #endif
