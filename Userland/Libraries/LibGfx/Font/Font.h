@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Bitmap.h>
 #include <AK/ByteReader.h>
 #include <AK/RefCounted.h>
@@ -143,7 +144,7 @@ enum FontWidth {
     UltraExpanded = 9
 };
 
-class Font : public RefCounted<Font> {
+class Font : public AtomicRefCounted<Font> {
 public:
     enum class AllowInexactSizeMatch {
         No,
