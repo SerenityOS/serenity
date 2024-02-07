@@ -116,7 +116,7 @@ ErrorOr<void> HexEditorWidget::setup()
         m_editor->update();
     };
 
-    m_new_action = GUI::Action::create("New...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_new_action = GUI::Action::create("New...", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv)), [this](const GUI::Action&) {
         String value;
         if (request_close() && GUI::InputBox::show(window(), value, "Enter a size:"sv, "New File"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto file_size = AK::StringUtils::convert_to_uint(value);
@@ -175,7 +175,7 @@ ErrorOr<void> HexEditorWidget::setup()
         dbgln("Wrote document to {}", file.filename());
     });
 
-    m_open_annotations_action = GUI::Action::create("Load Annotations...", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_open_annotations_action = GUI::Action::create("Load Annotations...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv)), [this](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(window(),
             { .window_title = "Load annotations file"sv,
                 .requested_access = Core::File::OpenMode::Read,
@@ -192,7 +192,7 @@ ErrorOr<void> HexEditorWidget::setup()
     });
     m_open_annotations_action->set_status_tip("Load annotations from a file"_string);
 
-    m_save_annotations_action = GUI::Action::create("Save Annotations", Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_save_annotations_action = GUI::Action::create("Save Annotations", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)), [&](auto&) {
         if (m_annotations_path.is_empty())
             return m_save_annotations_as_action->activate();
 
@@ -206,7 +206,7 @@ ErrorOr<void> HexEditorWidget::setup()
     });
     m_save_annotations_action->set_status_tip("Save annotations to a file"_string);
 
-    m_save_annotations_as_action = GUI::Action::create("Save Annotations As...", Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_save_annotations_as_action = GUI::Action::create("Save Annotations As...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv)), [&](auto&) {
         auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, "annotations"sv, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate);
         if (response.is_error())
             return;
@@ -227,7 +227,7 @@ ErrorOr<void> HexEditorWidget::setup()
     });
     m_redo_action->set_enabled(false);
 
-    m_find_action = GUI::Action::create("&Find...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_find_action = GUI::Action::create("&Find...", { Mod_Ctrl, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
         bool find_all = false;
         if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecResult::OK) {
@@ -264,7 +264,7 @@ ErrorOr<void> HexEditorWidget::setup()
         }
     });
 
-    m_goto_offset_action = GUI::Action::create("&Go to Offset...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_goto_offset_action = GUI::Action::create("&Go to Offset...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv)), [this](const GUI::Action&) {
         int new_offset;
         auto result = GoToOffsetDialog::show(
             window(),
@@ -293,17 +293,17 @@ ErrorOr<void> HexEditorWidget::setup()
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowSearchResults"sv, action.is_checked());
     });
 
-    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/hex.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/hex.png"sv)), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     });
     m_copy_hex_action->set_enabled(false);
 
-    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     });
     m_copy_text_action->set_enabled(false);
 
-    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/c.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/c.png"sv)), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     });
     m_copy_as_c_code_action->set_enabled(false);
@@ -519,7 +519,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu->add_separator();
     edit_menu->add_action(GUI::Action::create(
         "Add Annotation",
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv).release_value_but_fixme_should_propagate_errors(),
+        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv)),
         [this](GUI::Action&) { m_editor->show_create_annotation_dialog(); },
         this));
     edit_menu->add_separator();
