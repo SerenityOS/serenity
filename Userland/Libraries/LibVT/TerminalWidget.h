@@ -115,7 +115,11 @@ public:
     virtual void set_cursor_shape(CursorShape) override;
 
     static Optional<VT::CursorShape> parse_cursor_shape(StringView);
+    static Optional<BellMode> parse_bell(StringView);
+    static Optional<AutoMarkMode> parse_automark_mode(StringView);
     static ByteString stringify_cursor_shape(VT::CursorShape);
+    static ByteString stringify_bell(BellMode);
+    static ByteString stringify_automark_mode(AutoMarkMode);
 
 private:
     TerminalWidget(int ptm_fd, bool automatic_size_policy);

@@ -28,11 +28,6 @@ private:
     ErrorOr<void> setup();
     void write_back_settings() const;
 
-    static Optional<VT::TerminalWidget::BellMode> parse_bell(StringView bell_string);
-    static Optional<VT::TerminalWidget::AutoMarkMode> parse_automark_mode(StringView automark_mode);
-    static ByteString stringify_bell(VT::TerminalWidget::BellMode bell_mode);
-    static ByteString stringify_automark_mode(VT::TerminalWidget::AutoMarkMode automark_mode);
-
     VT::TerminalWidget::BellMode m_bell_mode { VT::TerminalWidget::BellMode::Disabled };
     VT::TerminalWidget::AutoMarkMode m_automark_mode { VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt };
     bool m_confirm_close { true };
