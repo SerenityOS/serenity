@@ -21,7 +21,7 @@ class FindDialog : public GUI::Dialog {
     C_OBJECT_ABSTRACT(FindDialog);
 
 public:
-    static ExecResult show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer, bool& find_all);
+    static ExecResult show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all);
     static ErrorOr<NonnullRefPtr<FindDialog>> try_create();
 
 private:
