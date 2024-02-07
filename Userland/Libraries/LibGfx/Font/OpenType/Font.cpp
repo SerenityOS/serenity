@@ -236,7 +236,18 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         /* NOTE: The encoding records are sorted first by platform ID, then by encoding ID.
            This means that the Windows platform will take precedence over Macintosh, which is
            usually what we want here. */
-        if (platform.value() == Cmap::Subtable::Platform::Windows) {
+        if (platform.value() == Cmap::Subtable::Platform::Unicode) {
+            if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_FullRepertoire) {
+                // "Encoding ID 3 should be used in conjunction with 'cmap' subtable formats 4 or 6."
+                cmap.set_active_index(i);
+                break;
+            }
+            if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_BMP_Only) {
+                // "Encoding ID 4 should be used in conjunction with subtable formats 10 or 12."
+                cmap.set_active_index(i);
+                break;
+            }
+        } else if (platform.value() == Cmap::Subtable::Platform::Windows) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
                 cmap.set_active_index(i);
                 break;
