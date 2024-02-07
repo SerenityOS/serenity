@@ -65,13 +65,7 @@ public:
         VERIFY(domain == "Terminal");
 
         if (group == "Window" && key == "Bell") {
-            auto bell_mode = VT::TerminalWidget::BellMode::Visible;
-            if (value == "AudibleBeep")
-                bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
-            if (value == "Visible")
-                bell_mode = VT::TerminalWidget::BellMode::Visible;
-            if (value == "Disabled")
-                bell_mode = VT::TerminalWidget::BellMode::Disabled;
+            auto bell_mode = VT::TerminalWidget::parse_bell(value).value_or(VT::TerminalWidget::BellMode::Visible);
             m_parent_terminal.set_bell_mode(bell_mode);
         } else if (group == "Text" && key == "Font") {
             auto font = Gfx::FontDatabase::the().get_by_name(value);
