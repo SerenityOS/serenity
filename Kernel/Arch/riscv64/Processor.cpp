@@ -276,6 +276,12 @@ ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread&, size
     return Vector<FlatPtr, 32> {};
 }
 
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread);
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread)
+{
+    do_context_first_init(from_thread, to_thread);
+}
+
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
@@ -304,9 +310,16 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     load_fpu_state(&to_thread->fpu_state());
 }
 
-NAKED void thread_context_first_enter(void)
+NAKED void thread_context_first_enter()
 {
-    asm("unimp");
+    asm(
+        "ld a0, 0(sp) \n"
+        "ld a1, 8(sp) \n"
+        "addi sp, sp, 32 \n"
+        "call context_first_init \n"
+        "mv a0, sp \n"
+        "call exit_trap \n"
+        "tail restore_context_and_sret \n");
 }
 
 NAKED void do_assume_context(Thread*, u32)
