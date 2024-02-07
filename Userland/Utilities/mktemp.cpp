@@ -56,11 +56,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
-    StringView file_template;
+    ByteString file_template;
     bool create_directory = false;
     bool dry_run = false;
     bool quiet = false;
-    StringView target_directory;
+    ByteString target_directory;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a temporary file or directory, safely, and print its name.");
@@ -71,33 +71,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(target_directory, "Create TEMPLATE relative to DIR", "tmpdir", 'p', "DIR");
     args_parser.parse(arguments);
 
-    Optional<ByteString> final_file_template;
-    ByteString final_target_directory = target_directory;
+    if (file_template.is_empty()) {
+        file_template = "tmp.XXXXXXXXXX"sv;
+    } else {
+        auto resolved_path = LexicalPath(file_template);
+        if (resolved_path.is_absolute()) {
+            if (!target_directory.is_empty()) {
+                warnln("mktemp: File template cannot be an absolute path if the --tmpdir option is used");
+                return 1;
+            }
 
-    if (target_directory.is_empty()) {
-        if (!file_template.is_empty()) {
-            auto resolved_path = LexicalPath(TRY(FileSystem::absolute_path(file_template)));
-            final_target_directory = resolved_path.dirname();
-            final_file_template = resolved_path.basename();
-        } else {
-            final_target_directory = "/tmp";
-            auto const* env_directory = getenv("TMPDIR");
-            if (env_directory != nullptr && *env_directory != 0)
-                final_target_directory = ByteString { env_directory, strlen(env_directory) };
+            target_directory = resolved_path.dirname();
+            file_template = resolved_path.basename();
         }
     }
 
-    if (!final_file_template.has_value()) {
-        final_file_template = "tmp.XXXXXXXXXX";
+    if (target_directory.is_empty()) {
+        target_directory = "/tmp";
+        auto const* env_directory = getenv("TMPDIR");
+        if (env_directory != nullptr && *env_directory != 0)
+            target_directory = ByteString(env_directory, strlen(env_directory));
     }
 
-    if (!final_file_template->find("XXX"sv).has_value()) {
+    if (!file_template.find("XXX"sv).has_value()) {
         if (!quiet)
-            warnln("Too few X's in template {}", final_file_template);
+            warnln("Too few X's in template {}", file_template);
         return 1;
     }
 
-    auto target_path = LexicalPath::join(final_target_directory, final_file_template.value()).string();
+    auto target_path = LexicalPath::join(target_directory, file_template).string();
 
     auto final_path = TRY(make_temp(target_path, create_directory, dry_run));
     if (!final_path.has_value()) {
