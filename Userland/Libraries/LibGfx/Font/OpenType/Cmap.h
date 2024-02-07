@@ -34,6 +34,16 @@ public:
             ManyToOneRange = 13,
             UnicodeVariationSequences = 14,
         };
+        enum class UnicodeEncoding {
+            DeprecatedUnicode1_0 = 0,
+            DeprecatedUnicode1_1 = 1,
+            DeprecatedISO10646 = 2,
+            Unicode2_0_BMP_Only = 3,
+            Unicode2_0_FullRepertoire = 4,
+            UnicodeVariationSequences = 5, // "for use with subtable format 14"
+            UnicodeFullRepertoire = 6,     // "for use with subtable format 13"
+        };
+
         enum class WindowsEncoding {
             UnicodeBMP = 1,
             UnicodeFullRepertoire = 10,
