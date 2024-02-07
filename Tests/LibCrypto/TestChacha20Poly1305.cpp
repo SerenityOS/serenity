@@ -92,7 +92,7 @@ TEST_CASE(test_keygen_vector_4)
 // https://datatracker.ietf.org/doc/html/rfc8439#section-2.8.2
 TEST_CASE(test_aead_encrypt_1)
 {
-    auto plaintext = MUST(String::from_utf8("Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."sv));
+    auto plaintext = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."_string;
     u8 aad[12] = { 0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 };
     u8 key[32] = {
         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
@@ -192,7 +192,7 @@ TEST_CASE(test_aead_decrypt_1)
 
 TEST_CASE(test_aead_encrypt_and_decrypt)
 {
-    auto plaintext = MUST(String::from_utf8("Well, hello friends :)"sv));
+    auto plaintext = "Well, hello friends :)"_string;
     u8 aad[12] = { 0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 };
     u8 key[32] = {
         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,

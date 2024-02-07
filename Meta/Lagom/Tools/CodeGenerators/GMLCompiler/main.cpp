@@ -299,7 +299,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     // Layout
     if (gml_object.layout_object() != nullptr) {
         TRY(append(generator, "RefPtr<GUI::Layout> layout;"));
-        TRY(generate_loader_for_object(*gml_object.layout_object(), generator.fork(), TRY(String::from_utf8("layout"sv)), indentation + 1, UseObjectConstructor::Yes));
+        TRY(generate_loader_for_object(*gml_object.layout_object(), generator.fork(), "layout"_string, indentation + 1, UseObjectConstructor::Yes));
         TRY(append(generator, "@object_name@->set_layout(layout.release_nonnull());"));
         generator.appendln("");
     }
@@ -352,16 +352,16 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, Lexica
     auto& main_class = gml->main_class();
     auto necessary_includes = TRY(extract_necessary_includes(main_class, gml_file_name));
     static String const always_necessary_includes[] = {
-        TRY(String::from_utf8("<AK/Error.h>"sv)),
-        TRY(String::from_utf8("<AK/JsonValue.h>"sv)),
-        TRY(String::from_utf8("<AK/NonnullRefPtr.h>"sv)),
-        TRY(String::from_utf8("<AK/RefPtr.h>"sv)),
-        TRY(String::from_utf8("<LibGfx/Font/FontWeight.h>"sv)),
+        "<AK/Error.h>"_string,
+        "<AK/JsonValue.h>"_string,
+        "<AK/NonnullRefPtr.h>"_string,
+        "<AK/RefPtr.h>"_string,
+        "<LibGfx/Font/FontWeight.h>"_string,
         // For Gfx::ColorRole
-        TRY(String::from_utf8("<LibGfx/SystemTheme.h>"sv)),
-        TRY(String::from_utf8("<LibGUI/Widget.h>"sv)),
+        "<LibGfx/SystemTheme.h>"_string,
+        "<LibGUI/Widget.h>"_string,
         // For Gfx::FontWeight
-        TRY(String::from_utf8("<LibGfx/Font/FontDatabase.h>"sv)),
+        "<LibGfx/Font/FontDatabase.h>"_string,
     };
     TRY(necessary_includes.try_set_from(always_necessary_includes));
     for (auto const& include : necessary_includes)
