@@ -258,6 +258,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
             }
         } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
             cmap.set_active_index(i);
+            // Intentionally no `break` so that Windows (value 3) wins over Macintosh (value 1).
         }
     }
 
