@@ -12,6 +12,7 @@
 #include <LibMarkdown/Heading.h>
 #include <LibMarkdown/LineIterator.h>
 #include <LibMarkdown/Text.h>
+#include <LibRegex/Regex.h>
 
 namespace Markdown {
 
@@ -37,7 +38,7 @@ private:
     ByteString m_style;
     Heading* m_current_section;
 
-    static OwnPtr<CodeBlock> parse_backticks(LineIterator& lines, Heading* current_section);
+    static OwnPtr<CodeBlock> parse_backticks(LineIterator& lines, Heading* current_section, RegexResult match_result);
     static OwnPtr<CodeBlock> parse_indent(LineIterator& lines);
 };
 

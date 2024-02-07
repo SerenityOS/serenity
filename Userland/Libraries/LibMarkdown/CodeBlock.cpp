@@ -88,8 +88,12 @@ RecursionDecision CodeBlock::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
-static Regex<ECMA262> open_fence_re("^ {0,3}(([\\`\\~])\\2{2,})\\s*([\\*_]*)\\s*([^\\*_\\s]*).*$");
-static Regex<ECMA262> close_fence_re("^ {0,3}(([\\`\\~])\\2{2,})\\s*$");
+// Separate regexes are used here because,
+// - Info strings for backtick code blocks cannot contain backticks (example 145)
+// - Info strings for tilde code blocks can contain backticks and tildes (example 146)
+static Regex<ECMA262> backtick_open_fence_re(R"#(^ {0,3}(\`{3,})\s*([\*_]*)\s*([^\*_\s\`]*)[^\`]*$)#");
+static Regex<ECMA262> tilde_open_fence_re(R"#(^ {0,3}(\~{3,})\s*([\*_]*)\s*([^\*_\s]*).*$)#");
+static Regex<ECMA262> close_fence_re(R"#(^ {0,3}(([\`\~])\2{2,})\s*$)#");
 
 static Optional<size_t> line_block_prefix(StringView const& line)
 {
@@ -123,8 +127,11 @@ OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section
         return {};
 
     StringView line = *lines;
-    if (open_fence_re.match(line).success)
-        return parse_backticks(lines, current_section);
+
+    if (auto backtick_match_result = backtick_open_fence_re.match(line); backtick_match_result.success)
+        return parse_backticks(lines, current_section, backtick_match_result);
+    else if (auto tilde_match_result = tilde_open_fence_re.match(line); tilde_match_result.success)
+        return parse_backticks(lines, current_section, tilde_match_result);
 
     // An indented code block cannot interrupt a paragraph (example 113)
     if (is_interrupting_paragraph)
@@ -136,7 +143,7 @@ OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section
     return {};
 }
 
-OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* current_section)
+OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* current_section, RegexResult match_result)
 {
     StringView line = *lines;
 
@@ -152,10 +159,10 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
     // and if possible syntax-highlighted
     // as appropriate for a shell script.
 
-    auto matches = open_fence_re.match(line).capture_group_matches[0];
+    auto matches = match_result.capture_group_matches[0];
     auto fence = matches[0].view.string_view();
-    auto style = matches[2].view.string_view();
-    auto language = matches[3].view.string_view();
+    auto style = matches[1].view.string_view();
+    auto language = matches[2].view.string_view();
 
     size_t fence_indent = 0;
     while (fence_indent < line.length() && line[fence_indent] == ' ')
