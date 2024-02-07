@@ -90,6 +90,9 @@ asm_trap_handler:
 
     call trap_handler
 
+.global restore_context_and_sret
+restore_context_and_sret:
+
     // Remove TrapFrame from the stack
     addi sp, sp, 16
 
@@ -130,8 +133,6 @@ asm_trap_handler:
     ld x29, 28*8(sp)
     ld x30, 29*8(sp)
     ld x31, 30*8(sp)
-
-    ld x2, 1*8(sp)
 
     addi sp, sp, REGISTER_STATE_SIZE
     sret
