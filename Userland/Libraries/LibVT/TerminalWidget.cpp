@@ -1415,6 +1415,46 @@ ByteString TerminalWidget::stringify_cursor_shape(VT::CursorShape cursor_shape)
     VERIFY_NOT_REACHED();
 }
 
+Optional<TerminalWidget::BellMode> TerminalWidget::parse_bell(StringView bell_string)
+{
+    if (bell_string == "AudibleBeep")
+        return BellMode::AudibleBeep;
+    if (bell_string == "Visible")
+        return BellMode::Visible;
+    if (bell_string == "Disabled")
+        return BellMode::Disabled;
+    return {};
+}
+
+ByteString TerminalWidget::stringify_bell(TerminalWidget::BellMode bell_mode)
+{
+    if (bell_mode == BellMode::AudibleBeep)
+        return "AudibleBeep";
+    if (bell_mode == BellMode::Disabled)
+        return "Disabled";
+    if (bell_mode == BellMode::Visible)
+        return "Visible";
+    VERIFY_NOT_REACHED();
+}
+
+Optional<TerminalWidget::AutoMarkMode> TerminalWidget::parse_automark_mode(StringView automark_mode)
+{
+    if (automark_mode == "MarkNothing")
+        return AutoMarkMode::MarkNothing;
+    if (automark_mode == "MarkInteractiveShellPrompt")
+        return AutoMarkMode::MarkInteractiveShellPrompt;
+    return {};
+}
+
+ByteString TerminalWidget::stringify_automark_mode(AutoMarkMode automark_mode)
+{
+    if (automark_mode == AutoMarkMode::MarkNothing)
+        return "MarkNothing";
+    if (automark_mode == AutoMarkMode::MarkInteractiveShellPrompt)
+        return "MarkInteractiveShellPrompt";
+    VERIFY_NOT_REACHED();
+}
+
 void TerminalWidget::handle_pty_owner_change(pid_t new_owner)
 {
     if (m_auto_mark_mode == AutoMarkMode::MarkInteractiveShellPrompt && new_owner == m_startup_process_id) {
