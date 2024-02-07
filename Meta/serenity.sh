@@ -286,9 +286,9 @@ delete_toolchain() {
 }
 
 kill_tmux_session() {
-    local TMUX_SESSION
-    TMUX_SESSION="$(tmux display-message -p '#S')"
-    [ -z "$TMUX_SESSION" ] || tmux kill-session -t "$TMUX_SESSION"
+    if [ -n "$TMUX_SESSION" ]; then
+        tmux has-session -t "$TMUX_SESSION" >/dev/null 2>&1 && tmux kill-session -t "$TMUX_SESSION"
+    fi
 }
 
 set_tmux_title() {
@@ -415,7 +415,9 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
                 build_target
                 build_target install
                 build_image
-                tmux new-session "$ARG0" __tmux_cmd "$TARGET" "$TOOLCHAIN_TYPE" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" "$TOOLCHAIN_TYPE" gdb "${CMD_ARGS[@]}" \;
+
+                TMUX_SESSION="tmux-serenity-gdb-$(date +%s)"
+                tmux new-session -e "TMUX_SESSION=$TMUX_SESSION" -s "$TMUX_SESSION" "$ARG0" __tmux_cmd "$TARGET" "$TOOLCHAIN_TYPE" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window -e "TMUX_SESSION=$TMUX_SESSION" "$ARG0" __tmux_cmd "$TARGET" "$TOOLCHAIN_TYPE" gdb "${CMD_ARGS[@]}" \;
             fi
             ;;
         test)
