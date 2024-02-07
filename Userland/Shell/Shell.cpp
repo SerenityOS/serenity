@@ -23,6 +23,7 @@
 #include <AK/URL.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Environment.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -1726,13 +1727,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
     }
 
     // Look at the environment.
-    for (auto i = 0; environ[i]; ++i) {
-        StringView entry { environ[i], strlen(environ[i]) };
-        if (entry.starts_with(pattern)) {
-            auto parts = entry.split_view('=');
-            if (parts.is_empty() || parts.first().is_empty())
+    for (auto entry : Core::Environment::entries()) {
+        if (entry.full_entry.starts_with(pattern)) {
+            if (entry.name.is_empty())
                 continue;
-            ByteString name = parts.first();
+            auto name = entry.name.to_byte_string();
             if (suggestions.contains_slow(name))
                 continue;
             suggestions.append(move(name));
