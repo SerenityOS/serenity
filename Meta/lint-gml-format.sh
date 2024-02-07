@@ -2,7 +2,7 @@
 
 set -e
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+script_path="$(cd -P -- "$(dirname -- "$0")" >/dev/null && pwd -P)"
 cd "${script_path}/.." || exit 1
 
 if [ -z "${GML_FORMAT:-}" ] ; then

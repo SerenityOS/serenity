@@ -5,7 +5,7 @@ set -eo pipefail
 # How many bytes optipng has to be able to strip out of the file for the optimization to be worth it. The default is 1 KiB.
 : "${MINIMUM_OPTIMIZATION_BYTES:=1024}"
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+script_path="$(cd -P -- "$(dirname -- "$0")" >/dev/null && pwd -P)"
 cd "${script_path}/.."
 
 if ! command -v optipng >/dev/null ; then
