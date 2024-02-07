@@ -40,7 +40,7 @@ ErrorOr<void> MainWidget::setup()
     auto& beep_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("beep_bell_radio");
     auto& visual_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
     auto& no_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("no_bell_radio");
-    auto& automark_off_radio = *find_descendant_of_type_named<GUI::RadioButton>("automark_of");
+    auto& automark_off_radio = *find_descendant_of_type_named<GUI::RadioButton>("automark_off");
     auto& automark_on_interactive_prompt_radio = *find_descendant_of_type_named<GUI::RadioButton>("automark_on_interactive_prompt");
 
     m_bell_mode = parse_bell(Config::read_string("Terminal"sv, "Window"sv, "Bell"sv));
