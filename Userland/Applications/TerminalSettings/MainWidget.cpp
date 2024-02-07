@@ -43,10 +43,10 @@ ErrorOr<void> MainWidget::setup()
     auto& automark_off_radio = *find_descendant_of_type_named<GUI::RadioButton>("automark_off");
     auto& automark_on_interactive_prompt_radio = *find_descendant_of_type_named<GUI::RadioButton>("automark_on_interactive_prompt");
 
-    m_bell_mode = parse_bell(Config::read_string("Terminal"sv, "Window"sv, "Bell"sv));
+    m_bell_mode = parse_bell(Config::read_string("Terminal"sv, "Window"sv, "Bell"sv)).value_or(VT::TerminalWidget::BellMode::Visible);
     m_original_bell_mode = m_bell_mode;
 
-    m_automark_mode = parse_automark_mode(Config::read_string("Terminal"sv, "Terminal"sv, "AutoMark"sv));
+    m_automark_mode = parse_automark_mode(Config::read_string("Terminal"sv, "Terminal"sv, "AutoMark"sv)).value_or(VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt);
     m_original_automark_mode = m_automark_mode;
 
     switch (m_bell_mode) {
@@ -109,7 +109,7 @@ ErrorOr<void> MainWidget::setup()
     return {};
 }
 
-VT::TerminalWidget::BellMode MainWidget::parse_bell(StringView bell_string)
+Optional<VT::TerminalWidget::BellMode> MainWidget::parse_bell(StringView bell_string)
 {
     if (bell_string == "AudibleBeep")
         return VT::TerminalWidget::BellMode::AudibleBeep;
@@ -117,7 +117,7 @@ VT::TerminalWidget::BellMode MainWidget::parse_bell(StringView bell_string)
         return VT::TerminalWidget::BellMode::Visible;
     if (bell_string == "Disabled")
         return VT::TerminalWidget::BellMode::Disabled;
-    VERIFY_NOT_REACHED();
+    return {};
 }
 
 ByteString MainWidget::stringify_bell(VT::TerminalWidget::BellMode bell_mode)
@@ -131,13 +131,13 @@ ByteString MainWidget::stringify_bell(VT::TerminalWidget::BellMode bell_mode)
     VERIFY_NOT_REACHED();
 }
 
-VT::TerminalWidget::AutoMarkMode MainWidget::parse_automark_mode(StringView automark_mode)
+Optional<VT::TerminalWidget::AutoMarkMode> MainWidget::parse_automark_mode(StringView automark_mode)
 {
     if (automark_mode == "MarkNothing")
         return VT::TerminalWidget::AutoMarkMode::MarkNothing;
     if (automark_mode == "MarkInteractiveShellPrompt")
         return VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt;
-    VERIFY_NOT_REACHED();
+    return {};
 }
 
 ByteString MainWidget::stringify_automark_mode(VT::TerminalWidget::AutoMarkMode automark_mode)
