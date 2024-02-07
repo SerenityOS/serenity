@@ -45,9 +45,9 @@ public:
     bool is_empty() { return m_history_items.is_empty(); }
 
     ErrorOr<void> read_from_file(ByteString const& path);
-    ErrorOr<void> write_to_file(bool rewrite_all);
+    ErrorOr<void> write_to_file();
 
-    ErrorOr<void> invalidate_model_and_file(bool rewrite_all);
+    ErrorOr<void> invalidate_model_and_file();
 
     // ^GUI::Model
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
