@@ -29,6 +29,9 @@ using NativeFloatingType = Conditional<M == 32, f32, Conditional<M == 64, f64, v
 template<size_t M, size_t N, template<typename> typename SetSign, typename ElementType = SetSign<NativeIntegralType<M>>>
 using NativeVectorType __attribute__((vector_size(N * sizeof(ElementType)))) = ElementType;
 
+template<size_t M, size_t N, typename ElementType = NativeFloatingType<M>>
+using NativeFloatingVectorType __attribute__((vector_size(N * sizeof(ElementType)))) = ElementType;
+
 template<typename T, template<typename> typename SetSign>
 using Native128ByteVectorOf = NativeVectorType<sizeof(T) * 8, 16 / sizeof(T), SetSign, T>;
 
