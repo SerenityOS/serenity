@@ -1623,49 +1623,6 @@ ErrorOr<void> mkfifo(StringView pathname, mode_t mode)
     return mknod(pathname, mode | S_IFIFO, 0);
 }
 
-ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
-{
-    auto builder = TRY(StringBuilder::create());
-    TRY(builder.try_append(name));
-    TRY(builder.try_append('\0'));
-    TRY(builder.try_append(value));
-    TRY(builder.try_append('\0'));
-    // Note the explicit null terminators above.
-    auto c_name = builder.string_view().characters_without_null_termination();
-    auto c_value = c_name + name.length() + 1;
-    auto rc = ::setenv(c_name, c_value, overwrite);
-    if (rc < 0)
-        return Error::from_errno(errno);
-    return {};
-}
-
-ErrorOr<void> unsetenv(StringView name)
-{
-    auto builder = TRY(StringBuilder::create());
-    TRY(builder.try_append(name));
-    TRY(builder.try_append('\0'));
-
-    // Note the explicit null terminator above.
-    auto rc = ::unsetenv(builder.string_view().characters_without_null_termination());
-    if (rc < 0)
-        return Error::from_errno(errno);
-    return {};
-}
-
-ErrorOr<void> putenv(StringView env)
-{
-#ifdef AK_OS_SERENITY
-    auto rc = serenity_putenv(env.characters_without_null_termination(), env.length());
-#else
-    // Leak somewhat unavoidable here due to the putenv API.
-    auto leaked_new_env = strndup(env.characters_without_null_termination(), env.length());
-    auto rc = ::putenv(leaked_new_env);
-#endif
-    if (rc < 0)
-        return Error::from_errno(errno);
-    return {};
-}
-
 ErrorOr<int> posix_openpt(int flags)
 {
     int const rc = ::posix_openpt(flags);
