@@ -59,7 +59,7 @@ GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out
     out_text = dialog->text_value();
 
     if (processed.is_error()) {
-        GUI::MessageBox::show_error(parent_window, processed.error());
+        GUI::MessageBox::show_error(parent_window, MUST(String::formatted("Input is invalid: {}", processed.release_error())));
         result = ExecResult::Aborted;
     } else {
         out_buffer = move(processed.value());
@@ -71,26 +71,18 @@ GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out
     return result;
 }
 
-Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId opt)
+ErrorOr<ByteBuffer> FindDialog::process_input(StringView text_value, OptionId opt)
 {
     dbgln("process_input opt={}", (int)opt);
+    VERIFY(!text_value.is_empty());
+
     switch (opt) {
-    case OPTION_ASCII_STRING: {
-        if (text_value.is_empty())
-            return "Input is empty"_string;
-
-        return ByteBuffer::copy(text_value.bytes()).release_value_but_fixme_should_propagate_errors();
-    }
-
+    case OPTION_ASCII_STRING:
+        return ByteBuffer::copy(text_value.bytes());
     case OPTION_HEX_VALUE: {
-        auto text_no_spaces = text_value.replace(" "sv, ""sv, ReplaceMode::All).release_value_but_fixme_should_propagate_errors();
-        ErrorOr<ByteBuffer> decoded = decode_hex(text_no_spaces);
-        if (decoded.is_error())
-            return String::formatted("Input is invalid: {}", decoded.error().string_literal()).release_value_but_fixme_should_propagate_errors();
-
-        return decoded.value();
+        auto text_no_spaces = text_value.replace(" "sv, ""sv, ReplaceMode::All);
+        return decode_hex(text_no_spaces);
     }
-
     default:
         VERIFY_NOT_REACHED();
     }

@@ -25,7 +25,7 @@ public:
     static ErrorOr<NonnullRefPtr<FindDialog>> try_create();
 
 private:
-    Result<ByteBuffer, String> process_input(String text_value, OptionId opt);
+    static ErrorOr<ByteBuffer> process_input(StringView text_value, OptionId opt);
 
     String text_value() const { return m_text_value; }
     OptionId selected_option() const { return m_selected_option; }
