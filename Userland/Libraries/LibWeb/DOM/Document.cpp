@@ -1060,8 +1060,10 @@ void Document::update_layout()
     // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
     inform_all_viewport_clients_about_the_current_viewport_rect();
 
-    if (navigable())
+    if (navigable()) {
+        navigable()->set_needs_to_resolve_paint_only_properties();
         navigable()->set_needs_display();
+    }
 
     if (navigable()->is_traversable()) {
         page().client().page_did_layout();
