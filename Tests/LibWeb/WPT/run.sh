@@ -11,8 +11,8 @@ then
 fi
 
 
-WEBDRIVER_BINARY=$(env PATH="${SERENITY_SOURCE_DIR}/Build/lagom/bin:${SERENITY_SOURCE_DIR}/Meta/Lagom/Build/bin:${PATH}" \
-                   which WebDriver)
+: "${WEBDRIVER_BINARY:=$(env PATH="${SERENITY_SOURCE_DIR}/Build/lagom/bin:${SERENITY_SOURCE_DIR}/Meta/Lagom/Build/bin:${PATH}" \
+                         which WebDriver)}"
 update_expectations_metadata=false
 
 for arg in "$@"; do

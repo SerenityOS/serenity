@@ -269,4 +269,9 @@ if (BUILD_TESTING)
         ENVIRONMENT QT_QPA_PLATFORM=offscreen
         ENVIRONMENT "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}"
     )
+    if (APPLE)
+        set_tests_properties(LibWeb WPT PROPERTIES
+            ENVIRONMENT "WEBDRIVER_BINARY=$<TARGET_FILE_DIR:ladybird>/$<TARGET_FILE_NAME:WebDriver>"
+        )
+    endif()
 endif()
