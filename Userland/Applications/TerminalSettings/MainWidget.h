@@ -28,8 +28,8 @@ private:
     ErrorOr<void> setup();
     void write_back_settings() const;
 
-    static VT::TerminalWidget::BellMode parse_bell(StringView bell_string);
-    static VT::TerminalWidget::AutoMarkMode parse_automark_mode(StringView automark_mode);
+    static Optional<VT::TerminalWidget::BellMode> parse_bell(StringView bell_string);
+    static Optional<VT::TerminalWidget::AutoMarkMode> parse_automark_mode(StringView automark_mode);
     static ByteString stringify_bell(VT::TerminalWidget::BellMode bell_mode);
     static ByteString stringify_automark_mode(VT::TerminalWidget::AutoMarkMode automark_mode);
 
