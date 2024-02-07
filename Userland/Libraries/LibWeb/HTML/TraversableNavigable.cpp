@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationParams.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
@@ -118,11 +119,28 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable
 {
     // 1. Let traversable be the result of creating a new top-level traversable given null and the empty string.
     auto traversable = TRY(create_a_new_top_level_traversable(page, nullptr, {}));
+    page->set_top_level_traversable(traversable);
 
-    // 2. Navigate traversable to initialNavigationURL using traversable's active document, with documentResource set to initialNavigationPostResource.
-    TRY(traversable->navigate({ .url = initial_navigation_url,
-        .source_document = *traversable->active_document(),
-        .document_resource = initial_navigation_post_resource }));
+    // AD-HOC: Mark the about:blank document as finished parsing if we're only going to about:blank
+    //         Skip the initial navigation as well. This matches the behavior of the window open steps.
+
+    if (url_matches_about_blank(initial_navigation_url)) {
+        Platform::EventLoopPlugin::the().deferred_invoke([traversable, initial_navigation_url] {
+            // FIXME: We do this other places too when creating a new about:blank document. Perhaps it's worth a spec issue?
+            HTML::HTMLParser::the_end(*traversable->active_document());
+
+            // FIXME: If we perform the URL and history update steps here, we start hanging tests and the UI process will
+            //        try to load() the initial URLs passed on the command line before we finish processing the events here.
+            //        However, because we call this before the PageClient is fully initialized... that gets awkward.
+        });
+    }
+
+    else {
+        // 2. Navigate traversable to initialNavigationURL using traversable's active document, with documentResource set to initialNavigationPostResource.
+        TRY(traversable->navigate({ .url = initial_navigation_url,
+            .source_document = *traversable->active_document(),
+            .document_resource = initial_navigation_post_resource }));
+    }
 
     // 3. Return traversable.
     return traversable;
