@@ -7,6 +7,7 @@
 
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Environment.h>
 #include <LibCore/GetPassword.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -60,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio exec"));
 
-    TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
+    TRY(Core::Environment::set("HOME"sv, account.home_directory(), Core::Environment::Overwrite::Yes));
 
     if (command.is_null()) {
         TRY(Core::System::exec(account.shell(), Array<StringView, 1> { account.shell().view() }, Core::System::SearchInPath::No));

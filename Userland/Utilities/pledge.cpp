@@ -6,6 +6,7 @@
 
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Environment.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
@@ -33,8 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (add_promises_for_dynamic_linker && TRY(is_dynamically_linked_executable(command[0]))) {
         auto constexpr loader_promises = "stdio rpath prot_exec"sv;
-        MUST(Core::System::setenv("_LOADER_PLEDGE_PROMISES"sv, loader_promises, true));
-        MUST(Core::System::setenv("_LOADER_MAIN_PROGRAM_PLEDGE_PROMISES"sv, promises, true));
+        MUST(Core::Environment::set("_LOADER_PLEDGE_PROMISES"sv, loader_promises, Core::Environment::Overwrite::Yes));
+        MUST(Core::Environment::set("_LOADER_MAIN_PROGRAM_PLEDGE_PROMISES"sv, promises, Core::Environment::Overwrite::Yes));
         promises = ByteString::formatted("{} {}", promises, loader_promises);
     }
 
