@@ -172,6 +172,101 @@ struct VectorShiftRight {
     }
 };
 
+struct VectorSwizzle {
+    auto operator()(u128 c1, u128 c2) const
+    {
+        // https://webassembly.github.io/spec/core/bikeshed/#-mathsfi8x16hrefsyntax-instr-vecmathsfswizzle%E2%91%A0
+        auto i = bit_cast<Native128ByteVectorOf<i8, MakeSigned>>(c2);
+        auto j = bit_cast<Native128ByteVectorOf<i8, MakeSigned>>(c1);
+        auto result = AK::SIMD::shuffle(i, j);
+        return bit_cast<u128>(result);
+    }
+    static StringView name() { return "vec(8x16).swizzle"sv; }
+};
+
+template<size_t VectorSize, template<typename> typename SetSign>
+struct VectorExtractLane {
+    size_t lane;
+
+    auto operator()(u128 c) const
+    {
+        auto result = bit_cast<Native128ByteVectorOf<NativeIntegralType<128 / VectorSize>, SetSign>>(c);
+        return result[lane];
+    }
+
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 16:
+            return "vec(8x16).extract_lane"sv;
+        case 8:
+            return "vec(16x8).extract_lane"sv;
+        case 4:
+            return "vec(32x4).extract_lane"sv;
+        case 2:
+            return "vec(64x2).extract_lane"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
+template<size_t VectorSize>
+struct VectorExtractLaneFloat {
+    size_t lane;
+
+    auto operator()(u128 c) const
+    {
+        auto result = bit_cast<NativeFloatingVectorType<128 / VectorSize, VectorSize>>(c);
+        return result[lane];
+    }
+
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 16:
+            return "vec(8x16).extract_lane"sv;
+        case 8:
+            return "vec(16x8).extract_lane"sv;
+        case 4:
+            return "vec(32x4).extract_lane"sv;
+        case 2:
+            return "vec(64x2).extract_lane"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
+template<size_t VectorSize, typename TrueValueType = NativeIntegralType<128 / VectorSize>>
+struct VectorReplaceLane {
+    size_t lane;
+    using ValueType = Conditional<IsFloatingPoint<TrueValueType>, NativeFloatingType<128 / VectorSize>, NativeIntegralType<128 / VectorSize>>;
+
+    auto operator()(u128 c, TrueValueType value) const
+    {
+        auto result = bit_cast<Native128ByteVectorOf<ValueType, MakeUnsigned>>(c);
+        result[lane] = static_cast<ValueType>(value);
+        return bit_cast<u128>(result);
+    }
+
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 16:
+            return "vec(8x16).replace_lane"sv;
+        case 8:
+            return "vec(16x8).replace_lane"sv;
+        case 4:
+            return "vec(32x4).replace_lane"sv;
+        case 2:
+            return "vec(64x2).replace_lane"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
 struct Minimum {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
