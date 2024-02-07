@@ -7,6 +7,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/Environment.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibFileSystem/FileSystem.h>
@@ -360,15 +361,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     test_glob = ByteString::formatted("*{}*", test_glob);
 
-    if (getenv("DISABLE_DBG_OUTPUT")) {
+    if (Core::Environment::has("DISABLE_DBG_OUTPUT"sv))
         AK::set_debug_enabled(false);
-    }
 
     // Make UBSAN deadly for all tests we run by default.
-    TRY(Core::System::setenv("UBSAN_OPTIONS"sv, "halt_on_error=1"sv, true));
+    TRY(Core::Environment::set("UBSAN_OPTIONS"sv, "halt_on_error=1"sv, Core::Environment::Overwrite::Yes));
 
     if (!run_benchmarks)
-        TRY(Core::System::setenv("TESTS_ONLY"sv, "1"sv, true));
+        TRY(Core::Environment::set("TESTS_ONLY"sv, "1"sv, Core::Environment::Overwrite::Yes));
 
     ByteString test_root;
 
