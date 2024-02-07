@@ -77,6 +77,9 @@ public:
         } else if (group == "Cursor" && key == "Shape") {
             auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(value).value_or(VT::CursorShape::Block);
             m_parent_terminal.set_cursor_shape(cursor_shape);
+        } else if (group == "Terminal" && key == "AutoMark") {
+            auto automark_mode = VT::TerminalWidget::parse_automark_mode(value).value_or(VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt);
+            m_parent_terminal.set_auto_mark_mode(automark_mode);
         }
     }
 
