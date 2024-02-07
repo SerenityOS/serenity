@@ -92,7 +92,7 @@ ErrorOr<void> Device::setup_queues(u16 requested_queue_count)
     VERIFY(!m_did_setup_queues);
     m_did_setup_queues = true;
 
-    auto* common_cfg = m_transport_entity->get_config(ConfigurationType::Common).release_value_but_fixme_should_propagate_errors();
+    auto* common_cfg = TRY(m_transport_entity->get_config(ConfigurationType::Common));
     if (common_cfg) {
         auto maximum_queue_count = m_transport_entity->config_read16(*common_cfg, COMMON_CFG_NUM_QUEUES);
         if (requested_queue_count == 0) {
