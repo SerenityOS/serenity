@@ -13,6 +13,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Environment.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -636,8 +637,8 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
         return 1;
 
     if (vars.is_empty()) {
-        for (size_t i = 0; environ[i]; ++i)
-            puts(environ[i]);
+        for (auto entry : Core::Environment::entries())
+            outln("{}", entry.full_entry);
         return 0;
     }
 
