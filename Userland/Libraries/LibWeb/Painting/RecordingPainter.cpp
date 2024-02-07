@@ -179,7 +179,8 @@ void RecordingPainter::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bit
 {
     push_command(DrawScaledBitmap {
         .dst_rect = state().translation.map(dst_rect),
-        .bitmap = bitmap,
+        // NOTE: Bitmap has to be cloned to prevent concurrent access from main and rendering threads.
+        .bitmap = MUST(bitmap.clone()),
         .src_rect = src_rect,
         .scaling_mode = scaling_mode,
     });
