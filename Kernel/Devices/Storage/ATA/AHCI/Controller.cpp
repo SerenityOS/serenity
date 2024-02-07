@@ -64,7 +64,7 @@ ErrorOr<void> AHCIController::reset()
 
     auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
     for (auto index : implemented_ports.to_vector()) {
-        auto port = AHCIPort::create(*this, m_hba_capabilities, static_cast<volatile AHCI::PortRegisters&>(hba().port_regs[index]), index).release_value_but_fixme_should_propagate_errors();
+        auto port = TRY(AHCIPort::create(*this, m_hba_capabilities, static_cast<volatile AHCI::PortRegisters&>(hba().port_regs[index]), index));
         m_ports[index] = port;
         port->reset();
     }
@@ -174,7 +174,7 @@ UNMAP_AFTER_INIT ErrorOr<void> AHCIController::initialize_hba(PCI::DeviceIdentif
     enable_global_interrupts();
 
     auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
-    m_irq_handler = AHCIInterruptHandler::create(*this, irq, implemented_ports).release_value_but_fixme_should_propagate_errors();
+    m_irq_handler = TRY(AHCIInterruptHandler::create(*this, irq, implemented_ports));
     TRY(reset());
 
     dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = {:#08x}", device_identifier().address(), version);
