@@ -2,7 +2,8 @@
 
 set -eo pipefail
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+unset CDPATH
+script_path="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 cd "${script_path}/.."
 
 if [ -z "${MARKDOWN_CHECK_BINARY:-}" ] ; then

@@ -3,7 +3,8 @@
 
 set -e
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+unset CDPATH
+script_path="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 cd "${script_path}/.."
 
 export LC_ALL=C  # Make the directory order reproducible

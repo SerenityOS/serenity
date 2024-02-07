@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+unset CDPATH
 script_path="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 cd "${script_path}/.."
 

@@ -2,7 +2,8 @@
 
 set -e
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+unset CDPATH
+script_path="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 cd "${script_path}/.." || exit 1
 
 if [ "$#" -eq "1" ]; then

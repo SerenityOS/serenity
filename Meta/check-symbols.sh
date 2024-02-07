@@ -1,6 +1,7 @@
 #!/bin/sh
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+unset CDPATH
+script_path="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 cd "$script_path/.." || exit 1
 
 # The __cxa_guard_* calls are generated for (non trivial) initialization of local static objects.
