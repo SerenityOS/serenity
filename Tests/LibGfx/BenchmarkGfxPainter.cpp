@@ -16,7 +16,7 @@ BENCHMARK_CASE(diagonal_lines)
     int const run_count = 50;
     int const bitmap_size = 2000;
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }));
     Gfx::Painter painter(bitmap);
 
     for (int run = 0; run < run_count; run++) {
@@ -32,7 +32,7 @@ BENCHMARK_CASE(fill)
     int const run_count = 1000;
     int const bitmap_size = 2000;
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }));
     Gfx::Painter painter(bitmap);
 
     for (int run = 0; run < run_count; run++) {
@@ -45,7 +45,7 @@ BENCHMARK_CASE(fill_with_gradient)
     int const run_count = 50;
     int const bitmap_size = 2000;
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }));
     Gfx::Painter painter(bitmap);
 
     for (int run = 0; run < run_count; run++) {
