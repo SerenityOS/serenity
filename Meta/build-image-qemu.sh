@@ -173,7 +173,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+script_path="$(cd -P -- "$(dirname -- "$0")" >/dev/null && pwd -P)"
 "$script_path/build-root-filesystem.sh"
 
 if [ $use_genext2fs = 1 ]; then
