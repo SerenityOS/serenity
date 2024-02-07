@@ -24,8 +24,8 @@ struct Option {
 
 static constexpr Array<Option, 2> options = {
     {
-        { "ASCII String"sv, OPTION_ASCII_STRING, true, true },
-        { "Hex value"sv, OPTION_HEX_VALUE, true, false },
+        { "ASCII String"sv, OptionId::AsciiString, true, true },
+        { "Hex value"sv, OptionId::HexValue, true, false },
     }
 };
 
@@ -77,9 +77,9 @@ ErrorOr<ByteBuffer> FindDialog::process_input(StringView text_value, OptionId op
     VERIFY(!text_value.is_empty());
 
     switch (opt) {
-    case OPTION_ASCII_STRING:
+    case OptionId::AsciiString:
         return ByteBuffer::copy(text_value.bytes());
-    case OPTION_HEX_VALUE: {
+    case OptionId::HexValue: {
         auto text_no_spaces = text_value.replace(" "sv, ""sv, ReplaceMode::All);
         return decode_hex(text_no_spaces);
     }
