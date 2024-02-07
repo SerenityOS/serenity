@@ -30,7 +30,7 @@
 namespace TerminalSettings {
 ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::create()
 {
-    auto widget = MainWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(MainWidget::try_create());
     TRY(widget->setup());
     return widget;
 }
