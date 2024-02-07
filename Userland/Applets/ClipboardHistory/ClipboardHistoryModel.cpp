@@ -111,40 +111,38 @@ void ClipboardHistoryModel::clipboard_content_did_change(ByteString const&)
         add_item(data_and_type);
 }
 
-ErrorOr<void> ClipboardHistoryModel::invalidate_model_and_file(bool rewrite_all)
+ErrorOr<void> ClipboardHistoryModel::invalidate_model_and_file()
 {
     invalidate();
 
-    TRY(write_to_file(rewrite_all));
+    TRY(write_to_file());
     return {};
 }
 
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 {
-    bool has_deleted_an_item = false;
     m_history_items.remove_first_matching([&](ClipboardItem& existing) {
         return existing.data_and_type.data == item.data && existing.data_and_type.mime_type == item.mime_type;
     });
 
     if (m_history_items.size() == m_history_limit) {
         m_history_items.take_last();
-        has_deleted_an_item = true;
     }
 
     m_history_items.prepend({ item, Core::DateTime::now() });
-    invalidate_model_and_file(has_deleted_an_item).release_value_but_fixme_should_propagate_errors();
+    invalidate_model_and_file().release_value_but_fixme_should_propagate_errors();
 }
 
 void ClipboardHistoryModel::remove_item(int index)
 {
     m_history_items.remove(index);
-    invalidate_model_and_file(true).release_value_but_fixme_should_propagate_errors();
+    invalidate_model_and_file().release_value_but_fixme_should_propagate_errors();
 }
 
 void ClipboardHistoryModel::clear()
 {
     m_history_items.clear();
-    invalidate_model_and_file(true).release_value_but_fixme_should_propagate_errors();
+    invalidate_model_and_file().release_value_but_fixme_should_propagate_errors();
 }
 
 void ClipboardHistoryModel::config_i32_did_change(StringView domain, StringView group, StringView key, i32 value)
@@ -155,7 +153,7 @@ void ClipboardHistoryModel::config_i32_did_change(StringView domain, StringView 
     if (key == "NumHistoryItems") {
         if (value < (int)m_history_items.size()) {
             m_history_items.remove(value, m_history_items.size() - value);
-            invalidate_model_and_file(false).release_value_but_fixme_should_propagate_errors();
+            invalidate_model_and_file().release_value_but_fixme_should_propagate_errors();
         }
         m_history_limit = value;
         return;
@@ -190,14 +188,15 @@ ErrorOr<void> ClipboardHistoryModel::read_from_file(ByteString const& path)
 
     auto read_from_file_impl = [this]() -> ErrorOr<void> {
         auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Read));
-        auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
-
-        auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
-
-        while (TRY(buffered_file->can_read_line())) {
-            auto line = TRY(buffered_file->read_line(buffer));
-            auto object = TRY(JsonParser { line }.parse()).as_object();
-            TRY(m_history_items.try_append(TRY(ClipboardItem::from_json(object))));
+        auto contents = TRY(file->read_until_eof());
+        auto json = TRY(JsonValue::from_string(contents));
+        if (!json.is_array())
+            return Error::from_string_literal("File contents is not a JSON array.");
+        auto& json_array = json.as_array();
+        for (auto const& item : json_array.values()) {
+            if (!item.is_object())
+                return Error::from_string_literal("JSON entry is not an object.");
+            TRY(m_history_items.try_append(TRY(ClipboardItem::from_json(item.as_object()))));
         }
         return {};
     };
@@ -209,30 +208,18 @@ ErrorOr<void> ClipboardHistoryModel::read_from_file(ByteString const& path)
     return {};
 }
 
-ErrorOr<void> ClipboardHistoryModel::write_to_file(bool rewrite_all)
+ErrorOr<void> ClipboardHistoryModel::write_to_file()
 {
-    if (m_history_items.is_empty()) {
-        // This will proceed to empty the file
-        rewrite_all = true;
-    }
-
-    auto const write_element = [](Core::File& file, ClipboardItem const& item) -> ErrorOr<void> {
+    auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate));
+    JsonArray array;
+    array.ensure_capacity(m_history_items.size());
+    for (auto const& item : m_history_items) {
         if (!item.data_and_type.mime_type.starts_with("text/"sv))
-            return {};
-        TRY(file.write_until_depleted(TRY(item.to_json()).to_byte_string().bytes()));
-        TRY(file.write_until_depleted("\n"sv.bytes()));
-        return {};
-    };
-
-    if (!rewrite_all) {
-        auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
-        TRY(write_element(*file, m_history_items.first()));
-    } else {
-        auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate));
-        for (auto const& item : m_history_items) {
-            TRY(write_element(*file, item));
-        }
+            continue;
+        TRY(array.append(TRY(item.to_json())));
     }
+    auto json_string = array.to_byte_string();
+    TRY(file->write_until_depleted(json_string.bytes()));
 
     return {};
 }
