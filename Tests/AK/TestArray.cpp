@@ -19,7 +19,7 @@ static constexpr int constexpr_sum(ReadonlySpan<int> const span)
 
 TEST_CASE(compile_time_constructible)
 {
-    constexpr Array<int, 4> array = { 0, 1, 2, 3 };
+    constexpr Array array = { 0, 1, 2, 3 };
     static_assert(array.size() == 4);
 }
 
