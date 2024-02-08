@@ -756,7 +756,7 @@ PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_co
             // CFF spec, "Table 19 Range1 Format (Charset)"
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
             int left = TRY(reader.try_read<Card8>());
-            for (SID sid = first_sid; left >= 0 && names.size() < glyph_count - 1; left--, sid++)
+            for (SID sid = first_sid; left >= 0; left--, sid++)
                 TRY(names.try_append(sid));
         }
     } else if (format == 2) {
@@ -767,7 +767,7 @@ PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_co
             // CFF spec, "Table 21 Range2 Format"
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
             int left = TRY(reader.try_read<BigEndian<Card16>>());
-            for (SID sid = first_sid; left >= 0 && names.size() < glyph_count - 1; left--, sid++)
+            for (SID sid = first_sid; left >= 0; left--, sid++)
                 TRY(names.try_append(sid));
         }
     } else {
