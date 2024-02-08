@@ -73,4 +73,15 @@ struct [[gnu::packed]] DOS7BIOSParameterBlock {
 };
 static_assert(AssertSize<DOS7BIOSParameterBlock, 54>());
 
+struct [[gnu::packed]] FAT32FSInfo {
+    u32 lead_signature;
+    u8 unused1[480];
+    u32 struct_signature;
+    u32 last_known_free_cluster_count;
+    u32 next_free_cluster_hint;
+    u8 unused2[12];
+    u32 trailing_signature;
+};
+static_assert(AssertSize<FAT32FSInfo, 512>());
+
 }
