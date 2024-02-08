@@ -55,6 +55,9 @@ public:
             , m_encoding_id(encoding_id)
         {
         }
+
+        ErrorOr<void> validate_format_can_be_read() const;
+
         // Returns 0 if glyph not found. This corresponds to the "missing glyph"
         u32 glyph_id_for_code_point(u32 code_point) const;
         Optional<Platform> platform_id() const;
@@ -107,6 +110,7 @@ public:
     u32 num_subtables() const;
     Optional<Subtable> subtable(u32 index) const;
     void set_active_index(u32 index) { m_active_index = index; }
+    ErrorOr<void> validate_active_cmap_format() const;
     // Returns 0 if glyph not found. This corresponds to the "missing glyph"
     u32 glyph_id_for_code_point(u32 code_point) const;
 

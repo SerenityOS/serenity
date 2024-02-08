@@ -264,6 +264,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     }
     if (!active_cmap_index.has_value())
         return Error::from_string_literal("No suitable cmap subtable found");
+    TRY(cmap.subtable(active_cmap_index.value()).value().validate_format_can_be_read());
     cmap.set_active_index(active_cmap_index.value());
 
     return adopt_ref(*new Font(
