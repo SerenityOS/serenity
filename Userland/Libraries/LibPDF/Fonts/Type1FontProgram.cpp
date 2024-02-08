@@ -716,7 +716,16 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
             default:
                 dbgln("Unhandled command: {}", v);
-                return error("Unhandled command");
+                // https://adobe-type-tools.github.io/font-tech-notes/pdfs/5177.Type2.pdf
+                // says "The behavior of undefined operators is unspecified." but
+                // https://learn.microsoft.com/en-us/typography/opentype/spec/cff2
+                // says "When an unrecognized operator is encountered, it is ignored and
+                // the stack is cleared."
+                //
+                // Some type 0 CIDFontType0C fonts (i.e. CID-keyed non-OpenType CFF fonts)
+                // depend on the latter, even though they're governed by the former spec.
+                state.sp = 0;
+                break;
             }
         }
     }
