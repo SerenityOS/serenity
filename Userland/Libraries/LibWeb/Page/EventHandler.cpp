@@ -405,12 +405,14 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen
                     }
                 }
 
-                // If we didn't focus anything, place the document text cursor at the mouse position.
-                // FIXME: This is all rather strange. Find a better solution.
                 if (!did_focus_something) {
                     if (auto* focused_element = document->focused_element())
                         HTML::run_unfocusing_steps(focused_element);
+                }
 
+                // If we didn't focus anything, place the document text cursor at the mouse position.
+                // FIXME: This is all rather strange. Find a better solution.
+                if (!did_focus_something || paintable->dom_node()->is_editable()) {
                     auto& realm = document->realm();
                     m_browsing_context->set_cursor_position(DOM::Position::create(realm, *paintable->dom_node(), result->index_in_node));
                     if (auto selection = document->get_selection()) {
