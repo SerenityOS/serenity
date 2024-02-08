@@ -39,6 +39,9 @@ Optional<StringView> LineIterator::match_context(StringView line) const
             if (offset >= line.length() || line[offset] != '>') {
                 return {};
             }
+            // The block quote marker '>' can be followed by an optional space (example 252)
+            if (offset + 1 < line.length() && line[offset + 1] == ' ')
+                ++offset;
             ++offset;
             break;
         }
