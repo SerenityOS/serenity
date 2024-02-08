@@ -202,6 +202,7 @@ public:
 
     void update_style();
     void update_layout();
+    void update_paint_and_hit_testing_properties_if_needed();
 
     void set_needs_layout();
 
@@ -562,6 +563,8 @@ public:
 
     Element const* element_from_point(double x, double y);
 
+    void set_needs_to_resolve_paint_only_properties() { m_needs_to_resolve_paint_only_properties = true; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -785,6 +788,8 @@ private:
     bool m_ready_to_run_scripts { false };
 
     Vector<HTML::FormAssociatedElement*> m_form_associated_elements_with_form_attribute;
+
+    bool m_needs_to_resolve_paint_only_properties { true };
 };
 
 template<>
