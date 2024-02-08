@@ -156,7 +156,7 @@ constexpr auto integer_sequence_generate_array([[maybe_unused]] T const offset, 
 }
 
 template<typename T, T N>
-constexpr static auto iota_array(T const offset = {})
+constexpr auto iota_array(T const offset = {})
 {
     static_assert(N >= T {}, "Negative sizes not allowed in iota_array()");
     return Detail::integer_sequence_generate_array<T>(offset, MakeIntegerSequence<T, N>());
