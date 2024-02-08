@@ -14,6 +14,16 @@
 
 namespace Web::Painting {
 
+struct ScrollFrame : public RefCounted<ScrollFrame> {
+    i32 id { -1 };
+    CSSPixelPoint offset;
+};
+
+struct ClipFrame : public RefCounted<ClipFrame> {
+    CSSPixelRect rect;
+    Optional<BorderRadiiData> corner_clip_radii;
+};
+
 class PaintableBox : public Paintable {
     JS_CELL(PaintableBox, Paintable);
 
@@ -193,14 +203,13 @@ public:
 
     Optional<CSSPixelRect> get_clip_rect() const;
 
-    void set_clip_rect(Optional<CSSPixelRect> rect) { m_clip_rect = rect; }
-    void set_scroll_frame_id(int id) { m_scroll_frame_id = id; }
-    void set_enclosing_scroll_frame_offset(CSSPixelPoint offset) { m_enclosing_scroll_frame_offset = offset; }
-    void set_corner_clip_radii(BorderRadiiData const& corner_radii) { m_corner_clip_radii = corner_radii; }
+    void set_enclosing_scroll_frame(RefPtr<ScrollFrame> scroll_frame) { m_enclosing_scroll_frame = scroll_frame; }
+    void set_enclosing_clip_frame(RefPtr<ClipFrame> clip_frame) { m_enclosing_clip_frame = clip_frame; }
 
-    Optional<int> scroll_frame_id() const { return m_scroll_frame_id; }
-    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const { return m_enclosing_scroll_frame_offset; }
-    Optional<CSSPixelRect> clip_rect() const { return m_clip_rect; }
+    Optional<int> scroll_frame_id() const;
+    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const;
+    Optional<CSSPixelRect> clip_rect() const;
+    Optional<BorderRadiiData> corner_clip_radii() const;
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -227,10 +236,8 @@ private:
     mutable bool m_clipping_overflow { false };
     mutable Optional<u32> m_corner_clipper_id;
 
-    Optional<CSSPixelRect> m_clip_rect;
-    Optional<int> m_scroll_frame_id;
-    Optional<CSSPixelPoint> m_enclosing_scroll_frame_offset;
-    Optional<BorderRadiiData> m_corner_clip_radii;
+    RefPtr<ScrollFrame const> m_enclosing_scroll_frame;
+    RefPtr<ClipFrame const> m_enclosing_clip_frame;
 
     Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;
