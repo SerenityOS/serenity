@@ -21,7 +21,7 @@ namespace PDF {
 
 // CFF spec, "Appendix B Predefined Encodings, Standard Encoding"
 // clang-format off
-static constexpr Array s_predefined_encoding_standard {
+static constexpr Array s_predefined_encoding_standard = to_array<CFF::SID>({
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,
      11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,
@@ -37,13 +37,13 @@ static constexpr Array s_predefined_encoding_standard {
       0,   0,   0,   0, 144,   0,   0,
       0, 145,   0,   0, 146, 147, 148,
     149,   0,   0,   0,   0,
-};
+});
 static_assert(s_predefined_encoding_standard.size() == 256);
 // clang-format on
 
 // CFF spec, "Appendix B Predefined Encodings, Expert Encoding"
 // clang-format off
-static constexpr Array s_predefined_encoding_expert {
+static constexpr Array s_predefined_encoding_expert = to_array<CFF::SID>({
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1, 229, 230,   0,
     231, 232, 233, 234, 235, 236, 237, 238,  13,  14,  15,  99, 239, 240, 241, 242, 243, 244,
@@ -59,7 +59,7 @@ static constexpr Array s_predefined_encoding_expert {
     351, 352, 353, 354, 355, 356, 357, 358, 359, 360,
     361, 362, 363, 364, 365, 366, 367, 368, 369, 370,
     371, 372, 373, 374, 375, 376, 377, 378,
-};
+});
 static_assert(s_predefined_encoding_expert.size() == 256);
 // clang-format on
 
@@ -67,7 +67,7 @@ static_assert(s_predefined_encoding_expert.size() == 256);
 
 // CFF spec, "Appendix C Predefined Charsets, Expert"
 // clang-format off
-static constexpr Array s_predefined_charset_expert {
+static constexpr auto s_predefined_charset_expert = to_array<CFF::SID>({
       1, 229, 230, 231, 232,
     233, 234, 235, 236, 237,
     238,  13,  14,  15,  99,
@@ -79,12 +79,12 @@ static constexpr Array s_predefined_charset_expert {
     164, 169, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342,
     343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360,
     361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378,
-};
+});
 // clang-format on
 
 // CFF spec, "Appendix C Predefined Charsets, Expert Subset"
 // clang-format off
-static constexpr Array s_predefined_charset_expert_subset {
+static constexpr auto s_predefined_charset_expert_subset = to_array<CFF::SID>({
       1, 231, 232, 235, 236, 237, 238,  13,  14,  15,  99,
     239, 240, 241, 242, 243, 244, 245, 246, 247, 248,  27,
      28, 249, 250, 251, 253, 254, 255, 256, 257, 258, 259,
@@ -92,7 +92,7 @@ static constexpr Array s_predefined_charset_expert_subset {
     260, 261, 262, 263, 264, 265, 266, 109, 110, 267, 268, 269, 270, 272, 300, 301, 302, 305,
     314, 315, 158, 155, 163, 320, 321, 322, 323, 324, 325, 326, 150, 164, 169, 327, 328, 329,
     330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346,
-};
+});
 // clang-format on
 
 PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<Encoding> encoding)
