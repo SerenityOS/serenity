@@ -27,23 +27,44 @@ Layout::InlineNode const& InlinePaintable::layout_node() const
     return static_cast<Layout::InlineNode const&>(Paintable::layout_node());
 }
 
+Optional<int> InlinePaintable::scroll_frame_id() const
+{
+    if (m_enclosing_scroll_frame)
+        return m_enclosing_scroll_frame->id;
+    return {};
+}
+
+Optional<CSSPixelPoint> InlinePaintable::enclosing_scroll_frame_offset() const
+{
+    if (m_enclosing_scroll_frame)
+        return m_enclosing_scroll_frame->offset;
+    return {};
+}
+
+Optional<CSSPixelRect> InlinePaintable::clip_rect() const
+{
+    if (m_enclosing_clip_frame)
+        return m_enclosing_clip_frame->rect;
+    return {};
+}
+
 void InlinePaintable::before_paint(PaintContext& context, PaintPhase) const
 {
-    if (m_scroll_frame_id.has_value()) {
+    if (scroll_frame_id().has_value()) {
         context.recording_painter().save();
-        context.recording_painter().set_scroll_frame_id(m_scroll_frame_id.value());
+        context.recording_painter().set_scroll_frame_id(scroll_frame_id().value());
     }
-    if (m_clip_rect.has_value()) {
+    if (clip_rect().has_value()) {
         context.recording_painter().save();
-        context.recording_painter().add_clip_rect(context.enclosing_device_rect(*m_clip_rect).to_type<int>());
+        context.recording_painter().add_clip_rect(context.enclosing_device_rect(*clip_rect()).to_type<int>());
     }
 }
 
 void InlinePaintable::after_paint(PaintContext& context, PaintPhase) const
 {
-    if (m_clip_rect.has_value())
+    if (clip_rect().has_value())
         context.recording_painter().restore();
-    if (m_scroll_frame_id.has_value())
+    if (scroll_frame_id().has_value())
         context.recording_painter().restore();
 }
 
@@ -186,8 +207,8 @@ Optional<HitTestResult> InlinePaintable::hit_test(CSSPixelPoint position, HitTes
         return {};
 
     auto position_adjusted_by_scroll_offset = position;
-    if (m_enclosing_scroll_frame_offset.has_value())
-        position_adjusted_by_scroll_offset.translate_by(-m_enclosing_scroll_frame_offset.value());
+    if (enclosing_scroll_frame_offset().has_value())
+        position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
 
     for (auto& fragment : m_fragments) {
         if (fragment.paintable().stacking_context())

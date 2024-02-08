@@ -20,12 +20,14 @@ public:
     void paint_all_phases(PaintContext&);
     void build_stacking_context_tree_if_needed();
 
-    struct ScrollFrame {
-        i32 id { -1 };
-        CSSPixelPoint offset;
-    };
-    void assign_scroll_frame_ids(HashMap<Painting::PaintableBox const*, ScrollFrame>&) const;
-    void assign_clip_rectangles();
+    HashMap<PaintableBox const*, RefPtr<ScrollFrame>> scroll_state;
+    void assign_scroll_frames();
+    void refresh_scroll_state();
+
+    HashMap<PaintableBox const*, RefPtr<ClipFrame>> clip_state;
+    void assign_clip_frames();
+    void refresh_clip_state();
+
     void resolve_paint_only_properties();
 
 private:

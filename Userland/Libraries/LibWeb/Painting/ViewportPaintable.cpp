@@ -58,37 +58,28 @@ void ViewportPaintable::paint_all_phases(PaintContext& context)
     stacking_context()->paint(context);
 }
 
-void ViewportPaintable::assign_scroll_frame_ids(HashMap<Painting::PaintableBox const*, ScrollFrame>& scroll_frames) const
+void ViewportPaintable::assign_scroll_frames()
 {
-    i32 next_id = 0;
-    // Collect scroll frames with their offsets (accumulated offset for nested scroll frames).
+    int next_id = 0;
     for_each_in_subtree_of_type<PaintableBox>([&](auto const& paintable_box) {
         if (paintable_box.has_scrollable_overflow()) {
-            auto offset = paintable_box.scroll_offset();
-            auto ancestor = paintable_box.containing_block();
-            while (ancestor) {
-                if (ancestor->paintable()->is_paintable_box() && static_cast<PaintableBox const*>(ancestor->paintable())->has_scrollable_overflow())
-                    offset.translate_by(static_cast<PaintableBox const*>(ancestor->paintable())->scroll_offset());
-                ancestor = ancestor->containing_block();
-            }
-            scroll_frames.set(&paintable_box, { .id = next_id++, .offset = -offset });
+            auto scroll_frame = adopt_ref(*new ScrollFrame());
+            scroll_frame->id = next_id++;
+            scroll_state.set(&paintable_box, move(scroll_frame));
         }
         return TraversalDecision::Continue;
     });
 
-    // Assign scroll frame id to all paintables contained in a scroll frame.
     for_each_in_subtree([&](auto const& paintable) {
         for (auto block = paintable.containing_block(); block; block = block->containing_block()) {
             auto const& block_paintable_box = *block->paintable_box();
-            if (auto scroll_frame_id = scroll_frames.get(&block_paintable_box); scroll_frame_id.has_value()) {
+            if (auto scroll_frame = scroll_state.get(&block_paintable_box); scroll_frame.has_value()) {
                 if (paintable.is_paintable_box()) {
                     auto const& paintable_box = static_cast<PaintableBox const&>(paintable);
-                    const_cast<PaintableBox&>(paintable_box).set_scroll_frame_id(scroll_frame_id->id);
-                    const_cast<PaintableBox&>(paintable_box).set_enclosing_scroll_frame_offset(scroll_frame_id->offset);
+                    const_cast<PaintableBox&>(paintable_box).set_enclosing_scroll_frame(scroll_frame.value());
                 } else if (paintable.is_inline_paintable()) {
                     auto const& inline_paintable = static_cast<InlinePaintable const&>(paintable);
-                    const_cast<InlinePaintable&>(inline_paintable).set_scroll_frame_id(scroll_frame_id->id);
-                    const_cast<InlinePaintable&>(inline_paintable).set_enclosing_scroll_frame_offset(scroll_frame_id->offset);
+                    const_cast<InlinePaintable&>(inline_paintable).set_enclosing_scroll_frame(scroll_frame.value());
                 }
                 break;
             }
@@ -97,19 +88,64 @@ void ViewportPaintable::assign_scroll_frame_ids(HashMap<Painting::PaintableBox c
     });
 }
 
-void ViewportPaintable::assign_clip_rectangles()
+void ViewportPaintable::assign_clip_frames()
 {
-    HashMap<Paintable const*, CSSPixelRect> clip_rects;
-    // Calculate clip rects for all boxes that either have hidden overflow or a CSS clip property.
     for_each_in_subtree_of_type<PaintableBox>([&](auto const& paintable_box) {
+        auto overflow_x = paintable_box.computed_values().overflow_x();
+        auto overflow_y = paintable_box.computed_values().overflow_y();
+        auto has_hidden_overflow = overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible;
+        if (has_hidden_overflow || paintable_box.get_clip_rect().has_value()) {
+            auto clip_frame = adopt_ref(*new ClipFrame());
+            clip_state.set(&paintable_box, move(clip_frame));
+        }
+        return TraversalDecision::Continue;
+    });
+
+    for_each_in_subtree([&](auto const& paintable) {
+        for (auto block = paintable.containing_block(); block; block = block->containing_block()) {
+            auto const& block_paintable_box = *block->paintable_box();
+            if (auto clip_frame = clip_state.get(&block_paintable_box); clip_frame.has_value()) {
+                if (paintable.is_paintable_box()) {
+                    auto const& paintable_box = static_cast<PaintableBox const&>(paintable);
+                    const_cast<PaintableBox&>(paintable_box).set_enclosing_clip_frame(clip_frame.value());
+                } else if (paintable.is_inline_paintable()) {
+                    auto const& inline_paintable = static_cast<InlinePaintable const&>(paintable);
+                    const_cast<InlinePaintable&>(inline_paintable).set_enclosing_clip_frame(clip_frame.value());
+                }
+                break;
+            }
+        }
+        return TraversalDecision::Continue;
+    });
+}
+
+void ViewportPaintable::refresh_scroll_state()
+{
+    for (auto& it : scroll_state) {
+        auto const& paintable_box = *it.key;
+        auto& scroll_frame = *it.value;
+        CSSPixelPoint offset;
+        for (auto const* block = &paintable_box.layout_box(); block; block = block->containing_block()) {
+            auto const& block_paintable_box = *block->paintable_box();
+            offset.translate_by(block_paintable_box.scroll_offset());
+        }
+        scroll_frame.offset = -offset;
+    }
+}
+
+void ViewportPaintable::refresh_clip_state()
+{
+    for (auto& it : clip_state) {
+        auto const& paintable_box = *it.key;
+        auto& clip_frame = *it.value;
         auto overflow_x = paintable_box.computed_values().overflow_x();
         auto overflow_y = paintable_box.computed_values().overflow_y();
         // Start from CSS clip property if it exists.
         Optional<CSSPixelRect> clip_rect = paintable_box.get_clip_rect();
-        // FIXME: Support overflow clip in one direction only.
+
         if (overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible) {
             auto overflow_clip_rect = paintable_box.compute_absolute_padding_rect_with_css_transform_applied();
-            for (auto block = &paintable_box.layout_box(); !block->is_viewport(); block = block->containing_block()) {
+            for (auto const* block = &paintable_box.layout_box(); !block->is_viewport(); block = block->containing_block()) {
                 auto const& block_paintable_box = *block->paintable_box();
                 auto block_overflow_x = block_paintable_box.computed_values().overflow_x();
                 auto block_overflow_y = block_paintable_box.computed_values().overflow_y();
@@ -120,39 +156,15 @@ void ViewportPaintable::assign_clip_rectangles()
             }
             clip_rect = overflow_clip_rect;
         }
-        if (clip_rect.has_value())
-            clip_rects.set(&paintable_box, *clip_rect);
-        return TraversalDecision::Continue;
-    });
 
-    // Assign clip rects to all paintable boxes contained by a box with a hidden overflow or a CSS clip property.
-    for_each_in_subtree_of_type<PaintableBox>([&](auto const& paintable_box) {
-        Optional<CSSPixelRect> clip_rect = paintable_box.get_clip_rect();
-        for (auto block = paintable_box.containing_block(); block; block = block->containing_block()) {
-            if (auto containing_block_clip_rect = clip_rects.get(block->paintable()); containing_block_clip_rect.has_value()) {
-                auto border_radii_data = block->paintable_box()->normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
-                if (border_radii_data.has_any_radius()) {
-                    // FIXME: Border radii of all boxes in containing block chain should be taken into account instead of just the closest one.
-                    const_cast<PaintableBox&>(paintable_box).set_corner_clip_radii(border_radii_data);
-                }
-                clip_rect = *containing_block_clip_rect;
-                break;
-            }
+        auto border_radii_data = paintable_box.normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
+        if (border_radii_data.has_any_radius()) {
+            // FIXME: Border radii of all boxes in containing block chain should be taken into account.
+            clip_frame.corner_clip_radii = border_radii_data;
         }
-        const_cast<PaintableBox&>(paintable_box).set_clip_rect(clip_rect);
-        return TraversalDecision::Continue;
-    });
 
-    // Assign clip rects to all inline paintables contained by a box with hidden overflow or a CSS clip property.
-    for_each_in_subtree_of_type<InlinePaintable>([&](auto const& paintable_box) {
-        for (auto block = paintable_box.containing_block(); block; block = block->containing_block()) {
-            if (auto clip_rect = clip_rects.get(block->paintable()); clip_rect.has_value()) {
-                const_cast<InlinePaintable&>(paintable_box).set_clip_rect(clip_rect);
-                break;
-            }
-        }
-        return TraversalDecision::Continue;
-    });
+        clip_frame.rect = *clip_rect;
+    }
 }
 
 static Painting::BorderRadiiData normalize_border_radii_data(Layout::Node const& node, CSSPixelRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)

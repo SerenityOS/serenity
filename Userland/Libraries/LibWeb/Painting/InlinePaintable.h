@@ -37,9 +37,12 @@ public:
     void set_box_shadow_data(Vector<ShadowData>&& box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
     Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
 
-    void set_scroll_frame_id(int id) { m_scroll_frame_id = id; }
-    void set_enclosing_scroll_frame_offset(CSSPixelPoint offset) { m_enclosing_scroll_frame_offset = offset; }
-    void set_clip_rect(Optional<CSSPixelRect> rect) { m_clip_rect = rect; }
+    void set_enclosing_scroll_frame(RefPtr<ScrollFrame> scroll_frame) { m_enclosing_scroll_frame = scroll_frame; }
+    void set_enclosing_clip_frame(RefPtr<ClipFrame> clip_frame) { m_enclosing_clip_frame = clip_frame; }
+
+    Optional<int> scroll_frame_id() const;
+    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const;
+    Optional<CSSPixelRect> clip_rect() const;
 
 private:
     InlinePaintable(Layout::InlineNode const&);
@@ -47,9 +50,9 @@ private:
     template<typename Callback>
     void for_each_fragment(Callback) const;
 
-    Optional<int> m_scroll_frame_id;
-    Optional<CSSPixelPoint> m_enclosing_scroll_frame_offset;
     Optional<CSSPixelRect> m_clip_rect;
+    RefPtr<ScrollFrame const> m_enclosing_scroll_frame;
+    RefPtr<ClipFrame const> m_enclosing_clip_frame;
 
     Vector<ShadowData> m_box_shadow_data;
     Vector<PaintableFragment> m_fragments;

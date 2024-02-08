@@ -187,6 +187,34 @@ Optional<CSSPixelRect> PaintableBox::get_clip_rect() const
     return {};
 }
 
+Optional<int> PaintableBox::scroll_frame_id() const
+{
+    if (m_enclosing_scroll_frame)
+        return m_enclosing_scroll_frame->id;
+    return {};
+}
+
+Optional<CSSPixelPoint> PaintableBox::enclosing_scroll_frame_offset() const
+{
+    if (m_enclosing_scroll_frame)
+        return m_enclosing_scroll_frame->offset;
+    return {};
+}
+
+Optional<CSSPixelRect> PaintableBox::clip_rect() const
+{
+    if (m_enclosing_clip_frame)
+        return m_enclosing_clip_frame->rect;
+    return {};
+}
+
+Optional<BorderRadiiData> PaintableBox::corner_clip_radii() const
+{
+    if (m_enclosing_clip_frame)
+        return m_enclosing_clip_frame->corner_clip_radii;
+    return {};
+}
+
 void PaintableBox::before_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
 {
     if (!is_visible())
@@ -378,15 +406,15 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
 
 void PaintableBox::apply_scroll_offset(PaintContext& context, PaintPhase) const
 {
-    if (m_scroll_frame_id.has_value()) {
+    if (scroll_frame_id().has_value()) {
         context.recording_painter().save();
-        context.recording_painter().set_scroll_frame_id(m_scroll_frame_id.value());
+        context.recording_painter().set_scroll_frame_id(scroll_frame_id().value());
     }
 }
 
 void PaintableBox::reset_scroll_offset(PaintContext& context, PaintPhase) const
 {
-    if (m_scroll_frame_id.has_value())
+    if (scroll_frame_id().has_value())
         context.recording_painter().restore();
 }
 
@@ -395,8 +423,8 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground, PaintPhase::Outline))
         return;
 
-    if (m_clip_rect.has_value()) {
-        auto overflow_clip_rect = m_clip_rect.value();
+    if (clip_rect().has_value()) {
+        auto overflow_clip_rect = clip_rect().value();
         for (auto const* ancestor = &this->layout_box(); ancestor; ancestor = ancestor->containing_block()) {
             auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->paintable_box()->transform());
             if (!affine_transform.is_identity()) {
@@ -410,12 +438,12 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         m_clipping_overflow = true;
         context.recording_painter().save();
         context.recording_painter().add_clip_rect(context.enclosing_device_rect(overflow_clip_rect).to_type<int>());
-        if (m_corner_clip_radii.has_value()) {
+        if (corner_clip_radii().has_value()) {
             VERIFY(!m_corner_clipper_id.has_value());
             m_corner_clipper_id = context.allocate_corner_clipper_id();
-            auto corner_radii = m_corner_clip_radii->as_corners(context);
+            auto corner_radii = corner_clip_radii()->as_corners(context);
             if (corner_radii.has_any_radius())
-                context.recording_painter().sample_under_corners(*m_corner_clipper_id, m_corner_clip_radii->as_corners(context), context.rounded_device_rect(overflow_clip_rect).to_type<int>(), CornerClip::Outside);
+                context.recording_painter().sample_under_corners(*m_corner_clipper_id, corner_clip_radii()->as_corners(context), context.rounded_device_rect(overflow_clip_rect).to_type<int>(), CornerClip::Outside);
         }
     }
 }
@@ -427,11 +455,11 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (m_clipping_overflow) {
         m_clipping_overflow = false;
-        if (m_corner_clip_radii.has_value()) {
+        if (corner_clip_radii().has_value()) {
             VERIFY(m_corner_clipper_id.has_value());
-            auto corner_radii = m_corner_clip_radii->as_corners(context);
+            auto corner_radii = corner_clip_radii()->as_corners(context);
             if (corner_radii.has_any_radius())
-                context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*m_clip_rect).to_type<int>());
+                context.recording_painter().blit_corner_clipping(*m_corner_clipper_id, context.rounded_device_rect(*clip_rect()).to_type<int>());
             m_corner_clipper_id = {};
         }
         context.recording_painter().restore();
@@ -600,6 +628,10 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     Optional<u32> corner_clip_id;
 
     auto clip_box = absolute_padding_box_rect();
+    if (get_clip_rect().has_value()) {
+        clip_box.intersect(get_clip_rect().value());
+        should_clip_overflow = true;
+    }
     if (enclosing_scroll_frame_offset().has_value())
         clip_box.translate_by(enclosing_scroll_frame_offset().value());
     if (should_clip_overflow) {
@@ -687,9 +719,9 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
     if (layout_box().is_viewport()) {
         auto& viewport_paintable = const_cast<ViewportPaintable&>(static_cast<ViewportPaintable const&>(*this));
         viewport_paintable.build_stacking_context_tree_if_needed();
-        HashMap<Painting::PaintableBox const*, Painting::ViewportPaintable::ScrollFrame> scroll_frames;
-        viewport_paintable.assign_scroll_frame_ids(scroll_frames);
-        viewport_paintable.assign_clip_rectangles();
+        viewport_paintable.document().update_paint_and_hit_testing_properties_if_needed();
+        viewport_paintable.refresh_scroll_state();
+        viewport_paintable.refresh_clip_state();
         return stacking_context()->hit_test(position, type);
     }
 
