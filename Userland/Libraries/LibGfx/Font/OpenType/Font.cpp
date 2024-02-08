@@ -223,6 +223,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
 
     // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
     // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
+    Optional<u32> active_cmap_index;
     for (u32 i = 0; i < cmap.num_subtables(); i++) {
         auto opt_subtable = cmap.subtable(i);
         if (!opt_subtable.has_value()) {
@@ -239,28 +240,31 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         if (platform.value() == Cmap::Subtable::Platform::Unicode) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_FullRepertoire) {
                 // "Encoding ID 3 should be used in conjunction with 'cmap' subtable formats 4 or 6."
-                cmap.set_active_index(i);
+                active_cmap_index = i;
                 break;
             }
             if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_BMP_Only) {
                 // "Encoding ID 4 should be used in conjunction with subtable formats 10 or 12."
-                cmap.set_active_index(i);
+                active_cmap_index = i;
                 break;
             }
         } else if (platform.value() == Cmap::Subtable::Platform::Windows) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
-                cmap.set_active_index(i);
+                active_cmap_index = i;
                 break;
             }
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeBMP) {
-                cmap.set_active_index(i);
+                active_cmap_index = i;
                 break;
             }
         } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
-            cmap.set_active_index(i);
+            active_cmap_index = i;
             // Intentionally no `break` so that Windows (value 3) wins over Macintosh (value 1).
         }
     }
+    if (!active_cmap_index.has_value())
+        return Error::from_string_literal("No suitable cmap subtable found");
+    cmap.set_active_index(active_cmap_index.value());
 
     return adopt_ref(*new Font(
         move(head),
