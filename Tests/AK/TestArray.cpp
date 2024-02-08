@@ -46,3 +46,12 @@ TEST_CASE(first_index_of)
     EXPECT(array.first_index_of(7) == 7u);
     EXPECT(!array.first_index_of(42).has_value());
 }
+
+TEST_CASE(to_array)
+{
+    constexpr auto array = to_array<u8>({ 0, 2, 1 });
+    static_assert(array.size() == 3);
+    static_assert(array[0] == 0);
+    static_assert(array[1] == 2);
+    static_assert(array[2] == 1);
+}
