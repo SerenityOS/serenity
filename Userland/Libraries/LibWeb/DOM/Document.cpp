@@ -1060,10 +1060,8 @@ void Document::update_layout()
     // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
     inform_all_viewport_clients_about_the_current_viewport_rect();
 
-    if (navigable()) {
-        navigable()->set_needs_to_resolve_paint_only_properties();
-        navigable()->set_needs_display();
-    }
+    navigable()->set_needs_display();
+    set_needs_to_resolve_paint_only_properties();
 
     if (navigable()->is_traversable()) {
         page().client().page_did_layout();
@@ -1143,6 +1141,15 @@ void Document::update_style()
     }
     m_needs_full_style_update = false;
     m_style_update_timer->stop();
+}
+
+void Document::update_paint_and_hit_testing_properties_if_needed()
+{
+    if (!m_needs_to_resolve_paint_only_properties)
+        return;
+    m_needs_to_resolve_paint_only_properties = false;
+    if (auto* paintable = this->paintable())
+        paintable->resolve_paint_only_properties();
 }
 
 void Document::set_link_color(Color color)

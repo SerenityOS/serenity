@@ -180,8 +180,6 @@ public:
     };
     void paint(Painting::RecordingPainter&, PaintConfig);
 
-    void set_needs_to_resolve_paint_only_properties() { m_needs_to_resolve_paint_only_properties = true; }
-
 protected:
     Navigable();
 
@@ -223,8 +221,6 @@ private:
 
     CSSPixelSize m_size;
     CSSPixelPoint m_viewport_scroll_offset;
-
-    bool m_needs_to_resolve_paint_only_properties { true };
 };
 
 HashTable<Navigable*>& all_navigables();
