@@ -79,9 +79,31 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
     return Subtable(subtable_slice, platform_id, encoding_id);
 }
 
+ErrorOr<void> Cmap::validate_active_cmap_format() const
+{
+    auto opt_subtable = subtable(m_active_index);
+    VERIFY(opt_subtable.has_value());
+    return opt_subtable.value().validate_format_can_be_read();
+}
+
+ErrorOr<void> Cmap::Subtable::validate_format_can_be_read() const
+{
+    // Keep in sync with switch in glyph_id_for_code_point().
+    switch (format()) {
+    case Format::ByteEncoding:
+    case Format::SegmentToDelta:
+    case Format::TrimmedTable:
+    case Format::SegmentedCoverage:
+        return {};
+    default:
+        return Error::from_string_view("Unimplemented cmap format"sv);
+    }
+}
+
 // FIXME: Implement the missing formats.
 u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
 {
+    // Keep in sync with switch in validate_format_can_be_read().
     switch (format()) {
     case Format::ByteEncoding:
         return glyph_id_for_code_point_table_0(code_point);
