@@ -280,7 +280,7 @@ FileResult TestRunner::run_test_file(ByteString const& test_path)
             break; // we'll end up with a failure
 
         if (WIFEXITED(wstatus)) {
-            if (wstatus == 0) {
+            if (WEXITSTATUS(wstatus) == 0) {
                 test_result = Test::Result::Pass;
             }
             break;
