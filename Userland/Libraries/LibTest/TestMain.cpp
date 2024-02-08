@@ -29,5 +29,8 @@ int TEST_MAIN(int argc, char** argv)
 
     int ret = ::Test::TestSuite::the().main(argv[0], arguments);
     ::Test::TestSuite::release();
-    return ret;
+    // As TestSuite::main() returns the number of test cases that did not pass,
+    // ret can be >=256 which cannot be returned as an exit status directly.
+    // Return 0 if all of the test cases pass and return 1 otherwise.
+    return ret != 0;
 }
