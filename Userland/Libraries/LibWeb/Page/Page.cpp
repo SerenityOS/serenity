@@ -120,10 +120,10 @@ CSSPixelRect Page::device_to_css_rect(DevicePixelRect rect) const
 {
     auto scale = client().device_pixels_per_css_pixel();
     return {
-        rect.x().value() / scale,
-        rect.y().value() / scale,
-        rect.width().value() / scale,
-        rect.height().value() / scale
+        CSSPixels::nearest_value_for(rect.x().value() / scale),
+        CSSPixels::nearest_value_for(rect.y().value() / scale),
+        CSSPixels::floored_value_for(rect.width().value() / scale),
+        CSSPixels::floored_value_for(rect.height().value() / scale),
     };
 }
 

@@ -98,6 +98,15 @@ public:
         return from_raw(raw_value);
     }
 
+    template<FloatingPoint F>
+    static CSSPixels floored_value_for(F value)
+    {
+        i32 raw_value = 0;
+        if (!isnan(value))
+            raw_value = AK::clamp_to<int>(floor(value * fixed_point_denominator));
+        return from_raw(raw_value);
+    }
+
     template<Unsigned U>
     constexpr CSSPixels(U value)
     {
