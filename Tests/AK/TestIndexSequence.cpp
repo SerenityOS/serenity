@@ -37,7 +37,7 @@ TEST_CASE(TestIndexSequence)
     constexpr auto index_seq2 = MakeIndexSequence<3> {};
     static_assert(IsSame<decltype(index_seq1), decltype(index_seq2)>, "");
 
-    verify_sequence(MakeIndexSequence<10> {}, std::initializer_list<unsigned> { 0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 9U });
+    verify_sequence(MakeIndexSequence<10> {}, std::initializer_list<size_t> { 0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 9U });
     verify_sequence(MakeIntegerSequence<long, 16> {}, std::initializer_list<long> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
 }
 

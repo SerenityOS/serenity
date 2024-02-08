@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Platform.h>
-#include <AK/StdLibExtras.h>
 
 using u64 = __UINT64_TYPE__;
 using u32 = __UINT32_TYPE__;
@@ -33,6 +32,85 @@ using f80 = long double;
 using f128 = long double;
 #    endif
 #endif
+
+namespace AK::Detail {
+
+// MakeSigned<> is here instead of in StdLibExtras.h because it's used in the definition of size_t and ssize_t
+// and Types.h must not include StdLibExtras.h to avoid circular dependencies.
+template<typename T>
+struct __MakeSigned {
+    using Type = void;
+};
+template<>
+struct __MakeSigned<signed char> {
+    using Type = signed char;
+};
+template<>
+struct __MakeSigned<short> {
+    using Type = short;
+};
+template<>
+struct __MakeSigned<int> {
+    using Type = int;
+};
+template<>
+struct __MakeSigned<long> {
+    using Type = long;
+};
+template<>
+struct __MakeSigned<long long> {
+    using Type = long long;
+};
+template<>
+struct __MakeSigned<unsigned char> {
+    using Type = char;
+};
+template<>
+struct __MakeSigned<unsigned short> {
+    using Type = short;
+};
+template<>
+struct __MakeSigned<unsigned int> {
+    using Type = int;
+};
+template<>
+struct __MakeSigned<unsigned long> {
+    using Type = long;
+};
+template<>
+struct __MakeSigned<unsigned long long> {
+    using Type = long long;
+};
+template<>
+struct __MakeSigned<char> {
+    using Type = char;
+};
+#if ARCH(AARCH64)
+template<>
+struct __MakeSigned<wchar_t> {
+    using Type = void;
+};
+#endif
+
+template<typename T>
+using MakeSigned = typename __MakeSigned<T>::Type;
+
+// Conditional<> is here instead of in StdLibExtras.h because it's used in the definition of FlatPtr
+// and Types.h must not include StdLibExtras.h to avoid circular dependencies.
+template<bool condition, class TrueType, class FalseType>
+struct __Conditional {
+    using Type = TrueType;
+};
+
+template<class TrueType, class FalseType>
+struct __Conditional<false, TrueType, FalseType> {
+    using Type = FalseType;
+};
+
+template<bool condition, class TrueType, class FalseType>
+using Conditional = typename __Conditional<condition, TrueType, FalseType>::Type;
+
+}
 
 #ifdef AK_OS_SERENITY
 

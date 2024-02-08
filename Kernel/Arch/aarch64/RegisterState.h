@@ -11,6 +11,8 @@
 #include <Kernel/Security/ExecutionMode.h>
 
 #include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
+
 VALIDATE_IS_AARCH64()
 
 namespace Kernel {

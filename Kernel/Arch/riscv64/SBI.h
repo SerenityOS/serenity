@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <AK/Format.h>
+#include <AK/StdLibExtras.h>
 
 // Documentation about the SBI:
 // RISC-V Supervisor Binary Interface Specification (https://github.com/riscv-non-isa/riscv-sbi-doc)

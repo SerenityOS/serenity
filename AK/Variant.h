@@ -182,14 +182,14 @@ inline constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<T, Ts> || 
 template<typename T, typename... Qs>
 using BlankIfDuplicate = Conditional<(IsTypeInPack<T, Qs> || ...), Blank<T>, T>;
 
-template<unsigned I, typename...>
+template<size_t I, typename...>
 struct InheritFromUniqueEntries;
 
 // InheritFromUniqueEntries will inherit from both Qs and Ts, but only scan entries going *forwards*
 // that is to say, if it's scanning from index I in Qs, it won't scan for duplicates for entries before I
 // as that has already been checked before.
 // This makes sure that the search is linear in time (like the 'merge' step of merge sort).
-template<unsigned I, typename... Ts, unsigned... Js, typename... Qs>
+template<size_t I, typename... Ts, size_t... Js, typename... Qs>
 struct InheritFromUniqueEntries<I, ParameterPack<Ts...>, IndexSequence<Js...>, Qs...>
     : public BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>... {
 
@@ -201,7 +201,7 @@ struct InheritFromPacks;
 
 // InheritFromPacks will attempt to 'merge' the pack 'Ps' with *itself*, but skip the duplicate entries
 // (via InheritFromUniqueEntries).
-template<unsigned... Is, typename... Ps>
+template<size_t... Is, typename... Ps>
 struct InheritFromPacks<IndexSequence<Is...>, Ps...>
     : public InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>... {
 

@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/RefPtr.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
