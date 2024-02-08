@@ -167,7 +167,7 @@ void Text::LinkNode::render_to_html(StringBuilder& builder) const
         }
         builder.append("\" alt=\""sv);
         text->render_to_html(builder);
-        builder.append("\" >"sv);
+        builder.append("\" />"sv);
     } else {
         builder.append("<a href=\""sv);
         builder.append(escape_html_entities(href));
