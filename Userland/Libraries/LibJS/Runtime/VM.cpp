@@ -54,10 +54,10 @@ ErrorOr<NonnullRefPtr<VM>> VM::create(OwnPtr<CustomData> custom_data)
     return vm;
 }
 
-template<u32... code_points>
+template<size_t... code_points>
 static constexpr auto make_single_ascii_character_strings(IndexSequence<code_points...>)
 {
-    return AK::Array { (String::from_code_point(code_points))... };
+    return AK::Array { (String::from_code_point(static_cast<u32>(code_points)))... };
 }
 
 static constexpr auto single_ascii_character_strings = make_single_ascii_character_strings(MakeIndexSequence<128>());

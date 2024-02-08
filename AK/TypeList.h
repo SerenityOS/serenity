@@ -46,7 +46,7 @@ struct TypeWrapper {
     using Type = T;
 };
 
-template<typename List, typename F, unsigned... Indices>
+template<typename List, typename F, size_t... Indices>
 constexpr void for_each_type_impl(F&& f, IndexSequence<Indices...>)
 {
     (forward<F>(f)(TypeWrapper<typename List::template Type<Indices>> {}), ...);
@@ -58,7 +58,7 @@ constexpr void for_each_type(F&& f)
     for_each_type_impl<List>(forward<F>(f), MakeIndexSequence<List::size> {});
 }
 
-template<typename ListA, typename ListB, typename F, unsigned... Indices>
+template<typename ListA, typename ListB, typename F, size_t... Indices>
 constexpr void for_each_type_zipped_impl(F&& f, IndexSequence<Indices...>)
 {
     (forward<F>(f)(TypeWrapper<typename ListA::template Type<Indices>> {}, TypeWrapper<typename ListB::template Type<Indices>> {}), ...);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/BitCast.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {

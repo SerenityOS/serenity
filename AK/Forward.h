@@ -8,6 +8,7 @@
 
 #include <AK/DefaultDelete.h>
 #include <AK/SinglyLinkedListSizePolicy.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {

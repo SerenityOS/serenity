@@ -41,14 +41,14 @@ struct Tuple<T> {
         return const_cast<Tuple<T>&>(*this).get<U>();
     }
 
-    template<typename U, unsigned index>
+    template<typename U, size_t index>
     U& get_with_index()
     {
         static_assert(IsSame<T, U> && index == 0, "Invalid tuple access");
         return value;
     }
 
-    template<typename U, unsigned index>
+    template<typename U, size_t index>
     U const& get_with_index() const
     {
         return const_cast<Tuple<T>&>(*this).get_with_index<U, index>();
@@ -89,7 +89,7 @@ struct Tuple<T, TRest...> : Tuple<TRest...> {
         return const_cast<Tuple<T, TRest...>&>(*this).get<U>();
     }
 
-    template<typename U, unsigned index>
+    template<typename U, size_t index>
     U& get_with_index()
     {
         if constexpr (IsSame<T, U> && index == 0)
@@ -98,7 +98,7 @@ struct Tuple<T, TRest...> : Tuple<TRest...> {
             return Tuple<TRest...>::template get_with_index<U, index - 1>();
     }
 
-    template<typename U, unsigned index>
+    template<typename U, size_t index>
     U const& get_with_index() const
     {
         return const_cast<Tuple<T, TRest...>&>(*this).get_with_index<U, index>();
@@ -146,7 +146,7 @@ struct Tuple : Detail::Tuple<Ts...> {
         return Detail::Tuple<Ts...>::template get<T>();
     }
 
-    template<unsigned index>
+    template<size_t index>
     auto& get()
     {
         return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
@@ -158,7 +158,7 @@ struct Tuple : Detail::Tuple<Ts...> {
         return Detail::Tuple<Ts...>::template get<T>();
     }
 
-    template<unsigned index>
+    template<size_t index>
     auto& get() const
     {
         return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
@@ -179,37 +179,37 @@ struct Tuple : Detail::Tuple<Ts...> {
     static constexpr auto size() { return sizeof...(Ts); }
 
 private:
-    template<unsigned... Is>
+    template<size_t... Is>
     Tuple(Tuple&& other, IndexSequence<Is...>)
         : Detail::Tuple<Ts...>(move(other.get<Is>())...)
     {
     }
 
-    template<unsigned... Is>
+    template<size_t... Is>
     Tuple(Tuple const& other, IndexSequence<Is...>)
         : Detail::Tuple<Ts...>(other.get<Is>()...)
     {
     }
 
-    template<unsigned... Is>
+    template<size_t... Is>
     void set(Tuple&& other, IndexSequence<Is...>)
     {
         ((get<Is>() = move(other.get<Is>())), ...);
     }
 
-    template<unsigned... Is>
+    template<size_t... Is>
     void set(Tuple const& other, IndexSequence<Is...>)
     {
         ((get<Is>() = other.get<Is>()), ...);
     }
 
-    template<typename F, unsigned... Is>
+    template<typename F, size_t... Is>
     auto apply_as_args(F&& f, IndexSequence<Is...>)
     {
         return forward<F>(f)(get<Is>()...);
     }
 
-    template<typename F, unsigned... Is>
+    template<typename F, size_t... Is>
     auto apply_as_args(F&& f, IndexSequence<Is...>) const
     {
         return forward<F>(f)(get<Is>()...);

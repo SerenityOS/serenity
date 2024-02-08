@@ -8,6 +8,7 @@
 
 #include <AK/BitCast.h>
 #include <AK/Format.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 #include <AK/Platform.h>
