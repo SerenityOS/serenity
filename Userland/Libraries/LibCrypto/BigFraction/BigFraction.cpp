@@ -213,7 +213,7 @@ ByteString BigFraction::to_byte_string(unsigned rounding_threshold) const
     auto const remove_trailing_zeros = [](StringView value) -> StringView {
         auto n = value.length();
         VERIFY(n > 0);
-        while (value.characters_without_null_termination()[n - 1] == '0')
+        while (n > 0 && value.characters_without_null_termination()[n - 1] == '0')
             --n;
         return { value.characters_without_null_termination(), n };
     };
