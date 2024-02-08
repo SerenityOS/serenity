@@ -763,7 +763,7 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
         while (names.size() < glyph_count - 1) {
             // CFF spec, "Table 21 Range2 Format"
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
-            int left = TRY(reader.try_read<Card16>());
+            int left = TRY(reader.try_read<BigEndian<Card16>>());
             for (SID sid = first_sid; left >= 0 && names.size() < glyph_count - 1; left--, sid++)
                 TRY(names.try_append(resolve_sid(sid, strings)));
         }
