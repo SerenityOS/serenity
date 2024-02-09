@@ -111,11 +111,7 @@ void NVMeQueue::complete_current_request(u16 cmdid, u16 status)
     auto current_request = request_pdu.request;
     AsyncDeviceRequest::RequestResult req_result = AsyncDeviceRequest::Success;
 
-    ScopeGuard guard = [req_result, status, &request_pdu, &lock] {
-        // FIXME: We should unlock at the end of this function to make sure no new requests is inserted
-        //  before we complete the request and calling end_io_handler but that results in a deadlock
-        //  For now this is avoided by asserting the `used` field while inserting.
-        lock.unlock();
+    ScopeGuard guard = [req_result, status, &request_pdu] {
         if (request_pdu.request)
             request_pdu.request->complete(req_result);
         if (request_pdu.end_io_handler)
@@ -150,10 +146,7 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
 
     {
         SpinlockLocker req_lock(m_request_lock);
-
-        if (m_requests.contains(sub.cmdid) && m_requests.get(sub.cmdid).release_value().used)
-            VERIFY_NOT_REACHED();
-        m_requests.set(sub.cmdid, { nullptr, true, [this, &cmd_status](u16 status) mutable { cmd_status = status; m_sync_wait_queue.wake_all(); } });
+        m_requests.set(sub.cmdid, { nullptr, [this, &cmd_status](u16 status) mutable { cmd_status = status; m_sync_wait_queue.wake_all(); } });
     }
     submit_sqe(sub);
 
@@ -176,9 +169,7 @@ void NVMeQueue::read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 
 
     {
         SpinlockLocker req_lock(m_request_lock);
-        if (m_requests.contains(sub.cmdid) && m_requests.get(sub.cmdid).release_value().used)
-            VERIFY_NOT_REACHED();
-        m_requests.set(sub.cmdid, { request, true, nullptr });
+        m_requests.set(sub.cmdid, { request, nullptr });
     }
 
     full_memory_barrier();
@@ -199,9 +190,7 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
 
     {
         SpinlockLocker req_lock(m_request_lock);
-        if (m_requests.contains(sub.cmdid) && m_requests.get(sub.cmdid).release_value().used)
-            VERIFY_NOT_REACHED();
-        m_requests.set(sub.cmdid, { request, true, nullptr });
+        m_requests.set(sub.cmdid, { request, nullptr });
     }
 
     if (auto result = request.read_from_buffer(request.buffer(), m_rw_dma_region->vaddr().as_ptr(), request.buffer_size()); result.is_error()) {

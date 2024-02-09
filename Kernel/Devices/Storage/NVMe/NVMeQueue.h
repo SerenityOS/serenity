@@ -42,12 +42,10 @@ class AsyncBlockDeviceRequest;
 struct NVMeIO {
     void clear()
     {
-        used = false;
         request = nullptr;
         end_io_handler = nullptr;
     }
     RefPtr<AsyncBlockDeviceRequest> request;
-    bool used = false;
     Function<void(u16 status)> end_io_handler;
 };
 
@@ -117,7 +115,7 @@ protected:
     Spinlock<LockRank::Interrupts> m_cq_lock {};
     HashMap<u16, NVMeIO> m_requests;
     NonnullOwnPtr<Memory::Region> m_rw_dma_region;
-    Spinlock<LockRank::None> m_request_lock {};
+    RecursiveSpinlock<LockRank::None> m_request_lock {};
 
 private:
     u16 m_qid {};
