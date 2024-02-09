@@ -388,6 +388,7 @@ void Application::set_most_recently_open_file(ByteString new_path)
     });
 
     new_recent_files_list.prepend(new_path);
+    new_recent_files_list.resize(max_recently_open_files());
 
     for (size_t i = 0; i < max_recently_open_files(); ++i) {
         auto& path = new_recent_files_list[i];
