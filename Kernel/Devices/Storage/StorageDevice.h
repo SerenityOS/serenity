@@ -109,8 +109,8 @@ private:
     // controller among its fellow controllers of the same hardware type in the system.
     u32 const m_hardware_relative_controller_id { 0 };
 
-    u64 m_max_addressable_block { 0 };
-    size_t m_blocks_per_page { 0 };
+    u64 const m_max_addressable_block { 0 };
+    size_t const m_blocks_per_page { 0 };
 };
 
 }
