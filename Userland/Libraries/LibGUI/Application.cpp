@@ -373,6 +373,7 @@ void Application::update_recent_file_actions()
 
 void Application::set_most_recently_open_file(ByteString new_path)
 {
+    VERIFY(!new_path.is_empty());
     Vector<ByteString> new_recent_files_list;
 
     for (size_t i = 0; i < max_recently_open_files(); ++i) {
