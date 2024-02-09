@@ -31,7 +31,6 @@ void NVMeInterruptQueue::initialize_interrupt_queue()
 
 bool NVMeInterruptQueue::handle_irq(RegisterState const&)
 {
-    SpinlockLocker lock(m_request_lock);
     return process_cq() ? true : false;
 }
 
@@ -47,14 +46,15 @@ void NVMeInterruptQueue::complete_current_request(u16 cmdid, u16 status)
     });
 
     if (work_item_creation_result.is_error()) {
-        SpinlockLocker lock(m_request_lock);
-        auto& request_pdu = m_requests.get(cmdid).release_value();
-        auto current_request = request_pdu.request;
+        m_requests.with([cmdid, status](auto& requests) {
+            auto& request_pdu = requests.get(cmdid).release_value();
+            auto current_request = request_pdu.request;
 
-        current_request->complete(AsyncDeviceRequest::OutOfMemory);
-        if (request_pdu.end_io_handler)
-            request_pdu.end_io_handler(status);
-        request_pdu.clear();
+            current_request->complete(AsyncDeviceRequest::OutOfMemory);
+            if (request_pdu.end_io_handler)
+                request_pdu.end_io_handler(status);
+            request_pdu.clear();
+        });
     }
 }
 }
