@@ -208,6 +208,16 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 }));
                 break;
             }
+            case TopDictOperator::CIDFontVersion:
+            case TopDictOperator::CIDFontRevision:
+            case TopDictOperator::CIDFontType:
+            case TopDictOperator::CIDCount:
+            case TopDictOperator::UIDBase:
+            case TopDictOperator::FDArray:
+            case TopDictOperator::FDSelect:
+            case TopDictOperator::FontName:
+                // Keys for CID-keyed fonts that we don't need, at least at the moment.
+                break;
             default:
                 dbgln("CFF: Unhandled top dict entry {}", static_cast<int>(op));
             }
