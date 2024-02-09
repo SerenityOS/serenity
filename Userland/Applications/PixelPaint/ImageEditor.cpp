@@ -763,6 +763,8 @@ void ImageEditor::save_project()
         return;
     }
     set_unmodified();
+    if (on_file_saved)
+        on_file_saved(path());
 }
 
 void ImageEditor::save_project_as()
@@ -779,6 +781,8 @@ void ImageEditor::save_project_as()
     set_path(file.filename());
     set_loaded_from_image(false);
     set_unmodified();
+    if (on_file_saved)
+        on_file_saved(path());
 }
 
 ErrorOr<void> ImageEditor::save_project_to_file(NonnullOwnPtr<Core::File> file) const
