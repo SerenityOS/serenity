@@ -567,6 +567,7 @@ public:
     WebIDL::ExceptionOr<void> set_design_mode(String const&);
 
     Element const* element_from_point(double x, double y);
+    Vector<JS::NonnullGCPtr<Element>> elements_from_point(double x, double y);
 
     void set_needs_to_resolve_paint_only_properties() { m_needs_to_resolve_paint_only_properties = true; }
 

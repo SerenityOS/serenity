@@ -3808,4 +3808,47 @@ Element const* Document::element_from_point(double x, double y)
     return nullptr;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-document-elementsfrompoint
+Vector<JS::NonnullGCPtr<Element>> Document::elements_from_point(double x, double y)
+{
+    // 1. Let sequence be a new empty sequence.
+    Vector<JS::NonnullGCPtr<Element>> sequence;
+
+    // 2. If either argument is negative, x is greater than the viewport width excluding the size of a rendered scroll bar (if any),
+    //    or y is greater than the viewport height excluding the size of a rendered scroll bar (if any),
+    //    or there is no viewport associated with the document, return sequence and terminate these steps.
+    auto viewport_rect = this->viewport_rect();
+    CSSPixelPoint position { x, y };
+    // FIXME: This should account for the size of the scroll bar.
+    if (x < 0 || y < 0 || position.x() > viewport_rect.width() || position.y() > viewport_rect.height())
+        return sequence;
+
+    // Ensure the layout tree exists prior to hit testing.
+    update_layout();
+
+    // 3. For each box in the viewport, in paint order, starting with the topmost box, that would be a target for
+    //    hit testing at coordinates x,y even if nothing would be overlapping it, when applying the transforms that
+    //    apply to the descendants of the viewport, append the associated element to sequence.
+    // FIXME: Paintable box tree order is not the same as paint order. We need a helper to traverse the paint tree in
+    //        paint order with a custom callback.
+    if (auto const* paintable_box = this->paintable_box(); paintable_box) {
+        paintable_box->for_each_in_inclusive_subtree_of_type<Painting::PaintableBox>([&](auto& paintable_box) {
+            if (auto result = paintable_box.hit_test(position, Painting::HitTestType::Exact); result.has_value()) {
+                if (auto* dom_node = result->dom_node(); dom_node && dom_node->is_element())
+                    sequence.append(*static_cast<Element*>(dom_node));
+                return Painting::TraversalDecision::Continue;
+            }
+            return Painting::TraversalDecision::SkipChildrenAndContinue;
+        });
+    }
+
+    // 4. If the document has a root element, and the last item in sequence is not the root element,
+    //    append the root element to sequence.
+    if (auto* root_element = document_element(); root_element && (sequence.is_empty() || (sequence.last() != root_element)))
+        sequence.append(*root_element);
+
+    // 5. Return sequence.
+    return sequence;
+}
+
 }
