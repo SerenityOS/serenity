@@ -32,6 +32,7 @@
 #include <Kernel/Locking/LockRank.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/VirtualRange.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -789,16 +790,17 @@ public:
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
 
-    ALWAYS_INLINE void yield_if_stopped()
+    ALWAYS_INLINE void yield_if_should_be_stopped()
     {
-        // If some thread stopped us, we need to yield to someone else
-        // We check this when entering/exiting a system call. A thread
-        // may continue to execute in user land until the next timer
-        // tick or entering the next system call, or if it's in kernel
-        // mode then we will intercept prior to returning back to user
-        // mode.
+        // A thread may continue to execute in user land until the next timer
+        // tick or until entering the next system call/exiting the current one.
+        if (!is_stopped() && should_be_stopped()) {
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
+            set_state(State::Stopped);
+        }
+        // If we're stopped, we need to yield to someone else.
         SpinlockLocker lock(m_lock);
-        while (state() == Thread::State::Stopped) {
+        while (is_stopped()) {
             lock.unlock();
             // We shouldn't be holding the big lock here
             yield_without_releasing_big_lock();

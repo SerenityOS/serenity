@@ -314,8 +314,8 @@ void Thread::unblock_from_blocker(Blocker& blocker)
         SpinlockLocker block_lock(m_block_lock);
         if (m_blocker != &blocker)
             return;
-        if (!should_be_stopped() && !is_stopped())
-            unblock();
+        VERIFY(!is_stopped());
+        unblock();
     };
     if (Processor::current_in_irq() != 0) {
         Processor::deferred_call_queue([do_unblock = move(do_unblock), self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
@@ -1273,14 +1273,8 @@ void Thread::set_state(State new_state, u8 stop_signal)
         m_stop_state = previous_state != Thread::State::Running ? previous_state : Thread::State::Runnable;
         auto& process = this->process();
         if (!process.set_stopped(true)) {
-            process.for_each_thread([&](auto& thread) {
-                if (&thread == this)
-                    return;
-                if (thread.is_stopped())
-                    return;
-                dbgln_if(THREAD_DEBUG, "Stopping peer thread {}", thread);
-                thread.set_state(Thread::State::Stopped, stop_signal);
-            });
+            // Note that we don't explicitly stop peer threads, we let them stop on their own the next time they
+            // enter/exit a syscall, or once their current time slice runs out.
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.
             if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
