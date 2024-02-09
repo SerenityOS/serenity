@@ -54,7 +54,12 @@ public:
     };
 
 public:
-    virtual u64 max_addressable_block() const { return m_max_addressable_block; }
+    u64 max_addressable_block() const { return m_max_addressable_block; }
+
+    // NOTE: This method should be used when we need to calculate the actual
+    // end of the storage device, because LBAs start counting at 0, which is not
+    // practical in many cases for verifying IO operation boundaries.
+    u64 max_mathematical_addressable_block() const { return m_max_addressable_block + 1; }
 
     // ^BlockDevice
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
