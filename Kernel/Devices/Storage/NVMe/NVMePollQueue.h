@@ -18,5 +18,8 @@ public:
 
 protected:
     NVMePollQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, NonnullRefPtr<Memory::PhysicalPage> rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
+
+private:
+    Spinlock<LockRank::Interrupts> m_cq_lock {};
 };
 }
