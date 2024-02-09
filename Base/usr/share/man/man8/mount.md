@@ -44,6 +44,9 @@ Additionally, the name `defaults` is accepted and ignored.
 ```sh
 # mount devpts /dev/pts -t devpts -o noexec,nosuid
 # mount /home/anon/myfile.txt /tmp/foo -o bind
+
+# mount a regular file using a temporary loop device
+$ mount /home/anon/myfilesystem.bin /mnt
 ```
 
 ## See also

@@ -7,6 +7,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -197,6 +198,21 @@ static ErrorOr<void> print_mounts()
     return {};
 }
 
+static ErrorOr<void> mount_using_loop_device(int inode_fd, StringView mountpoint, StringView fs_type, int flags)
+{
+    int devctl_fd = TRY(Core::System::open("/dev/devctl"sv, O_RDONLY));
+    int value = inode_fd;
+    TRY(Core::System::ioctl(devctl_fd, DEVCTL_CREATE_LOOP_DEVICE, &value));
+    int loop_device_index = value;
+
+    auto loop_device_path = TRY(String::formatted("/dev/loop/{}", loop_device_index));
+    int loop_device_fd = TRY(Core::System::open(loop_device_path.bytes_as_string_view(), O_RDONLY));
+
+    auto result = Core::System::mount(loop_device_fd, mountpoint, fs_type, flags);
+    TRY(Core::System::ioctl(devctl_fd, DEVCTL_DESTROY_LOOP_DEVICE, &loop_device_index));
+    return result;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView source;
@@ -242,7 +258,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             if (fs_type.is_empty())
                 fs_type = "ext2"sv;
-            TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
+            auto stat = TRY(Core::System::fstat(fd));
+            if (!S_ISBLK(stat.st_mode))
+                TRY(mount_using_loop_device(fd, mountpoint, fs_type, flags));
+            else
+                TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
         }
         return 0;
     }
