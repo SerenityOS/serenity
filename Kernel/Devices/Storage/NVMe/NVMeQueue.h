@@ -100,10 +100,11 @@ protected:
         }
     }
 
+    virtual void complete_current_request(u16 cmdid, u16 status);
+
 private:
     bool cqe_available();
     void update_cqe_head();
-    virtual void complete_current_request(u16 cmdid, u16 status) = 0;
     void update_cq_doorbell()
     {
         full_memory_barrier();
