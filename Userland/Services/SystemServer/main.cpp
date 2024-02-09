@@ -125,6 +125,8 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
     TRY(Core::System::mkdir("/dev/pts"sv, 0755));
     TRY(Core::System::mount(-1, "/dev/pts"sv, "devpts"sv, 0));
+    TRY(Core::System::mkdir("/dev/loop"sv, 0755));
+    TRY(Core::System::mount(-1, "/dev/loop"sv, "devloop"sv, 0));
 
     mode_t old_mask = umask(0);
     TRY(Core::System::create_char_device("/dev/devctl"sv, 0660, 2, 10));
