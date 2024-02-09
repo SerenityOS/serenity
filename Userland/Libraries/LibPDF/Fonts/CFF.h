@@ -47,6 +47,17 @@ private:
         PostScript,
         BaseFontName,
         BaseFontBlend,
+
+        // CFF spec, "Table 10 CIDFont Operator Extensions"
+        RegistryOrderingSupplement = (12 << 8 | 30),
+        CIDFontVersion,
+        CIDFontRevision,
+        CIDFontType,
+        CIDCount,
+        UIDBase,
+        FDArray,
+        FDSelect,
+        FontName,
     };
 
     // CFF spec, "Table 23 Private DICT Operators"
