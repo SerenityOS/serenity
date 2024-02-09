@@ -45,6 +45,33 @@ static Response deserialize_as_an_unhandled_prompt_behavior(JsonValue value)
     return value;
 }
 
+// https://w3c.github.io/webdriver/#dfn-deserialize-as-a-proxy
+static ErrorOr<JsonObject, Error> deserialize_as_a_proxy(JsonValue parameter)
+{
+    // 1. If parameter is not a JSON Object return an error with error code invalid argument.
+    if (!parameter.is_object())
+        return Error::from_code(ErrorCode::InvalidArgument, "Capability proxy must be an object"sv);
+
+    // 2. Let proxy be a new, empty proxy configuration object.
+    JsonObject proxy;
+
+    // 3. For each enumerable own property in parameter run the following substeps:
+    TRY(parameter.as_object().try_for_each_member([&](auto const& key, JsonValue const& value) -> ErrorOr<void, Error> {
+        // 1. Let key be the name of the property.
+        // 2. Let value be the result of getting a property named name from capability.
+
+        // FIXME: 3. If there is no matching key for key in the proxy configuration table return an error with error code invalid argument.
+        // FIXME: 4. If value is not one of the valid values for that key, return an error with error code invalid argument.
+
+        // 5. Set a property key to value on proxy.
+        proxy.set(key, value);
+
+        return {};
+    }));
+
+    return proxy;
+}
+
 static Response deserialize_as_ladybird_options(JsonValue value)
 {
     if (!value.is_object())
@@ -113,8 +140,11 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
             deserialized = TRY(deserialize_as_a_page_load_strategy(value));
         }
 
-        // FIXME: -> name equals "proxy"
-        // FIXME:     Let deserialized be the result of trying to deserialize as a proxy with argument value.
+        // -> name equals "proxy"
+        else if (name == "proxy"sv) {
+            // Let deserialized be the result of trying to deserialize as a proxy with argument value.
+            deserialized = TRY(deserialize_as_a_proxy(value));
+        }
 
         // -> name equals "strictFileInteractability"
         else if (name == "strictFileInteractability"sv) {
