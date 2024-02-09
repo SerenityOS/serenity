@@ -90,6 +90,8 @@ public:
     Function<void(void)> on_leave;
     Function<void(bool modified)> on_modified_change;
 
+    Function<void(ByteString const& filename)> on_file_saved;
+
     bool request_close();
 
     void save_project_as();

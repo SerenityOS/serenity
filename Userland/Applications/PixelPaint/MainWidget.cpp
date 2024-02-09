@@ -208,14 +208,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project_as();
-        GUI::Application::the()->set_most_recently_open_file(editor->path());
     });
 
     m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project();
-        GUI::Application::the()->set_most_recently_open_file(editor->path());
     });
 
     file_menu->add_action(*m_new_image_action);
@@ -1440,6 +1438,9 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_palette_widget->set_secondary_color(color);
         if (image_editor.active_tool())
             image_editor.active_tool()->on_secondary_color_change(color);
+    };
+    image_editor.on_file_saved = [](ByteString const& filename) {
+        GUI::Application::the()->set_most_recently_open_file(filename);
     };
 
     if (image->layer_count())
