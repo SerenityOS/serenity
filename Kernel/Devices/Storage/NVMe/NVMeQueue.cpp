@@ -111,7 +111,7 @@ void NVMeQueue::complete_current_request(u16 cmdid, u16 status)
     auto current_request = request_pdu.request;
     AsyncDeviceRequest::RequestResult req_result = AsyncDeviceRequest::Success;
 
-    ScopeGuard guard = [req_result, status, &request_pdu] {
+    ScopeGuard guard = [&req_result, status, &request_pdu] {
         if (request_pdu.request)
             request_pdu.request->complete(req_result);
         if (request_pdu.end_io_handler)
