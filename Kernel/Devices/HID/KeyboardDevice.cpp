@@ -43,14 +43,6 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
         }
     }
 
-    if (queued_event.map_entry_index != 0xFF)
-        queued_event.code_point = HIDManagement::the().get_char_from_character_map(queued_event, queued_event.map_entry_index);
-
-    // If using a non-QWERTY layout, queued_event.key needs to be updated to be the same as event.code_point
-    KeyCode mapped_key = code_point_to_key_code(queued_event.code_point);
-    if (mapped_key != KeyCode::Key_Invalid)
-        queued_event.key = mapped_key;
-
     if (!g_caps_lock_remapped_to_ctrl && queued_event.key == Key_CapsLock && queued_event.is_press())
         m_caps_lock_on = !m_caps_lock_on;
 
@@ -60,6 +52,14 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
         m_caps_lock_to_ctrl_pressed = queued_event.is_press();
         update_modifier(Mod_Ctrl, m_caps_lock_to_ctrl_pressed);
     }
+
+    if (queued_event.map_entry_index != 0xFF)
+        queued_event.code_point = HIDManagement::the().get_char_from_character_map(queued_event, queued_event.map_entry_index);
+
+    // If using a non-QWERTY layout, queued_event.key needs to be updated to be the same as event.code_point
+    KeyCode mapped_key = code_point_to_key_code(queued_event.code_point);
+    if (mapped_key != KeyCode::Key_Invalid)
+        queued_event.key = mapped_key;
 
     {
         SpinlockLocker locker(HIDManagement::the().m_client_lock);
