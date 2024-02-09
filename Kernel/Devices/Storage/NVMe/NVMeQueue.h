@@ -113,9 +113,8 @@ private:
 
 protected:
     Spinlock<LockRank::Interrupts> m_cq_lock {};
-    HashMap<u16, NVMeIO> m_requests;
+    SpinlockProtected<HashMap<u16, NVMeIO>, LockRank::None> m_requests;
     NonnullOwnPtr<Memory::Region> m_rw_dma_region;
-    RecursiveSpinlock<LockRank::None> m_request_lock {};
 
 private:
     u16 m_qid {};
