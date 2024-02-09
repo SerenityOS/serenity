@@ -83,6 +83,12 @@ void Internals::click(double x, double y)
     page.handle_mouseup({ x, y }, { x, y }, 1, 0, 0);
 }
 
+void Internals::wheel(double x, double y, double delta_x, double delta_y)
+{
+    auto& page = global_object().browsing_context()->page();
+    page.handle_mousewheel({ x, y }, { x, y }, 0, 0, 0, delta_x, delta_y);
+}
+
 WebIDL::ExceptionOr<bool> Internals::dispatch_user_activated_event(DOM::EventTarget& target, DOM::Event& event)
 {
     event.set_is_trusted(true);
