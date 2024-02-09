@@ -184,6 +184,25 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 Reader priv_dict_reader { cff_bytes.slice(private_dict_offset, private_dict_size) };
                 TRY(parse_dict<PrivDictOperator>(priv_dict_reader, [&](PrivDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
                     switch (op) {
+                    case PrivDictOperator::BlueValues:
+                    case PrivDictOperator::OtherBlues:
+                    case PrivDictOperator::FamilyBlues:
+                    case PrivDictOperator::FamilyOtherBlues:
+                    case PrivDictOperator::BlueScale:
+                    case PrivDictOperator::BlueShift:
+                    case PrivDictOperator::BlueFuzz:
+                    case PrivDictOperator::StemSnapH:
+                    case PrivDictOperator::StemSnapV:
+                    case PrivDictOperator::ForceBold:
+                    case PrivDictOperator::LanguageGroup:
+                    case PrivDictOperator::ExpansionFactor:
+                    case PrivDictOperator::InitialRandomSeed:
+                        // Ignore hinting-related operators for now.
+                        break;
+                    case PrivDictOperator::StdHW:
+                    case PrivDictOperator::StdVW:
+                        // FIXME: What do these do?
+                        break;
                     case PrivDictOperator::Subrs: {
                         // CFF spec, "16 Local/Global Subrs INDEXes"
                         // "Local subrs are stored in an INDEX structure which is located via the offset operand of the Subrs operator in the Private DICT."
@@ -203,6 +222,8 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                         if (!operands.is_empty())
                             nominalWidthX = to_number(operands[0]);
                         break;
+                    default:
+                        dbgln("CFF: Unhandled private dict entry {}", static_cast<int>(op));
                     }
                     return {};
                 }));
