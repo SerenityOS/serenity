@@ -18,7 +18,6 @@ namespace Kernel {
 
 static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& params, Process& caller)
 {
-    SpinlockLocker scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
         if (Process::current().tracer())
             return EBUSY;
@@ -39,6 +38,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         return ESRCH;
 
     MutexLocker ptrace_locker(peer->process().ptrace_lock());
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
 
     auto peer_credentials = peer->process().credentials();
     auto caller_credentials = caller.credentials();
