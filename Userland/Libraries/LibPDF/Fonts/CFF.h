@@ -51,6 +51,21 @@ private:
 
     // CFF spec, "Table 23 Private DICT Operators"
     enum class PrivDictOperator {
+        BlueValues = 6,
+        OtherBlues,
+        FamilyBlues,
+        FamilyOtherBlues,
+        BlueScale = (12 << 8 | 9),
+        BlueShift,
+        BlueFuzz,
+        StdHW = 10,
+        StdVW,
+        StemSnapH = (12 << 8 | 12),
+        StemSnapV,
+        ForceBold,
+        LanguageGroup = (12 << 8 | 17),
+        ExpansionFactor,
+        InitialRandomSeed,
         Subrs = 19,
         DefaultWidthX,
         NominalWidthX,
