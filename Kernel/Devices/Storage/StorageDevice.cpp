@@ -246,7 +246,7 @@ ErrorOr<void> StorageDevice::ioctl(OpenFileDescription&, unsigned request, Users
 {
     switch (request) {
     case STORAGE_DEVICE_GET_SIZE: {
-        u64 disk_size = m_max_addressable_block * block_size();
+        u64 disk_size = max_mathematical_addressable_block() * block_size();
         return copy_to_user(static_ptr_cast<u64*>(arg), &disk_size);
         break;
     }
