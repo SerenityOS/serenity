@@ -25,6 +25,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>
 
+#include <Kernel/FileSystem/DevLoopFS/FileSystem.h>
 #include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/FATFS/FileSystem.h>
@@ -68,6 +69,7 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
     { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
     { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "devloop"sv, "DevLoopFS"sv, false, false, false, {}, DevLoopFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
 };
 
 ErrorOr<FileSystemInitializer const*> VirtualFileSystem::find_filesystem_type_initializer(StringView fs_type)
