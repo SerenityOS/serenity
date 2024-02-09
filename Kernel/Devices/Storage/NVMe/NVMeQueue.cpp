@@ -104,6 +104,43 @@ void NVMeQueue::submit_sqe(NVMeSubmission& sub)
     update_sq_doorbell();
 }
 
+void NVMeQueue::complete_current_request(u16 cmdid, u16 status)
+{
+    SpinlockLocker lock(m_request_lock);
+    auto& request_pdu = m_requests.get(cmdid).release_value();
+    auto current_request = request_pdu.request;
+    AsyncDeviceRequest::RequestResult req_result = AsyncDeviceRequest::Success;
+
+    ScopeGuard guard = [req_result, status, &request_pdu, &lock] {
+        // FIXME: We should unlock at the end of this function to make sure no new requests is inserted
+        //  before we complete the request and calling end_io_handler but that results in a deadlock
+        //  For now this is avoided by asserting the `used` field while inserting.
+        lock.unlock();
+        if (request_pdu.request)
+            request_pdu.request->complete(req_result);
+        if (request_pdu.end_io_handler)
+            request_pdu.end_io_handler(status);
+        request_pdu.clear();
+    };
+
+    // There can be submission without any request associated with it such as with
+    // admin queue commands during init. If there is no request, we are done
+    if (!current_request)
+        return;
+
+    if (status) {
+        req_result = AsyncBlockDeviceRequest::Failure;
+        return;
+    }
+
+    if (current_request->request_type() == AsyncBlockDeviceRequest::RequestType::Read) {
+        if (auto result = current_request->write_to_buffer(current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), current_request->buffer_size()); result.is_error()) {
+            req_result = AsyncBlockDeviceRequest::MemoryFault;
+            return;
+        }
+    }
+}
+
 u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
 {
     // For now let's use sq tail as a unique command id.
