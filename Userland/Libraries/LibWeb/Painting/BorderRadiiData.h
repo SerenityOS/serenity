@@ -31,6 +31,12 @@ struct BorderRadiusData {
         if (vertical_radius != 0)
             vertical_radius = max(CSSPixels(0), vertical_radius - vertical);
     }
+
+    inline void union_max_radii(BorderRadiusData const& other)
+    {
+        horizontal_radius = max(horizontal_radius, other.horizontal_radius);
+        vertical_radius = max(vertical_radius, other.vertical_radius);
+    }
 };
 
 using CornerRadius = Gfx::AntiAliasingPainter::CornerRadius;
@@ -56,6 +62,14 @@ struct BorderRadiiData {
     inline bool has_any_radius() const
     {
         return top_left || top_right || bottom_right || bottom_left;
+    }
+
+    inline void union_max_radii(BorderRadiiData const& other)
+    {
+        top_left.union_max_radii(other.top_left);
+        top_right.union_max_radii(other.top_right);
+        bottom_right.union_max_radii(other.bottom_right);
+        bottom_left.union_max_radii(other.bottom_left);
     }
 
     inline void shrink(CSSPixels top, CSSPixels right, CSSPixels bottom, CSSPixels left)

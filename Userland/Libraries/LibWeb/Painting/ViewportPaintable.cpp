@@ -149,21 +149,22 @@ void ViewportPaintable::refresh_clip_state()
                 auto const& block_paintable_box = *block->paintable_box();
                 auto block_overflow_x = block_paintable_box.computed_values().overflow_x();
                 auto block_overflow_y = block_paintable_box.computed_values().overflow_y();
-                if (block_overflow_x != CSS::Overflow::Visible && block_overflow_y != CSS::Overflow::Visible)
-                    overflow_clip_rect.intersect(block_paintable_box.compute_absolute_padding_rect_with_css_transform_applied());
+                if (block_overflow_x != CSS::Overflow::Visible && block_overflow_y != CSS::Overflow::Visible) {
+                    auto rect = block_paintable_box.compute_absolute_padding_rect_with_css_transform_applied();
+                    overflow_clip_rect.intersect(rect);
+                    auto border_radii_data = block_paintable_box.normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
+                    if (border_radii_data.has_any_radius()) {
+                        BorderRadiiClip border_radii_clip { .rect = rect, .radii = border_radii_data };
+                        clip_frame.add_border_radii_clip(border_radii_clip);
+                    }
+                }
                 if (auto css_clip_property_rect = block->paintable_box()->get_clip_rect(); css_clip_property_rect.has_value())
                     overflow_clip_rect.intersect(css_clip_property_rect.value());
             }
             clip_rect = overflow_clip_rect;
         }
 
-        auto border_radii_data = paintable_box.normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
-        if (border_radii_data.has_any_radius()) {
-            // FIXME: Border radii of all boxes in containing block chain should be taken into account.
-            clip_frame.corner_clip_radii = border_radii_data;
-        }
-
-        clip_frame.rect = *clip_rect;
+        clip_frame.set_rect(*clip_rect);
     }
 }
 
