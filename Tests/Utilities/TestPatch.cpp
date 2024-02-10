@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,12 +80,12 @@ TEST_CASE(basic_change_patch)
 )"sv;
 
     auto file = "1\n2\n3\n"sv;
-    auto input = MUST(Core::File::open(MUST(String::formatted("{}/a", s_test_dir)), Core::File::OpenMode::Write));
+    auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
     MUST(input->write_until_depleted(file.bytes()));
 
     run_patch({}, patch, "patching file a\n"sv);
 
-    EXPECT_FILE_EQ(MUST(String::formatted("{}/a", s_test_dir)), "1\nb\n3\n");
+    EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "1\nb\n3\n");
 }
 
 TEST_CASE(basic_addition_patch_from_empty_file)
@@ -102,12 +102,12 @@ TEST_CASE(basic_addition_patch_from_empty_file)
 )"sv;
 
     auto file = ""sv;
-    auto input = MUST(Core::File::open(MUST(String::formatted("{}/a", s_test_dir)), Core::File::OpenMode::Write));
+    auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
     MUST(input->write_until_depleted(file.bytes()));
 
     run_patch({}, patch, "patching file a\n"sv);
 
-    EXPECT_FILE_EQ(MUST(String::formatted("{}/a", s_test_dir)), "1\n2\n3\n");
+    EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "1\n2\n3\n");
 }
 
 TEST_CASE(strip_path_to_basename)
@@ -165,7 +165,7 @@ TEST_CASE(add_file_from_scratch)
 
     run_patch({}, patch, "patching file file_to_add\n"sv);
 
-    EXPECT_FILE_EQ(MUST(String::formatted("{}/file_to_add", s_test_dir)), "Hello, friends!\n");
+    EXPECT_FILE_EQ(ByteString::formatted("{}/file_to_add", s_test_dir), "Hello, friends!\n");
 }
 
 TEST_CASE(two_patches_in_single_patch_file)
@@ -186,6 +186,6 @@ TEST_CASE(two_patches_in_single_patch_file)
     run_patch({}, patch, "patching file first_file_to_add\n"
                          "patching file second_file_to_add\n"sv);
 
-    EXPECT_FILE_EQ(MUST(String::formatted("{}/first_file_to_add", s_test_dir)), "Hello, friends!\n");
-    EXPECT_FILE_EQ(MUST(String::formatted("{}/second_file_to_add", s_test_dir)), "Hello, friends!\n");
+    EXPECT_FILE_EQ(ByteString::formatted("{}/first_file_to_add", s_test_dir), "Hello, friends!\n");
+    EXPECT_FILE_EQ(ByteString::formatted("{}/second_file_to_add", s_test_dir), "Hello, friends!\n");
 }
