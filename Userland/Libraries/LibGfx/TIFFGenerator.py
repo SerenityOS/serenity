@@ -124,7 +124,7 @@ Tag = namedtuple(
 # FIXME: Some tag have only a few allowed values, we should ensure that
 known_tags: List[Tag] = [
     Tag('256', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageWidth", is_required=True),
-    Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageHeight", is_required=True),
+    Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageLength", is_required=True),
     Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample", is_required=True),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression, is_required=True),
     Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation",

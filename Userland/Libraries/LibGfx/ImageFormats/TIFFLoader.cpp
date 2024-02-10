@@ -102,7 +102,7 @@ public:
 
     IntSize size() const
     {
-        return ExifOrientedBitmap::oriented_size({ *m_metadata.image_width(), *m_metadata.image_height() }, *m_metadata.orientation());
+        return ExifOrientedBitmap::oriented_size({ *m_metadata.image_width(), *m_metadata.image_length() }, *m_metadata.orientation());
     }
 
     ExifMetadata const& metadata() const
@@ -267,25 +267,25 @@ private:
     {
         auto const strips_offset = *m_metadata.strip_offsets();
         auto const strip_byte_counts = *m_metadata.strip_byte_counts();
-        auto const rows_per_strip = m_metadata.rows_per_strip().value_or(*m_metadata.image_height());
+        auto const rows_per_strip = m_metadata.rows_per_strip().value_or(*m_metadata.image_length());
 
         Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap> oriented_bitmap = TRY(([&]() -> ErrorOr<Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap>> {
             if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK)
-                return ExifOrientedCMYKBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_height() });
-            return ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_height() }, BitmapFormat::BGRA8888);
+                return ExifOrientedCMYKBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_length() });
+            return ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_length() }, BitmapFormat::BGRA8888);
         }()));
 
         for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
             TRY(m_stream->seek(strips_offset[strip_index]));
 
-            auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? rows_per_strip : *m_metadata.image_height() - rows_per_strip * strip_index;
+            auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? rows_per_strip : *m_metadata.image_length() - rows_per_strip * strip_index;
             auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index], rows_in_strip));
             auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
 
             for (u32 row = 0; row < rows_per_strip; row++) {
                 auto const scanline = row + rows_per_strip * strip_index;
-                if (scanline >= *m_metadata.image_height())
+                if (scanline >= *m_metadata.image_length())
                     break;
 
                 Optional<Color> last_color {};
