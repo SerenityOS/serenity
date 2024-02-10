@@ -140,7 +140,7 @@ ErrorOr<void> ISO9660Inode::chown(UserID, GroupID)
     return EROFS;
 }
 
-ErrorOr<void> ISO9660Inode::truncate(u64)
+ErrorOr<void> ISO9660Inode::truncate_locked(u64)
 {
     return EROFS;
 }

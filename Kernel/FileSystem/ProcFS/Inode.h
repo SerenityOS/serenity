@@ -50,7 +50,7 @@ private:
     virtual ErrorOr<void> chmod(mode_t) override { return EROFS; }
     virtual ErrorOr<void> chown(UserID, GroupID) override { return EROFS; }
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override { return EROFS; }
-    virtual ErrorOr<void> truncate(u64) override { return EROFS; }
+    virtual ErrorOr<void> truncate_locked(u64) override { return EROFS; }
 
     // ^Inode (Silent ignore handling)
     virtual ErrorOr<void> flush_metadata() override { return {}; }

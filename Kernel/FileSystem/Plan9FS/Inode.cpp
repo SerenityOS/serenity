@@ -284,8 +284,9 @@ ErrorOr<void> Plan9FSInode::chown(UserID, GroupID)
     return ENOTIMPL;
 }
 
-ErrorOr<void> Plan9FSInode::truncate(u64 new_size)
+ErrorOr<void> Plan9FSInode::truncate_locked(u64 new_size)
 {
+    VERIFY(m_inode_lock.is_locked());
     if (fs().m_remote_protocol_version >= Plan9FS::ProtocolVersion::v9P2000L) {
         Plan9FSMessage message { fs(), Plan9FSMessage::Type::Tsetattr };
         SetAttrMask valid = SetAttrMask::Size;

@@ -361,9 +361,9 @@ ErrorOr<void> RAMFSInode::remove_child(StringView name)
     return {};
 }
 
-ErrorOr<void> RAMFSInode::truncate(u64 size)
+ErrorOr<void> RAMFSInode::truncate_locked(u64 size)
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
 
     u64 block_index = size / DataBlock::block_size + ((size % DataBlock::block_size == 0) ? 0 : 1);
