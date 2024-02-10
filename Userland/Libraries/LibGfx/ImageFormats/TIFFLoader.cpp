@@ -71,9 +71,25 @@ public:
         return {};
     }
 
+    Optional<Vector<u32>> segment_offsets() const
+    {
+        return m_metadata.strip_offsets().has_value() ? m_metadata.strip_offsets() : m_metadata.tile_offsets();
+    }
+
+    Optional<Vector<u32>> segment_byte_counts() const
+    {
+        return m_metadata.strip_byte_counts().has_value() ? m_metadata.strip_byte_counts() : m_metadata.tile_byte_counts();
+    }
+
     ErrorOr<void> ensure_baseline_tags_are_correct() const
     {
-        if (m_metadata.strip_offsets()->size() != m_metadata.strip_byte_counts()->size())
+        if (!segment_offsets().has_value())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Missing Offsets tag");
+
+        if (!segment_byte_counts().has_value())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Missing ByteCounts tag");
+
+        if (segment_offsets()->size() != segment_byte_counts()->size())
             return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes");
 
         if (!m_metadata.rows_per_strip().has_value() && m_metadata.strip_byte_counts()->size() != 1)
@@ -281,7 +297,7 @@ private:
             auto const strip_width = *m_metadata.image_width();
             auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? rows_per_strip : *m_metadata.image_length() - rows_per_strip * strip_index;
 
-            auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index], {strip_width, rows_in_strip}));
+            auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index], { strip_width, rows_in_strip }));
             auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
 
