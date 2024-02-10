@@ -288,6 +288,7 @@ namespace Temporal {
 JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 class Temporal;
+struct CalendarMethods;
 struct DurationRecord;
 struct DateDurationRecord;
 struct TimeDurationRecord;
