@@ -1071,9 +1071,9 @@ ErrorOr<void> Ext2FSInode::chown(UserID uid, GroupID gid)
     return {};
 }
 
-ErrorOr<void> Ext2FSInode::truncate(u64 size)
+ErrorOr<void> Ext2FSInode::truncate_locked(u64 size)
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     if (static_cast<u64>(m_raw_inode.i_size) == size)
         return {};
     TRY(resize(size));

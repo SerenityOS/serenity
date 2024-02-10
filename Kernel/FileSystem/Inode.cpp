@@ -88,6 +88,12 @@ void Inode::will_be_destroyed()
         (void)flush_metadata();
 }
 
+ErrorOr<void> Inode::truncate(u64 size)
+{
+    MutexLocker locker(m_inode_lock);
+    return truncate_locked(size);
+}
+
 ErrorOr<size_t> Inode::write_bytes(off_t offset, size_t length, UserOrKernelBuffer const& target_buffer, OpenFileDescription* open_description)
 {
     MutexLocker locker(m_inode_lock);

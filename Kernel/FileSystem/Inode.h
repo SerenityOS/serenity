@@ -56,6 +56,7 @@ public:
     ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*);
     ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const;
     ErrorOr<size_t> read_until_filled_or_end(off_t, size_t, UserOrKernelBuffer buffer, OpenFileDescription*) const;
+    ErrorOr<void> truncate(u64);
 
     virtual ErrorOr<void> attach(OpenFileDescription&) { return {}; }
     virtual void detach(OpenFileDescription&) { }
@@ -70,7 +71,6 @@ public:
     virtual ErrorOr<void> replace_child(StringView name, Inode&) = 0;
     virtual ErrorOr<void> chmod(mode_t) = 0;
     virtual ErrorOr<void> chown(UserID, GroupID) = 0;
-    virtual ErrorOr<void> truncate(u64) { return {}; }
 
     ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Credentials const&, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
@@ -123,6 +123,7 @@ protected:
 
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) = 0;
     virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
+    virtual ErrorOr<void> truncate_locked(u64) { return {}; }
 
 private:
     ErrorOr<bool> try_apply_flock(Process const&, OpenFileDescription const&, flock const&);

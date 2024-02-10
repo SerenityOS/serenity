@@ -42,7 +42,7 @@ private:
     virtual ErrorOr<void> decrement_link_count() override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
-    virtual ErrorOr<void> truncate(u64) override;
+    virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<int> get_block_address(int) override;
 
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);

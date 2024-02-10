@@ -33,7 +33,7 @@ public:
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
-    virtual ErrorOr<void> truncate(u64) override;
+    virtual ErrorOr<void> truncate_locked(u64) override;
 
 private:
     // ^Inode
