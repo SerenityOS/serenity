@@ -107,6 +107,14 @@ OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
         while (offset < line.length() && line[offset] == ' ')
             ++offset;
 
+        // Optional initial indentation of maximum three spaces (example 289)
+        if (offset > 3) {
+            if (first)
+                return {};
+
+            break;
+        }
+
         if (offset + 2 <= line.length()) {
             if (line[offset + 1] == ' ' && (line[offset] == '*' || line[offset] == '-' || line[offset] == '+')) {
                 appears_unordered = true;
