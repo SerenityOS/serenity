@@ -43,7 +43,12 @@ private:
     }
 };
 
-static void run_patch(Vector<char const*>&& arguments, StringView standard_input, Optional<StringView> expected_stdout = {})
+enum class ExpectSuccess {
+    Yes,
+    No,
+};
+
+static void run_patch(ExpectSuccess success, Vector<char const*>&& arguments, StringView standard_input, Optional<StringView> expected_stdout = {})
 {
     // Ask patch to run the test in a temporary directory so we don't leave any files around.
     Vector<char const*> args_with_chdir = { "patch", "-d", s_test_dir };
@@ -57,8 +62,14 @@ static void run_patch(Vector<char const*>&& arguments, StringView standard_input
     auto [stdout, stderr] = MUST(patch->read_all());
 
     auto status = MUST(patch->status());
-    if (status != Core::Command::ProcessResult::DoneWithZeroExitCode) {
-        FAIL(MUST(String::formatted("patch didn't exit cleanly: status: {}, stdout:{}, stderr: {}", static_cast<int>(status), StringView { stdout.bytes() }, StringView { stderr.bytes() })));
+
+    StringView stdout_view { stdout.bytes() };
+    StringView stderr_view { stderr.bytes() };
+
+    if (success == ExpectSuccess::Yes && status != Core::Command::ProcessResult::DoneWithZeroExitCode) {
+        FAIL(MUST(String::formatted("patch did not return success: status: {}, stdout: {}, stderr: {}", static_cast<int>(status), stdout_view, stderr_view)));
+    } else if (success == ExpectSuccess::No && status != Core::Command::ProcessResult::Failed) {
+        FAIL(MUST(String::formatted("patch did not return error: status: {}, stdout: {}, stderr: {}", static_cast<int>(status), stdout_view, stderr_view)));
     }
 
     if (expected_stdout.has_value())
@@ -83,7 +94,7 @@ TEST_CASE(basic_change_patch)
     auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
     MUST(input->write_until_depleted(file.bytes()));
 
-    run_patch({}, patch, "patching file a\n"sv);
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file a\n"sv);
 
     EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "1\nb\n3\n");
 }
@@ -105,7 +116,7 @@ TEST_CASE(basic_addition_patch_from_empty_file)
     auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
     MUST(input->write_until_depleted(file.bytes()));
 
-    run_patch({}, patch, "patching file a\n"sv);
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file a\n"sv);
 
     EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "1\n2\n3\n");
 }
@@ -125,7 +136,7 @@ TEST_CASE(strip_path_to_basename)
     auto input = MUST(Core::File::open(MUST(String::formatted("{}/basename", s_test_dir)), Core::File::OpenMode::Write));
     MUST(input->write_until_depleted(file.bytes()));
 
-    run_patch({}, patch, "patching file basename\n"sv);
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file basename\n"sv);
 
     EXPECT_FILE_EQ(MUST(String::formatted("{}/basename", s_test_dir)), "Hello, friends!\n");
 }
@@ -147,7 +158,7 @@ TEST_CASE(strip_path_partially)
     auto input = MUST(Core::File::open(MUST(String::formatted("{}/to/basename", s_test_dir)), Core::File::OpenMode::Write));
     MUST(input->write_until_depleted(file.bytes()));
 
-    run_patch({ "-p6" }, patch, "patching file to/basename\n"sv);
+    run_patch(ExpectSuccess::Yes, { "-p6" }, patch, "patching file to/basename\n"sv);
 
     EXPECT_FILE_EQ(MUST(String::formatted("{}/to/basename", s_test_dir)), "Hello, friends!\n");
 }
@@ -163,7 +174,7 @@ TEST_CASE(add_file_from_scratch)
 +Hello, friends!
 )"sv;
 
-    run_patch({}, patch, "patching file file_to_add\n"sv);
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file file_to_add\n"sv);
 
     EXPECT_FILE_EQ(ByteString::formatted("{}/file_to_add", s_test_dir), "Hello, friends!\n");
 }
@@ -183,8 +194,8 @@ TEST_CASE(two_patches_in_single_patch_file)
 +Hello, friends!
 )"sv;
 
-    run_patch({}, patch, "patching file first_file_to_add\n"
-                         "patching file second_file_to_add\n"sv);
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file first_file_to_add\n"
+                                             "patching file second_file_to_add\n"sv);
 
     EXPECT_FILE_EQ(ByteString::formatted("{}/first_file_to_add", s_test_dir), "Hello, friends!\n");
     EXPECT_FILE_EQ(ByteString::formatted("{}/second_file_to_add", s_test_dir), "Hello, friends!\n");
