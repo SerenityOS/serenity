@@ -200,6 +200,7 @@ public:
     CSSPixelPoint const& transform_origin() const { return m_transform_origin; }
 
     CSSPixelRect compute_absolute_padding_rect_with_css_transform_applied() const;
+    Gfx::AffineTransform compute_combined_css_transform() const;
 
     Optional<CSSPixelRect> get_clip_rect() const;
 

@@ -142,6 +142,16 @@ CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_appl
     return padding_rect;
 }
 
+Gfx::AffineTransform PaintableBox::compute_combined_css_transform() const
+{
+    Gfx::AffineTransform combined_transform;
+    for (auto const* ancestor = &this->layout_box(); ancestor; ancestor = ancestor->containing_block()) {
+        auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->paintable_box()->transform());
+        combined_transform = combined_transform.multiply(affine_transform);
+    }
+    return combined_transform;
+}
+
 CSSPixelRect PaintableBox::absolute_rect() const
 {
     if (!m_absolute_rect.has_value())
@@ -425,15 +435,11 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (clip_rect().has_value()) {
         auto overflow_clip_rect = clip_rect().value();
-        for (auto const* ancestor = &this->layout_box(); ancestor; ancestor = ancestor->containing_block()) {
-            auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->paintable_box()->transform());
-            if (!affine_transform.is_identity()) {
-                // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
-                //       with this transform in account, we need to remove the transform from the clip rect.
-                //       Otherwise, the transform will be applied twice to the clip rect.
-                overflow_clip_rect.translate_by(-affine_transform.translation().to_type<CSSPixels>());
-            }
-        }
+        // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
+        //       with this transform in account, we need to remove the transform from the clip rect.
+        //       Otherwise, the transform will be applied twice to the clip rect.
+        auto combined_transform = compute_combined_css_transform();
+        overflow_clip_rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
 
         m_clipping_overflow = true;
         context.recording_painter().save();
