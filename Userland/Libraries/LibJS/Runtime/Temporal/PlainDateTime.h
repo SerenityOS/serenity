@@ -75,7 +75,7 @@ i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8
 ThrowCompletionOr<TemporalPlainDateTime> add_date_time(VM&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options);
 ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length = {});
 ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM&, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object const& options);
-ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(VM&, DifferenceOperation, PlainDateTime&, Value other, Value options);
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_date_time(VM&, DifferenceOperation, PlainDateTime&, Value other, Value options);
 ThrowCompletionOr<PlainDateTime*> add_duration_to_or_subtract_duration_from_plain_date_time(VM&, ArithmeticOperation, PlainDateTime&, Value temporal_duration_like, Value options_value);
 
 }

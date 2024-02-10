@@ -126,12 +126,12 @@ ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(VM& vm, double
 }
 
 // 7.5.8 ToTemporalDuration ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration
-ThrowCompletionOr<Duration*> to_temporal_duration(VM& vm, Value item)
+ThrowCompletionOr<NonnullGCPtr<Duration>> to_temporal_duration(VM& vm, Value item)
 {
     // 1. If Type(item) is Object and item has an [[InitializedTemporalDuration]] internal slot, then
     if (item.is_object() && is<Duration>(item.as_object())) {
         // a. Return item.
-        return &static_cast<Duration&>(item.as_object());
+        return static_cast<Duration&>(item.as_object());
     }
 
     // 2. Let result be ? ToTemporalDurationRecord(item).
@@ -394,7 +394,7 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&
 }
 
 // 7.5.14 CreateTemporalDuration ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalduration
-ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target)
+ThrowCompletionOr<NonnullGCPtr<Duration>> create_temporal_duration(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
 
@@ -420,11 +420,11 @@ ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, doub
     auto object = TRY(ordinary_create_from_constructor<Duration>(vm, *new_target, &Intrinsics::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 14. Return object.
-    return object.ptr();
+    return object;
 }
 
 // 7.5.15 CreateNegatedTemporalDuration ( duration ), https://tc39.es/proposal-temporal/#sec-temporal-createnegatedtemporalduration
-Duration* create_negated_temporal_duration(VM& vm, Duration const& duration)
+NonnullGCPtr<Duration> create_negated_temporal_duration(VM& vm, Duration const& duration)
 {
     // 1. Return ! CreateTemporalDuration(-duration.[[Years]], -duration.[[Months]], -duration.[[Weeks]], -duration.[[Days]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]]).
     return MUST(create_temporal_duration(vm, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds()));
@@ -829,13 +829,13 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
     VERIFY(sign != 0);
 
     // 4. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-    auto* one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+    auto one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
     // 5. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
-    auto* one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
+    auto one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
     // 6. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
-    auto* one_week = MUST(create_temporal_duration(vm, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
+    auto one_week = MUST(create_temporal_duration(vm, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
 
     Object* calendar;
 
@@ -1024,13 +1024,13 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
     VERIFY(sign != 0);
 
     // 5. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-    auto* one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+    auto one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
     // 6. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
-    auto* one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
+    auto one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
     // 7. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
-    auto* one_week = MUST(create_temporal_duration(vm, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
+    auto one_week = MUST(create_temporal_duration(vm, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
 
     // 8. Set relativeTo to ? ToTemporalDate(relativeTo).
     auto* relative_to = TRY(to_temporal_date(vm, relative_to_value));
@@ -1273,10 +1273,10 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         auto& calendar = relative_to.calendar();
 
         // b. Let dateDuration1 be ! CreateTemporalDuration(y1, mon1, w1, d1, 0, 0, 0, 0, 0, 0).
-        auto* date_duration1 = MUST(create_temporal_duration(vm, years1, months1, weeks1, days1, 0, 0, 0, 0, 0, 0));
+        auto date_duration1 = MUST(create_temporal_duration(vm, years1, months1, weeks1, days1, 0, 0, 0, 0, 0, 0));
 
         // c. Let dateDuration2 be ! CreateTemporalDuration(y2, mon2, w2, d2, 0, 0, 0, 0, 0, 0).
-        auto* date_duration2 = MUST(create_temporal_duration(vm, years2, months2, weeks2, days2, 0, 0, 0, 0, 0, 0));
+        auto date_duration2 = MUST(create_temporal_duration(vm, years2, months2, weeks2, days2, 0, 0, 0, 0, 0, 0));
 
         // d. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto date_add = TRY(Value(&calendar).get_method(vm, vm.names.dateAdd));
@@ -1470,14 +1470,14 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         VERIFY(plain_relative_to);
 
         // a. Let yearsDuration be ! CreateTemporalDuration(years, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_duration = MUST(create_temporal_duration(vm, years, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        auto years_duration = MUST(create_temporal_duration(vm, years, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // FIXME: b. Let yearsLater be ? AddDate(calendarRec, plainRelativeTo, yearsDuration).
         auto date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
         auto* years_later = TRY(calendar_date_add(vm, *calendar, plain_relative_to, *years_duration, nullptr, date_add));
 
         // c. Let yearsMonthsWeeks be ! CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_months_weeks = MUST(create_temporal_duration(vm, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
+        auto years_months_weeks = MUST(create_temporal_duration(vm, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
 
         // FIXME: d. Let yearsMonthsWeeksLater be ? AddDate(calendarRec, plainRelativeTo, yearsMonthsWeeks).
         auto* years_months_weeks_later = TRY(calendar_date_add(vm, *calendar, plain_relative_to, *years_months_weeks, nullptr, date_add));
@@ -1534,7 +1534,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto sign = fractional_days < 0 ? -1 : 1;
 
         // u. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        auto one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // v. Set moveResult to ? MoveRelativeDate(calendarRec, plainRelativeTo, oneYear).
         // FIXME:: pass through calendarRec
@@ -1565,14 +1565,14 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         VERIFY(plain_relative_to);
 
         // a. Let yearsMonths be ! CreateTemporalDuration(years, months, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_months = MUST(create_temporal_duration(vm, years, months, 0, 0, 0, 0, 0, 0, 0, 0));
+        auto years_months = MUST(create_temporal_duration(vm, years, months, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // FIXME: b. Let yearsMonthsLater be ? AddDate(calendarRec, plainRelativeTo, yearsMonths).
         auto date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
         auto* years_months_later = TRY(calendar_date_add(vm, *calendar, plain_relative_to, *years_months, nullptr, date_add));
 
         // c. Let yearsMonthsWeeks be ! CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_months_weeks = MUST(create_temporal_duration(vm, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
+        auto years_months_weeks = MUST(create_temporal_duration(vm, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
 
         // FIXME: d. Let yearsMonthsWeeksLater be ? AddDate(calendarRec, plainRelativeTo, yearsMonthsWeeks).
         auto* years_months_weeks_later = TRY(calendar_date_add(vm, *calendar, plain_relative_to, *years_months_weeks, nullptr, date_add));
@@ -1610,7 +1610,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         months += months_passed;
 
         // o. Let monthsPassedDuration be ! CreateTemporalDuration(0, monthsPassed, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* months_passed_duration = MUST(create_temporal_duration(vm, 0, months_passed, 0, 0, 0, 0, 0, 0, 0, 0));
+        auto months_passed_duration = MUST(create_temporal_duration(vm, 0, months_passed, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // p. Let moveResult be ? MoveRelativeDate(calendarRec, plainRelativeTo, monthsPassedDuration).
         // FIXME: Pass through calendarRec
@@ -1629,7 +1629,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto sign = fractional_days < 0 ? -1 : 1;
 
         // u. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
+        auto one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // v. Let moveResult be ? MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth).
         // FIXME: spec bug, this should be set.
@@ -1682,7 +1682,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         weeks += weeks_passed;
 
         // h. Let weeksPassedDuration be ! CreateTemporalDuration(0, 0, weeksPassed, 0, 0, 0, 0, 0, 0, 0).
-        auto* weeks_passed_duration = MUST(create_temporal_duration(vm, 0, 0, weeks_passed, 0, 0, 0, 0, 0, 0, 0));
+        auto weeks_passed_duration = MUST(create_temporal_duration(vm, 0, 0, weeks_passed, 0, 0, 0, 0, 0, 0, 0));
 
         // FIXME: i. Let moveResult be ? MoveRelativeDate(calendarRec, plainRelativeTo, weeksPassedDuration).
         auto date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
@@ -1701,7 +1701,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto sign = fractional_days < 0 ? -1 : 1;
 
         // n. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
-        auto* one_week = MUST(create_temporal_duration(vm, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
+        auto one_week = MUST(create_temporal_duration(vm, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
 
         // o. Let moveResult be ? MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek).
         // FIXME: spec bug, should be set
@@ -2019,7 +2019,7 @@ ThrowCompletionOr<String> temporal_duration_to_string(VM& vm, double years, doub
 }
 
 // 7.5.28 AddDurationToOrSubtractDurationFromDuration ( operation, duration, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromduration
-ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(VM& vm, ArithmeticOperation operation, Duration const& duration, Value other_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<Duration>> add_duration_to_or_subtract_duration_from_duration(VM& vm, ArithmeticOperation operation, Duration const& duration, Value other_value, Value options_value)
 {
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;

@@ -300,7 +300,7 @@ ThrowCompletionOr<TemporalPlainDateTime> add_date_time(VM& vm, i32 year, u8 mont
     auto* date_part = MUST(create_temporal_date(vm, year, month, day, calendar));
 
     // 4. Let dateDuration be ? CreateTemporalDuration(years, months, weeks, days + timeResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* date_duration = TRY(create_temporal_duration(vm, years, months, weeks, days + time_result.days, 0, 0, 0, 0, 0, 0));
+    auto date_duration = TRY(create_temporal_duration(vm, years, months, weeks, days + time_result.days, 0, 0, 0, 0, 0, 0));
 
     // 5. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
     auto* added_date = TRY(calendar_date_add(vm, calendar, date_part, *date_duration, options));
@@ -384,7 +384,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8
 }
 
 // 5.5.11 DifferenceTemporalPlainDateTime ( operation, dateTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime
-ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(VM& vm, DifferenceOperation operation, PlainDateTime& date_time, Value other_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_date_time(VM& vm, DifferenceOperation operation, PlainDateTime& date_time, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;

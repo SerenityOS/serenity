@@ -312,7 +312,7 @@ ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, V
 }
 
 // 8.5.9 DifferenceTemporalInstant ( operation, instant, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant
-ThrowCompletionOr<Duration*> difference_temporal_instant(VM& vm, DifferenceOperation operation, Instant const& instant, Value other_value, Value options)
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_instant(VM& vm, DifferenceOperation operation, Instant const& instant, Value other_value, Value options)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;

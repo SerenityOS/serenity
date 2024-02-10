@@ -173,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto* date = TRY(to_temporal_date(vm, vm.argument(0)));
 
     // 5. Set duration to ? ToTemporalDuration(duration).
-    auto* duration = TRY(to_temporal_duration(vm, vm.argument(1)));
+    auto duration = TRY(to_temporal_duration(vm, vm.argument(1)));
 
     // 6. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(vm, vm.argument(2)));

@@ -90,7 +90,7 @@ ThrowCompletionOr<String> temporal_time_to_string(VM&, u8 hour, u8 minute, u8 se
 i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2);
 DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length_ns = {});
-ThrowCompletionOr<Duration*> difference_temporal_plain_time(VM&, DifferenceOperation, PlainTime const&, Value other, Value options);
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_time(VM&, DifferenceOperation, PlainTime const&, Value other, Value options);
 ThrowCompletionOr<PlainTime*> add_duration_to_or_subtract_duration_from_plain_time(VM&, ArithmeticOperation, PlainTime const&, Value temporal_duration_like);
 
 }

@@ -84,7 +84,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationConstructor::construct(FunctionO
     auto ns = TRY(to_integer_if_integral(vm, vm.argument(9), ErrorType::TemporalInvalidDuration));
 
     // 12. Return ? CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget).
-    return *TRY(create_temporal_duration(vm, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
+    return TRY(create_temporal_duration(vm, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
@@ -108,10 +108,10 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::from)
 JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDuration(one).
-    auto* one = TRY(to_temporal_duration(vm, vm.argument(0)));
+    auto one = TRY(to_temporal_duration(vm, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalDuration(two).
-    auto* two = TRY(to_temporal_duration(vm, vm.argument(1)));
+    auto two = TRY(to_temporal_duration(vm, vm.argument(1)));
 
     // 3. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(vm, vm.argument(2)));

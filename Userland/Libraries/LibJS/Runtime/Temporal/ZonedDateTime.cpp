@@ -383,7 +383,7 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(VM& vm, BigInt const& epoch_nanos
     auto* date_part = MUST(create_temporal_date(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
 
     // 7. Let dateDuration be ! CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
-    auto* date_duration = MUST(create_temporal_duration(vm, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
+    auto date_duration = MUST(create_temporal_duration(vm, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
     // 8. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
     auto* added_date = TRY(calendar_date_add(vm, calendar, date_part, *date_duration, options));
@@ -571,7 +571,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
 }
 
 // 6.5.8 DifferenceTemporalZonedDateTime ( operation, zonedDateTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalzoneddatetime
-ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(VM& vm, DifferenceOperation operation, ZonedDateTime& zoned_date_time, Value other_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_zoned_date_time(VM& vm, DifferenceOperation operation, ZonedDateTime& zoned_date_time, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;

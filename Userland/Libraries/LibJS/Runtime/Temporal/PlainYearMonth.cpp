@@ -232,7 +232,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
 }
 
 // 9.5.7 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
-ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_year_month(VM& vm, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
@@ -317,7 +317,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto& realm = *vm.current_realm();
 
     // 1. Let duration be ? ToTemporalDuration(temporalDurationLike).
-    auto* duration = TRY(to_temporal_duration(vm, temporal_duration_like));
+    auto duration = TRY(to_temporal_duration(vm, temporal_duration_like));
 
     // 2. If operation is subtract, then
     if (operation == ArithmeticOperation::Subtract) {
@@ -363,7 +363,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto* date = TRY(calendar_date_from_fields(vm, calendar, *fields));
 
     // 13. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = MUST(create_temporal_duration(vm, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
+    auto duration_to_add = MUST(create_temporal_duration(vm, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 14. Let optionsCopy be OrdinaryObjectCreate(null).
     auto options_copy = Object::create(realm, nullptr);
