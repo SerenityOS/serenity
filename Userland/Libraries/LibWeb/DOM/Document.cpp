@@ -3735,6 +3735,47 @@ void Document::remove_form_associated_element_with_form_attribute(HTML::FormAsso
     });
 }
 
+void Document::set_design_mode_enabled_state(bool design_mode_enabled)
+{
+    m_design_mode_enabled = design_mode_enabled;
+    set_editable(design_mode_enabled);
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#making-entire-documents-editable:-the-designmode-idl-attribute
+String Document::design_mode() const
+{
+    // The designMode getter steps are to return "on" if this's design mode enabled is true; otherwise "off".
+    return design_mode_enabled_state() ? "on"_string : "off"_string;
+}
+
+WebIDL::ExceptionOr<void> Document::set_design_mode(String const& design_mode)
+{
+    // 1. Let value be the given value, converted to ASCII lowercase.
+    auto value = MUST(design_mode.to_lowercase());
+
+    // 2. If value is "on" and this's design mode enabled is false, then:
+    if (value == "on"sv && !m_design_mode_enabled) {
+        // 1. Set this's design mode enabled to true.
+        set_design_mode_enabled_state(true);
+        // 2. Reset this's active range's start and end boundary points to be at the start of this.
+        if (auto selection = get_selection(); selection) {
+            if (auto active_range = selection->range(); active_range) {
+                TRY(active_range->set_start(*this, 0));
+                TRY(active_range->set_end(*this, 0));
+                update_layout();
+            }
+        }
+        // 3. Run the focusing steps for this's document element, if non-null.
+        if (auto* document_element = this->document_element(); document_element)
+            HTML::run_focusing_steps(document_element);
+    }
+    // 3. If value is "off", then set this's design mode enabled to false.
+    else if (value == "off"sv) {
+        set_design_mode_enabled_state(false);
+    }
+    return {};
+}
+
 // https://drafts.csswg.org/cssom-view/#dom-document-elementfrompoint
 Element const* Document::element_from_point(double x, double y)
 {
