@@ -313,6 +313,8 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
             return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT codes encode for more that a line");
     }
 
+    TRY(decoded_bits.align_to_byte_boundary());
+
     return {};
 }
 
@@ -333,7 +335,8 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
     auto strip_stream = make<FixedMemoryStream>(bytes);
     auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
 
-    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8)));
+    // Note: We put image_height extra-space to handle at most one alignment to byte boundary per line.
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8) + image_height));
     auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
     auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
 
@@ -341,7 +344,6 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
         TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
 
         bit_stream->align_to_byte_boundary();
-        TRY(decoded_bits->align_to_byte_boundary());
     }
 
     return decoded_bytes;
@@ -352,7 +354,8 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
     auto strip_stream = make<FixedMemoryStream>(bytes);
     auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
 
-    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8)));
+    // Note: We put image_height extra-space to handle at most one alignment to byte boundary per line.
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8) + image_height));
     auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
     auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
 
