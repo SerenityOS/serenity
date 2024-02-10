@@ -395,24 +395,22 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value 
 }
 
 // 12.2.7 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
-ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object const& calendar, Value one, Value two, Object const& options, FunctionObject const* date_until)
+ThrowCompletionOr<NonnullGCPtr<Duration>> calendar_date_until(VM& vm, CalendarMethods const& calendar_record, Value one, Value two, Object const& options)
 {
-    // 1. Assert: Type(calendar) is Object.
+    // 1. Let duration be ? CalendarMethodsRecordCall(calendarRec, DATE-UNTIL, « one, two, options »).
+    auto duration = TRY(calendar_methods_record_call(vm, calendar_record, CalendarMethod::DateUntil, Vector<Value> { one, two, &options }));
 
-    // 2. If dateUntil is not present, set dateUntil to ? GetMethod(calendar, "dateUntil").
-    if (!date_until)
-        date_until = TRY(Value(&calendar).get_method(vm, vm.names.dateUntil));
+    // 2. If CalendarMethodsRecordIsBuiltin(calendarRec) is true, return duration.
+    if (calendar_methods_record_is_builtin(calendar_record))
+        return verify_cast<Duration>(duration.as_object());
 
-    // 3. Let duration be ? Call(dateUntil, calendar, « one, two, options »).
-    auto duration = TRY(call(vm, date_until ?: js_undefined(), &calendar, one, two, &options));
-
-    // 4. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    // 3. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto duration_object = TRY(duration.to_object(vm));
     if (!is<Duration>(*duration_object))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Duration");
 
-    // 5. Return duration.
-    return static_cast<Duration*>(duration_object.ptr());
+    // 4. Return duration.
+    return static_cast<Duration&>(duration.as_object());
 }
 
 // 12.2.8 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear

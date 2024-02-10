@@ -374,7 +374,9 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8
     auto* until_options = TRY(merge_largest_unit_option(vm, options, TRY_OR_THROW_OOM(vm, String::from_utf8(date_largest_unit))));
 
     // 12. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
-    auto* date_difference = TRY(calendar_date_until(vm, calendar, date1, date2, *until_options));
+    // FIXME: AD-HOC calendar records use as this AO is not up to date with latest spec
+    auto calendar_record = TRY(create_calendar_methods_record(vm, NonnullGCPtr<Object> { calendar }, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
+    auto date_difference = TRY(calendar_date_until(vm, calendar_record, date1, date2, *until_options));
 
     // 13. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
     auto balance_result = TRY(balance_duration(vm, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { time_difference.nanoseconds }, largest_unit));
@@ -406,7 +408,9 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_date_time(VM
     auto* relative_to = MUST(create_temporal_date(vm, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.calendar()));
 
     // 7. Let roundResult be (? RoundDuration(diff.[[Years]], diff.[[Months]], diff.[[Weeks]], diff.[[Days]], diff.[[Hours]], diff.[[Minutes]], diff.[[Seconds]], diff.[[Milliseconds]], diff.[[Microseconds]], diff.[[Nanoseconds]], settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], relativeTo)).[[DurationRecord]].
-    auto round_result = TRY(round_duration(vm, diff.years, diff.months, diff.weeks, diff.days, diff.hours, diff.minutes, diff.seconds, diff.milliseconds, diff.microseconds, diff.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, relative_to)).duration_record;
+    // FIXME: AD-HOC calendar records use as this AO is not up to date with latest spec
+    auto calendar_record = TRY(create_calendar_methods_record(vm, NonnullGCPtr<Object> { date_time.calendar() }, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
+    auto round_result = TRY(round_duration(vm, diff.years, diff.months, diff.weeks, diff.days, diff.hours, diff.minutes, diff.seconds, diff.milliseconds, diff.microseconds, diff.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, relative_to, calendar_record)).duration_record;
 
     // 8. Let result be ? BalanceDuration(roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], settings.[[LargestUnit]]).
     auto result = MUST(balance_duration(vm, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, Crypto::SignedBigInteger { round_result.nanoseconds }, settings.largest_unit));
