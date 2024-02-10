@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibELF/Arch/GenericDynamicRelocationType.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Hashes.h>
@@ -228,17 +229,17 @@ void DynamicLoader::do_main_relocations()
 
     // If the object is position-independent, the pointer to the PLT trampoline needs to be relocated.
     auto fixup_trampoline_pointer = [&](DynamicObject::Relocation const& relocation) {
-        VERIFY(relocation.type() == R_X86_64_JUMP_SLOT || relocation.type() == R_AARCH64_JUMP_SLOT);
+        VERIFY(static_cast<GenericDynamicRelocationType>(relocation.type()) == GenericDynamicRelocationType::JUMP_SLOT);
         if (image().is_dynamic())
             *((FlatPtr*)relocation.address().as_ptr()) += m_dynamic_object->base_address().get();
     };
 
     m_dynamic_object->plt_relocation_section().for_each_relocation([&](DynamicObject::Relocation const& relocation) {
-        if (relocation.type() == R_X86_64_IRELATIVE || relocation.type() == R_AARCH64_IRELATIVE) {
+        if (static_cast<GenericDynamicRelocationType>(relocation.type()) == GenericDynamicRelocationType::IRELATIVE) {
             m_direct_ifunc_relocations.append(relocation);
             return;
         }
-        if (relocation.type() == R_X86_64_TLSDESC || relocation.type() == R_AARCH64_TLSDESC) {
+        if (static_cast<GenericDynamicRelocationType>(relocation.type()) == GenericDynamicRelocationType::TLSDESC) {
             // GNU ld for some reason puts TLSDESC relocations into .rela.plt
             // https://sourceware.org/bugzilla/show_bug.cgi?id=28387
 
@@ -574,14 +575,14 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         return ResolvedTLSSymbol { *res.value().dynamic_object, res.value().value };
     };
 
-    switch (relocation.type()) {
+    using enum GenericDynamicRelocationType;
+    switch (static_cast<GenericDynamicRelocationType>(relocation.type())) {
 
-    case R_X86_64_NONE:
+    case NONE:
         // Apparently most loaders will just skip these?
         // Seems if the 'link editor' generates one something is funky with your code
         break;
-    case R_AARCH64_ABS64:
-    case R_X86_64_64: {
+    case ABSOLUTE: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
@@ -602,8 +603,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
             *patch_ptr = call_ifunc_resolver(VirtualAddress { *patch_ptr }).get();
         break;
     }
-    case R_AARCH64_GLOB_DAT:
-    case R_X86_64_GLOB_DAT: {
+    case GLOB_DAT: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         VirtualAddress symbol_location;
@@ -633,8 +633,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         *patch_ptr = symbol_location.get();
         break;
     }
-    case R_AARCH64_RELATIVE:
-    case R_X86_64_RELATIVE: {
+    case RELATIVE: {
         if (!image().is_dynamic())
             break;
         // FIXME: According to the spec, R_386_relative ones must be done first.
@@ -646,8 +645,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
             *patch_ptr += m_dynamic_object->base_address().get();
         break;
     }
-    case R_AARCH64_TLS_TPREL:
-    case R_X86_64_TPOFF64: {
+    case TLS_TPREL: {
         auto maybe_resolution = resolve_tls_symbol(relocation);
         if (!maybe_resolution.has_value())
             break;
@@ -660,7 +658,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         VERIFY(static_cast<ssize_t>(*patch_ptr) < 0);
         break;
     }
-    case R_X86_64_DTPMOD64: {
+    case TLS_DTPMOD: {
         auto maybe_resolution = resolve_tls_symbol(relocation);
         if (!maybe_resolution.has_value())
             break;
@@ -670,7 +668,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         *patch_ptr = maybe_resolution->dynamic_object.tls_offset().value();
         break;
     }
-    case R_X86_64_DTPOFF64: {
+    case TLS_DTPREL: {
         auto maybe_resolution = resolve_tls_symbol(relocation);
         if (!maybe_resolution.has_value())
             break;
@@ -680,7 +678,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         break;
     }
 #ifdef HAS_TLSDESC_SUPPORT
-    case R_AARCH64_TLSDESC: {
+    case TLSDESC: {
         auto maybe_resolution = resolve_tls_symbol(relocation);
         if (!maybe_resolution.has_value())
             break;
@@ -693,8 +691,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         break;
     }
 #endif
-    case R_AARCH64_IRELATIVE:
-    case R_X86_64_IRELATIVE: {
+    case IRELATIVE: {
         if (should_call_ifunc_resolver == ShouldCallIfuncResolver::No)
             return RelocationResult::CallIfuncResolver;
         VirtualAddress resolver;
@@ -711,8 +708,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         *patch_ptr = call_ifunc_resolver(resolver).get();
         break;
     }
-    case R_AARCH64_JUMP_SLOT:
-    case R_X86_64_JUMP_SLOT:
+    case JUMP_SLOT:
         VERIFY_NOT_REACHED(); // PLT relocations are handled by do_plt_relocation.
     default:
         // Raise the alarm! Someone needs to implement this relocation type
@@ -724,7 +720,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
 
 DynamicLoader::RelocationResult DynamicLoader::do_plt_relocation(DynamicObject::Relocation const& relocation, ShouldCallIfuncResolver should_call_ifunc_resolver)
 {
-    VERIFY(relocation.type() == R_X86_64_JUMP_SLOT || relocation.type() == R_AARCH64_JUMP_SLOT);
+    VERIFY(static_cast<GenericDynamicRelocationType>(relocation.type()) == GenericDynamicRelocationType::JUMP_SLOT);
     auto symbol = relocation.symbol();
     auto* relocation_address = (FlatPtr*)relocation.address().as_ptr();
 
