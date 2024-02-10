@@ -81,6 +81,11 @@ public:
         return m_metadata.strip_byte_counts().has_value() ? m_metadata.strip_byte_counts() : m_metadata.tile_byte_counts();
     }
 
+    bool is_tiled() const
+    {
+        return m_metadata.tile_width().has_value() && m_metadata.tile_length().has_value();
+    }
+
     ErrorOr<void> ensure_baseline_tags_are_correct() const
     {
         if (!segment_offsets().has_value())
@@ -92,7 +97,7 @@ public:
         if (segment_offsets()->size() != segment_byte_counts()->size())
             return Error::from_string_literal("TIFFImageDecoderPlugin: StripsOffset and StripByteCount have different sizes");
 
-        if (!m_metadata.rows_per_strip().has_value() && m_metadata.strip_byte_counts()->size() != 1)
+        if (!m_metadata.rows_per_strip().has_value() && segment_byte_counts()->size() != 1 && !is_tiled())
             return Error::from_string_literal("TIFFImageDecoderPlugin: RowsPerStrip is not provided and impossible to deduce");
 
         if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
@@ -278,12 +283,15 @@ private:
         return CMYK { first_component, second_component, third_component, fourth_component };
     }
 
-    template<CallableAs<ErrorOr<ReadonlyBytes>, u32, IntSize> StripDecoder>
-    ErrorOr<void> loop_over_pixels(StripDecoder&& strip_decoder)
+    template<CallableAs<ErrorOr<ReadonlyBytes>, u32, IntSize> SegmentDecoder>
+    ErrorOr<void> loop_over_pixels(SegmentDecoder&& segment_decoder)
     {
-        auto const strips_offset = *m_metadata.strip_offsets();
-        auto const strip_byte_counts = *m_metadata.strip_byte_counts();
-        auto const rows_per_strip = m_metadata.rows_per_strip().value_or(*m_metadata.image_length());
+        auto const offsets = *segment_offsets();
+        auto const byte_counts = *segment_byte_counts();
+
+        auto const segment_length = m_metadata.tile_length().value_or(m_metadata.rows_per_strip().value_or(*m_metadata.image_length()));
+        auto const segment_width = m_metadata.tile_width().value_or(*m_metadata.image_width());
+        auto const segment_per_rows = m_metadata.tile_width().map([&](u32 w) { return ceil_div(*m_metadata.image_width(), w); }).value_or(1);
 
         Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap> oriented_bitmap = TRY(([&]() -> ErrorOr<Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap>> {
             if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK)
@@ -291,27 +299,32 @@ private:
             return ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_length() }, BitmapFormat::BGRA8888);
         }()));
 
-        for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
-            TRY(m_stream->seek(strips_offset[strip_index]));
+        for (u32 segment_index = 0; segment_index < offsets.size(); ++segment_index) {
+            TRY(m_stream->seek(offsets[segment_index]));
 
-            auto const strip_width = *m_metadata.image_width();
-            auto const rows_in_strip = strip_index < strips_offset.size() - 1 ? rows_per_strip : *m_metadata.image_length() - rows_per_strip * strip_index;
+            auto const rows_in_segment = segment_index < offsets.size() - 1 ? segment_length : *m_metadata.image_length() - segment_length * segment_index;
+            auto const decoded_bytes = TRY(segment_decoder(byte_counts[segment_index], { segment_width, rows_in_segment }));
+            auto decoded_segment = make<FixedMemoryStream>(decoded_bytes);
+            auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_segment));
 
-            auto const decoded_bytes = TRY(strip_decoder(strip_byte_counts[strip_index], { strip_width, rows_in_strip }));
-            auto decoded_strip = make<FixedMemoryStream>(decoded_bytes);
-            auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
-
-            for (u32 row = 0; row < rows_per_strip; row++) {
-                auto const image_row = row + rows_per_strip * strip_index;
+            for (u32 row = 0; row < segment_length; row++) {
+                auto const image_row = row + segment_length * (segment_index / segment_per_rows);
                 if (image_row >= *m_metadata.image_length())
                     break;
 
                 Optional<Color> last_color {};
 
-                for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
+                for (u32 column = 0; column < segment_width; ++column) {
+                    // If image_length % segment_length != 0, the last tile will be padded.
+                    // This variable helps us to skip these last columns. Note that we still
+                    // need to read the sample from the stream.
+                    auto const image_column = column + segment_width * (segment_index % segment_per_rows);
+
                     if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK) {
                         auto const cmyk = TRY(read_color_cmyk(*decoded_stream));
-                        oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(column, image_row, cmyk);
+                        if (image_column >= *m_metadata.image_width())
+                            continue;
+                        oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(image_column, image_row, cmyk);
                     } else {
                         auto color = TRY(read_color(*decoded_stream));
 
@@ -326,7 +339,9 @@ private:
                         }
 
                         last_color = color;
-                        oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(column, image_row, color.value());
+                        if (image_column >= *m_metadata.image_width())
+                            continue;
+                        oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(image_column, image_row, color.value());
                     }
                 }
 
@@ -388,13 +403,13 @@ private:
             TRY(ensure_tags_are_correct_for_ccitt());
 
             ByteBuffer decoded_bytes {};
-            auto decode_ccitt_rle_strip = [&](u32 num_bytes, IntSize image_size) -> ErrorOr<ReadonlyBytes> {
+            auto decode_ccitt_rle_segment = [&](u32 num_bytes, IntSize segment_size) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(read_bytes_considering_fill_order(num_bytes));
-                decoded_bytes = TRY(CCITT::decode_ccitt_rle(encoded_bytes, image_size.width(), image_size.height()));
+                decoded_bytes = TRY(CCITT::decode_ccitt_rle(encoded_bytes, segment_size.width(), segment_size.height()));
                 return decoded_bytes;
             };
 
-            TRY(loop_over_pixels(move(decode_ccitt_rle_strip)));
+            TRY(loop_over_pixels(move(decode_ccitt_rle_segment)));
             break;
         }
         case Compression::Group3Fax: {
@@ -402,22 +417,22 @@ private:
 
             auto const parameters = parse_t4_options(*m_metadata.t4_options());
             ByteBuffer decoded_bytes {};
-            auto decode_group3_strip = [&](u32 num_bytes, IntSize image_size) -> ErrorOr<ReadonlyBytes> {
+            auto decode_group3_segment = [&](u32 num_bytes, IntSize segment_size) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(read_bytes_considering_fill_order(num_bytes));
-                decoded_bytes = TRY(CCITT::decode_ccitt_group3(encoded_bytes, image_size.width(), image_size.height(), parameters));
+                decoded_bytes = TRY(CCITT::decode_ccitt_group3(encoded_bytes, segment_size.width(), segment_size.height(), parameters));
                 return decoded_bytes;
             };
 
-            TRY(loop_over_pixels(move(decode_group3_strip)));
+            TRY(loop_over_pixels(move(decode_group3_segment)));
             break;
         }
         case Compression::LZW: {
             ByteBuffer decoded_bytes {};
-            auto decode_lzw_strip = [&](u32 num_bytes, IntSize) -> ErrorOr<ReadonlyBytes> {
+            auto decode_lzw_segment = [&](u32 num_bytes, IntSize) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
 
                 if (encoded_bytes.is_empty())
-                    return Error::from_string_literal("TIFFImageDecoderPlugin: Unable to read from empty LZW strip");
+                    return Error::from_string_literal("TIFFImageDecoderPlugin: Unable to read from empty LZW segment");
 
                 // Note: AFAIK, there are two common ways to use LZW compression:
                 //          - With a LittleEndian stream and no Early-Change, this is used in the GIF format
@@ -434,7 +449,7 @@ private:
                 return decoded_bytes;
             };
 
-            TRY(loop_over_pixels(move(decode_lzw_strip)));
+            TRY(loop_over_pixels(move(decode_lzw_segment)));
             break;
         }
         case Compression::AdobeDeflate:
@@ -456,13 +471,13 @@ private:
             // Section 9: PackBits Compression
             ByteBuffer decoded_bytes {};
 
-            auto decode_packbits_strip = [&](u32 num_bytes, IntSize) -> ErrorOr<ReadonlyBytes> {
+            auto decode_packbits_segment = [&](u32 num_bytes, IntSize) -> ErrorOr<ReadonlyBytes> {
                 auto const encoded_bytes = TRY(m_stream->read_in_place<u8 const>(num_bytes));
                 decoded_bytes = TRY(Compress::PackBits::decode_all(encoded_bytes));
                 return decoded_bytes;
             };
 
-            TRY(loop_over_pixels(move(decode_packbits_strip)));
+            TRY(loop_over_pixels(move(decode_packbits_segment)));
             break;
         }
         default:
