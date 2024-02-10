@@ -44,7 +44,7 @@ Optional<CSSPixelPoint> InlinePaintable::enclosing_scroll_frame_offset() const
 Optional<CSSPixelRect> InlinePaintable::clip_rect() const
 {
     if (m_enclosing_clip_frame)
-        return m_enclosing_clip_frame->rect;
+        return m_enclosing_clip_frame->rect();
     return {};
 }
 

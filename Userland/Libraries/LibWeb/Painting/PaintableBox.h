@@ -8,6 +8,7 @@
 
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
+#include <LibWeb/Painting/ClipFrame.h>
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/PaintableFragment.h>
 #include <LibWeb/Painting/ShadowPainting.h>
@@ -17,11 +18,6 @@ namespace Web::Painting {
 struct ScrollFrame : public RefCounted<ScrollFrame> {
     i32 id { -1 };
     CSSPixelPoint offset;
-};
-
-struct ClipFrame : public RefCounted<ClipFrame> {
-    CSSPixelRect rect;
-    Optional<BorderRadiiData> corner_clip_radii;
 };
 
 class PaintableBox : public Paintable {
@@ -210,7 +206,7 @@ public:
     Optional<int> scroll_frame_id() const;
     Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const;
     Optional<CSSPixelRect> clip_rect() const;
-    Optional<BorderRadiiData> corner_clip_radii() const;
+    Span<BorderRadiiClip const> border_radii_clips() const;
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -235,7 +231,7 @@ private:
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;
 
     mutable bool m_clipping_overflow { false };
-    mutable Optional<u32> m_corner_clipper_id;
+    mutable Vector<u32> m_corner_clipper_ids;
 
     RefPtr<ScrollFrame const> m_enclosing_scroll_frame;
     RefPtr<ClipFrame const> m_enclosing_clip_frame;
