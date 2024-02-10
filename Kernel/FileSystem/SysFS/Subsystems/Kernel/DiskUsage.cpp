@@ -5,6 +5,7 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
+#include <Kernel/API/POSIX/unistd.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/DiskUsage.h>
@@ -40,18 +41,22 @@ ErrorOr<void> SysFSDiskUsage::try_generate(KBufferBuilder& builder)
         TRY(fs_object.add("readonly"sv, fs.is_readonly()));
         TRY(fs_object.add("mount_flags"sv, mount.flags()));
 
-        if (fs.is_file_backed()) {
-            auto& file = static_cast<const FileBackedFileSystem&>(fs).file();
-            if (file.is_loop_device()) {
-                auto& device = static_cast<LoopDevice const&>(file);
-                auto path = TRY(device.custody().try_serialize_absolute_path());
-                TRY(fs_object.add("source"sv, path->view()));
-            } else {
-                auto pseudo_path = TRY(static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path());
-                TRY(fs_object.add("source"sv, pseudo_path->view()));
-            }
+        if (mount.flags() & MS_SRCHIDDEN) {
+            TRY(fs_object.add("source"sv, "unknown"));
         } else {
-            TRY(fs_object.add("source"sv, "none"));
+            if (fs.is_file_backed()) {
+                auto& file = static_cast<const FileBackedFileSystem&>(fs).file();
+                if (file.is_loop_device()) {
+                    auto& device = static_cast<LoopDevice const&>(file);
+                    auto path = TRY(device.custody().try_serialize_absolute_path());
+                    TRY(fs_object.add("source"sv, path->view()));
+                } else {
+                    auto pseudo_path = TRY(static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path());
+                    TRY(fs_object.add("source"sv, pseudo_path->view()));
+                }
+            } else {
+                TRY(fs_object.add("source"sv, "none"));
+            }
         }
 
         TRY(fs_object.finish());
