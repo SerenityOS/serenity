@@ -200,3 +200,23 @@ TEST_CASE(two_patches_in_single_patch_file)
     EXPECT_FILE_EQ(ByteString::formatted("{}/first_file_to_add", s_test_dir), "Hello, friends!\n");
     EXPECT_FILE_EQ(ByteString::formatted("{}/second_file_to_add", s_test_dir), "Hello, friends!\n");
 }
+
+TEST_CASE(patch_adding_file_to_existing_file)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- /dev/null
++++ a
+@@ -0,0 +1 @@
++1
+)"sv;
+
+    auto file = "a\n"sv;
+    auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
+    MUST(input->write_until_depleted(file.bytes()));
+
+    run_patch(ExpectSuccess::No, {}, patch);
+
+    EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "a\n"sv);
+}

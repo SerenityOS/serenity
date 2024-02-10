@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,9 +35,20 @@ static Optional<Location> locate_hunk(Vector<StringView> const& content, Hunk co
     // Make a first best guess at where the from-file range is telling us where the hunk should be.
     size_t offset_guess = expected_line_number(hunk.location) - 1 + offset;
 
-    // If there's no lines surrounding this hunk - it will always succeed, so there is no point in checking any further.
-    if (hunk.location.old_range.number_of_lines == 0)
+    // If there's no lines surrounding this hunk - it will always succeed,
+    // so there is no point in checking any further. Note that this check is
+    // also what makes matching against an empty 'from file' work (with no lines),
+    // as in that case there is no content for us to even match against in the
+    // first place!
+    //
+    // However, we also should reject patches being added when the hunk is
+    // claiming the file is completely empty - but there are actually lines in
+    // that file.
+    if (hunk.location.old_range.number_of_lines == 0) {
+        if (hunk.location.old_range.start_line == 0 && !content.is_empty())
+            return {};
         return Location { offset_guess, 0, 0 };
+    }
 
     size_t patch_prefix_context = 0;
     for (auto const& line : hunk.lines) {
