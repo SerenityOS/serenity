@@ -284,8 +284,8 @@ private:
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_strip));
 
             for (u32 row = 0; row < rows_per_strip; row++) {
-                auto const scanline = row + rows_per_strip * strip_index;
-                if (scanline >= *m_metadata.image_length())
+                auto const image_row = row + rows_per_strip * strip_index;
+                if (image_row >= *m_metadata.image_length())
                     break;
 
                 Optional<Color> last_color {};
@@ -293,7 +293,7 @@ private:
                 for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
                     if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK) {
                         auto const cmyk = TRY(read_color_cmyk(*decoded_stream));
-                        oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(column, scanline, cmyk);
+                        oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(column, image_row, cmyk);
                     } else {
                         auto color = TRY(read_color(*decoded_stream));
 
@@ -308,7 +308,7 @@ private:
                         }
 
                         last_color = color;
-                        oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(column, scanline, color.value());
+                        oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(column, image_row, color.value());
                     }
                 }
 
