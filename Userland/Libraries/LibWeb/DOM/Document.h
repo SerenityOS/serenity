@@ -561,6 +561,11 @@ public:
     void add_form_associated_element_with_form_attribute(HTML::FormAssociatedElement&);
     void remove_form_associated_element_with_form_attribute(HTML::FormAssociatedElement&);
 
+    bool design_mode_enabled_state() const { return m_design_mode_enabled; }
+    void set_design_mode_enabled_state(bool);
+    String design_mode() const;
+    WebIDL::ExceptionOr<void> set_design_mode(String const&);
+
     Element const* element_from_point(double x, double y);
 
     void set_needs_to_resolve_paint_only_properties() { m_needs_to_resolve_paint_only_properties = true; }
@@ -788,6 +793,8 @@ private:
     bool m_ready_to_run_scripts { false };
 
     Vector<HTML::FormAssociatedElement*> m_form_associated_elements_with_form_attribute;
+
+    bool m_design_mode_enabled { false };
 
     bool m_needs_to_resolve_paint_only_properties { true };
 };
