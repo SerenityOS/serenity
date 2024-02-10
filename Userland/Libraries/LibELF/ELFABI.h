@@ -882,3 +882,27 @@ struct elf_args {
     R(R_AARCH64_TLS_TPREL)                    \
     R(R_AARCH64_TLSDESC)                      \
     R(R_AARCH64_IRELATIVE)
+
+/* https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/v1.0/riscv-elf.adoc#relocations */
+#define R_RISCV_NONE 0
+#define R_RISCV_64 2
+#define R_RISCV_RELATIVE 3
+#define R_RISCV_COPY 4
+#define R_RISCV_JUMP_SLOT 5
+#define R_RISCV_TLS_DTPMOD64 7
+#define R_RISCV_TLS_DTPREL64 9
+#define R_RISCV_TLS_TPREL64 11
+#define R_RISCV_TLSDESC 12
+#define R_RISCV_IRELATIVE 58
+
+#define __ENUMERATE_RISCV_DYNAMIC_RELOCS(R) \
+    R(R_RISCV_NONE)                         \
+    R(R_RISCV_64)                           \
+    R(R_RISCV_RELATIVE)                     \
+    R(R_RISCV_COPY)                         \
+    R(R_RISCV_JUMP_SLOT)                    \
+    R(R_RISCV_TLS_DTPMOD64)                 \
+    R(R_RISCV_TLS_DTPREL64)                 \
+    R(R_RISCV_TLS_TPREL64)                  \
+    R(R_RISCV_TLSDESC)                      \
+    R(R_RISCV_IRELATIVE)

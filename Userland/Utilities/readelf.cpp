@@ -197,6 +197,10 @@ static char const* object_relocation_type_to_string(Elf_Half machine, Elf_Word t
         switch (type) {
             __ENUMERATE_AARCH64_DYNAMIC_RELOCS(ENUMERATE_RELOCATION)
         }
+    } else if (machine == EM_RISCV) {
+        switch (type) {
+            __ENUMERATE_RISCV_DYNAMIC_RELOCS(ENUMERATE_RELOCATION)
+        }
     }
 #undef ENUMERATE_RELOCATION
     return "(?)";

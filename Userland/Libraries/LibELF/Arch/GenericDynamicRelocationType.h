@@ -10,6 +10,8 @@
 
 #if ARCH(AARCH64)
 #    include <Userland/Libraries/LibELF/Arch/aarch64/GenericDynamicRelocationType.h>
+#elif ARCH(RISCV64)
+#    include <Userland/Libraries/LibELF/Arch/riscv64/GenericDynamicRelocationType.h>
 #elif ARCH(X86_64)
 #    include <Userland/Libraries/LibELF/Arch/x86_64/GenericDynamicRelocationType.h>
 #else

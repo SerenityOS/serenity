@@ -536,7 +536,7 @@ void DynamicLoader::load_program_headers()
 
 DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObject::Relocation const& relocation,
     Optional<DynamicLoader::CachedLookupResult>& cached_result,
-    ShouldInitializeWeak should_initialize_weak,
+    [[maybe_unused]] ShouldInitializeWeak should_initialize_weak,
     ShouldCallIfuncResolver should_call_ifunc_resolver)
 {
     FlatPtr* patch_ptr = nullptr;
@@ -603,6 +603,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
             *patch_ptr = call_ifunc_resolver(VirtualAddress { *patch_ptr }).get();
         break;
     }
+#if !ARCH(RISCV64)
     case GLOB_DAT: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
@@ -633,6 +634,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         *patch_ptr = symbol_location.get();
         break;
     }
+#endif
     case RELATIVE: {
         if (!image().is_dynamic())
             break;
