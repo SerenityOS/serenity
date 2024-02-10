@@ -43,7 +43,7 @@ private:
     }
 };
 
-static void run_patch(Vector<char const*>&& arguments, StringView standard_input, StringView expected_stdout)
+static void run_patch(Vector<char const*>&& arguments, StringView standard_input, Optional<StringView> expected_stdout = {})
 {
     // Ask patch to run the test in a temporary directory so we don't leave any files around.
     Vector<char const*> args_with_chdir = { "patch", "-d", s_test_dir };
@@ -60,7 +60,9 @@ static void run_patch(Vector<char const*>&& arguments, StringView standard_input
     if (status != Core::Command::ProcessResult::DoneWithZeroExitCode) {
         FAIL(MUST(String::formatted("patch didn't exit cleanly: status: {}, stdout:{}, stderr: {}", static_cast<int>(status), StringView { stdout.bytes() }, StringView { stderr.bytes() })));
     }
-    EXPECT_EQ(StringView { expected_stdout.bytes() }, StringView { stdout.bytes() });
+
+    if (expected_stdout.has_value())
+        EXPECT_EQ(StringView { expected_stdout->bytes() }, StringView { stdout.bytes() });
 }
 
 TEST_CASE(basic_change_patch)
