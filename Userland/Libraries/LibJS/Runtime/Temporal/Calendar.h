@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -82,5 +83,59 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM&, Object const& fiel
 ThrowCompletionOr<Object*> default_merge_calendar_fields(VM&, Object const& fields, Object const& additional_fields);
 u16 to_iso_day_of_year(i32 year, u8 month, u8 day);
 u8 to_iso_day_of_week(i32 year, u8 month, u8 day);
+
+// https://tc39.es/proposal-temporal/#table-temporal-calendar-methods-record-fields
+struct CalendarMethods {
+    // The calendar object, or a string indicating a built-in time zone.
+    Variant<String, NonnullGCPtr<Object>> receiver; // [[Reciever]]
+
+    // The calendar's dateAdd method. For a built-in calendar this is always %Temporal.Calendar.prototype.dateAdd%.
+    GCPtr<FunctionObject> date_add; // [[DateAdd]]
+
+    // The calendar's dateFromFields method. For a built-in calendar this is always %Temporal.Calendar.prototype.dateFromFields%.
+    GCPtr<FunctionObject> date_from_fields; // [[DateFromFields]]
+
+    // The calendar's dateUntil method. For a built-in calendar this is always %Temporal.Calendar.prototype.dateUntil%.
+    GCPtr<FunctionObject> date_until; // [[DateUntil]]
+
+    // The calendar's day method. For a built-in calendar this is always %Temporal.Calendar.prototype.day%.
+    GCPtr<FunctionObject> day; // [[Day]]
+
+    // The calendar's fields method. For a built-in calendar this is always %Temporal.Calendar.prototype.fields%.
+    GCPtr<FunctionObject> fields; // [[Fields]]
+
+    // The calendar's mergeFields method. For a built-in calendar this is always %Temporal.Calendar.prototype.mergeFields%.
+    GCPtr<FunctionObject> merge_fields; // [[MergeFields]]
+
+    // The calendar's monthDayFromFields method. For a built-in calendar this is always %Temporal.Calendar.prototype.monthDayFromFields%.
+    GCPtr<FunctionObject> month_day_from_fields; // [[MonthDayFromFields]]
+
+    // The calendar's yearMonthFromFields method. For a built-in calendar this is always %Temporal.Calendar.prototype.yearMonthFromFields%.
+    GCPtr<FunctionObject> year_month_from_fields; // [[YearMonthFromFields]]
+};
+
+#define JS_ENUMERATE_CALENDAR_METHODS                                             \
+    __JS_ENUMERATE(DateAdd, dateAdd, date_add)                                    \
+    __JS_ENUMERATE(DateFromFields, dateFromFields, date_from_fields)              \
+    __JS_ENUMERATE(DateUntil, dateUntil, date_until)                              \
+    __JS_ENUMERATE(Day, day, day)                                                 \
+    __JS_ENUMERATE(Fields, fields, fields)                                        \
+    __JS_ENUMERATE(MergeFields, mergeFields, merge_fields)                        \
+    __JS_ENUMERATE(MonthDayFromFields, monthDayFromFields, month_day_from_fields) \
+    __JS_ENUMERATE(YearMonthFromFields, yearMonthFromFields, year_month_from_fields)
+
+enum class CalendarMethod {
+#define __JS_ENUMERATE(PascalName, camelName, snake_name) \
+    PascalName,
+    JS_ENUMERATE_CALENDAR_METHODS
+#undef __JS_ENUMERATE
+};
+
+ThrowCompletionOr<void> calendar_methods_record_lookup(VM&, CalendarMethods&, CalendarMethod);
+ThrowCompletionOr<CalendarMethods> create_calendar_methods_record(VM&, Variant<String, NonnullGCPtr<Object>> calendar, ReadonlySpan<CalendarMethod>);
+ThrowCompletionOr<Optional<CalendarMethods>> create_calendar_methods_record_from_relative_to(VM&, GCPtr<PlainDate>, GCPtr<ZonedDateTime>, ReadonlySpan<CalendarMethod>);
+bool calendar_methods_record_has_looked_up(CalendarMethods const&, CalendarMethod);
+bool calendar_methods_record_is_builtin(CalendarMethods const&);
+ThrowCompletionOr<Value> calendar_methods_record_call(VM&, CalendarMethods const&, CalendarMethod, ReadonlySpan<Value> arguments);
 
 }
