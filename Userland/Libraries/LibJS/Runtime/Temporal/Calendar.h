@@ -47,7 +47,7 @@ Calendar* get_iso8601_calendar(VM&);
 ThrowCompletionOr<Vector<String>> calendar_fields(VM&, Object& calendar, Vector<StringView> const& field_names);
 ThrowCompletionOr<Object*> calendar_merge_fields(VM&, Object& calendar, Object& fields, Object& additional_fields);
 ThrowCompletionOr<PlainDate*> calendar_date_add(VM&, Object& calendar, Value date, Duration&, Object* options = nullptr, FunctionObject* date_add = nullptr);
-ThrowCompletionOr<Duration*> calendar_date_until(VM&, Object const& calendar, Value one, Value two, Object const& options, FunctionObject const* date_until = nullptr);
+ThrowCompletionOr<NonnullGCPtr<Duration>> calendar_date_until(VM&, CalendarMethods const&, Value one, Value two, Object const& options);
 ThrowCompletionOr<double> calendar_year(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_month(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<String> calendar_month_code(VM&, Object& calendar, Object& date_like);

@@ -262,7 +262,9 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_year_month(V
     // 8. Perform ! CreateDataPropertyOrThrow(resolvedOptions, "largestUnit", settings.[[LargestUnit]]).
     MUST(resolved_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, settings.largest_unit)));
 
-    // FIXME: 9. Let calendarRec be ? CreateCalendarMethodsRecord(calendar, « dateAdd, dateFromFields, dateUntil, fields »).
+    // 9. Let calendarRec be ? CreateCalendarMethodsRecord(calendar, « dateAdd, dateFromFields, dateUntil, fields »).
+    // FIXME: The type of calendar in PlainYearMonth does not align with latest spec
+    auto calendar_record = TRY(create_calendar_methods_record(vm, NonnullGCPtr<Object> { calendar }, { { CalendarMethod::DateAdd, CalendarMethod::DateFromFields, CalendarMethod::DateUntil, CalendarMethod::Fields } }));
 
     // 10. Let fieldNames be ? CalendarFields(calendarRec, « "monthCode", "year" »).
     // FIXME: Pass through calendar record
@@ -292,23 +294,22 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_year_month(V
     MUST(resolved_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, settings.largest_unit)));
 
     // 18. Let result be ? CalendarDateUntil(calendarRec, thisDate, otherDate, resolvedOptions).
-    // FIXME: Pass through calendar record
-    auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *resolved_options));
-    auto result = DurationRecord { duration->years(), duration->months(), 0, 0, 0, 0, 0, 0, 0, 0 };
+    auto result = TRY(calendar_date_until(vm, calendar_record, this_date, other_date, *resolved_options));
 
     // 19. If settings.[[SmallestUnit]] is not "month" or settings.[[RoundingIncrement]] ≠ 1, then
     if (settings.smallest_unit != "month"sv || settings.rounding_increment != 1) {
         // a. Let roundRecord be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], thisDate, calendarRec).
-        // FIXME: Pass through calendar record
-        auto round_record = TRY(round_duration(vm, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date));
+        auto round_record = TRY(round_duration(vm, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date, calendar_record));
 
-        // FIXME: b. Let roundResult be roundRecord.[[DurationRecord]].
+        // b. Let roundResult be roundRecord.[[DurationRecord]].
+        auto round_result = round_record.duration_record;
+
         // FIXME: c. Set result to ? BalanceDateDurationRelative(roundResult.[[Years]], roundResult.[[Months]], 0, 0, settings.[[LargestUnit]], settings.[[SmallestUnit]], thisDate, calendarRec).
-        result = round_record.duration_record;
+        result = MUST(create_temporal_duration(vm, round_result.years, round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     // 20. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
-    return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
+    return MUST(create_temporal_duration(vm, sign * result->years(), sign * result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 // 9.5.8 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplainyearmonth

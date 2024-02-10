@@ -258,4 +258,29 @@ describe("errors", () => {
             }
         }
     });
+
+    test("dateUntil only called once with rounding mode of days and small enough granularity", () => {
+        const actual = [];
+
+        class DateUntilOptionsCalendar extends Temporal.Calendar {
+            constructor() {
+                super("iso8601");
+            }
+
+            dateUntil(earlier, later, options) {
+                actual.push(options.largestUnit);
+                return super.dateUntil(earlier, later, options);
+            }
+        }
+
+        const calendar = new DateUntilOptionsCalendar();
+
+        largestUnit = "days";
+        expected = [];
+
+        const earlier = new Temporal.PlainDate(2000, 5, 2, calendar);
+        const later = new Temporal.PlainDate(2001, 6, 3, calendar);
+        later.since(earlier, { largestUnit });
+        expect(actual).toEqual([]);
+    });
 });

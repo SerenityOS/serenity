@@ -865,8 +865,8 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
 
+        // FIXME: This AO is out of date, this is no longer needed.
         // c. Let dateUntil be ? GetMethod(calendar, "dateUntil").
-        auto date_until = TRY(Value(calendar).get_method(vm, vm.names.dateUntil));
 
         // d. Repeat, while years ≠ 0,
         while (years != 0) {
@@ -879,8 +879,10 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
             // iii. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
             MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"_string)));
 
+            // FIXME: AD-HOC calendar records use as this AO is not up to date with latest spec
             // iv. Let untilResult be ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
-            auto* until_result = TRY(calendar_date_until(vm, *calendar, relative_to, new_relative_to, *until_options, date_until));
+            auto calendar_record = TRY(create_calendar_methods_record(vm, NonnullGCPtr<Object> { *calendar }, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
+            auto until_result = TRY(calendar_date_until(vm, calendar_record, relative_to, new_relative_to, *until_options));
 
             // v. Let oneYearMonths be untilResult.[[Months]].
             auto one_year_months = until_result->months();
@@ -1106,8 +1108,8 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
         // j. Set newRelativeTo to ? CalendarDateAdd(calendar, relativeTo, oneYear, undefined, dateAdd).
         new_relative_to = TRY(calendar_date_add(vm, calendar, relative_to, *one_year, nullptr, date_add));
 
+        // FIXME: This AO is out of date, this is no longer needed.
         // k. Let dateUntil be ? GetMethod(calendar, "dateUntil").
-        auto date_until = TRY(Value(&calendar).get_method(vm, vm.names.dateUntil));
 
         // l. Let untilOptions be OrdinaryObjectCreate(null).
         auto until_options = Object::create(realm, nullptr);
@@ -1115,8 +1117,10 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
         // m. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"_string)));
 
+        // FIXME: AD-HOC calendar records use as this AO is not up to date with latest spec
         // n. Let untilResult be ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
-        auto* until_result = TRY(calendar_date_until(vm, calendar, relative_to, new_relative_to, *until_options, date_until));
+        auto calendar_record = TRY(create_calendar_methods_record(vm, NonnullGCPtr<Object> { calendar }, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
+        auto until_result = TRY(calendar_date_until(vm, calendar_record, relative_to, new_relative_to, *until_options));
 
         // o. Let oneYearMonths be untilResult.[[Months]].
         auto one_year_months = until_result->months();
@@ -1142,7 +1146,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
             MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"_string)));
 
             // vii. Set untilResult to ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
-            until_result = TRY(calendar_date_until(vm, calendar, relative_to, new_relative_to, *until_options, date_until));
+            until_result = TRY(calendar_date_until(vm, calendar_record, relative_to, new_relative_to, *until_options));
 
             // viii. Set oneYearMonths to untilResult.[[Months]].
             one_year_months = until_result->months();
@@ -1297,7 +1301,9 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, date_largest_unit)));
 
         // j. Let dateDifference be ? CalendarDateUntil(calendar, relativeTo, end, differenceOptions).
-        auto* date_difference = TRY(calendar_date_until(vm, calendar, &relative_to, end, *difference_options));
+        // FIXME: AD-HOC calendar records use as this AO is not up to date with latest spec
+        auto calendar_record = TRY(create_calendar_methods_record(vm, NonnullGCPtr<Object> { calendar }, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
+        auto date_difference = TRY(calendar_date_until(vm, calendar_record, &relative_to, end, *difference_options));
 
         // k. Let result be ? BalanceDuration(dateDifference.[[Days]], h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
         // NOTE: Nanoseconds is the only one that can overflow the safe integer range of a double
@@ -1367,7 +1373,7 @@ ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(VM& vm, ZonedDat
 
 // 7.5.27 RoundDuration ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ , plainRelativeTo [ , calendarRec [ , zonedRelativeTo [ , timeZoneRec [ , precalculatedPlainDateTime ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundduration
 // FIXME: Support calendarRec, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime
-ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* plain_relative_to_object)
+ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* plain_relative_to_object, Optional<CalendarMethods> const& calendar_record)
 {
     auto& realm = *vm.current_realm();
 
@@ -1377,6 +1383,9 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
     double fractional_days = 0;
 
     // FIXME: 1. Assert: If either of plainRelativeTo or zonedRelativeTo are present and not undefined, calendarRec is not undefined.
+    if (plain_relative_to_object)
+        VERIFY(calendar_record.has_value());
+
     // FIXME: 2. Assert: If zonedRelativeTo is present and not undefined, timeZoneRec is not undefined.
 
     // 3. If plainRelativeTo is not present, set plainRelativeTo to undefined.
@@ -1398,8 +1407,11 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         if (!plain_relative_to_object)
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, unit, "smallestUnit"sv);
 
-        // FIXME: b. Assert: CalendarMethodsRecordHasLookedUp(calendarRec, dateAdd) is true.
-        // FIXME: c. Assert: CalendarMethodsRecordHasLookedUp(calendarRec, dateUntil) is true.
+        // b. Assert: CalendarMethodsRecordHasLookedUp(calendarRec, dateAdd) is true.
+        VERIFY(calendar_methods_record_has_looked_up(calendar_record.value(), CalendarMethod::DateAdd));
+
+        // c. Assert: CalendarMethodsRecordHasLookedUp(calendarRec, dateUntil) is true.
+        VERIFY(calendar_methods_record_has_looked_up(calendar_record.value(), CalendarMethod::DateAdd));
     }
 
     // FIXME: AD-HOC, should be coming from arguments given to this function.
@@ -1505,8 +1517,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "year"_string)));
 
         // l. Let timePassed be ? DifferenceDate(calendarRec, plainRelativeTo, wholeDaysLater, untilOptions).
-        // FIXME: Pass through calendarRec
-        auto time_passed = TRY(difference_date(vm, *calendar, *plain_relative_to, *whole_days_later, *until_options));
+        auto time_passed = TRY(difference_date(vm, calendar_record.value(), *plain_relative_to, *whole_days_later, *until_options));
 
         // m. Let yearsPassed be timePassed.[[Years]].
         auto years_passed = time_passed->years();
@@ -1600,8 +1611,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"_string)));
 
         // l. Let timePassed be ? DifferenceDate(calendarRec, plainRelativeTo, wholeDaysLater, untilOptions).
-        // FIXME: Pass through receiver from calendarRec
-        auto time_passed = TRY(difference_date(vm, *calendar, *plain_relative_to, *whole_days_later, *until_options));
+        auto time_passed = TRY(difference_date(vm, calendar_record.value(), *plain_relative_to, *whole_days_later, *until_options));
 
         // m. Let monthsPassed be timePassed.[[Months]].
         auto months_passed = time_passed->months();
@@ -1672,8 +1682,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"_string)));
 
         // e. Let timePassed be ? DifferenceDate(calendarRec, plainRelativeTo, wholeDaysLater, untilOptions).
-        // FIXME: Pass through calendarRec
-        auto time_passed = TRY(difference_date(vm, *calendar, *plain_relative_to, *whole_days_later, *until_options));
+        auto time_passed = TRY(difference_date(vm, calendar_record.value(), *plain_relative_to, *whole_days_later, *until_options));
 
         // f. Let weeksPassed be timePassed.[[Weeks]].
         auto weeks_passed = time_passed->weeks();
