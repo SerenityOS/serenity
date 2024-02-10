@@ -762,6 +762,35 @@ WebIDL::ExceptionOr<void> Animation::update_playback_rate(double new_playback_ra
     return {};
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-animation-reverse
+WebIDL::ExceptionOr<void> Animation::reverse()
+{
+    auto& realm = this->realm();
+
+    // 1. If there is no timeline associated with animation, or the associated timeline is inactive throw an
+    //    "InvalidStateError" DOMException and abort these steps.
+    if (!m_timeline || m_timeline->is_inactive())
+        return WebIDL::InvalidStateError::create(realm, "Cannot reverse an animation with an inactive timeline"_fly_string);
+
+    // 2. Let original pending playback rate be animation’s pending playback rate.
+    auto original_pending_playback_rate = m_pending_playback_rate;
+
+    // 3. Let animation’s pending playback rate be the additive inverse of its effective playback rate (i.e.
+    //    -effective playback rate).
+    m_pending_playback_rate = -effective_playback_rate();
+
+    // 4. Run the steps to play an animation for animation with the auto-rewind flag set to true.
+    //    If the steps to play an animation throw an exception, set animation’s pending playback rate to original
+    //    pending playback rate and propagate the exception.
+    auto result = play_an_animation(AutoRewind::Yes);
+    if (result.is_error()) {
+        m_pending_playback_rate = original_pending_playback_rate;
+        return result;
+    }
+
+    return {};
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-persist
 void Animation::persist()
 {
