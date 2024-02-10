@@ -75,6 +75,7 @@ public:
     WebIDL::ExceptionOr<void> play();
     WebIDL::ExceptionOr<void> play_an_animation(AutoRewind);
     WebIDL::ExceptionOr<void> pause();
+    WebIDL::ExceptionOr<void> update_playback_rate(double);
     void persist();
 
     Optional<double> convert_an_animation_time_to_timeline_time(Optional<double>) const;

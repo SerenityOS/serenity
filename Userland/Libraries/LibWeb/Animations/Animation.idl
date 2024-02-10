@@ -28,7 +28,7 @@ interface Animation : EventTarget {
     undefined finish();
     undefined play();
     undefined pause();
-    // FIXME: undefined updatePlaybackRate(double playbackRate);
+    undefined updatePlaybackRate(double playbackRate);
     // FIXME: undefined reverse();
     undefined persist();
     // FIXME: [CEReactions] undefined commitStyles();

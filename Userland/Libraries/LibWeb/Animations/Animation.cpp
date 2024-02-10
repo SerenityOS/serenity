@@ -697,6 +697,71 @@ WebIDL::ExceptionOr<void> Animation::pause()
     return {};
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-animation-updateplaybackrate
+WebIDL::ExceptionOr<void> Animation::update_playback_rate(double new_playback_rate)
+{
+    // 1. Let previous play state be animation’s play state.
+    // Note: It is necessary to record the play state before updating animation’s effective playback rate since, in the
+    //       following logic, we want to immediately apply the pending playback rate of animation if it is currently
+    //       finished regardless of whether or not it will still be finished after we apply the pending playback rate.
+    auto previous_play_state = play_state();
+
+    // 2. Let animation’s pending playback rate be new playback rate.
+    m_pending_playback_rate = new_playback_rate;
+
+    // 3. Perform the steps corresponding to the first matching condition from below:
+
+    // -> If animation has a pending play task or a pending pause task,
+    if (pending()) {
+        // Abort these steps.
+        // Note: The different types of pending tasks will apply the pending playback rate when they run so there is no
+        //       further action required in this case.
+        return {};
+    }
+
+    // -> If previous play state is idle or paused, or animation’s current time is unresolved,
+    if (previous_play_state == Bindings::AnimationPlayState::Idle || previous_play_state == Bindings::AnimationPlayState::Paused || !current_time().has_value()) {
+        // Apply any pending playback rate on animation.
+        // Note: the second condition above is required so that if we have a running animation with an unresolved
+        //       current time and no pending play task, we do not attempt to play it below.
+        apply_any_pending_playback_rate();
+    }
+    // -> If previous play state is finished,
+    else if (previous_play_state == Bindings::AnimationPlayState::Finished) {
+        // 1. Let the unconstrained current time be the result of calculating the current time of animation
+        //    substituting an unresolved time value for the hold time.
+        Optional<double> unconstrained_current_time;
+        {
+            TemporaryChange change(m_hold_time, {});
+            unconstrained_current_time = current_time();
+        }
+
+        // 2. Let animation’s start time be the result of evaluating the following expression:
+        //        timeline time - (unconstrained current time / pending playback rate)
+        //    Where timeline time is the current time value of the timeline associated with animation.
+        //    If pending playback rate is zero, let animation’s start time be timeline time.
+        if (m_pending_playback_rate.value() == 0.0) {
+            m_start_time = m_timeline->current_time().value();
+        } else {
+            m_start_time = m_timeline->current_time().value() - (unconstrained_current_time.value() / m_pending_playback_rate.value());
+        }
+
+        // 3. Apply any pending playback rate on animation.
+        apply_any_pending_playback_rate();
+
+        // 4. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
+        //    false, and the synchronously notify flag set to false.
+        update_finished_state(DidSeek::No, SynchronouslyNotify::No);
+    }
+    // -> Otherwise,
+    else {
+        // Run the procedure to play an animation for animation with the auto-rewind flag set to false.
+        TRY(play_an_animation(AutoRewind::No));
+    }
+
+    return {};
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-persist
 void Animation::persist()
 {
