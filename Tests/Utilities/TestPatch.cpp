@@ -220,3 +220,44 @@ TEST_CASE(patch_adding_file_to_existing_file)
 
     EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "a\n"sv);
 }
+
+TEST_CASE(patch_remove_file_to_empty)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- a
++++ /dev/null
+@@ -1 +0,0 @@
+-1
+)"sv;
+
+    auto file = "1\n"sv;
+    auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
+    MUST(input->write_until_depleted(file.bytes()));
+
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file a\n"sv);
+
+    EXPECT(!FileSystem::exists(ByteString::formatted("{}/a", s_test_dir)));
+}
+
+TEST_CASE(patch_remove_file_trailing_garbage)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- a
++++ /dev/null
+@@ -1 +0,0 @@
+-1
+)"sv;
+
+    auto file = "1\n2\n"sv;
+    auto input = MUST(Core::File::open(ByteString::formatted("{}/a", s_test_dir), Core::File::OpenMode::Write));
+    MUST(input->write_until_depleted(file.bytes()));
+
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file a\n"
+                                             "Not deleting file a as content differs from patch\n"sv);
+
+    EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "2\n"sv);
+}
