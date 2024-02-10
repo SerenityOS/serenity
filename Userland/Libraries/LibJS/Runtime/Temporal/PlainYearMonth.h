@@ -48,7 +48,7 @@ bool iso_year_month_within_limits(i32 year, u8 month);
 ISOYearMonth balance_iso_year_month(double year, double month);
 ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM&, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<String> temporal_year_month_to_string(VM&, PlainYearMonth&, StringView show_calendar);
-ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM&, DifferenceOperation, PlainYearMonth&, Value other, Value options);
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_year_month(VM&, DifferenceOperation, PlainYearMonth&, Value other, Value options);
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(VM&, ArithmeticOperation, PlainYearMonth&, Value temporal_duration_like, Value options_value);
 
 }

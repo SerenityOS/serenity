@@ -396,7 +396,7 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> difference_date(VM& vm, Object const& 
     // 5. If one.[[ISOYear]] = two.[[ISOYear]] and one.[[ISOMonth]] = two.[[ISOMonth]] and one.[[ISODay]] = two.[[ISODay]], then
     if (one.iso_year() == two.iso_year() && one.iso_month() == two.iso_month() && one.iso_day() == two.iso_day()) {
         // a. Return ! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-        return *MUST(create_temporal_duration(vm, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        return MUST(create_temporal_duration(vm, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     // 6. If ! Get(options, "largestUnit") is "day", then
@@ -406,7 +406,7 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> difference_date(VM& vm, Object const& 
         auto days = days_until(one, two);
 
         // b. Return ! CreateTemporalDuration(0, 0, 0, days, 0, 0, 0, 0, 0, 0).
-        return *MUST(create_temporal_duration(vm, 0, 0, 0, days, 0, 0, 0, 0, 0, 0));
+        return MUST(create_temporal_duration(vm, 0, 0, 0, days, 0, 0, 0, 0, 0, 0));
     }
 
     // 7. Return ? CalendarDateUntil(calendarRec, one, two, options).
@@ -529,7 +529,7 @@ i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2
 }
 
 // 3.5.11 DifferenceTemporalPlainDate ( operation, temporalDate, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindate
-ThrowCompletionOr<Duration*> difference_temporal_plain_date(VM& vm, DifferenceOperation operation, PlainDate& temporal_date, Value other_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_date(VM& vm, DifferenceOperation operation, PlainDate& temporal_date, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;

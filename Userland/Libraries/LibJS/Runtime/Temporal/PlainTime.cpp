@@ -644,7 +644,7 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
 }
 
 // 4.5.13 DifferenceTemporalPlainTime ( operation, temporalTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaintime
-ThrowCompletionOr<Duration*> difference_temporal_plain_time(VM& vm, DifferenceOperation operation, PlainTime const& temporal_time, Value other_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_time(VM& vm, DifferenceOperation operation, PlainTime const& temporal_time, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;

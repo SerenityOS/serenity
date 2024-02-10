@@ -60,7 +60,7 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM&, ZonedDateTime&
 ThrowCompletionOr<BigInt*> add_zoned_date_time(VM&, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options = nullptr);
 ThrowCompletionOr<DurationRecord> difference_zoned_date_time(VM&, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object const& options);
 ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM&, Crypto::SignedBigInteger nanoseconds, Value relative_to);
-ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(VM&, DifferenceOperation, ZonedDateTime&, Value other, Value options);
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_zoned_date_time(VM&, DifferenceOperation, ZonedDateTime&, Value other, Value options);
 ThrowCompletionOr<ZonedDateTime*> add_duration_to_or_subtract_duration_from_zoned_date_time(VM&, ArithmeticOperation, ZonedDateTime&, Value temporal_duration_like, Value options_value);
 
 }

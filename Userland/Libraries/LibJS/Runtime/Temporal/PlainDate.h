@@ -58,7 +58,7 @@ ThrowCompletionOr<String> pad_iso_year(VM&, i32 y);
 ThrowCompletionOr<String> temporal_date_to_string(VM&, PlainDate&, StringView show_calendar);
 ThrowCompletionOr<ISODateRecord> add_iso_date(VM&, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow);
 i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2);
-ThrowCompletionOr<Duration*> difference_temporal_plain_date(VM&, DifferenceOperation, PlainDate&, Value other, Value options);
+ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_date(VM&, DifferenceOperation, PlainDate&, Value other, Value options);
 ThrowCompletionOr<NonnullGCPtr<Duration>> difference_date(VM& vm, Object const& calendar, PlainDate const& one, PlainDate const& two, Object const& options);
 
 }
