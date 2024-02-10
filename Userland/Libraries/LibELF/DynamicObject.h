@@ -13,6 +13,7 @@
 #include <AK/Concepts.h>
 #include <AK/RefCounted.h>
 #include <Kernel/Memory/VirtualAddress.h>
+#include <LibELF/Arch/GenericDynamicRelocationType.h>
 #include <LibELF/ELFABI.h>
 #include <link.h>
 
@@ -402,7 +403,7 @@ inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
 {
     for (unsigned i = 0; i < relocation_count(); ++i) {
         auto const reloc = relocation(i);
-        if (reloc.type() == 0)
+        if (static_cast<GenericDynamicRelocationType>(reloc.type()) == GenericDynamicRelocationType::NONE)
             continue;
         if (func(reloc) == IterationDecision::Break)
             break;
