@@ -110,6 +110,10 @@ if [ -f mnt/usr/Tests/Kernel/TestProcFSWrite ]; then
     chown 0:0 mnt/usr/Tests/Kernel/TestProcFSWrite
     chmod 4755 mnt/usr/Tests/Kernel/TestProcFSWrite
 fi
+if [ -f mnt/usr/Tests/Kernel/TestLoopDevice ]; then
+    chown 0:0 mnt/usr/Tests/Kernel/TestLoopDevice
+    chmod 4755 mnt/usr/Tests/Kernel/TestLoopDevice
+fi
 
 if [ -f mnt/res/kernel.map ]; then
     chmod 0400 mnt/res/kernel.map
