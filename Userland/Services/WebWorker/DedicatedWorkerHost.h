@@ -16,7 +16,7 @@ namespace WebWorker {
 
 class DedicatedWorkerHost : public RefCounted<DedicatedWorkerHost> {
 public:
-    explicit DedicatedWorkerHost(AK::URL url, String type);
+    explicit DedicatedWorkerHost(URL url, String type);
     ~DedicatedWorkerHost();
 
     void run(JS::NonnullGCPtr<Web::Page>, Web::HTML::TransferDataHolder message_port_data);
@@ -24,7 +24,7 @@ public:
 private:
     RefPtr<Web::HTML::WorkerDebugConsoleClient> m_console;
 
-    AK::URL m_url;
+    URL m_url;
     String m_type;
 };
 

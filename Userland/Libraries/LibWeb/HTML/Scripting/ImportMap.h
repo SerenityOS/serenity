@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-using ModuleSpecifierMap = HashMap<ByteString, Optional<AK::URL>>;
+using ModuleSpecifierMap = HashMap<ByteString, Optional<URL>>;
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#import-map
 class ImportMap {
@@ -20,12 +20,12 @@ public:
     ModuleSpecifierMap const& imports() const { return m_imports; }
     ModuleSpecifierMap& imports() { return m_imports; }
 
-    HashMap<AK::URL, ModuleSpecifierMap> const& scopes() const { return m_scopes; }
-    HashMap<AK::URL, ModuleSpecifierMap>& scopes() { return m_scopes; }
+    HashMap<URL, ModuleSpecifierMap> const& scopes() const { return m_scopes; }
+    HashMap<URL, ModuleSpecifierMap>& scopes() { return m_scopes; }
 
 private:
     ModuleSpecifierMap m_imports;
-    HashMap<AK::URL, ModuleSpecifierMap> m_scopes;
+    HashMap<URL, ModuleSpecifierMap> m_scopes;
 };
 
 }

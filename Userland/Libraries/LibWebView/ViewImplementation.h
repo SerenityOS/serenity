@@ -35,14 +35,14 @@ public:
         String aria_properties_state_json;
     };
 
-    void set_url(Badge<WebContentClient>, AK::URL url) { m_url = move(url); }
-    AK::URL const& url() const { return m_url; }
+    void set_url(Badge<WebContentClient>, URL url) { m_url = move(url); }
+    URL const& url() const { return m_url; }
 
     String const& handle() const { return m_client_state.client_handle; }
 
     void server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size);
 
-    void load(AK::URL const&);
+    void load(URL const&);
     void load_html(StringView);
     void load_empty_document();
 
@@ -116,16 +116,16 @@ public:
     Function<void()> on_activate_tab;
     Function<void()> on_close;
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
-    Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
-    Function<void(const AK::URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
+    Function<void(const URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
+    Function<void(const URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
     Function<void(Gfx::IntPoint screen_position, Web::Page::MediaContextMenu const&)> on_media_context_menu_request;
-    Function<void(const AK::URL&)> on_link_hover;
+    Function<void(const URL&)> on_link_hover;
     Function<void()> on_link_unhover;
-    Function<void(const AK::URL&, ByteString const& target, unsigned modifiers)> on_link_click;
-    Function<void(const AK::URL&, ByteString const& target, unsigned modifiers)> on_link_middle_click;
+    Function<void(const URL&, ByteString const& target, unsigned modifiers)> on_link_click;
+    Function<void(const URL&, ByteString const& target, unsigned modifiers)> on_link_middle_click;
     Function<void(ByteString const&)> on_title_change;
-    Function<void(const AK::URL&, bool)> on_load_start;
-    Function<void(const AK::URL&)> on_load_finish;
+    Function<void(const URL&, bool)> on_load_start;
+    Function<void(const URL&)> on_load_finish;
     Function<void(ByteString const& path, i32)> on_request_file;
     Function<void()> on_navigate_back;
     Function<void()> on_navigate_forward;
@@ -142,7 +142,7 @@ public:
     Function<void(String const& message)> on_request_set_prompt_text;
     Function<void()> on_request_accept_dialog;
     Function<void()> on_request_dismiss_dialog;
-    Function<void(const AK::URL&, ByteString const&)> on_received_source;
+    Function<void(const URL&, ByteString const&)> on_received_source;
     Function<void(ByteString const&)> on_received_dom_tree;
     Function<void(Optional<DOMNodeProperties>)> on_received_dom_node_properties;
     Function<void(ByteString const&)> on_received_accessibility_tree;
@@ -151,10 +151,10 @@ public:
     Function<void(String const&)> on_received_dom_node_html;
     Function<void(i32 message_id)> on_received_console_message;
     Function<void(i32 start_index, Vector<ByteString> const& message_types, Vector<ByteString> const& messages)> on_received_console_messages;
-    Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
-    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, String const& name)> on_get_named_cookie;
-    Function<String(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
-    Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
+    Function<Vector<Web::Cookie::Cookie>(URL const& url)> on_get_all_cookies;
+    Function<Optional<Web::Cookie::Cookie>(URL const& url, String const& name)> on_get_named_cookie;
+    Function<String(const URL& url, Web::Cookie::Source source)> on_get_cookie;
+    Function<void(const URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void(Web::Cookie::Cookie const& cookie)> on_update_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
     Function<void()> on_restore_window;
@@ -227,7 +227,7 @@ protected:
         bool has_usable_bitmap { false };
     } m_client_state;
 
-    AK::URL m_url;
+    URL m_url;
 
     float m_zoom_level { 1.0 };
     float m_device_pixel_ratio { 1.0 };

@@ -361,7 +361,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
             auto const& encoded_string = body_bytes.get<ByteBuffer>();
             auto maybe_decoded_string = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, encoded_string);
             if (maybe_decoded_string.is_error()) {
-                dbgln("Style sheet {} claimed to be '{}' but decoding failed", response.url().value_or(AK::URL()), encoding);
+                dbgln("Style sheet {} claimed to be '{}' but decoding failed", response.url().value_or(URL()), encoding);
                 dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error));
             } else {
                 auto const decoded_string = maybe_decoded_string.release_value();
@@ -442,7 +442,7 @@ void HTMLLinkElement::resource_did_load_favicon()
     document().check_favicon_after_loading_link_resource();
 }
 
-static bool decode_favicon(ReadonlyBytes favicon_data, AK::URL const& favicon_url, JS::GCPtr<Navigable> navigable)
+static bool decode_favicon(ReadonlyBytes favicon_data, URL const& favicon_url, JS::GCPtr<Navigable> navigable)
 {
     auto decoded_image = Platform::ImageCodecPlugin::the().decode_image(favicon_data);
     if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {

@@ -92,7 +92,7 @@ public:
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, String content_type, HTML::NavigationParams&);
 
-    [[nodiscard]] static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
+    [[nodiscard]] static JS::NonnullGCPtr<Document> create(JS::Realm&, URL const& url = "about:blank"sv);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
@@ -106,10 +106,10 @@ public:
     String referrer() const;
     void set_referrer(String);
 
-    void set_url(const AK::URL& url) { m_url = url; }
-    AK::URL url() const { return m_url; }
-    AK::URL fallback_base_url() const;
-    AK::URL base_url() const;
+    void set_url(const URL& url) { m_url = url; }
+    URL url() const { return m_url; }
+    URL fallback_base_url() const;
+    URL base_url() const;
 
     void update_base_element(Badge<HTML::HTMLBaseElement>);
     JS::GCPtr<HTML::HTMLBaseElement const> first_base_element_with_href_in_tree_order() const;
@@ -123,7 +123,7 @@ public:
     HTML::CrossOriginOpenerPolicy const& cross_origin_opener_policy() const { return m_cross_origin_opener_policy; }
     void set_cross_origin_opener_policy(HTML::CrossOriginOpenerPolicy policy) { m_cross_origin_opener_policy = move(policy); }
 
-    AK::URL parse_url(StringView) const;
+    URL parse_url(StringView) const;
 
     CSS::StyleComputer& style_computer() { return *m_style_computer; }
     const CSS::StyleComputer& style_computer() const { return *m_style_computer; }
@@ -451,8 +451,8 @@ public:
     void set_is_initial_about_blank(bool b) { m_is_initial_about_blank = b; }
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-about-base-url
-    Optional<AK::URL> about_base_url() const { return m_about_base_url; }
-    void set_about_base_url(Optional<AK::URL> url) { m_about_base_url = url; }
+    Optional<URL> about_base_url() const { return m_about_base_url; }
+    void set_about_base_url(Optional<URL> url) { m_about_base_url = url; }
 
     String domain() const;
     void set_domain(String const&);
@@ -544,7 +544,7 @@ public:
 
     void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, bool update_navigation_api = true);
 
-    HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
+    HashMap<URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
 
     void restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry);
 
@@ -602,7 +602,7 @@ protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    Document(JS::Realm&, AK::URL const&);
+    Document(JS::Realm&, URL const&);
 
 private:
     // ^HTML::GlobalEventHandlers
@@ -631,7 +631,7 @@ private:
     Optional<CSS::Selector::PseudoElement::Type> m_inspected_pseudo_element;
     JS::GCPtr<Node> m_active_favicon;
     WeakPtr<HTML::BrowsingContext> m_browsing_context;
-    AK::URL m_url;
+    URL m_url;
 
     JS::GCPtr<HTML::Window> m_window;
 
@@ -732,7 +732,7 @@ private:
     bool m_is_initial_about_blank { false };
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-about-base-url
-    Optional<AK::URL> m_about_base_url;
+    Optional<URL> m_about_base_url;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-coop
     HTML::CrossOriginOpenerPolicy m_cross_origin_opener_policy;
@@ -808,7 +808,7 @@ private:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#latest-entry
     JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
 
-    HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>> m_shared_image_requests;
+    HashMap<URL, JS::GCPtr<HTML::SharedImageRequest>> m_shared_image_requests;
 
     // https://www.w3.org/TR/web-animations-1/#timeline-associated-with-a-document
     HashTable<JS::NonnullGCPtr<Animations::AnimationTimeline>> m_associated_animation_timelines;

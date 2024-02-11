@@ -39,7 +39,7 @@ private:
     Web::Page& page();
     Web::Page const& page() const;
 
-    virtual void start_dedicated_worker(AK::URL const& url, String const&, String const&, String const&, Web::HTML::TransferDataHolder const&) override;
+    virtual void start_dedicated_worker(URL const& url, String const&, String const&, String const&, Web::HTML::TransferDataHolder const&) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
 
     JS::Handle<PageHost> m_page_host;

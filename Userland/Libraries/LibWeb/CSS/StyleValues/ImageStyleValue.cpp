@@ -20,7 +20,7 @@
 
 namespace Web::CSS {
 
-ImageStyleValue::ImageStyleValue(AK::URL const& url)
+ImageStyleValue::ImageStyleValue(URL const& url)
     : AbstractImageStyleValue(Type::Image)
     , m_url(url)
 {

@@ -73,7 +73,7 @@ ErrorOr<void> AutoplayAllowlist::enable_for_origins(ReadonlySpan<String> origins
     TRY(allowlist.try_ensure_capacity(origins.size()));
 
     for (auto const& origin : origins) {
-        AK::URL url { origin };
+        URL url { origin };
 
         if (!url.is_valid())
             url = TRY(String::formatted("https://{}", origin));

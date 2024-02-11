@@ -124,7 +124,7 @@ ErrorOr<void> AutoComplete::got_network_response(QNetworkReply* reply)
 String AutoComplete::auto_complete_url_from_query(StringView query)
 {
     auto autocomplete_engine = ak_string_from_qstring(Settings::the()->autocomplete_engine().url);
-    return MUST(autocomplete_engine.replace("{}"sv, AK::URL::percent_encode(query), ReplaceMode::FirstOnly));
+    return MUST(autocomplete_engine.replace("{}"sv, URL::percent_encode(query), ReplaceMode::FirstOnly));
 }
 
 void AutoComplete::clear_suggestions()

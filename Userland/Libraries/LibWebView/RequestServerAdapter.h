@@ -42,8 +42,8 @@ public:
     static ErrorOr<NonnullRefPtr<RequestServerAdapter>> try_create();
     virtual ~RequestServerAdapter() override;
 
-    virtual void prefetch_dns(AK::URL const& url) override;
-    virtual void preconnect(AK::URL const& url) override;
+    virtual void prefetch_dns(URL const& url) override;
+    virtual void preconnect(URL const& url) override;
 
     virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) override;
 

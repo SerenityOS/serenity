@@ -15,11 +15,11 @@ class XMLDocument final : public Document {
     JS_DECLARE_ALLOCATOR(XMLDocument);
 
 public:
-    static JS::NonnullGCPtr<XMLDocument> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
+    static JS::NonnullGCPtr<XMLDocument> create(JS::Realm&, URL const& url = "about:blank"sv);
     virtual ~XMLDocument() override = default;
 
 private:
-    XMLDocument(JS::Realm& realm, AK::URL const& url);
+    XMLDocument(JS::Realm& realm, URL const& url);
 
     virtual void initialize(JS::Realm&) override;
 };

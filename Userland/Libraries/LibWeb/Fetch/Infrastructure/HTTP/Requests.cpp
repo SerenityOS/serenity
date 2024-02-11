@@ -44,7 +44,7 @@ JS::NonnullGCPtr<Request> Request::create(JS::VM& vm)
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-url
-AK::URL& Request::url()
+URL& Request::url()
 {
     // A request has an associated URL (a URL).
     // NOTE: Implementations are encouraged to make this a pointer to the first URL in request’s URL list. It is provided as a distinct field solely for the convenience of other standards hooking into Fetch.
@@ -53,13 +53,13 @@ AK::URL& Request::url()
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-url
-AK::URL const& Request::url() const
+URL const& Request::url() const
 {
     return const_cast<Request&>(*this).url();
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-current-url
-AK::URL& Request::current_url()
+URL& Request::current_url()
 {
     // A request has an associated current URL. It is a pointer to the last URL in request’s URL list.
     VERIFY(!m_url_list.is_empty());
@@ -67,12 +67,12 @@ AK::URL& Request::current_url()
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-current-url
-AK::URL const& Request::current_url() const
+URL const& Request::current_url() const
 {
     return const_cast<Request&>(*this).current_url();
 }
 
-void Request::set_url(AK::URL url)
+void Request::set_url(URL url)
 {
     // Sometimes setting the URL and URL list are done as two distinct steps in the spec,
     // but since we know the URL is always the URL list's first item and doesn't change later
@@ -163,7 +163,7 @@ bool Request::has_redirect_tainted_origin() const
     // A request request has a redirect-tainted origin if these steps return true:
 
     // 1. Let lastURL be null.
-    Optional<AK::URL const&> last_url;
+    Optional<URL const&> last_url;
 
     // 2. For each url of request’s URL list:
     for (auto const& url : m_url_list) {

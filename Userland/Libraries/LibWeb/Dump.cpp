@@ -647,8 +647,8 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     builder.append("sources:\n"sv);
     for (auto const& source : font_face.sources()) {
         indent(builder, indent_levels + 2);
-        if (source.local_or_url.has<AK::URL>())
-            builder.appendff("url={}, format={}\n", source.local_or_url.get<AK::URL>(), source.format.value_or("???"_string));
+        if (source.local_or_url.has<URL>())
+            builder.appendff("url={}, format={}\n", source.local_or_url.get<URL>(), source.format.value_or("???"_string));
         else
             builder.appendff("local={}\n", source.local_or_url.get<AK::String>());
     }

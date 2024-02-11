@@ -16,7 +16,7 @@ namespace Web::HTML {
 class Origin {
 public:
     Origin() = default;
-    Origin(Optional<ByteString> const& scheme, AK::URL::Host const& host, u16 port)
+    Origin(Optional<ByteString> const& scheme, URL::Host const& host, u16 port)
         : m_scheme(scheme)
         , m_host(host)
         , m_port(port)
@@ -30,7 +30,7 @@ public:
     {
         return m_scheme.map([](auto& str) { return str.view(); }).value_or(StringView {});
     }
-    AK::URL::Host const& host() const { return m_host; }
+    URL::Host const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
     // https://html.spec.whatwg.org/multipage/origin.html#same-origin
@@ -98,7 +98,7 @@ public:
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain
-    Optional<AK::URL::Host> effective_domain() const
+    Optional<URL::Host> effective_domain() const
     {
         // 1. If origin is an opaque origin, then return null.
         if (is_opaque())
@@ -114,7 +114,7 @@ public:
 
 private:
     Optional<ByteString> m_scheme;
-    AK::URL::Host m_host;
+    URL::Host m_host;
     u16 m_port { 0 };
 };
 

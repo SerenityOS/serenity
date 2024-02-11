@@ -74,7 +74,7 @@ static Bindings::NavigationHistoryBehavior to_navigation_history_behavior(Histor
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#location-object-navigate
-WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavior history_handling)
+WebIDL::ExceptionOr<void> Location::navigate(URL url, HistoryHandlingBehavior history_handling)
 {
     // 1. Let navigable be location's relevant global object's navigable.
     auto navigable = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigable();
@@ -97,7 +97,7 @@ WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavio
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#concept-location-url
-AK::URL Location::url() const
+URL Location::url() const
 {
     // A Location object has an associated url, which is this Location object's relevant Document's URL,
     // if this Location object's relevant Document is non-null, and about:blank otherwise.

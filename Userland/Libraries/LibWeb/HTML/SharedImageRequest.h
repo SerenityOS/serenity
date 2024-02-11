@@ -22,11 +22,11 @@ class SharedImageRequest final : public JS::Cell {
     JS_DECLARE_ALLOCATOR(SharedImageRequest);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<SharedImageRequest> get_or_create(JS::Realm&, JS::NonnullGCPtr<Page>, AK::URL const&);
+    [[nodiscard]] static JS::NonnullGCPtr<SharedImageRequest> get_or_create(JS::Realm&, JS::NonnullGCPtr<Page>, URL const&);
 
     virtual ~SharedImageRequest() override;
 
-    AK::URL const& url() const { return m_url; }
+    URL const& url() const { return m_url; }
 
     [[nodiscard]] JS::GCPtr<DecodedImageData> image_data() const;
 
@@ -41,12 +41,12 @@ public:
     bool needs_fetching() const;
 
 private:
-    explicit SharedImageRequest(JS::NonnullGCPtr<Page>, AK::URL, JS::NonnullGCPtr<DOM::Document>);
+    explicit SharedImageRequest(JS::NonnullGCPtr<Page>, URL, JS::NonnullGCPtr<DOM::Document>);
 
     virtual void finalize() override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    void handle_successful_fetch(AK::URL const&, StringView mime_type, ByteBuffer data);
+    void handle_successful_fetch(URL const&, StringView mime_type, ByteBuffer data);
     void handle_failed_fetch();
 
     enum class State {
@@ -66,7 +66,7 @@ private:
     };
     Vector<Callbacks> m_callbacks;
 
-    AK::URL m_url;
+    URL m_url;
     JS::GCPtr<DecodedImageData> m_image_data;
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 

@@ -59,7 +59,7 @@ struct NavigationParams {
     // FIXME: a NavigationTimingType used for creating the navigation timing entry for the new Document
 
     // a URL or null used to populate the new Document's about base URL
-    Optional<AK::URL> about_base_url;
+    Optional<URL> about_base_url;
 };
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#non-fetch-scheme-navigation-params
@@ -71,7 +71,7 @@ struct NonFetchSchemeNavigationParams {
     JS::Handle<Navigable> navigable;
 
     // a URL
-    AK::URL url;
+    URL url;
 
     // the target snapshot params's sandboxing flags present during navigation
     SandboxingFlagSet target_snapshot_sandboxing_flags = {};

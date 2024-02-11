@@ -471,7 +471,7 @@ void BrowserWindow::debug_request(ByteString const& request, ByteString const& a
     m_current_tab->debug_request(request, argument);
 }
 
-Tab& BrowserWindow::new_tab_from_url(AK::URL const& url, Web::HTML::ActivateTab activate_tab)
+Tab& BrowserWindow::new_tab_from_url(URL const& url, Web::HTML::ActivateTab activate_tab)
 {
     auto& tab = create_new_tab(activate_tab);
     tab.navigate(url);

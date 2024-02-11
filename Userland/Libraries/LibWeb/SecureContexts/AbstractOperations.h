@@ -17,6 +17,6 @@ enum class Trustworthiness {
 };
 
 [[nodiscard]] Trustworthiness is_origin_potentially_trustworthy(HTML::Origin const&);
-[[nodiscard]] Trustworthiness is_url_potentially_trustworthy(AK::URL const&);
+[[nodiscard]] Trustworthiness is_url_potentially_trustworthy(URL const&);
 
 }

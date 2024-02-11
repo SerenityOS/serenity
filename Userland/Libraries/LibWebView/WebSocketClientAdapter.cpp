@@ -125,7 +125,7 @@ WebSocketClientManagerAdapter::WebSocketClientManagerAdapter(NonnullRefPtr<Proto
 
 WebSocketClientManagerAdapter::~WebSocketClientManagerAdapter() = default;
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const AK::URL& url, ByteString const& origin, Vector<ByteString> const& protocols)
+RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const URL& url, ByteString const& origin, Vector<ByteString> const& protocols)
 {
     auto underlying_websocket = m_websocket_client->connect(url, origin, protocols);
     if (!underlying_websocket)

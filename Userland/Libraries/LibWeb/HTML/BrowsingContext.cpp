@@ -36,7 +36,7 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(BrowsingContext);
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
-bool url_matches_about_blank(AK::URL const& url)
+bool url_matches_about_blank(URL const& url)
 {
     // A URL matches about:blank if its scheme is "about", its path contains a single string "blank", its username and password are the empty string, and its host is null.
     return url.scheme() == "about"sv
@@ -47,7 +47,7 @@ bool url_matches_about_blank(AK::URL const& url)
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:srcdoc
-bool url_matches_about_srcdoc(AK::URL const& url)
+bool url_matches_about_srcdoc(URL const& url)
 {
     // A URL matches about:srcdoc if its scheme is "about", its path contains a single string "srcdoc", its query is null, its username and password are the empty string, and its host is null.
     return url.scheme() == "about"sv
@@ -59,7 +59,7 @@ bool url_matches_about_srcdoc(AK::URL const& url)
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin
-HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin)
+HTML::Origin determine_the_origin(URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin)
 {
     // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
     if (has_flag(sandbox_flags, SandboxingFlagSet::SandboxedOrigin)) {
@@ -132,7 +132,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     Optional<Origin> creator_origin = {};
 
     // FIXME: This algorithm needs re-aligned with the spec
-    Optional<AK::URL> creator_base_url = {};
+    Optional<URL> creator_base_url = {};
 
     // 4. If creator is non-null, then:
     if (creator) {
@@ -151,7 +151,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     SandboxingFlagSet sandbox_flags = {};
 
     // 6. Let origin be the result of determining the origin given about:blank, sandboxFlags, and creatorOrigin.
-    auto origin = determine_the_origin(AK::URL("about:blank"sv), sandbox_flags, creator_origin);
+    auto origin = determine_the_origin(URL("about:blank"sv), sandbox_flags, creator_origin);
 
     // FIXME: 7. Let permissionsPolicy be the result of creating a permissions policy given browsingContext and origin. [PERMISSIONSPOLICY]
 
@@ -176,7 +176,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         });
 
     // 10. Let topLevelCreationURL be about:blank if embedder is null; otherwise embedder's relevant settings object's top-level creation URL.
-    auto top_level_creation_url = !embedder ? AK::URL("about:blank") : relevant_settings_object(*embedder).top_level_creation_url;
+    auto top_level_creation_url = !embedder ? URL("about:blank") : relevant_settings_object(*embedder).top_level_creation_url;
 
     // 11. Let topLevelOrigin be origin if embedder is null; otherwise embedder's relevant settings object's top-level origin.
     auto top_level_origin = !embedder ? origin : relevant_settings_object(*embedder).origin();
@@ -184,7 +184,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // 12. Set up a window environment settings object with about:blank, realm execution context, null, topLevelCreationURL, and topLevelOrigin.
     WindowEnvironmentSettingsObject::setup(
         page,
-        AK::URL("about:blank"),
+        URL("about:blank"),
         move(realm_execution_context),
         {},
         top_level_creation_url,

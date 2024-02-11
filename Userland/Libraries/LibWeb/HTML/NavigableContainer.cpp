@@ -188,10 +188,10 @@ HTML::WindowProxy* NavigableContainer::content_window()
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements
-Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
+Optional<URL> NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
 {
     // 1. Let url be the URL record about:blank.
-    auto url = AK::URL("about:blank");
+    auto url = URL("about:blank");
 
     // 2. If element has a src attribute specified, and its value is not the empty string,
     //    then parse the value of that attribute relative to element's node document.
@@ -208,7 +208,7 @@ Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_ifra
     if (m_content_navigable) {
         for (auto const& navigable : document().inclusive_ancestor_navigables()) {
             VERIFY(navigable->active_document());
-            if (navigable->active_document()->url().equals(url, AK::URL::ExcludeFragment::Yes))
+            if (navigable->active_document()->url().equals(url, URL::ExcludeFragment::Yes))
                 return {};
         }
     }
@@ -223,7 +223,7 @@ Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_ifra
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
-void NavigableContainer::navigate_an_iframe_or_frame(AK::URL url, ReferrerPolicy::ReferrerPolicy referrer_policy, Optional<String> srcdoc_string)
+void NavigableContainer::navigate_an_iframe_or_frame(URL url, ReferrerPolicy::ReferrerPolicy referrer_policy, Optional<String> srcdoc_string)
 {
     // 1. Let historyHandling be "auto".
     auto history_handling = Bindings::NavigationHistoryBehavior::Auto;

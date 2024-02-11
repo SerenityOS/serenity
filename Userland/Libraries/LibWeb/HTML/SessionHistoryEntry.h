@@ -46,7 +46,7 @@ struct SessionHistoryEntry final : public JS::Cell {
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-url
     // URL, a URL
-    AK::URL url;
+    URL url;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document-state
     JS::GCPtr<HTML::DocumentState> document_state;

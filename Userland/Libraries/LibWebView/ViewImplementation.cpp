@@ -74,7 +74,7 @@ void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id
     client().async_ready_to_paint(page_id());
 }
 
-void ViewImplementation::load(AK::URL const& url)
+void ViewImplementation::load(URL const& url)
 {
     m_url = url;
     client().async_load_url(page_id(), url);

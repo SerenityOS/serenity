@@ -33,7 +33,7 @@ public:
 
     WebContentView& view() { return *m_view; }
 
-    void navigate(AK::URL const&);
+    void navigate(URL const&);
     void load_html(StringView);
 
     void back();

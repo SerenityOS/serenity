@@ -17,7 +17,7 @@
 namespace Web::ReferrerPolicy {
 
 // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
-Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request const& request)
+Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const& request)
 {
     // 1. Let policy be request’s referrer policy.
     auto const& policy = request.referrer_policy();
@@ -28,7 +28,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
     // 3. Switch on request’s referrer:
     auto referrer_source = request.referrer().visit(
         // "client"
-        [&](Fetch::Infrastructure::Request::Referrer referrer) -> Optional<AK::URL> {
+        [&](Fetch::Infrastructure::Request::Referrer referrer) -> Optional<URL> {
             // Note: If request’s referrer is "no-referrer", Fetch will not call into this algorithm.
             VERIFY(referrer == Fetch::Infrastructure::Request::Referrer::Client);
 
@@ -56,7 +56,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
             }
         },
         // a URL
-        [&](AK::URL const& url) -> Optional<AK::URL> {
+        [&](URL const& url) -> Optional<URL> {
             // Let referrerSource be request’s referrer.
             return url;
         });
@@ -164,7 +164,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
     }
 }
 
-Optional<AK::URL> strip_url_for_use_as_referrer(Optional<AK::URL> url, OriginOnly origin_only)
+Optional<URL> strip_url_for_use_as_referrer(Optional<URL> url, OriginOnly origin_only)
 {
     // 1. If url is null, return no referrer.
     if (!url.has_value())

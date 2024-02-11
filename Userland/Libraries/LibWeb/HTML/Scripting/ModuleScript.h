@@ -19,7 +19,7 @@ public:
     virtual ~ModuleScript() override;
 
 protected:
-    ModuleScript(AK::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
+    ModuleScript(URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
 };
 
 class JavaScriptModuleScript final : public ModuleScript {
@@ -29,7 +29,7 @@ class JavaScriptModuleScript final : public ModuleScript {
 public:
     virtual ~JavaScriptModuleScript() override;
 
-    static WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> create(ByteString const& filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url);
+    static WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> create(ByteString const& filename, StringView source, EnvironmentSettingsObject&, URL base_url);
 
     enum class PreventErrorReporting {
         Yes,
@@ -42,7 +42,7 @@ public:
     JS::SourceTextModule* record() { return m_record.ptr(); }
 
 protected:
-    JavaScriptModuleScript(AK::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
+    JavaScriptModuleScript(URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
 
 private:
     virtual void visit_edges(JS::Cell::Visitor&) override;

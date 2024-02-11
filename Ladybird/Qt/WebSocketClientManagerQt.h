@@ -19,7 +19,7 @@ public:
     static NonnullRefPtr<WebSocketClientManagerQt> create();
 
     virtual ~WebSocketClientManagerQt() override;
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const&, ByteString const& origin, Vector<ByteString> const& protocols) override;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(URL const&, ByteString const& origin, Vector<ByteString> const& protocols) override;
 
 private:
     WebSocketClientManagerQt();

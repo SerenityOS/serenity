@@ -18,19 +18,19 @@ namespace Web::DOMURL {
 
 JS_DEFINE_ALLOCATOR(DOMURL);
 
-JS::NonnullGCPtr<DOMURL> DOMURL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+JS::NonnullGCPtr<DOMURL> DOMURL::create(JS::Realm& realm, URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
     return realm.heap().allocate<DOMURL>(realm, realm, move(url), move(query));
 }
 
 // https://url.spec.whatwg.org/#api-url-parser
-static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const& base)
+static Optional<URL> parse_api_url(String const& url, Optional<String> const& base)
 {
     // FIXME: We somewhat awkwardly have two failure states encapsulated in the return type (and convert between them in the steps),
     //        ideally we'd get rid of URL's valid flag
 
     // 1. Let parsedBase be null.
-    Optional<AK::URL> parsed_base;
+    Optional<URL> parsed_base;
 
     // 2. If base is non-null:
     if (base.has_value()) {
@@ -46,7 +46,7 @@ static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const
 
     // 3. Return the result of running the basic URL parser on url with parsedBase.
     auto parsed = URLParser::basic_parse(url, parsed_base);
-    return parsed.is_valid() ? parsed : Optional<AK::URL> {};
+    return parsed.is_valid() ? parsed : Optional<URL> {};
 }
 
 // https://url.spec.whatwg.org/#dom-url-url
@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMURL>> DOMURL::construct_impl(JS::Realm& 
     return result_url;
 }
 
-DOMURL::DOMURL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+DOMURL::DOMURL(JS::Realm& realm, URL url, JS::NonnullGCPtr<URLSearchParams> query)
     : PlatformObject(realm)
     , m_url(move(url))
     , m_query(move(query))
@@ -166,7 +166,7 @@ WebIDL::ExceptionOr<void> DOMURL::set_href(String const& href)
     auto& vm = realm().vm();
 
     // 1. Let parsedURL be the result of running the basic URL parser on the given value.
-    AK::URL parsed_url = href;
+    URL parsed_url = href;
 
     // 2. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
@@ -355,7 +355,7 @@ WebIDL::ExceptionOr<String> DOMURL::pathname() const
     auto& vm = realm().vm();
 
     // The pathname getter steps are to return the result of URL path serializing this’s URL.
-    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_url.serialize_path(AK::URL::ApplyPercentDecoding::No)));
+    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_url.serialize_path(URL::ApplyPercentDecoding::No)));
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-pathname%E2%91%A0
@@ -482,7 +482,7 @@ void DOMURL::set_hash(String const& hash)
 }
 
 // https://url.spec.whatwg.org/#concept-url-origin
-HTML::Origin url_origin(AK::URL const& url)
+HTML::Origin url_origin(URL const& url)
 {
     // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
 
@@ -533,7 +533,7 @@ HTML::Origin url_origin(AK::URL const& url)
 }
 
 // https://url.spec.whatwg.org/#concept-domain
-bool host_is_domain(AK::URL::Host const& host)
+bool host_is_domain(URL::Host const& host)
 {
     // A domain is a non-empty ASCII string that identifies a realm within a network.
     return host.has<String>() && host.get<String>() != String {};
@@ -563,7 +563,7 @@ void strip_trailing_spaces_from_an_opaque_path(DOMURL& url)
 }
 
 // https://url.spec.whatwg.org/#concept-url-parser
-AK::URL parse(StringView input, Optional<AK::URL> const& base_url)
+URL parse(StringView input, Optional<URL> const& base_url)
 {
     // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
 

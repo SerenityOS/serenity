@@ -16,7 +16,7 @@ class ContentFilter {
 public:
     static ContentFilter& the();
 
-    bool is_filtered(const AK::URL&) const;
+    bool is_filtered(const URL&) const;
     ErrorOr<void> set_patterns(ReadonlySpan<String>);
 
 private:

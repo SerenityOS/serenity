@@ -29,12 +29,12 @@ Trustworthiness is_origin_potentially_trustworthy(HTML::Origin const& origin)
 
     // 4. If origin’s host matches one of the CIDR notations 127.0.0.0/8 or ::1/128 [RFC4632], return "Potentially Trustworthy".
     // FIXME: This would be nicer if URL::IPv4Address and URL::IPv6Address were instances of AK::IPv4Address and AK::IPv6Address
-    if (origin.host().has<AK::URL::IPv4Address>()) {
-        if ((origin.host().get<AK::URL::IPv4Address>() & 0xff000000) != 0)
+    if (origin.host().has<URL::IPv4Address>()) {
+        if ((origin.host().get<URL::IPv4Address>() & 0xff000000) != 0)
             return Trustworthiness::PotentiallyTrustworthy;
-    } else if (origin.host().has<AK::URL::IPv6Address>()) {
-        auto ipv6_address = origin.host().get<AK::URL::IPv6Address>();
-        static constexpr AK::URL::IPv6Address loopback { 0, 0, 0, 0, 0, 0, 0, 1 };
+    } else if (origin.host().has<URL::IPv6Address>()) {
+        auto ipv6_address = origin.host().get<URL::IPv6Address>();
+        static constexpr URL::IPv6Address loopback { 0, 0, 0, 0, 0, 0, 0, 1 };
         if (ipv6_address == loopback)
             return Trustworthiness::PotentiallyTrustworthy;
     }
@@ -68,7 +68,7 @@ Trustworthiness is_origin_potentially_trustworthy(HTML::Origin const& origin)
 }
 
 // https://w3c.github.io/webappsec-secure-contexts/#is-url-trustworthy
-Trustworthiness is_url_potentially_trustworthy(AK::URL const& url)
+Trustworthiness is_url_potentially_trustworthy(URL const& url)
 {
     // 1. If url is "about:blank" or "about:srcdoc", return "Potentially Trustworthy".
     if (url == "about:blank"sv || url == "about:srcdoc"sv)

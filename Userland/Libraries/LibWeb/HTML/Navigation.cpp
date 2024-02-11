@@ -1012,7 +1012,7 @@ bool Navigation::inner_navigate_event_firing_algorithm(
     //  - destination's URL's fragment is not identical to currentURL's fragment,
     //  then initialize event's hashChange to true. Otherwise, initialize it to false.
     event_init.hash_change = (destination->same_document()
-        && destination->raw_url().equals(current_url, AK::URL::ExcludeFragment::Yes)
+        && destination->raw_url().equals(current_url, URL::ExcludeFragment::Yes)
         && destination->raw_url().fragment() != current_url.fragment());
 
     // 22. If userInvolvement is not "none", then initialize event's userInitiated to true. Otherwise, initialize it to false.
@@ -1282,7 +1282,7 @@ bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryE
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#fire-a-push/replace/reload-navigate-event
 bool Navigation::fire_a_push_replace_reload_navigate_event(
     Bindings::NavigationType navigation_type,
-    AK::URL destination_url,
+    URL destination_url,
     bool is_same_document,
     UserNavigationInvolvement user_involvement,
     Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list,
@@ -1322,7 +1322,7 @@ bool Navigation::fire_a_push_replace_reload_navigate_event(
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#fire-a-download-request-navigate-event
-bool Navigation::fire_a_download_request_navigate_event(AK::URL destination_url, UserNavigationInvolvement user_involvement, String filename)
+bool Navigation::fire_a_download_request_navigate_event(URL destination_url, UserNavigationInvolvement user_involvement, String filename)
 {
     auto& realm = relevant_realm(*this);
     auto& vm = this->vm();

@@ -33,7 +33,7 @@ inline constexpr Array FETCH_SCHEMES = {
     "resource"sv
 };
 
-[[nodiscard]] bool is_local_url(AK::URL const&);
+[[nodiscard]] bool is_local_url(URL const&);
 [[nodiscard]] bool is_fetch_scheme(StringView);
 [[nodiscard]] bool is_http_or_https_scheme(StringView);
 

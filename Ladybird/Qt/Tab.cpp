@@ -309,7 +309,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     search_selected_text_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
     QObject::connect(search_selected_text_action, &QAction::triggered, this, [this]() {
         auto url = MUST(String::formatted(Settings::the()->search_engine().query_url, URL::percent_encode(*m_page_context_menu_search_text)));
-        m_window->new_tab_from_url(AK::URL(url), Web::HTML::ActivateTab::Yes);
+        m_window->new_tab_from_url(URL(url), Web::HTML::ActivateTab::Yes);
     });
 
     auto take_screenshot = [this](auto type) {
@@ -658,7 +658,7 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(AK::URL const& url)
+void Tab::navigate(URL const& url)
 {
     view().load(url);
 }

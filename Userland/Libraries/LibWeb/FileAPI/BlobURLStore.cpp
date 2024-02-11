@@ -82,7 +82,7 @@ ErrorOr<void> remove_entry_from_blob_url_store(StringView url)
     auto& store = blob_url_store();
 
     // 2. Let url string be the result of serializing url.
-    auto url_string = TRY(AK::URL { url }.to_string());
+    auto url_string = TRY(URL { url }.to_string());
 
     // 3. Remove store[url string].
     store.remove(url_string);

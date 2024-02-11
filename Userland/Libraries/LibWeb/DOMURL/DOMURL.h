@@ -79,22 +79,22 @@ public:
     void set_query(Badge<URLSearchParams>, Optional<String> query) { m_url.set_query(move(query)); }
 
 private:
-    DOMURL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);
+    DOMURL(JS::Realm&, URL, JS::NonnullGCPtr<URLSearchParams> query);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    AK::URL m_url;
+    URL m_url;
     JS::NonnullGCPtr<URLSearchParams> m_query;
 };
 
-HTML::Origin url_origin(AK::URL const&);
-bool host_is_domain(AK::URL::Host const&);
+HTML::Origin url_origin(URL const&);
+bool host_is_domain(URL::Host const&);
 
 // https://url.spec.whatwg.org/#potentially-strip-trailing-spaces-from-an-opaque-path
 void strip_trailing_spaces_from_an_opaque_path(DOMURL& url);
 
 // https://url.spec.whatwg.org/#concept-url-parser
-AK::URL parse(StringView input, Optional<AK::URL> const& base_url = {});
+URL parse(StringView input, Optional<URL> const& base_url = {});
 
 }
