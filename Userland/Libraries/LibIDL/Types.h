@@ -260,6 +260,7 @@ public:
     ByteString name;
     ByteString parent_name;
     ByteString namespaced_name;
+    ByteString implemented_name;
 
     bool is_namespace { false };
     bool is_mixin { false };

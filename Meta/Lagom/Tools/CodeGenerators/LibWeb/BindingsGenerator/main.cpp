@@ -77,10 +77,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::"sv);
-        builder.append(interface.name);
+        builder.append(interface.implemented_name);
         interface.fully_qualified_name = builder.to_byte_string();
     } else {
-        interface.fully_qualified_name = interface.name;
+        interface.fully_qualified_name = interface.implemented_name;
     }
 
     if constexpr (BINDINGS_GENERATOR_DEBUG) {

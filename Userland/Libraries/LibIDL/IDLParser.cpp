@@ -634,8 +634,13 @@ void Parser::parse_interface(Interface& interface)
     else
         interface.namespaced_name = interface.name;
 
-    interface.constructor_class = ByteString::formatted("{}Constructor", interface.name);
-    interface.prototype_class = ByteString::formatted("{}Prototype", interface.name);
+    if (auto maybe_implemented_as = interface.extended_attributes.get("ImplementedAs"); maybe_implemented_as.has_value())
+        interface.implemented_name = maybe_implemented_as.release_value();
+    else
+        interface.implemented_name = interface.name;
+
+    interface.constructor_class = ByteString::formatted("{}Constructor", interface.implemented_name);
+    interface.prototype_class = ByteString::formatted("{}Prototype", interface.implemented_name);
     interface.prototype_base_class = ByteString::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);
     interface.global_mixin_class = ByteString::formatted("{}GlobalMixin", interface.name);
     consume_whitespace();
