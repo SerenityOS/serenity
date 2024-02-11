@@ -725,6 +725,7 @@ def set_up_machine_devices(config: Configuration):
         config.display_backend = None
         config.audio_devices = []
         config.extra_arguments.extend(["-serial", "stdio"])
+        config.kernel_cmdline.append("serial_debug")
         config.qemu_cpu = None
         return
 
