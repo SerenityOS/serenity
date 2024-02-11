@@ -632,6 +632,8 @@ WebIDL::ExceptionOr<void> Animation::silently_set_current_time(Optional<double> 
 // https://www.w3.org/TR/web-animations-1/#update-an-animations-finished-state
 void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify synchronously_notify)
 {
+    auto& realm = this->realm();
+
     // 1. Let the unconstrained current time be the result of calculating the current time substituting an unresolved
     //    time value for the hold time if did seek is false. If did seek is true, the unconstrained current time is
     //    equal to the current time.
@@ -708,30 +710,23 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
     if (current_finished_state && !m_is_finished) {
         // 1. Let finish notification steps refer to the following procedure:
         JS::SafeFunction<void()> finish_notification_steps = [&]() {
-            if (m_should_abort_finish_notification_microtask) {
-                m_should_abort_finish_notification_microtask = false;
-                m_has_finish_notification_microtask_scheduled = false;
-                return;
-            }
-
             // 1. If animation’s play state is not equal to finished, abort these steps.
             if (play_state() != Bindings::AnimationPlayState::Finished)
                 return;
 
             // 2. Resolve animation’s current finished promise object with animation.
             {
-                HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm()) };
-                WebIDL::resolve_promise(realm(), current_finished_promise(), this);
+                HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
+                WebIDL::resolve_promise(realm, current_finished_promise(), this);
             }
             m_is_finished = true;
 
             // 3. Create an AnimationPlaybackEvent, finishEvent.
             // 4. Set finishEvent’s type attribute to finish.
             // 5. Set finishEvent’s currentTime attribute to the current time of animation.
-            auto& realm = this->realm();
             AnimationPlaybackEventInit init;
             init.current_time = current_time();
-            auto finish_event = AnimationPlaybackEvent::create(realm, "finish"_fly_string, init);
+            auto finish_event = AnimationPlaybackEvent::create(realm, HTML::EventNames::finish, init);
 
             // 6. Set finishEvent’s timelineTime attribute to the current time of the timeline with which animation is
             //    associated. If animation is not associated with a timeline, or the timeline is inactive, let
@@ -752,44 +747,47 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
             //    Otherwise, queue a task to dispatch finishEvent at animation. The task source for this task is the DOM
             //    manipulation task source.
             else {
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm.global_object(), [this, finish_event]() {
+                // Manually create a task so its ID can be saved
+                auto& document = verify_cast<HTML::Window>(realm.global_object()).associated_document();
+                auto task = HTML::Task::create(HTML::Task::Source::DOMManipulation, &document, [this, finish_event]() {
                     dispatch_event(finish_event);
                 });
+                m_pending_finish_microtask_id = task->id();
+                HTML::main_thread_event_loop().task_queue().add(move(task));
             }
-
-            m_has_finish_notification_microtask_scheduled = false;
         };
 
         // 2. If synchronously notify is true, cancel any queued microtask to run the finish notification steps for this
         //    animation, and run the finish notification steps immediately.
         if (synchronously_notify == SynchronouslyNotify::Yes) {
-            m_should_abort_finish_notification_microtask = false;
+            if (m_pending_finish_microtask_id.has_value()) {
+                HTML::main_thread_event_loop().task_queue().remove_tasks_matching([id = move(m_pending_finish_microtask_id)](auto const& task) {
+                    return task.id() == id;
+                });
+            }
             finish_notification_steps();
-            m_should_abort_finish_notification_microtask = true;
         }
         //    Otherwise, if synchronously notify is false, queue a microtask to run finish notification steps for
         //    animation unless there is already a microtask queued to run those steps for animation.
-        else {
-            if (!m_has_finish_notification_microtask_scheduled)
-                HTML::queue_a_microtask({}, move(finish_notification_steps));
-
-            m_has_finish_notification_microtask_scheduled = true;
-            m_should_abort_finish_notification_microtask = false;
+        else if (!m_pending_finish_microtask_id.has_value()) {
+            auto& document = verify_cast<HTML::Window>(realm.global_object()).associated_document();
+            auto task = HTML::Task::create(HTML::Task::Source::DOMManipulation, &document, move(finish_notification_steps));
+            m_pending_finish_microtask_id = task->id();
+            HTML::main_thread_event_loop().task_queue().add(move(task));
         }
     }
 
     // 6. If current finished state is false and animation’s current finished promise is already resolved, set
     //    animation’s current finished promise to a new promise in the relevant Realm of animation.
     if (!current_finished_state && m_is_finished) {
-        m_current_finished_promise = WebIDL::create_promise(realm());
+        {
+            HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
+            m_current_finished_promise = WebIDL::create_promise(realm);
+        }
         m_is_finished = false;
     }
 
-    // Invalidate the style of our target element, if applicable
-    if (m_effect) {
-        if (auto target = m_effect->target())
-            target->invalidate_style();
-    }
+    invalidate_effect();
 }
 
 // Step 12 of https://www.w3.org/TR/web-animations-1/#playing-an-animation-section
@@ -881,6 +879,14 @@ JS::NonnullGCPtr<WebIDL::Promise> Animation::current_finished_promise() const
     }
 
     return *m_current_finished_promise;
+}
+
+void Animation::invalidate_effect()
+{
+    if (m_effect) {
+        if (auto target = m_effect->target())
+            target->invalidate_style();
+    }
 }
 
 Animation::Animation(JS::Realm& realm)
