@@ -65,6 +65,8 @@ public:
     JS::GCPtr<DOM::Document> document_for_timing() const;
     void notify_timeline_time_did_change();
 
+    void effect_timing_changed(Badge<AnimationEffect>);
+
 protected:
     Animation(JS::Realm&);
 
