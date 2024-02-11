@@ -21,11 +21,11 @@ class HTMLDocument final : public DOM::Document {
 public:
     virtual ~HTMLDocument() override;
 
-    [[nodiscard]] static JS::NonnullGCPtr<HTMLDocument> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
+    [[nodiscard]] static JS::NonnullGCPtr<HTMLDocument> create(JS::Realm&, URL const& url = "about:blank"sv);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLDocument>> construct_impl(JS::Realm&);
 
 private:
-    HTMLDocument(JS::Realm&, AK::URL const&);
+    HTMLDocument(JS::Realm&, URL const&);
 };
 
 }

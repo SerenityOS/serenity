@@ -23,11 +23,11 @@ class CSSImportRule final
     JS_DECLARE_ALLOCATOR(CSSImportRule);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<CSSImportRule> create(AK::URL, DOM::Document&);
+    [[nodiscard]] static JS::NonnullGCPtr<CSSImportRule> create(URL, DOM::Document&);
 
     virtual ~CSSImportRule() = default;
 
-    AK::URL const& url() const { return m_url; }
+    URL const& url() const { return m_url; }
     // FIXME: This should return only the specified part of the url. eg, "stuff/foo.css", not "https://example.com/stuff/foo.css".
     String href() const { return MUST(m_url.to_string()); }
 
@@ -39,7 +39,7 @@ public:
     virtual Type type() const override { return Type::Import; }
 
 private:
-    CSSImportRule(AK::URL, DOM::Document&);
+    CSSImportRule(URL, DOM::Document&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -50,7 +50,7 @@ private:
     virtual void resource_did_fail() override;
     virtual void resource_did_load() override;
 
-    AK::URL m_url;
+    URL m_url;
     JS::GCPtr<DOM::Document> m_document;
     JS::GCPtr<CSSStyleSheet> m_style_sheet;
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;

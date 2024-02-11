@@ -104,7 +104,7 @@ bool Response::is_network_error() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-url
-Optional<AK::URL const&> Response::url() const
+Optional<URL const&> Response::url() const
 {
     // A response has an associated URL. It is a pointer to the last URL in response’s URL list and null if response’s URL list is empty.
     // NOTE: We have to use the virtual getter here to not bypass filtered responses.
@@ -114,23 +114,23 @@ Optional<AK::URL const&> Response::url() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-location-url
-ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& request_fragment) const
+ErrorOr<Optional<URL>> Response::location_url(Optional<String> const& request_fragment) const
 {
     // The location URL of a response response, given null or an ASCII string requestFragment, is the value returned by the following steps. They return null, failure, or a URL.
 
     // 1. If response’s status is not a redirect status, then return null.
     // NOTE: We have to use the virtual getter here to not bypass filtered responses.
     if (!is_redirect_status(status()))
-        return Optional<AK::URL> {};
+        return Optional<URL> {};
 
     // 2. Let location be the result of extracting header list values given `Location` and response’s header list.
     auto location_values_or_failure = TRY(extract_header_list_values("Location"sv.bytes(), m_header_list));
     if (location_values_or_failure.has<Infrastructure::ExtractHeaderParseFailure>() || location_values_or_failure.has<Empty>())
-        return Optional<AK::URL> {};
+        return Optional<URL> {};
 
     auto const& location_values = location_values_or_failure.get<Vector<ByteBuffer>>();
     if (location_values.size() != 1)
-        return Optional<AK::URL> {};
+        return Optional<URL> {};
 
     // 3. If location is a header value, then set location to the result of parsing location with response’s URL.
     auto location = DOMURL::parse(location_values.first(), url());

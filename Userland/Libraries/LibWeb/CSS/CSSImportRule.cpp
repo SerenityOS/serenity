@@ -21,13 +21,13 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(CSSImportRule);
 
-JS::NonnullGCPtr<CSSImportRule> CSSImportRule::create(AK::URL url, DOM::Document& document)
+JS::NonnullGCPtr<CSSImportRule> CSSImportRule::create(URL url, DOM::Document& document)
 {
     auto& realm = document.realm();
     return realm.heap().allocate<CSSImportRule>(realm, move(url), document);
 }
 
-CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
+CSSImportRule::CSSImportRule(URL url, DOM::Document& document)
     : CSSRule(document.realm())
     , m_url(move(url))
     , m_document(document)

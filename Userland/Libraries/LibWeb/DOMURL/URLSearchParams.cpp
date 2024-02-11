@@ -55,11 +55,11 @@ ErrorOr<String> url_encode(Vector<QueryParam> const& tuples, StringView encoding
 
         // 2. Let name be the result of running percent-encode after encoding with encoding, tuple’s name, the application/x-www-form-urlencoded percent-encode set, and true.
         // FIXME: URLParser does not currently implement encoding.
-        auto name = TRY(URLParser::percent_encode_after_encoding(tuple.name, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
+        auto name = TRY(URLParser::percent_encode_after_encoding(tuple.name, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
 
         // 3. Let value be the result of running percent-encode after encoding with encoding, tuple’s value, the application/x-www-form-urlencoded percent-encode set, and true.
         // FIXME: URLParser does not currently implement encoding.
-        auto value = TRY(URLParser::percent_encode_after_encoding(tuple.value, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
+        auto value = TRY(URLParser::percent_encode_after_encoding(tuple.value, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
 
         // 4. If output is not the empty string, then append U+0026 (&) to output.
         if (!output.is_empty())
@@ -109,8 +109,8 @@ ErrorOr<Vector<QueryParam>> url_decode(StringView input)
         auto space_decoded_name = name.replace("+"sv, " "sv, ReplaceMode::All);
 
         // 5. Let nameString and valueString be the result of running UTF-8 decode without BOM on the percent-decoding of name and value, respectively.
-        auto name_string = TRY(String::from_byte_string(AK::URL::percent_decode(space_decoded_name)));
-        auto value_string = TRY(String::from_byte_string(AK::URL::percent_decode(value)));
+        auto name_string = TRY(String::from_byte_string(URL::percent_decode(space_decoded_name)));
+        auto value_string = TRY(String::from_byte_string(URL::percent_decode(value)));
 
         TRY(output.try_empend(move(name_string), move(value_string)));
     }

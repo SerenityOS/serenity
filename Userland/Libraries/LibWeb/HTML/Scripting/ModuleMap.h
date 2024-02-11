@@ -15,13 +15,13 @@ namespace Web::HTML {
 
 class ModuleLocationTuple {
 public:
-    ModuleLocationTuple(AK::URL url, ByteString type)
+    ModuleLocationTuple(URL url, ByteString type)
         : m_url(move(url))
         , m_type(move(type))
     {
     }
 
-    AK::URL const& url() const { return m_url; }
+    URL const& url() const { return m_url; }
     ByteString const& type() const { return m_type; }
 
     bool operator==(ModuleLocationTuple const& other) const
@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    AK::URL m_url;
+    URL m_url;
     ByteString m_type;
 };
 
@@ -56,16 +56,16 @@ public:
 
     using CallbackFunction = JS::NonnullGCPtr<JS::HeapFunction<void(Entry)>>;
 
-    bool is_fetching(AK::URL const& url, ByteString const& type) const;
-    bool is_failed(AK::URL const& url, ByteString const& type) const;
+    bool is_fetching(URL const& url, ByteString const& type) const;
+    bool is_failed(URL const& url, ByteString const& type) const;
 
-    bool is(AK::URL const& url, ByteString const& type, EntryType) const;
+    bool is(URL const& url, ByteString const& type, EntryType) const;
 
-    Optional<Entry> get(AK::URL const& url, ByteString const& type) const;
+    Optional<Entry> get(URL const& url, ByteString const& type) const;
 
-    AK::HashSetResult set(AK::URL const& url, ByteString const& type, Entry);
+    AK::HashSetResult set(URL const& url, ByteString const& type, Entry);
 
-    void wait_for_change(JS::Heap&, AK::URL const& url, ByteString const& type, Function<void(Entry)> callback);
+    void wait_for_change(JS::Heap&, URL const& url, ByteString const& type, Function<void(Entry)> callback);
 
 private:
     virtual void visit_edges(JS::Cell::Visitor&) override;

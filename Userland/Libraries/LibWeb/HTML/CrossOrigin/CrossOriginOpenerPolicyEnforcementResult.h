@@ -21,7 +21,7 @@ struct CrossOriginOpenerPolicyEnforcementResult {
     bool would_need_a_browsing_context_group_switch_due_to_report_only { false };
 
     // A URL url.
-    AK::URL url;
+    URL url;
 
     // An origin origin.
     Origin origin;

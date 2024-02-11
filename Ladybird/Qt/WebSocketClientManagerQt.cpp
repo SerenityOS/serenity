@@ -19,7 +19,7 @@ NonnullRefPtr<WebSocketClientManagerQt> WebSocketClientManagerQt::create()
 WebSocketClientManagerQt::WebSocketClientManagerQt() = default;
 WebSocketClientManagerQt::~WebSocketClientManagerQt() = default;
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerQt::connect(AK::URL const& url, ByteString const& origin, Vector<ByteString> const& protocols)
+RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerQt::connect(URL const& url, ByteString const& origin, Vector<ByteString> const& protocols)
 {
     WebSocket::ConnectionInfo connection_info(url);
     connection_info.set_origin(origin);

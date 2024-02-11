@@ -69,7 +69,7 @@ private:
     void update_href();
     bool cannot_navigate() const;
 
-    Optional<AK::URL> m_url;
+    Optional<URL> m_url;
 };
 
 }

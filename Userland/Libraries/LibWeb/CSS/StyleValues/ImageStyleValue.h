@@ -22,7 +22,7 @@ class ImageStyleValue final
     : public AbstractImageStyleValue
     , public Weakable<ImageStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<ImageStyleValue> create(AK::URL const& url)
+    static ValueComparingNonnullRefPtr<ImageStyleValue> create(URL const& url)
     {
         return adopt_ref(*new (nothrow) ImageStyleValue(url));
     }
@@ -54,14 +54,14 @@ public:
     JS::GCPtr<HTML::DecodedImageData> image_data() const;
 
 private:
-    ImageStyleValue(AK::URL const&);
+    ImageStyleValue(URL const&);
 
     JS::GCPtr<HTML::SharedImageRequest> m_image_request;
 
     void animate();
     Gfx::ImmutableBitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;
 
-    AK::URL m_url;
+    URL m_url;
     WeakPtr<DOM::Document> m_document;
 
     size_t m_current_frame_index { 0 };

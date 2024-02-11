@@ -31,7 +31,7 @@ JS::NonnullGCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTM
     //    origin: origin
     //    cross-origin opener policy: coop
     HTML::CrossOriginOpenerPolicyEnforcementResult coop_enforcement_result {
-        .url = AK::URL("about:error"), // AD-HOC
+        .url = URL("about:error"), // AD-HOC
         .origin = origin,
         .cross_origin_opener_policy = coop
     };
@@ -52,7 +52,7 @@ JS::NonnullGCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTM
     //    FIXME: navigation timing type: navTimingType
     //    about base URL: null
     auto response = Fetch::Infrastructure::Response::create(vm);
-    response->url_list().append(AK::URL("about:error")); // AD-HOC: https://github.com/whatwg/html/issues/9122
+    response->url_list().append(URL("about:error")); // AD-HOC: https://github.com/whatwg/html/issues/9122
     HTML::NavigationParams navigation_params {
         .id = navigation_id,
         .navigable = navigable,

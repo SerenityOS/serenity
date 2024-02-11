@@ -21,7 +21,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(SharedImageRequest);
 
-JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm& realm, JS::NonnullGCPtr<Page> page, AK::URL const& url)
+JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm& realm, JS::NonnullGCPtr<Page> page, URL const& url)
 {
     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
     VERIFY(document);
@@ -33,7 +33,7 @@ JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm
     return request;
 }
 
-SharedImageRequest::SharedImageRequest(JS::NonnullGCPtr<Page> page, AK::URL url, JS::NonnullGCPtr<DOM::Document> document)
+SharedImageRequest::SharedImageRequest(JS::NonnullGCPtr<Page> page, URL url, JS::NonnullGCPtr<DOM::Document> document)
     : m_page(page)
     , m_url(move(url))
     , m_document(document)
@@ -134,7 +134,7 @@ void SharedImageRequest::add_callbacks(Function<void()> on_finish, Function<void
     m_callbacks.append(move(callbacks));
 }
 
-void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, StringView mime_type, ByteBuffer data)
+void SharedImageRequest::handle_successful_fetch(URL const& url_string, StringView mime_type, ByteBuffer data)
 {
     // AD-HOC: At this point, things gets very ad-hoc.
     // FIXME: Bring this closer to spec.

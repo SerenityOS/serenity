@@ -45,7 +45,7 @@ public:
 
     virtual ~WebSocketClientManagerAdapter() override;
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const AK::URL&, ByteString const& origin, Vector<ByteString> const& protocols) override;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const URL&, ByteString const& origin, Vector<ByteString> const& protocols) override;
 
 private:
     WebSocketClientManagerAdapter(NonnullRefPtr<Protocol::WebSocketClient>);

@@ -73,7 +73,7 @@ public slots:
     void device_pixel_ratio_changed(qreal dpi);
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon const& icon);
-    Tab& new_tab_from_url(AK::URL const&, Web::HTML::ActivateTab);
+    Tab& new_tab_from_url(URL const&, Web::HTML::ActivateTab);
     Tab& new_tab_from_content(StringView html, Web::HTML::ActivateTab);
     Tab& new_child_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
     void activate_tab(int index);

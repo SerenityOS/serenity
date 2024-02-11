@@ -137,7 +137,7 @@ void WebSocket::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"_fly_string));
 }
 
-ErrorOr<void> WebSocket::establish_web_socket_connection(AK::URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client)
+ErrorOr<void> WebSocket::establish_web_socket_connection(URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client)
 {
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
 

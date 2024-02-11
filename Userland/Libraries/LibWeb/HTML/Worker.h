@@ -69,7 +69,7 @@ private:
 
     JS::GCPtr<WorkerAgent> m_agent;
 
-    void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> outside_port, WorkerOptions const& options);
+    void run_a_worker(URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> outside_port, WorkerOptions const& options);
 };
 
 }

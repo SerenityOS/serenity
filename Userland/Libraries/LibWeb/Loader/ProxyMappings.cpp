@@ -12,7 +12,7 @@ Web::ProxyMappings& Web::ProxyMappings::the()
     return instance;
 }
 
-Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
+Core::ProxyData Web::ProxyMappings::proxy_for_url(URL const& url) const
 {
     auto url_string = url.to_byte_string();
     for (auto& it : m_mappings) {

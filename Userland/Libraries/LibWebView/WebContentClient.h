@@ -35,7 +35,7 @@ private:
     virtual void die() override;
 
     virtual void did_paint(u64 page_id, Gfx::IntRect const&, i32) override;
-    virtual void did_finish_loading(u64 page_id, AK::URL const&) override;
+    virtual void did_finish_loading(u64 page_id, URL const&) override;
     virtual void did_request_navigate_back(u64 page_id) override;
     virtual void did_request_navigate_forward(u64 page_id) override;
     virtual void did_request_refresh(u64 page_id) override;
@@ -46,16 +46,16 @@ private:
     virtual void did_request_scroll_to(u64 page_id, Gfx::IntPoint) override;
     virtual void did_enter_tooltip_area(u64 page_id, Gfx::IntPoint, ByteString const&) override;
     virtual void did_leave_tooltip_area(u64 page_id) override;
-    virtual void did_hover_link(u64 page_id, AK::URL const&) override;
+    virtual void did_hover_link(u64 page_id, URL const&) override;
     virtual void did_unhover_link(u64 page_id) override;
-    virtual void did_click_link(u64 page_id, AK::URL const&, ByteString const&, unsigned) override;
-    virtual void did_middle_click_link(u64 page_id, AK::URL const&, ByteString const&, unsigned) override;
-    virtual void did_start_loading(u64 page_id, AK::URL const&, bool) override;
+    virtual void did_click_link(u64 page_id, URL const&, ByteString const&, unsigned) override;
+    virtual void did_middle_click_link(u64 page_id, URL const&, ByteString const&, unsigned) override;
+    virtual void did_start_loading(u64 page_id, URL const&, bool) override;
     virtual void did_request_context_menu(u64 page_id, Gfx::IntPoint) override;
-    virtual void did_request_link_context_menu(u64 page_id, Gfx::IntPoint, AK::URL const&, ByteString const&, unsigned) override;
-    virtual void did_request_image_context_menu(u64 page_id, Gfx::IntPoint, AK::URL const&, ByteString const&, unsigned, Gfx::ShareableBitmap const&) override;
+    virtual void did_request_link_context_menu(u64 page_id, Gfx::IntPoint, URL const&, ByteString const&, unsigned) override;
+    virtual void did_request_image_context_menu(u64 page_id, Gfx::IntPoint, URL const&, ByteString const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_request_media_context_menu(u64 page_id, Gfx::IntPoint, ByteString const&, unsigned, Web::Page::MediaContextMenu const&) override;
-    virtual void did_get_source(u64 page_id, AK::URL const&, ByteString const&) override;
+    virtual void did_get_source(u64 page_id, URL const&, ByteString const&) override;
     virtual void did_inspect_dom_tree(u64 page_id, ByteString const&) override;
     virtual void did_inspect_dom_node(u64 page_id, bool has_style, ByteString const& computed_style, ByteString const& resolved_style, ByteString const& custom_properties, ByteString const& node_box_sizing, ByteString const& aria_properties_state) override;
     virtual void did_inspect_accessibility_tree(u64 page_id, ByteString const&) override;
@@ -72,10 +72,10 @@ private:
     virtual void did_request_set_prompt_text(u64 page_id, String const& message) override;
     virtual void did_request_accept_dialog(u64 page_id) override;
     virtual void did_request_dismiss_dialog(u64 page_id) override;
-    virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(u64 page_id, AK::URL const&) override;
-    virtual Messages::WebContentClient::DidRequestNamedCookieResponse did_request_named_cookie(u64 page_id, AK::URL const&, String const&) override;
-    virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(u64 page_id, AK::URL const&, Web::Cookie::Source) override;
-    virtual void did_set_cookie(u64 page_id, AK::URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
+    virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(u64 page_id, URL const&) override;
+    virtual Messages::WebContentClient::DidRequestNamedCookieResponse did_request_named_cookie(u64 page_id, URL const&, String const&) override;
+    virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(u64 page_id, URL const&, Web::Cookie::Source) override;
+    virtual void did_set_cookie(u64 page_id, URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
     virtual void did_update_cookie(u64 page_id, Web::Cookie::Cookie const&) override;
     virtual Messages::WebContentClient::DidRequestNewWebViewResponse did_request_new_web_view(u64 page_id, Web::HTML::ActivateTab const&, Web::HTML::WebViewHints const&, Optional<u64> const& page_index) override;
     virtual void did_request_activate_tab(u64 page_id) override;

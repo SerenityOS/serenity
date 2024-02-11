@@ -205,7 +205,7 @@ String HTMLHyperlinkElementUtils::hostname() const
     // 1. Reinitialize url.
     //
     // 2. Let url be this element's url.
-    AK::URL url(href());
+    URL url(href());
 
     // 3. If url or url's host is null, return the empty string.
     if (url.host().has<Empty>())

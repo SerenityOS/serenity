@@ -17,7 +17,7 @@ class ProxyMappings {
 public:
     static ProxyMappings& the();
 
-    Core::ProxyData proxy_for_url(AK::URL const&) const;
+    Core::ProxyData proxy_for_url(URL const&) const;
     void set_mappings(Vector<ByteString> proxies, OrderedHashMap<ByteString, size_t> mappings);
 
 private:

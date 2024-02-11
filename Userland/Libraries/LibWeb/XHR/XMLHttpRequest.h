@@ -129,7 +129,7 @@ private:
     // https://xhr.spec.whatwg.org/#request-url
     // request URL
     //     A URL.
-    AK::URL m_request_url;
+    URL m_request_url;
 
     // https://xhr.spec.whatwg.org/#author-request-headers
     // author request headers

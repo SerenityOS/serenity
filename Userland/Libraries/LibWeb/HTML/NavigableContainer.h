@@ -57,10 +57,10 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements
-    Optional<AK::URL> shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion);
+    Optional<URL> shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion);
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
-    void navigate_an_iframe_or_frame(AK::URL url, ReferrerPolicy::ReferrerPolicy referrer_policy, Optional<String> srcdoc_string = {});
+    void navigate_an_iframe_or_frame(URL url, ReferrerPolicy::ReferrerPolicy referrer_policy, Optional<String> srcdoc_string = {});
 
     WebIDL::ExceptionOr<void> create_new_child_navigable();
 

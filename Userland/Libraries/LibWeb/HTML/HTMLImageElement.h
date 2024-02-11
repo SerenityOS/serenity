@@ -110,9 +110,9 @@ private:
 
     virtual void did_set_viewport_rect(CSSPixelRect const&) override;
 
-    void handle_successful_fetch(AK::URL const&, StringView mime_type, ImageRequest&, ByteBuffer, bool maybe_omit_events, AK::URL const& previous_url);
+    void handle_successful_fetch(URL const&, StringView mime_type, ImageRequest&, ByteBuffer, bool maybe_omit_events, URL const& previous_url);
     void handle_failed_fetch();
-    void add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequest>, bool maybe_omit_events, AK::URL const& url_string, AK::URL const& previous_url);
+    void add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequest>, bool maybe_omit_events, URL const& url_string, URL const& previous_url);
 
     void animate();
 

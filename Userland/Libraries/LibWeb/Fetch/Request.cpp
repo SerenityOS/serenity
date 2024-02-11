@@ -548,7 +548,7 @@ WebIDL::ExceptionOr<String> Request::referrer() const
                 VERIFY_NOT_REACHED();
             }
         },
-        [&](AK::URL const& url) -> WebIDL::ExceptionOr<String> {
+        [&](URL const& url) -> WebIDL::ExceptionOr<String> {
             // 3. Return this’s request’s referrer, serialized.
             return TRY_OR_THROW_OOM(vm, String::from_byte_string(url.serialize()));
         });

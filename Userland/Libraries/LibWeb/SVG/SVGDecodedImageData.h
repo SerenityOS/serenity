@@ -16,7 +16,7 @@ class SVGDecodedImageData final : public HTML::DecodedImageData {
     JS_DECLARE_ALLOCATOR(SVGDecodedImageData);
 
 public:
-    static ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> create(JS::Realm&, JS::NonnullGCPtr<Page>, AK::URL const&, ByteBuffer encoded_svg);
+    static ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> create(JS::Realm&, JS::NonnullGCPtr<Page>, URL const&, ByteBuffer encoded_svg);
     virtual ~SVGDecodedImageData() override;
 
     virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize) const override;

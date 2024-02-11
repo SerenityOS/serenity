@@ -62,7 +62,7 @@ protected:
     Gfx::AffineTransform m_transform = {};
 
     template<typename T>
-    JS::GCPtr<T> try_resolve_url_to(AK::URL const& url) const
+    JS::GCPtr<T> try_resolve_url_to(URL const& url) const
     {
         if (!url.fragment().has_value())
             return {};

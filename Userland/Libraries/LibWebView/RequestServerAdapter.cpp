@@ -94,12 +94,12 @@ RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(
     return RequestServerRequestAdapter::try_create(protocol_request.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
-void RequestServerAdapter::prefetch_dns(AK::URL const& url)
+void RequestServerAdapter::prefetch_dns(URL const& url)
 {
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::ResolveOnly);
 }
 
-void RequestServerAdapter::preconnect(AK::URL const& url)
+void RequestServerAdapter::preconnect(URL const& url)
 {
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::CreateConnection);
 }

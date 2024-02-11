@@ -15,7 +15,7 @@
 
 namespace Web {
 
-CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
+CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<URL> location)
 {
     if (css.is_empty()) {
         auto rule_list = CSS::CSSRuleList::create_empty(context.realm());

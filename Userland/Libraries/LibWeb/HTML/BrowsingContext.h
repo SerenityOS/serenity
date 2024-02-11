@@ -179,7 +179,7 @@ private:
     bool m_is_auxiliary { false };
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#browsing-context-initial-url
-    Optional<AK::URL> m_initial_url;
+    Optional<URL> m_initial_url;
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#virtual-browsing-context-group-id
     u64 m_virtual_browsing_context_group_id = { 0 };
@@ -199,12 +199,12 @@ private:
     JS::GCPtr<BrowsingContext> m_previous_sibling;
 };
 
-HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin);
+HTML::Origin determine_the_origin(URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin);
 
 SandboxingFlagSet determine_the_creation_sandboxing_flags(BrowsingContext const&, JS::GCPtr<DOM::Element> embedder);
 
 // FIXME: Find a better home for these
-bool url_matches_about_blank(AK::URL const& url);
-bool url_matches_about_srcdoc(AK::URL const& url);
+bool url_matches_about_blank(URL const& url);
+bool url_matches_about_srcdoc(URL const& url);
 
 }

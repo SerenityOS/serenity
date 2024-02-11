@@ -23,7 +23,7 @@ class Script
 public:
     virtual ~Script() override;
 
-    AK::URL const& base_url() const { return m_base_url; }
+    URL const& base_url() const { return m_base_url; }
     ByteString const& filename() const { return m_filename; }
 
     EnvironmentSettingsObject& settings_object() { return m_settings_object; }
@@ -35,14 +35,14 @@ public:
     void set_parse_error(JS::Value value) { m_parse_error = value; }
 
 protected:
-    Script(AK::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
+    Script(URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object);
 
     virtual void visit_edges(Visitor&) override;
 
 private:
     virtual void visit_host_defined_self(JS::Cell::Visitor&) override;
 
-    AK::URL m_base_url;
+    URL m_base_url;
     ByteString m_filename;
     JS::NonnullGCPtr<EnvironmentSettingsObject> m_settings_object;
 

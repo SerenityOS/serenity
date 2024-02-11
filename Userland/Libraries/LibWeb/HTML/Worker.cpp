@@ -89,7 +89,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#run-a-worker
-void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> port, WorkerOptions const& options)
+void Worker::run_a_worker(URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> port, WorkerOptions const& options)
 {
     // 1. Let is shared be true if worker is a SharedWorker object, and false otherwise.
     // FIXME: SharedWorker support

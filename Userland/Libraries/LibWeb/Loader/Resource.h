@@ -50,7 +50,7 @@ public:
 
     bool has_encoded_data() const { return !m_encoded_data.is_empty(); }
 
-    const AK::URL& url() const { return m_request.url(); }
+    const URL& url() const { return m_request.url(); }
     ByteBuffer const& encoded_data() const { return m_encoded_data; }
 
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers() const { return m_response_headers; }

@@ -82,7 +82,7 @@ Java_org_serenityos_ladybird_WebViewImplementation_nativeLoadURL(JNIEnv* env, jo
 {
     auto* impl = reinterpret_cast<WebViewImplementationNative*>(instance);
     char const* raw_url = env->GetStringUTFChars(url, nullptr);
-    auto ak_url = AK::URL::create_with_url_or_path(StringView { raw_url, strlen(raw_url) });
+    auto ak_url = URL::create_with_url_or_path(StringView { raw_url, strlen(raw_url) });
     env->ReleaseStringUTFChars(url, raw_url);
     impl->load(ak_url);
 }

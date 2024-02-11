@@ -22,7 +22,7 @@ class ListOfAvailableImages : public JS::Cell {
 
 public:
     struct Key {
-        AK::URL url;
+        URL url;
         HTML::CORSSettingAttribute mode;
         Optional<HTML::Origin> origin;
 

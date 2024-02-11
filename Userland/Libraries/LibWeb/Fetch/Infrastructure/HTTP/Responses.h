@@ -65,9 +65,9 @@ public:
     [[nodiscard]] virtual bool aborted() const { return m_aborted; }
     void set_aborted(bool aborted) { m_aborted = aborted; }
 
-    [[nodiscard]] virtual Vector<AK::URL> const& url_list() const { return m_url_list; }
-    [[nodiscard]] virtual Vector<AK::URL>& url_list() { return m_url_list; }
-    void set_url_list(Vector<AK::URL> url_list) { m_url_list = move(url_list); }
+    [[nodiscard]] virtual Vector<URL> const& url_list() const { return m_url_list; }
+    [[nodiscard]] virtual Vector<URL>& url_list() { return m_url_list; }
+    void set_url_list(Vector<URL> url_list) { m_url_list = move(url_list); }
 
     [[nodiscard]] virtual Status status() const { return m_status; }
     void set_status(Status status) { m_status = status; }
@@ -106,8 +106,8 @@ public:
     [[nodiscard]] bool is_aborted_network_error() const;
     [[nodiscard]] bool is_network_error() const;
 
-    [[nodiscard]] Optional<AK::URL const&> url() const;
-    [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<String> const& request_fragment) const;
+    [[nodiscard]] Optional<URL const&> url() const;
+    [[nodiscard]] ErrorOr<Optional<URL>> location_url(Optional<String> const& request_fragment) const;
 
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::Realm&) const;
 
@@ -134,7 +134,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-response-url-list
     // A response has an associated URL list (a list of zero or more URLs). Unless stated otherwise, it is the empty list.
-    Vector<AK::URL> m_url_list;
+    Vector<URL> m_url_list;
 
     // https://fetch.spec.whatwg.org/#concept-response-status
     // A response has an associated status, which is a status. Unless stated otherwise it is 200.
@@ -197,8 +197,8 @@ public:
 
     [[nodiscard]] virtual Type type() const override { return m_internal_response->type(); }
     [[nodiscard]] virtual bool aborted() const override { return m_internal_response->aborted(); }
-    [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_internal_response->url_list(); }
-    [[nodiscard]] virtual Vector<AK::URL>& url_list() override { return m_internal_response->url_list(); }
+    [[nodiscard]] virtual Vector<URL> const& url_list() const override { return m_internal_response->url_list(); }
+    [[nodiscard]] virtual Vector<URL>& url_list() override { return m_internal_response->url_list(); }
     [[nodiscard]] virtual Status status() const override { return m_internal_response->status(); }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return m_internal_response->status_message(); }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_internal_response->header_list(); }
@@ -268,8 +268,8 @@ public:
     [[nodiscard]] static JS::NonnullGCPtr<OpaqueFilteredResponse> create(JS::VM&, JS::NonnullGCPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::Opaque; }
-    [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_url_list; }
-    [[nodiscard]] virtual Vector<AK::URL>& url_list() override { return m_url_list; }
+    [[nodiscard]] virtual Vector<URL> const& url_list() const override { return m_url_list; }
+    [[nodiscard]] virtual Vector<URL>& url_list() override { return m_url_list; }
     [[nodiscard]] virtual Status status() const override { return 0; }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return {}; }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_header_list; }
@@ -281,7 +281,7 @@ private:
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    Vector<AK::URL> m_url_list;
+    Vector<URL> m_url_list;
     JS::NonnullGCPtr<HeaderList> m_header_list;
     JS::GCPtr<Body> m_body;
 };

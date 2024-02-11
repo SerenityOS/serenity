@@ -65,7 +65,7 @@ ResourceLoader::ResourceLoader(NonnullRefPtr<ResourceLoaderConnector> connector)
 {
 }
 
-void ResourceLoader::prefetch_dns(AK::URL const& url)
+void ResourceLoader::prefetch_dns(URL const& url)
 {
     if (ContentFilter::the().is_filtered(url)) {
         dbgln("ResourceLoader: Refusing to prefetch DNS for '{}': \033[31;1mURL was filtered\033[0m", url);
@@ -75,7 +75,7 @@ void ResourceLoader::prefetch_dns(AK::URL const& url)
     m_connector->prefetch_dns(url);
 }
 
-void ResourceLoader::preconnect(AK::URL const& url)
+void ResourceLoader::preconnect(URL const& url)
 {
     if (url.scheme().is_one_of("file"sv, "data"sv))
         return;
@@ -126,7 +126,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
     return resource;
 }
 
-static ByteString sanitized_url_for_logging(AK::URL const& url)
+static ByteString sanitized_url_for_logging(URL const& url)
 {
     if (url.scheme() == "data"sv)
         return "[data URL]"sv;
@@ -144,7 +144,7 @@ static void emit_signpost(ByteString const& message, int id)
 #endif
 }
 
-static void store_response_cookies(Page& page, AK::URL const& url, ByteString const& cookies)
+static void store_response_cookies(Page& page, URL const& url, ByteString const& cookies)
 {
     auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
     VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
@@ -196,7 +196,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
     };
 
-    auto respond_directory_page = [log_success, log_failure](LoadRequest const& request, AK::URL const& url, SuccessCallback const& success_callback, ErrorCallback const& error_callback) {
+    auto respond_directory_page = [log_success, log_failure](LoadRequest const& request, URL const& url, SuccessCallback const& success_callback, ErrorCallback const& error_callback) {
         auto maybe_response = load_file_directory_page(url);
         if (maybe_response.is_error()) {
             log_failure(request, maybe_response.error());

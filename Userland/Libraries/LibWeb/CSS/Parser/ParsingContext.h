@@ -21,7 +21,7 @@ public:
 
     explicit ParsingContext(JS::Realm&, Mode = Mode::Normal);
     explicit ParsingContext(DOM::Document const&, Mode = Mode::Normal);
-    explicit ParsingContext(DOM::Document const&, AK::URL, Mode = Mode::Normal);
+    explicit ParsingContext(DOM::Document const&, URL, Mode = Mode::Normal);
     explicit ParsingContext(DOM::ParentNode&, Mode = Mode::Normal);
 
     Mode mode() const { return m_mode; }
@@ -30,7 +30,7 @@ public:
     bool in_quirks_mode() const;
     DOM::Document const* document() const { return m_document; }
     HTML::Window const* window() const;
-    AK::URL complete_url(StringView) const;
+    URL complete_url(StringView) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }
     void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
@@ -41,7 +41,7 @@ private:
     JS::NonnullGCPtr<JS::Realm> m_realm;
     JS::GCPtr<DOM::Document const> m_document;
     PropertyID m_current_property_id { PropertyID::Invalid };
-    AK::URL m_url;
+    URL m_url;
     Mode m_mode { Mode::Normal };
 };
 

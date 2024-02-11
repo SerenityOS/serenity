@@ -75,8 +75,8 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<DOM::Document> relevant_document() const;
-    AK::URL url() const;
-    WebIDL::ExceptionOr<void> navigate(AK::URL, HistoryHandlingBehavior = HistoryHandlingBehavior::Default);
+    URL url() const;
+    WebIDL::ExceptionOr<void> navigate(URL, HistoryHandlingBehavior = HistoryHandlingBehavior::Default);
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     HTML::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;

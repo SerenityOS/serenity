@@ -66,12 +66,12 @@ void ImageRequest::set_state(State state)
     m_state = state;
 }
 
-AK::URL const& ImageRequest::current_url() const
+URL const& ImageRequest::current_url() const
 {
     return m_current_url;
 }
 
-void ImageRequest::set_current_url(JS::Realm& realm, AK::URL url)
+void ImageRequest::set_current_url(JS::Realm& realm, URL url)
 {
     m_current_url = move(url);
     if (m_current_url.is_valid())

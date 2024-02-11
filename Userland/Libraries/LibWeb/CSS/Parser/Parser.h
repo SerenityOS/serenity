@@ -44,7 +44,7 @@ public:
 
     Parser(Parser&&);
 
-    CSSStyleSheet* parse_as_css_stylesheet(Optional<AK::URL> location);
+    CSSStyleSheet* parse_as_css_stylesheet(Optional<URL> location);
     ElementInlineCSSStyleDeclaration* parse_as_style_attribute(DOM::Element&);
     CSSRule* parse_as_css_rule();
     Optional<StyleProperty> parse_as_supports_condition();
@@ -86,11 +86,11 @@ private:
 
     // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
     struct ParsedStyleSheet {
-        Optional<AK::URL> location;
+        Optional<URL> location;
         Vector<NonnullRefPtr<Rule>> rules;
     };
     template<typename T>
-    ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
+    ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<URL> location);
 
     // "Parse a list of rules" is intended for the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
@@ -195,7 +195,7 @@ private:
     Optional<GridRepeat> parse_repeat(Vector<ComponentValue> const&);
     Optional<ExplicitGridTrack> parse_track_sizing_function(ComponentValue const&);
 
-    Optional<AK::URL> parse_url_function(ComponentValue const&);
+    Optional<URL> parse_url_function(ComponentValue const&);
     RefPtr<StyleValue> parse_url_value(ComponentValue const&);
 
     Optional<Vector<LinearColorStopListElement>> parse_linear_color_stop_list(TokenStream<ComponentValue>&);
@@ -330,7 +330,7 @@ private:
 
 namespace Web {
 
-CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const&, StringView, Optional<AK::URL> location = {});
+CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const&, StringView, Optional<URL> location = {});
 CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);

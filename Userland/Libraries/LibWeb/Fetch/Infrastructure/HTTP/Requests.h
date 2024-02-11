@@ -164,7 +164,7 @@ public:
     using BodyType = Variant<Empty, ByteBuffer, JS::NonnullGCPtr<Body>>;
     using OriginType = Variant<Origin, HTML::Origin>;
     using PolicyContainerType = Variant<PolicyContainer, HTML::PolicyContainer>;
-    using ReferrerType = Variant<Referrer, AK::URL>;
+    using ReferrerType = Variant<Referrer, URL>;
     using ReservedClientType = Variant<Empty, HTML::Environment*, JS::GCPtr<HTML::EnvironmentSettingsObject>>;
     using WindowType = Variant<Window, JS::GCPtr<HTML::EnvironmentSettingsObject>>;
 
@@ -263,9 +263,9 @@ public:
     [[nodiscard]] bool render_blocking() const { return m_render_blocking; }
     void set_render_blocking(bool render_blocking) { m_render_blocking = render_blocking; }
 
-    [[nodiscard]] Vector<AK::URL> const& url_list() const { return m_url_list; }
-    [[nodiscard]] Vector<AK::URL>& url_list() { return m_url_list; }
-    void set_url_list(Vector<AK::URL> url_list) { m_url_list = move(url_list); }
+    [[nodiscard]] Vector<URL> const& url_list() const { return m_url_list; }
+    [[nodiscard]] Vector<URL>& url_list() { return m_url_list; }
+    void set_url_list(Vector<URL> url_list) { m_url_list = move(url_list); }
 
     [[nodiscard]] u8 redirect_count() const { return m_redirect_count; }
     void set_redirect_count(u8 redirect_count) { m_redirect_count = redirect_count; }
@@ -288,11 +288,11 @@ public:
     [[nodiscard]] bool timing_allow_failed() const { return m_timing_allow_failed; }
     void set_timing_allow_failed(bool timing_allow_failed) { m_timing_allow_failed = timing_allow_failed; }
 
-    [[nodiscard]] AK::URL& url();
-    [[nodiscard]] AK::URL const& url() const;
-    [[nodiscard]] AK::URL& current_url();
-    [[nodiscard]] AK::URL const& current_url() const;
-    void set_url(AK::URL url);
+    [[nodiscard]] URL& url();
+    [[nodiscard]] URL const& url() const;
+    [[nodiscard]] URL& current_url();
+    [[nodiscard]] URL const& current_url() const;
+    void set_url(URL url);
 
     [[nodiscard]] bool destination_is_script_like() const;
 
@@ -487,7 +487,7 @@ private:
     // https://fetch.spec.whatwg.org/#concept-request-url-list
     // A request has an associated URL list (a list of one or more URLs). Unless stated otherwise, it is a list
     // containing a copy of request’s URL.
-    Vector<AK::URL> m_url_list;
+    Vector<URL> m_url_list;
 
     // https://fetch.spec.whatwg.org/#concept-request-redirect-count
     // A request has an associated redirect count. Unless stated otherwise, it is zero.
