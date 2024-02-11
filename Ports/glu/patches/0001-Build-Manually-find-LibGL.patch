@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Sun, 11 Feb 2024 22:25:59 +0100
+Subject: [PATCH] Build: Manually find LibGL
+
+We don't have a working pkgconfig to find it, so get rid of it and
+manually find the library using the C compiler.
+---
+ meson.build | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 7949e300ac60e0ff6955dedfd9a050cfa3010f4a..18dd4f497e7a43be3e36915bb5430e8891a3a9fb 100644
+--- a/meson.build
++++ b/meson.build
+@@ -18,7 +18,8 @@ gl_provider = get_option('gl_provider')
+ if gl_provider == 'glvnd'
+   gl_provider = 'opengl'
+ endif
+-dep_gl = dependency(gl_provider)
++cc = meson.get_compiler('c')
++dep_gl = cc.find_library('gl', has_headers : 'GL/gl.h')
+ 
+ inc_include = include_directories('include')
+ 
+@@ -28,11 +29,3 @@ install_headers(
+   'include/GL/glu.h',
+   subdir : 'GL',
+ )
+-
+-pkgconf = import('pkgconfig')
+-pkgconf.generate(
+-  libglu,
+-  name : 'glu',
+-  description : 'Mesa OpenGL Utility Library',
+-  requires: dep_gl
+-)
