@@ -184,6 +184,9 @@ set(SOURCES
     DOM/XMLDocument.cpp
     DOMParsing/InnerHTML.cpp
     DOMParsing/XMLSerializer.cpp
+    DOMURL/DOMURL.cpp
+    DOMURL/URLSearchParams.cpp
+    DOMURL/URLSearchParamsIterator.cpp
     Dump.cpp
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
@@ -610,9 +613,6 @@ set(SOURCES
     UIEvents/MouseEvent.cpp
     UIEvents/UIEvent.cpp
     UIEvents/WheelEvent.cpp
-    URL/URL.cpp
-    URL/URLSearchParams.cpp
-    URL/URLSearchParamsIterator.cpp
     UserTiming/PerformanceMark.cpp
     UserTiming/PerformanceMeasure.cpp
     WebAssembly/Instance.cpp

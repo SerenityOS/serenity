@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/RequestPrototype.h>
 #include <LibWeb/DOM/AbortSignal.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Fetch/Enums.h>
 #include <LibWeb/Fetch/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
@@ -17,7 +18,6 @@
 #include <LibWeb/Fetch/Request.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::Fetch {
 
@@ -121,7 +121,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     // 5. If input is a string, then:
     if (input.has<String>()) {
         // 1. Let parsedURL be the result of parsing input with baseURL.
-        auto parsed_url = URL::parse(input.get<String>(), base_url);
+        auto parsed_url = DOMURL::parse(input.get<String>(), base_url);
 
         // 2. If parsedURL is failure, then throw a TypeError.
         if (!parsed_url.is_valid())
@@ -299,7 +299,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         // 3. Otherwise:
         else {
             // 1. Let parsedReferrer be the result of parsing referrer with baseURL.
-            auto parsed_referrer = URL::parse(referrer, base_url);
+            auto parsed_referrer = DOMURL::parse(referrer, base_url);
 
             // 2. If parsedReferrer is failure, then throw a TypeError.
             if (!parsed_referrer.is_valid())
@@ -309,7 +309,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             // - parsedReferrer’s scheme is "about" and path is the string "client"
             // - parsedReferrer’s origin is not same origin with origin
             // then set request’s referrer to "client".
-            auto parsed_referrer_origin = URL::url_origin(parsed_referrer);
+            auto parsed_referrer_origin = DOMURL::url_origin(parsed_referrer);
             if ((parsed_referrer.scheme() == "about"sv && parsed_referrer.serialize_path() == "client"sv) || !parsed_referrer_origin.is_same_origin(origin)) {
                 request->set_referrer(Infrastructure::Request::Referrer::Client);
             }

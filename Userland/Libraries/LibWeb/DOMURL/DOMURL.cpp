@@ -10,17 +10,17 @@
 #include <AK/IPv6Address.h>
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/BlobURLStore.h>
-#include <LibWeb/URL/URL.h>
 
-namespace Web::URL {
+namespace Web::DOMURL {
 
-JS_DEFINE_ALLOCATOR(URL);
+JS_DEFINE_ALLOCATOR(DOMURL);
 
-JS::NonnullGCPtr<URL> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+JS::NonnullGCPtr<DOMURL> DOMURL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
-    return realm.heap().allocate<URL>(realm, realm, move(url), move(query));
+    return realm.heap().allocate<DOMURL>(realm, realm, move(url), move(query));
 }
 
 // https://url.spec.whatwg.org/#api-url-parser
@@ -50,7 +50,7 @@ static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const
 }
 
 // https://url.spec.whatwg.org/#dom-url-url
-WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, String const& url, Optional<String> const& base)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMURL>> DOMURL::construct_impl(JS::Realm& realm, String const& url, Optional<String> const& base)
 {
     // 1. Let parsedURL be the result of running the API URL parser on url with base, if given.
     auto parsed_url = parse_api_url(url, base);
@@ -67,7 +67,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
     auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
 
     // 6. Initialize this’s query object with query.
-    auto result_url = URL::create(realm, parsed_url.release_value(), move(query_object));
+    auto result_url = DOMURL::create(realm, parsed_url.release_value(), move(query_object));
 
     // 7. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;
@@ -75,36 +75,36 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
     return result_url;
 }
 
-URL::URL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+DOMURL::DOMURL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
     : PlatformObject(realm)
     , m_url(move(url))
     , m_query(move(query))
 {
 }
 
-URL::~URL() = default;
+DOMURL::~DOMURL() = default;
 
-void URL::initialize(JS::Realm& realm)
+void DOMURL::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLPrototype>(realm, "URL"_fly_string));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMURLPrototype>(realm, "URL"_fly_string));
 }
 
-void URL::visit_edges(Cell::Visitor& visitor)
+void DOMURL::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_query);
 }
 
 // https://w3c.github.io/FileAPI/#dfn-createObjectURL
-WebIDL::ExceptionOr<String> URL::create_object_url(JS::VM& vm, JS::NonnullGCPtr<FileAPI::Blob> object)
+WebIDL::ExceptionOr<String> DOMURL::create_object_url(JS::VM& vm, JS::NonnullGCPtr<FileAPI::Blob> object)
 {
     // The createObjectURL(obj) static method must return the result of adding an entry to the blob URL store for obj.
     return TRY_OR_THROW_OOM(vm, FileAPI::add_entry_to_blob_url_store(object));
 }
 
 // https://w3c.github.io/FileAPI/#dfn-revokeObjectURL
-WebIDL::ExceptionOr<void> URL::revoke_object_url(JS::VM& vm, StringView url)
+WebIDL::ExceptionOr<void> DOMURL::revoke_object_url(JS::VM& vm, StringView url)
 {
     // 1. Let url record be the result of parsing url.
     auto url_record = parse(url);
@@ -129,7 +129,7 @@ WebIDL::ExceptionOr<void> URL::revoke_object_url(JS::VM& vm, StringView url)
 }
 
 // https://url.spec.whatwg.org/#dom-url-canparse
-bool URL::can_parse(JS::VM&, String const& url, Optional<String> const& base)
+bool DOMURL::can_parse(JS::VM&, String const& url, Optional<String> const& base)
 {
     // 1. Let parsedURL be the result of running the API URL parser on url with base, if given.
     auto parsed_url = parse_api_url(url, base);
@@ -143,7 +143,7 @@ bool URL::can_parse(JS::VM&, String const& url, Optional<String> const& base)
 }
 
 // https://url.spec.whatwg.org/#dom-url-href
-WebIDL::ExceptionOr<String> URL::href() const
+WebIDL::ExceptionOr<String> DOMURL::href() const
 {
     auto& vm = realm().vm();
 
@@ -152,7 +152,7 @@ WebIDL::ExceptionOr<String> URL::href() const
 }
 
 // https://url.spec.whatwg.org/#dom-url-tojson
-WebIDL::ExceptionOr<String> URL::to_json() const
+WebIDL::ExceptionOr<String> DOMURL::to_json() const
 {
     auto& vm = realm().vm();
 
@@ -161,7 +161,7 @@ WebIDL::ExceptionOr<String> URL::to_json() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-href②
-WebIDL::ExceptionOr<void> URL::set_href(String const& href)
+WebIDL::ExceptionOr<void> DOMURL::set_href(String const& href)
 {
     auto& vm = realm().vm();
 
@@ -188,7 +188,7 @@ WebIDL::ExceptionOr<void> URL::set_href(String const& href)
 }
 
 // https://url.spec.whatwg.org/#dom-url-origin
-WebIDL::ExceptionOr<String> URL::origin() const
+WebIDL::ExceptionOr<String> DOMURL::origin() const
 {
     auto& vm = realm().vm();
 
@@ -197,7 +197,7 @@ WebIDL::ExceptionOr<String> URL::origin() const
 }
 
 // https://url.spec.whatwg.org/#dom-url-protocol
-WebIDL::ExceptionOr<String> URL::protocol() const
+WebIDL::ExceptionOr<String> DOMURL::protocol() const
 {
     auto& vm = realm().vm();
 
@@ -206,7 +206,7 @@ WebIDL::ExceptionOr<String> URL::protocol() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-protocol%E2%91%A0
-WebIDL::ExceptionOr<void> URL::set_protocol(String const& protocol)
+WebIDL::ExceptionOr<void> DOMURL::set_protocol(String const& protocol)
 {
     auto& vm = realm().vm();
 
@@ -219,7 +219,7 @@ WebIDL::ExceptionOr<void> URL::set_protocol(String const& protocol)
 }
 
 // https://url.spec.whatwg.org/#dom-url-username
-WebIDL::ExceptionOr<String> URL::username() const
+WebIDL::ExceptionOr<String> DOMURL::username() const
 {
     auto& vm = realm().vm();
 
@@ -228,7 +228,7 @@ WebIDL::ExceptionOr<String> URL::username() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-username%E2%91%A0
-void URL::set_username(String const& username)
+void DOMURL::set_username(String const& username)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -239,7 +239,7 @@ void URL::set_username(String const& username)
 }
 
 // https://url.spec.whatwg.org/#dom-url-password
-WebIDL::ExceptionOr<String> URL::password() const
+WebIDL::ExceptionOr<String> DOMURL::password() const
 {
     auto& vm = realm().vm();
 
@@ -248,7 +248,7 @@ WebIDL::ExceptionOr<String> URL::password() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-password%E2%91%A0
-void URL::set_password(String const& password)
+void DOMURL::set_password(String const& password)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -259,7 +259,7 @@ void URL::set_password(String const& password)
 }
 
 // https://url.spec.whatwg.org/#dom-url-host
-WebIDL::ExceptionOr<String> URL::host() const
+WebIDL::ExceptionOr<String> DOMURL::host() const
 {
     auto& vm = realm().vm();
 
@@ -279,7 +279,7 @@ WebIDL::ExceptionOr<String> URL::host() const
 }
 
 // https://url.spec.whatwg.org/#dom-url-hostref-for-dom-url-host%E2%91%A0
-void URL::set_host(String const& host)
+void DOMURL::set_host(String const& host)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
@@ -292,7 +292,7 @@ void URL::set_host(String const& host)
 }
 
 // https://url.spec.whatwg.org/#dom-url-hostname
-WebIDL::ExceptionOr<String> URL::hostname() const
+WebIDL::ExceptionOr<String> DOMURL::hostname() const
 {
     auto& vm = realm().vm();
 
@@ -305,7 +305,7 @@ WebIDL::ExceptionOr<String> URL::hostname() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-hostname①
-void URL::set_hostname(String const& hostname)
+void DOMURL::set_hostname(String const& hostname)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
@@ -318,7 +318,7 @@ void URL::set_hostname(String const& hostname)
 }
 
 // https://url.spec.whatwg.org/#dom-url-port
-WebIDL::ExceptionOr<String> URL::port() const
+WebIDL::ExceptionOr<String> DOMURL::port() const
 {
     auto& vm = realm().vm();
 
@@ -331,7 +331,7 @@ WebIDL::ExceptionOr<String> URL::port() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-port%E2%91%A0
-void URL::set_port(String const& port)
+void DOMURL::set_port(String const& port)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -350,7 +350,7 @@ void URL::set_port(String const& port)
 }
 
 // https://url.spec.whatwg.org/#dom-url-pathname
-WebIDL::ExceptionOr<String> URL::pathname() const
+WebIDL::ExceptionOr<String> DOMURL::pathname() const
 {
     auto& vm = realm().vm();
 
@@ -359,7 +359,7 @@ WebIDL::ExceptionOr<String> URL::pathname() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-pathname%E2%91%A0
-void URL::set_pathname(String const& pathname)
+void DOMURL::set_pathname(String const& pathname)
 {
     // FIXME: These steps no longer match the speci.
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
@@ -377,7 +377,7 @@ void URL::set_pathname(String const& pathname)
 }
 
 // https://url.spec.whatwg.org/#dom-url-search
-WebIDL::ExceptionOr<String> URL::search() const
+WebIDL::ExceptionOr<String> DOMURL::search() const
 {
     auto& vm = realm().vm();
 
@@ -390,7 +390,7 @@ WebIDL::ExceptionOr<String> URL::search() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-search%E2%91%A0
-WebIDL::ExceptionOr<void> URL::set_search(String const& search)
+WebIDL::ExceptionOr<void> DOMURL::set_search(String const& search)
 {
     auto& vm = realm().vm();
 
@@ -433,14 +433,14 @@ WebIDL::ExceptionOr<void> URL::set_search(String const& search)
 }
 
 // https://url.spec.whatwg.org/#dom-url-searchparams
-JS::NonnullGCPtr<URLSearchParams const> URL::search_params() const
+JS::NonnullGCPtr<URLSearchParams const> DOMURL::search_params() const
 {
     // The searchParams getter steps are to return this’s query object.
     return m_query;
 }
 
 // https://url.spec.whatwg.org/#dom-url-hash
-WebIDL::ExceptionOr<String> URL::hash() const
+WebIDL::ExceptionOr<String> DOMURL::hash() const
 {
     auto& vm = realm().vm();
 
@@ -453,7 +453,7 @@ WebIDL::ExceptionOr<String> URL::hash() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-hash%E2%91%A0
-void URL::set_hash(String const& hash)
+void DOMURL::set_hash(String const& hash)
 {
     // 1. If the given value is the empty string:
     if (hash.is_empty()) {
@@ -540,7 +540,7 @@ bool host_is_domain(AK::URL::Host const& host)
 }
 
 // https://url.spec.whatwg.org/#potentially-strip-trailing-spaces-from-an-opaque-path
-void strip_trailing_spaces_from_an_opaque_path(URL& url)
+void strip_trailing_spaces_from_an_opaque_path(DOMURL& url)
 {
     // 1. If url’s URL does not have an opaque path, then return.
     // FIXME: Reimplement this step once we modernize the URL implementation to meet the spec.

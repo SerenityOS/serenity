@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLFormControlsCollection.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
@@ -30,7 +31,6 @@
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Page/Page.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::HTML {
 
@@ -649,10 +649,10 @@ ErrorOr<String> HTMLFormElement::pick_an_encoding() const
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#convert-to-a-list-of-name-value-pairs
-static ErrorOr<Vector<URL::QueryParam>> convert_to_list_of_name_value_pairs(Vector<XHR::FormDataEntry> const& entry_list)
+static ErrorOr<Vector<DOMURL::QueryParam>> convert_to_list_of_name_value_pairs(Vector<XHR::FormDataEntry> const& entry_list)
 {
     // 1. Let list be an empty list of name-value pairs.
-    Vector<URL::QueryParam> list;
+    Vector<DOMURL::QueryParam> list;
 
     // 2. For each entry of entry list:
     for (auto const& entry : entry_list) {
@@ -675,7 +675,7 @@ static ErrorOr<Vector<URL::QueryParam>> convert_to_list_of_name_value_pairs(Vect
         auto normalized_value = TRY(normalize_line_breaks(value));
 
         // 4. Append to list a new name-value pair whose name is name and whose value is value.
-        TRY(list.try_append(URL::QueryParam { .name = move(name), .value = move(normalized_value) }));
+        TRY(list.try_append(DOMURL::QueryParam { .name = move(name), .value = move(normalized_value) }));
     }
 
     // 3. Return list.
@@ -683,7 +683,7 @@ static ErrorOr<Vector<URL::QueryParam>> convert_to_list_of_name_value_pairs(Vect
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#text/plain-encoding-algorithm
-static ErrorOr<String> plain_text_encode(Vector<URL::QueryParam> const& pairs)
+static ErrorOr<String> plain_text_encode(Vector<DOMURL::QueryParam> const& pairs)
 {
     // 1. Let result be the empty string.
     StringBuilder result;

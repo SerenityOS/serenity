@@ -7,9 +7,9 @@
 #pragma once
 
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/URL/URLSearchParams.h>
+#include <LibWeb/DOMURL/URLSearchParams.h>
 
-namespace Web::URL {
+namespace Web::DOMURL {
 
 class URLSearchParamsIterator : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URLSearchParamsIterator, Bindings::PlatformObject);

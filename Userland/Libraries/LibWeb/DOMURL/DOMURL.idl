@@ -1,8 +1,8 @@
 #import <FileAPI/Blob.idl>
-#import <URL/URLSearchParams.idl>
+#import <DOMURL/URLSearchParams.idl>
 
 // https://url.spec.whatwg.org/#url
-[Exposed=*, LegacyWindowAlias=webkitURL]
+[Exposed=*, LegacyWindowAlias=webkitURL, ImplementedAs=DOMURL]
 interface URL {
     constructor(USVString url, optional USVString base);
 

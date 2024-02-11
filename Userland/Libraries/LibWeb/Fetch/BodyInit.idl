@@ -1,6 +1,6 @@
 #import <FileAPI/Blob.idl>
 #import <Streams/ReadableStream.idl>
-#import <URL/URLSearchParams.idl>
+#import <DOMURL/URLSearchParams.idl>
 #import <XHR/FormData.idl>
 
 // https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit

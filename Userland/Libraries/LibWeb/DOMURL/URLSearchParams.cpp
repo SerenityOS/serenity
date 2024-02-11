@@ -12,10 +12,10 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/URL/URL.h>
-#include <LibWeb/URL/URLSearchParams.h>
+#include <LibWeb/DOMURL/DOMURL.h>
+#include <LibWeb/DOMURL/URLSearchParams.h>
 
-namespace Web::URL {
+namespace Web::DOMURL {
 
 JS_DEFINE_ALLOCATOR(URLSearchParams);
 

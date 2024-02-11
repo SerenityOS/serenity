@@ -6,13 +6,13 @@
  */
 
 #include <LibJS/Runtime/Completion.h>
+#include <LibWeb/DOMURL/URLSearchParams.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/Streams/AbstractOperations.h>
-#include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -103,7 +103,7 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(TRY_OR_THROW_OOM(vm, String::formatted("multipart/form-data; boundary={}"sv, serialized_form_data.boundary)).bytes()));
             return {};
         },
-        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> WebIDL::ExceptionOr<void> {
+        [&](JS::Handle<DOMURL::URLSearchParams> const& url_search_params) -> WebIDL::ExceptionOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             auto search_params_bytes = TRY(url_search_params->to_string()).bytes();
             source = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(search_params_bytes));

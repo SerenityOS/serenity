@@ -10,6 +10,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/Range.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
@@ -29,7 +30,6 @@
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/Paintable.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::HTML {
 
@@ -83,7 +83,7 @@ HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_
         return source_origin.release_value();
 
     // 5. Return url's origin.
-    return URL::url_origin(url);
+    return DOMURL::url_origin(url);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-auxiliary-browsing-context
