@@ -80,7 +80,8 @@ void Calendar::toggle_mode()
     set_show_year(!m_show_year);
     set_show_month_and_year(!m_show_month_year);
     update_tiles(this->view_year(), this->view_month());
-    this->resize(this->height(), this->width());
+    ResizeEvent resize_evt(relative_rect().size());
+    event(resize_evt);
     invalidate_layout();
 }
 
