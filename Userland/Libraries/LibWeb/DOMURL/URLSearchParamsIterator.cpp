@@ -8,7 +8,7 @@
 #include <LibJS/Runtime/Iterator.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/URLSearchParamsIteratorPrototype.h>
-#include <LibWeb/URL/URLSearchParamsIterator.h>
+#include <LibWeb/DOMURL/URLSearchParamsIterator.h>
 
 namespace Web::Bindings {
 
@@ -21,7 +21,7 @@ void Intrinsics::create_web_prototype_and_constructor<URLSearchParamsIteratorPro
 
 }
 
-namespace Web::URL {
+namespace Web::DOMURL {
 
 JS_DEFINE_ALLOCATOR(URLSearchParamsIterator);
 

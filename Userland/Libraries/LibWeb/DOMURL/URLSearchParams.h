@@ -10,7 +10,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
-namespace Web::URL {
+namespace Web::DOMURL {
 
 struct QueryParam {
     String name;
@@ -45,7 +45,7 @@ public:
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
 
 private:
-    friend class URL;
+    friend class DOMURL;
     friend class URLSearchParamsIterator;
 
     URLSearchParams(JS::Realm&, Vector<QueryParam> list);
@@ -56,7 +56,7 @@ private:
     WebIDL::ExceptionOr<void> update();
 
     Vector<QueryParam> m_list;
-    JS::GCPtr<URL> m_url;
+    JS::GCPtr<DOMURL> m_url;
 };
 
 }

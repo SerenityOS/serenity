@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Fetch/Fetching/Checks.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::Fetch::Fetching {
 
@@ -70,7 +70,7 @@ ErrorOr<bool> tao_check(Infrastructure::Request const& request, Infrastructure::
     //       information, but the container document would not.
     if (request.mode() == Infrastructure::Request::Mode::Navigate
         && request.origin().has<HTML::Origin>()
-        && !URL::url_origin(request.current_url()).is_same_origin(request.origin().get<HTML::Origin>())) {
+        && !DOMURL::url_origin(request.current_url()).is_same_origin(request.origin().get<HTML::Origin>())) {
         return false;
     }
 

@@ -7,9 +7,9 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
-#include <LibWeb/URL/URL.h>
 
 // FIXME: This is an ad-hoc implementation of the "autoplay" policy-controlled feature:
 // https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature
@@ -82,7 +82,7 @@ ErrorOr<void> AutoplayAllowlist::enable_for_origins(ReadonlySpan<String> origins
             continue;
         }
 
-        TRY(allowlist.try_append(URL::url_origin(url)));
+        TRY(allowlist.try_append(DOMURL::url_origin(url)));
     }
 
     return {};

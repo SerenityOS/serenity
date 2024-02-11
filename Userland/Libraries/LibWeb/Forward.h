@@ -654,8 +654,8 @@ class MouseEvent;
 class UIEvents;
 }
 
-namespace Web::URL {
-class URL;
+namespace Web::DOMURL {
+class DOMURL;
 class URLSearchParams;
 class URLSearchParamsIterator;
 }

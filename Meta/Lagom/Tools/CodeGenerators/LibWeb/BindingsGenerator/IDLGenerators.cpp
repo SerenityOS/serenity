@@ -3422,6 +3422,7 @@ using namespace Web::Animations;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::DOMURL;
 using namespace Web::Encoding;
 using namespace Web::Fetch;
 using namespace Web::FileAPI;
@@ -3435,7 +3436,6 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::Streams;
 using namespace Web::UIEvents;
-using namespace Web::URL;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
 using namespace Web::WebAudio;
@@ -3614,8 +3614,8 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #    include <LibWeb/WebSockets/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
+#elif __has_include(<LibWeb/DOMURL/@name@.h>)
+#    include <LibWeb/DOMURL/@name@.h>
 #endif
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
@@ -3650,6 +3650,7 @@ using namespace Web::Animations;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::DOMURL;
 using namespace Web::Encoding;
 using namespace Web::Fetch;
 using namespace Web::FileAPI;
@@ -3665,7 +3666,6 @@ using namespace Web::Selection;
 using namespace Web::Streams;
 using namespace Web::UIEvents;
 using namespace Web::UserTiming;
-using namespace Web::URL;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
 using namespace Web::WebAudio;
@@ -4130,6 +4130,7 @@ using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::DOMURL;
 using namespace Web::Encoding;
 using namespace Web::Fetch;
 using namespace Web::FileAPI;
@@ -4146,7 +4147,6 @@ using namespace Web::Selection;
 using namespace Web::Streams;
 using namespace Web::SVG;
 using namespace Web::UIEvents;
-using namespace Web::URL;
 using namespace Web::UserTiming;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
@@ -4282,6 +4282,7 @@ using namespace Web::Animations;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::DOMURL;
 using namespace Web::Encoding;
 using namespace Web::Fetch;
 using namespace Web::FileAPI;
@@ -4297,7 +4298,6 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::UIEvents;
-using namespace Web::URL;
 using namespace Web::UserTiming;
 using namespace Web::WebAudio;
 using namespace Web::WebGL;
@@ -4420,6 +4420,7 @@ using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::DOMURL;
 using namespace Web::Encoding;
 using namespace Web::Fetch;
 using namespace Web::FileAPI;
@@ -4436,7 +4437,6 @@ using namespace Web::Selection;
 using namespace Web::Streams;
 using namespace Web::SVG;
 using namespace Web::UIEvents;
-using namespace Web::URL;
 using namespace Web::UserTiming;
 using namespace Web::WebAudio;
 using namespace Web::WebSockets;

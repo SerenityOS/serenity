@@ -6,13 +6,13 @@
 
 #include <AK/URL.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/URL.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 #include <LibWeb/SecureContexts/AbstractOperations.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::ReferrerPolicy {
 
@@ -112,7 +112,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
     case ReferrerPolicy::StrictOriginWhenCrossOrigin:
         // 1. If the origin of referrerURL and the origin of request’s current URL are the same, then return
         //    referrerURL.
-        if (referrer_url.has_value() && URL::url_origin(*referrer_url).is_same_origin(URL::url_origin(request.current_url())))
+        if (referrer_url.has_value() && DOMURL::url_origin(*referrer_url).is_same_origin(DOMURL::url_origin(request.current_url())))
             return referrer_url;
 
         // 2. If referrerURL is a potentially trustworthy URL and request’s current URL is not a potentially
@@ -130,7 +130,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
         // 1. If the origin of referrerURL and the origin of request’s current URL are the same, then return
         //    referrerURL.
         if (referrer_url.has_value()
-            && URL::url_origin(*referrer_url).is_same_origin(URL::url_origin(request.current_url()))) {
+            && DOMURL::url_origin(*referrer_url).is_same_origin(DOMURL::url_origin(request.current_url()))) {
             return referrer_url;
         }
 
@@ -141,7 +141,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
         // 1. If the origin of referrerURL and the origin of request’s current URL are the same, then return
         //    referrerURL.
         if (referrer_url.has_value()
-            && URL::url_origin(*referrer_url).is_same_origin(URL::url_origin(request.current_url()))) {
+            && DOMURL::url_origin(*referrer_url).is_same_origin(DOMURL::url_origin(request.current_url()))) {
             return referrer_url;
         }
 

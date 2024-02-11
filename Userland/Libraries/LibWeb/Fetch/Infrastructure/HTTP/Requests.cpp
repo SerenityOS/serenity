@@ -7,9 +7,9 @@
 #include <AK/Array.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Fetch/Fetching/PendingResponse.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -175,8 +175,8 @@ bool Request::has_redirect_tainted_origin() const
 
         // 2. If url’s origin is not same origin with lastURL’s origin and request’s origin is not same origin with lastURL’s origin, then return true.
         auto const* request_origin = m_origin.get_pointer<HTML::Origin>();
-        if (!URL::url_origin(url).is_same_origin(URL::url_origin(*last_url))
-            && (request_origin == nullptr || !request_origin->is_same_origin(URL::url_origin(*last_url)))) {
+        if (!DOMURL::url_origin(url).is_same_origin(DOMURL::url_origin(*last_url))
+            && (request_origin == nullptr || !request_origin->is_same_origin(DOMURL::url_origin(*last_url)))) {
             return true;
         }
 
@@ -331,7 +331,7 @@ ErrorOr<void> Request::add_origin_header()
             case ReferrerPolicy::ReferrerPolicy::SameOrigin:
                 // If request’s origin is not same origin with request’s current URL’s origin, then set serializedOrigin
                 // to `null`.
-                if (m_origin.has<HTML::Origin>() && !m_origin.get<HTML::Origin>().is_same_origin(URL::url_origin(current_url())))
+                if (m_origin.has<HTML::Origin>() && !m_origin.get<HTML::Origin>().is_same_origin(DOMURL::url_origin(current_url())))
                     serialized_origin = MUST(ByteBuffer::copy("null"sv.bytes()));
                 break;
             // -> Otherwise
@@ -371,7 +371,7 @@ bool Request::cross_origin_embedder_policy_allows_credentials() const
     if (request_origin == nullptr)
         return false;
 
-    return request_origin->is_same_origin(URL::url_origin(current_url())) && !has_redirect_tainted_origin();
+    return request_origin->is_same_origin(DOMURL::url_origin(current_url())) && !has_redirect_tainted_origin();
 }
 
 }

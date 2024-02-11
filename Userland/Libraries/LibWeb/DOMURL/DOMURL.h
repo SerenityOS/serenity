@@ -10,20 +10,20 @@
 
 #include <AK/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/URL/URLSearchParams.h>
+#include <LibWeb/DOMURL/URLSearchParams.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
-namespace Web::URL {
+namespace Web::DOMURL {
 
-class URL : public Bindings::PlatformObject {
-    WEB_PLATFORM_OBJECT(URL, Bindings::PlatformObject);
-    JS_DECLARE_ALLOCATOR(URL);
+class DOMURL : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMURL, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMURL);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<URL> create(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, String const& url, Optional<String> const& base = {});
+    [[nodiscard]] static JS::NonnullGCPtr<DOMURL> create(JS::Realm&, URL, JS::NonnullGCPtr<URLSearchParams> query);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMURL>> construct_impl(JS::Realm&, String const& url, Optional<String> const& base = {});
 
-    virtual ~URL() override;
+    virtual ~DOMURL() override;
 
     static WebIDL::ExceptionOr<String> create_object_url(JS::VM&, JS::NonnullGCPtr<FileAPI::Blob> object);
     static WebIDL::ExceptionOr<void> revoke_object_url(JS::VM&, StringView url);
@@ -79,7 +79,7 @@ public:
     void set_query(Badge<URLSearchParams>, Optional<String> query) { m_url.set_query(move(query)); }
 
 private:
-    URL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);
+    DOMURL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -92,7 +92,7 @@ HTML::Origin url_origin(AK::URL const&);
 bool host_is_domain(AK::URL::Host const&);
 
 // https://url.spec.whatwg.org/#potentially-strip-trailing-spaces-from-an-opaque-path
-void strip_trailing_spaces_from_an_opaque_path(URL& url);
+void strip_trailing_spaces_from_an_opaque_path(DOMURL& url);
 
 // https://url.spec.whatwg.org/#concept-url-parser
 AK::URL parse(StringView input, Optional<AK::URL> const& base_url = {});

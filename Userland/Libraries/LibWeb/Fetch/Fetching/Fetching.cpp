@@ -13,6 +13,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Fetching/Checks.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
@@ -43,7 +44,6 @@
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <LibWeb/SRI/SRI.h>
-#include <LibWeb/URL/URL.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::Fetch::Fetching {
@@ -259,7 +259,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
         // - request’s current URL’s scheme is "http"
         request->current_url().scheme() == "http"sv
         // - request’s current URL’s host is a domain
-        && URL::host_is_domain(request->current_url().host())
+        && DOMURL::host_is_domain(request->current_url().host())
         // FIXME: - Matching request’s current URL’s host per Known HSTS Host Domain Name Matching results in either a
         //          superdomain match with an asserted includeSubDomains directive or a congruent match (with or without an
         //          asserted includeSubDomains directive) [HSTS]; or DNS resolution for the request finds a matching HTTPS RR
@@ -291,7 +291,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
         // -> request’s current URL’s scheme is "data"
         // -> request’s mode is "navigate" or "websocket"
         else if (
-            (request->origin().has<HTML::Origin>() && URL::url_origin(request->current_url()).is_same_origin(request->origin().get<HTML::Origin>()) && request->response_tainting() == Infrastructure::Request::ResponseTainting::Basic)
+            (request->origin().has<HTML::Origin>() && DOMURL::url_origin(request->current_url()).is_same_origin(request->origin().get<HTML::Origin>()) && request->response_tainting() == Infrastructure::Request::ResponseTainting::Basic)
             || request->current_url().scheme() == "data"sv
             || (request->mode() == Infrastructure::Request::Mode::Navigate || request->mode() == Infrastructure::Request::Mode::WebSocket)) {
             // 1. Set request’s response tainting to "basic".
@@ -1113,7 +1113,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> http_redirect_f
     if (request->mode() == Infrastructure::Request::Mode::CORS
         && location_url.includes_credentials()
         && request->origin().has<HTML::Origin>()
-        && !request->origin().get<HTML::Origin>().is_same_origin(URL::url_origin(location_url))) {
+        && !request->origin().get<HTML::Origin>().is_same_origin(DOMURL::url_origin(location_url))) {
         return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'cors' mode and different URL and request origin must not include credentials in redirect URL"sv));
     }
 
@@ -1156,7 +1156,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> http_redirect_f
     // 13. If request’s current URL’s origin is not same origin with locationURL’s origin, then for each headerName of
     //     CORS non-wildcard request-header name, delete headerName from request’s header list.
     // NOTE: I.e., the moment another origin is seen after the initial request, the `Authorization` header is removed.
-    if (!URL::url_origin(request->current_url()).is_same_origin(URL::url_origin(location_url))) {
+    if (!DOMURL::url_origin(request->current_url()).is_same_origin(DOMURL::url_origin(location_url))) {
         static constexpr Array cors_non_wildcard_request_header_names {
             "Authorization"sv
         };

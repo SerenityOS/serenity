@@ -32,6 +32,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
 #include <LibWeb/HTML/DocumentState.h>
@@ -68,7 +69,6 @@
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 #include <LibWeb/Selection/Selection.h>
-#include <LibWeb/URL/URL.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::HTML {
@@ -1064,14 +1064,14 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
     // 5. Otherwise, if targetOrigin is not a single U+002A ASTERISK character (*), then:
     else if (options.target_origin != "*"sv) {
         // 1. Let parsedURL be the result of running the URL parser on targetOrigin.
-        auto parsed_url = URL::parse(options.target_origin);
+        auto parsed_url = DOMURL::parse(options.target_origin);
 
         // 2. If parsedURL is failure, then throw a "SyntaxError" DOMException.
         if (!parsed_url.is_valid())
             return WebIDL::SyntaxError::create(target_realm, MUST(String::formatted("Invalid URL for targetOrigin: '{}'", options.target_origin)));
 
         // 3. Set targetOrigin to parsedURL's origin.
-        target_origin = URL::url_origin(parsed_url);
+        target_origin = DOMURL::url_origin(parsed_url);
     }
 
     // 6. Let transfer be options["transfer"].
