@@ -198,7 +198,7 @@ Optional<Gfx::AntiAliasingPainter> CanvasRenderingContext2D::antialiased_painter
     return {};
 }
 
-void CanvasRenderingContext2D::fill_text(StringView text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::bitmap_font_fill_text(StringView text, float x, float y, Optional<double> max_width)
 {
     if (max_width.has_value() && max_width.value() <= 0)
         return;
@@ -207,9 +207,8 @@ void CanvasRenderingContext2D::fill_text(StringView text, float x, float y, Opti
         auto& drawing_state = this->drawing_state();
         auto& base_painter = painter.underlying_painter();
 
-        auto font = current_font();
-
         // Create text rect from font
+        auto font = current_font();
         auto text_rect = Gfx::FloatRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : font->width(text), font->pixel_size());
 
         // Apply text align to text_rect
@@ -242,10 +241,72 @@ void CanvasRenderingContext2D::fill_text(StringView text, float x, float y, Opti
     });
 }
 
+Gfx::Path CanvasRenderingContext2D::text_path(StringView text, float x, float y, Optional<double> max_width)
+{
+    if (max_width.has_value() && max_width.value() <= 0)
+        return {};
+
+    auto& drawing_state = this->drawing_state();
+    auto font = current_font();
+
+    Gfx::Path path;
+    path.move_to({ x, y });
+    path.text(Utf8View { text }, *font);
+
+    auto text_width = path.bounding_box().width();
+    Gfx::AffineTransform transform = {};
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#text-preparation-algorithm:
+    // 6. If maxWidth was provided and the hypothetical width of the inline box in the hypothetical line box
+    // is greater than maxWidth CSS pixels, then change font to have a more condensed font (if one is
+    // available or if a reasonably readable one can be synthesized by applying a horizontal scale
+    // factor to the font) or a smaller font, and return to the previous step.
+    if (max_width.has_value() && text_width > float(*max_width)) {
+        auto horizontal_scale = float(*max_width) / text_width;
+        transform = Gfx::AffineTransform {}.scale({ horizontal_scale, 1 });
+        text_width *= horizontal_scale;
+    }
+
+    // Apply text align
+    // FIXME: CanvasTextAlign::Start and CanvasTextAlign::End currently do not nothing for right-to-left languages:
+    //        https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-textalign-start
+    // Default alignment of draw_text is left so do nothing by CanvasTextAlign::Start and CanvasTextAlign::Left
+    if (drawing_state.text_align == Bindings::CanvasTextAlign::Center) {
+        transform = Gfx::AffineTransform {}.set_translation({ -text_width / 2, 0 }).multiply(transform);
+    }
+    if (drawing_state.text_align == Bindings::CanvasTextAlign::End || drawing_state.text_align == Bindings::CanvasTextAlign::Right) {
+        transform = Gfx::AffineTransform {}.set_translation({ -text_width, 0 }).multiply(transform);
+    }
+
+    // Apply text baseline
+    // FIXME: Implement CanvasTextBasline::Hanging, Bindings::CanvasTextAlign::Alphabetic and Bindings::CanvasTextAlign::Ideographic for real
+    //        right now they are just handled as textBaseline = top or bottom.
+    //        https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-textbaseline-hanging
+    // Default baseline of draw_text is top so do nothing by CanvasTextBaseline::Top and CanvasTextBasline::Hanging
+    if (drawing_state.text_baseline == Bindings::CanvasTextBaseline::Middle) {
+        transform = Gfx::AffineTransform {}.set_translation({ 0, font->pixel_size() / 2 }).multiply(transform);
+    }
+    if (drawing_state.text_baseline == Bindings::CanvasTextBaseline::Top || drawing_state.text_baseline == Bindings::CanvasTextBaseline::Hanging) {
+        transform = Gfx::AffineTransform {}.set_translation({ 0, font->pixel_size() }).multiply(transform);
+    }
+
+    transform = Gfx::AffineTransform { drawing_state.transform }.multiply(transform);
+    path = path.copy_transformed(transform);
+    return path;
+}
+
+void CanvasRenderingContext2D::fill_text(StringView text, float x, float y, Optional<double> max_width)
+{
+    if (is<Gfx::BitmapFont>(*current_font()))
+        return bitmap_font_fill_text(text, x, y, max_width);
+    fill_internal(text_path(text, x, y, max_width), Gfx::Painter::WindingRule::Nonzero);
+}
+
 void CanvasRenderingContext2D::stroke_text(StringView text, float x, float y, Optional<double> max_width)
 {
-    // FIXME: Stroke the text instead of filling it.
-    fill_text(text, x, y, max_width);
+    if (is<Gfx::BitmapFont>(*current_font()))
+        return bitmap_font_fill_text(text, x, y, max_width);
+    stroke_internal(text_path(text, x, y, max_width));
 }
 
 void CanvasRenderingContext2D::begin_path()
