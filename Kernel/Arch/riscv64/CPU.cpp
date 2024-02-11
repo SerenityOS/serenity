@@ -32,6 +32,13 @@ void dump_fdt()
     MUST(DeviceTree::dump(header, fdt));
 }
 
+ErrorOr<StringView> get_command_line_from_fdt()
+{
+    auto& header = *bit_cast<DeviceTree::FlattenedDeviceTreeHeader*>(&s_fdt_storage[0]);
+    auto fdt = ReadonlyBytes(s_fdt_storage, header.totalsize);
+    return TRY(DeviceTree::slow_get_property("/chosen/bootargs"sv, header, fdt)).as_string();
+}
+
 }
 
 DeviceTree::DeviceTree const& DeviceTree::get()

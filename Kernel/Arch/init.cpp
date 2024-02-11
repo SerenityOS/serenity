@@ -218,8 +218,11 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #elif ARCH(RISCV64)
-    // FIXME: Take this from the flattened device tree (/chosen/bootargs)
-    kernel_cmdline = "serial_debug"sv;
+    auto maybe_command_line = get_command_line_from_fdt();
+    if (maybe_command_line.is_error())
+        kernel_cmdline = "serial_debug"sv;
+    else
+        kernel_cmdline = maybe_command_line.value();
 #endif
 
     setup_serial_debug();
@@ -290,7 +293,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
 #if ARCH(RISCV64)
     MUST(unflatten_fdt());
 
-    dump_fdt();
+    if (kernel_command_line().contains("dump_fdt"sv))
+        dump_fdt();
 #endif
 
     // Initialize TimeManagement before using randomness!

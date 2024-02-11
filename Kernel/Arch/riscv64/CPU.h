@@ -24,6 +24,7 @@ extern BootInfo s_boot_info;
 
 ErrorOr<void> unflatten_fdt();
 void dump_fdt();
+ErrorOr<StringView> get_command_line_from_fdt();
 }
 
 namespace DeviceTree {
