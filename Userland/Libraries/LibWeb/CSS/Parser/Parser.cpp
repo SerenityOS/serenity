@@ -5,6 +5,7 @@
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2024, Tommy van der Vorst <tommy@pixelspark.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -5469,9 +5470,18 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
             // The repeat() notation can’t be nested.
             if (track_sizing_function.value().is_repeat())
                 return {};
+
             // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
-            if (track_sizing_function.value().is_default() && track_sizing_function.value().grid_size().is_flexible_length() && (is_auto_fill || is_auto_fit))
+            // Note that 'auto' is also an intrinsic size (and thus not permitted) but we can't use
+            // track_sizing_function.is_auto(..) to check for it, as it requires AvailableSize, which is why there is
+            // a separate check for it below.
+            // https://www.w3.org/TR/css-grid-2/#repeat-syntax
+            // https://www.w3.org/TR/css-grid-2/#intrinsic-sizing-function
+            if (track_sizing_function.value().is_default()
+                && (track_sizing_function.value().grid_size().is_flexible_length() || token.is_ident("auto"sv))
+                && (is_auto_fill || is_auto_fit))
                 return {};
+
             repeat_params.append(track_sizing_function.value());
             part_two_tokens.skip_whitespace();
         }
