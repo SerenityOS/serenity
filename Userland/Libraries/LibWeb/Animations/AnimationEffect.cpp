@@ -8,6 +8,7 @@
 #include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/AnimationEffect.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Animations {
@@ -151,6 +152,13 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
         m_easing_function = timing.easing.value();
 
     return {};
+}
+
+void AnimationEffect::set_associated_animation(JS::GCPtr<Animation> value)
+{
+    m_associated_animation = value;
+    if (auto* target = this->target())
+        target->invalidate_style();
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-direction

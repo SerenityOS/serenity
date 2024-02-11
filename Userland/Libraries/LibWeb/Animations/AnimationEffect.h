@@ -95,7 +95,7 @@ public:
     void set_timing_function(TimingFunction value) { m_timing_function = move(value); }
 
     JS::GCPtr<Animation> associated_animation() const { return m_associated_animation; }
-    void set_associated_animation(JS::GCPtr<Animation> value) { m_associated_animation = value; }
+    void set_associated_animation(JS::GCPtr<Animation> value);
 
     AnimationDirection animation_direction() const;
 
