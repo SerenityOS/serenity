@@ -125,6 +125,16 @@ public:
             m_image_width = m_metadata.image_width().value();
         if (m_metadata.predictor().has_value())
             m_predictor = m_metadata.predictor().value();
+
+        // FIXME: Default-initialize fields with multiple values
+        for (u32 i = 0; i < m_bits_per_sample.size(); ++i)
+            m_sample_format.append(SampleFormat::Unsigned);
+        if (m_metadata.sample_format().has_value()) {
+            auto sample_format = *m_metadata.sample_format();
+            for (u32 i = 0; i < min(sample_format.size(), m_sample_format.size()); ++i)
+                m_sample_format[i] = sample_format[i];
+        }
+
         m_alpha_channel_index = alpha_channel_index();
     }
 
@@ -175,14 +185,28 @@ private:
         BigEndian,
     };
 
-    static ErrorOr<u8> read_component(BigEndianInputBitStream& stream, u8 bits)
+    ErrorOr<u8> read_component(BigEndianInputBitStream& stream, u8 component_index) const
     {
         // FIXME: This function truncates everything to 8-bits
-        auto const value = TRY(stream.read_bits<u32>(bits));
 
-        if (bits > 8)
-            return value >> (bits - 8);
-        return NumericLimits<u8>::max() * value / ((1 << bits) - 1);
+        auto const bits = (*m_metadata.bits_per_sample())[component_index];
+        auto value = TRY(stream.read_bits<u32>(bits));
+
+        switch (m_sample_format[component_index]) {
+        case SampleFormat::Unsigned:
+            if (bits > 8)
+                return value >> (bits - 8);
+            return NumericLimits<u8>::max() * value / ((1 << bits) - 1);
+        case SampleFormat::Float:
+            if (bits == 32) {
+                if (m_byte_order == ByteOrder::LittleEndian)
+                    value = __builtin_bswap32(value);
+                return static_cast<u8>(bit_cast<float>(value));
+            }
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid bit depth for floating point value");
+        default:
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Value of SampleFormat is not supported");
+        }
     }
 
     u8 samples_for_photometric_interpretation() const
@@ -228,9 +252,9 @@ private:
 
         for (u8 i = number_base_channels; i < m_bits_per_sample.size(); ++i) {
             if (m_alpha_channel_index == i)
-                alpha = TRY(read_component(stream, m_bits_per_sample[i]));
+                alpha = TRY(read_component(stream, i));
             else
-                TRY(read_component(stream, m_bits_per_sample[i]));
+                TRY(read_component(stream, i));
         }
 
         return alpha.value_or(NumericLimits<u8>::max());
@@ -239,9 +263,9 @@ private:
     ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
     {
         if (m_photometric_interpretation == PhotometricInterpretation::RGB) {
-            auto const first_component = TRY(read_component(stream, m_bits_per_sample[0]));
-            auto const second_component = TRY(read_component(stream, m_bits_per_sample[1]));
-            auto const third_component = TRY(read_component(stream, m_bits_per_sample[2]));
+            auto const first_component = TRY(read_component(stream, 0));
+            auto const second_component = TRY(read_component(stream, 1));
+            auto const third_component = TRY(read_component(stream, 2));
 
             auto const alpha = TRY(manage_extra_channels(stream));
             return Color(first_component, second_component, third_component, alpha);
@@ -275,7 +299,7 @@ private:
 
         if (m_photometric_interpretation == PhotometricInterpretation::WhiteIsZero
             || m_photometric_interpretation == PhotometricInterpretation::BlackIsZero) {
-            auto luminosity = TRY(read_component(stream, m_bits_per_sample[0]));
+            auto luminosity = TRY(read_component(stream, 0));
 
             if (m_photometric_interpretation == PhotometricInterpretation::WhiteIsZero)
                 luminosity = ~luminosity;
@@ -291,10 +315,10 @@ private:
     {
         VERIFY(m_photometric_interpretation == PhotometricInterpretation::CMYK);
 
-        auto const first_component = TRY(read_component(stream, m_bits_per_sample[0]));
-        auto const second_component = TRY(read_component(stream, m_bits_per_sample[1]));
-        auto const third_component = TRY(read_component(stream, m_bits_per_sample[2]));
-        auto const fourth_component = TRY(read_component(stream, m_bits_per_sample[3]));
+        auto const first_component = TRY(read_component(stream, 0));
+        auto const second_component = TRY(read_component(stream, 1));
+        auto const third_component = TRY(read_component(stream, 2));
+        auto const fourth_component = TRY(read_component(stream, 3));
 
         // FIXME: We probably won't encounter CMYK images with an alpha channel, but if
         //        we do: the first step to support them is not dropping the value here!
@@ -709,6 +733,7 @@ private:
     Vector<u32, 4> m_bits_per_sample {};
     u32 m_image_width {};
     Predictor m_predictor {};
+    Vector<SampleFormat, 4> m_sample_format {};
 
     Optional<u8> m_alpha_channel_index {};
 };
