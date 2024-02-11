@@ -1,12 +1,26 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=glu
-useconfigure="true"
-version="9.0.2"
+port='glu'
+version='9.0.3'
 files=(
-    "https://archive.mesa3d.org/glu/glu-${version}.tar.gz#24effdfb952453cc00e275e1c82ca9787506aba0282145fff054498e60e19a65"
+    "https://archive.mesa3d.org/glu/glu-${version}.tar.xz#bd43fe12f374b1192eb15fe20e45ff456b9bc26ab57f0eee919f96ca0f8a330f"
 )
-depends=("pkgconf")
-use_fresh_config_sub=true
+useconfigure='true'
+configopts=(
+    "--cross-file=${SERENITY_BUILD_DIR}/meson-cross-file.txt"
+    "--prefix=${SERENITY_INSTALL_ROOT}/usr/local"
+    '-Dbuildtype=release'
+)
 
-export GL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
-export GL_LIBS="-lgl"
+export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
+
+configure() {
+    run meson setup "${configopts[@]}" build
+}
+
+build() {
+    run ninja -C build
+}
+
+install() {
+    run ninja -C build install
+}
