@@ -13,6 +13,17 @@
 namespace AK {
 
 namespace Detail {
+
+// FIXME: GCC ICEs when a simpler implementation of CO_TRY_OR_FAIL is used. See also LibTest/AsyncTestCase.h.
+#ifdef AK_COMPILER_GCC
+namespace Test {
+
+template<typename T>
+struct TryOrFailAwaiter;
+
+}
+#endif
+
 struct SuspendNever {
     // Even though we set -fno-exceptions, Clang really wants these to be noexcept.
     bool await_ready() const noexcept { return true; }
@@ -105,6 +116,11 @@ public:
 private:
     template<typename U>
     friend struct Detail::TryAwaiter;
+
+#ifdef AK_COMPILER_GCC
+    template<typename U>
+    friend struct AK::Detail::Test::TryOrFailAwaiter;
+#endif
 
     // You cannot just have return_value and return_void defined in the same promise type because C++.
     struct CoroutinePromiseBase {
