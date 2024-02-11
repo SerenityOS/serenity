@@ -359,6 +359,42 @@ void Animation::set_replace_state(Bindings::AnimationReplaceState value)
     }
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-animation-onfinish
+JS::GCPtr<WebIDL::CallbackType> Animation::onfinish()
+{
+    return event_handler_attribute(HTML::EventNames::finish);
+}
+
+// https://www.w3.org/TR/web-animations-1/#dom-animation-onfinish
+void Animation::set_onfinish(JS::GCPtr<WebIDL::CallbackType> event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::finish, event_handler);
+}
+
+// https://www.w3.org/TR/web-animations-1/#dom-animation-oncancel
+JS::GCPtr<WebIDL::CallbackType> Animation::oncancel()
+{
+    return event_handler_attribute(HTML::EventNames::cancel);
+}
+
+// https://www.w3.org/TR/web-animations-1/#dom-animation-oncancel
+void Animation::set_oncancel(JS::GCPtr<WebIDL::CallbackType> event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::cancel, event_handler);
+}
+
+// https://www.w3.org/TR/web-animations-1/#dom-animation-onremove
+JS::GCPtr<WebIDL::CallbackType> Animation::onremove()
+{
+    return event_handler_attribute(HTML::EventNames::remove);
+}
+
+// https://www.w3.org/TR/web-animations-1/#dom-animation-onremove
+void Animation::set_onremove(JS::GCPtr<WebIDL::CallbackType> event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::remove, event_handler);
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-cancel
 void Animation::cancel()
 {

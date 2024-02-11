@@ -20,9 +20,9 @@ interface Animation : EventTarget {
     readonly attribute Promise<Animation> ready;
     readonly attribute Promise<Animation> finished;
 
-    // FIXME: attribute EventHandler onfinish;
-    // FIXME: attribute EventHandler oncancel;
-    // FIXME: attribute EventHandler onremove;
+    attribute EventHandler onfinish;
+    attribute EventHandler oncancel;
+    attribute EventHandler onremove;
 
     undefined cancel();
     undefined finish();
