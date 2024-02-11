@@ -151,6 +151,9 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
     if (timing.easing.has_value())
         m_easing_function = timing.easing.value();
 
+    if (auto animation = m_associated_animation)
+        animation->effect_timing_changed({});
+
     return {};
 }
 

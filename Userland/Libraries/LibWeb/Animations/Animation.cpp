@@ -509,6 +509,11 @@ void Animation::notify_timeline_time_did_change()
     }
 }
 
+void Animation::effect_timing_changed(Badge<AnimationEffect>)
+{
+    update_finished_state(DidSeek::No, SynchronouslyNotify::Yes);
+}
+
 // https://www.w3.org/TR/web-animations-1/#associated-effect-end
 double Animation::associated_effect_end() const
 {
