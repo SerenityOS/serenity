@@ -23,13 +23,15 @@ JS_DEFINE_ALLOCATOR(Animation);
 // https://www.w3.org/TR/web-animations-1/#dom-animation-animation
 JS::NonnullGCPtr<Animation> Animation::create(JS::Realm& realm, JS::GCPtr<AnimationEffect> effect, JS::GCPtr<AnimationTimeline> timeline)
 {
+    auto& vm = realm.vm();
+
     // 1. Let animation be a new Animation object.
     auto animation = realm.heap().allocate<Animation>(realm, realm);
 
     // 2. Run the procedure to set the timeline of an animation on animation passing timeline as the new timeline or, if
     //    a timeline argument is missing, passing the default document timeline of the Document associated with the
     //    Window that is the current global object.
-    if (!timeline) {
+    if (vm.argument_count() < 2) {
         auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
         timeline = window.associated_document().timeline();
     }
