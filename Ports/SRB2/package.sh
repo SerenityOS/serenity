@@ -4,6 +4,7 @@ useconfigure=true
 version='2.2.13'
 depends=(
     'curl'
+    'glu'
     'libpng'
     'SDL2'
     'SDL2_mixer'
