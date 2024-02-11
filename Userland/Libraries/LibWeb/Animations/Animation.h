@@ -120,6 +120,8 @@ private:
     JS::NonnullGCPtr<WebIDL::Promise> current_ready_promise() const;
     JS::NonnullGCPtr<WebIDL::Promise> current_finished_promise() const;
 
+    void invalidate_effect();
+
     // https://www.w3.org/TR/web-animations-1/#dom-animation-id
     FlyString m_id;
 
@@ -164,10 +166,7 @@ private:
     // https://www.w3.org/TR/web-animations-1/#pending-pause-task
     TaskState m_pending_pause_task { TaskState::None };
 
-    // Flags used to manage the finish notification microtask and ultimately prevent more than one finish notification
-    // microtask from being queued at any given time
-    bool m_should_abort_finish_notification_microtask { false };
-    bool m_has_finish_notification_microtask_scheduled { false };
+    Optional<int> m_pending_finish_microtask_id;
 };
 
 }
