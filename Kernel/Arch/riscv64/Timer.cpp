@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/NeverDestroyed.h>
+#include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Arch/riscv64/Timer.h>
 
@@ -14,10 +15,7 @@ namespace Kernel::RISCV64 {
 Timer::Timer()
     : HardwareTimer(to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK)
 {
-    // FIXME: Actually query the frequency of the timer from the device tree.
-
-    // Based on the "/cpus/timebase-frequency" device tree node for the QEMU virt machine
-    m_frequency = 10'000'000; // in Hz
+    m_frequency = DeviceTree::get().resolve_property("/cpus/timebase-frequency"sv).value().as<u32>();
 
     m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
 
