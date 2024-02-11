@@ -227,6 +227,7 @@ void ViewportPaintable::resolve_paint_only_properties()
     // - Text shadows
     // - Transforms
     // - Transform origins
+    // - Outlines
     for_each_in_inclusive_subtree([&](Paintable& paintable) {
         auto& node = paintable.layout_node();
 
@@ -414,6 +415,21 @@ void ViewportPaintable::resolve_paint_only_properties()
             auto y = reference_box.top() + transform_origin.y.to_px(node, reference_box.height());
             paintable_box.set_transform_origin({ x, y });
             paintable_box.set_transform_origin({ x, y });
+        }
+
+        // Outlines
+        auto const& computed_values = node.computed_values();
+        auto outline_width = computed_values.outline_width().to_px(node);
+        auto outline_data = borders_data_for_outline(node, computed_values.outline_color(), computed_values.outline_style(), outline_width);
+        auto outline_offset = computed_values.outline_offset().to_px(node);
+        if (is_paintable_box) {
+            auto& paintable_box = static_cast<Painting::PaintableBox&>(paintable);
+            paintable_box.set_outline_data(outline_data);
+            paintable_box.set_outline_offset(outline_offset);
+        } else if (is_inline_paintable) {
+            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(paintable);
+            inline_paintable.set_outline_data(outline_data);
+            inline_paintable.set_outline_offset(outline_offset);
         }
 
         return TraversalDecision::Continue;

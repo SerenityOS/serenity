@@ -167,11 +167,9 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
     }
 
     if (phase == PaintPhase::Outline) {
-        auto outline_width = computed_values().outline_width().to_px(layout_node());
-        auto maybe_outline_data = borders_data_for_outline(layout_node(), computed_values().outline_color(), computed_values().outline_style(), outline_width);
-        if (maybe_outline_data.has_value()) {
+        auto maybe_outline_data = this->outline_data();
+        if (maybe_outline_data.has_value())
             paint_border_or_outline(maybe_outline_data.value(), computed_values().outline_offset().to_px(layout_node()));
-        }
     }
 
     if (phase == PaintPhase::Foreground) {

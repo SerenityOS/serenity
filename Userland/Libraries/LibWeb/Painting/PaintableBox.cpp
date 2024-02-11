@@ -259,10 +259,9 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     }
 
     if (phase == PaintPhase::Outline) {
-        auto outline_width = computed_values().outline_width().to_px(layout_node());
-        auto borders_data = borders_data_for_outline(layout_node(), computed_values().outline_color(), computed_values().outline_style(), outline_width);
-        if (borders_data.has_value()) {
-            auto outline_offset = computed_values().outline_offset().to_px(layout_node());
+        auto const& outline_data = this->outline_data();
+        if (outline_data.has_value()) {
+            auto outline_offset = this->outline_offset();
             auto border_radius_data = normalized_border_radii_data(ShrinkRadiiForBorders::No);
             auto borders_rect = absolute_border_box_rect();
 
@@ -279,10 +278,10 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
             if ((borders_rect.height() / 2) + outline_offset_y < 0)
                 outline_offset_y = -borders_rect.height() / 2;
 
-            border_radius_data.inflate(outline_width + outline_offset_y, outline_width + outline_offset_x, outline_width + outline_offset_y, outline_width + outline_offset_x);
-            borders_rect.inflate(outline_width + outline_offset_y, outline_width + outline_offset_x, outline_width + outline_offset_y, outline_width + outline_offset_x);
+            border_radius_data.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
+            borders_rect.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
 
-            context.recording_painter().paint_borders(context.rounded_device_rect(borders_rect), border_radius_data.as_corners(context), borders_data->to_device_pixels(context));
+            context.recording_painter().paint_borders(context.rounded_device_rect(borders_rect), border_radius_data.as_corners(context), outline_data->to_device_pixels(context));
         }
     }
 

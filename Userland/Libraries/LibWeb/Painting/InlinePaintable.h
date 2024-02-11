@@ -37,6 +37,12 @@ public:
     void set_box_shadow_data(Vector<ShadowData>&& box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
     Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }
 
+    void set_outline_data(Optional<BordersData> outline_data) { m_outline_data = outline_data; }
+    Optional<BordersData> const& outline_data() const { return m_outline_data; }
+
+    void set_outline_offset(CSSPixels outline_offset) { m_outline_offset = outline_offset; }
+    CSSPixels outline_offset() const { return m_outline_offset; }
+
     void set_enclosing_scroll_frame(RefPtr<ScrollFrame> scroll_frame) { m_enclosing_scroll_frame = scroll_frame; }
     void set_enclosing_clip_frame(RefPtr<ClipFrame> clip_frame) { m_enclosing_clip_frame = clip_frame; }
 
@@ -55,6 +61,8 @@ private:
     RefPtr<ClipFrame const> m_enclosing_clip_frame;
 
     Vector<ShadowData> m_box_shadow_data;
+    Optional<BordersData> m_outline_data;
+    CSSPixels m_outline_offset { 0 };
     Vector<PaintableFragment> m_fragments;
 };
 

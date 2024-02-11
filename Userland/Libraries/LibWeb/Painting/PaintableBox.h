@@ -195,6 +195,12 @@ public:
     void set_transform_origin(CSSPixelPoint transform_origin) { m_transform_origin = transform_origin; }
     CSSPixelPoint const& transform_origin() const { return m_transform_origin; }
 
+    void set_outline_data(Optional<BordersData> outline_data) { m_outline_data = outline_data; }
+    Optional<BordersData> const& outline_data() const { return m_outline_data; }
+
+    void set_outline_offset(CSSPixels outline_offset) { m_outline_offset = outline_offset; }
+    CSSPixels outline_offset() const { return m_outline_offset; }
+
     CSSPixelRect compute_absolute_padding_rect_with_css_transform_applied() const;
     Gfx::AffineTransform compute_combined_css_transform() const;
 
@@ -243,6 +249,9 @@ private:
     Vector<ShadowData> m_box_shadow_data;
     Gfx::FloatMatrix4x4 m_transform { Gfx::FloatMatrix4x4::identity() };
     CSSPixelPoint m_transform_origin;
+
+    Optional<BordersData> m_outline_data;
+    CSSPixels m_outline_offset { 0 };
 };
 
 class PaintableWithLines : public PaintableBox {
