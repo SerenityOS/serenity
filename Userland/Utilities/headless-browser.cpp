@@ -282,18 +282,22 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
 
     if (mode == TestMode::Layout) {
         view.on_load_finish = [&](auto const& loaded_url) {
-            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes));
+            // This callback will be called for 'about:blank' first, then for the URL we actually want to dump
+            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes) || url.equals(URL("about:blank")));
 
-            // NOTE: We take a screenshot here to force the lazy layout of SVG-as-image documents to happen.
-            //       It also causes a lot more code to run, which is good for finding bugs. :^)
-            (void)view.take_screenshot();
+            if (url.equals(loaded_url, URL::ExcludeFragment::Yes)) {
+                // NOTE: We take a screenshot here to force the lazy layout of SVG-as-image documents to happen.
+                //       It also causes a lot more code to run, which is good for finding bugs. :^)
+                (void)view.take_screenshot();
 
-            StringBuilder builder;
-            builder.append(view.dump_layout_tree().release_value_but_fixme_should_propagate_errors());
-            builder.append("\n"sv);
-            builder.append(view.dump_paint_tree().release_value_but_fixme_should_propagate_errors());
-            result = builder.to_string().release_value_but_fixme_should_propagate_errors();
-            loop.quit(0);
+                StringBuilder builder;
+                builder.append(view.dump_layout_tree().release_value_but_fixme_should_propagate_errors());
+                builder.append("\n"sv);
+                builder.append(view.dump_paint_tree().release_value_but_fixme_should_propagate_errors());
+                result = builder.to_string().release_value_but_fixme_should_propagate_errors();
+
+                loop.quit(0);
+            }
         };
         view.on_text_test_finish = {};
     } else if (mode == TestMode::Text) {
