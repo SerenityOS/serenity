@@ -923,6 +923,9 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
 
         auto resolved_end_property = resolve_property(end_property.value());
 
+        if (resolved_end_property && !resolved_start_property)
+            resolved_start_property = CSS::property_initial_value(document().realm(), it.key);
+
         if (!resolved_start_property || !resolved_end_property)
             continue;
 
