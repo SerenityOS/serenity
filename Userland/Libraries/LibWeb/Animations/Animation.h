@@ -66,6 +66,13 @@ public:
     JS::NonnullGCPtr<JS::Object> finished() const { return *current_finished_promise()->promise(); }
     bool is_finished() const { return m_is_finished; }
 
+    JS::GCPtr<WebIDL::CallbackType> onfinish();
+    void set_onfinish(JS::GCPtr<WebIDL::CallbackType>);
+    JS::GCPtr<WebIDL::CallbackType> oncancel();
+    void set_oncancel(JS::GCPtr<WebIDL::CallbackType>);
+    JS::GCPtr<WebIDL::CallbackType> onremove();
+    void set_onremove(JS::GCPtr<WebIDL::CallbackType>);
+
     enum class AutoRewind {
         Yes,
         No,
