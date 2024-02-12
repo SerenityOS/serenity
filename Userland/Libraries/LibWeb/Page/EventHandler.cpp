@@ -489,7 +489,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
             if (hovered_link_element)
                 is_hovering_link = true;
 
-            if (node->is_text()) {
+            if (paintable->layout_node().is_text_node()) {
                 if (cursor == CSS::Cursor::Auto)
                     hovered_node_cursor = Gfx::StandardCursor::IBeam;
                 else
