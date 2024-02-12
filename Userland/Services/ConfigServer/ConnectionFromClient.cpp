@@ -99,10 +99,20 @@ void ConnectionFromClient::pledge_domains(Vector<ByteString> const& domains)
         m_pledged_domains.set(domain);
 }
 
+void ConnectionFromClient::enable_permissive_mode()
+{
+    if (m_has_pledged) {
+        did_misbehave("Tried to enable permissive mode after pledging.");
+        return;
+    }
+    m_permissive_mode = true;
+}
+
 void ConnectionFromClient::monitor_domain(ByteString const& domain)
 {
     if (m_has_pledged && !m_pledged_domains.contains(domain)) {
-        did_misbehave("Attempt to monitor non-pledged domain");
+        if (!m_permissive_mode)
+            did_misbehave("Attempt to monitor non-pledged domain");
         return;
     }
 
@@ -115,7 +125,8 @@ bool ConnectionFromClient::validate_access(ByteString const& domain, ByteString 
         return true;
     if (m_pledged_domains.contains(domain))
         return true;
-    did_misbehave(ByteString::formatted("Blocked attempt to access domain '{}', group={}, key={}", domain, group, key).characters());
+    if (!m_permissive_mode)
+        did_misbehave(ByteString::formatted("Blocked attempt to access domain '{}', group={}, key={}", domain, group, key).characters());
     return false;
 }
 
@@ -153,8 +164,11 @@ Messages::ConfigServer::ListConfigGroupsResponse ConnectionFromClient::list_conf
 
 Messages::ConfigServer::ReadStringValueResponse ConnectionFromClient::read_string_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
-    if (!validate_access(domain, group, key))
+    if (!validate_access(domain, group, key)) {
+        if (m_permissive_mode)
+            return Optional<ByteString> {};
         return nullptr;
+    }
 
     auto& config = ensure_domain_config(domain);
     if (!config.has_key(group, key))
@@ -164,8 +178,11 @@ Messages::ConfigServer::ReadStringValueResponse ConnectionFromClient::read_strin
 
 Messages::ConfigServer::ReadI32ValueResponse ConnectionFromClient::read_i32_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
-    if (!validate_access(domain, group, key))
+    if (!validate_access(domain, group, key)) {
+        if (m_permissive_mode)
+            return Optional<i32> {};
         return nullptr;
+    }
 
     auto& config = ensure_domain_config(domain);
     if (!config.has_key(group, key))
@@ -175,8 +192,11 @@ Messages::ConfigServer::ReadI32ValueResponse ConnectionFromClient::read_i32_valu
 
 Messages::ConfigServer::ReadU32ValueResponse ConnectionFromClient::read_u32_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
-    if (!validate_access(domain, group, key))
+    if (!validate_access(domain, group, key)) {
+        if (m_permissive_mode)
+            return Optional<u32> {};
         return nullptr;
+    }
 
     auto& config = ensure_domain_config(domain);
     if (!config.has_key(group, key))
@@ -186,8 +206,11 @@ Messages::ConfigServer::ReadU32ValueResponse ConnectionFromClient::read_u32_valu
 
 Messages::ConfigServer::ReadBoolValueResponse ConnectionFromClient::read_bool_value(ByteString const& domain, ByteString const& group, ByteString const& key)
 {
-    if (!validate_access(domain, group, key))
+    if (!validate_access(domain, group, key)) {
+        if (m_permissive_mode)
+            return Optional<bool> {};
         return nullptr;
+    }
 
     auto& config = ensure_domain_config(domain);
     if (!config.has_key(group, key))

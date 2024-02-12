@@ -26,6 +26,7 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     virtual void pledge_domains(Vector<ByteString> const&) override;
+    virtual void enable_permissive_mode() override;
     virtual void monitor_domain(ByteString const&) override;
     virtual Messages::ConfigServer::ListConfigGroupsResponse list_config_groups([[maybe_unused]] ByteString const& domain) override;
     virtual Messages::ConfigServer::ListConfigKeysResponse list_config_keys([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group) override;
@@ -46,6 +47,7 @@ private:
     void start_or_restart_sync_timer();
 
     bool m_has_pledged { false };
+    bool m_permissive_mode { false };
     HashTable<ByteString> m_pledged_domains;
 
     HashTable<ByteString> m_monitored_domains;

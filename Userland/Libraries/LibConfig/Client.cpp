@@ -19,6 +19,11 @@ Client& Client::the()
     return *s_the;
 }
 
+void Client::enable_permissive_mode()
+{
+    async_enable_permissive_mode();
+}
+
 void Client::pledge_domains(Vector<ByteString> const& domains)
 {
     async_pledge_domains(domains);
