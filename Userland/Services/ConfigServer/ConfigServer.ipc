@@ -1,5 +1,6 @@
 endpoint ConfigServer
 {
+    enable_permissive_mode() =|
     pledge_domains(Vector<ByteString> domains) =|
 
     monitor_domain(ByteString domain) =|

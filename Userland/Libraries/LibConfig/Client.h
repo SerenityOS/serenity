@@ -20,6 +20,8 @@ class Client final
     IPC_CLIENT_CONNECTION(Client, "/tmp/session/%sid/portal/config"sv)
 
 public:
+    /// Permissive mode makes reads and writes to non-pledged domains into no-ops instead of client misbehavior errors.
+    void enable_permissive_mode();
     void pledge_domains(Vector<ByteString> const&);
     void monitor_domain(ByteString const&);
 
@@ -119,6 +121,11 @@ inline void remove_group(StringView domain, StringView group)
 inline void add_group(StringView domain, StringView group)
 {
     Client::the().add_group(domain, group);
+}
+
+inline void enable_permissive_mode()
+{
+    Client::the().enable_permissive_mode();
 }
 
 inline void pledge_domains(Vector<ByteString> const& domains)
