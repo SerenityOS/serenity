@@ -8,20 +8,21 @@
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/CFF.h>
 #include <LibPDF/Fonts/Type0Font.h>
+#include <LibPDF/Renderer.h>
 
 namespace PDF {
 
 class CIDFontType {
 public:
     virtual ~CIDFontType() = default;
-    virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) = 0;
+    virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) = 0;
 };
 
 class CIDFontType0 : public CIDFontType {
 public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType0>> create(Document*, NonnullRefPtr<DictObject> const& descendant);
 
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) override;
+    virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
 
 private:
     CIDFontType0(RefPtr<Type1FontProgram> font_program)
@@ -38,7 +39,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document,
 
     RefPtr<Type1FontProgram> font_program;
 
-    // See spec comment in CIDFontType0::draw_string().
+    // See spec comment in CIDFontType0::draw_glyph().
     if (descriptor->contains(CommonNames::FontFile3)) {
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile3));
         auto font_file_dict = font_file_stream->dict();
@@ -63,7 +64,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document,
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType0(move(font_program))));
 }
 
-PDFErrorOr<Gfx::FloatPoint> CIDFontType0::draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&)
+PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u32, Renderer const&)
 {
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "When the CIDFont contains an embedded font program that is represented in the Compact Font Format (CFF),
@@ -81,7 +82,7 @@ class CIDFontType2 : public CIDFontType {
 public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType2>> create(Document*, NonnullRefPtr<DictObject> const& descendant, float font_size);
 
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) override;
+    virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
 };
 
 PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document, NonnullRefPtr<DictObject> const& descendant, float font_size)
@@ -112,7 +113,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType2()));
 }
 
-PDFErrorOr<Gfx::FloatPoint> CIDFontType2::draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&)
+PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u32, Renderer const&)
 {
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "For Type 2, the CIDFont program is actually a TrueType font program, which has no native notion of CIDs.
@@ -217,7 +218,7 @@ void Type0Font::set_font_size(float)
 {
 }
 
-PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const&)
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer)
 {
     // Type0 fonts map bytes to character IDs ("CIDs"), and then CIDs to glyphs.
 
@@ -236,9 +237,52 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     if (string.length() % 2 != 0)
         return Error::malformed_error("Identity-H but length not multiple of 2");
 
-    // FIXME: Map string data to CIDs, then call m_cid_font_type with CIDs.
+    auto cids = ReadonlySpan<BigEndian<u16>>(reinterpret_cast<BigEndian<u16> const*>(string.characters()), string.length() / 2);
 
-    return m_cid_font_type->draw_string(painter, glyph_position, string);
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+
+    // TrueType fonts are prescaled to text_rendering_matrix.x_scale() * text_state().font_size / horizontal_scaling,
+    // cf `Renderer::text_set_font()`. That's the width we get back from `get_glyph_width()` if we use a fallback
+    // (or built-in) font. Scale the width size too, so the m_width.get() codepath is consistent.
+    auto const font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling;
+
+    auto character_spacing = renderer.text_state().character_spacing;
+    auto word_spacing = renderer.text_state().word_spacing;
+
+    for (auto cid : cids) {
+        // Use the width specified in the font's dictionary if available,
+        // and use the default width for the given font otherwise.
+        float glyph_width;
+        if (auto width = m_widths.get(cid); width.has_value())
+            glyph_width = font_size * width.value() / 1000.0f;
+        else
+            glyph_width = font_size * m_missing_width / 1000.0f;
+
+        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
+        TRY(m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer));
+
+        // FIXME: Honor encoding's WMode for vertical text.
+
+        // glyph_width is scaled by `text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling`,
+        // but it should only be scaled by `renderer.text_state().font_size`.
+        // FIXME: Having to divide here isn't pretty. Refactor things so that this isn't needed.
+        auto tx = glyph_width / text_rendering_matrix.x_scale() * horizontal_scaling;
+        tx += character_spacing;
+
+        // ISO 32000 (PDF 2.0), 9.3.3 Wordspacing
+        // "Word spacing shall be applied to every occurrence of the single-byte character code 32
+        // in a string when using a simple font (including Type 3) or a composite font that defines
+        // code 32 as a single-byte code."
+        // FIXME: Identity-H always uses 2 bytes, but this will be true once we support more encodings.
+        bool was_single_byte_code = false;
+        if (cid == ' ' && was_single_byte_code)
+            tx += word_spacing;
+
+        glyph_position += { tx, 0.0f };
+    }
+    return glyph_position;
 }
 
 }
