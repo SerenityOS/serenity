@@ -96,7 +96,8 @@ ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const
 ErrorOr<void> InodeFile::truncate(u64 size)
 {
     TRY(m_inode->truncate(size));
-    TRY(m_inode->update_timestamps({}, {}, kgettimeofday()));
+    auto truncated_at = kgettimeofday();
+    TRY(m_inode->update_timestamps({}, truncated_at, truncated_at));
     return {};
 }
 
