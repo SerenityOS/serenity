@@ -269,7 +269,9 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
     auto const ccitt_white = Color::NamedColor::White;
     auto const ccitt_black = Color::NamedColor::Black;
 
-    Color current_color { ccitt_white };
+    // We always flip the color when entering the loop, so let's initialize the
+    // color with black to make the first marker actually be white.
+    Color current_color { ccitt_black };
     u32 run_length = 0;
     u32 column = 0;
 
@@ -283,10 +285,6 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
         }
 
         current_color = current_color == ccitt_white ? ccitt_black : ccitt_white;
-
-        if (column == 0) {
-            current_color = ccitt_white;
-        }
 
         u8 size {};
         u16 potential_code {};
