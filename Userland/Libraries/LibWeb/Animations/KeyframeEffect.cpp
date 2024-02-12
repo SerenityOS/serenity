@@ -281,7 +281,7 @@ static bool is_loosely_sorted_by_offset(Vector<BaseKeyframe> const& keyframes)
 }
 
 // https://www.w3.org/TR/web-animations-1/#process-a-keyframes-argument
-[[maybe_unused]] static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS::Realm& realm, JS::GCPtr<JS::Object> object)
+static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS::Realm& realm, JS::GCPtr<JS::Object> object)
 {
     auto& vm = realm.vm();
 
@@ -688,16 +688,55 @@ void KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-getkeyframes
-WebIDL::ExceptionOr<Vector<JS::Object*>> KeyframeEffect::get_keyframes() const
+WebIDL::ExceptionOr<Vector<JS::Object*>> KeyframeEffect::get_keyframes()
 {
-    // FIXME: Implement this
-    return Vector<JS::Object*> {};
+    if (m_keyframe_objects.size() != m_keyframes.size()) {
+        auto& vm = this->vm();
+        auto& realm = this->realm();
+
+        // Recalculate the keyframe objects
+        VERIFY(m_keyframe_objects.size() == 0);
+
+        for (auto& keyframe : m_keyframes) {
+            auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
+            TRY(object->set(vm.names.offset, keyframe.offset.has_value() ? JS::Value(keyframe.offset.value()) : JS::js_null(), ShouldThrowExceptions::Yes));
+            TRY(object->set(vm.names.computedOffset, JS::Value(keyframe.computed_offset.value()), ShouldThrowExceptions::Yes));
+            auto easing_value = keyframe.easing.get<NonnullRefPtr<CSS::StyleValue const>>();
+            TRY(object->set(vm.names.easing, JS::PrimitiveString::create(vm, easing_value->to_string()), ShouldThrowExceptions::Yes));
+
+            if (keyframe.composite == Bindings::CompositeOperationOrAuto::Replace) {
+                TRY(object->set(vm.names.composite, JS::PrimitiveString::create(vm, "replace"sv), ShouldThrowExceptions::Yes));
+            } else if (keyframe.composite == Bindings::CompositeOperationOrAuto::Add) {
+                TRY(object->set(vm.names.composite, JS::PrimitiveString::create(vm, "add"sv), ShouldThrowExceptions::Yes));
+            } else if (keyframe.composite == Bindings::CompositeOperationOrAuto::Accumulate) {
+                TRY(object->set(vm.names.composite, JS::PrimitiveString::create(vm, "accumulate"sv), ShouldThrowExceptions::Yes));
+            } else {
+                TRY(object->set(vm.names.composite, JS::PrimitiveString::create(vm, "auto"sv), ShouldThrowExceptions::Yes));
+            }
+
+            for (auto const& [id, value] : keyframe.parsed_properties()) {
+                auto value_string = JS::PrimitiveString::create(vm, value->to_string());
+                TRY(object->set(JS::PropertyKey(DeprecatedFlyString(CSS::string_from_property_id(id))), value_string, ShouldThrowExceptions::Yes));
+            }
+
+            m_keyframe_objects.append(object);
+        }
+    }
+
+    return m_keyframe_objects;
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-setkeyframes
-WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::Object>> const&)
+WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::Object>> const& keyframe_object)
 {
-    // FIXME: Implement this
+    m_keyframe_objects.clear();
+    m_keyframes = TRY(process_a_keyframes_argument(realm(), keyframe_object.has_value() ? JS::GCPtr { keyframe_object->ptr() } : JS::GCPtr<Object> {}));
+    // FIXME: After processing the keyframe argument, we need to turn the set of keyframes into a set of computed
+    //        keyframes using the procedure outlined in the second half of
+    //        https://www.w3.org/TR/web-animations-1/#calculating-computed-keyframes. For now, just compute the
+    //        missing keyframe offsets
+    compute_missing_keyframe_offsets(m_keyframes);
+
     return {};
 }
 
@@ -716,6 +755,8 @@ void KeyframeEffect::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_target_element);
+    for (auto const& keyframe : m_keyframe_objects)
+        visitor.visit(keyframe);
 }
 
 }

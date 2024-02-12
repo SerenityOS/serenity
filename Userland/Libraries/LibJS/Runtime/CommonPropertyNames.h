@@ -110,6 +110,8 @@ namespace JS {
     P(compactDisplay)                        \
     P(compareExchange)                       \
     P(compile)                               \
+    P(composite)                             \
+    P(computedOffset)                        \
     P(concat)                                \
     P(configurable)                          \
     P(console)                               \
@@ -157,6 +159,7 @@ namespace JS {
     P(done)                                  \
     P(dotAll)                                \
     P(drop)                                  \
+    P(easing)                                \
     P(encodeURI)                             \
     P(encodeURIComponent)                    \
     P(endsWith)                              \

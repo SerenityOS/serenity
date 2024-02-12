@@ -77,7 +77,7 @@ public:
     Bindings::CompositeOperation composite() const { return m_composite; }
     void set_composite(Bindings::CompositeOperation value) { m_composite = value; }
 
-    WebIDL::ExceptionOr<Vector<JS::Object*>> get_keyframes() const;
+    WebIDL::ExceptionOr<Vector<JS::Object*>> get_keyframes();
     WebIDL::ExceptionOr<void> set_keyframes(Optional<JS::Handle<JS::Object>> const&);
 
 private:
@@ -97,6 +97,9 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#keyframe
     Vector<BaseKeyframe> m_keyframes {};
+
+    // A cached version of m_keyframes suitable for returning from get_keyframes()
+    Vector<JS::Object*> m_keyframe_objects {};
 };
 
 }
