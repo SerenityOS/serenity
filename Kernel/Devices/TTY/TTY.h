@@ -37,7 +37,6 @@ public:
         return 0;
     }
 
-    ErrorOr<void> set_termios(termios const&);
     bool should_generate_signals() const { return (m_termios.c_lflag & ISIG) == ISIG; }
     bool should_flush_on_signal() const { return (m_termios.c_lflag & NOFLSH) != NOFLSH; }
     bool should_echo_input() const { return (m_termios.c_lflag & ECHO) == ECHO; }
@@ -78,6 +77,7 @@ private:
     virtual bool is_tty() const final override { return true; }
 
     virtual void echo(u8) = 0;
+    ErrorOr<void> set_termios(OpenFileDescription&, termios const&);
 
     template<typename Functor>
     void process_output(u8, Functor put_char);

@@ -373,7 +373,7 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-ErrorOr<void> TTY::set_termios(termios const& t)
+ErrorOr<void> TTY::set_termios(OpenFileDescription& description, termios const& t)
 {
     ErrorOr<void> rc;
     m_termios = t;
@@ -463,10 +463,15 @@ ErrorOr<void> TTY::set_termios(termios const& t)
         }
     }
 
+    // FIXME: decouple VMIN/VTIME support from the description's blocking status
+    // FIXME: support VMIN > 1 where we should block until VMIN characters are available
+    // FIXME: implement support for VTIME as an interbyte timeout
+    description.set_blocking(in_canonical_mode() || m_termios.c_cc[VMIN] > 0);
+
     return rc;
 }
 
-ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+ErrorOr<void> TTY::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
     auto& current_process = Process::current();
     TRY(current_process.require_promise(Pledge::tty));
@@ -520,7 +525,7 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
     case TCSETSW: {
         auto user_termios = static_ptr_cast<termios const*>(arg);
         auto termios = TRY(copy_typed_from_user(user_termios));
-        auto rc = set_termios(termios);
+        auto rc = set_termios(description, termios);
         if (request == TCSETSF)
             flush_input();
         return rc;
