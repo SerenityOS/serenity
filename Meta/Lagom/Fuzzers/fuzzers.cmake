@@ -28,6 +28,7 @@ set(FUZZER_TARGETS
     MatroskaReader
     MD5
     MP3Loader
+    PAMLoader
     PBMLoader
     PDF
     PEM
@@ -99,6 +100,7 @@ set(FUZZER_DEPENDENCIES_Markdown LibMarkdown)
 set(FUZZER_DEPENDENCIES_MatroskaReader LibVideo)
 set(FUZZER_DEPENDENCIES_MD5 LibCrypto)
 set(FUZZER_DEPENDENCIES_MP3Loader LibAudio)
+set(FUZZER_DEPENDENCIES_PAMLoader LibGfx)
 set(FUZZER_DEPENDENCIES_PBMLoader LibGfx)
 set(FUZZER_DEPENDENCIES_PDF LibPDF)
 set(FUZZER_DEPENDENCIES_PEM LibCrypto)
