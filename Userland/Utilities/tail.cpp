@@ -64,6 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_t wanted_line_count = DEFAULT_LINE_COUNT;
     bool start_from_end = true;
     StringView file;
+    size_t file_size;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print the end ('tail') of a file.");
@@ -158,12 +159,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(tail_from_pos(*f, pos));
 
     if (follow) {
+        file_size = TRY(f->size());
         TRY(f->seek(0, SeekMode::FromEndPosition));
 
         Core::EventLoop event_loop;
         auto watcher = TRY(Core::FileWatcher::create());
         watcher->on_change = [&](Core::FileWatcherEvent const& event) {
             if (event.type == Core::FileWatcherEvent::Type::ContentModified) {
+                auto maybe_current_size = f->size();
+                if (maybe_current_size.is_error()) {
+                    auto error = maybe_current_size.release_error();
+                    warnln(error.string_literal());
+                    event_loop.quit(error.code());
+                    return;
+                }
+                auto current_size = maybe_current_size.value();
+                if (current_size < file_size) {
+                    warnln("{}: file truncated", event.event_path);
+                    auto maybe_seek_error = f->seek(0, SeekMode::SetPosition);
+                    if (maybe_seek_error.is_error()) {
+                        auto error = maybe_seek_error.release_error();
+                        warnln(error.string_literal());
+                        event_loop.quit(error.code());
+                        return;
+                    }
+                }
+                file_size = current_size;
                 auto buffer_or_error = f->read_until_eof();
                 if (buffer_or_error.is_error()) {
                     auto error = buffer_or_error.release_error();
