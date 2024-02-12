@@ -1078,6 +1078,7 @@ ErrorOr<void> Ext2FSInode::truncate(u64 size)
         return {};
     TRY(resize(size));
     set_metadata_dirty(true);
+    did_modify_contents();
     return {};
 }
 
