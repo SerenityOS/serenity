@@ -771,13 +771,13 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
     case StyleValue::Type::Color: {
         auto from_color = from.as_color().color();
         auto to_color = to.as_color().color();
-        auto from_hsv = from_color.to_hsv();
-        auto to_hsv = to_color.to_hsv();
+        auto from_oklab = from_color.to_oklab();
+        auto to_oklab = to_color.to_oklab();
 
-        auto color = Color::from_hsv(
-            interpolate_raw(from_hsv.hue, to_hsv.hue),
-            interpolate_raw(from_hsv.saturation, to_hsv.saturation),
-            interpolate_raw(from_hsv.value, to_hsv.value));
+        auto color = Color::from_oklab(
+            interpolate_raw(from_oklab.L, to_oklab.L),
+            interpolate_raw(from_oklab.a, to_oklab.a),
+            interpolate_raw(from_oklab.b, to_oklab.b));
         color.set_alpha(interpolate_raw(from_color.alpha(), to_color.alpha()));
 
         return ColorStyleValue::create(color);
