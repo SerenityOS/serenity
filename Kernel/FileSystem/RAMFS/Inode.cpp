@@ -380,6 +380,7 @@ ErrorOr<void> RAMFSInode::truncate(u64 size)
     }
     m_metadata.size = size;
     set_metadata_dirty(true);
+    did_modify_contents();
     return {};
 }
 
