@@ -152,8 +152,18 @@ OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
             break;
         }
 
+        VERIFY(line[offset] == ' ');
+
+        size_t fallback_context_indent = offset + 1;
+
         while (offset < line.length() && line[offset] == ' ')
             offset++;
+
+        size_t context_indent = offset;
+
+        // Item starting with indented code (example 273)
+        if (1 + offset - fallback_context_indent > 4)
+            context_indent = fallback_context_indent;
 
         if (first) {
             is_ordered = appears_ordered;
@@ -163,7 +173,7 @@ OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
 
         is_tight = is_tight && !has_trailing_blank_lines;
 
-        lines.push_context(LineIterator::Context::list_item(offset));
+        lines.push_context(LineIterator::Context::list_item(context_indent));
 
         auto list_item = ContainerBlock::parse(lines);
         is_tight = is_tight && !list_item->has_blank_lines();
