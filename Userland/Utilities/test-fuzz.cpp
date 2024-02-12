@@ -42,6 +42,7 @@
     T(MatroskaReader)        \
     T(MD5)                   \
     T(MP3Loader)             \
+    T(PAMLoader)             \
     T(PBMLoader)             \
     T(PDF)                   \
     T(PEM)                   \
