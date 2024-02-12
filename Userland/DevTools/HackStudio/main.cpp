@@ -43,6 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
     app->set_config_domain("HackStudio"_string);
+    Config::enable_permissive_mode();
     Config::pledge_domains({ "HackStudio", "Terminal", "FileManager" });
 
     auto window = GUI::Window::construct();
