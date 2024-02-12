@@ -34,8 +34,12 @@ static JS::GCPtr<DOM::Node> dom_node_for_event_dispatch(Painting::Paintable& pai
         return node;
     if (auto node = paintable.dom_node())
         return node;
-    if (auto* layout_parent = paintable.layout_node().parent())
-        return layout_parent->dom_node();
+    auto* layout_parent = paintable.layout_node().parent();
+    while (layout_parent) {
+        if (auto* node = layout_parent->dom_node())
+            return node;
+        layout_parent = layout_parent->parent();
+    }
     return nullptr;
 }
 
