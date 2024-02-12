@@ -2,7 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
- * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath unix"));
     auto app = TRY(GUI::Application::create(arguments));
 
-    Config::pledge_domains({ "GMLPlayground", "Calendar" });
+    Config::enable_permissive_mode();
+    Config::pledge_domain("GMLPlayground");
     app->set_config_domain("GMLPlayground"_string);
 
     TRY(Core::System::unveil("/res", "r"));
