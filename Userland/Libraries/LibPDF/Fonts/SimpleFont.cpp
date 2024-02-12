@@ -69,7 +69,7 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         else if (auto width = get_glyph_width(char_code); width.has_value())
             glyph_width = width.value();
         else
-            glyph_width = m_missing_width; // FIXME: times m_font_matrix.x_scale() probably?
+            glyph_width = font_size * m_missing_width * m_font_matrix.x_scale();
 
         Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
         TRY(draw_glyph(painter, glyph_render_position, glyph_width, char_code, renderer));
