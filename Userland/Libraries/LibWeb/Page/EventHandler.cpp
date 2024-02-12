@@ -847,12 +847,12 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
     }
 
     // FIXME: Work out and implement the difference between this and keydown.
-    return fire_keyboard_event(UIEvents::EventNames::keypress, m_browsing_context, key, modifiers, code_point);
+    return !fire_keyboard_event(UIEvents::EventNames::keypress, m_browsing_context, key, modifiers, code_point);
 }
 
 bool EventHandler::handle_keyup(KeyCode key, u32 modifiers, u32 code_point)
 {
-    return fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
+    return !fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
 }
 
 void EventHandler::set_mouse_event_tracking_paintable(Painting::Paintable* paintable)
