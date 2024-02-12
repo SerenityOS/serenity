@@ -6,6 +6,7 @@
 
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Fonts/CFF.h>
 #include <LibPDF/Fonts/Type0Font.h>
 
 namespace PDF {
@@ -18,8 +19,49 @@ public:
 
 class CIDFontType0 : public CIDFontType {
 public:
+    static PDFErrorOr<NonnullOwnPtr<CIDFontType0>> create(Document*, NonnullRefPtr<DictObject> const& descendant);
+
     PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&) override;
+
+private:
+    CIDFontType0(RefPtr<Type1FontProgram> font_program)
+        : m_font_program(move(font_program))
+    {
+    }
+
+    RefPtr<Type1FontProgram> m_font_program;
 };
+
+PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document, NonnullRefPtr<DictObject> const& descendant)
+{
+    auto descriptor = TRY(descendant->get_dict(document, CommonNames::FontDescriptor));
+
+    RefPtr<Type1FontProgram> font_program;
+
+    // See spec comment in CIDFontType0::draw_string().
+    if (descriptor->contains(CommonNames::FontFile3)) {
+        auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile3));
+        auto font_file_dict = font_file_stream->dict();
+        DeprecatedFlyString subtype;
+        if (font_file_dict->contains(CommonNames::Subtype))
+            subtype = font_file_dict->get_name(CommonNames::Subtype)->name();
+        if (subtype == CommonNames::CIDFontType0C) {
+            // FIXME: Call CFF::create() and assign the result to font_program once CFF::create() can handle CID-keyed fonts.
+            return Error::rendering_unsupported_error("Type0 font CIDFontType0: support for CIDFontType0C not yet implemented");
+        } else {
+            // FIXME: Add support for /OpenType.
+            dbgln("CIDFontType0: unsupported FontFile3 subtype '{}'", subtype);
+            return Error::rendering_unsupported_error("Type0 font CIDFontType0: support for non-CIDFontType0C not yet implemented");
+        }
+    }
+
+    if (!font_program) {
+        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
+        return Error::malformed_error("CIDFontType0: missing FontFile3");
+    }
+
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType0(move(font_program))));
+}
 
 PDFErrorOr<Gfx::FloatPoint> CIDFontType0::draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&)
 {
@@ -114,7 +156,7 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
     auto subtype = TRY(descendant_font->get_name(document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::CIDFontType0) {
         // CFF-based
-        m_cid_font_type = TRY(try_make<CIDFontType0>());
+        m_cid_font_type = TRY(CIDFontType0::create(document, descendant_font));
     } else if (subtype == CommonNames::CIDFontType2) {
         // TrueType-based
         m_cid_font_type = TRY(CIDFontType2::create(document, descendant_font, font_size));

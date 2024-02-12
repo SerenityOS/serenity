@@ -32,6 +32,7 @@
     X(CF)                         \
     X(CFM)                        \
     X(CIDFontType0)               \
+    X(CIDFontType0C)              \
     X(CIDFontType2)               \
     X(CIDSystemInfo)              \
     X(CIDToGIDMap)                \
