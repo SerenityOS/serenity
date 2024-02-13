@@ -19,33 +19,14 @@ namespace PDF {
 
 PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
 {
-    int predictor = 1;
-    int columns = 1;
-    int colors = 1;
-    int bits_per_component = 8;
-    int early_change = 1;
-
-    if (decode_parms) {
-        if (decode_parms->contains(CommonNames::Predictor))
-            predictor = decode_parms->get_value(CommonNames::Predictor).get<int>();
-        if (decode_parms->contains(CommonNames::Columns))
-            columns = decode_parms->get_value(CommonNames::Columns).get<int>();
-        if (decode_parms->contains(CommonNames::Colors))
-            colors = decode_parms->get_value(CommonNames::Colors).get<int>();
-        if (decode_parms->contains(CommonNames::BitsPerComponent))
-            bits_per_component = decode_parms->get_value(CommonNames::BitsPerComponent).get<int>();
-        if (decode_parms->contains(CommonNames::EarlyChange))
-            early_change = decode_parms->get_value(CommonNames::EarlyChange).get<int>();
-    }
-
     if (encoding_type == CommonNames::ASCIIHexDecode)
         return decode_ascii_hex(bytes);
     if (encoding_type == CommonNames::ASCII85Decode)
         return decode_ascii85(bytes);
     if (encoding_type == CommonNames::LZWDecode)
-        return decode_lzw(bytes, predictor, columns, colors, bits_per_component, early_change);
+        return decode_lzw(bytes, decode_parms);
     if (encoding_type == CommonNames::FlateDecode)
-        return decode_flate(bytes, predictor, columns, colors, bits_per_component);
+        return decode_flate(bytes, decode_parms);
     if (encoding_type == CommonNames::RunLengthDecode)
         return decode_run_length(bytes);
     if (encoding_type == CommonNames::CCITTFaxDecode)
@@ -228,9 +209,24 @@ PDFErrorOr<ByteBuffer> Filter::decode_tiff_prediction(Bytes bytes, int columns, 
     return decoded;
 }
 
-PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer, int predictor, int columns, int colors, int bits_per_component)
+PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer, RefPtr<DictObject> decode_parms)
 {
     // Table 3.7 Optional parameters for LZWDecode and FlateDecode filters
+    int predictor = 1;
+    int colors = 1;
+    int bits_per_component = 8;
+    int columns = 1;
+
+    if (decode_parms) {
+        if (decode_parms->contains(CommonNames::Predictor))
+            predictor = decode_parms->get_value(CommonNames::Predictor).get<int>();
+        if (decode_parms->contains(CommonNames::Colors))
+            colors = decode_parms->get_value(CommonNames::Colors).get<int>();
+        if (decode_parms->contains(CommonNames::BitsPerComponent))
+            bits_per_component = decode_parms->get_value(CommonNames::BitsPerComponent).get<int>();
+        if (decode_parms->contains(CommonNames::Columns))
+            columns = decode_parms->get_value(CommonNames::Columns).get<int>();
+    }
 
     if (predictor == 1)
         return buffer;
@@ -257,16 +253,21 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
     return decode_png_prediction(buffer_bytes, bytes_per_row, bytes_per_pixel);
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component, int early_change)
+PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
 {
+    // Table 3.7 Optional parameters for LZWDecode and FlateDecode filters
+    int early_change = 1;
+    if (decode_parms && decode_parms->contains(CommonNames::EarlyChange))
+        early_change = decode_parms->get_value(CommonNames::EarlyChange).get<int>();
+
     auto decoded = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(bytes, 8, -early_change));
-    return handle_lzw_and_flate_parameters(move(decoded), predictor, columns, colors, bits_per_component);
+    return handle_lzw_and_flate_parameters(move(decoded), decode_parms);
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
+PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
 {
     auto buff = TRY(Compress::DeflateDecompressor::decompress_all(bytes.slice(2)));
-    return handle_lzw_and_flate_parameters(move(buff), predictor, columns, colors, bits_per_component);
+    return handle_lzw_and_flate_parameters(move(buff), decode_parms);
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
