@@ -304,6 +304,7 @@ Vector<FunctionDefinition> create_function_definitions(ByteString function_name,
     // Create functions for each name and/or variant
     Vector<FunctionDefinition> functions;
 
+    function_name = function_definition.get_byte_string("name"sv).value_or(function_name);
     auto return_type = function_definition.get_byte_string("return_type"sv).value_or("void");
     auto function_implementation = function_definition.get_byte_string("implementation"sv).value_or(function_name.to_snakecase());
     auto function_unimplemented = function_definition.get_bool("unimplemented"sv).value_or(false);
