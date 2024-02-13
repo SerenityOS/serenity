@@ -8,8 +8,6 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/DatePicker.h>
 #include <LibGUI/DatePickerDialogGML.h>
-#include <LibGUI/ImageWidget.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 
@@ -48,7 +46,6 @@ DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTim
         m_selected_date.set_time(static_cast<int>(m_selected_date.year()), index.row() + 1);
         calendar.set_selected_date(m_selected_date);
         calendar.update_tiles(m_selected_date.year(), m_selected_date.month());
-        calendar.update();
     };
 
     m_year_box = widget->find_descendant_of_type_named<GUI::SpinBox>("year_box");
@@ -57,7 +54,6 @@ DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTim
         m_selected_date.set_time(year, static_cast<int>(m_selected_date.month()));
         calendar.set_selected_date(m_selected_date);
         calendar.update_tiles(m_selected_date.year(), m_selected_date.month());
-        calendar.update();
     };
 
     auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
