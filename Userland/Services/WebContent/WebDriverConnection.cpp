@@ -346,7 +346,7 @@ void WebDriverConnection::close_session()
     set_is_webdriver_active(false);
 
     // 2. An endpoint node must close any top-level browsing contexts associated with the session, without prompting to unload.
-    m_page_client.page().top_level_browsing_context().active_document()->navigable()->traversable_navigable()->close_top_level_traversable();
+    m_page_client.page().top_level_traversable()->close_top_level_traversable();
 }
 
 void WebDriverConnection::set_page_load_strategy(Web::WebDriver::PageLoadStrategy const& page_load_strategy)
@@ -542,7 +542,7 @@ Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window
     TRY(handle_any_user_prompts());
 
     // 3. Close the current top-level browsing context.
-    m_page_client.page().top_level_browsing_context().active_document()->navigable()->traversable_navigable()->close_top_level_traversable();
+    m_page_client.page().top_level_traversable()->close_top_level_traversable();
 
     return JsonValue {};
 }
