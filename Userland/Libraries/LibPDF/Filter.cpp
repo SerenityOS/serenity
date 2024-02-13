@@ -30,7 +30,7 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
     if (encoding_type == CommonNames::RunLengthDecode)
         return decode_run_length(bytes);
     if (encoding_type == CommonNames::CCITTFaxDecode)
-        return decode_ccitt(bytes);
+        return decode_ccitt(bytes, decode_parms);
     if (encoding_type == CommonNames::JBIG2Decode)
         return decode_jbig2(bytes);
     if (encoding_type == CommonNames::DCTDecode)
@@ -275,8 +275,46 @@ PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
     return TRY(Compress::PackBits::decode_all(bytes, OptionalNone {}, Compress::PackBits::CompatibilityMode::PDF));
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes, RefPtr<DictObject> decode_parms)
 {
+    // Table 3.9 Optional parameters for the CCITTFaxDecode filter
+    int k = 0;
+    bool require_end_of_line = false;
+    bool encoded_byte_align = false;
+    int columns = 1728;
+    int rows = 0;
+    bool end_of_block = true;
+    bool black_is_1 = false;
+    int damaged_rows_before_error = 0;
+    if (decode_parms) {
+        if (decode_parms->contains(CommonNames::K))
+            k = decode_parms->get_value(CommonNames::K).get<int>();
+        if (decode_parms->contains(CommonNames::EndOfLine))
+            require_end_of_line = decode_parms->get_value(CommonNames::EndOfLine).get<bool>();
+        if (decode_parms->contains(CommonNames::EncodedByteAlign))
+            encoded_byte_align = decode_parms->get_value(CommonNames::EncodedByteAlign).get<bool>();
+        if (decode_parms->contains(CommonNames::Columns))
+            columns = decode_parms->get_value(CommonNames::Columns).get<int>();
+        if (decode_parms->contains(CommonNames::Rows))
+            rows = decode_parms->get_value(CommonNames::Rows).get<int>();
+        if (decode_parms->contains(CommonNames::EndOfBlock))
+            end_of_block = decode_parms->get_value(CommonNames::EndOfBlock).get<bool>();
+        if (decode_parms->contains(CommonNames::BlackIs1))
+            black_is_1 = decode_parms->get_value(CommonNames::BlackIs1).get<bool>();
+        if (decode_parms->contains(CommonNames::DamagedRowsBeforeError))
+            damaged_rows_before_error = decode_parms->get_value(CommonNames::DamagedRowsBeforeError).get<int>();
+    }
+
+    // FIXME: Do something with these.
+    (void)k;
+    (void)require_end_of_line;
+    (void)encoded_byte_align;
+    (void)columns;
+    (void)rows;
+    (void)end_of_block;
+    (void)black_is_1;
+    (void)damaged_rows_before_error;
+
     return Error::rendering_unsupported_error("CCITTFaxDecode Filter is unsupported");
 }
 

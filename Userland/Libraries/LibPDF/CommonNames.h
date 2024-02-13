@@ -22,6 +22,7 @@
     X(BaseFont)                   \
     X(BitsPerComponent)           \
     X(BitsPerSample)              \
+    X(BlackIs1)                   \
     X(BlackPoint)                 \
     X(Bounds)                     \
     X(C)                          \
@@ -51,6 +52,7 @@
     X(D)                          \
     X(DCTDecode)                  \
     X(DW)                         \
+    X(DamagedRowsBeforeError)     \
     X(Decode)                     \
     X(DecodeParms)                \
     X(DescendantFonts)            \
@@ -65,9 +67,12 @@
     X(E)                          \
     X(EarlyChange)                \
     X(Encode)                     \
+    X(EncodedByteAlign)           \
     X(Encoding)                   \
     X(Encrypt)                    \
     X(EncryptMetadata)            \
+    X(EndOfBlock)                 \
+    X(EndOfLine)                  \
     X(ExtGState)                  \
     X(F)                          \
     X(FL)                         \
@@ -106,6 +111,7 @@
     X(Intent)                     \
     X(JBIG2Decode)                \
     X(JPXDecode)                  \
+    X(K)                          \
     X(Keywords)                   \
     X(Kids)                       \
     X(L)                          \
@@ -152,6 +158,7 @@
     X(Registry)                   \
     X(Resources)                  \
     X(Root)                       \
+    X(Rows)                       \
     X(Rotate)                     \
     X(RunLengthDecode)            \
     X(S)                          \
