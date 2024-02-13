@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!follow)
         TRY(Core::System::pledge("stdio"));
 
-    auto file_is_seekable = !f->tell().is_error();
+    auto file_is_seekable = !f->seek(0, SeekMode::SetPosition).is_error();
     if (!file_is_seekable) {
         do {
             // FIXME: If f is the standard input, f->read_all() does not block
