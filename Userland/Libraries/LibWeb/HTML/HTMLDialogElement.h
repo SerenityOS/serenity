@@ -21,7 +21,7 @@ public:
     String return_value() const;
     void set_return_value(String);
 
-    void show();
+    WebIDL::ExceptionOr<void> show();
     void show_modal();
     void close(Optional<String> return_value);
 
@@ -34,6 +34,8 @@ private:
     virtual void initialize(JS::Realm&) override;
 
     void close_the_dialog(Optional<String> result);
+
+    void run_dialog_focusing_steps();
 
     String m_return_value;
 };
