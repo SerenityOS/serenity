@@ -917,6 +917,11 @@ void TraversableNavigable::destroy_top_level_traversable()
 
     // 5. Remove traversable from the user agent's top-level traversable set.
     user_agent_top_level_traversable_set().remove(this);
+
+    // FIXME: Figure out why we need to do this... we shouldn't be leaking Navigables for all time.
+    //        However, without this, we can keep stale destroyed traversables around.
+    set_has_been_destroyed();
+    all_navigables().remove(this);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-same-document-navigation
