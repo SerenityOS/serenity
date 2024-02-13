@@ -554,9 +554,25 @@
         "arguments": [
             {"type": "GLenum", "name": "pname"},
             {"name": "param"},
+            {"name": ["y", "z", "w"]}
+        ],
+        "variants": {
+            "argument_counts": [1],
+            "argument_defaults": ["0.f", "0.f", "0.f", "0.f"],
+            "types": {
+                "f": {},
+                "i": {}
+            }
+        }
+    },
+    "LightModel_v": {
+        "arguments": [
+            {"type": "GLenum", "name": "pname"},
+            {"name": "param"},
             {"type": "GLenum", "expression": "@variant_gl_type@"}
         ],
         "implementation": "light_modelv",
+        "name": "LightModel",
         "variants": {
             "argument_counts": [1],
             "pointer_argument": "params",
@@ -565,22 +581,6 @@
                 "iv": {}
             }
         }
-    },
-    "LightModelf": {
-        "arguments": [
-            {"type": "GLenum", "name": "pname"},
-            {"type": "GLfloat", "name": "x"},
-            {"name": ["y", "z", "w"], "expression": "0.f"}
-        ],
-        "implementation": "light_model"
-    },
-    "LightModeli": {
-        "arguments": [
-            {"type": "GLenum", "name": "pname"},
-            {"type": "GLint", "name": "x", "cast_to": "GLfloat"},
-            {"name": ["y", "z", "w"], "expression": "0.f"}
-        ],
-        "implementation": "light_model"
     },
     "LineWidth": {
         "arguments": [
