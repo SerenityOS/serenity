@@ -66,6 +66,7 @@ public:
     ErrorOr<String> formatted_date(Format format = LongMonthYear);
 
     Mode mode() const { return m_mode; }
+    void set_mode(Mode);
     void toggle_mode();
 
     void update_tiles(unsigned year, unsigned month);
