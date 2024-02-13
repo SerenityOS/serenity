@@ -6,6 +6,7 @@
 
 import argparse
 import re
+import os
 from enum import Enum
 from collections import namedtuple
 from pathlib import Path
@@ -614,6 +615,9 @@ def main():
     args = parser.parse_args()
 
     output_path = Path(args.output)
+
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path)
 
     update_file(output_path / 'TIFFMetadata.h', generate_metadata_file(known_tags))
     update_file(output_path / 'TIFFTagHandler.cpp', generate_tag_handler_file(known_tags))
