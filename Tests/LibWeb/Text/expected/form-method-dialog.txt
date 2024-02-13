@@ -1,0 +1,2 @@
+  dialog.open before form submit: true
+dialog.open after form submit: false

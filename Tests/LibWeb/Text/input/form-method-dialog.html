@@ -1,0 +1,22 @@
+<style>
+    #test-dialog {
+    }
+</style>
+<script src="./include.js"></script>
+<dialog id="test-dialog" open>
+    <form method="dialog">
+        <button id="submit-button">Submit</button>
+    </form>
+</dialog>
+<script>
+    test(() => {
+        const dialog = document.getElementById("test-dialog");
+        const submitter = document.getElementById("submit-button");
+        const submitterRect = submitter.getBoundingClientRect();
+        const form = document.forms[0];        
+        println(`dialog.open before form submit: ${dialog.open}`);
+        form.submit();
+        println(`dialog.open after form submit: ${dialog.open}`);
+
+    });
+</script>
