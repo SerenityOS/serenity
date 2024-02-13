@@ -26,7 +26,7 @@ public:
 
     Function<void(WebDriverConnection&)> on_webdriver_connection;
 
-    PageClient& page(u64 index) { return *m_pages.find(index)->value; }
+    Optional<PageClient&> page(u64 index);
     PageClient& create_page();
     void remove_page(Badge<PageClient>, u64 index);
 

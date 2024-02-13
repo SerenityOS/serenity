@@ -34,6 +34,13 @@ void PageHost::remove_page(Badge<PageClient>, u64 index)
     m_pages.remove(index);
 }
 
+Optional<PageClient&> PageHost::page(u64 index)
+{
+    return m_pages.get(index).map([](auto& value) -> PageClient& {
+        return *value;
+    });
+}
+
 PageHost::~PageHost() = default;
 
 }
