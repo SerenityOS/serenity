@@ -98,9 +98,9 @@ bool Paintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, 
     return false;
 }
 
-Optional<HitTestResult> Paintable::hit_test(CSSPixelPoint, HitTestType) const
+TraversalDecision Paintable::hit_test(CSSPixelPoint, HitTestType, Function<TraversalDecision(HitTestResult)> const&) const
 {
-    return {};
+    return TraversalDecision::Continue;
 }
 
 StackingContext* Paintable::enclosing_stacking_context()

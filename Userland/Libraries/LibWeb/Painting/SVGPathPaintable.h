@@ -17,7 +17,7 @@ class SVGPathPaintable final : public SVGGraphicsPaintable {
 public:
     static JS::NonnullGCPtr<SVGPathPaintable> create(Layout::SVGGraphicsBox const&);
 
-    virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
+    virtual TraversalDecision hit_test(CSSPixelPoint, HitTestType, Function<TraversalDecision(HitTestResult)> const& callback) const override;
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

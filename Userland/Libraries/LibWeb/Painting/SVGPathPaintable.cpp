@@ -26,15 +26,14 @@ Layout::SVGGraphicsBox const& SVGPathPaintable::layout_box() const
     return static_cast<Layout::SVGGraphicsBox const&>(layout_node());
 }
 
-Optional<HitTestResult> SVGPathPaintable::hit_test(CSSPixelPoint position, HitTestType type) const
+TraversalDecision SVGPathPaintable::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
-    auto result = SVGGraphicsPaintable::hit_test(position, type);
-    if (!result.has_value() || !computed_path().has_value())
-        return {};
+    if (!computed_path().has_value())
+        return TraversalDecision::Continue;
     auto transformed_bounding_box = computed_transforms().svg_to_css_pixels_transform().map_to_quad(computed_path()->bounding_box());
     if (!transformed_bounding_box.contains(position.to_type<float>()))
-        return {};
-    return result;
+        return TraversalDecision::Continue;
+    return SVGGraphicsPaintable::hit_test(position, type, callback);
 }
 
 static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)

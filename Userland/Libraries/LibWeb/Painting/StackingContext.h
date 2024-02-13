@@ -35,7 +35,8 @@ public:
     static void paint_node_as_stacking_context(Paintable const&, PaintContext&);
     static void paint_descendants(PaintContext&, Paintable const&, StackingContextPaintPhase);
     void paint(PaintContext&) const;
-    Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const;
+
+    [[nodiscard]] TraversalDecision hit_test(CSSPixelPoint, HitTestType, Function<TraversalDecision(HitTestResult)> const& callback) const;
 
     Gfx::AffineTransform affine_transform_matrix() const;
 
