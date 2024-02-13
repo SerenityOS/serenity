@@ -48,6 +48,12 @@
             {"type": "GLubyte const*", "name": "bitmap"}
         ]
     },
+    "BlendEquation": {
+        "arguments": [
+            {"type": "GLenum", "name": "mode"}
+        ],
+        "unimplemented": true
+    },
     "BlendFunc": {
         "arguments": [
             {"type": "GLenum", "name": ["sfactor", "dfactor"]}
@@ -468,6 +474,15 @@
         ],
         "implementation": "get_program"
     },
+    "GetShaderInfoLog": {
+        "arguments": [
+            {"type": "GLuint", "name": "shader"},
+            {"type": "GLsizei", "name": "maxLength"},
+            {"type": "GLsizei*", "name": "length"},
+            {"type": "GLchar*", "name": "infoLog"}
+        ],
+        "unimplemented": true
+    },
     "GetShaderiv": {
         "arguments": [
             {"type": "GLuint", "name": "shader"},
@@ -505,6 +520,13 @@
                 "iv!": {"implementation": "get_tex_parameter_integerv"}
             }
         }
+    },
+    "GetUniformLocation": {
+        "arguments": [
+            {"type": "GLuint", "name": "program"},
+            {"type": "GLchar const*", "name": "name"}
+        ],
+        "unimplemented": true
     },
     "Hint": {
         "arguments": [
@@ -1134,6 +1156,40 @@
             "types": {
                 "d": {},
                 "f": {}
+            }
+        }
+    },
+    "Uniform": {
+        "arguments": [
+            {"type": "GLint", "name": "location"},
+            {"name": ["v0", "v1", "v2", "v3"]}
+        ],
+        "unimplemented": true,
+        "variants": {
+            "argument_counts": [1, 2, 3, 4],
+            "argument_defaults": ["0.", "0.", "0.", "0."],
+            "types": {
+                "f": {},
+                "i": {},
+                "ui": {}
+            }
+        }
+    },
+    "Uniform_v": {
+        "arguments": [
+            {"type": "GLint", "name": "location"},
+            {"type": "GLsizei", "name": "count"},
+            {"name": "value"}
+        ],
+        "name": "Uniform",
+        "unimplemented": true,
+        "variants": {
+            "argument_counts": [1, 2, 3, 4],
+            "pointer_argument": "value",
+            "types": {
+                "fv": {},
+                "iv": {},
+                "uiv": {}
             }
         }
     },
