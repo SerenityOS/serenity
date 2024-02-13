@@ -44,8 +44,8 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    PageClient& page(u64 index);
-    PageClient const& page(u64 index) const;
+    Optional<PageClient&> page(u64 index);
+    Optional<PageClient const&> page(u64 index) const;
 
     virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle(u64 page_id) override;
     virtual void set_window_handle(u64 page_id, String const& handle) override;
