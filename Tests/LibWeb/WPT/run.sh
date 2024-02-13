@@ -46,6 +46,8 @@ if [ ! -d "${SCRIPT_DIR}/wpt" ]; then
     # Switch to the commit that was used to generate tests expectations. Requires periodic updates.
     git -C wpt checkout eedf737ce39c512d0ca3471f988972e3ece11822
 
+    git apply 0001-tools-Pass-product-name-to-update-metadata-fallback-.patch
+
     # Update hosts file if needed
     if [ "$(comm -13 <(sort -u /etc/hosts) <(python3 ./wpt/wpt make-hosts-file | sort -u) | wc -l)" -gt 0 ]; then
         echo "Enter superuser password to append wpt hosts to /etc/hosts"
