@@ -68,6 +68,8 @@ python3 ./wpt/wpt run ladybird \
                   --include-manifest include.ini \
                   --metadata ./metadata \
                   --manifest ./MANIFEST.json \
+                  --webdriver-arg="--certificate=${PWD}/wpt/tools/certs/cacert.pem" \
+                  --webdriver-arg="--certificate=${SERENITY_SOURCE_DIR}/Build/lagom/cacert.pem" \
                   --log-raw "${wpt_run_log_filename}"
 
 # Update expectations metadata files if requested
