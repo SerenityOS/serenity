@@ -119,7 +119,7 @@ Web::WebDriver::Response Session::close_window()
 {
     {
         // Defer removing the window handle from this session until after we know we are done with its connection.
-        ScopeGuard guard { [this] { m_windows.remove(m_current_window_handle); } };
+        ScopeGuard guard { [this] { m_windows.remove(m_current_window_handle); m_current_window_handle = "NoSuchWindowPleaseSelectANewOne"_string; } };
 
         // 3. Close the current top-level browsing context.
         TRY(web_content_connection().close_window());
