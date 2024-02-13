@@ -719,17 +719,17 @@ Layout::BlockContainer& PaintableWithLines::layout_box()
     return static_cast<Layout::BlockContainer&>(PaintableBox::layout_box());
 }
 
-Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestType type) const
+TraversalDecision PaintableBox::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
     if (clip_rect().has_value() && !clip_rect()->contains(position))
-        return {};
+        return TraversalDecision::Continue;
 
     auto position_adjusted_by_scroll_offset = position;
     if (enclosing_scroll_frame_offset().has_value())
         position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
 
     if (!is_visible())
-        return {};
+        return TraversalDecision::Continue;
 
     if (layout_box().is_viewport()) {
         auto& viewport_paintable = const_cast<ViewportPaintable&>(static_cast<ViewportPaintable const&>(*this));
@@ -737,46 +737,55 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
         viewport_paintable.document().update_paint_and_hit_testing_properties_if_needed();
         viewport_paintable.refresh_scroll_state();
         viewport_paintable.refresh_clip_state();
-        return stacking_context()->hit_test(position, type);
+        return stacking_context()->hit_test(position, type, callback);
     }
 
     if (!absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y()))
-        return {};
+        return TraversalDecision::Continue;
 
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        auto result = child->hit_test(position, type);
-        if (!result.has_value())
+    for (auto const* child = last_child(); child; child = child->previous_sibling()) {
+        auto z_index = child->computed_values().z_index();
+        if (child->layout_node().is_positioned() && z_index.value_or(0) == 0)
             continue;
-        if (!result->paintable->visible_for_hit_testing())
-            continue;
-        return result;
+        if (child->hit_test(position, type, callback) == TraversalDecision::Break)
+            return TraversalDecision::Break;
     }
 
     if (!visible_for_hit_testing())
-        return {};
+        return TraversalDecision::Continue;
 
-    return HitTestResult { const_cast<PaintableBox&>(*this) };
+    return callback(HitTestResult { const_cast<PaintableBox&>(*this) });
 }
 
-Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
+Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestType type) const
+{
+    Optional<HitTestResult> result;
+    (void)PaintableBox::hit_test(position, type, [&](HitTestResult candidate) {
+        VERIFY(!result.has_value());
+        if (!candidate.paintable->visible_for_hit_testing())
+            return Painting::TraversalDecision::Continue;
+        result = move(candidate);
+        return Painting::TraversalDecision::Break;
+    });
+    return result;
+}
+
+TraversalDecision PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
     if (clip_rect().has_value() && !clip_rect()->contains(position))
-        return {};
+        return TraversalDecision::Continue;
 
     auto position_adjusted_by_scroll_offset = position;
     if (enclosing_scroll_frame_offset().has_value())
         position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
 
-    if (!layout_box().children_are_inline() || m_fragments.is_empty())
-        return PaintableBox::hit_test(position, type);
+    if (!layout_box().children_are_inline() || m_fragments.is_empty()) {
+        return PaintableBox::hit_test(position, type, callback);
+    }
 
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        auto result = child->hit_test(position, type);
-        if (!result.has_value())
-            continue;
-        if (!result->paintable->visible_for_hit_testing())
-            continue;
-        return result;
+    for (auto const* child = last_child(); child; child = child->previous_sibling()) {
+        if (child->hit_test(position, type, callback) == TraversalDecision::Break)
+            return TraversalDecision::Break;
     }
 
     Optional<HitTestResult> last_good_candidate;
@@ -785,9 +794,11 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
             continue;
         auto fragment_absolute_rect = fragment.absolute_rect();
         if (fragment_absolute_rect.contains(position_adjusted_by_scroll_offset)) {
-            if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
-                return result;
-            return HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.text_index_at(position_adjusted_by_scroll_offset.x()) };
+            if (fragment.paintable().hit_test(position, type, callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
+            HitTestResult hit_test_result { const_cast<Paintable&>(fragment.paintable()), fragment.text_index_at(position_adjusted_by_scroll_offset.x()) };
+            if (callback(hit_test_result) == TraversalDecision::Break)
+                return TraversalDecision::Break;
         }
 
         // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
@@ -808,11 +819,16 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
         }
     }
 
-    if (type == HitTestType::TextCursor && last_good_candidate.has_value())
-        return last_good_candidate;
-    if (is_visible() && absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y()))
-        return HitTestResult { const_cast<PaintableWithLines&>(*this) };
-    return {};
+    if (type == HitTestType::TextCursor && last_good_candidate.has_value()) {
+        if (callback(last_good_candidate.value()) == TraversalDecision::Break)
+            return TraversalDecision::Break;
+    }
+    if (!stacking_context() && is_visible() && absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y())) {
+        if (callback(HitTestResult { const_cast<PaintableWithLines&>(*this) }) == TraversalDecision::Break)
+            return TraversalDecision::Break;
+    }
+
+    return TraversalDecision::Continue;
 }
 
 void PaintableBox::set_needs_display() const

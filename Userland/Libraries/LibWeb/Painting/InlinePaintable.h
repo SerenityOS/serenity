@@ -32,7 +32,7 @@ public:
 
     virtual bool is_inline_paintable() const override { return true; }
 
-    virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
+    virtual TraversalDecision hit_test(CSSPixelPoint, HitTestType, Function<TraversalDecision(HitTestResult)> const& callback) const override;
 
     void set_box_shadow_data(Vector<ShadowData>&& box_shadow_data) { m_box_shadow_data = move(box_shadow_data); }
     Vector<ShadowData> const& box_shadow_data() const { return m_box_shadow_data; }

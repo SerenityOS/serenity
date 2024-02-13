@@ -199,39 +199,42 @@ void InlinePaintable::for_each_fragment(Callback callback) const
     }
 }
 
-Optional<HitTestResult> InlinePaintable::hit_test(CSSPixelPoint position, HitTestType type) const
+TraversalDecision InlinePaintable::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
     if (m_clip_rect.has_value() && !m_clip_rect.value().contains(position))
-        return {};
+        return TraversalDecision::Continue;
 
     auto position_adjusted_by_scroll_offset = position;
     if (enclosing_scroll_frame_offset().has_value())
         position_adjusted_by_scroll_offset.translate_by(-enclosing_scroll_frame_offset().value());
 
-    for (auto& fragment : m_fragments) {
+    for (auto const& fragment : m_fragments) {
         if (fragment.paintable().stacking_context())
             continue;
         auto fragment_absolute_rect = fragment.absolute_rect();
         if (fragment_absolute_rect.contains(position_adjusted_by_scroll_offset)) {
-            if (auto result = fragment.paintable().hit_test(position, type); result.has_value())
-                return result;
-            return HitTestResult { const_cast<Paintable&>(fragment.paintable()),
-                fragment.text_index_at(position_adjusted_by_scroll_offset.x()) };
+            if (fragment.paintable().hit_test(position, type, callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
+            auto hit_test_result = HitTestResult { const_cast<Paintable&>(fragment.paintable()), fragment.text_index_at(position_adjusted_by_scroll_offset.x()) };
+            if (callback(hit_test_result) == TraversalDecision::Break)
+                return TraversalDecision::Break;
         }
     }
 
-    Optional<HitTestResult> hit_test_result;
+    bool should_exit = false;
     for_each_child([&](Paintable const& child) {
+        if (should_exit)
+            return;
         if (child.stacking_context())
-            return IterationDecision::Continue;
-        if (auto result = child.hit_test(position, type); result.has_value()) {
-            hit_test_result = result;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
+            return;
+        if (child.hit_test(position, type, callback) == TraversalDecision::Break)
+            should_exit = true;
     });
 
-    return hit_test_result;
+    if (should_exit)
+        return TraversalDecision::Break;
+
+    return TraversalDecision::Continue;
 }
 
 CSSPixelRect InlinePaintable::bounding_rect() const
