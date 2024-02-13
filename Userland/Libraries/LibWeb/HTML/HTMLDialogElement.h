@@ -33,6 +33,8 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
+    void close_the_dialog(Optional<String> result);
+
     String m_return_value;
 };
 
