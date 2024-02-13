@@ -142,8 +142,13 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
 
     // FIXME: Support arbitrary CMaps
     auto cmap_value = TRY(dict->get_object(document, CommonNames::Encoding));
-    if (!cmap_value->is<NameObject>() || cmap_value->cast<NameObject>()->name() != CommonNames::IdentityH)
-        return Error::rendering_unsupported_error("Type0 font: support for general Encodings not yet implemented");
+    if (!cmap_value->is<NameObject>())
+        return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
+
+    auto cmap_name = cmap_value->cast<NameObject>()->name();
+    if (cmap_name != CommonNames::IdentityH) {
+        return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", cmap_name);
+    }
 
     auto descendant_font_value = TRY(dict->get_array(document, CommonNames::DescendantFonts));
     auto descendant_font = TRY(descendant_font_value->get_dict_at(document, 0));
