@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
+#include <LibWeb/HTML/HTMLDialogElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -179,17 +180,26 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
 
     // 11. If method is dialog, then:
     if (method == MethodAttributeState::Dialog) {
-        // FIXME: 1. If form does not have an ancestor dialog element, then return.
-        // FIXME: 2. Let subject be form's nearest ancestor dialog element.
-        // FIXME: 3. Let result be null.
+        // 1. If form does not have an ancestor dialog element, then return.
+        // 2. Let subject be form's nearest ancestor dialog element.
+        auto* subject = first_ancestor_of_type<HTMLDialogElement>();
+        if (!subject)
+            return {};
+
+        // 3. Let result be null.
+        Optional<String> result;
+
         // FIXME: 4. If submitter is an input element whose type attribute is in the Image Button state, then:
         //           1. Let (x, y) be the selected coordinate.
         //           2. Set result to the concatenation of x, ",", and y.
-        // FIXME: 5. Otherwise, if submitter has a value, then set result to that value.
-        // FIXME: 6. Close the dialog subject with result.
-        // FIXME: 7. Return.
 
-        dbgln("FIXME: Implement form submission with `dialog` action. Returning from form submission.");
+        // 5. Otherwise, if submitter has a value, then set result to that value.
+        result = submitter->get_attribute_value(AttributeNames::value);
+
+        // 6. Close the dialog subject with result.
+        subject->close(move(result));
+
+        // 7. Return.
         return {};
     }
 
