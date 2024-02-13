@@ -30,6 +30,7 @@
 
         @GUI::Calendar {
             name: "calendar_view"
+            mode: "Month"
         }
     }
 
