@@ -28,7 +28,7 @@ public:
 private:
     SampledFunction(NonnullRefPtr<StreamObject>);
 
-    float sample(ReadonlySpan<int> const& coordinates, size_t r) const
+    ReadonlySpan<u8> sample(ReadonlySpan<int> const& coordinates) const
     {
         // "For a function with multidimensional input (more than one input variable),
         //  the sample values in the first dimension vary fastest,
@@ -46,7 +46,7 @@ private:
             offset += coordinates[i] * stride;
             stride *= m_sizes[i];
         }
-        return m_sample_data[offset * m_range.size() + r];
+        return m_sample_data.slice(offset * m_range.size(), m_range.size());
     }
 
     Vector<Bound> m_domain;
@@ -198,30 +198,33 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
         m_inputs[i] = ec - m_left_index[i];
     }
 
-    for (size_t r = 0; r < m_range.size(); ++r) {
-        // For 1-D input data, we need to sample 2 points, one to the left and one to the right, and then interpolate between them.
-        // For 2-D input data, we need to sample 4 points (top-left, top-right, bottom-left, bottom-right),
-        // then reduce them to 2 points by interpolating along y, and then to 1 by interpolating along x.
-        // For 3-D input data, it's 8 points in a cube around the point, then reduce to 4 points by interpolating along z,
-        // then 2 by interpolating along y, then 1 by interpolating along x.
-        // So for the general case, we create 2**N samples, and then for each coordinate, we cut the number of samples in half
-        // by interpolating along that coordinate.
-        // Instead of storing all the 2**N samples, we can calculate the product of weights for each corner,
-        // and sum up the weighted samples.
-        float sample_output = 0;
-        // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
-        Vector<int> coordinates;
-        coordinates.resize(m_domain.size());
-        for (size_t mask = 0; mask < (1u << m_domain.size()); ++mask) {
-            float sample_weight = 1.0f;
-            for (size_t i = 0; i < m_domain.size(); ++i) {
-                coordinates[i] = m_left_index[i] + ((mask >> i) & 1u);
-                sample_weight *= ((mask >> i) & 1u) ? m_inputs[i] : (1.0f - m_inputs[i]);
-            }
-            sample_output += sample(coordinates, r) * sample_weight;
+    // For 1-D input data, we need to sample 2 points, one to the left and one to the right, and then interpolate between them.
+    // For 2-D input data, we need to sample 4 points (top-left, top-right, bottom-left, bottom-right),
+    // then reduce them to 2 points by interpolating along y, and then to 1 by interpolating along x.
+    // For 3-D input data, it's 8 points in a cube around the point, then reduce to 4 points by interpolating along z,
+    // then 2 by interpolating along y, then 1 by interpolating along x.
+    // So for the general case, we create 2**N samples, and then for each coordinate, we cut the number of samples in half
+    // by interpolating along that coordinate.
+    // Instead of storing all the 2**N samples, we can calculate the product of weights for each corner,
+    // and sum up the weighted samples.
+    Vector<float, 4> sample_outputs;
+    sample_outputs.resize(m_range.size());
+    // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
+    Vector<int> coordinates;
+    coordinates.resize(m_domain.size());
+    for (size_t mask = 0; mask < (1u << m_domain.size()); ++mask) {
+        float sample_weight = 1.0f;
+        for (size_t i = 0; i < m_domain.size(); ++i) {
+            coordinates[i] = m_left_index[i] + ((mask >> i) & 1u);
+            sample_weight *= ((mask >> i) & 1u) ? m_inputs[i] : (1.0f - m_inputs[i]);
         }
+        ReadonlyBytes samples = sample(coordinates);
+        for (size_t r = 0; r < m_range.size(); ++r)
+            sample_outputs[r] += samples[r] * sample_weight;
+    }
 
-        float result = interpolate(sample_output, 0.0f, 255.0f, m_decode[r].lower, m_decode[r].upper);
+    for (size_t r = 0; r < m_range.size(); ++r) {
+        float result = interpolate(sample_outputs[r], 0.0f, 255.0f, m_decode[r].lower, m_decode[r].upper);
         m_outputs[r] = clamp(result, m_range[r].lower, m_range[r].upper);
     }
 
