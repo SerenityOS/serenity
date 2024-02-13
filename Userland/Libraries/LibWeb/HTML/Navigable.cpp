@@ -312,7 +312,7 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
     JS::GCPtr<Navigable> same_name_navigable = nullptr;
     if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
         for (auto& n : all_navigables()) {
-            if (n->target_name() == name) {
+            if (n->target_name() == name && !n->has_been_destroyed()) {
                 same_name_navigable = n;
             }
         }
