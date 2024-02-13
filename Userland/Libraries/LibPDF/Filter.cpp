@@ -306,7 +306,6 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes, RefPtr<DictObject> de
     }
 
     // FIXME: Do something with these.
-    (void)k;
     (void)require_end_of_line;
     (void)encoded_byte_align;
     (void)columns;
@@ -315,7 +314,11 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes, RefPtr<DictObject> de
     (void)black_is_1;
     (void)damaged_rows_before_error;
 
-    return Error::rendering_unsupported_error("CCITTFaxDecode Filter is unsupported");
+    if (k < 0)
+        return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 4 is unsupported");
+    if (k == 0)
+        return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 3, 1-D is unsupported");
+    return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 3, 2-D is unsupported");
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
