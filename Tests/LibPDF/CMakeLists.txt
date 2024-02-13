@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    BenchmarkPDF.cpp
     TestPDF.cpp
 )
 
