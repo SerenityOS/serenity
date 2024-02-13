@@ -16,6 +16,8 @@
 #include <LibMain/Main.h>
 #include <WebDriver/Client.h>
 
+static Vector<ByteString> certificates;
+
 static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char const*> arguments)
 {
     auto paths = TRY(get_paths_for_helper_process(application));
@@ -32,12 +34,20 @@ static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char c
 
 static ErrorOr<pid_t> launch_browser(ByteString const& socket_path)
 {
-    return launch_process("Ladybird"sv,
-        Array {
-            "--webdriver-content-path",
-            socket_path.characters(),
-            "about:blank",
-        });
+    auto arguments = Vector {
+        "--webdriver-content-path",
+        socket_path.characters(),
+    };
+
+    Vector<ByteString> certificate_args;
+    for (auto const& certificate : certificates) {
+        certificate_args.append(ByteString::formatted("--certificate={}", certificate));
+        arguments.append(certificate_args.last().view().characters_without_null_termination());
+    }
+
+    arguments.append("about:blank");
+
+    return launch_process("Ladybird"sv, arguments.span());
 }
 
 static ErrorOr<pid_t> launch_headless_browser(ByteString const& socket_path)
@@ -63,6 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address");
     args_parser.add_option(port, "Port to listen on", "port", 'p', "port");
+    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
     auto ipv4_address = IPv4Address::from_string(listen_address);
