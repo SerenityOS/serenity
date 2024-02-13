@@ -3829,16 +3829,12 @@ Vector<JS::NonnullGCPtr<Element>> Document::elements_from_point(double x, double
     // 3. For each box in the viewport, in paint order, starting with the topmost box, that would be a target for
     //    hit testing at coordinates x,y even if nothing would be overlapping it, when applying the transforms that
     //    apply to the descendants of the viewport, append the associated element to sequence.
-    // FIXME: Paintable box tree order is not the same as paint order. We need a helper to traverse the paint tree in
-    //        paint order with a custom callback.
     if (auto const* paintable_box = this->paintable_box(); paintable_box) {
-        paintable_box->for_each_in_inclusive_subtree_of_type<Painting::PaintableBox>([&](auto& paintable_box) {
-            if (auto result = paintable_box.hit_test(position, Painting::HitTestType::Exact); result.has_value()) {
-                if (auto* dom_node = result->dom_node(); dom_node && dom_node->is_element())
-                    sequence.append(*static_cast<Element*>(dom_node));
-                return Painting::TraversalDecision::Continue;
-            }
-            return Painting::TraversalDecision::SkipChildrenAndContinue;
+        (void)paintable_box->hit_test(position, Painting::HitTestType::Exact, [&](Painting::HitTestResult result) {
+            auto* dom_node = result.dom_node();
+            if (dom_node && dom_node->is_element())
+                sequence.append(*static_cast<Element*>(dom_node));
+            return Painting::TraversalDecision::Continue;
         });
     }
 
