@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLDialogElement.h>
 
 namespace Web::HTML {
@@ -26,9 +27,25 @@ void HTMLDialogElement::initialize(JS::Realm& realm)
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-show
-void HTMLDialogElement::show()
+WebIDL::ExceptionOr<void> HTMLDialogElement::show()
 {
-    dbgln("(STUBBED) HTMLDialogElement::show()");
+    // 1. If this has an open attribute and the is modal flag of this is false, then return.
+    // FIXME: Add modal flag check here when modal dialog support is added
+    if (has_attribute(AttributeNames::open))
+        return {};
+
+    // FIXME: 2. If this has an open attribute, then throw an "InvalidStateError" DOMException.
+
+    // 3. Add an open attribute to this, whose value is the empty string.
+    TRY(set_attribute(AttributeNames::open, {}));
+
+    // FIXME 4. Set this's previously focused element to the focused element.
+    // FIXME 5. Run hide all popovers given this's node document.
+
+    // 6. Run the dialog focusing steps given this.
+    run_dialog_focusing_steps();
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-showmodal
@@ -90,6 +107,23 @@ void HTMLDialogElement::close_the_dialog(Optional<String> result)
     // FIXME: 9. If subject's close watcher is not null, then:
     //           1. Destroy subject's close watcher.
     //           2. Set subject's close watcher to null.
+}
+
+// https://html.spec.whatwg.org/multipage/interactive-elements.html#dialog-focusing-steps
+void HTMLDialogElement::run_dialog_focusing_steps()
+{
+    // 1. Let control be null
+    JS::GCPtr<Element> control = nullptr;
+
+    // FIXME 2. If subject has the autofocus attribute, then set control to subject.
+    // FIXME 3. If control is null, then set control to the focus delegate of subject.
+
+    // 4. If control is null, then set control to subject.
+    if (!control)
+        control = this;
+
+    // 5. Run the focusing steps for control.
+    run_focusing_steps(control);
 }
 
 }
