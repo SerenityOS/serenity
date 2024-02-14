@@ -20,9 +20,16 @@ class Encoding;
 class Type1FontProgram : public RefCounted<Type1FontProgram> {
 
 public:
+    enum Kind {
+        NameKeyed,
+        CIDKeyed,
+    };
+
     RefPtr<Gfx::Bitmap> rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
     Gfx::FloatPoint glyph_translation(DeprecatedFlyString const& char_name, float width) const;
     RefPtr<Encoding> encoding() const { return m_encoding; }
+
+    Kind kind() const { return m_kind; }
 
 protected:
     struct AccentedCharacter {
@@ -111,10 +118,13 @@ protected:
 
     void consolidate_glyphs();
 
+    void set_kind(Kind kind) { m_kind = kind; }
+
 private:
     HashMap<DeprecatedFlyString, Glyph> m_glyph_map;
     Gfx::AffineTransform m_font_matrix;
     RefPtr<Encoding> m_encoding;
+    Kind m_kind { NameKeyed };
 
     Gfx::Path build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
     Gfx::AffineTransform glyph_transform_to_device_space(Glyph const& glyph, float width) const;

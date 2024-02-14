@@ -44,6 +44,10 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
             m_font_program = TRY(PS1FontProgram::create(font_file_stream->bytes(), encoding(), length1, length2));
         }
     }
+
+    if (m_font_program && m_font_program->kind() == Type1FontProgram::Kind::CIDKeyed)
+        return Error::parse_error("Type1 fonts must not be CID-keyed"sv);
+
     if (!m_font_program) {
         m_font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
     }
