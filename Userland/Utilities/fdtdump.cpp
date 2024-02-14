@@ -35,14 +35,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(DeviceTree::dump(*fdt_header, bytes));
 
-    auto compatible = TRY(DeviceTree::slow_get_property<StringView>("/compatible"sv, *fdt_header, bytes));
-    auto compatible_strings = compatible.split_view('\0');
-    dbgln("compatible with: {}", compatible_strings);
+    auto compatible = TRY(DeviceTree::slow_get_property("/compatible"sv, *fdt_header, bytes)).as_strings();
+    dbgln("compatible with: {}", compatible);
 
-    auto bootargs = TRY(DeviceTree::slow_get_property<StringView>("/chosen/bootargs"sv, *fdt_header, bytes));
+    auto bootargs = TRY(DeviceTree::slow_get_property("/chosen/bootargs"sv, *fdt_header, bytes)).as_string();
     dbgln("bootargs: {}", bootargs);
 
-    auto cpu_compatible = TRY(DeviceTree::slow_get_property<StringView>("/cpus/cpu@0/compatible"sv, *fdt_header, bytes));
+    auto cpu_compatible = TRY(DeviceTree::slow_get_property("/cpus/cpu@0/compatible"sv, *fdt_header, bytes)).as_string();
     dbgln("cpu0 compatible: {}", cpu_compatible);
 
     return 0;
