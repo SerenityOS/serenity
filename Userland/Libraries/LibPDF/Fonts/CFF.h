@@ -128,7 +128,7 @@ public:
         float nominalWidthX = 0;
         int fdselect_offset = 0;
     };
-    static PDFErrorOr<TopDict> parse_top_dict(Reader&, ReadonlyBytes const& cff_bytes);
+    static PDFErrorOr<Vector<TopDict>> parse_top_dicts(Reader&, ReadonlyBytes const& cff_bytes);
 
     static PDFErrorOr<Vector<StringView>> parse_strings(Reader&);
 
