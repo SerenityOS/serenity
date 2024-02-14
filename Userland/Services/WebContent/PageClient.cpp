@@ -189,7 +189,8 @@ Web::Layout::Viewport* PageClient::layout_root()
 
 void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
 {
-    Web::Painting::RecordingPainter recording_painter;
+    Web::Painting::CommandList painting_commands;
+    Web::Painting::RecordingPainter recording_painter(painting_commands);
 
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
     recording_painter.fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
@@ -203,7 +204,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS
         Web::Painting::PaintingCommandExecutorGPU painting_command_executor(*m_accelerated_graphics_context, target);
-        recording_painter.execute(painting_command_executor);
+        painting_commands.execute(painting_command_executor);
 #else
         static bool has_warned_about_configuration = false;
 
@@ -214,7 +215,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 #endif
     } else {
         Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
-        recording_painter.execute(painting_command_executor);
+        painting_commands.execute(painting_command_executor);
     }
 }
 

@@ -2127,7 +2127,7 @@ void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig
             auto scroll_offset = context.rounded_device_point(scrollable_frame->offset).to_type<int>();
             scroll_offsets_by_frame_id[scrollable_frame->id] = scroll_offset;
         }
-        recording_painter.apply_scroll_offsets(scroll_offsets_by_frame_id);
+        recording_painter.commands_list().apply_scroll_offsets(scroll_offsets_by_frame_id);
     }
 }
 

@@ -492,6 +492,8 @@ set(SOURCES
     Painting/BordersData.cpp
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
+    Painting/Command.cpp
+    Painting/CommandList.cpp
     Painting/CheckBoxPaintable.cpp
     Painting/GradientPainting.cpp
     Painting/FilterPainting.cpp
