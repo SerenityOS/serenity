@@ -9,6 +9,7 @@
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
 
 namespace ImageDecoder {
 
@@ -37,7 +38,7 @@ static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder
     }
 }
 
-static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
+static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations, Gfx::FloatPoint& scale)
 {
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
@@ -54,6 +55,19 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
     }
     is_animated = decoder->is_animated();
     loop_count = decoder->loop_count();
+
+    if (auto maybe_metadata = decoder->metadata(); maybe_metadata.has_value() && is<Gfx::ExifMetadata>(*maybe_metadata)) {
+        auto const& exif = static_cast<Gfx::ExifMetadata const&>(maybe_metadata.value());
+        if (exif.x_resolution().has_value() && exif.y_resolution().has_value()) {
+            auto const x_resolution = exif.x_resolution()->as_double();
+            auto const y_resolution = exif.y_resolution()->as_double();
+            if (x_resolution < y_resolution)
+                scale.set_y(x_resolution / y_resolution);
+            else
+                scale.set_x(y_resolution / x_resolution);
+        }
+    }
+
     decode_image_to_bitmaps_and_durations_with_decoder(*decoder, ideal_size, bitmaps, durations);
 }
 
@@ -66,10 +80,11 @@ Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_i
 
     bool is_animated = false;
     u32 loop_count = 0;
+    Gfx::FloatPoint scale { 1, 1 };
     Vector<Gfx::ShareableBitmap> bitmaps;
     Vector<u32> durations;
-    decode_image_to_details(encoded_buffer, ideal_size, mime_type, is_animated, loop_count, bitmaps, durations);
-    return { is_animated, loop_count, bitmaps, durations };
+    decode_image_to_details(encoded_buffer, ideal_size, mime_type, is_animated, loop_count, bitmaps, durations, scale);
+    return { is_animated, loop_count, bitmaps, durations, scale };
 }
 
 }

@@ -246,7 +246,7 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
         frames.ensure_capacity(decoded_image->frames.size());
         for (u32 i = 0; i < decoded_image->frames.size(); i++) {
             auto& frame_data = decoded_image->frames[i];
-            frames.unchecked_append({ BitmapImage::create(frame_data.bitmap), int(frame_data.duration) });
+            frames.unchecked_append({ BitmapImage::create(frame_data.bitmap, decoded_image->scale), int(frame_data.duration) });
         }
     }
 

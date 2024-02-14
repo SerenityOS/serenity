@@ -20,6 +20,7 @@ struct Frame {
 
 struct DecodedImage {
     bool is_animated { false };
+    Gfx::FloatPoint scale { 1, 1 };
     u32 loop_count { 0 };
     Vector<Frame> frames;
 };
