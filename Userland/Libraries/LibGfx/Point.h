@@ -306,9 +306,13 @@ namespace IPC {
 
 template<>
 ErrorOr<void> encode(Encoder&, Gfx::IntPoint const&);
+template<>
+ErrorOr<void> encode(Encoder&, Gfx::FloatPoint const&);
 
 template<>
 ErrorOr<Gfx::IntPoint> decode(Decoder&);
+template<>
+ErrorOr<Gfx::FloatPoint> decode(Decoder&);
 
 }
 
