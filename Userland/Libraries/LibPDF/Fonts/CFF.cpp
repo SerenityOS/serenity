@@ -121,14 +121,122 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     auto cff = adopt_ref(*new CFF());
     cff->set_font_matrix({ 0.001f, 0.0f, 0.0f, 0.001f, 0.0f, 0.0f });
 
-    // CFF spec, "8 Top DICT INDEX"
-    int charset_offset = 0;
-    int encoding_offset = 0;
-    auto charstrings_offset = 0;
-    Vector<ByteBuffer> local_subroutines;
-    float defaultWidthX = 0;
-    float nominalWidthX = 0;
-    int fdselect_offset = 0;
+    auto top_dict = TRY(parse_top_dict(reader, cff_bytes));
+
+    auto strings = TRY(parse_strings(reader));
+
+    // CFF spec "16 Local/Global Subrs INDEXes"
+    // "Global subrs are stored in an INDEX structure which follows the String INDEX."
+    Vector<ByteBuffer> global_subroutines;
+    TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
+        return TRY(global_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
+    }));
+    dbgln_if(CFF_DEBUG, "CFF has {} gsubr entries", global_subroutines.size());
+
+    // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
+    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(top_dict.charstrings_offset)), top_dict.local_subroutines, global_subroutines));
+
+    // CFF spec, "Table 16 Encoding ID"
+    // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
+    Vector<u8> encoding_codes;                 // Maps GID to its codepoint.
+    HashMap<Card8, SID> encoding_supplemental; // Maps codepoint to SID.
+    switch (top_dict.encoding_offset) {
+    case 0:
+        dbgln_if(CFF_DEBUG, "CFF predefined encoding Standard");
+        for (size_t i = 1; i < s_predefined_encoding_standard.size(); ++i)
+            TRY(encoding_supplemental.try_set(i, s_predefined_encoding_standard[i]));
+        break;
+    case 1:
+        dbgln_if(CFF_DEBUG, "CFF predefined encoding Expert");
+        for (size_t i = 1; i < s_predefined_encoding_expert.size(); ++i)
+            TRY(encoding_supplemental.try_set(i, s_predefined_encoding_expert[i]));
+        break;
+    default:
+        encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(top_dict.encoding_offset)), encoding_supplemental));
+        break;
+    }
+
+    // CFF spec, "Table 22 Charset ID"
+    Vector<DeprecatedFlyString> charset_names;
+    switch (top_dict.charset_offset) {
+    case 0:
+        dbgln_if(CFF_DEBUG, "CFF predefined charset ISOAdobe");
+        // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
+        for (SID sid = 1; sid <= 228; sid++)
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
+        break;
+    case 1:
+        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert");
+        for (SID sid : s_predefined_charset_expert)
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
+        break;
+    case 2:
+        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert Subset");
+        for (SID sid : s_predefined_charset_expert_subset)
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
+        break;
+    default: {
+        auto charset = TRY(parse_charset(Reader { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
+        for (SID sid : charset)
+            TRY(charset_names.try_append(resolve_sid(sid, strings)));
+        break;
+    }
+    }
+
+    // CFF spec, "19 FDSelect"
+    if (top_dict.fdselect_offset != 0) {
+        auto fdselect = TRY(parse_fdselect(Reader { cff_bytes.slice(top_dict.fdselect_offset) }, glyphs.size()));
+        dbgln_if(CFF_DEBUG, "CFF has {} FDSelect entries", fdselect.size());
+    }
+
+    // Adjust glyphs' widths as they are deltas from nominalWidthX
+    for (auto& glyph : glyphs) {
+        if (!glyph.has_width())
+            glyph.set_width(top_dict.defaultWidthX);
+        else
+            glyph.set_width(glyph.width() + top_dict.nominalWidthX);
+    }
+
+    for (size_t i = 0; i < glyphs.size(); i++) {
+        if (i == 0) {
+            TRY(cff->add_glyph(0, move(glyphs[0])));
+            continue;
+        }
+        auto const& name = charset_names[i - 1];
+        TRY(cff->add_glyph(name, move(glyphs[i])));
+    }
+    cff->consolidate_glyphs();
+
+    // Encoding given or read
+    if (encoding) {
+        dbgln_if(CFF_DEBUG, "CFF using external encoding");
+        cff->set_encoding(move(encoding));
+    } else {
+        dbgln_if(CFF_DEBUG, "CFF using embedded encoding");
+        auto encoding = Encoding::create();
+        for (size_t i = 0; i < glyphs.size(); i++) {
+            if (i == 0) {
+                encoding->set(0, ".notdef");
+                continue;
+            }
+            if (i >= encoding_codes.size() || i >= charset_names.size())
+                break;
+            auto code = encoding_codes[i - 1];
+            auto char_name = charset_names[i - 1];
+            encoding->set(code, char_name);
+        }
+        for (auto const& entry : encoding_supplemental)
+            encoding->set(entry.key, resolve_sid(entry.value, strings));
+        cff->set_encoding(move(encoding));
+    }
+
+    return cff;
+}
+
+PDFErrorOr<CFF::TopDict> CFF::parse_top_dict(Reader& reader, ReadonlyBytes const& cff_bytes)
+{
+    TopDict top_dict;
+
     TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) {
         Reader element_reader { element_data };
         return parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
@@ -166,17 +274,17 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 break;
             case TopDictOperator::Encoding: {
                 if (!operands.is_empty())
-                    encoding_offset = operands[0].get<int>();
+                    top_dict.encoding_offset = operands[0].get<int>();
                 break;
             }
             case TopDictOperator::Charset: {
                 if (!operands.is_empty())
-                    charset_offset = operands[0].get<int>();
+                    top_dict.charset_offset = operands[0].get<int>();
                 break;
             }
             case TopDictOperator::CharStrings: {
                 if (!operands.is_empty())
-                    charstrings_offset = operands[0].get<int>();
+                    top_dict.charstrings_offset = operands[0].get<int>();
                 break;
             }
             case TopDictOperator::Private: {
@@ -210,18 +318,18 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                         auto subrs_offset = operands[0].get<int>();
                         Reader subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
                         TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
-                            return TRY(local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
+                            return TRY(top_dict.local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
                         }));
-                        dbgln_if(CFF_DEBUG, "CFF has {} subr entries", local_subroutines.size());
+                        dbgln_if(CFF_DEBUG, "CFF has {} subr entries", top_dict.local_subroutines.size());
                         break;
                     }
                     case PrivDictOperator::DefaultWidthX:
                         if (!operands.is_empty())
-                            defaultWidthX = to_number(operands[0]);
+                            top_dict.defaultWidthX = to_number(operands[0]);
                         break;
                     case PrivDictOperator::NominalWidthX:
                         if (!operands.is_empty())
-                            nominalWidthX = to_number(operands[0]);
+                            top_dict.nominalWidthX = to_number(operands[0]);
                         break;
                     default:
                         dbgln("CFF: Unhandled private dict entry {}", static_cast<int>(op));
@@ -232,7 +340,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
             }
             case TopDictOperator::FDSelect:
                 if (!operands.is_empty())
-                    fdselect_offset = operands[0].get<int>();
+                    top_dict.fdselect_offset = operands[0].get<int>();
                 break;
             case TopDictOperator::CIDFontVersion:
             case TopDictOperator::CIDFontRevision:
@@ -250,114 +358,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         });
     }));
 
-    auto strings = TRY(parse_strings(reader));
-
-    // CFF spec "16 Local/Global Subrs INDEXes"
-    // "Global subrs are stored in an INDEX structure which follows the String INDEX."
-    Vector<ByteBuffer> global_subroutines;
-    TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
-        return TRY(global_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
-    }));
-    dbgln_if(CFF_DEBUG, "CFF has {} gsubr entries", global_subroutines.size());
-
-    // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
-    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), local_subroutines, global_subroutines));
-
-    // CFF spec, "Table 16 Encoding ID"
-    // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
-    Vector<u8> encoding_codes;                 // Maps GID to its codepoint.
-    HashMap<Card8, SID> encoding_supplemental; // Maps codepoint to SID.
-    switch (encoding_offset) {
-    case 0:
-        dbgln_if(CFF_DEBUG, "CFF predefined encoding Standard");
-        for (size_t i = 1; i < s_predefined_encoding_standard.size(); ++i)
-            TRY(encoding_supplemental.try_set(i, s_predefined_encoding_standard[i]));
-        break;
-    case 1:
-        dbgln_if(CFF_DEBUG, "CFF predefined encoding Expert");
-        for (size_t i = 1; i < s_predefined_encoding_expert.size(); ++i)
-            TRY(encoding_supplemental.try_set(i, s_predefined_encoding_expert[i]));
-        break;
-    default:
-        encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset)), encoding_supplemental));
-        break;
-    }
-
-    // CFF spec, "Table 22 Charset ID"
-    Vector<DeprecatedFlyString> charset_names;
-    switch (charset_offset) {
-    case 0:
-        dbgln_if(CFF_DEBUG, "CFF predefined charset ISOAdobe");
-        // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
-        for (SID sid = 1; sid <= 228; sid++)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    case 1:
-        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert");
-        for (SID sid : s_predefined_charset_expert)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    case 2:
-        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert Subset");
-        for (SID sid : s_predefined_charset_expert_subset)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    default: {
-        auto charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size()));
-        for (SID sid : charset)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    }
-    }
-
-    // CFF spec, "19 FDSelect"
-    if (fdselect_offset != 0) {
-        auto fdselect = TRY(parse_fdselect(Reader { cff_bytes.slice(fdselect_offset) }, glyphs.size()));
-        dbgln_if(CFF_DEBUG, "CFF has {} FDSelect entries", fdselect.size());
-    }
-
-    // Adjust glyphs' widths as they are deltas from nominalWidthX
-    for (auto& glyph : glyphs) {
-        if (!glyph.has_width())
-            glyph.set_width(defaultWidthX);
-        else
-            glyph.set_width(glyph.width() + nominalWidthX);
-    }
-
-    for (size_t i = 0; i < glyphs.size(); i++) {
-        if (i == 0) {
-            TRY(cff->add_glyph(0, move(glyphs[0])));
-            continue;
-        }
-        auto const& name = charset_names[i - 1];
-        TRY(cff->add_glyph(name, move(glyphs[i])));
-    }
-    cff->consolidate_glyphs();
-
-    // Encoding given or read
-    if (encoding) {
-        dbgln_if(CFF_DEBUG, "CFF using external encoding");
-        cff->set_encoding(move(encoding));
-    } else {
-        dbgln_if(CFF_DEBUG, "CFF using embedded encoding");
-        auto encoding = Encoding::create();
-        for (size_t i = 0; i < glyphs.size(); i++) {
-            if (i == 0) {
-                encoding->set(0, ".notdef");
-                continue;
-            }
-            if (i >= encoding_codes.size() || i >= charset_names.size())
-                break;
-            auto code = encoding_codes[i - 1];
-            auto char_name = charset_names[i - 1];
-            encoding->set(code, char_name);
-        }
-        for (auto const& entry : encoding_supplemental)
-            encoding->set(entry.key, resolve_sid(entry.value, strings));
-        cff->set_encoding(move(encoding));
-    }
-
-    return cff;
+    return top_dict;
 }
 
 /// Appendix A: Standard Strings

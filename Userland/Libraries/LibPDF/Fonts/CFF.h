@@ -118,6 +118,18 @@ public:
     template<typename OperatorT>
     static PDFErrorOr<OperatorT> parse_dict_operator(u8, Reader&);
 
+    // CFF spec, "8 Top DICT INDEX"
+    struct TopDict {
+        int charset_offset = 0;
+        int encoding_offset = 0;
+        int charstrings_offset = 0;
+        Vector<ByteBuffer> local_subroutines;
+        float defaultWidthX = 0;
+        float nominalWidthX = 0;
+        int fdselect_offset = 0;
+    };
+    static PDFErrorOr<TopDict> parse_top_dict(Reader&, ReadonlyBytes const& cff_bytes);
+
     static PDFErrorOr<Vector<StringView>> parse_strings(Reader&);
 
     static PDFErrorOr<Vector<CFF::Glyph>> parse_charstrings(Reader&&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines);
