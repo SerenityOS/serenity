@@ -186,6 +186,13 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     }
     }
 
+    // CFF spec, "18 CID-keyed Fonts"
+    if (top_dict.fdarray_offset != 0) {
+        Reader fdarray_reader { cff_bytes.slice(top_dict.fdarray_offset) };
+        auto font_dicts = TRY(parse_top_dicts(fdarray_reader, cff_bytes));
+        dbgln_if(CFF_DEBUG, "CFF has {} FDArray entries", font_dicts.size());
+    }
+
     // CFF spec, "19 FDSelect"
     if (top_dict.fdselect_offset != 0) {
         auto fdselect = TRY(parse_fdselect(Reader { cff_bytes.slice(top_dict.fdselect_offset) }, glyphs.size()));
@@ -347,12 +354,15 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBy
                 if (!operands.is_empty())
                     top_dict.fdselect_offset = operands[0].get<int>();
                 break;
+            case TopDictOperator::FDArray:
+                if (!operands.is_empty())
+                    top_dict.fdarray_offset = operands[0].get<int>();
+                break;
             case TopDictOperator::CIDFontVersion:
             case TopDictOperator::CIDFontRevision:
             case TopDictOperator::CIDFontType:
             case TopDictOperator::CIDCount:
             case TopDictOperator::UIDBase:
-            case TopDictOperator::FDArray:
             case TopDictOperator::FontName:
                 // Keys for CID-keyed fonts that we don't need, at least at the moment.
                 break;
