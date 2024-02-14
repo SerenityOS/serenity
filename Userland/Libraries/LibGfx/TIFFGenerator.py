@@ -409,6 +409,10 @@ struct Rational {{
     using Type = x32;
     x32 numerator;
     x32 denominator;
+
+    double as_double() const {{
+        return static_cast<double>(numerator) / denominator;
+    }}
 }};
 
 {export_promoter()}
@@ -436,7 +440,7 @@ struct AK::Formatter<Gfx::TIFF::Rational<T>> : Formatter<FormatString> {{
     ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::Rational<T> value)
     {{
         return Formatter<FormatString>::format(builder, "{{}} ({{}}/{{}})"sv,
-            static_cast<double>(value.numerator) / value.denominator, value.numerator, value.denominator);
+            value.as_double(), value.numerator, value.denominator);
     }}
 }};
 
