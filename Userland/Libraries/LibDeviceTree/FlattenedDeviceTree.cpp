@@ -9,6 +9,7 @@
 #include <AK/IterationDecision.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringView.h>
+#include <LibDeviceTree/DeviceTree.h>
 #include <LibDeviceTree/FlattenedDeviceTree.h>
 
 #ifdef KERNEL
@@ -137,6 +138,7 @@ static ErrorOr<ReadonlyBytes> slow_get_property_raw(StringView name, FlattenedDe
                 ++current_path_idx; // Root node
                 return IterationDecision::Continue;
             }
+            // FIXME: This might need to ignore address details in the path
             if (token_name == path[current_path_idx]) {
                 ++current_path_idx;
                 if (current_path_idx == static_cast<ssize_t>(path.size() - 1)) {
@@ -169,26 +171,9 @@ static ErrorOr<ReadonlyBytes> slow_get_property_raw(StringView name, FlattenedDe
     return found_property_value;
 }
 
-template<typename T>
-ErrorOr<T> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
+ErrorOr<DeviceTreeProperty> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
 {
-    [[maybe_unused]] auto bytes = TRY(slow_get_property_raw(name, header, raw_device_tree));
-    if constexpr (IsVoid<T>) {
-        return {};
-    } else if constexpr (IsArithmetic<T>) {
-        if (bytes.size() != sizeof(T)) {
-            return Error::from_errno(EINVAL);
-        }
-        return *bit_cast<T*>(bytes.data());
-    } else {
-        static_assert(IsSame<T, StringView>);
-        return T(bytes);
-    }
+    return DeviceTreeProperty { TRY(slow_get_property_raw(name, header, raw_device_tree)) };
 }
-
-template ErrorOr<void> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
-template ErrorOr<u32> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
-template ErrorOr<u64> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
-template ErrorOr<StringView> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
 
 } // namespace DeviceTree

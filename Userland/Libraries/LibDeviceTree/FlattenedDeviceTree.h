@@ -13,6 +13,8 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
+#include "DeviceTree.h"
+
 namespace DeviceTree {
 
 // https://devicetree-specification.readthedocs.io/en/v0.3/flattened-format.html
@@ -60,12 +62,6 @@ struct DeviceTreeCallbacks {
 
 ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree, DeviceTreeCallbacks);
 
-template<typename T>
-ErrorOr<T> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
-
-extern template ErrorOr<void> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
-extern template ErrorOr<u32> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
-extern template ErrorOr<u64> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
-extern template ErrorOr<StringView> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+ErrorOr<DeviceTreeProperty> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
 
 } // namespace DeviceTree
