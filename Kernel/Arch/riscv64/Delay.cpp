@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <Kernel/Arch/Delay.h>
 
 namespace Kernel {
