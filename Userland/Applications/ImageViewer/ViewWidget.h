@@ -66,9 +66,9 @@ private:
 
 class BitmapImage final : public Image {
 public:
-    static NonnullRefPtr<BitmapImage> create(Gfx::Bitmap& bitmap) { return adopt_ref(*new BitmapImage(bitmap)); }
+    static NonnullRefPtr<BitmapImage> create(Gfx::Bitmap& bitmap, Gfx::FloatPoint scale) { return adopt_ref(*new BitmapImage(bitmap, scale)); }
 
-    virtual Gfx::IntSize size() const override { return m_bitmap->size(); }
+    virtual Gfx::IntSize size() const override { return { round(m_bitmap->size().width() * m_scale.x()), round(m_bitmap->size().height() * m_scale.y()) }; }
 
     virtual void flip(Gfx::Orientation) override;
     virtual void rotate(Gfx::RotationDirection) override;
@@ -81,12 +81,14 @@ public:
     }
 
 private:
-    BitmapImage(Gfx::Bitmap& bitmap)
+    BitmapImage(Gfx::Bitmap& bitmap, Gfx::FloatPoint scale)
         : m_bitmap(bitmap)
+        , m_scale(scale)
     {
     }
 
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
+    Gfx::FloatPoint m_scale;
 };
 
 class ViewWidget final : public GUI::AbstractZoomPanWidget {

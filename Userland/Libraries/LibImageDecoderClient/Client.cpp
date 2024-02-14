@@ -48,6 +48,7 @@ Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional
     DecodedImage image;
     image.is_animated = response.is_animated();
     image.loop_count = response.loop_count();
+    image.scale = response.scale();
     image.frames.ensure_capacity(response.bitmaps().size());
     auto bitmaps = response.take_bitmaps();
     for (size_t i = 0; i < bitmaps.size(); ++i) {
