@@ -51,13 +51,16 @@ ByteString FloatPoint::to_byte_string() const
 
 namespace IPC {
 
-template<>
-ErrorOr<void> encode(Encoder& encoder, Gfx::IntPoint const& point)
+template<OneOf<Gfx::IntPoint, Gfx::FloatPoint> Point>
+ErrorOr<void> encode(Encoder& encoder, Point const& point)
 {
     TRY(encoder.encode(point.x()));
     TRY(encoder.encode(point.y()));
     return {};
 }
+
+template ErrorOr<void> encode(Encoder&, Gfx::IntPoint const& point);
+template ErrorOr<void> encode(Encoder&, Gfx::FloatPoint const& point);
 
 template<>
 ErrorOr<Gfx::IntPoint> decode(Decoder& decoder)
@@ -65,6 +68,14 @@ ErrorOr<Gfx::IntPoint> decode(Decoder& decoder)
     auto x = TRY(decoder.decode<int>());
     auto y = TRY(decoder.decode<int>());
     return Gfx::IntPoint { x, y };
+}
+
+template<>
+ErrorOr<Gfx::FloatPoint> decode(Decoder& decoder)
+{
+    auto x = TRY(decoder.decode<float>());
+    auto y = TRY(decoder.decode<float>());
+    return Gfx::FloatPoint { x, y };
 }
 
 }
