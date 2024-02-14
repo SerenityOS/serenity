@@ -121,7 +121,10 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     auto cff = adopt_ref(*new CFF());
     cff->set_font_matrix({ 0.001f, 0.0f, 0.0f, 0.001f, 0.0f, 0.0f });
 
-    auto top_dict = TRY(parse_top_dict(reader, cff_bytes));
+    auto top_dicts = TRY(parse_top_dicts(reader, cff_bytes));
+    if (top_dicts.size() != 1)
+        return error("CFFs with more than one font not yet implemented");
+    auto const& top_dict = top_dicts[0];
 
     auto strings = TRY(parse_strings(reader));
 
@@ -233,13 +236,15 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     return cff;
 }
 
-PDFErrorOr<CFF::TopDict> CFF::parse_top_dict(Reader& reader, ReadonlyBytes const& cff_bytes)
+PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBytes const& cff_bytes)
 {
-    TopDict top_dict;
+    Vector<TopDict> top_dicts;
 
-    TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) {
+    TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) -> PDFErrorOr<void> {
+        TopDict top_dict;
+
         Reader element_reader { element_data };
-        return parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
+        TRY(parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
             switch (op) {
             case TopDictOperator::Version:
             case TopDictOperator::Notice:
@@ -355,10 +360,13 @@ PDFErrorOr<CFF::TopDict> CFF::parse_top_dict(Reader& reader, ReadonlyBytes const
                 dbgln("CFF: Unhandled top dict entry {}", static_cast<int>(op));
             }
             return {};
-        });
+        }));
+
+        top_dicts.append((move(top_dict)));
+        return {};
     }));
 
-    return top_dict;
+    return top_dicts;
 }
 
 /// Appendix A: Standard Strings
