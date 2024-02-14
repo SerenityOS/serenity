@@ -127,6 +127,7 @@ public:
         float defaultWidthX = 0;
         float nominalWidthX = 0;
         int fdselect_offset = 0;
+        int fdarray_offset = 0;
     };
     static PDFErrorOr<Vector<TopDict>> parse_top_dicts(Reader&, ReadonlyBytes const& cff_bytes);
 
