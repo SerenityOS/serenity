@@ -37,13 +37,13 @@ Co-Authored-By: Tim Ledbetter <timledbetter@gmail.com>
  src/video/SDL_video.c                         |  13 +
  src/video/serenity/SDL_serenityevents.cpp     |  52 ++
  src/video/serenity/SDL_serenityevents_c.h     |  33 +
- src/video/serenity/SDL_serenitymessagebox.cpp |  40 ++
+ src/video/serenity/SDL_serenitymessagebox.cpp |  47 ++
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
  src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
  src/video/serenity/SDL_serenityvideo.cpp      | 655 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1358 insertions(+), 26 deletions(-)
+ 21 files changed, 1365 insertions(+), 26 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -606,10 +606,10 @@ index 0000000000000000000000000000000000000000..89e9e919e319c701144da8f6d73bbb2e
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymessagebox.cpp b/src/video/serenity/SDL_serenitymessagebox.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..fe41a8beecc4f1e6b9cc17831d53b43c05f167f1
+index 0000000000000000000000000000000000000000..a0c7d0772be7198a521708abb9d69ef9cc413597
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymessagebox.cpp
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,47 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -639,10 +639,17 @@ index 0000000000000000000000000000000000000000..fe41a8beecc4f1e6b9cc17831d53b43c
 +#    include "SDL_messagebox.h"
 +#    include "SDL_serenitymessagebox.h"
 +
++#    include <LibGUI/Application.h>
 +#    include <LibGUI/MessageBox.h>
++#    include <LibMain/Main.h>
 +
 +extern "C" int SERENITY_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
 +{
++    // From the docs: "[SDL_ShowMessageBox] may be called at any time, even before SDL_Init()."
++    AK::RefPtr<GUI::Application> app = GUI::Application::the();
++    if (app == nullptr)
++        app = MUST(GUI::Application::create(Main::Arguments {}));
++
 +    GUI::MessageBox::show(nullptr, { messageboxdata->message, strlen(messageboxdata->message) }, { messageboxdata->title, strlen(messageboxdata->title) });
 +    return 0;
 +}
