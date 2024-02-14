@@ -129,13 +129,14 @@ RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
     m_document->navigable()->set_viewport_rect({ 0, 0, size.width(), size.height() });
     m_document->update_layout();
 
-    Painting::RecordingPainter recording_painter;
+    Painting::CommandList painting_commands;
+    Painting::RecordingPainter recording_painter(painting_commands);
     PaintContext context(recording_painter, m_page_client->palette(), m_page_client->device_pixels_per_css_pixel());
 
     m_document->paintable()->paint_all_phases(context);
 
     Painting::PaintingCommandExecutorCPU executor { *bitmap };
-    recording_painter.execute(executor);
+    painting_commands.execute(executor);
 
     return bitmap;
 }
