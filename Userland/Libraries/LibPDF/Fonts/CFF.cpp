@@ -126,6 +126,11 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         return error("CFFs with more than one font not yet implemented");
     auto const& top_dict = top_dicts[0];
 
+    if (top_dict.is_cid_keyed) {
+        // CFF spec, "18 CID-keyed Fonts"
+        cff->set_kind(CFF::Kind::CIDKeyed);
+    }
+
     auto strings = TRY(parse_strings(reader));
 
     // CFF spec "16 Local/Global Subrs INDEXes"
@@ -350,6 +355,12 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBy
                 }));
                 break;
             }
+            case TopDictOperator::RegistryOrderingSupplement:
+                // CFF Spec, "18 CID-keyed Fonts"
+                // "The Top DICT begins with ROS operator which specifies the Registry-Ordering-Supplement for the font.
+                //  This will indicate to a CFF parser that special CID processing should be applied to this font."
+                top_dict.is_cid_keyed = true;
+                break;
             case TopDictOperator::FDSelect:
                 if (!operands.is_empty())
                     top_dict.fdselect_offset = operands[0].get<int>();
