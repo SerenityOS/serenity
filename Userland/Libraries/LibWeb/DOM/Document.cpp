@@ -3690,9 +3690,12 @@ HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>>& Document::shared_image_re
 // https://www.w3.org/TR/web-animations-1/#dom-document-timeline
 JS::NonnullGCPtr<Animations::DocumentTimeline> Document::timeline()
 {
-    // The DocumentTimeline object representing the default document timeline.
-    if (!m_default_timeline)
-        m_default_timeline = Animations::DocumentTimeline::create(realm(), *this, static_cast<double>(MonotonicTime::now().milliseconds()));
+    // The DocumentTimeline object representing the default document timeline. The default document timeline has an
+    // origin time of zero.
+    if (!m_default_timeline) {
+        m_default_timeline = Animations::DocumentTimeline::create(realm(), *this, 0.0);
+        m_default_timeline->set_current_time(MonotonicTime::now().milliseconds());
+    }
     return *m_default_timeline;
 }
 
