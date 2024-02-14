@@ -288,7 +288,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     ACPI::initialize();
 
 #if ARCH(RISCV64)
-    // FIXME: Unflatten the device tree and use it for device discovery
+    MUST(unflatten_fdt());
+
     dump_fdt();
 #endif
 

@@ -4,16 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Memory/MemoryManager.h>
+#include <LibDeviceTree/DeviceTree.h>
 #include <Userland/Libraries/LibDeviceTree/FlattenedDeviceTree.h>
 #include <Userland/Libraries/LibDeviceTree/Validation.h>
+
+static Singleton<OwnPtr<DeviceTree::DeviceTree>> s_device_tree;
 
 namespace Kernel {
 
 BootInfo s_boot_info;
 
 alignas(PAGE_SIZE) __attribute__((section(".bss.fdt"))) u8 s_fdt_storage[fdt_storage_size];
+
+ErrorOr<void> unflatten_fdt()
+{
+    *s_device_tree = TRY(DeviceTree::DeviceTree::parse({ s_fdt_storage, fdt_storage_size }));
+    return {};
+}
 
 void dump_fdt()
 {
@@ -22,4 +32,10 @@ void dump_fdt()
     MUST(DeviceTree::dump(header, fdt));
 }
 
+}
+
+DeviceTree::DeviceTree const& DeviceTree::get()
+{
+    VERIFY(*s_device_tree);
+    return **s_device_tree;
 }
