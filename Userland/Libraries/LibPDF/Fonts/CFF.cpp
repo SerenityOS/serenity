@@ -128,6 +128,21 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     if (top_dict.is_cid_keyed) {
         // CFF spec, "18 CID-keyed Fonts"
+        // "* The FDArray operator is expected to be present"
+        if (top_dict.fdarray_offset == 0)
+            return error("CID-keyed CFFs must have an FDArray");
+
+        // "* The charset data, although in the same format as non-CIDFonts, will represent CIDs rather than SIDs"
+        // (Done below.)
+
+        // "* The Top DICT will include an FDSelect operator"
+        if (top_dict.fdselect_offset == 0)
+            return error("CID-keyed CFFs must have FDSelect");
+
+        // "* no Encoding operator will be present and the default StandardEncoding should not be applied"
+        if (top_dict.encoding_offset != 0)
+            return error("CID-keyed CFFs must not have Encoding");
+
         cff->set_kind(CFF::Kind::CIDKeyed);
     }
 
@@ -148,47 +163,54 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
     Vector<u8> encoding_codes;                 // Maps GID to its codepoint.
     HashMap<Card8, SID> encoding_supplemental; // Maps codepoint to SID.
-    switch (top_dict.encoding_offset) {
-    case 0:
-        dbgln_if(CFF_DEBUG, "CFF predefined encoding Standard");
-        for (size_t i = 1; i < s_predefined_encoding_standard.size(); ++i)
-            TRY(encoding_supplemental.try_set(i, s_predefined_encoding_standard[i]));
-        break;
-    case 1:
-        dbgln_if(CFF_DEBUG, "CFF predefined encoding Expert");
-        for (size_t i = 1; i < s_predefined_encoding_expert.size(); ++i)
-            TRY(encoding_supplemental.try_set(i, s_predefined_encoding_expert[i]));
-        break;
-    default:
-        encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(top_dict.encoding_offset)), encoding_supplemental));
-        break;
+    if (!top_dict.is_cid_keyed) {
+        switch (top_dict.encoding_offset) {
+        case 0:
+            dbgln_if(CFF_DEBUG, "CFF predefined encoding Standard");
+            for (size_t i = 1; i < s_predefined_encoding_standard.size(); ++i)
+                TRY(encoding_supplemental.try_set(i, s_predefined_encoding_standard[i]));
+            break;
+        case 1:
+            dbgln_if(CFF_DEBUG, "CFF predefined encoding Expert");
+            for (size_t i = 1; i < s_predefined_encoding_expert.size(); ++i)
+                TRY(encoding_supplemental.try_set(i, s_predefined_encoding_expert[i]));
+            break;
+        default:
+            encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(top_dict.encoding_offset)), encoding_supplemental));
+            break;
+        }
     }
 
     // CFF spec, "Table 22 Charset ID"
-    Vector<DeprecatedFlyString> charset_names;
-    switch (top_dict.charset_offset) {
-    case 0:
-        dbgln_if(CFF_DEBUG, "CFF predefined charset ISOAdobe");
-        // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
-        for (SID sid = 1; sid <= 228; sid++)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    case 1:
-        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert");
-        for (SID sid : s_predefined_charset_expert)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    case 2:
-        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert Subset");
-        for (SID sid : s_predefined_charset_expert_subset)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    default: {
-        auto charset = TRY(parse_charset(Reader { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
-        for (SID sid : charset)
-            TRY(charset_names.try_append(resolve_sid(sid, strings)));
-        break;
-    }
+    Vector<SID> charset;                       // Maps GID to CIDs for CID-keyed, to SIDs otherwise.
+    Vector<DeprecatedFlyString> charset_names; // Only valid for non-CID-keyed fonts.
+    if (top_dict.is_cid_keyed) {
+        charset = TRY(parse_charset(Reader { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
+    } else {
+        switch (top_dict.charset_offset) {
+        case 0:
+            dbgln_if(CFF_DEBUG, "CFF predefined charset ISOAdobe");
+            // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
+            for (SID sid = 1; sid <= 228; sid++)
+                TRY(charset_names.try_append(resolve_sid(sid, strings)));
+            break;
+        case 1:
+            dbgln_if(CFF_DEBUG, "CFF predefined charset Expert");
+            for (SID sid : s_predefined_charset_expert)
+                TRY(charset_names.try_append(resolve_sid(sid, strings)));
+            break;
+        case 2:
+            dbgln_if(CFF_DEBUG, "CFF predefined charset Expert Subset");
+            for (SID sid : s_predefined_charset_expert_subset)
+                TRY(charset_names.try_append(resolve_sid(sid, strings)));
+            break;
+        default: {
+            charset = TRY(parse_charset(Reader { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
+            for (SID sid : charset)
+                TRY(charset_names.try_append(resolve_sid(sid, strings)));
+            break;
+        }
+        }
     }
 
     // CFF spec, "18 CID-keyed Fonts"
@@ -226,7 +248,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     if (encoding) {
         dbgln_if(CFF_DEBUG, "CFF using external encoding");
         cff->set_encoding(move(encoding));
-    } else {
+    } else if (!top_dict.is_cid_keyed) {
         dbgln_if(CFF_DEBUG, "CFF using embedded encoding");
         auto encoding = Encoding::create();
         for (size_t i = 0; i < glyphs.size(); i++) {
