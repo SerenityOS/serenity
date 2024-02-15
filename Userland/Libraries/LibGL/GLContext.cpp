@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -259,6 +259,50 @@ void GLContext::gl_finish()
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // No-op since GLContext is completely synchronous at the moment
+}
+
+void GLContext::gl_blend_equation_separate(GLenum rgb_mode, GLenum alpha_mode)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_blend_equation_separate, rgb_mode, alpha_mode);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(!(rgb_mode == GL_FUNC_ADD
+                             || rgb_mode == GL_FUNC_SUBTRACT
+                             || rgb_mode == GL_FUNC_REVERSE_SUBTRACT
+                             || rgb_mode == GL_MIN
+                             || rgb_mode == GL_MAX),
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(alpha_mode == GL_FUNC_ADD
+                             || alpha_mode == GL_FUNC_SUBTRACT
+                             || alpha_mode == GL_FUNC_REVERSE_SUBTRACT
+                             || alpha_mode == GL_MIN
+                             || alpha_mode == GL_MAX),
+        GL_INVALID_ENUM);
+
+    m_blend_equation_rgb = rgb_mode;
+    m_blend_equation_alpha = alpha_mode;
+
+    auto map_gl_blend_equation_to_device = [](GLenum equation) constexpr {
+        switch (equation) {
+        case GL_FUNC_ADD:
+            return GPU::BlendEquation::Add;
+        case GL_FUNC_SUBTRACT:
+            return GPU::BlendEquation::Subtract;
+        case GL_FUNC_REVERSE_SUBTRACT:
+            return GPU::BlendEquation::ReverseSubtract;
+        case GL_MIN:
+            return GPU::BlendEquation::Min;
+        case GL_MAX:
+            return GPU::BlendEquation::Max;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    auto options = m_rasterizer->options();
+    options.blend_equation_rgb = map_gl_blend_equation_to_device(m_blend_equation_rgb);
+    options.blend_equation_alpha = map_gl_blend_equation_to_device(m_blend_equation_alpha);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)

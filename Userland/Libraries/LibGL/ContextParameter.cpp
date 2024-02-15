@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,6 +25,10 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
     case GL_BLEND_DST:
     case GL_BLEND_DST_ALPHA:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_destination_factor) } };
+    case GL_BLEND_EQUATION_ALPHA:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_equation_alpha) } };
+    case GL_BLEND_EQUATION_RGB:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_equation_rgb) } };
     case GL_BLEND_SRC:
     case GL_BLEND_SRC_ALPHA:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_source_factor) } };
