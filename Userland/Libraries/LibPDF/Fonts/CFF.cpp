@@ -214,24 +214,34 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     }
 
     // CFF spec, "18 CID-keyed Fonts"
+    Vector<TopDict> font_dicts;
     if (top_dict.fdarray_offset != 0) {
         Reader fdarray_reader { cff_bytes.slice(top_dict.fdarray_offset) };
-        auto font_dicts = TRY(parse_top_dicts(fdarray_reader, cff_bytes));
+        font_dicts = TRY(parse_top_dicts(fdarray_reader, cff_bytes));
         dbgln_if(CFF_DEBUG, "CFF has {} FDArray entries", font_dicts.size());
     }
 
     // CFF spec, "19 FDSelect"
+    Vector<u8> fdselect;
     if (top_dict.fdselect_offset != 0) {
-        auto fdselect = TRY(parse_fdselect(Reader { cff_bytes.slice(top_dict.fdselect_offset) }, glyphs.size()));
+        fdselect = TRY(parse_fdselect(Reader { cff_bytes.slice(top_dict.fdselect_offset) }, glyphs.size()));
         dbgln_if(CFF_DEBUG, "CFF has {} FDSelect entries", fdselect.size());
     }
 
     // Adjust glyphs' widths as they are deltas from nominalWidthX
-    for (auto& glyph : glyphs) {
-        if (!glyph.has_width())
-            glyph.set_width(top_dict.defaultWidthX);
-        else
-            glyph.set_width(glyph.width() + top_dict.nominalWidthX);
+    for (size_t glyph_id = 0; glyph_id < glyphs.size(); glyph_id++) {
+        auto& glyph = glyphs[glyph_id];
+        if (!glyph.has_width()) {
+            auto default_width = top_dict.defaultWidthX.value_or(0.0f);
+            if (top_dict.is_cid_keyed)
+                default_width = font_dicts[fdselect[glyph_id]].defaultWidthX.value_or(default_width);
+            glyph.set_width(default_width);
+        } else {
+            auto nominal_width = top_dict.nominalWidthX.value_or(0.0f);
+            if (top_dict.is_cid_keyed)
+                nominal_width = font_dicts[fdselect[glyph_id]].nominalWidthX.value_or(nominal_width);
+            glyph.set_width(glyph.width() + nominal_width);
+        }
     }
 
     for (size_t i = 0; i < glyphs.size(); i++) {

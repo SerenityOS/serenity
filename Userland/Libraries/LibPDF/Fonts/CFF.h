@@ -124,8 +124,8 @@ public:
         int encoding_offset = 0;
         int charstrings_offset = 0;
         Vector<ByteBuffer> local_subroutines;
-        float defaultWidthX = 0;
-        float nominalWidthX = 0;
+        Optional<float> defaultWidthX;
+        Optional<float> nominalWidthX;
         bool is_cid_keyed = false;
         int fdselect_offset = 0;
         int fdarray_offset = 0;
