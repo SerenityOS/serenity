@@ -58,7 +58,7 @@ static void store_fpu_state(FPUState* fpu_state)
         : "t0", "memory");
 }
 
-[[maybe_unused]] static void load_fpu_state(FPUState* fpu_state)
+static void load_fpu_state(FPUState* fpu_state)
 {
     asm volatile(
         "fld f0, 0*8(%0) \n"
@@ -274,6 +274,34 @@ ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread&, size
 {
     dbgln("FIXME: Implement Processor::capture_stack_trace() for riscv64");
     return Vector<FlatPtr, 32> {};
+}
+
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
+{
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::State::Running);
+    VERIFY(to_thread->state() == Thread::State::Running);
+
+    Processor::set_current_thread(*to_thread);
+
+    store_fpu_state(&from_thread->fpu_state());
+
+    auto& from_regs = from_thread->regs();
+    auto& to_regs = to_thread->regs();
+    if (from_regs.satp != to_regs.satp) {
+        RISCV64::CSR::SATP::write(to_regs.satp);
+        Processor::flush_entire_tlb_local();
+    }
+
+    to_thread->set_cpu(Processor::current().id());
+
+    Processor::set_thread_specific_data(to_thread->thread_specific_data());
+
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    Processor::restore_critical(in_critical);
+
+    load_fpu_state(&to_thread->fpu_state());
 }
 
 NAKED void thread_context_first_enter(void)
