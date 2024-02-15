@@ -275,7 +275,7 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
     u32 run_length = 0;
     u32 column = 0;
 
-    while (column < image_width - 1) {
+    while (column < image_width) {
         if (run_length > 0) {
             run_length--;
             TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
