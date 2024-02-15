@@ -66,6 +66,9 @@ public:
     WebIDL::ExceptionOr<void> submit();
 
     // NOTE: This is for the JS bindings. Use submit_form instead.
+    WebIDL::ExceptionOr<void> request_submit(JS::GCPtr<Element> submitter);
+
+    // NOTE: This is for the JS bindings. Use submit_form instead.
     void reset();
 
     void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);

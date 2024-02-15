@@ -25,7 +25,7 @@ interface HTMLFormElement : HTMLElement {
     getter (RadioNodeList or Element) (DOMString name);
 
     undefined submit();
-    // FIXME: undefined requestSubmit(optional HTMLElement? submitter = null);
+    undefined requestSubmit(optional HTMLElement? submitter = null);
     [CEReactions] undefined reset();
     boolean checkValidity();
     boolean reportValidity();
