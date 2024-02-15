@@ -12,14 +12,14 @@
 
 namespace Audio {
 
-ErrorOr<NonnullOwnPtr<WavWriter>> WavWriter::create_from_file(StringView path, int sample_rate, u16 num_channels, PcmSampleFormat sample_format)
+ErrorOr<NonnullOwnPtr<WavWriter>> WavWriter::create_from_file(StringView path, u32 sample_rate, u16 num_channels, PcmSampleFormat sample_format)
 {
     auto wav_writer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) WavWriter(sample_rate, num_channels, sample_format)));
     TRY(wav_writer->set_file(path));
     return wav_writer;
 }
 
-WavWriter::WavWriter(int sample_rate, u16 num_channels, PcmSampleFormat sample_format)
+WavWriter::WavWriter(u32 sample_rate, u16 num_channels, PcmSampleFormat sample_format)
     : m_sample_rate(sample_rate)
     , m_num_channels(num_channels)
     , m_sample_format(sample_format)
