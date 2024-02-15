@@ -319,6 +319,29 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit()
     return submit_form(*this, { .from_submit_binding = true });
 }
 
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
+WebIDL::ExceptionOr<void> HTMLFormElement::request_submit(JS::GCPtr<Element> submitter)
+{
+    // 1. If submitter is not null, then:
+    if (submitter) {
+        // 1. If submitter is not a submit button, then throw a TypeError.
+        auto* form_associated_element = dynamic_cast<FormAssociatedElement*>(submitter.ptr());
+        if (!(form_associated_element && form_associated_element->is_submit_button()))
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "The submitter is not a submit button"sv };
+
+        // 2. If submitter's form owner is not this form element, then throw a "NotFoundError" DOMException.
+        if (form_associated_element->form() != this)
+            return WebIDL::NotFoundError::create(realm(), "The submitter is not owned by this form element"_fly_string);
+    }
+    // 2. Otherwise, set submitter to this form element.
+    else {
+        submitter = this;
+    }
+
+    // 3. Submit this form element, from submitter.
+    return submit_form(static_cast<HTMLElement&>(*submitter), {});
+}
+
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-reset
 void HTMLFormElement::reset()
 {
