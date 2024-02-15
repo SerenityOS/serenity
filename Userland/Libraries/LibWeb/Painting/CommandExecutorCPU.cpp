@@ -8,14 +8,14 @@
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
+#include <LibWeb/Painting/CommandExecutorCPU.h>
 #include <LibWeb/Painting/FilterPainting.h>
-#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
-PaintingCommandExecutorCPU::PaintingCommandExecutorCPU(Gfx::Bitmap& bitmap)
+CommandExecutorCPU::CommandExecutorCPU(Gfx::Bitmap& bitmap)
     : m_target_bitmap(bitmap)
 {
     stacking_contexts.append({ .painter = AK::make<Gfx::Painter>(bitmap),
@@ -24,7 +24,7 @@ PaintingCommandExecutorCPU::PaintingCommandExecutorCPU(Gfx::Bitmap& bitmap)
         .scaling_mode = {} });
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+CommandResult CommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
 {
     auto& painter = this->painter();
     for (auto& glyph_or_emoji : glyph_run) {
@@ -39,7 +39,7 @@ CommandResult PaintingCommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOr
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_text(Gfx::IntRect const& rect, String const& raw_text, Gfx::TextAlignment alignment, Color const& color, Gfx::TextElision elision, Gfx::TextWrapping wrapping, Optional<NonnullRefPtr<Gfx::Font>> const& font)
+CommandResult CommandExecutorCPU::draw_text(Gfx::IntRect const& rect, String const& raw_text, Gfx::TextAlignment alignment, Color const& color, Gfx::TextElision elision, Gfx::TextWrapping wrapping, Optional<NonnullRefPtr<Gfx::Font>> const& font)
 {
     auto& painter = this->painter();
     if (font.has_value()) {
@@ -50,28 +50,28 @@ CommandResult PaintingCommandExecutorCPU::draw_text(Gfx::IntRect const& rect, St
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_rect(Gfx::IntRect const& rect, Color const& color)
+CommandResult CommandExecutorCPU::fill_rect(Gfx::IntRect const& rect, Color const& color)
 {
     auto& painter = this->painter();
     painter.fill_rect(rect, color);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult CommandExecutorCPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     auto& painter = this->painter();
     painter.draw_scaled_bitmap(dst_rect, bitmap, src_rect, 1, scaling_mode);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult CommandExecutorCPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     auto& painter = this->painter();
     painter.draw_scaled_bitmap(dst_rect, immutable_bitmap.bitmap(), src_rect, 1, scaling_mode);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::set_clip_rect(Gfx::IntRect const& rect)
+CommandResult CommandExecutorCPU::set_clip_rect(Gfx::IntRect const& rect)
 {
     auto& painter = this->painter();
     painter.clear_clip_rect();
@@ -79,13 +79,13 @@ CommandResult PaintingCommandExecutorCPU::set_clip_rect(Gfx::IntRect const& rect
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::clear_clip_rect()
+CommandResult CommandExecutorCPU::clear_clip_rect()
 {
     painter().clear_clip_rect();
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::push_stacking_context(
+CommandResult CommandExecutorCPU::push_stacking_context(
     float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation,
     CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask)
 {
@@ -174,7 +174,7 @@ CommandResult PaintingCommandExecutorCPU::push_stacking_context(
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::pop_stacking_context()
+CommandResult CommandExecutorCPU::pop_stacking_context()
 {
     ScopeGuard restore_painter = [&] {
         painter().restore();
@@ -195,7 +195,7 @@ CommandResult PaintingCommandExecutorCPU::pop_stacking_context()
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_linear_gradient(Gfx::IntRect const& gradient_rect, Web::Painting::LinearGradientData const& linear_gradient_data)
+CommandResult CommandExecutorCPU::paint_linear_gradient(Gfx::IntRect const& gradient_rect, Web::Painting::LinearGradientData const& linear_gradient_data)
 {
     auto const& data = linear_gradient_data;
     painter().fill_rect_with_linear_gradient(
@@ -204,21 +204,21 @@ CommandResult PaintingCommandExecutorCPU::paint_linear_gradient(Gfx::IntRect con
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_outer_box_shadow(PaintOuterBoxShadowParams const& outer_box_shadow_params)
+CommandResult CommandExecutorCPU::paint_outer_box_shadow(PaintOuterBoxShadowParams const& outer_box_shadow_params)
 {
     auto& painter = this->painter();
     Web::Painting::paint_outer_box_shadow(painter, outer_box_shadow_params);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_inner_box_shadow(PaintOuterBoxShadowParams const& outer_box_shadow_params)
+CommandResult CommandExecutorCPU::paint_inner_box_shadow(PaintOuterBoxShadowParams const& outer_box_shadow_params)
 {
     auto& painter = this->painter();
     Web::Painting::paint_inner_box_shadow(painter, outer_box_shadow_params);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
+CommandResult CommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
 {
     // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
     auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bounding_rect.size());
@@ -250,7 +250,7 @@ CommandResult PaintingCommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
+CommandResult CommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.fill_rect_with_rounded_corners(
@@ -263,7 +263,7 @@ CommandResult PaintingCommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::In
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_path_using_color(Gfx::Path const& path, Color const& color, Gfx::Painter::WindingRule winding_rule, Gfx::FloatPoint const& aa_translation)
+CommandResult CommandExecutorCPU::fill_path_using_color(Gfx::Path const& path, Color const& color, Gfx::Painter::WindingRule winding_rule, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.translate(aa_translation);
@@ -271,7 +271,7 @@ CommandResult PaintingCommandExecutorCPU::fill_path_using_color(Gfx::Path const&
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Gfx::FloatPoint const& aa_translation)
+CommandResult CommandExecutorCPU::fill_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.translate(aa_translation);
@@ -279,7 +279,7 @@ CommandResult PaintingCommandExecutorCPU::fill_path_using_paint_style(Gfx::Path 
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::stroke_path_using_color(Gfx::Path const& path, Color const& color, float thickness, Gfx::FloatPoint const& aa_translation)
+CommandResult CommandExecutorCPU::stroke_path_using_color(Gfx::Path const& path, Color const& color, float thickness, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.translate(aa_translation);
@@ -287,7 +287,7 @@ CommandResult PaintingCommandExecutorCPU::stroke_path_using_color(Gfx::Path cons
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::stroke_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Gfx::FloatPoint const& aa_translation)
+CommandResult CommandExecutorCPU::stroke_path_using_paint_style(Gfx::Path const& path, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Gfx::FloatPoint const& aa_translation)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.translate(aa_translation);
@@ -295,21 +295,21 @@ CommandResult PaintingCommandExecutorCPU::stroke_path_using_paint_style(Gfx::Pat
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_ellipse(Gfx::IntRect const& rect, Color const& color, int thickness)
+CommandResult CommandExecutorCPU::draw_ellipse(Gfx::IntRect const& rect, Color const& color, int thickness)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.draw_ellipse(rect, color, thickness);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode blend_mode)
+CommandResult CommandExecutorCPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode blend_mode)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.fill_ellipse(rect, color, blend_mode);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_line(Color const& color, Gfx::IntPoint const& from, Gfx::IntPoint const& to, int thickness, Gfx::Painter::LineStyle style, Color const& alternate_color)
+CommandResult CommandExecutorCPU::draw_line(Color const& color, Gfx::IntPoint const& from, Gfx::IntPoint const& to, int thickness, Gfx::Painter::LineStyle style, Color const& alternate_color)
 {
     if (style == Gfx::Painter::LineStyle::Dotted) {
         Gfx::AntiAliasingPainter aa_painter(painter());
@@ -320,19 +320,19 @@ CommandResult PaintingCommandExecutorCPU::draw_line(Color const& color, Gfx::Int
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_signed_distance_field(Gfx::IntRect const& rect, Color const& color, Gfx::GrayscaleBitmap const& sdf, float smoothing)
+CommandResult CommandExecutorCPU::draw_signed_distance_field(Gfx::IntRect const& rect, Color const& color, Gfx::GrayscaleBitmap const& sdf, float smoothing)
 {
     painter().draw_signed_distance_field(rect, color, sdf, smoothing);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_frame(Gfx::IntRect const& rect, Palette const& palette, Gfx::FrameStyle style)
+CommandResult CommandExecutorCPU::paint_frame(Gfx::IntRect const& rect, Palette const& palette, Gfx::FrameStyle style)
 {
     Gfx::StylePainter::paint_frame(painter(), rect, palette, style);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::apply_backdrop_filter(Gfx::IntRect const& backdrop_region, Web::CSS::ResolvedBackdropFilter const& backdrop_filter)
+CommandResult CommandExecutorCPU::apply_backdrop_filter(Gfx::IntRect const& backdrop_region, Web::CSS::ResolvedBackdropFilter const& backdrop_filter)
 {
     auto& painter = this->painter();
 
@@ -369,31 +369,31 @@ CommandResult PaintingCommandExecutorCPU::apply_backdrop_filter(Gfx::IntRect con
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_rect(Gfx::IntRect const& rect, Color const& color, bool rough)
+CommandResult CommandExecutorCPU::draw_rect(Gfx::IntRect const& rect, Color const& color, bool rough)
 {
     painter().draw_rect(rect, color, rough);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_radial_gradient(Gfx::IntRect const& rect, Web::Painting::RadialGradientData const& radial_gradient_data, Gfx::IntPoint const& center, Gfx::IntSize const& size)
+CommandResult CommandExecutorCPU::paint_radial_gradient(Gfx::IntRect const& rect, Web::Painting::RadialGradientData const& radial_gradient_data, Gfx::IntPoint const& center, Gfx::IntSize const& size)
 {
     painter().fill_rect_with_radial_gradient(rect, radial_gradient_data.color_stops.list, center, size, radial_gradient_data.color_stops.repeat_length);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_conic_gradient(Gfx::IntRect const& rect, Web::Painting::ConicGradientData const& conic_gradient_data, Gfx::IntPoint const& position)
+CommandResult CommandExecutorCPU::paint_conic_gradient(Gfx::IntRect const& rect, Web::Painting::ConicGradientData const& conic_gradient_data, Gfx::IntPoint const& position)
 {
     painter().fill_rect_with_conic_gradient(rect, conic_gradient_data.color_stops.list, position, conic_gradient_data.start_angle, conic_gradient_data.color_stops.repeat_length);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const& color, int amplitude, int thickness)
+CommandResult CommandExecutorCPU::draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const& color, int amplitude, int thickness)
 {
     painter().draw_triangle_wave(p1, p2, color, amplitude, thickness);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip corner_clip)
+CommandResult CommandExecutorCPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip corner_clip)
 {
     m_corner_clippers.resize(id + 1);
     auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect.to_type<DevicePixels>(), corner_clip);
@@ -402,20 +402,20 @@ CommandResult PaintingCommandExecutorCPU::sample_under_corners(u32 id, CornerRad
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::blit_corner_clipping(u32 id)
+CommandResult CommandExecutorCPU::blit_corner_clipping(u32 id)
 {
     m_corner_clippers[id]->blit_corner_clipping(painter());
     m_corner_clippers[id] = nullptr;
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
+CommandResult CommandExecutorCPU::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
 {
     paint_all_borders(painter(), border_rect, corner_radii, borders_data);
     return CommandResult::Continue;
 }
 
-bool PaintingCommandExecutorCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
+bool CommandExecutorCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     return !painter().clip_rect().intersects(rect.translated(painter().translation()));
 }

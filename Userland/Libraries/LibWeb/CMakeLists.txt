@@ -493,6 +493,7 @@ set(SOURCES
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/Command.cpp
+    Painting/CommandExecutorCPU.cpp
     Painting/CommandList.cpp
     Painting/CheckBoxPaintable.cpp
     Painting/GradientPainting.cpp
@@ -507,7 +508,6 @@ set(SOURCES
     Painting/Paintable.cpp
     Painting/PaintableBox.cpp
     Painting/PaintableFragment.cpp
-    Painting/PaintingCommandExecutorCPU.cpp
     Painting/RadioButtonPaintable.cpp
     Painting/RecordingPainter.cpp
     Painting/SVGPathPaintable.cpp
@@ -692,7 +692,7 @@ link_with_locale_data(LibWeb)
 
 if (HAS_ACCELERATED_GRAPHICS)
     target_link_libraries(LibWeb PRIVATE ${ACCEL_GFX_LIBS})
-    target_sources(LibWeb PRIVATE Painting/PaintingCommandExecutorGPU.cpp)
+    target_sources(LibWeb PRIVATE Painting/CommandExecutorGPU.cpp)
     target_link_libraries(LibWeb PRIVATE LibAccelGfx)
     target_compile_definitions(LibWeb PRIVATE HAS_ACCELERATED_GRAPHICS)
 endif()

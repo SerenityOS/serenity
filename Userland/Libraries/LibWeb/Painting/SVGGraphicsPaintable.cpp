@@ -5,7 +5,7 @@
  */
 
 #include <LibWeb/Layout/ImageBox.h>
-#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
+#include <LibWeb/Painting/CommandExecutorCPU.h>
 #include <LibWeb/Painting/SVGGraphicsPaintable.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/SVG/SVGMaskElement.h>
@@ -98,7 +98,7 @@ RefPtr<Gfx::Bitmap> SVGGraphicsPaintable::calculate_mask(PaintContext& context, 
             auto paint_context = context.clone(recording_painter);
             paint_context.set_svg_transform(graphics_element.get_transform());
             StackingContext::paint_node_as_stacking_context(mask_paintable, paint_context);
-            PaintingCommandExecutorCPU executor { *mask_bitmap };
+            CommandExecutorCPU executor { *mask_bitmap };
             painting_commands.execute(executor);
         }
     }
