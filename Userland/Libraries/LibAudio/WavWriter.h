@@ -23,8 +23,8 @@ class WavWriter : public Encoder {
     AK_MAKE_NONMOVABLE(WavWriter);
 
 public:
-    static ErrorOr<NonnullOwnPtr<WavWriter>> create_from_file(StringView path, int sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
-    WavWriter(int sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
+    static ErrorOr<NonnullOwnPtr<WavWriter>> create_from_file(StringView path, u32 sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
+    WavWriter(u32 sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
     ~WavWriter();
 
     virtual ErrorOr<void> write_samples(ReadonlySpan<Sample> samples) override;
