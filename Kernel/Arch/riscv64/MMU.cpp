@@ -150,20 +150,12 @@ static UNMAP_AFTER_INIT void build_mappings(PageBumpAllocator& allocator, u64* r
     auto start_of_kernel_range = VirtualAddress { bit_cast<FlatPtr>(+start_of_kernel_image) };
     auto end_of_kernel_range = VirtualAddress { bit_cast<FlatPtr>(+end_of_kernel_image) };
 
-    // FIXME: don't use the memory before `start` as the stack
-    auto start_of_stack_range = VirtualAddress { bit_cast<FlatPtr>(+start_of_kernel_image) }.offset(-64 * KiB);
-    auto end_of_stack_range = VirtualAddress { bit_cast<FlatPtr>(+start_of_kernel_image) };
-
     auto start_of_physical_kernel_range = PhysicalAddress { start_of_kernel_range.get() }.offset(-calculate_physical_to_link_time_address_offset());
-    auto start_of_physical_stack_range = PhysicalAddress { start_of_stack_range.get() }.offset(-calculate_physical_to_link_time_address_offset());
 
     // FIXME: dont map everything RWX
 
     // Map kernel into high virtual memory
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range, end_of_kernel_range, start_of_physical_kernel_range, PageTableEntryBits::Readable | PageTableEntryBits::Writeable | PageTableEntryBits::Executable);
-
-    // Map the stack
-    insert_entries_for_memory_range(allocator, root_table, start_of_stack_range, end_of_stack_range, start_of_physical_stack_range, PageTableEntryBits::Readable | PageTableEntryBits::Writeable);
 }
 
 static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
