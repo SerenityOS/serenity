@@ -237,8 +237,8 @@ constexpr Array common_make_up_codes = {
     Code { 2560, 12, 0b000000011111 },
 };
 
-template<size_t Size>
-Optional<Code> get_code_from_table(Array<Code, Size> const& array, u16 code_word, u8 code_size)
+template<typename T, size_t Size>
+Optional<T> get_code_from_table(Array<T, Size> const& array, u16 code_word, u8 code_size)
 {
     for (auto const& code : array) {
         if (code.code_length == code_size && code.code == code_word)
