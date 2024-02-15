@@ -229,6 +229,13 @@ protected:
 private:
     [[nodiscard]] virtual bool is_paintable_box() const final { return true; }
 
+    enum class ScrollDirection {
+        Horizontal,
+        Vertical,
+    };
+    [[nodiscard]] Optional<CSSPixelRect> scroll_thumb_rect(ScrollDirection) const;
+    [[nodiscard]] bool is_scrollable(ScrollDirection) const;
+
     Optional<OverflowData> m_overflow_data;
 
     CSSPixelPoint m_offset;
