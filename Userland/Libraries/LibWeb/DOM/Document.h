@@ -500,11 +500,17 @@ public:
     DocumentUnloadTimingInfo const& previous_document_unload_timing() const { return m_previous_document_unload_timing; }
     void set_previous_document_unload_timing(DocumentUnloadTimingInfo const& previous_document_unload_timing) { m_previous_document_unload_timing = previous_document_unload_timing; }
 
+    // https://w3c.github.io/editing/docs/execCommand/
+    bool exec_command(String command_id, bool show_ui, String value);
+    bool query_command_enabled(String command_id);
+    bool query_command_indeterm(String command_id);
+    bool query_command_state(String command_id);
+    bool query_command_supported(String command_id);
+    String query_command_value(String command_id);
+
     bool is_allowed_to_use_feature(PolicyControlledFeature) const;
 
     void did_stop_being_active_document_in_navigable();
-
-    bool query_command_supported(String const&) const;
 
     String dump_accessibility_tree_as_json();
 

@@ -106,7 +106,6 @@ interface Document : Node {
 
     [CEReactions] attribute DOMString title;
 
-    boolean queryCommandSupported(DOMString commandId);
     readonly attribute boolean hidden;
     readonly attribute DOMString visibilityState;
 
@@ -124,6 +123,14 @@ interface Document : Node {
     Element? elementFromPoint(double x, double y);
     sequence<Element> elementsFromPoint(double x, double y);
     readonly attribute Element? scrollingElement;
+
+    // https://w3c.github.io/editing/docs/execCommand/
+    [CEReactions] boolean execCommand(DOMString commandId, optional boolean showUI = false, optional DOMString value = "");
+    boolean queryCommandEnabled(DOMString commandId);
+    boolean queryCommandIndeterm(DOMString commandId);
+    boolean queryCommandState(DOMString commandId);
+    boolean queryCommandSupported(DOMString commandId);
+    DOMString queryCommandValue(DOMString commandId);
 };
 
 dictionary ElementCreationOptions {
