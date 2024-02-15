@@ -98,6 +98,12 @@ SECTIONS
         *(.heap)
     } :bss
 
+    . = ALIGN(4K);
+    start_of_initial_stack = .;
+
+    . += 32K;
+    end_of_initial_stack = .;
+
     /*
         FIXME: 8MB is enough space for all of the tables required to identity map
                physical memory. 8M is wasteful, so this should be properly calculated.

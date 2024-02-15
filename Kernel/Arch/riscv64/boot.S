@@ -35,8 +35,8 @@ Lclear_bss_loop:
   bltu t0, t1, Lclear_bss_loop
 Lclear_bss_done:
 
-  // Let the stack start before .text for now.
-  lla sp, start
+  // Set the stack pointer register to the location defined in the linker script.
+  lla sp, end_of_initial_stack
 
   // Zero all registers except sp, a0 and a1.
   li ra, 0
