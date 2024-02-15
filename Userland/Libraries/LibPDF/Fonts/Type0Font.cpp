@@ -47,8 +47,8 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document,
         if (font_file_dict->contains(CommonNames::Subtype))
             subtype = font_file_dict->get_name(CommonNames::Subtype)->name();
         if (subtype == CommonNames::CIDFontType0C) {
-            // FIXME: Call CFF::create() and assign the result to font_program once CFF::create() can handle CID-keyed fonts.
-            return Error::rendering_unsupported_error("Type0 font CIDFontType0: support for CIDFontType0C not yet implemented");
+            // FIXME: Stop passing an external encoding to CFF::create().
+            font_program = TRY(CFF::create(font_file_stream->bytes(), /*encoding=*/nullptr));
         } else {
             // FIXME: Add support for /OpenType.
             dbgln("CIDFontType0: unsupported FontFile3 subtype '{}'", subtype);
@@ -64,7 +64,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document,
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType0(move(font_program))));
 }
 
-PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u32, Renderer const&)
+PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 cid, Renderer const& renderer)
 {
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "When the CIDFont contains an embedded font program that is represented in the Compact Font Format (CFF),
@@ -75,7 +75,37 @@ PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float,
     //    The GID value shall then be used to look up the glyph procedure using the CharStrings INDEX table [...]
     //  * The "CFF" font program has a Top DICT that does not use CIDFont operators: The CIDs shall be used
     //    directly as GID values, and the glyph procedure shall be retrieved using the CharStrings INDEX"
-    return Error::rendering_unsupported_error("Type0 font CIDFontType0 not implemented yet");
+
+    // FIXME: We currently only do the first.
+
+    // FIXME: Do better than printing the cid to a string.
+    auto char_name = ByteString::formatted("{}", cid);
+    auto translation = m_font_program->glyph_translation(char_name, width);
+    point = point.translated(translation);
+
+    auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
+
+    // FIXME: Cache the font bitmap (but probably want to figure out rotation first).
+    auto bitmap = m_font_program->rasterize_glyph(char_name, width, glyph_position.subpixel_offset);
+    if (!bitmap)
+        return Error::rendering_unsupported_error("Type0 font CIDFontType0: failed to rasterize glyph");
+
+    auto style = renderer.state().paint_style;
+
+    if (style.has<Color>()) {
+        painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
+            return pixel.multiply(style.get<Color>());
+        });
+    } else {
+        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(bitmap->physical_rect(), [&](auto sample) {
+            painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [&](Color pixel) -> Color {
+                // FIXME: Presumably we need to sample at every point in the glyph, not just the top left?
+                return pixel.multiply(sample(glyph_position.blit_position));
+            });
+        });
+    }
+
+    return {};
 }
 
 class CIDFontType2 : public CIDFontType {
