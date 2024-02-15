@@ -2987,13 +2987,6 @@ void Document::did_stop_being_active_document_in_navigable()
     }
 }
 
-// https://w3c.github.io/editing/docs/execCommand/#querycommandsupported()
-bool Document::query_command_supported(String const& command) const
-{
-    dbgln("(STUBBED) Document::query_command_supported(command='{}')", command);
-    return false;
-}
-
 void Document::increment_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>)
 {
     ++m_throw_on_dynamic_markup_insertion_counter;
@@ -4074,6 +4067,42 @@ WebIDL::ExceptionOr<JS::Value> Document::named_item_value(FlyString const& name)
         return (element.name() == name);
     });
     return collection;
+}
+
+// https://w3c.github.io/editing/docs/execCommand/#execcommand()
+bool Document::exec_command(String, bool, String)
+{
+    return false;
+}
+
+// https://w3c.github.io/editing/docs/execCommand/#querycommandenabled()
+bool Document::query_command_enabled(String)
+{
+    return false;
+}
+
+// https://w3c.github.io/editing/docs/execCommand/#querycommandindeterm()
+bool Document::query_command_indeterm(String)
+{
+    return false;
+}
+
+// https://w3c.github.io/editing/docs/execCommand/#querycommandstate()
+bool Document::query_command_state(String)
+{
+    return false;
+}
+
+// https://w3c.github.io/editing/docs/execCommand/#querycommandsupported()
+bool Document::query_command_supported(String)
+{
+    return false;
+}
+
+// https://w3c.github.io/editing/docs/execCommand/#querycommandvalue()
+String Document::query_command_value(String)
+{
+    return String {};
 }
 
 }
