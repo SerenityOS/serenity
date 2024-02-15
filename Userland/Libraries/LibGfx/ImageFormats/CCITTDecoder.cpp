@@ -264,11 +264,11 @@ Optional<Code> get_terminal_code(Color color, u16 code_word, u8 code_size)
     return get_code_from_table(black_terminating_codes, code_word, code_size);
 }
 
+constexpr auto const ccitt_white = Color::NamedColor::White;
+constexpr auto const ccitt_black = Color::NamedColor::Black;
+
 ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width)
 {
-    auto const ccitt_white = Color::NamedColor::White;
-    auto const ccitt_black = Color::NamedColor::Black;
-
     // We always flip the color when entering the loop, so let's initialize the
     // color with black to make the first marker actually be white.
     Color current_color { ccitt_black };
