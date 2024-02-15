@@ -267,6 +267,11 @@ Optional<Code> get_terminal_code(Color color, u16 code_word, u8 code_size)
 constexpr auto const ccitt_white = Color::NamedColor::White;
 constexpr auto const ccitt_black = Color::NamedColor::Black;
 
+Color invert(Color current_color)
+{
+    return current_color == ccitt_white ? ccitt_black : ccitt_white;
+}
+
 ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width)
 {
     // We always flip the color when entering the loop, so let's initialize the
@@ -284,7 +289,7 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
             continue;
         }
 
-        current_color = current_color == ccitt_white ? ccitt_black : ccitt_white;
+        current_color = invert(current_color);
 
         u8 size {};
         u16 potential_code {};
