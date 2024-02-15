@@ -15,8 +15,8 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/CommandExecutorCPU.h>
 #include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
@@ -135,7 +135,7 @@ RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
 
     m_document->paintable()->paint_all_phases(context);
 
-    Painting::PaintingCommandExecutorCPU executor { *bitmap };
+    Painting::CommandExecutorCPU executor { *bitmap };
     painting_commands.execute(executor);
 
     return bitmap;

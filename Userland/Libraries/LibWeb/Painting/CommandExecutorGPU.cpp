@@ -6,11 +6,11 @@
 
 #include <LibAccelGfx/GlyphAtlas.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
-#include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
+#include <LibWeb/Painting/CommandExecutorGPU.h>
 
 namespace Web::Painting {
 
-PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Context& context, Gfx::Bitmap& bitmap)
+CommandExecutorGPU::CommandExecutorGPU(AccelGfx::Context& context, Gfx::Bitmap& bitmap)
     : m_target_bitmap(bitmap)
     , m_context(context)
 {
@@ -24,26 +24,26 @@ PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Context& contex
         .transform = {} });
 }
 
-PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
+CommandExecutorGPU::~CommandExecutorGPU()
 {
     m_context.activate();
     VERIFY(m_stacking_contexts.size() == 1);
     painter().flush(m_target_bitmap);
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+CommandResult CommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
 {
     painter().draw_glyph_run(glyph_run, color);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&)
+CommandResult CommandExecutorGPU::draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Color const& color)
+CommandResult CommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Color const& color)
 {
     painter().fill_rect(rect, color);
     return CommandResult::Continue;
@@ -64,31 +64,31 @@ static AccelGfx::Painter::ScalingMode to_accelgfx_scaling_mode(Gfx::Painter::Sca
     }
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult CommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     painter().draw_scaled_bitmap(dst_rect, bitmap, src_rect, to_accelgfx_scaling_mode(scaling_mode));
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult CommandExecutorGPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     painter().draw_scaled_immutable_bitmap(dst_rect, immutable_bitmap, src_rect, to_accelgfx_scaling_mode(scaling_mode));
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::set_clip_rect(Gfx::IntRect const& rect)
+CommandResult CommandExecutorGPU::set_clip_rect(Gfx::IntRect const& rect)
 {
     painter().set_clip_rect(rect);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::clear_clip_rect()
+CommandResult CommandExecutorGPU::clear_clip_rect()
 {
     painter().clear_clip_rect();
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform transform, Optional<StackingContextMask>)
+CommandResult CommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform transform, Optional<StackingContextMask>)
 {
     if (source_paintable_rect.is_empty())
         return CommandResult::SkipStackingContext;
@@ -131,7 +131,7 @@ CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, b
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::pop_stacking_context()
+CommandResult CommandExecutorGPU::pop_stacking_context()
 {
     auto stacking_context = m_stacking_contexts.take_last();
     VERIFY(stacking_context.stacking_context_depth == 0);
@@ -143,25 +143,25 @@ CommandResult PaintingCommandExecutorGPU::pop_stacking_context()
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_linear_gradient(Gfx::IntRect const& rect, Web::Painting::LinearGradientData const& data)
+CommandResult CommandExecutorGPU::paint_linear_gradient(Gfx::IntRect const& rect, Web::Painting::LinearGradientData const& data)
 {
     painter().fill_rect_with_linear_gradient(rect, data.color_stops.list, data.gradient_angle, data.color_stops.repeat_length);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_outer_box_shadow(PaintOuterBoxShadowParams const&)
+CommandResult CommandExecutorGPU::paint_outer_box_shadow(PaintOuterBoxShadowParams const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_inner_box_shadow(PaintOuterBoxShadowParams const&)
+CommandResult CommandExecutorGPU::paint_inner_box_shadow(PaintOuterBoxShadowParams const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
+CommandResult CommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color, int fragment_baseline, Gfx::IntPoint const& draw_location)
 {
     auto text_shadow_canvas = AccelGfx::Canvas::create(shadow_bounding_rect.size());
     auto text_shadow_painter = AccelGfx::Painter::create(m_context, text_shadow_canvas);
@@ -184,7 +184,7 @@ CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
+CommandResult CommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
 {
     painter().fill_rect_with_rounded_corners(
         rect, color,
@@ -195,37 +195,37 @@ CommandResult PaintingCommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::In
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_path_using_color(Gfx::Path const&, Color const&, Gfx::Painter::WindingRule, Gfx::FloatPoint const&)
+CommandResult CommandExecutorGPU::fill_path_using_color(Gfx::Path const&, Color const&, Gfx::Painter::WindingRule, Gfx::FloatPoint const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const&, Gfx::Painter::WindingRule, float, Gfx::FloatPoint const&)
+CommandResult CommandExecutorGPU::fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const&, Gfx::Painter::WindingRule, float, Gfx::FloatPoint const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::stroke_path_using_color(Gfx::Path const&, Color const&, float, Gfx::FloatPoint const&)
+CommandResult CommandExecutorGPU::stroke_path_using_color(Gfx::Path const&, Color const&, float, Gfx::FloatPoint const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::stroke_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const&, float, float, Gfx::FloatPoint const&)
+CommandResult CommandExecutorGPU::stroke_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const&, float, float, Gfx::FloatPoint const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_ellipse(Gfx::IntRect const&, Color const&, int)
+CommandResult CommandExecutorGPU::draw_ellipse(Gfx::IntRect const&, Color const&, int)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode)
+CommandResult CommandExecutorGPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode)
 {
     auto horizontal_radius = static_cast<float>(rect.width() / 2);
     auto vertical_radius = static_cast<float>(rect.height() / 2);
@@ -238,56 +238,56 @@ CommandResult PaintingCommandExecutorGPU::fill_ellipse(Gfx::IntRect const& rect,
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_line(Color const& color, Gfx::IntPoint const& a, Gfx::IntPoint const& b, int thickness, Gfx::Painter::LineStyle, Color const&)
+CommandResult CommandExecutorGPU::draw_line(Color const& color, Gfx::IntPoint const& a, Gfx::IntPoint const& b, int thickness, Gfx::Painter::LineStyle, Color const&)
 {
     // FIXME: Pass line style and alternate color once AccelGfx::Painter supports it
     painter().draw_line(a, b, thickness, color);
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_signed_distance_field(Gfx::IntRect const&, Color const&, Gfx::GrayscaleBitmap const&, float)
+CommandResult CommandExecutorGPU::draw_signed_distance_field(Gfx::IntRect const&, Color const&, Gfx::GrayscaleBitmap const&, float)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_frame(Gfx::IntRect const&, Palette const&, Gfx::FrameStyle)
+CommandResult CommandExecutorGPU::paint_frame(Gfx::IntRect const&, Palette const&, Gfx::FrameStyle)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::apply_backdrop_filter(Gfx::IntRect const&, Web::CSS::ResolvedBackdropFilter const&)
+CommandResult CommandExecutorGPU::apply_backdrop_filter(Gfx::IntRect const&, Web::CSS::ResolvedBackdropFilter const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_rect(Gfx::IntRect const&, Color const&, bool)
+CommandResult CommandExecutorGPU::draw_rect(Gfx::IntRect const&, Color const&, bool)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_radial_gradient(Gfx::IntRect const&, Web::Painting::RadialGradientData const&, Gfx::IntPoint const&, Gfx::IntSize const&)
+CommandResult CommandExecutorGPU::paint_radial_gradient(Gfx::IntRect const&, Web::Painting::RadialGradientData const&, Gfx::IntPoint const&, Gfx::IntSize const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_conic_gradient(Gfx::IntRect const&, Web::Painting::ConicGradientData const&, Gfx::IntPoint const&)
+CommandResult CommandExecutorGPU::paint_conic_gradient(Gfx::IntRect const&, Web::Painting::ConicGradientData const&, Gfx::IntPoint const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_triangle_wave(Gfx::IntPoint const&, Gfx::IntPoint const&, Color const&, int, int)
+CommandResult CommandExecutorGPU::draw_triangle_wave(Gfx::IntPoint const&, Gfx::IntPoint const&, Color const&, int, int)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip)
+CommandResult CommandExecutorGPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip)
 {
     m_corner_clippers.resize(id + 1);
     m_corner_clippers[id] = make<BorderRadiusCornerClipper>();
@@ -343,7 +343,7 @@ CommandResult PaintingCommandExecutorGPU::sample_under_corners(u32 id, CornerRad
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(u32 id)
+CommandResult CommandExecutorGPU::blit_corner_clipping(u32 id)
 {
     auto const& corner_clipper = *m_corner_clippers[id];
     auto const& corner_sample_canvas = *corner_clipper.corners_sample_canvas;
@@ -361,7 +361,7 @@ CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(u32 id)
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
+CommandResult CommandExecutorGPU::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
 {
     // FIXME: Add support for corner radiuses
     (void)corner_radii;
@@ -403,23 +403,23 @@ CommandResult PaintingCommandExecutorGPU::paint_borders(DevicePixelRect const& b
     return CommandResult::Continue;
 }
 
-bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
+bool CommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     auto translation = painter().transform().translation().to_type<int>();
     return !painter().clip_rect().intersects(rect.translated(translation));
 }
 
-void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
+void CommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
 {
     AccelGfx::GlyphAtlas::the().update(unique_glyphs);
 }
 
-void PaintingCommandExecutorGPU::prepare_to_execute()
+void CommandExecutorGPU::prepare_to_execute()
 {
     m_context.activate();
 }
 
-void PaintingCommandExecutorGPU::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)
+void CommandExecutorGPU::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)
 {
     painter().update_immutable_bitmap_texture_cache(immutable_bitmaps);
 }

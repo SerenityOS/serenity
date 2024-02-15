@@ -43,9 +43,9 @@ enum class CommandResult {
     SkipStackingContext,
 };
 
-class PaintingCommandExecutor {
+class CommandExecutor {
 public:
-    virtual ~PaintingCommandExecutor() = default;
+    virtual ~CommandExecutor() = default;
 
     virtual CommandResult draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const&) = 0;
     virtual CommandResult draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment alignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&) = 0;
@@ -96,7 +96,7 @@ public:
     void append(Command&& command, Optional<i32> scroll_frame_id);
 
     void apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_frame_id);
-    void execute(PaintingCommandExecutor&);
+    void execute(CommandExecutor&);
 
 private:
     struct CommandWithScrollFrame {

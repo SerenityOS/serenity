@@ -39,7 +39,7 @@ void CommandList::apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_f
     }
 }
 
-void CommandList::execute(PaintingCommandExecutor& executor)
+void CommandList::execute(CommandExecutor& executor)
 {
     executor.prepare_to_execute();
 

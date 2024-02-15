@@ -7,12 +7,11 @@
 #pragma once
 
 #include <AK/MaybeOwned.h>
-#include <LibAccelGfx/Painter.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 
 namespace Web::Painting {
 
-class PaintingCommandExecutorGPU : public PaintingCommandExecutor {
+class CommandExecutorCPU : public CommandExecutor {
 public:
     CommandResult draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const&) override;
     CommandResult draw_text(Gfx::IntRect const& rect, String const& raw_text, Gfx::TextAlignment alignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&) override;
@@ -21,7 +20,7 @@ public:
     CommandResult draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) override;
     CommandResult set_clip_rect(Gfx::IntRect const& rect) override;
     CommandResult clear_clip_rect() override;
-    CommandResult push_stacking_context(float opacity, bool, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask) override;
+    CommandResult push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask) override;
     CommandResult pop_stacking_context() override;
     CommandResult paint_linear_gradient(Gfx::IntRect const&, Web::Painting::LinearGradientData const&) override;
     CommandResult paint_outer_box_shadow(PaintOuterBoxShadowParams const&) override;
@@ -43,54 +42,35 @@ public:
     CommandResult paint_conic_gradient(Gfx::IntRect const& rect, Web::Painting::ConicGradientData const& conic_gradient_data, Gfx::IntPoint const& position) override;
     CommandResult draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const&, int amplitude, int thickness) override;
     CommandResult sample_under_corners(u32 id, CornerRadii const&, Gfx::IntRect const&, CornerClip) override;
-    CommandResult blit_corner_clipping(u32) override;
+    CommandResult blit_corner_clipping(u32 id) override;
     CommandResult paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data) override;
 
     bool would_be_fully_clipped_by_painter(Gfx::IntRect) const override;
 
-    virtual bool needs_prepare_glyphs_texture() const override { return true; }
-    void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override;
+    bool needs_prepare_glyphs_texture() const override { return false; }
+    void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override {};
 
-    virtual void prepare_to_execute() override;
+    bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
+    void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override {};
 
-    bool needs_update_immutable_bitmap_texture_cache() const override { return true; }
-    void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override;
-
-    PaintingCommandExecutorGPU(AccelGfx::Context&, Gfx::Bitmap& bitmap);
-    ~PaintingCommandExecutorGPU() override;
+    CommandExecutorCPU(Gfx::Bitmap& bitmap);
 
 private:
     Gfx::Bitmap& m_target_bitmap;
-    AccelGfx::Context& m_context;
+    Vector<RefPtr<BorderRadiusCornerClipper>> m_corner_clippers;
 
     struct StackingContext {
-        RefPtr<AccelGfx::Canvas> canvas;
-        MaybeOwned<AccelGfx::Painter> painter;
+        MaybeOwned<Gfx::Painter> painter;
         float opacity;
         Gfx::IntRect destination;
-        Gfx::AffineTransform transform;
-        int stacking_context_depth { 0 };
+        Gfx::Painter::ScalingMode scaling_mode;
+        Optional<StackingContextMask> mask = {};
     };
 
-    struct BorderRadiusCornerClipper {
-        RefPtr<AccelGfx::Canvas> corners_sample_canvas;
+    [[nodiscard]] Gfx::Painter const& painter() const { return *stacking_contexts.last().painter; }
+    [[nodiscard]] Gfx::Painter& painter() { return *stacking_contexts.last().painter; }
 
-        Gfx::FloatRect page_top_left_rect;
-        Gfx::FloatRect page_top_right_rect;
-        Gfx::FloatRect page_bottom_right_rect;
-        Gfx::FloatRect page_bottom_left_rect;
-
-        Gfx::FloatRect sample_canvas_top_left_rect;
-        Gfx::FloatRect sample_canvas_top_right_rect;
-        Gfx::FloatRect sample_canvas_bottom_right_rect;
-        Gfx::FloatRect sample_canvas_bottom_left_rect;
-    };
-
-    [[nodiscard]] AccelGfx::Painter const& painter() const { return *m_stacking_contexts.last().painter; }
-    [[nodiscard]] AccelGfx::Painter& painter() { return *m_stacking_contexts.last().painter; }
-
-    Vector<StackingContext> m_stacking_contexts;
-    Vector<OwnPtr<BorderRadiusCornerClipper>> m_corner_clippers;
+    Vector<StackingContext> stacking_contexts;
 };
 
 }

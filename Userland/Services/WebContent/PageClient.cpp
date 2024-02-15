@@ -19,8 +19,8 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Painting/CommandExecutorCPU.h>
 #include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWebView/Attribute.h>
@@ -32,7 +32,7 @@
 #include <WebContent/WebDriverConnection.h>
 
 #ifdef HAS_ACCELERATED_GRAPHICS
-#    include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
+#    include <LibWeb/Painting/CommandExecutorGPU.h>
 #endif
 
 namespace WebContent {
@@ -203,7 +203,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS
-        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(*m_accelerated_graphics_context, target);
+        Web::Painting::CommandExecutorGPU painting_command_executor(*m_accelerated_graphics_context, target);
         painting_commands.execute(painting_command_executor);
 #else
         static bool has_warned_about_configuration = false;
@@ -214,7 +214,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
         }
 #endif
     } else {
-        Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
+        Web::Painting::CommandExecutorCPU painting_command_executor(target);
         painting_commands.execute(painting_command_executor);
     }
 }
