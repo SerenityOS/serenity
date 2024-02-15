@@ -122,6 +122,7 @@ interface Document : Node {
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface
     Element? elementFromPoint(double x, double y);
     sequence<Element> elementsFromPoint(double x, double y);
+    readonly attribute Element? scrollingElement;
 };
 
 dictionary ElementCreationOptions {
