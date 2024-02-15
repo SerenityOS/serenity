@@ -3857,4 +3857,26 @@ Vector<JS::NonnullGCPtr<Element>> Document::elements_from_point(double x, double
     return sequence;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-document-scrollingelement
+JS::GCPtr<Element const> Document::scrolling_element() const
+{
+    // 1. If the Document is in quirks mode, follow these substeps:
+    if (in_quirks_mode()) {
+        // 1. If the body element exists, and it is not potentially scrollable, return the body element and abort these steps.
+        //    For this purpose, a value of overflow:clip on the the body element’s parent element must be treated as overflow:hidden.
+        if (auto const* body_element = body(); body_element && !body_element->is_potentially_scrollable())
+            return body_element;
+
+        // 2. Return null and abort these steps.
+        return nullptr;
+    }
+
+    // 2. If there is a root element, return the root element and abort these steps.
+    if (auto const* root_element = document_element(); root_element)
+        return root_element;
+
+    // 3. Return null.
+    return nullptr;
+}
+
 }
