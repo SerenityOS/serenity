@@ -246,11 +246,24 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     for (size_t i = 0; i < glyphs.size(); i++) {
         if (i == 0) {
-            TRY(cff->add_glyph(0, move(glyphs[0])));
+            if (top_dict.is_cid_keyed) {
+                // FIXME: Do better than printing the cid to a string.
+                auto cid = 0;
+                TRY(cff->add_glyph(ByteString::formatted("{}", cid), move(glyphs[0])));
+            } else {
+                // FIXME: Shouldn't this use resolve_sid(0, strings) (".notdef") as name?
+                TRY(cff->add_glyph(0, move(glyphs[0])));
+            }
             continue;
         }
-        auto const& name = charset_names[i - 1];
-        TRY(cff->add_glyph(name, move(glyphs[i])));
+        if (top_dict.is_cid_keyed) {
+            // FIXME: Do better than printing the cid to a string.
+            auto cid = charset[i - 1];
+            TRY(cff->add_glyph(ByteString::formatted("{}", cid), move(glyphs[i])));
+        } else {
+            auto const& name = charset_names[i - 1];
+            TRY(cff->add_glyph(name, move(glyphs[i])));
+        }
     }
     cff->consolidate_glyphs();
 
