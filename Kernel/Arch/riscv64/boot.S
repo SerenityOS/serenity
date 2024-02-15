@@ -7,6 +7,28 @@
 // In a specially-named text section so that the linker script can put it first in .text.
 .section ".text.first"
 
+// Make the kernel bootable using U-Boot's booti command by adding a linux header (https://www.kernel.org/doc/html/latest/arch/riscv/boot-image-header.html).
+// Booting via booti causes U-Boot to pass us the boot hart ID and a flattened devicetree (https://www.kernel.org/doc/html/latest/arch/riscv/boot.html).
+linux_header:
+.option push
+.option norvc
+  j start                                   // u32 code0
+  j start                                   // u32 code1
+.option pop
+
+  // This offset is needed, as otherwise U-Boot will try to load us at the same address where OpenSBI is loaded.
+  // The value is the same that Linux uses.
+  .dword 0x400000                           // u64 text_offset
+
+  .dword end_of_kernel_image - linux_header // u64 image_size
+  .dword 0                                  // u64 flags
+  .word 2                                   // u32 version
+  .word 0                                   // u32 res1
+  .dword 0                                  // u64 res2
+  .ascii "RISCV\0\0\0"                      // u64 magic (deprecated)
+  .ascii "RSC\x5"                           // u32 magic2
+  .word 0                                   // u32 res3
+
 .global start
 .type start, @function
 start:
