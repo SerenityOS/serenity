@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +23,8 @@ struct RasterizerOptions {
     AlphaTestFunction alpha_test_func { AlphaTestFunction::Always };
     float alpha_test_ref_value { 0 };
     bool enable_blending { false };
+    BlendEquation blend_equation_rgb { BlendEquation::Add };
+    BlendEquation blend_equation_alpha { BlendEquation::Add };
     BlendFactor blend_source_factor { BlendFactor::One };
     BlendFactor blend_destination_factor { BlendFactor::One };
     u32 color_mask { 0xffffffff };

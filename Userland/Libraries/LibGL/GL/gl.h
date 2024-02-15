@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2021-2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2021-2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -380,11 +380,18 @@ extern "C" {
 #define GL_LIGHT6 0x4006
 #define GL_LIGHT7 0x4007
 
-// More blend factors
+// Blend factors & modes
 #define GL_CONSTANT_COLOR 0x8001
 #define GL_ONE_MINUS_CONSTANT_COLOR 0x8002
 #define GL_CONSTANT_ALPHA 0x8003
 #define GL_ONE_MINUS_CONSTANT_ALPHA 0x8004
+#define GL_FUNC_ADD 0x8006
+#define GL_MIN 0x8007
+#define GL_MAX 0x8008
+#define GL_BLEND_EQUATION_RGB 0x8009
+#define GL_FUNC_SUBTRACT 0x800A
+#define GL_FUNC_REVERSE_SUBTRACT 0x800B
+#define GL_BLEND_EQUATION_ALPHA 0x883D
 
 // Points
 #define GL_POINT_SMOOTH 0x0B10

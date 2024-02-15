@@ -50,9 +50,15 @@
     },
     "BlendEquation": {
         "arguments": [
-            {"type": "GLenum", "name": "mode"}
+            {"type": "GLenum", "name": "mode"},
+            {"expression": "mode"}
         ],
-        "unimplemented": true
+        "implementation": "blend_equation_separate"
+    },
+    "BlendEquationSeparate": {
+        "arguments": [
+            {"type": "GLenum", "name": ["modeRGB", "modeAlpha"]}
+        ]
     },
     "BlendFunc": {
         "arguments": [

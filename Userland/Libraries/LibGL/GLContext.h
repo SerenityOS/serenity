@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021-2022, Jesse Buhagiar <jooster669@gmail.com>
- * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -148,6 +148,7 @@ public:
     GLboolean gl_is_list(GLuint list);
     void gl_flush();
     void gl_finish();
+    void gl_blend_equation_separate(GLenum rgb_mode, GLenum alpha_mode);
     void gl_blend_func(GLenum src_factor, GLenum dst_factor);
     void gl_shade_model(GLenum mode);
     void gl_alpha_func(GLenum func, GLclampf ref);
@@ -336,6 +337,9 @@ private:
     GLenum m_blend_source_factor = GL_ONE;
     GLenum m_blend_destination_factor = GL_ZERO;
 
+    GLenum m_blend_equation_rgb = GL_FUNC_ADD;
+    GLenum m_blend_equation_alpha = GL_FUNC_ADD;
+
     bool m_alpha_test_enabled = false;
     GLenum m_alpha_test_func = GL_ALWAYS;
     GLclampf m_alpha_test_ref_value = 0;
@@ -469,6 +473,7 @@ private:
             decltype(&GLContext::gl_cull_face),
             decltype(&GLContext::gl_call_list),
             decltype(&GLContext::gl_call_lists),
+            decltype(&GLContext::gl_blend_equation_separate),
             decltype(&GLContext::gl_blend_func),
             decltype(&GLContext::gl_shade_model),
             decltype(&GLContext::gl_alpha_func),

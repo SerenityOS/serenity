@@ -1,10 +1,11 @@
 /*
  * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
@@ -21,9 +22,9 @@
 #endif
 #define SAVE_OUTPUT false
 
-static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height)
+static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height, Gfx::BitmapFormat format = Gfx::BitmapFormat::BGRx8888)
 {
-    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }));
+    auto bitmap = MUST(Gfx::Bitmap::create(format, { width, height }));
     auto context = MUST(GL::create_context(*bitmap));
     GL::make_context_current(context);
     return context;
@@ -316,4 +317,62 @@ TEST_CASE(0011_tex_env_combine_with_constant_color)
 
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0011_tex_env_combine_with_constant_color"sv);
+}
+
+TEST_CASE(0012_blend_equations)
+{
+    auto context = create_testing_context(64, 64, Gfx::BitmapFormat::BGRA8888);
+
+    // Assert initial state
+    int actual_mode;
+    glGetIntegerv(GL_BLEND_EQUATION_RGB, &actual_mode);
+    EXPECT_EQ(actual_mode, GL_FUNC_ADD);
+    glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &actual_mode);
+    EXPECT_EQ(actual_mode, GL_FUNC_ADD);
+
+    // Clear with alpha 0 so we get a transparent color buffer
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glColor4f(.8f, .2f, .3f, .7f);
+    glRecti(-1, -1, 1, 1);
+
+    glColor4f(.3f, .1f, .8f, .5f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    static constexpr Array<GLenum, 5> blend_modes = {
+        GL_FUNC_ADD,
+        GL_FUNC_SUBTRACT,
+        GL_FUNC_REVERSE_SUBTRACT,
+        GL_MIN,
+        GL_MAX,
+    };
+    auto constexpr grid_size = blend_modes.size();
+    auto constexpr cell_size = 2.f / grid_size;
+    for (size_t x = 0; x < grid_size; ++x) {
+        for (size_t y = 0; y < grid_size; ++y) {
+            auto rgb_mode = blend_modes[x];
+            auto alpha_mode = blend_modes[y];
+
+            glBlendEquationSeparate(rgb_mode, alpha_mode);
+
+            glGetIntegerv(GL_BLEND_EQUATION_RGB, &actual_mode);
+            EXPECT_EQ(static_cast<GLenum>(actual_mode), rgb_mode);
+
+            glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &actual_mode);
+            EXPECT_EQ(static_cast<GLenum>(actual_mode), alpha_mode);
+
+            glRectf(
+                -1.f + cell_size * static_cast<float>(x),
+                1.f - cell_size * static_cast<float>(y),
+                -1.f + cell_size * static_cast<float>(x + 1),
+                1.f - cell_size * static_cast<float>(y + 1));
+        }
+    }
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0012_blend_equations"sv);
 }
