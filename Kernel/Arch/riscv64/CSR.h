@@ -93,6 +93,11 @@ struct [[gnu::packed]] alignas(u64) SATP {
     {
         return bit_cast<SATP>(CSR::read(CSR::Address::SATP));
     }
+
+    bool operator==(SATP const& other) const
+    {
+        return bit_cast<u64>(*this) == bit_cast<u64>(other);
+    }
 };
 static_assert(AssertSize<SATP, 8>());
 
