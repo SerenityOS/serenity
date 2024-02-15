@@ -24,7 +24,8 @@
 #import <Selection/Selection.idl>
 
 // https://dom.spec.whatwg.org/#document
-[Exposed=Window]
+// https://html.spec.whatwg.org/multipage/dom.html#the-document-object
+[Exposed=Window, LegacyOverrideBuiltins]
 interface Document : Node {
     constructor();
 

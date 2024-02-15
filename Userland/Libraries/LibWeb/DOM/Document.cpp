@@ -65,6 +65,7 @@
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
+#include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/ListOfAvailableImages.h>
@@ -337,6 +338,11 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
 {
+    m_legacy_platform_object_flags = PlatformObject::LegacyPlatformObjectFlags {
+        .supports_named_properties = true,
+        .has_legacy_override_built_ins_interface_extended_attribute = true,
+    };
+
     HTML::main_thread_event_loop().register_document({}, *this);
 
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
@@ -456,6 +462,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
         visitor.visit(form_associated_element->form_associated_element_to_html_element());
+
+    for (auto& element : m_potentially_named_elements)
+        visitor.visit(element);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
@@ -3714,16 +3723,87 @@ void Document::append_pending_animation_event(Web::DOM::Document::PendingAnimati
     m_pending_animation_event_queue.append(event);
 }
 
-void Document::element_id_changed(Badge<DOM::Element>)
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
+static bool is_potentially_named_element(DOM::Element const& element)
+{
+    return is<HTML::HTMLEmbedElement>(element) || is<HTML::HTMLFormElement>(element) || is<HTML::HTMLIFrameElement>(element) || is<HTML::HTMLImageElement>(element) || is<HTML::HTMLObjectElement>(element);
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
+static bool is_potentially_named_element_by_id(DOM::Element const& element)
+{
+    return is<HTML::HTMLObjectElement>(element) || is<HTML::HTMLImageElement>(element);
+}
+
+static void insert_in_tree_order(Vector<JS::NonnullGCPtr<DOM::Element>>& elements, DOM::Element& element)
+{
+    for (auto& el : elements) {
+        if (el == &element)
+            return;
+    }
+
+    auto index = elements.find_first_index_if([&](auto& existing_element) {
+        return existing_element->compare_document_position(element) & Node::DOCUMENT_POSITION_FOLLOWING;
+    });
+    if (index.has_value())
+        elements.insert(index.value(), element);
+    else
+        elements.append(element);
+}
+
+void Document::element_id_changed(Badge<DOM::Element>, JS::NonnullGCPtr<DOM::Element> element)
 {
     for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
         form_associated_element->element_id_changed({});
+
+    if (element->id().has_value())
+        insert_in_tree_order(m_potentially_named_elements, element);
+    else
+        (void)m_potentially_named_elements.remove_first_matching([element](auto& e) { return e == element; });
 }
 
-void Document::element_with_id_was_added_or_removed(Badge<DOM::Element>)
+void Document::element_with_id_was_added(Badge<DOM::Element>, JS::NonnullGCPtr<DOM::Element> element)
 {
     for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
         form_associated_element->element_with_id_was_added_or_removed({});
+
+    if (is_potentially_named_element_by_id(*element))
+        insert_in_tree_order(m_potentially_named_elements, element);
+}
+
+void Document::element_with_id_was_removed(Badge<DOM::Element>, JS::NonnullGCPtr<DOM::Element> element)
+{
+    for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
+        form_associated_element->element_with_id_was_added_or_removed({});
+
+    if (is_potentially_named_element_by_id(*element))
+        (void)m_potentially_named_elements.remove_first_matching([element](auto& e) { return e == element; });
+}
+
+void Document::element_name_changed(Badge<DOM::Element>, JS::NonnullGCPtr<DOM::Element> element)
+{
+    if (element->name().has_value()) {
+        insert_in_tree_order(m_potentially_named_elements, element);
+    } else {
+        if (is_potentially_named_element_by_id(element) && element->id().has_value())
+            return;
+        (void)m_potentially_named_elements.remove_first_matching([element](auto& e) { return e == element; });
+    }
+}
+
+void Document::element_with_name_was_added(Badge<DOM::Element>, JS::NonnullGCPtr<DOM::Element> element)
+{
+    if (is_potentially_named_element(element))
+        insert_in_tree_order(m_potentially_named_elements, element);
+}
+
+void Document::element_with_name_was_removed(Badge<DOM::Element>, JS::NonnullGCPtr<DOM::Element> element)
+{
+    if (is_potentially_named_element(element)) {
+        if (is_potentially_named_element_by_id(element) && element->id().has_value())
+            return;
+        (void)m_potentially_named_elements.remove_first_matching([element](auto& e) { return e == element; });
+    }
 }
 
 void Document::add_form_associated_element_with_form_attribute(HTML::FormAssociatedElement& form_associated_element)
@@ -3877,6 +3957,123 @@ JS::GCPtr<Element const> Document::scrolling_element() const
 
     // 3. Return null.
     return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#exposed
+static bool is_exposed(Element const& element)
+{
+    if (is<HTML::HTMLObjectElement>(element) || is<HTML::HTMLEmbedElement>(element)) {
+        // FIXME: An embed or object element is said to be exposed if it has no exposed object ancestor, and,
+        //        for object elements, is additionally either not showing its fallback content or has no object or embed descendants.
+        return true;
+    }
+
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-which
+Vector<FlyString> Document::supported_property_names() const
+{
+    // The supported property names of a Document object document at any moment consist of the following,
+    // in tree order according to the element that contributed them, ignoring later duplicates,
+    // and with values from id attributes coming before values from name attributes when the same element contributes both:
+    OrderedHashTable<FlyString> names;
+
+    // the value of the name content attribute for all exposed embed, form, iframe, img, and exposed object elements
+    // that have a non-empty name content attribute and are in a document tree with document as their root;
+
+    // the value of the id content attribute for all exposed object elements that have a non-empty id content attribute
+    // and are in a document tree with document as their root; and
+
+    // the value of the id content attribute for all img elements that have both a non-empty id content attribute
+    // and a non-empty name content attribute, and are in a document tree with document as their root.
+
+    for (auto const& element : m_potentially_named_elements) {
+        if (!is_exposed(element))
+            continue;
+
+        if (is<HTML::HTMLObjectElement>(*element)) {
+            if (auto id = element->id(); id.has_value())
+                names.set(id.value());
+        }
+        if (is<HTML::HTMLImageElement>(*element)) {
+            auto maybe_name = element->name();
+            // Only set id if both name and id have value, for img elements. clear as mud
+            if (auto maybe_id = element->id(); maybe_name.has_value() && maybe_id.has_value())
+                names.set(maybe_id.value());
+        }
+
+        if (auto name = element->name(); name.has_value())
+            names.set(name.value());
+    }
+
+    return names.values();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
+static Vector<JS::NonnullGCPtr<DOM::Element>> named_elements_with_name(Document const& document, FlyString const& name)
+{
+    // Named elements with the name name, for the purposes of the above algorithm, are those that are either:
+
+    // - Exposed embed, form, iframe, img, or exposed object elements that have a name content attribute whose value is name, or
+    // - Exposed object elements that have an id content attribute whose value is name, or
+    // - img elements that have an id content attribute whose value is name, and that have a non-empty name content attribute present also.
+
+    Vector<JS::NonnullGCPtr<DOM::Element>> named_elements;
+    for (auto const& element : document.potentially_named_elements()) {
+        if (!is_exposed(*element))
+            continue;
+
+        if (is<HTML::HTMLObjectElement>(*element)) {
+            if (element->id() == name)
+                named_elements.append(element);
+        } else if (is<HTML::HTMLImageElement>(*element)) {
+            if (element->id() == name && element->name().has_value())
+                named_elements.append(element);
+        }
+
+        if (element->name() == name) {
+            named_elements.append(*element);
+        }
+    }
+
+    return named_elements;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem
+WebIDL::ExceptionOr<JS::Value> Document::named_item_value(FlyString const& name) const
+{
+    // 1. Let elements be the list of named elements with the name name that are in a document tree with the Document as their root.
+    // NOTE: There will be at least one such element, since the algorithm would otherwise not have been invoked by Web IDL.
+    auto elements = named_elements_with_name(*this, name);
+
+    // 2. If elements has only one element, and that element is an iframe element, and that iframe element's content navigable is not null,
+    //    then return the active WindowProxy of the element's content navigable.
+    if (elements.size() == 1 && is<HTML::HTMLIFrameElement>(*elements.first())) {
+        auto& iframe_element = static_cast<HTML::HTMLIFrameElement&>(*elements.first());
+        if (iframe_element.content_navigable() != nullptr)
+            return iframe_element.content_navigable()->active_window_proxy();
+    }
+
+    // 3. Otherwise, if elements has only one element, return that element.
+    if (elements.size() == 1)
+        return elements.first();
+
+    // 4. Otherwise return an HTMLCollection rooted at the Document node, whose filter matches only named elements with the name name.
+    auto collection = HTMLCollection::create(*const_cast<Document*>(this), HTMLCollection::Scope::Descendants, [name](auto& element) {
+        if (!is_potentially_named_element(element) || !is_exposed(element))
+            return false;
+
+        if (is<HTML::HTMLObjectElement>(element)) {
+            if (element.id() == name)
+                return true;
+        } else if (is<HTML::HTMLImageElement>(element)) {
+            if (element.id() == name && element.name().has_value())
+                return true;
+        }
+        return (element.name() == name);
+    });
+    return collection;
 }
 
 }

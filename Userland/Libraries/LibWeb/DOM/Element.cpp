@@ -466,12 +466,14 @@ void Element::attribute_changed(FlyString const& name, Optional<String> const& v
         else
             m_id = value_or_empty;
 
-        document().element_id_changed({});
+        document().element_id_changed({}, *this);
     } else if (name == HTML::AttributeNames::name) {
         if (!value.has_value())
             m_name = {};
         else
             m_name = value_or_empty;
+
+        document().element_name_changed({}, *this);
     } else if (name == HTML::AttributeNames::class_) {
         auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
         m_classes.clear();
@@ -1033,7 +1035,10 @@ void Element::inserted()
     Base::inserted();
 
     if (m_id.has_value())
-        document().element_with_id_was_added_or_removed({});
+        document().element_with_id_was_added({}, *this);
+
+    if (m_name.has_value())
+        document().element_with_name_was_added({}, *this);
 }
 
 void Element::removed_from(Node* node)
@@ -1041,7 +1046,10 @@ void Element::removed_from(Node* node)
     Base::removed_from(node);
 
     if (m_id.has_value())
-        document().element_with_id_was_added_or_removed({});
+        document().element_with_id_was_removed({}, *this);
+
+    if (m_name.has_value())
+        document().element_with_name_was_removed({}, *this);
 }
 
 void Element::children_changed()
