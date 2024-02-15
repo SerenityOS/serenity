@@ -272,6 +272,36 @@ Color invert(Color current_color)
     return current_color == ccitt_white ? ccitt_black : ccitt_white;
 }
 
+ErrorOr<u32> read_run_length(BigEndianInputBitStream& input_bit_stream, Color current_color, u32 image_width, u32 column)
+{
+    u8 size {};
+    u16 potential_code {};
+    u32 run_length {};
+    while (size < 14) {
+        potential_code <<= 1;
+        potential_code |= TRY(input_bit_stream.read_bit());
+        size++;
+
+        if (auto const maybe_markup = get_markup_code(current_color, potential_code, size); maybe_markup.has_value()) {
+            run_length += maybe_markup->run_length;
+            // OK, let's reset the loop to read a terminal code now
+            size = 0;
+            potential_code = 0;
+        } else if (auto const maybe_terminal = get_terminal_code(current_color, potential_code, size); maybe_terminal.has_value()) {
+            run_length += maybe_terminal->run_length;
+            break;
+        }
+    }
+
+    if (size == 14)
+        return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid CCITT code");
+
+    if (column + run_length > image_width)
+        return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT codes encode for more than a line");
+
+    return run_length;
+}
+
 ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width)
 {
     // We always flip the color when entering the loop, so let's initialize the
@@ -291,29 +321,7 @@ ErrorOr<void> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_st
 
         current_color = invert(current_color);
 
-        u8 size {};
-        u16 potential_code {};
-        while (size < 14) {
-            potential_code <<= 1;
-            potential_code |= TRY(input_bit_stream.read_bit());
-            size++;
-
-            if (auto const maybe_markup = get_markup_code(current_color, potential_code, size); maybe_markup.has_value()) {
-                run_length += maybe_markup->run_length;
-                // OK, let's reset the loop to read a terminal code now
-                size = 0;
-                potential_code = 0;
-            } else if (auto const maybe_terminal = get_terminal_code(current_color, potential_code, size); maybe_terminal.has_value()) {
-                run_length += maybe_terminal->run_length;
-                break;
-            }
-        }
-
-        if (size == 14)
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid CCITT code");
-
-        if (column + run_length > image_width)
-            return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT codes encode for more that a line");
+        run_length += TRY(read_run_length(input_bit_stream, current_color, image_width, column));
     }
 
     TRY(decoded_bits.align_to_byte_boundary());
