@@ -843,6 +843,8 @@ DeprecatedFlyString CFF::resolve_sid(SID sid, Vector<StringView> const& strings)
 PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_count)
 {
     // CFF spec, "13 Charsets"
+
+    // Maps `GID - 1` to a SID (or CID, for CID-keyed fonts). The name of GID 0 is implicitly ".notdef".
     Vector<SID> names;
     auto format = TRY(reader.try_read<Card8>());
     if (format == 0) {
