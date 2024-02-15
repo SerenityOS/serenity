@@ -95,6 +95,7 @@ OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
     bool is_tight = true;
     bool has_trailing_blank_lines = false;
     size_t start_number = 1;
+    char list_bullet = 0;
 
     while (!lines.is_end()) {
 
@@ -117,6 +118,12 @@ OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
 
         if (offset + 2 <= line.length()) {
             if (line[offset + 1] == ' ' && (line[offset] == '*' || line[offset] == '-' || line[offset] == '+')) {
+                // Changing the bullet starts a new list (example 301)
+                if (first)
+                    list_bullet = line[offset];
+                else if (list_bullet != line[offset])
+                    break;
+
                 appears_unordered = true;
                 offset++;
             }
@@ -137,12 +144,17 @@ OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
                         // Only ordered lists starting with 1 can iterrupt a paragraph (example 304)
                         if (is_interrupting_paragraph && start_number != 1)
                             return {};
+                        list_bullet = ch;
                     }
                     appears_ordered = true;
                     offset = i + 1;
                 }
             break;
         }
+
+        // Changing the ordered list delimiter starts a new list (example 302)
+        if (appears_ordered && line[offset - 1] != list_bullet)
+            break;
 
         VERIFY(!(appears_unordered && appears_ordered));
         if (!appears_unordered && !appears_ordered) {
