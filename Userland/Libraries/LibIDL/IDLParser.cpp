@@ -372,6 +372,7 @@ Vector<Parameter> Parser::parse_parameters()
 
 Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface, IsSpecialOperation is_special_operation)
 {
+    auto position = lexer.current_position();
     bool static_ = false;
     if (lexer.consume_specific("static"sv)) {
         static_ = true;
@@ -388,7 +389,7 @@ Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attrib
     consume_whitespace();
     assert_specific(';');
 
-    Function function { move(return_type), name, move(parameters), move(extended_attributes), {}, false };
+    Function function { move(return_type), name, move(parameters), move(extended_attributes), position, {}, false };
 
     // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
     if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
@@ -1111,6 +1112,32 @@ Interface& Parser::parse()
             overloaded_function.is_overloaded = true;
     }
     // FIXME: Add support for overloading constructors
+
+    // Check overload sets for repeated instances of the same function
+    // as these will produce very cryptic errors if left alone.
+    for (auto& overload_set : interface.overload_sets) {
+        auto& functions = overload_set.value;
+        for (size_t i = 0; i < functions.size(); ++i) {
+            for (size_t j = i + 1; j < functions.size(); ++j) {
+                if (functions[i].parameters.size() != functions[j].parameters.size())
+                    continue;
+                auto same = true;
+                for (size_t k = 0; k < functions[i].parameters.size(); ++k) {
+                    if (functions[i].parameters[k].type->is_distinguishable_from(interface, functions[j].parameters[k].type)) {
+                        same = false;
+                        break;
+                    }
+                }
+                if (same) {
+                    report_parsing_error(
+                        ByteString::formatted("Overload set '{}' contains multiple identical declarations", overload_set.key),
+                        filename,
+                        input,
+                        functions[j].source_position.offset);
+                }
+            }
+        }
+    }
 
     if (interface.will_generate_code())
         interface.required_imported_paths.set(this_module);

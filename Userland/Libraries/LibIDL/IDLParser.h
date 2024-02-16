@@ -61,7 +61,7 @@ private:
     ByteString import_base_path;
     ByteString filename;
     StringView input;
-    GenericLexer lexer;
+    LineTrackingLexer lexer;
 
     HashTable<NonnullOwnPtr<Interface>>& top_level_interfaces();
     HashTable<NonnullOwnPtr<Interface>> interfaces;
