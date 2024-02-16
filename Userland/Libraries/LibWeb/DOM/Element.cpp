@@ -1407,6 +1407,9 @@ int Element::scroll_height() const
     if (!document.is_active())
         return 0;
 
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document).update_layout();
+
     // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any,
     //    or zero if there is no viewport.
     auto viewport_height = document.viewport_rect().height().to_int();
