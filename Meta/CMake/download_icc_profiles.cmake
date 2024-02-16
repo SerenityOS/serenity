@@ -7,7 +7,7 @@ if (ENABLE_ADOBE_ICC_PROFILES_DOWNLOAD)
     if (ENABLE_NETWORK_DOWNLOADS)
         download_file("${ADOBE_ICC_PROFILES_DATA_URL}" "${ADOBE_ICC_PROFILES_ZIP_PATH}")
     else()
-        message(STATUS "Skipping download of ${ADOBE_ICC_PROFILES_DATA_URL}, expecting the archive to have been donwloaded to ${ADOBE_ICC_PROFILES_ZIP_PATH}")
+        message(STATUS "Skipping download of ${ADOBE_ICC_PROFILES_DATA_URL}, expecting the archive to have been downloaded to ${ADOBE_ICC_PROFILES_ZIP_PATH}")
     endif()
 
     function(extract_adobe_icc_profiles source path)

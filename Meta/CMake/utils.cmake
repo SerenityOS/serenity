@@ -187,23 +187,6 @@ function(link_with_locale_data target)
     endif()
 endfunction()
 
-function(remove_path_if_version_changed version version_file cache_path)
-    set(version_differs YES)
-
-    if (EXISTS "${version_file}")
-        file(STRINGS "${version_file}" active_version)
-        if (version STREQUAL active_version)
-            set(version_differs NO)
-        endif()
-    endif()
-
-    if (version_differs)
-        message(STATUS "Removing outdated ${cache_path} for version ${version}")
-        file(REMOVE_RECURSE "${cache_path}")
-        file(WRITE "${version_file}" "${version}")
-    endif()
-endfunction()
-
 function(invoke_generator name generator version_file header implementation)
     cmake_parse_arguments(invoke_generator "" "" "arguments;dependencies" ${ARGN})
 
