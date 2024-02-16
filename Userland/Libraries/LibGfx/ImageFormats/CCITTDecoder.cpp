@@ -418,32 +418,42 @@ ErrorOr<ReferenceLine> decode_single_ccitt_2d_line(BigEndianInputBitStream& inpu
     ReferenceLine current_line {};
     Color current_color { ccitt_white };
     u32 column {};
+    u32 remainder_from_pass_mode {};
 
-    auto const next_change_on_reference_line = [&](Search search = Search::B1) -> ErrorOr<Change> {
+    auto const next_change_on_reference_line = [&]() -> ErrorOr<Change> {
         // 4.2.1.3.1 Definition of changing picture elements
         Optional<Change> next_change {}; // This is referred to as b1 in the spec.
+        u32 offset {};
         while (!next_change.has_value()) {
-            if (reference_line.is_empty())
+            if (reference_line.is_empty() || reference_line.size() <= offset)
                 return Error::from_string_literal("CCITTDecoder: Corrupted stream");
-            auto const change = reference_line.take_first();
-            if (change.column < column)
+            auto const change = reference_line[0 + offset];
+            // 4.2.1.3.4 Processing the first and last picture elements in a line
+            // "The first starting picture element a0 on each coding line is imaginarily set at a position just
+            // before the first picture element, and is regarded as a white picture element."
+            // To emulate this behavior we check for column == 0 here.
+            if (change.column <= column && column != 0) {
+                reference_line.take_first();
                 continue;
-            if ((search == Search::B1 && change.color != current_color)
-                || (search == Search::B2 && change.color == current_color))
+            }
+            if (change.color != current_color)
                 next_change = change;
+            else
+                offset++;
         }
         return *next_change;
     };
 
     auto const encode_for = [&](Change change, i8 offset = 0) -> ErrorOr<void> {
-        auto const to_encode = change.column - column + offset;
+        auto const to_encode = remainder_from_pass_mode + change.column - column + offset;
         for (u32 i {}; i < to_encode; ++i)
             TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
 
-        column += to_encode;
+        column = change.column + offset;
         current_color = change.color;
+        remainder_from_pass_mode = 0;
 
-        TRY(current_line.try_empend(change.color, change.column + offset));
+        TRY(current_line.try_empend(current_color, column));
         return {};
     };
 
@@ -452,9 +462,21 @@ ErrorOr<ReferenceLine> decode_single_ccitt_2d_line(BigEndianInputBitStream& inpu
 
         // Behavior are described here 4.2.1.3.2 Coding modes.
         switch (mode.mode) {
-        case Mode::Pass:
-            TRY(next_change_on_reference_line(Search::B2));
+        case Mode::Pass: {
+            auto const column_before = column;
+            // We search for b1.
+            auto change = TRY(next_change_on_reference_line());
+            current_color = change.color;
+            column = change.column;
+
+            // We search for b2, which is the same as searching for b1 after updating the state.
+            change = TRY(next_change_on_reference_line());
+            current_color = change.color;
+            column = change.column;
+
+            remainder_from_pass_mode += column - column_before;
             break;
+        }
         case Mode::Horizontal: {
             // a0a1
             auto run_length = TRY(read_run_length(input_bit_stream, OptionalNone {}, current_color, image_width, column));
