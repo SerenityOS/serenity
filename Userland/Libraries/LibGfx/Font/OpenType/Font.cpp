@@ -358,8 +358,8 @@ Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y
             //        the pixels-per-em values and the font point size. It appears that bitmaps are not in the same
             //        coordinate space as the head table's "units per em" value.
             //        There's definitely some cleaner way to do this.
-            float x_scale = (point_width * 1.3333333f) / static_cast<float>(data.bitmap_size.ppem_x);
-            float y_scale = (point_height * 1.3333333f) / static_cast<float>(data.bitmap_size.ppem_y);
+            float x_scale = (point_width * DEFAULT_DPI) / (POINTS_PER_INCH * data.bitmap_size.ppem_x);
+            float y_scale = (point_height * DEFAULT_DPI) / (POINTS_PER_INCH * data.bitmap_size.ppem_y);
 
             return Gfx::ScaledGlyphMetrics {
                 .ascender = static_cast<float>(data.bitmap_size.hori.ascender) * y_scale,
