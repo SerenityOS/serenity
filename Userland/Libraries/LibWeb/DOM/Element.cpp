@@ -1430,7 +1430,7 @@ int Element::scroll_height() const
         return 0;
 
     // 7. Return the height of the element’s scrolling area.
-    return paintable_box()->border_box_height().to_int();
+    return paintable_box()->scrollable_overflow_rect()->height().to_int();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
