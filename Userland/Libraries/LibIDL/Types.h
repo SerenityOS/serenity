@@ -158,6 +158,7 @@ struct Function {
     ByteString name;
     Vector<Parameter> parameters;
     HashMap<ByteString, ByteString> extended_attributes;
+    LineTrackingLexer::Position source_position;
     size_t overload_index { 0 };
     bool is_overloaded { false };
 
