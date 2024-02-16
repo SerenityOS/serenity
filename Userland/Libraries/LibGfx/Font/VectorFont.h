@@ -12,6 +12,9 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Path.h>
 
+#define POINTS_PER_INCH 72.0f
+#define DEFAULT_DPI 96
+
 namespace Gfx {
 
 class ScaledFont;

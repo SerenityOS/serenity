@@ -12,9 +12,6 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/VectorFont.h>
 
-#define POINTS_PER_INCH 72.0f
-#define DEFAULT_DPI 96
-
 namespace Gfx {
 
 struct GlyphIndexWithSubpixelOffset {
