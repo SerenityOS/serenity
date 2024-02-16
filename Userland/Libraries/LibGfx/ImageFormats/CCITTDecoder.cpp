@@ -563,4 +563,25 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
     return decoded_bytes;
 }
 
+ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height)
+{
+    auto strip_stream = make<FixedMemoryStream>(bytes);
+    auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
+
+    // Note: We put image_height extra-space to handle at most one alignment to byte boundary per line.
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8) + image_height));
+    auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
+    auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
+
+    // T.6 2.2.1 Principle of the coding scheme
+    // The reference line for the first coding line in a page is an imaginary white line.
+    ReferenceLine reference_line;
+    TRY(reference_line.try_empend(ccitt_black, image_width));
+
+    for (u32 i = 0; i < image_height; ++i)
+        reference_line = TRY(decode_single_ccitt_2d_line(*bit_stream, *decoded_bits, move(reference_line), image_width));
+
+    return decoded_bytes;
+}
+
 }
