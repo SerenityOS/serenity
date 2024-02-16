@@ -436,6 +436,20 @@ private:
             TRY(loop_over_pixels(move(decode_group3_segment)));
             break;
         }
+        case Compression::Group4Fax: {
+            TRY(ensure_tags_are_correct_for_ccitt());
+
+            // FIXME: We need to parse T6 options
+            ByteBuffer decoded_bytes {};
+            auto decode_group3_segment = [&](u32 num_bytes, IntSize segment_size) -> ErrorOr<ReadonlyBytes> {
+                auto const encoded_bytes = TRY(read_bytes_considering_fill_order(num_bytes));
+                decoded_bytes = TRY(CCITT::decode_ccitt_group4(encoded_bytes, segment_size.width(), segment_size.height()));
+                return decoded_bytes;
+            };
+
+            TRY(loop_over_pixels(move(decode_group3_segment)));
+            break;
+        }
         case Compression::LZW: {
             ByteBuffer decoded_bytes {};
             auto decode_lzw_segment = [&](u32 num_bytes, IntSize) -> ErrorOr<ReadonlyBytes> {
