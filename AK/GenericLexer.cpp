@@ -176,6 +176,31 @@ ErrorOr<T> GenericLexer::consume_decimal_integer()
     }
 }
 
+LineTrackingLexer::Position LineTrackingLexer::position_for(size_t index) const
+{
+    auto& [cached_index, cached_line, cached_column] = m_cached_position;
+
+    if (cached_index <= index) {
+        for (size_t i = cached_index; i < index; ++i) {
+            if (m_input[i] == '\n')
+                ++cached_line, cached_column = 0;
+            else
+                ++cached_column;
+        }
+    } else {
+        auto lines_backtracked = m_input.substring_view(index, cached_index - index).count('\n');
+        cached_line -= lines_backtracked;
+        if (lines_backtracked == 0) {
+            cached_column -= cached_index - index;
+        } else {
+            auto current_line_start = m_input.substring_view(0, index).find_last('\n').value_or(0);
+            cached_column = index - current_line_start;
+        }
+    }
+    cached_index = index;
+    return m_cached_position;
+}
+
 template ErrorOr<u8> GenericLexer::consume_decimal_integer<u8>();
 template ErrorOr<i8> GenericLexer::consume_decimal_integer<i8>();
 template ErrorOr<u16> GenericLexer::consume_decimal_integer<u16>();

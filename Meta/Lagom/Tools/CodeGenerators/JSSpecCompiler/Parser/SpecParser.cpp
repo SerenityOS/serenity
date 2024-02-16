@@ -50,12 +50,12 @@ Location SpecificationParsingContext::file_scope() const
     return { .filename = m_translation_unit->filename() };
 }
 
-Location SpecificationParsingContext::location_from_xml_offset(XML::Offset offset) const
+Location SpecificationParsingContext::location_from_xml_offset(LineTrackingLexer::Position position) const
 {
     return {
         .filename = m_translation_unit->filename(),
-        .line = offset.line,
-        .column = offset.column,
+        .line = position.line,
+        .column = position.column,
         .logical_location = m_current_logical_scope,
     };
 }
