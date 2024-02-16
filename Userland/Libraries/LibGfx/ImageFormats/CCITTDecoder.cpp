@@ -413,6 +413,89 @@ enum class Search : u8 {
     B2,
 };
 
+ErrorOr<ReferenceLine> decode_single_ccitt_2d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, ReferenceLine&& reference_line, u32 image_width)
+{
+    ReferenceLine current_line {};
+    Color current_color { ccitt_white };
+    u32 column {};
+
+    auto const next_change_on_reference_line = [&](Search search = Search::B1) -> ErrorOr<Change> {
+        // 4.2.1.3.1 Definition of changing picture elements
+        Optional<Change> next_change {}; // This is referred to as b1 in the spec.
+        while (!next_change.has_value()) {
+            if (reference_line.is_empty())
+                return Error::from_string_literal("CCITTDecoder: Corrupted stream");
+            auto const change = reference_line.take_first();
+            if (change.column < column)
+                continue;
+            if ((search == Search::B1 && change.color != current_color)
+                || (search == Search::B2 && change.color == current_color))
+                next_change = change;
+        }
+        return *next_change;
+    };
+
+    auto const encode_for = [&](Change change, i8 offset = 0) -> ErrorOr<void> {
+        auto const to_encode = change.column - column + offset;
+        for (u32 i {}; i < to_encode; ++i)
+            TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
+
+        column += to_encode;
+        current_color = change.color;
+
+        TRY(current_line.try_empend(change.color, change.column + offset));
+        return {};
+    };
+
+    while (column < image_width) {
+        auto const mode = TRY(read_mode(input_bit_stream));
+
+        // Behavior are described here 4.2.1.3.2 Coding modes.
+        switch (mode.mode) {
+        case Mode::Pass:
+            TRY(next_change_on_reference_line(Search::B2));
+            break;
+        case Mode::Horizontal: {
+            // a0a1
+            auto run_length = TRY(read_run_length(input_bit_stream, OptionalNone {}, current_color, image_width, column));
+            TRY(encode_for({ invert(current_color), column + run_length }));
+
+            // a1a2
+            run_length = TRY(read_run_length(input_bit_stream, OptionalNone {}, current_color, image_width, column));
+            TRY(encode_for({ invert(current_color), column + run_length }));
+            break;
+        }
+        case Mode::Vertical_0:
+            TRY(encode_for(TRY(next_change_on_reference_line())));
+            break;
+        case Mode::Vertical_R1:
+            TRY(encode_for(TRY(next_change_on_reference_line()), 1));
+            break;
+        case Mode::Vertical_R2:
+            TRY(encode_for(TRY(next_change_on_reference_line()), 2));
+            break;
+        case Mode::Vertical_R3:
+            TRY(encode_for(TRY(next_change_on_reference_line()), 3));
+            break;
+        case Mode::Vertical_L1:
+            TRY(encode_for(TRY(next_change_on_reference_line()), -1));
+            break;
+        case Mode::Vertical_L2:
+            TRY(encode_for(TRY(next_change_on_reference_line()), -2));
+            break;
+        case Mode::Vertical_L3:
+            TRY(encode_for(TRY(next_change_on_reference_line()), -3));
+            break;
+        default:
+            return Error::from_string_literal("CCITTDecoder: Unsupported mode for 2D decoding");
+        }
+    }
+
+    TRY(decoded_bits.align_to_byte_boundary());
+
+    return current_line;
+}
+
 ErrorOr<void> decode_single_ccitt3_2d_block(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width, u32 image_height, Group3Options::UseFillBits use_fill_bits)
 {
     ReferenceLine reference_line;
@@ -420,89 +503,11 @@ ErrorOr<void> decode_single_ccitt3_2d_block(BigEndianInputBitStream& input_bit_s
         TRY(read_eol(input_bit_stream, use_fill_bits));
         bool const next_is_1D = TRY(input_bit_stream.read_bit()) == 1;
 
-        if (next_is_1D) {
+        if (next_is_1D)
             reference_line = TRY(decode_single_ccitt3_1d_line(input_bit_stream, decoded_bits, image_width));
-        } else {
-            ReferenceLine current_line {};
-            Color current_color { ccitt_white };
-            u32 column {};
-
-            auto const next_change_on_reference_line = [&](Search search = Search::B1) -> ErrorOr<Change> {
-                // 4.2.1.3.1 Definition of changing picture elements
-                Optional<Change> next_change {}; // This is referred to as b1 in the spec.
-                while (!next_change.has_value()) {
-                    if (reference_line.is_empty())
-                        return Error::from_string_literal("CCITTDecoder: Corrupted stream");
-                    auto const change = reference_line.take_first();
-                    if (change.column < column)
-                        continue;
-                    if ((search == Search::B1 && change.color != current_color)
-                        || (search == Search::B2 && change.color == current_color))
-                        next_change = change;
-                }
-                return *next_change;
-            };
-
-            auto const encode_for = [&](Change change, i8 offset = 0) -> ErrorOr<void> {
-                auto const to_encode = change.column - column + offset;
-                for (u32 i {}; i < to_encode; ++i)
-                    TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
-
-                column += to_encode;
-                current_color = change.color;
-
-                TRY(current_line.try_empend(change.color, change.column + offset));
-                return {};
-            };
-
-            while (column < image_width) {
-                auto const mode = TRY(read_mode(input_bit_stream));
-
-                // Behavior are described here 4.2.1.3.2 Coding modes.
-                switch (mode.mode) {
-                case Mode::Pass:
-                    TRY(next_change_on_reference_line(Search::B2));
-                    break;
-                case Mode::Horizontal: {
-                    // a0a1
-                    auto run_length = TRY(read_run_length(input_bit_stream, OptionalNone {}, current_color, image_width, column));
-                    TRY(encode_for({ invert(current_color), column + run_length }));
-
-                    // a1a2
-                    run_length = TRY(read_run_length(input_bit_stream, OptionalNone {}, current_color, image_width, column));
-                    TRY(encode_for({ invert(current_color), column + run_length }));
-                    break;
-                }
-                case Mode::Vertical_0:
-                    TRY(encode_for(TRY(next_change_on_reference_line())));
-                    break;
-                case Mode::Vertical_R1:
-                    TRY(encode_for(TRY(next_change_on_reference_line()), 1));
-                    break;
-                case Mode::Vertical_R2:
-                    TRY(encode_for(TRY(next_change_on_reference_line()), 2));
-                    break;
-                case Mode::Vertical_R3:
-                    TRY(encode_for(TRY(next_change_on_reference_line()), 3));
-                    break;
-                case Mode::Vertical_L1:
-                    TRY(encode_for(TRY(next_change_on_reference_line()), -1));
-                    break;
-                case Mode::Vertical_L2:
-                    TRY(encode_for(TRY(next_change_on_reference_line()), -2));
-                    break;
-                case Mode::Vertical_L3:
-                    TRY(encode_for(TRY(next_change_on_reference_line()), -3));
-                    break;
-                default:
-                    return Error::from_string_literal("CCITTDecoder: Unsupported mode for 2D decoding");
-                }
-            }
-            reference_line = move(current_line);
-        }
+        else
+            reference_line = TRY(decode_single_ccitt_2d_line(input_bit_stream, decoded_bits, move(reference_line), image_width));
     }
-
-    TRY(decoded_bits.align_to_byte_boundary());
 
     return {};
 }
