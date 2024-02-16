@@ -37,7 +37,7 @@ public:
     int step_list_nesting_level() const;
 
     Location file_scope() const;
-    Location location_from_xml_offset(XML::Offset offset) const;
+    Location location_from_xml_offset(LineTrackingLexer::Position position) const;
 
 private:
     TranslationUnitRef m_translation_unit;

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -17,12 +18,6 @@ namespace XML {
 struct Attribute {
     Name name;
     ByteString value;
-};
-
-struct Offset {
-    size_t offset { 0 };
-    size_t line { 0 };
-    size_t column { 0 };
 };
 
 struct Node {
@@ -40,7 +35,7 @@ struct Node {
 
     bool operator==(Node const&) const;
 
-    Offset offset;
+    LineTrackingLexer::Position offset;
     Variant<Text, Comment, Element> content;
     Node* parent { nullptr };
 

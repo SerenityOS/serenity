@@ -14,7 +14,7 @@
 namespace JSSpecCompiler {
 
 namespace {
-Optional<Token> consume_number(XML::LineTrackingLexer& lexer, Location& location)
+Optional<Token> consume_number(LineTrackingLexer& lexer, Location& location)
 {
     u64 start = lexer.tell();
 
@@ -73,14 +73,14 @@ void tokenize_string(SpecificationParsingContext& ctx, XML::Node const* node, St
         { "+"sv, TokenType::Plus },
     };
 
-    XML::LineTrackingLexer lexer(view, node->offset);
+    LineTrackingLexer lexer(view, node->offset);
 
     while (!lexer.is_eof()) {
         lexer.ignore_while(is_ascii_space);
 
         // FIXME: This is incorrect since we count text offset after XML reference resolution. To do
         //        this properly, we need support from XML::Parser.
-        Location token_location = ctx.location_from_xml_offset(lexer.offset_for(lexer.tell()));
+        Location token_location = ctx.location_from_xml_offset(lexer.position_for(lexer.tell()));
 
         if (auto result = consume_number(lexer, token_location); result.has_value()) {
             tokens.append(result.release_value());
