@@ -16,6 +16,9 @@ namespace Gfx::CCITT {
 // The CCITT3 specification is accessible at this page:
 // https://www.itu.int/rec/T-REC-T.4/en
 
+// And CCITT4's specification is available here:
+// https://www.itu.int/rec/T-REC-T.6/en
+
 // The unidimensional scheme is originally described in:
 // 4.1 One-dimensional coding scheme
 // However, this function implements the TIFF variant (see TIFFLoader.h for a spec link),
@@ -46,5 +49,7 @@ struct Group3Options {
 };
 
 ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group3Options const& options);
+
+ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height);
 
 }
