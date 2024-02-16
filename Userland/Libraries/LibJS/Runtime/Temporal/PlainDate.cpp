@@ -577,7 +577,7 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> difference_temporal_plain_date(VM& vm,
     }
 
     // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], 0, 0, 0, 0, 0, 0).
-    return TRY(create_temporal_duration(vm, sign * result->years(), sign * result->months(), sign * result->weeks(), sign * result->days(), 0, 0, 0, 0, 0, 0));
+    return MUST(create_temporal_duration(vm, sign * result->years(), sign * result->months(), sign * result->weeks(), sign * result->days(), 0, 0, 0, 0, 0, 0));
 }
 
 }
