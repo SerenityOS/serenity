@@ -116,6 +116,7 @@ public:
             m_image_width = m_metadata.image_width().value();
         if (m_metadata.predictor().has_value())
             m_predictor = m_metadata.predictor().value();
+        m_alpha_channel_index = alpha_channel_index();
     }
 
     ErrorOr<void> decode_frame()
@@ -213,12 +214,11 @@ private:
         // them, conserve the alpha value (if any) and discard everything else.
 
         auto const number_base_channels = samples_for_photometric_interpretation();
-        auto const alpha_index = alpha_channel_index();
 
         Optional<u8> alpha {};
 
         for (u8 i = number_base_channels; i < m_bits_per_sample.size(); ++i) {
-            if (alpha_index == i)
+            if (m_alpha_channel_index == i)
                 alpha = TRY(read_component(stream, m_bits_per_sample[i]));
             else
                 TRY(read_component(stream, m_bits_per_sample[i]));
@@ -344,7 +344,7 @@ private:
                             color.set_red(last_color->red() + color.red());
                             color.set_green(last_color->green() + color.green());
                             color.set_blue(last_color->blue() + color.blue());
-                            if (alpha_channel_index().has_value())
+                            if (m_alpha_channel_index.has_value())
                                 color.set_alpha(last_color->alpha() + color.alpha());
                         }
 
@@ -686,6 +686,8 @@ private:
     Vector<u32, 4> m_bits_per_sample {};
     u32 m_image_width {};
     Predictor m_predictor {};
+
+    Optional<u8> m_alpha_channel_index {};
 };
 
 }
