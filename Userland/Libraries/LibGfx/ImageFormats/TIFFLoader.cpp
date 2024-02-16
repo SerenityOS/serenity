@@ -106,11 +106,24 @@ public:
         return {};
     }
 
+    void cache_values()
+    {
+        if (m_metadata.photometric_interpretation().has_value())
+            m_photometric_interpretation = m_metadata.photometric_interpretation().value();
+        if (m_metadata.bits_per_sample().has_value())
+            m_bits_per_sample = m_metadata.bits_per_sample().value();
+        if (m_metadata.image_width().has_value())
+            m_image_width = m_metadata.image_width().value();
+        if (m_metadata.predictor().has_value())
+            m_predictor = m_metadata.predictor().value();
+    }
+
     ErrorOr<void> decode_frame()
     {
         TRY(ensure_baseline_tags_are_present(m_metadata));
         TRY(ensure_baseline_tags_are_correct());
         TRY(ensure_conditional_tags_are_present());
+        cache_values();
         auto maybe_error = decode_frame_impl();
 
         if (maybe_error.is_error()) {
@@ -164,7 +177,7 @@ private:
 
     u8 samples_for_photometric_interpretation() const
     {
-        switch (*m_metadata.photometric_interpretation()) {
+        switch (m_photometric_interpretation) {
         case PhotometricInterpretation::WhiteIsZero:
         case PhotometricInterpretation::BlackIsZero:
         case PhotometricInterpretation::RGBPalette:
@@ -190,7 +203,7 @@ private:
         return OptionalNone {};
     }
 
-    ErrorOr<u8> manage_extra_channels(BigEndianInputBitStream& stream, Vector<u32> const& bits_per_sample) const
+    ErrorOr<u8> manage_extra_channels(BigEndianInputBitStream& stream) const
     {
         // Section 7: Additional Baseline TIFF Requirements
         // Some TIFF files may have more components per pixel than you think. A Baseline TIFF reader must skip over
@@ -204,11 +217,11 @@ private:
 
         Optional<u8> alpha {};
 
-        for (u8 i = number_base_channels; i < bits_per_sample.size(); ++i) {
+        for (u8 i = number_base_channels; i < m_bits_per_sample.size(); ++i) {
             if (alpha_index == i)
-                alpha = TRY(read_component(stream, bits_per_sample[i]));
+                alpha = TRY(read_component(stream, m_bits_per_sample[i]));
             else
-                TRY(read_component(stream, bits_per_sample[i]));
+                TRY(read_component(stream, m_bits_per_sample[i]));
         }
 
         return alpha.value_or(NumericLimits<u8>::max());
@@ -216,26 +229,24 @@ private:
 
     ErrorOr<Color> read_color(BigEndianInputBitStream& stream)
     {
-        auto bits_per_sample = *m_metadata.bits_per_sample();
+        if (m_photometric_interpretation == PhotometricInterpretation::RGB) {
+            auto const first_component = TRY(read_component(stream, m_bits_per_sample[0]));
+            auto const second_component = TRY(read_component(stream, m_bits_per_sample[1]));
+            auto const third_component = TRY(read_component(stream, m_bits_per_sample[2]));
 
-        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGB) {
-            auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
-            auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
-            auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
-
-            auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
+            auto const alpha = TRY(manage_extra_channels(stream));
             return Color(first_component, second_component, third_component, alpha);
         }
 
-        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::RGBPalette) {
-            auto const index = TRY(stream.read_bits<u16>(bits_per_sample[0]));
-            auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
+        if (m_photometric_interpretation == PhotometricInterpretation::RGBPalette) {
+            auto const index = TRY(stream.read_bits<u16>(m_bits_per_sample[0]));
+            auto const alpha = TRY(manage_extra_channels(stream));
 
             // SamplesPerPixel == 1 is a requirement for RGBPalette
             // From description of PhotometricInterpretation in Section 8: Baseline Field Reference Guide
             // "In a TIFF ColorMap, all the Red values come first, followed by the Green values,
             //  then the Blue values."
-            u64 const size = 1ul << (*m_metadata.bits_per_sample())[0];
+            u64 const size = 1ul << m_bits_per_sample[0];
             u64 const red_offset = 0 * size;
             u64 const green_offset = 1 * size;
             u64 const blue_offset = 2 * size;
@@ -253,14 +264,14 @@ private:
                 alpha);
         }
 
-        if (*m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero
-            || *m_metadata.photometric_interpretation() == PhotometricInterpretation::BlackIsZero) {
-            auto luminosity = TRY(read_component(stream, bits_per_sample[0]));
+        if (m_photometric_interpretation == PhotometricInterpretation::WhiteIsZero
+            || m_photometric_interpretation == PhotometricInterpretation::BlackIsZero) {
+            auto luminosity = TRY(read_component(stream, m_bits_per_sample[0]));
 
-            if (m_metadata.photometric_interpretation() == PhotometricInterpretation::WhiteIsZero)
+            if (m_photometric_interpretation == PhotometricInterpretation::WhiteIsZero)
                 luminosity = ~luminosity;
 
-            auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
+            auto const alpha = TRY(manage_extra_channels(stream));
             return Color(luminosity, luminosity, luminosity, alpha);
         }
 
@@ -269,17 +280,16 @@ private:
 
     ErrorOr<CMYK> read_color_cmyk(BigEndianInputBitStream& stream)
     {
-        VERIFY(m_metadata.photometric_interpretation() == PhotometricInterpretation::CMYK);
-        auto bits_per_sample = *m_metadata.bits_per_sample();
+        VERIFY(m_photometric_interpretation == PhotometricInterpretation::CMYK);
 
-        auto const first_component = TRY(read_component(stream, bits_per_sample[0]));
-        auto const second_component = TRY(read_component(stream, bits_per_sample[1]));
-        auto const third_component = TRY(read_component(stream, bits_per_sample[2]));
-        auto const fourth_component = TRY(read_component(stream, bits_per_sample[3]));
+        auto const first_component = TRY(read_component(stream, m_bits_per_sample[0]));
+        auto const second_component = TRY(read_component(stream, m_bits_per_sample[1]));
+        auto const third_component = TRY(read_component(stream, m_bits_per_sample[2]));
+        auto const fourth_component = TRY(read_component(stream, m_bits_per_sample[3]));
 
         // FIXME: We probably won't encounter CMYK images with an alpha channel, but if
         //        we do: the first step to support them is not dropping the value here!
-        [[maybe_unused]] auto const alpha = TRY(manage_extra_channels(stream, bits_per_sample));
+        [[maybe_unused]] auto const alpha = TRY(manage_extra_channels(stream));
         return CMYK { first_component, second_component, third_component, fourth_component };
     }
 
@@ -290,13 +300,13 @@ private:
         auto const byte_counts = *segment_byte_counts();
 
         auto const segment_length = m_metadata.tile_length().value_or(m_metadata.rows_per_strip().value_or(*m_metadata.image_length()));
-        auto const segment_width = m_metadata.tile_width().value_or(*m_metadata.image_width());
-        auto const segment_per_rows = m_metadata.tile_width().map([&](u32 w) { return ceil_div(*m_metadata.image_width(), w); }).value_or(1);
+        auto const segment_width = m_metadata.tile_width().value_or(m_image_width);
+        auto const segment_per_rows = m_metadata.tile_width().map([&](u32 w) { return ceil_div(m_image_width, w); }).value_or(1);
 
         Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap> oriented_bitmap = TRY(([&]() -> ErrorOr<Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap>> {
-            if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK)
-                return ExifOrientedCMYKBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_length() });
-            return ExifOrientedBitmap::create(*metadata().orientation(), { *metadata().image_width(), *metadata().image_length() }, BitmapFormat::BGRA8888);
+            if (m_photometric_interpretation == PhotometricInterpretation::CMYK)
+                return ExifOrientedCMYKBitmap::create(*metadata().orientation(), { m_image_width, *metadata().image_length() });
+            return ExifOrientedBitmap::create(*metadata().orientation(), { m_image_width, *metadata().image_length() }, BitmapFormat::BGRA8888);
         }()));
 
         for (u32 segment_index = 0; segment_index < offsets.size(); ++segment_index) {
@@ -320,9 +330,9 @@ private:
                     // need to read the sample from the stream.
                     auto const image_column = column + segment_width * (segment_index % segment_per_rows);
 
-                    if (metadata().photometric_interpretation() == PhotometricInterpretation::CMYK) {
+                    if (m_photometric_interpretation == PhotometricInterpretation::CMYK) {
                         auto const cmyk = TRY(read_color_cmyk(*decoded_stream));
-                        if (image_column >= *m_metadata.image_width())
+                        if (image_column >= m_image_width)
                             continue;
                         oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(image_column, image_row, cmyk);
                     } else {
@@ -330,7 +340,7 @@ private:
 
                         // FIXME:  We should do the differencing at the byte-stream level, that would make it
                         //         compatible with both LibPDF and all color formats.
-                        if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
+                        if (m_predictor == Predictor::HorizontalDifferencing && last_color.has_value()) {
                             color.set_red(last_color->red() + color.red());
                             color.set_green(last_color->green() + color.green());
                             color.set_blue(last_color->blue() + color.blue());
@@ -339,7 +349,7 @@ private:
                         }
 
                         last_color = color;
-                        if (image_column >= *m_metadata.image_width())
+                        if (image_column >= m_image_width)
                             continue;
                         oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(image_column, image_row, color.value());
                     }
@@ -349,7 +359,7 @@ private:
             }
         }
 
-        if (m_metadata.photometric_interpretation() == PhotometricInterpretation::CMYK)
+        if (m_photometric_interpretation == PhotometricInterpretation::CMYK)
             m_cmyk_bitmap = oriented_bitmap.get<ExifOrientedCMYKBitmap>().bitmap();
         else
             m_bitmap = oriented_bitmap.get<ExifOrientedBitmap>().bitmap();
@@ -670,6 +680,12 @@ private:
     Optional<u32> m_next_ifd {};
 
     ExifMetadata m_metadata {};
+
+    // These are caches for m_metadata values
+    PhotometricInterpretation m_photometric_interpretation {};
+    Vector<u32, 4> m_bits_per_sample {};
+    u32 m_image_width {};
+    Predictor m_predictor {};
 };
 
 }
