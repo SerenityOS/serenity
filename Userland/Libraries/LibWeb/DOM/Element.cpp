@@ -1371,6 +1371,9 @@ int Element::scroll_width() const
     if (!document.is_active())
         return 0;
 
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document).update_layout();
+
     // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any,
     //    or zero if there is no viewport.
     auto viewport_width = document.viewport_rect().width().to_int();
