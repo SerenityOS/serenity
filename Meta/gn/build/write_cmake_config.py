@@ -39,13 +39,10 @@ import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(
-                 epilog=__doc__,
-                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('input', help='input file')
     parser.add_argument('values', nargs='*', help='several KEY=VALUE pairs')
-    parser.add_argument('-o', '--output', required=True,
-                        help='output file')
+    parser.add_argument('-o', '--output', required=True, help='output file')
     args = parser.parse_args()
 
     values = {}
@@ -64,10 +61,12 @@ def main():
         in_lines = f.readlines()
     out_lines = []
     for in_line in in_lines:
+
         def repl(m):
             key = m.group(1) or m.group(2)
             unused_values.discard(key)
             return values[key]
+
         in_line = var_re.sub(repl, in_line)
         if in_line.startswith('#cmakedefine01 ') or in_line.startswith("#    cmakedefine01"):
             in_line = in_line.replace('#    cmakedefine01', '#cmakedefine01')
@@ -101,10 +100,7 @@ def main():
 
     leftovers = var_re.findall(output)
     if leftovers:
-        print(
-            'unprocessed values:\n',
-            '\n'.join([x[0] or x[1] for x in leftovers]),
-            file=sys.stderr)
+        print('unprocessed values:\n', '\n'.join([x[0] or x[1] for x in leftovers]), file=sys.stderr)
         return 1
 
     def read(filename):

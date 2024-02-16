@@ -19,12 +19,12 @@ else
 fi
 
 if (( ${#files[@]} )); then
-    if ! command -v flake8 >/dev/null 2>&1 ; then
-        echo "flake8 is not available, but python files need linting! Either skip this script, or install flake8."
+    if ! command -v black >/dev/null 2>&1 ; then
+        echo "black is not available, but python files need linting! Either skip this script, or install black."
         exit 1
     fi
 
-    flake8 "${files[@]}" --max-line-length=120
+    black "${files[@]}"
 else
     echo "No py files to check."
 fi

@@ -27,7 +27,7 @@ IGNORE_FILES = {
     'build_all.sh',
     'build_installed.sh',
     'README.md',
-    '.hosted_defs.sh'
+    '.hosted_defs.sh',
 }
 
 # Matches port names in Ports/foo/ReadMe.md
@@ -55,7 +55,7 @@ def read_port_table(filename):
                 "name": match[2].strip(),
                 "version": match[4].strip(),
                 "url": match[5].strip(),
-                "line_len": line_len
+                "line_len": line_len,
             }
     return ports
 
@@ -131,7 +131,7 @@ def get_script_props(dir: str, script_name: str, props: dict, depth: int = 0, ma
     for line in open(f"{dir}/{script_name}", 'r'):
         # Ignore comments (search in reverse to ignore # in strings)
         if line.rfind("#") > min(line.rfind('"'), line.rfind("'"), 0):
-            line = line[0:line.rfind("#")]
+            line = line[0 : line.rfind("#")]
 
         line = line.rstrip()
         buffer += line
@@ -139,12 +139,12 @@ def get_script_props(dir: str, script_name: str, props: dict, depth: int = 0, ma
         if "=" in buffer:
             [key, value] = buffer.split("=", 1)
 
-            if (key.startswith(" ") or key.isspace()):
+            if key.startswith(" ") or key.isspace():
                 buffer = ""
                 continue
 
-            if (value.startswith(('"', "'"))):
-                if (value.endswith(value[0]) and len(value) > 1):
+            if value.startswith(('"', "'")):
+                if value.endswith(value[0]) and len(value) > 1:
                     value = value[1:-1]
                 else:
                     buffer += "\n"
@@ -234,13 +234,15 @@ def get_and_check_port_patch_list(ports):
             "patches_path": patches_path,
             "patches_readme_path": patches_readme_path,
             "patch_files": patch_files,
-            "non_patch_files": non_patch_files
+            "non_patch_files": non_patch_files,
         }
         all_port_properties[port] = port_properties
 
         if len(non_patch_files) != 0:
-            print(f"Ports/{port}/patches contains the following non-patch files:",
-                  ', '.join(x.name for x in non_patch_files))
+            print(
+                f"Ports/{port}/patches contains the following non-patch files:",
+                ', '.join(x.name for x in non_patch_files),
+            )
             all_good = False
 
     return all_good, all_port_properties
@@ -289,14 +291,17 @@ def check_descriptions_for_port_patches(patches):
 
         for patch_name in patch_names:
             if patch_name not in readme_contents:
-                print(f"Ports/{port}/patches/{patch_name}.patch does not appear to be described in"
-                      " the corresponding ReadMe.md")
+                print(
+                    f"Ports/{port}/patches/{patch_name}.patch does not appear to be described in"
+                    " the corresponding ReadMe.md"
+                )
                 all_good = False
 
         for patch_name in readme_contents:
             if patch_name not in patch_names:
-                print(f"Ports/{port}/patches/{patch_name}.patch is described in ReadMe.md, "
-                      "but does not actually exist")
+                print(
+                    f"Ports/{port}/patches/{patch_name}.patch is described in ReadMe.md, " "but does not actually exist"
+                )
                 all_good = False
 
     return all_good
@@ -308,10 +313,8 @@ def try_parse_git_patch(path_to_patch):
 
     with NamedTemporaryFile('r+b') as message_file:
         res = subprocess.run(
-            f"git mailinfo {message_file.name} /dev/null",
-            shell=True,
-            capture_output=True,
-            input=contents_of_patch)
+            f"git mailinfo {message_file.name} /dev/null", shell=True, capture_output=True, input=contents_of_patch
+        )
 
         if res.returncode != 0:
             return None
@@ -340,8 +343,7 @@ def check_patches_are_git_patches(patches):
         for patch_path in properties["patch_files"]:
             result = try_parse_git_patch(patch_path)
             if not result:
-                print(f"Ports/{port}/patches: {patch_path.stem} does not appear to be a valid "
-                      "git patch.")
+                print(f"Ports/{port}/patches: {patch_path.stem} does not appear to be a valid " "git patch.")
                 all_good = False
                 continue
     return all_good
@@ -374,10 +376,12 @@ def check_available_ports(from_table, ports):
         actual_ref = from_table[port]["dir_ref"]
         expected_ref = f"{port}/"
         if actual_ref != expected_ref:
-            print((
-                f'Directory link target in AvailablePorts.md for port {port} is '
-                f'incorrect, expected "{expected_ref}", found "{actual_ref}"'
-            ))
+            print(
+                (
+                    f'Directory link target in AvailablePorts.md for port {port} is '
+                    f'incorrect, expected "{expected_ref}", found "{actual_ref}"'
+                )
+            )
             all_good = False
 
         actual_version = from_table[port]["version"]
@@ -387,10 +391,12 @@ def check_available_ports(from_table, ports):
         if expected_version == "git":
             expected_version = ""
         if actual_version != expected_version:
-            print((
-                f'Version in AvailablePorts.md for port {port} is incorrect, '
-                f'expected "{expected_version}", found "{actual_version}"'
-            ))
+            print(
+                (
+                    f'Version in AvailablePorts.md for port {port} is incorrect, '
+                    f'expected "{expected_version}", found "{actual_version}"'
+                )
+            )
             all_good = False
 
     return all_good

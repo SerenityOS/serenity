@@ -17,18 +17,12 @@ import urllib.request
 
 
 def main():
-    parser = argparse.ArgumentParser(
-                 epilog=__doc__,
-                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('url', help='input url')
-    parser.add_argument('-o', '--output', required=True,
-                        help='output file')
-    parser.add_argument('-v', '--version', required=True,
-                        help='version of file to detect mismatches and redownload')
-    parser.add_argument('-f', '--version-file', required=True,
-                        help='filesystem location to cache version')
-    parser.add_argument('-c', "--cache-path", required=False,
-                        help='path for cached files to clear on version mismatch')
+    parser.add_argument('-o', '--output', required=True, help='output file')
+    parser.add_argument('-v', '--version', required=True, help='version of file to detect mismatches and redownload')
+    parser.add_argument('-f', '--version-file', required=True, help='filesystem location to cache version')
+    parser.add_argument('-c', "--cache-path", required=False, help='path for cached files to clear on version mismatch')
     args = parser.parse_args()
 
     version_from_file = ''
@@ -41,7 +35,7 @@ def main():
         return 0
 
     # Fresh build or version mismatch, delete old cache
-    if (args.cache_path):
+    if args.cache_path:
         cache_path = pathlib.Path(args.cache_path)
         shutil.rmtree(cache_path, ignore_errors=True)
         cache_path.mkdir(parents=True)
@@ -50,8 +44,7 @@ def main():
 
     with urllib.request.urlopen(args.url) as f:
         try:
-            with tempfile.NamedTemporaryFile(delete=False,
-                                             dir=pathlib.Path(args.output).parent) as out:
+            with tempfile.NamedTemporaryFile(delete=False, dir=pathlib.Path(args.output).parent) as out:
                 out.write(f.read())
                 os.rename(out.name, args.output)
         except IOError:

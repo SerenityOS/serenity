@@ -24,8 +24,7 @@ import re
 import subprocess
 
 
-Result = collections.namedtuple(
-             'Result', ['filename', 'returncode', 'stdout', 'stderr'])
+Result = collections.namedtuple('Result', ['filename', 'returncode', 'stdout', 'stderr'])
 
 
 @dataclasses.dataclass
@@ -46,16 +45,12 @@ def elide_parser_offset(s):
 
 def test_pdf(filename):
     pdf_path = os.path.join(os.path.dirname(__file__), '../Build/lagom/bin/pdf')
-    r = subprocess.run([pdf_path, '--debugging-stats', '--json', filename],
-                       capture_output=True)
-    return Result(filename, r.returncode, r.stdout,
-                  elide_parser_offset(elide_aslr(r.stderr)))
+    r = subprocess.run([pdf_path, '--debugging-stats', '--json', filename], capture_output=True)
+    return Result(filename, r.returncode, r.stdout, elide_parser_offset(elide_aslr(r.stderr)))
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('input', nargs='+', help='input directories')
     parser.add_argument('-n', type=int, help='render at most n pdfs')
     args = parser.parse_args()

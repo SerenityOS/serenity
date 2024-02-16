@@ -70,9 +70,9 @@ jobs:
         # The setup-python action set default python to python3.x. Note that we are not using system python here.
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 requests
+          pip install black requests
       - name: Check versions
-        run: set +e; g++ --version; g++-12 --version; clang-format --version; clang-format-16 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version; gn --version
+        run: set +e; g++ --version; g++-12 --version; clang-format --version; clang-format-16 --version; prettier --version; python --version; python3 --version; ninja --version; black --version; ccache --version; qemu-system-i386 --version; gn --version
 
       # === PREPARE FOR BUILDING ===
 

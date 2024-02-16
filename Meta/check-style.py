@@ -14,12 +14,13 @@ import sys
 #  * SPDX-License-Identifier: BSD-2-Clause
 #  */
 GOOD_LICENSE_HEADER_PATTERN = re.compile(
-    '^/\\*\n' +
-    '( \\* Copyright \\(c\\) [0-9]{4}(-[0-9]{4})?, .*\n)+' +
-    ' \\*\n' +
-    ' \\* SPDX-License-Identifier: BSD-2-Clause\n' +
-    ' \\*/\n' +
-    '\n')
+    '^/\\*\n'
+    + '( \\* Copyright \\(c\\) [0-9]{4}(-[0-9]{4})?, .*\n)+'
+    + ' \\*\n'
+    + ' \\* SPDX-License-Identifier: BSD-2-Clause\n'
+    + ' \\*/\n'
+    + '\n'
+)
 LICENSE_HEADER_CHECK_EXCLUDES = {
     'AK/Checked.h',
     'AK/Function.h',
@@ -28,7 +29,7 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
     'Userland/Libraries/LibELF/ELFABI.h',
     'Userland/Libraries/LibCodeComprehension/Cpp/Tests/',
     'Userland/Libraries/LibCpp/Tests/parser/',
-    'Userland/Libraries/LibCpp/Tests/preprocessor/'
+    'Userland/Libraries/LibCpp/Tests/preprocessor/',
 }
 
 # We check that "#pragma once" is present
@@ -91,9 +92,7 @@ def find_files_here_or_argv():
 
 
 def is_in_prefix_list(filename, prefix_list):
-    return any(
-        filename.startswith(prefix) for prefix in prefix_list
-    )
+    return any(filename.startswith(prefix) for prefix in prefix_list)
 
 
 def find_matching_prefix(filename, prefix_list):
@@ -191,8 +190,8 @@ def run():
         have_errors = True
     if errors_include_bad_complex:
         print(
-             "Files that include a non-AK complex header:",
-             " ".join(errors_include_bad_complex),
+            "Files that include a non-AK complex header:",
+            " ".join(errors_include_bad_complex),
         )
         have_errors = True
 

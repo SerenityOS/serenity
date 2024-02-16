@@ -9,9 +9,7 @@ from pathlib import Path
 
 
 def main():
-    parser = argparse.ArgumentParser(
-                 epilog=__doc__,
-                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('kernel', help='kernel binary location')
     parser.add_argument('-n', '--nm', required=True, help='path to nm')
     parser.add_argument('-o', '--objcopy', required=True, help='path to objcopy')
@@ -34,6 +32,7 @@ def main():
 
     def sort_symbols(s1, s2):
         return int(s1.split()[0], base=16) - int(s2.split()[0], base=16)
+
     symbols = sorted(symbols, key=cmp_to_key(sort_symbols))
 
     kernel_map = binary_directory / "kernel.map"

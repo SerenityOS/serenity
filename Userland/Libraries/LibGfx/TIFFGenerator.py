@@ -115,11 +115,7 @@ class ExtraSample(EnumWithExportName):
 
 tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum', 'is_required']
 
-Tag = namedtuple(
-    'Tag',
-    field_names=tag_fields,
-    defaults=(None,) * len(tag_fields)
-)
+Tag = namedtuple('Tag', field_names=tag_fields, defaults=(None,) * len(tag_fields))
 
 # FIXME: Some tag have only a few allowed values, we should ensure that
 known_tags: List[Tag] = [
@@ -127,8 +123,15 @@ known_tags: List[Tag] = [
     Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageLength", is_required=True),
     Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample", is_required=True),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression, is_required=True),
-    Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation",
-        PhotometricInterpretation, is_required=True),
+    Tag(
+        '262',
+        [TIFFType.UnsignedShort],
+        [1],
+        None,
+        "PhotometricInterpretation",
+        PhotometricInterpretation,
+        is_required=True,
+    ),
     Tag('266', [TIFFType.UnsignedShort], [1], FillOrder.LeftToRight, "FillOrder", FillOrder),
     Tag('271', [TIFFType.ASCII], [], None, "Make"),
     Tag('272', [TIFFType.ASCII], [], None, "Model"),
@@ -158,9 +161,11 @@ known_tags: List[Tag] = [
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
 
-HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(Function<ErrorOr<void>(u32)>&& subifd_handler, "
-                                 "ExifMetadata& metadata, u16 tag, {namespace}Type type, u32 count, "
-                                 "Vector<{namespace}Value>&& value)")
+HANDLE_TAG_SIGNATURE_TEMPLATE = (
+    "ErrorOr<void> {namespace}handle_tag(Function<ErrorOr<void>(u32)>&& subifd_handler, "
+    "ExifMetadata& metadata, u16 tag, {namespace}Type type, u32 count, "
+    "Vector<{namespace}Value>&& value)"
+)
 HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
 
@@ -254,9 +259,9 @@ def tiff_type_to_cpp(t: TIFFType, with_promotion: bool = True) -> str:
 
 def is_container(t: TIFFType) -> bool:
     """
-        Some TIFF types are defined on the unit scale but are intended to be used within a collection.
-        An example of that are ASCII strings defined as N * byte. Let's intercept that and generate
-        a nice API instead of Vector<u8>.
+    Some TIFF types are defined on the unit scale but are intended to be used within a collection.
+    An example of that are ASCII strings defined as N * byte. Let's intercept that and generate
+    a nice API instead of Vector<u8>.
     """
     return t in [TIFFType.ASCII, TIFFType.Byte, TIFFType.Undefined, TIFFType.UTF8]
 
@@ -511,20 +516,40 @@ def generate_tag_handler(tag: Tag) -> str:
 
 
 def generate_tag_handler_file(tags: List[Tag]) -> str:
-    formatter_for_tag_with_enum = '\n'.join([fR"""        case {tag.id}:
+    formatter_for_tag_with_enum = '\n'.join(
+        [
+            fR"""        case {tag.id}:
             return MUST(String::from_utf8(
                 name_for_enum_tag_value(static_cast<{tag.associated_enum.export_name()}>(v.get<u32>()))));"""
-                                             for tag in tags if tag.associated_enum])
+            for tag in tags
+            if tag.associated_enum
+        ]
+    )
 
-    ensure_tags_are_present = '\n'.join([fR"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
+    ensure_tags_are_present = '\n'.join(
+        [
+            fR"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
         return Error::from_string_literal("Unable to decode image, missing required tag {tag.name}.");
-""" for tag in filter(lambda tag: tag.is_required, known_tags)])
+"""
+            for tag in filter(lambda tag: tag.is_required, known_tags)
+        ]
+    )
 
-    tiff_type_from_u16_cases = '\n'.join([fR"""    case to_underlying(Type::{t.name}):
-        return Type::{t.name};""" for t in TIFFType])
+    tiff_type_from_u16_cases = '\n'.join(
+        [
+            fR"""    case to_underlying(Type::{t.name}):
+        return Type::{t.name};"""
+            for t in TIFFType
+        ]
+    )
 
-    size_of_tiff_type_cases = '\n'.join([fR"""    case Type::{t.name}:
-        return {t.size};""" for t in TIFFType])
+    size_of_tiff_type_cases = '\n'.join(
+        [
+            fR"""    case Type::{t.name}:
+        return {t.size};"""
+            for t in TIFFType
+        ]
+    )
 
     output = fR"""{LICENSE}
 

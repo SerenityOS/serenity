@@ -54,7 +54,7 @@ def thread_execute(file_path):
         '-DUSING_AK_GLOBALLY=1',  # To avoid errors about USING_AK_GLOBALLY not being defined at all
         '-p',
         compile_commands_path,
-        file_path
+        file_path,
     ]
     proc = subprocess.Popen(clang_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     sys.stdout.buffer.write(proc.communicate()[0])

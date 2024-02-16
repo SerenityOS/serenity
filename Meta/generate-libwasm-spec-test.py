@@ -104,6 +104,7 @@ def parse_typed_value(ast):
             num = '0'
 
         if type.startswith('f'):
+
             def generate():
                 if num == 'nan:canonical':
                     return float.fromhex('0x7fc00000')
@@ -141,10 +142,7 @@ def parse_typed_value(ast):
                 assert len(value) - s == size, f'Expected {size} bytes, got {len(value) - s} bytes'
 
             assert len(value) == 16, f'Expected 16 bytes, got {len(value)} bytes'
-            return {
-                'type': types[ast[0][0]],
-                'value': value.tobytes().hex()
-            }
+            return {'type': types[ast[0][0]], 'value': value.tobytes().hex()}
 
         return {"type": types[ast[0][0]], "value": ast[1][0]}
 
@@ -163,7 +161,7 @@ def generate_module_source_for_compilation(entries):
         else:
             raise Exception("wat? I dunno how to pretty print " + str(type(entry)))
     while s.endswith(' '):
-        s = s[:len(s) - 1]
+        s = s[: len(s) - 1]
     return s + ')'
 
 
@@ -174,7 +172,7 @@ def generate_binary_source(chunks):
         while i < len(chunk):
             c = chunk[i]
             if c == '\\':
-                res += bytes.fromhex(chunk[i + 1: i + 3])
+                res += bytes.fromhex(chunk[i + 1 : i + 3])
                 i += 3
                 continue
             res += c.encode('utf-8')
@@ -213,10 +211,7 @@ def generate_module(ast):
         'quote': lambda: ('literal', ast[start_index]),
     }[mode]()
 
-    return {
-        'module': result,
-        'name': name
-    }
+    return {'module': result, 'name': name}
 
 
 def generate(ast):
@@ -229,10 +224,7 @@ def generate(ast):
         if len(entry) > 0 and entry[0] == ('module',):
             gen = generate_module(entry)
             module, name = gen['module'], gen['name']
-            tests.append({
-                "module": module,
-                "tests": []
-            })
+            tests.append({"module": module, "tests": []})
 
             if name is not None:
                 named_modules[name] = len(tests) - 1
@@ -243,28 +235,36 @@ def generate(ast):
                 print(f"Invalid argument to assert_unlinkable: {entry[1]}", file=stderr)
                 continue
             result = generate_module(entry[1])
-            tests.append({
-                'module': None,
-                'tests': [{
-                    "kind": "unlinkable",
-                    "module": result['module'],
-                }]
-            })
+            tests.append(
+                {
+                    'module': None,
+                    'tests': [
+                        {
+                            "kind": "unlinkable",
+                            "module": result['module'],
+                        }
+                    ],
+                }
+            )
         elif entry[0] in (('assert_malformed',), ('assert_invalid',)):
             # (assert_malformed/invalid module message)
             if len(entry) < 2 or not isinstance(entry[1], list) or entry[1][0] != ('module',):
                 print(f"Invalid argument to assert_malformed: {entry[1]}", file=stderr)
                 continue
             result = generate_module(entry[1])
-            kind = entry[0][0][len('assert_'):]
-            tests.append({
-                'module': None,
-                'kind': kind,
-                'tests': [{
-                    "kind": kind,
-                    "module": result['module'],
-                }]
-            })
+            kind = entry[0][0][len('assert_') :]
+            tests.append(
+                {
+                    'module': None,
+                    'kind': kind,
+                    'tests': [
+                        {
+                            "kind": kind,
+                            "module": result['module'],
+                        }
+                    ],
+                }
+            )
         elif len(entry) in [2, 3] and entry[0][0].startswith('assert_'):
             if entry[1][0] == ('invoke',):
                 arg, name, module = 0, None, None
@@ -274,16 +274,20 @@ def generate(ast):
                     name = entry[1][2]
                     module = named_modules[entry[1][1][0]]
                     arg = 1
-                kind = entry[0][0][len('assert_'):]
-                tests[-1]["tests"].append({
-                    "kind": kind,
-                    "function": {
-                        "module": module,
-                        "name": name,
-                        "args": list(parse_typed_value(x) for x in entry[1][arg + 2:])
-                    },
-                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg and kind != 'exhaustion' else None
-                })
+                kind = entry[0][0][len('assert_') :]
+                tests[-1]["tests"].append(
+                    {
+                        "kind": kind,
+                        "function": {
+                            "module": module,
+                            "name": name,
+                            "args": list(parse_typed_value(x) for x in entry[1][arg + 2 :]),
+                        },
+                        "result": (
+                            parse_typed_value(entry[2]) if len(entry) == 3 + arg and kind != 'exhaustion' else None
+                        ),
+                    }
+                )
             elif entry[1][0] == ('get',):
                 arg, name, module = 0, None, None
                 if isinstance(entry[1][1], str):
@@ -292,29 +296,26 @@ def generate(ast):
                     name = entry[1][2]
                     module = named_modules[entry[1][1][0]]
                     arg = 1
-                tests[-1]["tests"].append({
-                    "kind": entry[0][0][len('assert_'):],
-                    "get": {
-                        "name": name,
-                        "module": module,
-                    },
-                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
-                })
+                tests[-1]["tests"].append(
+                    {
+                        "kind": entry[0][0][len('assert_') :],
+                        "get": {
+                            "name": name,
+                            "module": module,
+                        },
+                        "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None,
+                    }
+                )
             else:
                 if not len(tests):
-                    tests.append({
-                        "module": ('literal', b""),
-                        "tests": []
-                    })
-                tests[-1]["tests"].append({
-                    "kind": "testgen_fail",
-                    "function": {
-                        "module": None,
-                        "name": "<unknown>",
-                        "args": []
-                    },
-                    "reason": f"Unknown assertion {entry[0][0][len('assert_'):]}"
-                })
+                    tests.append({"module": ('literal', b""), "tests": []})
+                tests[-1]["tests"].append(
+                    {
+                        "kind": "testgen_fail",
+                        "function": {"module": None, "name": "<unknown>", "args": []},
+                        "reason": f"Unknown assertion {entry[0][0][len('assert_'):]}",
+                    }
+                )
         elif len(entry) >= 2 and entry[0][0] == 'invoke':
             # toplevel invoke :shrug:
             arg, name, module = 0, None, None
@@ -326,15 +327,17 @@ def generate(ast):
                 name = entry[1][2]
                 module = named_modules[entry[1][1][0]]
                 arg = 1
-            tests[-1]["tests"].append({
-                "kind": "ignore",
-                "function": {
-                    "module": module,
-                    "name": name,
-                    "args": list(parse_typed_value(x) for x in entry[1][arg + 2:])
-                },
-                "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
-            })
+            tests[-1]["tests"].append(
+                {
+                    "kind": "ignore",
+                    "function": {
+                        "module": module,
+                        "name": name,
+                        "args": list(parse_typed_value(x) for x in entry[1][arg + 2 :]),
+                    },
+                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None,
+                }
+            )
         elif len(entry) > 1 and entry[0][0] == 'register':
             if len(entry) == 3:
                 registered_modules[entry[1]] = named_modules[entry[2][0]]
@@ -346,19 +349,14 @@ def generate(ast):
                 named_modules_inverse[index] = (":" + entry[1], entry[1])
         else:
             if not len(tests):
-                tests.append({
-                    "module": ('literal', b""),
-                    "tests": []
-                })
-            tests[-1]["tests"].append({
-                "kind": "testgen_fail",
-                "function": {
-                    "module": None,
-                    "name": "<unknown>",
-                    "args": []
-                },
-                "reason": f"Unknown command {entry[0][0]}"
-            })
+                tests.append({"module": ('literal', b""), "tests": []})
+            tests[-1]["tests"].append(
+                {
+                    "kind": "testgen_fail",
+                    "function": {"module": None, "name": "<unknown>", "args": []},
+                    "reason": f"Unknown command {entry[0][0]}",
+                }
+            )
     return tests
 
 
@@ -436,16 +434,13 @@ def genresult(ident, entry, index):
         tmodule = 'module'
         if entry['function']['module'] is not None:
             tmodule = f'namedModules[{json.dumps(named_modules_inverse[entry["function"]["module"]][0])}]'
-        expectation = (
-            f'{tmodule}.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])})'
-        )
+        expectation = f'{tmodule}.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])})'
     elif "get" in entry:
         expectation = f'module.getExport({ident})'
 
     if entry['kind'] == 'return':
-        return (
-                f'let {ident}_result = {expectation};\n    ' +
-                (f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else '')
+        return f'let {ident}_result = {expectation};\n    ' + (
+            f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else ''
         )
 
     if entry['kind'] == 'ignore':
@@ -464,9 +459,7 @@ def genresult(ident, entry, index):
         )
 
     if entry['kind'] in ('exhaustion', 'trap', 'invalid'):
-        return (
-            f'expect(() => {expectation}.toThrow(TypeError, "Execution trapped"));\n    '
-        )
+        return f'expect(() => {expectation}.toThrow(TypeError, "Execution trapped"));\n    '
 
     if entry['kind'] == 'malformed':
         return ''
@@ -513,14 +506,15 @@ def gentest(entry, main_name):
         test = f"/* {e.msg} */ _test.skip"
         result = ""
     return (
-            f'{test}({json.dumps(test_name)}, () => {{\n' +
-            (
-                f'let {ident} = {tmodule}.getExport({json.dumps(name)});\n        '
-                f'expect({ident}).not.toBeUndefined();\n        '
-                if not isempty else ''
-            ) +
-            f'{result}'
-            '});\n\n    '
+        f'{test}({json.dumps(test_name)}, () => {{\n'
+        + (
+            f'let {ident} = {tmodule}.getExport({json.dumps(name)});\n        '
+            f'expect({ident}).not.toBeUndefined();\n        '
+            if not isempty
+            else ''
+        )
+        + f'{result}'
+        '});\n\n    '
     )
 
 
@@ -581,12 +575,14 @@ def main():
             print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
             continue
         sep = ""
-        print(f'''describe({json.dumps(testname)}, () => {{
+        print(
+            f'''describe({json.dumps(testname)}, () => {{
 let _test = test;
 {gen_parse_module(testname, index) if mod else ''}
 {sep.join(gentest(x, testname) for x in description["tests"])}
 }});
-''')
+'''
+        )
 
 
 if __name__ == "__main__":
