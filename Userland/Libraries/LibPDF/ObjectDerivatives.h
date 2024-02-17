@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/SourceLocation.h>
+#include <LibGfx/Bitmap.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Object.h>
@@ -205,6 +206,27 @@ protected:
 private:
     u32 m_index;
     Value m_value;
+};
+
+class BitmapObject final : public Object {
+public:
+    explicit BitmapObject(NonnullRefPtr<Gfx::Bitmap> bitmap)
+        : m_bitmap(move(bitmap))
+    {
+    }
+
+    ~BitmapObject() override = default;
+
+    [[nodiscard]] ALWAYS_INLINE Gfx::Bitmap const& bitmap() const { return *m_bitmap; }
+
+    char const* type_name() const override { return "bitmap"; }
+    ByteString to_byte_string(int indent) const override;
+
+protected:
+    bool is_bitmap() const override { return true; }
+
+private:
+    NonnullRefPtr<Gfx::Bitmap> m_bitmap;
 };
 
 template<IsValueType T>

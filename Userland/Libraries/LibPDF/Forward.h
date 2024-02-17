@@ -19,6 +19,7 @@ class Object;
     V(ArrayObject, array)         \
     V(DictObject, dict)           \
     V(StreamObject, stream)       \
+    V(BitmapObject, bitmap)       \
     V(IndirectValue, indirect_value)
 
 #define FORWARD_DECL(class_name, _) class class_name;

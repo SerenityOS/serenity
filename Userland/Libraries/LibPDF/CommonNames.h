@@ -192,6 +192,7 @@
     X(Widths)                     \
     X(XObject)                    \
     X(XYZ)                        \
+    X(XXCachedBitmap)             \
     X(ca)                         \
     X(op)
 

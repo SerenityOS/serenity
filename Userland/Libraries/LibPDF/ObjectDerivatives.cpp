@@ -187,4 +187,9 @@ ByteString IndirectValue::to_byte_string(int indent) const
     return builder.to_byte_string();
 }
 
+ByteString BitmapObject::to_byte_string(int) const
+{
+    return ByteString::formatted("bitmap [{}x{}]", m_bitmap->width(), m_bitmap->height());
+}
+
 }

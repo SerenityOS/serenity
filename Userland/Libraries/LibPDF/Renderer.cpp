@@ -1237,36 +1237,47 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         show_empty_image(width, height);
         return {};
     }
-    auto image_bitmap = TRY(load_image(image));
-    if (image_bitmap.is_image_mask) {
-        // PDF 1.7 spec, 4.8.5 Masked Images, Stencil Masking:
-        // "An image mask (an image XObject whose ImageMask entry is true) [...] is treated as a stencil mask [...].
-        //  Sample values [...] designate places on the page that should either be marked with the current color or masked out (not marked at all)."
-        if (!state().paint_style.has<Gfx::Color>())
-            return Error(Error::Type::RenderingUnsupported, "Image masks with pattern fill not yet implemented");
 
-        // Move mask to alpha channel, and put current color in RGB.
-        auto current_color = state().paint_style.get<Gfx::Color>();
-        for (auto& pixel : *image_bitmap.bitmap) {
-            u8 mask_alpha = Color::from_argb(pixel).luminosity();
-            pixel = current_color.with_alpha(mask_alpha).value();
+    RefPtr<Gfx::Bitmap> bitmap;
+    if (image_dict->contains(CommonNames::XXCachedBitmap)) {
+        bitmap = image_dict->get_bitmap(CommonNames::XXCachedBitmap)->bitmap();
+    } else {
+        auto image_bitmap = TRY(load_image(image));
+        bool cacheable = true;
+        if (image_bitmap.is_image_mask) {
+            cacheable = false; // the image depends on the current paint style
+            // PDF 1.7 spec, 4.8.5 Masked Images, Stencil Masking:
+            // "An image mask (an image XObject whose ImageMask entry is true) [...] is treated as a stencil mask [...].
+            //  Sample values [...] designate places on the page that should either be marked with the current color or masked out (not marked at all)."
+            if (!state().paint_style.has<Gfx::Color>())
+                return Error(Error::Type::RenderingUnsupported, "Image masks with pattern fill not yet implemented");
+
+            // Move mask to alpha channel, and put current color in RGB.
+            auto current_color = state().paint_style.get<Gfx::Color>();
+            for (auto& pixel : *image_bitmap.bitmap) {
+                u8 mask_alpha = Color::from_argb(pixel).luminosity();
+                pixel = current_color.with_alpha(mask_alpha).value();
+            }
+        } else if (image_dict->contains(CommonNames::SMask)) {
+            auto smask_bitmap = TRY(load_image(TRY(image_dict->get_stream(m_document, CommonNames::SMask))));
+            TRY(apply_alpha_channel(image_bitmap.bitmap, smask_bitmap.bitmap));
+        } else if (image_dict->contains(CommonNames::Mask)) {
+            auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
+            if (mask_object->is<StreamObject>()) {
+                auto mask_bitmap = TRY(load_image(mask_object->cast<StreamObject>()));
+                TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
+            } else if (mask_object->is<ArrayObject>()) {
+                return Error::rendering_unsupported_error("/Mask array objects not yet implemented");
+            }
         }
-    } else if (image_dict->contains(CommonNames::SMask)) {
-        auto smask_bitmap = TRY(load_image(TRY(image_dict->get_stream(m_document, CommonNames::SMask))));
-        TRY(apply_alpha_channel(image_bitmap.bitmap, smask_bitmap.bitmap));
-    } else if (image_dict->contains(CommonNames::Mask)) {
-        auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
-        if (mask_object->is<StreamObject>()) {
-            auto mask_bitmap = TRY(load_image(mask_object->cast<StreamObject>()));
-            TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
-        } else if (mask_object->is<ArrayObject>()) {
-            return Error::rendering_unsupported_error("/Mask array objects not yet implemented");
-        }
+        if (cacheable)
+            image_dict->set_private_value(CommonNames::XXCachedBitmap, make_object<BitmapObject>(image_bitmap.bitmap));
+        bitmap = move(image_bitmap.bitmap);
     }
 
     auto image_space = calculate_image_space_transformation(width, height);
     auto image_rect = Gfx::FloatRect { 0, 0, width, height };
-    m_painter.draw_scaled_bitmap_with_transform(image_bitmap.bitmap->rect(), image_bitmap.bitmap, image_rect, image_space);
+    m_painter.draw_scaled_bitmap_with_transform(bitmap->rect(), *bitmap, image_rect, image_space);
     return {};
 }
 
