@@ -20,12 +20,18 @@
 
 namespace OpenType {
 
+class CharCodeToGlyphIndex {
+public:
+    virtual ~CharCodeToGlyphIndex() = default;
+    virtual u32 glyph_id_for_code_point(u32) const = 0;
+};
+
 class Font : public Gfx::VectorFont {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_resource(Core::Resource const&, unsigned index = 0);
-    static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(ReadonlyBytes bytes, unsigned index = 0);
+    static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(ReadonlyBytes bytes, unsigned index = 0, OwnPtr<CharCodeToGlyphIndex> external_cmap = {});
 
     virtual Gfx::ScaledFontMetrics metrics(float x_scale, float y_scale) const override;
     virtual Gfx::ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const override;
@@ -68,7 +74,7 @@ private:
 
     EmbeddedBitmapData embedded_bitmap_data_for_glyph(u32 glyph_id) const;
 
-    static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
+    static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index, OwnPtr<CharCodeToGlyphIndex> external_cmap);
 
     Font(
         Head&& head,
@@ -76,7 +82,7 @@ private:
         Hhea&& hhea,
         Maxp&& maxp,
         Hmtx&& hmtx,
-        Cmap&& cmap,
+        NonnullOwnPtr<CharCodeToGlyphIndex> cmap,
         Optional<Loca>&& loca,
         Optional<Glyf>&& glyf,
         Optional<OS2> os2,
@@ -114,7 +120,7 @@ private:
     Hmtx m_hmtx;
     Optional<Loca> m_loca;
     Optional<Glyf> m_glyf;
-    Cmap m_cmap;
+    NonnullOwnPtr<CharCodeToGlyphIndex> m_cmap;
     Optional<OS2> m_os2;
     Optional<Kern> m_kern;
     Optional<Fpgm> m_fpgm;
