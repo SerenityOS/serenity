@@ -17,6 +17,7 @@ class CIDFontType {
 public:
     virtual ~CIDFontType() = default;
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) = 0;
+    virtual void set_font_size(float) = 0;
 };
 
 class CIDFontType0 : public CIDFontType {
@@ -24,6 +25,8 @@ public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType0>> create(Document*, NonnullRefPtr<DictObject> const& descendant);
 
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
+
+    virtual void set_font_size(float) override { }
 
 private:
     CIDFontType0(RefPtr<Type1FontProgram> font_program)
@@ -115,6 +118,8 @@ public:
 
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
 
+    virtual void set_font_size(float) override;
+
 private:
     CIDFontType2(RefPtr<Gfx::Font> font)
         : m_font(move(font))
@@ -193,6 +198,11 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
         });
     }
     return {};
+}
+
+void CIDFontType2::set_font_size(float font_size)
+{
+    m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
 Type0Font::Type0Font() = default;
@@ -283,8 +293,9 @@ float Type0Font::get_char_width(u16 char_code) const
     return static_cast<float>(width) / 1000.0f;
 }
 
-void Type0Font::set_font_size(float)
+void Type0Font::set_font_size(float font_size)
 {
+    m_cid_font_type->set_font_size(font_size);
 }
 
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer)
