@@ -36,10 +36,33 @@ public:
     double width() const { return m_rect.width(); }
     double height() const { return m_rect.height(); }
 
-    double top() const { return min(y(), y() + height()); }
-    double right() const { return max(x(), x() + width()); }
-    double bottom() const { return max(y(), y() + height()); }
-    double left() const { return min(x(), x() + width()); }
+    double top() const
+    {
+        if (isnan(y()) || isnan(height()))
+            return NAN;
+        return min(y(), y() + height());
+    }
+
+    double right() const
+    {
+        if (isnan(x()) || isnan(width()))
+            return NAN;
+        return max(x(), x() + width());
+    }
+
+    double bottom() const
+    {
+        if (isnan(y()) || isnan(height()))
+            return NAN;
+        return max(y(), y() + height());
+    }
+
+    double left() const
+    {
+        if (isnan(x()) || isnan(width()))
+            return NAN;
+        return min(x(), x() + width());
+    }
 
 protected:
     DOMRectReadOnly(JS::Realm&, double x, double y, double width, double height);

@@ -26,6 +26,18 @@
             // 4. Creating a DOMRect with DOMRect.fromRect()
             testPart(() => Rect.fromRect({ x: 10, y: 20, width: 30, height: 40 }));
 
+            // 5. Creating a DOMRect with NaN x value
+            testPart(() => new Rect(NaN, 20, 30, 40));
+
+            // 6. Creating a DOMRect with NaN y value
+            testPart(() => new Rect(10, NaN, 30, 40));
+
+            // 7. Creating a DOMRect with NaN width value
+            testPart(() => new Rect(10, 20, NaN, 40));
+
+            // 8. Creating a DOMRect with NaN height value
+            testPart(() => new Rect(10, 20, 30, NaN));
+
             testCounter = 1;
         }
     });
