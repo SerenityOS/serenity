@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/CFF.h>
@@ -113,6 +114,14 @@ public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType2>> create(Document*, NonnullRefPtr<DictObject> const& descendant, float font_size);
 
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
+
+private:
+    CIDFontType2(RefPtr<Gfx::Font> font)
+        : m_font(move(font))
+    {
+    }
+
+    RefPtr<Gfx::Font> m_font;
 };
 
 PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document, NonnullRefPtr<DictObject> const& descendant, float font_size)
@@ -128,22 +137,31 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
         }
     }
 
+    class IdentityCIDToGIDMap : public OpenType::CharCodeToGlyphIndex {
+    public:
+        virtual u32 glyph_id_for_code_point(u32 char_code) const override
+        {
+            return char_code;
+        }
+    };
+
     RefPtr<Gfx::Font> font;
     if (descriptor->contains(CommonNames::FontFile2)) {
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
         float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
-        // FIXME: Load font_file_stream->bytes() as TTF data, similar to TrueTypeFont::initialize().
-        //        Unfortunately, TTF data in Type0 CIDFontType2 fonts don't contain the "cmap" table
-        //        that's mandatory per TTF spec and the PDF stores that mapping in CIDToGIDMap instead.
-        //        OpenType::Font::try_load currently rejects TTF data without "cmap" data.
-        (void)font_file_stream;
-        (void)point_size;
+        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), 0, make<IdentityCIDToGIDMap>()));
+        font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
     }
 
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType2()));
+    if (!font) {
+        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
+        return Error::malformed_error("CIDFontType2: missing FontFile2");
+    }
+
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType2(move(font))));
 }
 
-PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u32, Renderer const&)
+PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Renderer const& renderer)
 {
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "For Type 2, the CIDFont program is actually a TrueType font program, which has no native notion of CIDs.
@@ -157,8 +175,24 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float,
     //    that maps CIDs to the glyph indices for the appropriate glyph descriptions in that font program.
     //  * If the TrueType font program is not embedded but is referenced by name, and the Type 2 CIDFont dictionary
     //    contains a CIDToGIDMap entry, the CIDToGIDMap entry shall be ignored, since it is not meaningful
-    ///   to refer to glyph indices in an external font program."
-    return Error::rendering_unsupported_error("Type0 font CIDFontType2 not implemented yet");
+    //    to refer to glyph indices in an external font program."
+
+    // FIXME: We don't support non-embedded type0 truetype fonts yet.
+
+    auto style = renderer.state().paint_style;
+
+    // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
+    auto position = point.translated(0, -m_font->pixel_metrics().ascent);
+
+    if (style.has<Color>()) {
+        painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
+    } else {
+        // FIXME: Bounding box and sample point look to be pretty wrong
+        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
+            painter.draw_glyph(position, char_code, *m_font, sample(Gfx::IntPoint(position.x(), position.y())));
+        });
+    }
+    return {};
 }
 
 Type0Font::Type0Font() = default;
