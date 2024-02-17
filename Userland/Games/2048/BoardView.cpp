@@ -58,10 +58,14 @@ void BoardView::pick_font()
         }
     });
 
-    auto font = font_database.get_by_name(best_font_name);
+    if (best_font_name.is_empty()) {
+        dbgln("Failed to find a good font for size {}, using the default font", m_cell_size / 2);
+        best_font_name = font_database.default_font().qualified_name();
+    }
+    auto const font = font_database.get_by_name(best_font_name);
     set_font(font);
 
-    m_min_cell_size = best_font_size;
+    m_min_cell_size = font->pixel_size_rounded_up();
 }
 
 size_t BoardView::rows() const
