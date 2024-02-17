@@ -24,8 +24,10 @@ ErrorOr<Gfx::FloatMatrix4x4> Transformation::to_matrix(Optional<Painting::Painta
             [&](CSS::LengthPercentage const& value) -> ErrorOr<float> {
                 if (paintable_box.has_value())
                     return value.resolved(paintable_box->layout_node(), reference_length).to_px(paintable_box->layout_node()).to_float();
-                if (value.is_length())
-                    return value.length().absolute_length_to_px().to_float();
+                if (value.is_length()) {
+                    if (auto const& length = value.length(); length.is_absolute())
+                        return length.absolute_length_to_px().to_float();
+                }
                 return Error::from_string_literal("Transform contains non absolute units");
             },
             [&](CSS::AngleOrCalculated const& value) -> ErrorOr<float> {

@@ -64,5 +64,8 @@
 
         // 18. Creating a DOMMatrix with CSS transform string with error
         testPart(() => new DOMMatrix('matrix(1.0, 2.0deg, 3.0, 4.0, 5.0, 6.0)'));
+
+        // 19. Creating a DOMMatrix with CSS transform string with non-absolute units should fail
+        testPart(() => new DOMMatrix('translate(1em, 1em)'));
     });
 </script>
