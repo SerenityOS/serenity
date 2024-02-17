@@ -216,6 +216,14 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     String value_sanitization_algorithm(String const&) const;
 
+    enum class ValueAttributeMode {
+        Value,
+        Default,
+        DefaultOn,
+        Filename,
+    };
+    ValueAttributeMode value_attribute_mode() const;
+
     void update_placeholder_visibility();
     JS::GCPtr<DOM::Element> m_placeholder_element;
     JS::GCPtr<DOM::Text> m_placeholder_text_node;

@@ -346,93 +346,93 @@ void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
 
 String HTMLInputElement::value() const
 {
+    switch (value_attribute_mode()) {
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
+    case ValueAttributeMode::Value:
+        // Return the current value of the element.
+        return m_value;
+
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default
+    case ValueAttributeMode::Default:
+        // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return
+        // the empty string.
+        return get_attribute_value(AttributeNames::value);
+
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default-on
+    case ValueAttributeMode::DefaultOn:
+        // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return
+        // the string "on".
+        return get_attribute(AttributeNames::value).value_or("on"_string);
+
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
-    if (type_state() == TypeAttributeState::FileUpload) {
-        // NOTE: This "fakepath" requirement is a sad accident of history. See the example in the File Upload state section for more information.
-        // NOTE: Since path components are not permitted in filenames in the list of selected files, the "\fakepath\" cannot be mistaken for a path component.
-        // On getting, return the string "C:\fakepath\" followed by the name of the first file in the list of selected files, if any, or the empty string if the list is empty.
+    case ValueAttributeMode::Filename:
+        // On getting, return the string "C:\fakepath\" followed by the name of the first file in the list of selected
+        // files, if any, or the empty string if the list is empty.
         if (m_selected_files && m_selected_files->item(0))
             return MUST(String::formatted("C:\\fakepath\\{}", m_selected_files->item(0)->name()));
         return String {};
     }
 
-    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default-on
-    if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
-        // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the string "on".
-        return get_attribute(AttributeNames::value).value_or("on"_string);
-    }
-
-    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default
-    if (type_state() == TypeAttributeState::Hidden
-        || type_state() == TypeAttributeState::SubmitButton
-        || type_state() == TypeAttributeState::ImageButton
-        || type_state() == TypeAttributeState::ResetButton
-        || type_state() == TypeAttributeState::Button) {
-        // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the empty string.
-        return get_attribute_value(AttributeNames::value);
-    }
-
-    // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):attr-input-value
-    if (type_state() == TypeAttributeState::Range) {
-        // https://html.spec.whatwg.org/multipage/input.html#concept-input-value-default-range
-        double minimum = *min();
-        double maximum = *max();
-        double default_value = minimum + (maximum - minimum) / 2;
-        if (maximum < minimum)
-            default_value = minimum;
-
-        if (!parse_floating_point_number(m_value).has_value())
-            return MUST(String::number(default_value));
-    }
-
-    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
-    // Return the current value of the element.
-    return m_value;
+    VERIFY_NOT_REACHED();
 }
 
 WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
 {
     auto& realm = this->realm();
 
+    switch (value_attribute_mode()) {
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
+    case ValueAttributeMode::Value: {
+        // 1. Let oldValue be the element's value.
+        auto old_value = move(m_value);
+
+        // 2. Set the element's value to the new value.
+        // NOTE: For the TextNode this is done as part of step 4 below.
+
+        // 3. Set the element's dirty value flag to true.
+        m_dirty_value = true;
+
+        // 4. Invoke the value sanitization algorithm, if the element's type attribute's current state defines one.
+        m_value = value_sanitization_algorithm(value);
+
+        // 5. If the element's value (after applying the value sanitization algorithm) is different from oldValue,
+        //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
+        //    text control, unselecting any selected text and resetting the selection direction to "none".
+        if (m_value != old_value) {
+            if (m_text_node) {
+                m_text_node->set_data(m_value);
+                update_placeholder_visibility();
+
+                if (auto* browsing_context = document().browsing_context())
+                    browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
+            }
+
+            if (type_state() == TypeAttributeState::Color && m_color_well_element)
+                update_color_well_element();
+
+            if (type_state() == TypeAttributeState::Range && m_slider_thumb)
+                update_slider_thumb_element();
+        }
+
+        break;
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default-on
+    case ValueAttributeMode::Default:
+    case ValueAttributeMode::DefaultOn:
+        // On setting, set the value of the element's value content attribute to the new value.
+        TRY(set_attribute(HTML::AttributeNames::value, value));
+        break;
+
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
-    if (type_state() == TypeAttributeState::FileUpload) {
+    case ValueAttributeMode::Filename:
         // On setting, if the new value is the empty string, empty the list of selected files; otherwise, throw an "InvalidStateError" DOMException.
         if (!value.is_empty())
             return WebIDL::InvalidStateError::create(realm, "Setting value of input type file to non-empty string"_fly_string);
+
         m_selected_files = nullptr;
-        return {};
-    }
-
-    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
-    // 1. Let oldValue be the element's value.
-    auto old_value = move(m_value);
-
-    // 2. Set the element's value to the new value.
-    // NOTE: For the TextNode this is done as part of step 4 below.
-
-    // 3. Set the element's dirty value flag to true.
-    m_dirty_value = true;
-
-    // 4. Invoke the value sanitization algorithm, if the element's type attribute's current state defines one.
-    m_value = value_sanitization_algorithm(value);
-
-    // 5. If the element's value (after applying the value sanitization algorithm) is different from oldValue,
-    //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
-    //    text control, unselecting any selected text and resetting the selection direction to "none".
-    if (m_value != old_value) {
-        if (m_text_node) {
-            m_text_node->set_data(m_value);
-            update_placeholder_visibility();
-
-            if (auto* browsing_context = document().browsing_context())
-                browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
-        }
-
-        if (type_state() == TypeAttributeState::Color && m_color_well_element)
-            update_color_well_element();
-
-        if (type_state() == TypeAttributeState::Range && m_slider_thumb)
-            update_slider_thumb_element();
+        break;
     }
 
     return {};
@@ -1774,6 +1774,44 @@ bool HTMLInputElement::step_applies() const
 bool HTMLInputElement::step_up_or_down_applies() const
 {
     return value_as_number_applies();
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:dom-input-value-2
+HTMLInputElement::ValueAttributeMode HTMLInputElement::value_attribute_mode() const
+{
+    switch (type_state()) {
+    case TypeAttributeState::Text:
+    case TypeAttributeState::Search:
+    case TypeAttributeState::Telephone:
+    case TypeAttributeState::URL:
+    case TypeAttributeState::Email:
+    case TypeAttributeState::Password:
+    case TypeAttributeState::Date:
+    case TypeAttributeState::Month:
+    case TypeAttributeState::Week:
+    case TypeAttributeState::Time:
+    case TypeAttributeState::LocalDateAndTime:
+    case TypeAttributeState::Number:
+    case TypeAttributeState::Range:
+    case TypeAttributeState::Color:
+        return ValueAttributeMode::Value;
+
+    case TypeAttributeState::Hidden:
+    case TypeAttributeState::SubmitButton:
+    case TypeAttributeState::ImageButton:
+    case TypeAttributeState::ResetButton:
+    case TypeAttributeState::Button:
+        return ValueAttributeMode::Default;
+
+    case TypeAttributeState::Checkbox:
+    case TypeAttributeState::RadioButton:
+        return ValueAttributeMode::DefaultOn;
+
+    case TypeAttributeState::FileUpload:
+        return ValueAttributeMode::Filename;
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 }
