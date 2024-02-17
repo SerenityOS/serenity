@@ -197,6 +197,13 @@
 
 namespace PDF {
 
+// PDF Annex E section E.2 Name Registry:
+// Third class: Names that may be used only in PDF files that other third parties will never see
+// because they can conflict with third-class names defined by others. Third-class names shall all
+// begin with a specific prefix reserved for private extensions. This prefix, which is XX, shall be
+// used as the first characters in the names of all private data added by the developer.
+static constexpr StringView third_class_private_name_prefix = "XX"sv;
+
 class CommonNames {
 public:
 #define ENUMERATE(name) static DeprecatedFlyString name;

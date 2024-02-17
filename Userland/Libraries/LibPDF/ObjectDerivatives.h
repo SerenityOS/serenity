@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/SourceLocation.h>
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Value.h>
@@ -137,6 +138,12 @@ public:
     NonnullRefPtr<class_name> get_##snake_name(DeprecatedFlyString const& key) const;
     ENUMERATE_OBJECT_TYPES(DEFINE_GETTER)
 #undef DEFINE_GETTER
+
+    void set_private_value(DeprecatedFlyString const& key, Value value)
+    {
+        VERIFY(key.starts_with(third_class_private_name_prefix));
+        m_map.set(key, move(value));
+    }
 
     char const* type_name() const override
     {
