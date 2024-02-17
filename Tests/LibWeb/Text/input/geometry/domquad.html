@@ -32,5 +32,13 @@
             new DOMPoint(100, 100),
             new DOMPoint(0, 100)
         ).getBounds());
+
+        // 5. Getting the bounds of a DOMQuad with points set to Infinity
+        testPart(() => DOMQuad.fromRect({ 
+            x: -Infinity,
+            y: -Infinity,
+            width: Infinity,
+            height: Infinity
+        }).getBounds());
     });
 </script>

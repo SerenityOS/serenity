@@ -47,20 +47,32 @@ JS::NonnullGCPtr<DOMQuad> DOMQuad::from_quad(JS::VM& vm, DOMQuadInit const& othe
 // https://drafts.fxtf.org/geometry/#dom-domquad-getbounds
 JS::NonnullGCPtr<DOMRect> DOMQuad::get_bounds() const
 {
+    auto nan_safe_minimum = [](double a, double b, double c, double d) -> double {
+        if (isnan(a) || isnan(b) || isnan(c) || isnan(d))
+            return NAN;
+        return min(a, min(b, min(c, d)));
+    };
+
+    auto nan_safe_maximum = [](double a, double b, double c, double d) -> double {
+        if (isnan(a) || isnan(b) || isnan(c) || isnan(d))
+            return NAN;
+        return max(a, max(b, max(c, d)));
+    };
+
     // 1. Let bounds be a DOMRect object.
     auto bounds = DOMRect::create(realm(), {});
 
     // 2. Let left be the NaN-safe minimum of point 1’s x coordinate, point 2’s x coordinate, point 3’s x coordinate and point 4’s x coordinate.
-    auto left = min(m_p1->x(), min(m_p2->x(), min(m_p3->x(), m_p4->x())));
+    auto left = nan_safe_minimum(m_p1->x(), m_p2->x(), m_p3->x(), m_p4->x());
 
     // 3. Let top be the NaN-safe minimum of point 1’s y coordinate, point 2’s y coordinate, point 3’s y coordinate and point 4’s y coordinate.
-    auto top = min(m_p1->y(), min(m_p2->y(), min(m_p3->y(), m_p4->y())));
+    auto top = nan_safe_minimum(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y());
 
     // 4. Let right be the NaN-safe maximum of point 1’s x coordinate, point 2’s x coordinate, point 3’s x coordinate and point 4’s x coordinate.
-    auto right = max(m_p1->x(), max(m_p2->x(), max(m_p3->x(), m_p4->x())));
+    auto right = nan_safe_maximum(m_p1->x(), m_p2->x(), m_p3->x(), m_p4->x());
 
     // 5. Let bottom be the NaN-safe maximum of point 1’s y coordinate, point 2’s y coordinate, point 3’s y coordinate and point 4’s y coordinate.
-    auto bottom = max(m_p1->y(), max(m_p2->y(), max(m_p3->y(), m_p4->y())));
+    auto bottom = nan_safe_maximum(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y());
 
     // 6. Set x coordinate of bounds to left, y coordinate of bounds to top, width dimension of bounds to right - left and height dimension of bounds to bottom - top.
     bounds->set_x(left);
