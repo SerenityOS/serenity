@@ -214,7 +214,7 @@ pushd "$DIR/Tarballs"
 
     patch_md5="$($MD5SUM "$DIR"/Patches/llvm/*.patch)"
 
-    if [ ! -d "$LLVM_NAME" ] || [ "$(cat $LLVM_NAME/.patch.applied)" != "$patch_md5" ]; then
+    if [ ! -d "$LLVM_NAME" ] || [ "$(cat $LLVM_NAME/.patch.applied)" != "$patch_md5" ] || [ "$dev" = "1" ]; then
         if [ -d "$LLVM_NAME" ]; then
             # Drop the previously patched extracted dir
             rm -rf "${LLVM_NAME}"

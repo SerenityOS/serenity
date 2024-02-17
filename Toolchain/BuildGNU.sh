@@ -158,7 +158,7 @@ pushd "$DIR/Tarballs"
 
     patch_md5="$(${MD5SUM} "${DIR}"/Patches/binutils/*.patch)"
 
-    if [ ! -d "${BINUTILS_NAME}" ] || [ "$(cat ${BINUTILS_NAME}/.patch.applied)" != "${patch_md5}" ]; then
+    if [ ! -d "${BINUTILS_NAME}" ] || [ "$(cat ${BINUTILS_NAME}/.patch.applied)" != "${patch_md5}" ] || [ "${git_patch}" = "1" ]; then
         if [ -d ${BINUTILS_NAME} ]; then
             rm -rf "${BINUTILS_NAME}"
             rm -rf "${DIR}/Build/${ARCH}/${BINUTILS_NAME}"
@@ -186,7 +186,7 @@ pushd "$DIR/Tarballs"
 
     patch_md5="$(${MD5SUM} "${DIR}"/Patches/gcc/*.patch)"
 
-    if [ ! -d "${GCC_NAME}" ] || [ "$(cat ${GCC_NAME}/.patch.applied)" != "${patch_md5}" ]; then
+    if [ ! -d "${GCC_NAME}" ] || [ "$(cat ${GCC_NAME}/.patch.applied)" != "${patch_md5}" ] || [ "${git_patch}" = "1" ]; then
         if [ -d ${GCC_NAME} ]; then
             rm -rf "${GCC_NAME}"
             rm -rf "${DIR}/Build/${ARCH}/${GCC_NAME}"
