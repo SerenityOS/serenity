@@ -425,8 +425,12 @@ TraversalDecision StackingContext::hit_test(CSSPixelPoint position, HitTestType 
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (paintable().layout_node().children_are_inline() && is<Layout::BlockContainer>(paintable().layout_node())) {
-        if (paintable_box().hit_test(transformed_position, type, callback) == TraversalDecision::Break)
-            return TraversalDecision::Break;
+        for (auto const* child = paintable().last_child(); child; child = child->previous_sibling()) {
+            if (child->is_inline() && !child->is_absolutely_positioned() && !child->stacking_context()) {
+                if (child->hit_test(transformed_position, type, callback) == TraversalDecision::Break)
+                    return TraversalDecision::Break;
+            }
+        }
     }
 
     // 4. the non-positioned floats.
