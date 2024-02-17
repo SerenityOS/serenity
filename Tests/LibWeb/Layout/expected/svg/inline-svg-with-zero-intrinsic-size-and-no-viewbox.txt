@@ -1,0 +1,28 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x17 children: inline
+      frag 0 from ImageBox start: 0, length: 0, rect: [8,21 0x0] baseline: 0
+      frag 1 from TextNode start: 0, length: 1, rect: [8,8 8x17] baseline: 13.296875
+          " "
+      frag 2 from SVGSVGBox start: 0, length: 0, rect: [16,21 0x0] baseline: 0
+      ImageBox <img> at (8,21) content-size 0x0 children: not-inline
+        (SVG-as-image isolated context)
+        Viewport <#document> at (0,0) content-size 0x0 [BFC] children: inline
+          SVGSVGBox <svg> at (0,0) content-size 0x0 [SVG] children: inline
+            TextNode <#text>
+            SVGGeometryBox <rect> at (0,0) content-size 1x1 children: not-inline
+            TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (16,21) content-size 0x0 [SVG] children: inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (16,21) content-size 1x1 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17]
+      ImagePaintable (ImageBox<IMG>) [8,21 0x0]
+      TextPaintable (TextNode<#text>)
+      SVGSVGPaintable (SVGSVGBox<svg>) [16,21 0x0]
+        SVGPathPaintable (SVGGeometryBox<rect>) [16,21 1x1]
