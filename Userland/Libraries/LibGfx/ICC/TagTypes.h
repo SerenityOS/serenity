@@ -1093,7 +1093,7 @@ inline ErrorOr<FloatVector3> Lut16TagData::evaluate(ColorSpace input_space, Colo
     //  Each output table entry is appropriately normalized to the range 0 to 65535.
     //  The outputTable is of size (OutputChannels x outputTableEntries x 2) bytes.
     //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
-    for (u8 c = 0; c < output_color.length(); ++c)
+    for (u8 c = 0; c < 3; ++c)
         output_color[c] = lerp_1d(m_output_tables.span().slice(c * m_number_of_output_table_entries, m_number_of_output_table_entries), output_color[c]) / 65535.0f;
 
     if (connection_space == ColorSpace::PCSXYZ) {
@@ -1181,7 +1181,7 @@ inline ErrorOr<FloatVector3> Lut8TagData::evaluate(ColorSpace input_space, Color
     //  Each output table entry is appropriately normalized to the range 0 to 255.
     //  The outputTable is of size (OutputChannels x 256) bytes.
     //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
-    for (u8 c = 0; c < output_color.length(); ++c)
+    for (u8 c = 0; c < 3; ++c)
         output_color[c] = lerp_1d(m_output_tables.span().slice(c * 256, 256), output_color[c]) / 255.0f;
 
     if (connection_space == ColorSpace::PCSXYZ) {
