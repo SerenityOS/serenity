@@ -490,7 +490,7 @@ static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, St
             TRY(collect_dump_tests(tests, path, TRY(String::formatted("{}/{}", trail, name)), mode));
             continue;
         }
-        if (!name.ends_with(".html"sv))
+        if (!name.ends_with(".html"sv) && !name.ends_with(".svg"sv))
             continue;
         auto basename = LexicalPath::title(name);
         auto expectation_path = TRY(String::formatted("{}/expected/{}/{}.txt", path, trail, basename));
