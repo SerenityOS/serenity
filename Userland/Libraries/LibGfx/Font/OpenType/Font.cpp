@@ -24,6 +24,86 @@
 
 namespace OpenType {
 
+namespace {
+
+class CmapCharCodeToGlyphIndex : public CharCodeToGlyphIndex {
+public:
+    static ErrorOr<NonnullOwnPtr<CharCodeToGlyphIndex>> from_slice(Optional<ReadonlyBytes>);
+
+    virtual u32 glyph_id_for_code_point(u32 code_point) const override;
+
+private:
+    explicit CmapCharCodeToGlyphIndex(Cmap cmap)
+        : m_cmap(cmap)
+    {
+    }
+
+    Cmap m_cmap;
+};
+
+ErrorOr<NonnullOwnPtr<CharCodeToGlyphIndex>> CmapCharCodeToGlyphIndex::from_slice(Optional<ReadonlyBytes> opt_cmap_slice)
+{
+    if (!opt_cmap_slice.has_value())
+        return Error::from_string_literal("Font is missing Cmap");
+
+    auto cmap = TRY(Cmap::from_slice(opt_cmap_slice.value()));
+
+    // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
+    // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
+    Optional<u32> active_cmap_index;
+    for (u32 i = 0; i < cmap.num_subtables(); i++) {
+        auto opt_subtable = cmap.subtable(i);
+        if (!opt_subtable.has_value()) {
+            continue;
+        }
+        auto subtable = opt_subtable.value();
+        auto platform = subtable.platform_id();
+        if (!platform.has_value())
+            return Error::from_string_literal("Invalid Platform ID");
+
+        /* NOTE: The encoding records are sorted first by platform ID, then by encoding ID.
+           This means that the Windows platform will take precedence over Macintosh, which is
+           usually what we want here. */
+        if (platform.value() == Cmap::Subtable::Platform::Unicode) {
+            if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_FullRepertoire) {
+                // "Encoding ID 3 should be used in conjunction with 'cmap' subtable formats 4 or 6."
+                active_cmap_index = i;
+                break;
+            }
+            if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_BMP_Only) {
+                // "Encoding ID 4 should be used in conjunction with subtable formats 10 or 12."
+                active_cmap_index = i;
+                break;
+            }
+        } else if (platform.value() == Cmap::Subtable::Platform::Windows) {
+            if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
+                active_cmap_index = i;
+                break;
+            }
+            if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeBMP) {
+                active_cmap_index = i;
+                break;
+            }
+        } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
+            active_cmap_index = i;
+            // Intentionally no `break` so that Windows (value 3) wins over Macintosh (value 1).
+        }
+    }
+    if (!active_cmap_index.has_value())
+        return Error::from_string_literal("No suitable cmap subtable found");
+    TRY(cmap.subtable(active_cmap_index.value()).value().validate_format_can_be_read());
+    cmap.set_active_index(active_cmap_index.value());
+
+    return adopt_nonnull_own_or_enomem(new CmapCharCodeToGlyphIndex(cmap));
+}
+
+u32 CmapCharCodeToGlyphIndex::glyph_id_for_code_point(u32 code_point) const
+{
+    return m_cmap.glyph_id_for_code_point(code_point);
+}
+
+}
+
 // https://learn.microsoft.com/en-us/typography/opentype/spec/otff#ttc-header
 struct [[gnu::packed]] TTCHeaderV1 {
     Tag ttc_tag;                      // Font Collection ID string: 'ttcf' (used for fonts with CFF or CFF2 outlines as well as TrueType outlines)
@@ -76,7 +156,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& 
     return font;
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned index)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned index, OwnPtr<CharCodeToGlyphIndex> external_cmap)
 {
     FixedMemoryStream stream { buffer };
 
@@ -92,7 +172,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 
         TRY(stream.seek(ttc_header_v1->table_directory_offsets + sizeof(u32) * index, SeekMode::SetPosition));
         auto offset = TRY(stream.read_value<BigEndian<u32>>());
-        return try_load_from_offset(buffer, offset);
+        return try_load_from_offset(buffer, offset, move(external_cmap));
     }
     if (tag == Tag("OTTO"))
         return Error::from_string_literal("CFF fonts not supported yet");
@@ -100,11 +180,11 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     if (tag.to_u32() != 0x00010000 && tag != Tag("true"))
         return Error::from_string_literal("Not a valid font");
 
-    return try_load_from_offset(buffer, 0);
+    return try_load_from_offset(buffer, 0, move(external_cmap));
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset, OwnPtr<CharCodeToGlyphIndex> external_cmap)
 {
     FixedMemoryStream stream { buffer };
     TRY(stream.seek(offset, AK::SeekMode::SetPosition));
@@ -192,9 +272,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Font is missing Hmtx");
     auto hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
 
-    if (!opt_cmap_slice.has_value())
-        return Error::from_string_literal("Font is missing Cmap");
-    auto cmap = TRY(Cmap::from_slice(opt_cmap_slice.value()));
+    NonnullOwnPtr<CharCodeToGlyphIndex> cmap = external_cmap ? external_cmap.release_nonnull() : TRY(CmapCharCodeToGlyphIndex::from_slice(opt_cmap_slice.value()));
 
     Optional<Loca> loca;
     if (opt_loca_slice.has_value())
@@ -220,52 +298,6 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<Prep> prep;
     if (opt_prep_slice.has_value())
         prep = Prep(opt_prep_slice.value());
-
-    // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
-    // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
-    Optional<u32> active_cmap_index;
-    for (u32 i = 0; i < cmap.num_subtables(); i++) {
-        auto opt_subtable = cmap.subtable(i);
-        if (!opt_subtable.has_value()) {
-            continue;
-        }
-        auto subtable = opt_subtable.value();
-        auto platform = subtable.platform_id();
-        if (!platform.has_value())
-            return Error::from_string_literal("Invalid Platform ID");
-
-        /* NOTE: The encoding records are sorted first by platform ID, then by encoding ID.
-           This means that the Windows platform will take precedence over Macintosh, which is
-           usually what we want here. */
-        if (platform.value() == Cmap::Subtable::Platform::Unicode) {
-            if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_FullRepertoire) {
-                // "Encoding ID 3 should be used in conjunction with 'cmap' subtable formats 4 or 6."
-                active_cmap_index = i;
-                break;
-            }
-            if (subtable.encoding_id() == (u16)Cmap::Subtable::UnicodeEncoding::Unicode2_0_BMP_Only) {
-                // "Encoding ID 4 should be used in conjunction with subtable formats 10 or 12."
-                active_cmap_index = i;
-                break;
-            }
-        } else if (platform.value() == Cmap::Subtable::Platform::Windows) {
-            if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
-                active_cmap_index = i;
-                break;
-            }
-            if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeBMP) {
-                active_cmap_index = i;
-                break;
-            }
-        } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
-            active_cmap_index = i;
-            // Intentionally no `break` so that Windows (value 3) wins over Macintosh (value 1).
-        }
-    }
-    if (!active_cmap_index.has_value())
-        return Error::from_string_literal("No suitable cmap subtable found");
-    TRY(cmap.subtable(active_cmap_index.value()).value().validate_format_can_be_read());
-    cmap.set_active_index(active_cmap_index.value());
 
     return adopt_ref(*new Font(
         move(head),
@@ -644,7 +676,7 @@ void Font::populate_glyph_page(GlyphPage& glyph_page, size_t page_index) const
     u32 first_code_point = page_index * GlyphPage::glyphs_per_page;
     for (size_t i = 0; i < GlyphPage::glyphs_per_page; ++i) {
         u32 code_point = first_code_point + i;
-        glyph_page.glyph_ids[i] = m_cmap.glyph_id_for_code_point(code_point);
+        glyph_page.glyph_ids[i] = m_cmap->glyph_id_for_code_point(code_point);
     }
 }
 bool Font::has_color_bitmaps() const
