@@ -479,27 +479,6 @@ void ASTNode::dump(int indent) const
 void ScopeNode::dump(int indent) const
 {
     ASTNode::dump(indent);
-    if (!m_lexical_declarations.is_empty()) {
-        print_indent(indent + 1);
-        outln("(Lexical declarations)");
-        for (auto& declaration : m_lexical_declarations)
-            declaration->dump(indent + 2);
-    }
-
-    if (!m_var_declarations.is_empty()) {
-        print_indent(indent + 1);
-        outln("(Variable declarations)");
-        for (auto& declaration : m_var_declarations)
-            declaration->dump(indent + 2);
-    }
-
-    if (!m_functions_hoistable_with_annexB_extension.is_empty()) {
-        print_indent(indent + 1);
-        outln("(Hoisted functions via annexB extension)");
-        for (auto& declaration : m_functions_hoistable_with_annexB_extension)
-            declaration->dump(indent + 2);
-    }
-
     if (!m_children.is_empty()) {
         print_indent(indent + 1);
         outln("(Children)");
