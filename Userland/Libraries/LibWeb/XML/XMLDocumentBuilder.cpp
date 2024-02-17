@@ -8,6 +8,8 @@
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/SVG/SVGScriptElement.h>
+#include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 inline namespace {
@@ -128,7 +130,15 @@ void XMLDocumentBuilder::element_end(const XML::Name& name)
 
             // There is no longer a pending parsing-blocking script.
         }
-    }
+    } else if (m_scripting_support == XMLScriptingSupport::Enabled && m_current_node->is_svg_script_element()) {
+        // https://www.w3.org/TR/SVGMobile12/struct.html#ProgressiveRendering
+        // When an end element event occurs for a 'script' element, that element is processed according to the
+        // Script processing section of the Scripting chapter. Further parsing of the document will be blocked
+        // until processing of the 'script' is complete.
+        auto& script_element = static_cast<SVG::SVGScriptElement&>(*m_current_node);
+        script_element.process_the_script_element();
+    };
+
     m_current_node = m_current_node->parent_node();
 }
 
