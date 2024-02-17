@@ -129,32 +129,61 @@ private:
     RefPtr<Gfx::Font> m_font;
 };
 
+static PDFErrorOr<NonnullOwnPtr<OpenType::CharCodeToGlyphIndex>> create_cid_to_gid_map(Document* document, NonnullRefPtr<DictObject> const& dict)
+{
+    // "If the value is a stream, the bytes in the stream contain the mapping from CIDs to glyph indices:
+    //  the glyph index for a particular CID value c is a 2-byte value stored in bytes 2×c and 2×c+1, where the first byte is the high-order byte.
+    //  If the value of CIDToGIDMap is a name, it must be Identity, indicating that the mapping between CIDs and glyph indices is the identity mapping.
+    //  Default value: Identity."
+
+    class IdentityCIDToGIDMap : public OpenType::CharCodeToGlyphIndex {
+    public:
+        virtual u32 glyph_id_for_code_point(u32 char_code) const override { return char_code; }
+    };
+
+    class StreamCIDToGIDMap : public OpenType::CharCodeToGlyphIndex {
+    public:
+        StreamCIDToGIDMap(ReadonlyBytes bytes)
+            : m_bytes(move(bytes))
+        {
+        }
+        virtual u32 glyph_id_for_code_point(u32 char_code) const override
+        {
+            u32 index = char_code * 2;
+            if (index + 1 >= m_bytes.size()) {
+                // This can happen because Font::populate_glyph_page() with CIDs not used on the page and hence not in the font.
+                return 0;
+            }
+            return (m_bytes[index] << 8) | m_bytes[index + 1];
+        }
+
+    private:
+        ReadonlyBytes m_bytes;
+    };
+
+    if (!dict->contains(CommonNames::CIDToGIDMap))
+        return make<IdentityCIDToGIDMap>();
+
+    auto value = TRY(dict->get_object(document, CommonNames::CIDToGIDMap));
+    if (value->is<StreamObject>())
+        return make<StreamCIDToGIDMap>(value->cast<StreamObject>()->bytes());
+
+    if (value->cast<NameObject>()->name() != "Identity")
+        return Error::rendering_unsupported_error("Type0 font: The only valid CIDToGIDMap name is 'Identity'");
+    return make<IdentityCIDToGIDMap>();
+}
+
 PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document, NonnullRefPtr<DictObject> const& descendant, float font_size)
 {
     auto descriptor = TRY(descendant->get_dict(document, CommonNames::FontDescriptor));
 
-    if (descendant->contains(CommonNames::CIDToGIDMap)) {
-        auto value = TRY(descendant->get_object(document, CommonNames::CIDToGIDMap));
-        if (value->is<StreamObject>()) {
-            return Error::rendering_unsupported_error("Type0 font subtype 2: support for stream cid maps not yet implemented");
-        } else if (value->cast<NameObject>()->name() != "Identity") {
-            return Error::rendering_unsupported_error("Type0 font: support for non-Identity named cid maps not yet implemented");
-        }
-    }
-
-    class IdentityCIDToGIDMap : public OpenType::CharCodeToGlyphIndex {
-    public:
-        virtual u32 glyph_id_for_code_point(u32 char_code) const override
-        {
-            return char_code;
-        }
-    };
+    auto cid_to_gid_map = TRY(create_cid_to_gid_map(document, descendant));
 
     RefPtr<Gfx::Font> font;
     if (descriptor->contains(CommonNames::FontFile2)) {
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
         float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
-        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), 0, make<IdentityCIDToGIDMap>()));
+        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), 0, move(cid_to_gid_map)));
         font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
     }
 
