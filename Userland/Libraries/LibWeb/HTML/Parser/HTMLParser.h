@@ -53,8 +53,8 @@ public:
     static JS::NonnullGCPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
     static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, ByteString const& encoding);
 
-    void run();
-    void run(const AK::URL&);
+    void run(HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
+    void run(const AK::URL&, HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
 
     static void the_end(JS::NonnullGCPtr<DOM::Document>, JS::GCPtr<HTMLParser> = nullptr);
 
