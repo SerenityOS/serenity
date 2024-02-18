@@ -326,12 +326,14 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 {
     auto& realm = *vm.current_realm();
 
+    auto round_to_value = vm.argument(0);
+
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto duration = TRY(typed_this_object(vm));
 
     // 3. If roundTo is undefined, then
-    if (vm.argument(0).is_undefined()) {
+    if (round_to_value.is_undefined()) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::TemporalMissingOptionsObject);
     }
@@ -339,7 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     Object* round_to;
 
     // 4. If Type(roundTo) is String, then
-    if (vm.argument(0).is_string()) {
+    if (round_to_value.is_string()) {
         // a. Let paramString be roundTo.
 
         // b. Set roundTo to OrdinaryObjectCreate(null).
@@ -351,7 +353,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 5. Else,
     else {
         // a. Set roundTo to ? GetOptionsObject(roundTo).
-        round_to = TRY(get_options_object(vm, vm.argument(0)));
+        round_to = TRY(get_options_object(vm, round_to_value));
     }
 
     // 6. Let smallestUnitPresent be true.
