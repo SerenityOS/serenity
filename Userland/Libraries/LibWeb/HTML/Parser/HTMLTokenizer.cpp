@@ -2805,9 +2805,9 @@ void HTMLTokenizer::insert_input_at_insertion_point(StringView input)
 
     // FIXME: Implement a InputStream to handle insertion_point and iterators.
     StringBuilder builder {};
-    builder.append(m_decoded_input.substring(0, m_insertion_point.position));
+    builder.append(m_decoded_input.substring_view(0, m_insertion_point.position));
     builder.append(input);
-    builder.append(m_decoded_input.substring(m_insertion_point.position));
+    builder.append(m_decoded_input.substring_view(m_insertion_point.position));
     m_decoded_input = builder.to_byte_string();
 
     m_utf8_view = Utf8View(m_decoded_input);
