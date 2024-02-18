@@ -244,7 +244,7 @@ try_select_again:
             }
 
             if (owner)
-                ThreadEventQueue::current().post_event(*owner, make<TimerEvent>(timer.timer_id));
+                ThreadEventQueue::current().post_event(*owner, make<TimerEvent>());
             if (timer.should_reload) {
                 timer.reload(now);
             } else {

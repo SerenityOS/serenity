@@ -80,13 +80,13 @@ void EventLoopImplementationQt::post_event(Core::EventReceiver& receiver, Nonnul
         wake();
 }
 
-static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible, Core::EventReceiver& object)
+static void qt_timer_fired(Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible, Core::EventReceiver& object)
 {
     if (should_fire_when_not_visible == Core::TimerShouldFireWhenNotVisible::No) {
         if (!object.is_visible_for_timer_purposes())
             return;
     }
-    Core::TimerEvent event(timer_id);
+    Core::TimerEvent event;
     object.dispatch_event(event);
 }
 
@@ -98,11 +98,11 @@ int EventLoopManagerQt::register_timer(Core::EventReceiver& object, int millisec
     timer->setSingleShot(!should_reload);
     auto timer_id = thread_data.timer_id_allocator.allocate();
     auto weak_object = object.make_weak_ptr();
-    QObject::connect(timer, &QTimer::timeout, [timer_id, should_fire_when_not_visible, weak_object = move(weak_object)] {
+    QObject::connect(timer, &QTimer::timeout, [should_fire_when_not_visible, weak_object = move(weak_object)] {
         auto object = weak_object.strong_ref();
         if (!object)
             return;
-        qt_timer_fired(timer_id, should_fire_when_not_visible, *object);
+        qt_timer_fired(should_fire_when_not_visible, *object);
     });
     timer->start();
     thread_data.timers.set(timer_id, move(timer));

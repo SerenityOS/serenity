@@ -66,17 +66,12 @@ private:
 
 class TimerEvent final : public Event {
 public:
-    explicit TimerEvent(int timer_id)
+    explicit TimerEvent()
         : Event(Event::Timer)
-        , m_timer_id(timer_id)
     {
     }
+
     ~TimerEvent() = default;
-
-    int timer_id() const { return m_timer_id; }
-
-private:
-    int m_timer_id;
 };
 
 enum class NotificationType {
