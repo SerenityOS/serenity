@@ -2802,6 +2802,7 @@ HTMLTokenizer::HTMLTokenizer(StringView input, ByteString const& encoding)
 void HTMLTokenizer::insert_input_at_insertion_point(StringView input)
 {
     auto utf8_iterator_byte_offset = m_utf8_view.byte_offset_of(m_utf8_iterator);
+    auto prev_utf8_iterator_byte_offset = m_utf8_view.byte_offset_of(m_prev_utf8_iterator);
 
     // FIXME: Implement a InputStream to handle insertion_point and iterators.
     StringBuilder builder {};
@@ -2812,6 +2813,7 @@ void HTMLTokenizer::insert_input_at_insertion_point(StringView input)
 
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.iterator_at_byte_offset(utf8_iterator_byte_offset);
+    m_prev_utf8_iterator = m_utf8_view.iterator_at_byte_offset(prev_utf8_iterator_byte_offset);
 
     m_insertion_point.position += input.length();
 }
