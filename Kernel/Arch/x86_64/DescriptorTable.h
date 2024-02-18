@@ -121,14 +121,14 @@ struct [[gnu::packed]] IDTEntry
     u32 zeros;
 
     IDTEntry() = default;
-    IDTEntry(FlatPtr callback, u16 selector_, IDTEntryType type, u8 storage_segment, u8 privilege_level)
+    IDTEntry(FlatPtr callback, u16 selector_, IDTEntryType type, u8 privilege_level)
         : offset_1 { (u16)((FlatPtr)callback & 0xFFFF) }
         , selector { selector_ }
         , interrupt_stack_table { 0 }
         , zero { 0 }
         , type_attr {
             .gate_type = (u8)type,
-            .storage_segment = storage_segment,
+            .storage_segment = 0,
             .descriptor_privilege_level = (u8)(privilege_level & 0b11),
             .present = 1,
         }
