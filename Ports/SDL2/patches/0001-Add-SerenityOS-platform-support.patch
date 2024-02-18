@@ -21,6 +21,7 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
 Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 Co-Authored-By: Tim Ledbetter <timledbetter@gmail.com>
+Co-Authored-By: Refrag <R3FR4GYT@gmail.com>
 ---
  CMakeLists.txt                                |  25 +-
  build-scripts/config.sub                      |   3 +
@@ -39,11 +40,11 @@ Co-Authored-By: Tim Ledbetter <timledbetter@gmail.com>
  src/video/serenity/SDL_serenityevents_c.h     |  33 +
  src/video/serenity/SDL_serenitymessagebox.cpp |  47 ++
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
- src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
+ src/video/serenity/SDL_serenitymouse.cpp      | 169 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
  src/video/serenity/SDL_serenityvideo.cpp      | 655 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1365 insertions(+), 26 deletions(-)
+ 21 files changed, 1392 insertions(+), 26 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -703,10 +704,10 @@ index 0000000000000000000000000000000000000000..34e607783310310ac8956bccf584b5ab
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymouse.cpp b/src/video/serenity/SDL_serenitymouse.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..5d0cb527a03dc0ac775ed68d66451495bf993ec6
+index 0000000000000000000000000000000000000000..c603fe8cedaae61ab8ae84407734d1c89f99ff06
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymouse.cpp
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,157 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
@@ -746,6 +747,7 @@ index 0000000000000000000000000000000000000000..5d0cb527a03dc0ac775ed68d66451495
 +#include "SDL_serenityvideo.h"
 +
 +#include <LibGfx/StandardCursor.h>
++#include <LibGUI/ConnectionToWindowServer.h>
 +
 +struct SerenityCursorData final {
 +    Gfx::StandardCursor cursor_type;
@@ -821,6 +823,20 @@ index 0000000000000000000000000000000000000000..5d0cb527a03dc0ac775ed68d66451495
 +    return 0;
 +}
 +
++static void
++SERENITY_WarpMouse(SDL_Window *window, int x, int y)
++{
++    auto platform_window = SerenityPlatformWindow::from_sdl_window(window);
++
++    auto window_position = platform_window->window()->position();
++    auto warp_position = Gfx::Point(x, y);
++
++    auto absolute_warp_position = window_position + warp_position;
++
++    GUI::ConnectionToWindowServer::the().async_set_global_cursor_position(absolute_warp_position);
++    SDL_SendMouseMotion(window, 0, 0, warp_position.x(), warp_position.y());
++}
++
 +void
 +SERENITY_InitMouse(_THIS)
 +{
@@ -831,10 +847,10 @@ index 0000000000000000000000000000000000000000..5d0cb527a03dc0ac775ed68d66451495
 +    mouse->CreateSystemCursor = SERENITY_CreateSystemCursor;
 +    mouse->ShowCursor = SERENITY_ShowCursor;
 +    mouse->FreeCursor = SERENITY_FreeCursor;
++    mouse->WarpMouse = SERENITY_WarpMouse;
 +
 +    // FIXME: implement below methods
 +    //mouse->CreateCursor = ...;
-+    //mouse->WarpMouse = ...;
 +    //mouse->SetRelativeMouseMode = ...;
 +
 +    SDL_SetDefaultCursor(SERENITY_CreateDefaultCursor());
