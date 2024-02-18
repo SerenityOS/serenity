@@ -237,6 +237,7 @@ set(SOURCES
     Runtime/Temporal/Temporal.cpp
     Runtime/Temporal/TimeZone.cpp
     Runtime/Temporal/TimeZoneConstructor.cpp
+    Runtime/Temporal/TimeZoneMethods.cpp
     Runtime/Temporal/TimeZonePrototype.cpp
     Runtime/Temporal/ZonedDateTime.cpp
     Runtime/Temporal/ZonedDateTimeConstructor.cpp
