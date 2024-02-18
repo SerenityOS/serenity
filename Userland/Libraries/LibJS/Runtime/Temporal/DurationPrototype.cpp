@@ -418,43 +418,29 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 
     // 20. Let relativeTo be ? ToRelativeTemporalObject(roundTo).
     auto relative_to = TRY(to_relative_temporal_object(vm, *round_to));
+    auto relative_to_value = relative_to_converted_to_value(relative_to);
 
     // 21. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], largestUnit, relativeTo).
-    auto unbalance_result = TRY(unbalance_duration_relative(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), *largest_unit, relative_to));
+    auto unbalance_result = TRY(unbalance_duration_relative(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), *largest_unit, relative_to_value));
 
-    // FIXME: AD-HOC - this function is not up to date with latest spec.
-    PlainDate* plain_relative_to_ptr = nullptr;
-    ZonedDateTime* zoned_relative_to_ptr = nullptr;
-
-    if (relative_to.is_object()) {
-        if (is<PlainDate>(relative_to.as_object()))
-            plain_relative_to_ptr = &static_cast<PlainDate&>(relative_to.as_object());
-        else if (is<ZonedDateTime>(relative_to.as_object()))
-            zoned_relative_to_ptr = &static_cast<ZonedDateTime&>(relative_to.as_object());
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    auto calendar_record = TRY(create_calendar_methods_record_from_relative_to(vm, plain_relative_to_ptr, zoned_relative_to_ptr, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
+    auto calendar_record = TRY(create_calendar_methods_record_from_relative_to(vm, relative_to.plain_relative_to, relative_to.zoned_relative_to, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
     // 22. Let roundResult be (? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo)).[[DurationRecord]].
-    auto round_result = TRY(round_duration(vm, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr, calendar_record)).duration_record;
+    auto round_result = TRY(round_duration(vm, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode, relative_to_value.is_object() ? &relative_to_value.as_object() : nullptr, calendar_record)).duration_record;
 
     // 23. Let adjustResult be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo).
-    auto adjust_result = TRY(adjust_rounded_duration_days(vm, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+    auto adjust_result = TRY(adjust_rounded_duration_days(vm, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to_value.is_object() ? &relative_to_value.as_object() : nullptr));
 
     // 24. Let balanceResult be ? BalanceDurationRelative(adjustResult.[[Years]], adjustResult.[[Months]], adjustResult.[[Weeks]], adjustResult.[[Days]], largestUnit, relativeTo).
-    auto balance_result = TRY(balance_duration_relative(vm, adjust_result.years, adjust_result.months, adjust_result.weeks, adjust_result.days, *largest_unit, relative_to));
+    auto balance_result = TRY(balance_duration_relative(vm, adjust_result.years, adjust_result.months, adjust_result.weeks, adjust_result.days, *largest_unit, relative_to_value));
 
     // 25. If Type(relativeTo) is Object and relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
-    if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
-        auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(relative_to.as_object());
-
+    if (relative_to.zoned_relative_to) {
         // a. Set relativeTo to ? MoveRelativeZonedDateTime(relativeTo, balanceResult.[[Years]], balanceResult.[[Months]], balanceResult.[[Weeks]], 0).
-        relative_to = TRY(move_relative_zoned_date_time(vm, relative_to_zoned_date_time, balance_result.years, balance_result.months, balance_result.weeks, 0));
+        relative_to_value = TRY(move_relative_zoned_date_time(vm, *relative_to.zoned_relative_to, balance_result.years, balance_result.months, balance_result.weeks, 0));
     }
 
     // 26. Let result be ? BalanceDuration(balanceResult.[[Days]], adjustResult.[[Hours]], adjustResult.[[Minutes]], adjustResult.[[Seconds]], adjustResult.[[Milliseconds]], adjustResult.[[Microseconds]], adjustResult.[[Nanoseconds]], largestUnit, relativeTo).
-    auto result = TRY(balance_duration(vm, balance_result.days, adjust_result.hours, adjust_result.minutes, adjust_result.seconds, adjust_result.milliseconds, adjust_result.microseconds, Crypto::SignedBigInteger { adjust_result.nanoseconds }, *largest_unit, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+    auto result = TRY(balance_duration(vm, balance_result.days, adjust_result.hours, adjust_result.minutes, adjust_result.seconds, adjust_result.milliseconds, adjust_result.microseconds, Crypto::SignedBigInteger { adjust_result.nanoseconds }, *largest_unit, relative_to_value.is_object() ? &relative_to_value.as_object() : nullptr));
 
     // 27. Return ! CreateTemporalDuration(balanceResult.[[Years]], balanceResult.[[Months]], balanceResult.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(vm, balance_result.years, balance_result.months, balance_result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -494,44 +480,30 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
 
     // 6. Let relativeTo be ? ToRelativeTemporalObject(totalOf).
     auto relative_to = TRY(to_relative_temporal_object(vm, *total_of));
+    auto relative_to_value = relative_to_converted_to_value(relative_to);
 
     // 7. Let unit be ? GetTemporalUnit(totalOf, "unit", datetime, required).
     auto unit = TRY(get_temporal_unit(vm, *total_of, vm.names.unit, UnitGroup::DateTime, TemporalUnitRequired {}));
 
     // 8. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], unit, relativeTo).
-    auto unbalance_result = TRY(unbalance_duration_relative(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), *unit, relative_to));
+    auto unbalance_result = TRY(unbalance_duration_relative(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), *unit, relative_to_value));
 
     // 9. Let intermediate be undefined.
     ZonedDateTime* intermediate = nullptr;
 
     // 10. If Type(relativeTo) is Object and relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
-    if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
-        auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(relative_to.as_object());
-
+    if (relative_to.zoned_relative_to) {
         // a. Set intermediate to ? MoveRelativeZonedDateTime(relativeTo, unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], 0).
-        intermediate = TRY(move_relative_zoned_date_time(vm, relative_to_zoned_date_time, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, 0));
+        intermediate = TRY(move_relative_zoned_date_time(vm, *relative_to.zoned_relative_to, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, 0));
     }
 
     // 11. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
     auto balance_result = TRY(balance_duration(vm, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger { duration->nanoseconds() }, *unit, intermediate));
 
     // 12. Let roundRecord be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
-    // FIXME: AD-HOC - this function is not up to date with latest spec.
-    PlainDate* plain_relative_to_ptr = nullptr;
-    ZonedDateTime* zoned_relative_to_ptr = nullptr;
+    auto calendar_record = TRY(create_calendar_methods_record_from_relative_to(vm, relative_to.plain_relative_to, relative_to.zoned_relative_to, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
 
-    if (relative_to.is_object()) {
-        if (is<PlainDate>(relative_to.as_object()))
-            plain_relative_to_ptr = &static_cast<PlainDate&>(relative_to.as_object());
-        else if (is<ZonedDateTime>(relative_to.as_object()))
-            zoned_relative_to_ptr = &static_cast<ZonedDateTime&>(relative_to.as_object());
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    auto calendar_record = TRY(create_calendar_methods_record_from_relative_to(vm, plain_relative_to_ptr, zoned_relative_to_ptr, { { CalendarMethod::DateAdd, CalendarMethod::DateUntil } }));
-
-    auto round_record = TRY(round_duration(vm, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, *unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr, calendar_record));
+    auto round_record = TRY(round_duration(vm, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, *unit, "trunc"sv, relative_to_value.is_object() ? &relative_to_value.as_object() : nullptr, calendar_record));
 
     // 13. Return 𝔽(roundRecord.[[Total]]).
     return Value(round_record.total);

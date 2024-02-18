@@ -545,8 +545,21 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(VM& vm, Object const& norm
     return value;
 }
 
+// FIXME: This function is a hack to undo a RelativeTo back to the old API, which was just a Value.
+//        We should get rid of this once all callers have been converted to the new API.
+Value relative_to_converted_to_value(RelativeTo const& relative_to)
+{
+    if (relative_to.plain_relative_to)
+        return relative_to.plain_relative_to;
+
+    if (relative_to.zoned_relative_to)
+        return relative_to.zoned_relative_to;
+
+    return js_undefined();
+}
+
 // 13.16 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
-ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& options)
+ThrowCompletionOr<RelativeTo> to_relative_temporal_object(VM& vm, Object const& options)
 {
     auto& realm = *vm.current_realm();
 
@@ -558,7 +571,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     // 3. If value is undefined, then
     if (value.is_undefined()) {
         // a. Return value.
-        return value;
+        return RelativeTo {};
     }
 
     // 4. Let offsetBehaviour be option.
@@ -575,52 +588,77 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     // 6. If Type(value) is Object, then
     if (value.is_object()) {
         auto& value_object = value.as_object();
+        // a. If value has an [[InitializedTemporalZonedDateTime]] internal slot, then
+        if (is<ZonedDateTime>(value_object)) {
+            auto& zoned_relative_to = static_cast<ZonedDateTime&>(value_object);
 
-        // a. If value has either an [[InitializedTemporalDate]] or [[InitializedTemporalZonedDateTime]] internal slot, then
-        if (is<PlainDate>(value_object) || is<ZonedDateTime>(value_object)) {
-            // i. Return value.
-            return value;
+            // i. Let timeZoneRec be ? CreateTimeZoneMethodsRecord(value.[[TimeZone]], « GET-OFFSET-NANOSECONDS-FOR, GET-POSSIBLE-INSTANTS-FOR »).
+            auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { zoned_relative_to.time_zone() }, { { TimeZoneMethod::GetOffsetNanosecondsFor, TimeZoneMethod::GetPossibleInstantsFor } }));
+
+            // ii. Return the Record { [[PlainRelativeTo]]: undefined, [[ZonedRelativeTo]]: value, [[TimeZoneRec]]: timeZoneRec }.
+            return RelativeTo {
+                .plain_relative_to = {},
+                .zoned_relative_to = zoned_relative_to,
+                .time_zone_record = time_zone_record,
+            };
         }
 
-        // b. If value has an [[InitializedTemporalDateTime]] internal slot, then
+        // b. If value has an [[InitializedTemporalDate]] internal slot, then
+        if (is<PlainDate>(value_object)) {
+            // i. Return the Record { [[PlainRelativeTo]]: value, [[ZonedRelativeTo]]: undefined, [[TimeZoneRec]]: undefined }.
+            return RelativeTo {
+                .plain_relative_to = static_cast<PlainDate&>(value_object),
+                .zoned_relative_to = {},
+                .time_zone_record = {},
+            };
+        }
+
+        // c. If value has an [[InitializedTemporalDateTime]] internal slot, then
         if (is<PlainDateTime>(value_object)) {
             auto& plain_date_time = static_cast<PlainDateTime&>(value_object);
 
-            // i. Return ? CreateTemporalDate(value.[[ISOYear]], value.[[ISOMonth]], value.[[ISODay]], 0, 0, 0, 0, 0, 0, value.[[Calendar]]).
-            return TRY(create_temporal_date(vm, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.calendar()));
+            // i. Let plainDate be ! CreateTemporalDate(value.[[ISOYear]], value.[[ISOMonth]], value.[[ISODay]], value.[[Calendar]]).
+            auto* plain_date = TRY(create_temporal_date(vm, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.calendar()));
+
+            // ii. Return the Record { [[PlainRelativeTo]]: plainDate, [[ZonedRelativeTo]]: undefined, [[TimeZoneRec]]: undefined }.
+            return RelativeTo {
+                .plain_relative_to = plain_date,
+                .zoned_relative_to = {},
+                .time_zone_record = {},
+            };
         }
 
-        // c. Let calendar be ? GetTemporalCalendarWithISODefault(value).
+        // d. Let calendar be ? GetTemporalCalendarWithISODefault(value).
         calendar = TRY(get_temporal_calendar_with_iso_default(vm, value_object));
 
-        // d. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
+        // e. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
         auto field_names = TRY(calendar_fields(vm, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
-        // e. Let fields be ? PrepareTemporalFields(value, fieldNames, «»).
+        // f. Let fields be ? PrepareTemporalFields(value, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(vm, value_object, field_names, Vector<StringView> {}));
 
-        // f. Let dateOptions be OrdinaryObjectCreate(null).
+        // g. Let dateOptions be OrdinaryObjectCreate(null).
         auto date_options = Object::create(realm, nullptr);
 
-        // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
+        // h. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
         MUST(date_options->create_data_property_or_throw(vm.names.overflow, PrimitiveString::create(vm, "constrain"_string)));
 
-        // h. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, dateOptions).
+        // i. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, dateOptions).
         result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, date_options));
 
-        // i. Let offsetString be ? Get(value, "offset").
+        // j. Let offsetString be ? Get(value, "offset").
         offset_string = TRY(value_object.get(vm.names.offset));
 
-        // j. Let timeZone be ? Get(value, "timeZone").
+        // k. Let timeZone be ? Get(value, "timeZone").
         time_zone = TRY(value_object.get(vm.names.timeZone));
 
-        // k. If timeZone is not undefined, then
+        // l. If timeZone is not undefined, then
         if (!time_zone.is_undefined()) {
             // i. Set timeZone to ? ToTemporalTimeZone(timeZone).
             time_zone = TRY(to_temporal_time_zone(vm, time_zone));
         }
 
-        // l. If offsetString is undefined, then
+        // m. If offsetString is undefined, then
         if (offset_string.is_undefined()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
@@ -682,7 +720,12 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     // 8. If timeZone is undefined, then
     if (time_zone.is_undefined()) {
         // a. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-        return TRY(create_temporal_date(vm, result.year, result.month, result.day, *calendar));
+        auto* plain_date = TRY(create_temporal_date(vm, result.year, result.month, result.day, *calendar));
+        return RelativeTo {
+            .plain_relative_to = plain_date,
+            .zoned_relative_to = {},
+            .time_zone_record = {},
+        };
     }
 
     double offset_ns;
@@ -710,7 +753,13 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     auto const* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_ns, time_zone, "compatible"sv, "reject"sv, match_behavior));
 
     // 12. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
-    return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone.as_object(), *calendar));
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetOffsetNanosecondsFor, TimeZoneMethod::GetPossibleInstantsFor } }));
+    auto* zoned_relative_to = MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone.as_object(), *calendar));
+    return RelativeTo {
+        .plain_relative_to = {},
+        .zoned_relative_to = zoned_relative_to,
+        .time_zone_record = time_zone_record,
+    };
 }
 
 // 13.17 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
