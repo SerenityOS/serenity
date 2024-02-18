@@ -72,7 +72,7 @@ int CFEventLoopManager::register_timer(Core::EventReceiver& receiver, int interv
                 }
             }
 
-            Core::TimerEvent event(timer_id);
+            Core::TimerEvent event;
             receiver->dispatch_event(event);
         });
 
