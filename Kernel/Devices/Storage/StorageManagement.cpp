@@ -189,16 +189,16 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
 
 UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() const
 {
-    dbgln("StorageManagement: Detected {} storage devices", m_storage_devices.size_slow());
+    dmesgln("StorageManagement: Detected {} storage devices", m_storage_devices.size_slow());
     for (auto const& storage_device : m_storage_devices) {
         auto const& partitions = storage_device.partitions();
         if (partitions.is_empty()) {
-            dbgln("  Device: block{}:{} (no partitions)", storage_device.major(), storage_device.minor());
+            dmesgln("  Device: block{}:{} (no partitions)", storage_device.major(), storage_device.minor());
         } else {
-            dbgln("  Device: block{}:{} ({} partitions)", storage_device.major(), storage_device.minor(), partitions.size());
+            dmesgln("  Device: block{}:{} ({} partitions)", storage_device.major(), storage_device.minor(), partitions.size());
             unsigned partition_number = 1;
             for (auto const& partition : partitions) {
-                dbgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition->major(), partition->minor(), partition->metadata().unique_guid().to_string());
+                dmesgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition->major(), partition->minor(), partition->metadata().unique_guid().to_string());
                 partition_number++;
             }
         }
