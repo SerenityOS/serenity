@@ -21,15 +21,7 @@ Disable Console Variables value checker sad path
 For some reason, the value checker for console variables seems to not behave properly even with the default console variables value.
 Disabling the error path resolves this issue and the game still works fine without it.
 
-## `0004-i_video.c-mouse-hacks.patch`
-
-i_video.c: Mouse hacks
-
-This patch works aroud the SDL relative mouse implementation as it is not implemented in the port.
-SRB2 relies on it quite heavily to make the mouse work, not having this unfortunately means that the mouse doesn't reset back to the center and will get stuck at the window borders. Ultimately, we would want this relative mouse implementation to have a proper mouse support.
-Removing the calls to the SDL relative mouse felt like the best option for now as otherwise the console gets spammed with this "No relative mode implementation available" messsage.
-
-## `0005-i_system.c-hacks.patch`
+## `0004-i_system.c-hacks.patch`
 
 i_system.c hacks
 
