@@ -169,14 +169,14 @@ void HTMLParser::visit_edges(Cell::Visitor& visitor)
     m_list_of_active_formatting_elements.visit_edges(visitor);
 }
 
-void HTMLParser::run()
+void HTMLParser::run(HTMLTokenizer::StopAtInsertionPoint stop_at_insertion_point)
 {
     for (;;) {
         // FIXME: Find a better way to say that we come from Document::close() and want to process EOF.
         if (!m_tokenizer.is_eof_inserted() && m_tokenizer.is_insertion_point_reached())
             return;
 
-        auto optional_token = m_tokenizer.next_token();
+        auto optional_token = m_tokenizer.next_token(stop_at_insertion_point);
         if (!optional_token.has_value())
             break;
         auto& token = optional_token.value();
@@ -216,11 +216,11 @@ void HTMLParser::run()
     flush_character_insertions();
 }
 
-void HTMLParser::run(const AK::URL& url)
+void HTMLParser::run(const AK::URL& url, HTMLTokenizer::StopAtInsertionPoint stop_at_insertion_point)
 {
     m_document->set_url(url);
     m_document->set_source(MUST(String::from_byte_string(m_tokenizer.source())));
-    run();
+    run(stop_at_insertion_point);
     the_end(*m_document, this);
     m_document->detach_parser({});
 }

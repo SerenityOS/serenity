@@ -530,9 +530,12 @@ WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(StringView inpu
     // 5. Insert input into the input stream just before the insertion point.
     m_parser->tokenizer().insert_input_at_insertion_point(input);
 
-    // 6. If there is no pending parsing-blocking script, have the HTML parser process input, one code point at a time, processing resulting tokens as they are emitted, and stopping when the tokenizer reaches the insertion point or when the processing of the tokenizer is aborted by the tree construction stage (this can happen if a script end tag token is emitted by the tokenizer).
+    // 6. If there is no pending parsing-blocking script, have the HTML parser process input, one code point at a time,
+    //    processing resulting tokens as they are emitted, and stopping when the tokenizer reaches the insertion point
+    //    or when the processing of the tokenizer is aborted by the tree construction stage (this can happen if a script
+    //    end tag token is emitted by the tokenizer).
     if (!pending_parsing_blocking_script())
-        m_parser->run();
+        m_parser->run(HTML::HTMLTokenizer::StopAtInsertionPoint::Yes);
 
     return {};
 }

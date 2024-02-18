@@ -111,7 +111,11 @@ public:
 #undef __ENUMERATE_TOKENIZER_STATE
     };
 
-    Optional<HTMLToken> next_token();
+    enum class StopAtInsertionPoint {
+        No,
+        Yes,
+    };
+    Optional<HTMLToken> next_token(StopAtInsertionPoint = StopAtInsertionPoint::No);
 
     void set_parser(Badge<HTMLParser>, HTMLParser& parser) { m_parser = &parser; }
 

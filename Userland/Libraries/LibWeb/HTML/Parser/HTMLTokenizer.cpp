@@ -248,7 +248,7 @@ HTMLToken::Position HTMLTokenizer::nth_last_position(size_t n)
     return m_source_positions.at(m_source_positions.size() - 1 - n);
 }
 
-Optional<HTMLToken> HTMLTokenizer::next_token()
+Optional<HTMLToken> HTMLTokenizer::next_token(StopAtInsertionPoint stop_at_insertion_point)
 {
     if (!m_source_positions.is_empty()) {
         auto last_position = m_source_positions.last();
@@ -263,6 +263,9 @@ _StartOfFunction:
         return {};
 
     for (;;) {
+        if (stop_at_insertion_point == StopAtInsertionPoint::Yes && is_insertion_point_reached())
+            return {};
+
         auto current_input_character = next_code_point();
         switch (m_state) {
             // 13.2.5.1 Data state, https://html.spec.whatwg.org/multipage/parsing.html#data-state
