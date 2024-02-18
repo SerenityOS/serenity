@@ -21,21 +21,19 @@ namespace Web::Animations {
 JS_DEFINE_ALLOCATOR(Animation);
 
 // https://www.w3.org/TR/web-animations-1/#dom-animation-animation
-JS::NonnullGCPtr<Animation> Animation::create(JS::Realm& realm, JS::GCPtr<AnimationEffect> effect, JS::GCPtr<AnimationTimeline> timeline)
+JS::NonnullGCPtr<Animation> Animation::create(JS::Realm& realm, JS::GCPtr<AnimationEffect> effect, Optional<JS::GCPtr<AnimationTimeline>> timeline)
 {
-    auto& vm = realm.vm();
-
     // 1. Let animation be a new Animation object.
     auto animation = realm.heap().allocate<Animation>(realm, realm);
 
     // 2. Run the procedure to set the timeline of an animation on animation passing timeline as the new timeline or, if
     //    a timeline argument is missing, passing the default document timeline of the Document associated with the
     //    Window that is the current global object.
-    if (vm.argument_count() < 2) {
+    if (!timeline.has_value()) {
         auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
         timeline = window.associated_document().timeline();
     }
-    animation->set_timeline(timeline);
+    animation->set_timeline(timeline.release_value());
 
     // 3. Run the procedure to set the associated effect of an animation on animation passing source as the new effect.
     animation->set_effect(effect);
@@ -43,7 +41,7 @@ JS::NonnullGCPtr<Animation> Animation::create(JS::Realm& realm, JS::GCPtr<Animat
     return animation;
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> Animation::construct_impl(JS::Realm& realm, JS::GCPtr<AnimationEffect> effect, JS::GCPtr<AnimationTimeline> timeline)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> Animation::construct_impl(JS::Realm& realm, JS::GCPtr<AnimationEffect> effect, Optional<JS::GCPtr<AnimationTimeline>> timeline)
 {
     return create(realm, effect, timeline);
 }

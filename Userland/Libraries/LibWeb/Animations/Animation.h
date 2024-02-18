@@ -18,8 +18,8 @@ class Animation : public DOM::EventTarget {
     JS_DECLARE_ALLOCATOR(Animation);
 
 public:
-    static JS::NonnullGCPtr<Animation> create(JS::Realm&, JS::GCPtr<AnimationEffect>, JS::GCPtr<AnimationTimeline>);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> construct_impl(JS::Realm&, JS::GCPtr<AnimationEffect>, JS::GCPtr<AnimationTimeline>);
+    static JS::NonnullGCPtr<Animation> create(JS::Realm&, JS::GCPtr<AnimationEffect>, Optional<JS::GCPtr<AnimationTimeline>>);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> construct_impl(JS::Realm&, JS::GCPtr<AnimationEffect>, Optional<JS::GCPtr<AnimationTimeline>>);
 
     FlyString const& id() const { return m_id; }
     void set_id(FlyString value) { m_id = move(value); }
