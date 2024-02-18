@@ -129,10 +129,7 @@ void EventReceiver::stop_timer()
 {
     if (!m_timer_id)
         return;
-    bool success = Core::EventLoop::unregister_timer(m_timer_id);
-    if (!success) {
-        dbgln("{:p} could not unregister timer {}", this, m_timer_id);
-    }
+    Core::EventLoop::unregister_timer(m_timer_id);
     m_timer_id = 0;
 }
 

@@ -109,11 +109,11 @@ int EventLoopManagerQt::register_timer(Core::EventReceiver& object, int millisec
     return timer_id;
 }
 
-bool EventLoopManagerQt::unregister_timer(int timer_id)
+void EventLoopManagerQt::unregister_timer(int timer_id)
 {
     auto& thread_data = ThreadData::the();
     thread_data.timer_id_allocator.deallocate(timer_id);
-    return thread_data.timers.remove(timer_id);
+    VERIFY(thread_data.timers.remove(timer_id));
 }
 
 static void qt_notifier_activated(Core::Notifier& notifier)
