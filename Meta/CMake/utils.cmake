@@ -209,6 +209,8 @@ function(invoke_generator name generator version_file header implementation)
 
     add_custom_command(
         OUTPUT "${header}" "${implementation}"
+        get_filename_component(header_path ${header} DIRECTORY)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${header_path}
         COMMAND $<TARGET_FILE:${generator}> -h "${header}.tmp" -c "${implementation}.tmp" ${invoke_generator_arguments}
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${header}.tmp" "${header}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${implementation}.tmp" "${implementation}"

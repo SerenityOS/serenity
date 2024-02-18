@@ -51,6 +51,8 @@ function(compile_ipc source output)
     endif()
     add_custom_command(
         OUTPUT ${output}
+        get_filename_component(output_path ${output} DIRECTORY)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${output_path}
         COMMAND $<TARGET_FILE:Lagom::IPCCompiler> ${source} -o ${output}.tmp
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.tmp ${output}
         COMMAND "${CMAKE_COMMAND}" -E remove ${output}.tmp
