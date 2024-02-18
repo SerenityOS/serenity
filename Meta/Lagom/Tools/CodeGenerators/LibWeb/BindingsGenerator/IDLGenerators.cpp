@@ -396,7 +396,7 @@ static void generate_to_integral(SourceGenerator& scoped_generator, ParameterTyp
     VERIFY(it != idl_type_map.end());
     scoped_generator.set("cpp_type"sv, it->cpp_type);
 
-    if (!optional || optional_default_value.has_value()) {
+    if ((!optional && !parameter.type->is_nullable()) || optional_default_value.has_value()) {
         scoped_generator.append(R"~~~(
     @cpp_type@ @cpp_name@;
 )~~~");
@@ -406,7 +406,11 @@ static void generate_to_integral(SourceGenerator& scoped_generator, ParameterTyp
 )~~~");
     }
 
-    if (optional) {
+    if (parameter.type->is_nullable()) {
+        scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_null() && !@js_name@@js_suffix@.is_undefined())
+)~~~");
+    } else if (optional) {
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
 )~~~");
