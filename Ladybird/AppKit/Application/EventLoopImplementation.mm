@@ -48,7 +48,7 @@ NonnullOwnPtr<Core::EventLoopImplementation> CFEventLoopManager::make_implementa
     return CFEventLoopImplementation::create();
 }
 
-int CFEventLoopManager::register_timer(Core::EventReceiver& receiver, int interval_milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
+intptr_t CFEventLoopManager::register_timer(Core::EventReceiver& receiver, int interval_milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
 {
     auto& thread_data = ThreadData::the();
 
@@ -82,12 +82,12 @@ int CFEventLoopManager::register_timer(Core::EventReceiver& receiver, int interv
     return timer_id;
 }
 
-void CFEventLoopManager::unregister_timer(int timer_id)
+void CFEventLoopManager::unregister_timer(intptr_t timer_id)
 {
     auto& thread_data = ThreadData::the();
-    thread_data.timer_id_allocator.deallocate(timer_id);
+    thread_data.timer_id_allocator.deallocate(static_cast<int>(timer_id));
 
-    auto timer = thread_data.timers.take(timer_id);
+    auto timer = thread_data.timers.take(static_cast<int>(timer_id));
     VERIFY(timer.has_value());
     CFRunLoopTimerInvalidate(*timer);
     CFRelease(*timer);

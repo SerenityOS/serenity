@@ -125,12 +125,12 @@ void EventLoop::notify_forked(ForkEvent)
     current().m_impl->notify_forked_and_in_child();
 }
 
-int EventLoop::register_timer(EventReceiver& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
+intptr_t EventLoop::register_timer(EventReceiver& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     return EventLoopManager::the().register_timer(object, milliseconds, should_reload, fire_when_not_visible);
 }
 
-void EventLoop::unregister_timer(int timer_id)
+void EventLoop::unregister_timer(intptr_t timer_id)
 {
     EventLoopManager::the().unregister_timer(timer_id);
 }
