@@ -75,11 +75,18 @@ void ResizeObserver::observe(DOM::Element& target, ResizeObserverOptions options
     m_observation_targets.append(resize_observation);
 }
 
-// https://drafts.csswg.org/resize-observer/#dom-resizeobserver-unobserve
+// https://drafts.csswg.org/resize-observer-1/#dom-resizeobserver-unobserve
 void ResizeObserver::unobserve(DOM::Element& target)
 {
-    // FIXME: Implement
-    (void)target;
+    // 1. Let observation be ResizeObservation in [[observationTargets]] whose target slot is target.
+    auto observation = m_observation_targets.find_if([&](auto& observation) { return observation->target().ptr() == &target; });
+
+    // 2. If observation is not found, return.
+    if (observation.is_end())
+        return;
+
+    // 3. Remove observation from [[observationTargets]].
+    m_observation_targets.remove(observation.index());
 }
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-disconnect
