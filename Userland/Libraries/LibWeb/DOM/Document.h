@@ -642,7 +642,7 @@ private:
     QuirksMode m_quirks_mode { QuirksMode::No };
 
     // https://dom.spec.whatwg.org/#concept-document-type
-    Type m_type { Type::HTML };
+    Type m_type { Type::XML };
 
     bool m_editable { false };
 
