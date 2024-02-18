@@ -89,10 +89,14 @@ void ResizeObserver::unobserve(DOM::Element& target)
     m_observation_targets.remove(observation.index());
 }
 
-// https://drafts.csswg.org/resize-observer/#dom-resizeobserver-disconnect
+// https://drafts.csswg.org/resize-observer-1/#dom-resizeobserver-disconnect
 void ResizeObserver::disconnect()
 {
-    // FIXME: Implement
+    // 1. Clear the [[observationTargets]] list.
+    m_observation_targets.clear();
+
+    // 2. Clear the [[activeTargets]] list.
+    m_active_targets.clear();
 }
 
 void ResizeObserver::invoke_callback(Vector<JS::NonnullGCPtr<ResizeObserverEntry>>& entries) const
