@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericLexer.h>
+#include <AK/Hex.h>
 #include <AK/MemoryStream.h>
 #include <AK/StackInfo.h>
 #include <LibCore/ArgsParser.h>
@@ -36,6 +38,194 @@ static void sigint_handler(int)
         kill(getpid(), SIGINT);
     }
     g_continue = false;
+}
+
+static Optional<u128> convert_to_uint(StringView string)
+{
+    if (string.is_empty())
+        return {};
+
+    u128 value = 0;
+    auto const characters = string.characters_without_null_termination();
+
+    for (size_t i = 0; i < string.length(); i++) {
+        if (characters[i] < '0' || characters[i] > '9')
+            return {};
+
+        value *= 10;
+        value += u128 { static_cast<u64>(characters[i] - '0'), 0 };
+    }
+    return value;
+}
+
+static Optional<u128> convert_to_uint_from_hex(StringView string)
+{
+    if (string.is_empty())
+        return {};
+
+    u128 value = 0;
+    auto const count = string.length();
+    auto const upper_bound = NumericLimits<u128>::max();
+
+    for (size_t i = 0; i < count; i++) {
+        char digit = string[i];
+        if (value > (upper_bound >> 4))
+            return {};
+
+        auto digit_val = decode_hex_digit(digit);
+        if (digit_val == 255)
+            return {};
+
+        value = (value << 4) + digit_val;
+    }
+    return value;
+}
+
+static ErrorOr<Wasm::Value> parse_value(StringView spec)
+{
+    constexpr auto is_sep = [](char c) { return is_ascii_space(c) || c == ':'; };
+    // Scalar: 'T.const[:\s]v' (i32.const 42)
+    auto parse_scalar = []<typename T>(StringView text) -> ErrorOr<Wasm::Value> {
+        if constexpr (IsFloatingPoint<T>) {
+            if (text.trim_whitespace().equals_ignoring_ascii_case("nan"sv)) {
+                if constexpr (IsSame<T, float>)
+                    return Wasm::Value { nanf("") };
+                else
+                    return Wasm::Value { nan("") };
+            }
+            if (text.trim_whitespace().equals_ignoring_ascii_case("inf"sv)) {
+                if constexpr (IsSame<T, float>)
+                    return Wasm::Value { HUGE_VALF };
+                else
+                    return Wasm::Value { HUGE_VAL };
+            }
+        }
+        if (auto v = text.to_number<T>(); v.has_value())
+            return Wasm::Value { *v };
+        return Error::from_string_literal("Invalid scalar value");
+    };
+    // Vector: 'v128.const[:\s]v' (v128.const 0x01000000020000000300000004000000) or 'v(T.const[:\s]v, ...)' (v(i32.const 1, i32.const 2, i32.const 3, i32.const 4))
+    auto parse_u128 = [](StringView text) -> ErrorOr<Wasm::Value> {
+        u128 value;
+        if (text.starts_with("0x"sv)) {
+            if (auto v = convert_to_uint_from_hex(text); v.has_value())
+                value = *v;
+            else
+                return Error::from_string_literal("Invalid hex v128 value");
+        } else {
+            if (auto v = convert_to_uint(text); v.has_value())
+                value = *v;
+            else
+                return Error::from_string_literal("Invalid v128 value");
+        }
+
+        return Wasm::Value { value };
+    };
+
+    GenericLexer lexer(spec);
+    if (lexer.consume_specific("v128.const"sv)) {
+        lexer.ignore_while(is_sep);
+        // The rest of the string is the value
+        auto text = lexer.consume_all();
+        return parse_u128(text);
+    }
+
+    if (lexer.consume_specific("i8.const"sv)) {
+        lexer.ignore_while(is_sep);
+        auto text = lexer.consume_all();
+        return parse_scalar.operator()<i8>(text);
+    }
+    if (lexer.consume_specific("i16.const"sv)) {
+        lexer.ignore_while(is_sep);
+        auto text = lexer.consume_all();
+        return parse_scalar.operator()<i16>(text);
+    }
+    if (lexer.consume_specific("i32.const"sv)) {
+        lexer.ignore_while(is_sep);
+        auto text = lexer.consume_all();
+        return parse_scalar.operator()<i32>(text);
+    }
+    if (lexer.consume_specific("i64.const"sv)) {
+        lexer.ignore_while(is_sep);
+        auto text = lexer.consume_all();
+        return parse_scalar.operator()<i64>(text);
+    }
+    if (lexer.consume_specific("f32.const"sv)) {
+        lexer.ignore_while(is_sep);
+        auto text = lexer.consume_all();
+        return parse_scalar.operator()<float>(text);
+    }
+    if (lexer.consume_specific("f64.const"sv)) {
+        lexer.ignore_while(is_sep);
+        auto text = lexer.consume_all();
+        return parse_scalar.operator()<double>(text);
+    }
+
+    if (lexer.consume_specific("v("sv)) {
+        Vector<Wasm::Value> values;
+        for (;;) {
+            lexer.ignore_while(is_sep);
+            if (lexer.consume_specific(")"sv))
+                break;
+            if (lexer.is_eof()) {
+                warnln("Expected ')' to close vector");
+                break;
+            }
+            auto value = parse_value(lexer.consume_until(is_any_of(",)"sv)));
+            if (value.is_error())
+                return value.release_error();
+            lexer.consume_specific(',');
+            values.append(value.release_value());
+        }
+
+        if (values.is_empty())
+            return Error::from_string_literal("Empty vector");
+
+        auto element_type = values.first().type();
+        for (auto& value : values) {
+            if (value.type() != element_type)
+                return Error::from_string_literal("Mixed types in vector");
+        }
+
+        unsigned total_size = 0;
+        unsigned width = 0;
+        u128 result = 0;
+        u128 last_value = 0;
+        for (auto& value : values) {
+            if (total_size >= 128)
+                return Error::from_string_literal("Vector too large");
+
+            width = value.value().visit(
+                [&](Integral auto x) {
+                    last_value = u128(x, 0);
+                    return sizeof(x);
+                },
+                [&](float x) {
+                    last_value = u128(bit_cast<u32>(x), 0);
+                    return sizeof(x);
+                },
+                [&](double x) {
+                    last_value = u128(bit_cast<u64>(x), 0);
+                    return sizeof(x);
+                },
+                [&](auto) -> size_t { VERIFY_NOT_REACHED(); });
+
+            result |= last_value << total_size;
+            total_size += width * 8;
+        }
+
+        if (total_size < 128)
+            warnln("Vector value '{}' is only {} bytes wide, repeating last element", spec, total_size);
+        while (total_size < 128) {
+            // Repeat the last value until we fill the 128 bits
+            result |= last_value << total_size;
+            total_size += width * 8;
+        }
+
+        return Wasm::Value { result };
+    }
+
+    return Error::from_string_literal("Invalid value");
 }
 
 static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& ip, Wasm::Instruction const& instr, Wasm::Interpreter const& interpreter)
@@ -200,12 +390,31 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                 warnln("Expected {} arguments for call, but found only {}", type.parameters().size(), args.size() - 2);
                 continue;
             }
-            Vector<u64> values_to_push;
+            Vector<Wasm::Value> values_to_push;
             Vector<Wasm::Value> values;
-            for (size_t index = 2; index < args.size(); ++index)
-                values_to_push.append(args[index].to_number<u64>().value_or(0));
-            for (auto& param : type.parameters())
-                values.append(Wasm::Value { param, values_to_push.take_last() });
+            auto ok = true;
+            for (size_t index = 2; index < args.size(); ++index) {
+                auto r = parse_value(args[index]);
+                if (r.is_error()) {
+                    warnln("Failed to parse argument {}: {}", args[index], r.error());
+                    ok = false;
+                    break;
+                }
+                values_to_push.append(r.release_value());
+            }
+            if (!ok)
+                continue;
+            for (auto& param : type.parameters()) {
+                auto v = values_to_push.take_last();
+                if (v.type() != param) {
+                    warnln("Type mismatch in argument: expected {}, but got {}", Wasm::ValueType::kind_name(param.kind()), Wasm::ValueType::kind_name(v.type().kind()));
+                    ok = false;
+                    break;
+                }
+                values.append(v);
+            }
+            if (!ok)
+                continue;
 
             Wasm::Result result { Wasm::Trap {} };
             {
@@ -283,7 +492,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool shell_mode = false;
     bool wasi = false;
     ByteString exported_function_to_execute;
-    Vector<u64> values_to_push;
+    Vector<Wasm::Value> values_to_push;
     Vector<ByteString> modules_to_link_in;
     Vector<StringView> args_if_wasi;
     Vector<StringView> wasi_preopened_mappings;
@@ -327,16 +536,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Supply arguments to the function (default=0) (expects u64, casts to required type)",
+        .help_string = "Supply arguments to the function (default=0) (T.const:v or v(T.const:v, ...))",
         .long_name = "arg",
         .short_name = 0,
-        .value_name = "u64",
+        .value_name = "value",
         .accept_value = [&](StringView str) -> bool {
-            if (auto v = str.to_number<u64>(); v.has_value()) {
-                values_to_push.append(v.value());
-                return true;
+            auto result = parse_value(str);
+            if (result.is_error()) {
+                warnln("Failed to parse value: {}", result.error());
+                return false;
             }
-            return false;
+            values_to_push.append(result.release_value());
+            return true;
         },
     });
     parser.add_positional_argument(args_if_wasi, "Arguments to pass to the WASI module", "args", Core::ArgsParser::Required::No);
@@ -570,10 +781,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             for (auto& param : instance->get<Wasm::WasmFunction>().type().parameters()) {
-                if (values_to_push.is_empty())
+                if (values_to_push.is_empty()) {
                     values.append(Wasm::Value { param, 0ull });
-                else
-                    values.append(Wasm::Value { param, values_to_push.take_last() });
+                } else if (param == values_to_push.last().type()) {
+                    values.append(values_to_push.take_last());
+                } else {
+                    warnln("Type mismatch in argument: expected {}, but got {}", Wasm::ValueType::kind_name(param.kind()), Wasm::ValueType::kind_name(values_to_push.last().type().kind()));
+                    return 1;
+                }
             }
 
             if (print) {
