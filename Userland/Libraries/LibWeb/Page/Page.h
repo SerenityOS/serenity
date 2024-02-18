@@ -302,6 +302,8 @@ public:
     virtual void inspector_did_request_dom_tree_context_menu([[maybe_unused]] i32 node_id, [[maybe_unused]] CSSPixelPoint position, [[maybe_unused]] String const& type, [[maybe_unused]] Optional<String> const& tag, [[maybe_unused]] Optional<String> const& attribute_name, [[maybe_unused]] Optional<String> const& attribute_value) { }
     virtual void inspector_did_execute_console_script([[maybe_unused]] String const& script) { }
 
+    virtual void schedule_repaint() = 0;
+
 protected:
     virtual ~PageClient() = default;
 };
