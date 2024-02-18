@@ -302,7 +302,11 @@ const editDOMNode = domNode => {
     let editor = createDOMEditor(handleChange, cancelChange);
 
     if (type === "text") {
-        editor.value = domNode.dataset.text;
+        let emptyTextSpan = domNode.querySelector(".internal");
+
+        if (emptyTextSpan === null) {
+            editor.value = domNode.innerText;
+        }
     } else {
         editor.value = domNode.innerText;
     }
