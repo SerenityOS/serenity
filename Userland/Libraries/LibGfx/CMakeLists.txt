@@ -92,6 +92,7 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 add_custom_command(
         OUTPUT  ${generated_sources}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/ImageFormats"
         COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/TIFFGenerator.py" -o "${CMAKE_CURRENT_BINARY_DIR}/ImageFormats"
         DEPENDS "TIFFGenerator.py"
         VERBATIM
