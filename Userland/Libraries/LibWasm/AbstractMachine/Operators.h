@@ -267,6 +267,63 @@ struct VectorReplaceLane {
     }
 };
 
+template<size_t VectorSize, typename Op, template<typename> typename SetSign = MakeSigned>
+struct VectorCmpOp {
+    auto operator()(u128 c1, u128 c2) const
+    {
+        using ElementType = NativeIntegralType<128 / VectorSize>;
+        auto result = bit_cast<Native128ByteVectorOf<ElementType, SetSign>>(c1);
+        auto other = bit_cast<Native128ByteVectorOf<ElementType, SetSign>>(c2);
+        Op op;
+        for (size_t i = 0; i < VectorSize; ++i)
+            result[i] = op(result[i], other[i]) ? static_cast<MakeUnsigned<ElementType>>(-1) : 0;
+        return bit_cast<u128>(result);
+    }
+
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 16:
+            return "vec(8x16).cmp"sv;
+        case 8:
+            return "vec(16x8).cmp"sv;
+        case 4:
+            return "vec(32x4).cmp"sv;
+        case 2:
+            return "vec(64x2).cmp"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
+template<size_t VectorSize, typename Op>
+struct VectorFloatCmpOp {
+    auto operator()(u128 c1, u128 c2) const
+    {
+        auto first = bit_cast<NativeFloatingVectorType<128, VectorSize, NativeFloatingType<128 / VectorSize>>>(c1);
+        auto other = bit_cast<NativeFloatingVectorType<128, VectorSize, NativeFloatingType<128 / VectorSize>>>(c2);
+        using ElementType = NativeIntegralType<128 / VectorSize>;
+        Native128ByteVectorOf<ElementType, MakeUnsigned> result;
+        Op op;
+        for (size_t i = 0; i < VectorSize; ++i)
+            result[i] = op(first[i], other[i]) ? static_cast<ElementType>(-1) : 0;
+        return bit_cast<u128>(result);
+    }
+
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 4:
+            return "vecf(32x4).cmp"sv;
+        case 2:
+            return "vecf(64x2).cmp"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
 struct Minimum {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
