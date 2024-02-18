@@ -129,6 +129,7 @@ private:
     StringView possible_device_name();
 
     void reset();
+    void pci_commit();
     void read_mac_address();
     void set_phy_speed();
     void start_hardware();
@@ -137,6 +138,9 @@ private:
     void configure_phy();
     void configure_phy_b_1();
     void configure_phy_b_2();
+    void configure_phy_c_1();
+    void configure_phy_c_2();
+    void configure_phy_c_3();
     void configure_phy_e_2();
     void configure_phy_h_1();
     void configure_phy_h_2();
@@ -146,6 +150,9 @@ private:
     void hardware_quirks();
     void hardware_quirks_b_1();
     void hardware_quirks_b_2();
+    void hardware_quirks_c_1();
+    void hardware_quirks_c_2();
+    void hardware_quirks_c_3();
     void hardware_quirks_e_2();
     void hardware_quirks_h();
 
