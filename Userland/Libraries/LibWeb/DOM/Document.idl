@@ -1,5 +1,6 @@
 #import <Animations/DocumentTimeline.idl>
 #import <CSS/StyleSheetList.idl>
+#import <DOM/CDATASection.idl>
 #import <DOM/Comment.idl>
 #import <DOM/DOMImplementation.idl>
 #import <DOM/DocumentFragment.idl>
@@ -80,6 +81,7 @@ interface Document : Node {
     [CEReactions, NewObject] Element createElementNS([FlyString] DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
+    [NewObject] CDATASection createCDATASection(DOMString data);
     Comment createComment(DOMString data);
     [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
