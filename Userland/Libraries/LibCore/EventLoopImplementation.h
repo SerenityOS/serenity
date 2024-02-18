@@ -24,7 +24,7 @@ public:
     virtual NonnullOwnPtr<EventLoopImplementation> make_implementation() = 0;
 
     virtual int register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) = 0;
-    virtual bool unregister_timer(int timer_id) = 0;
+    virtual void unregister_timer(int timer_id) = 0;
 
     virtual void register_notifier(Notifier&) = 0;
     virtual void unregister_notifier(Notifier&) = 0;

@@ -27,7 +27,7 @@ public:
     virtual NonnullOwnPtr<Core::EventLoopImplementation> make_implementation() override;
 
     virtual int register_timer(Core::EventReceiver&, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible) override;
-    virtual bool unregister_timer(int timer_id) override;
+    virtual void unregister_timer(int timer_id) override;
 
     virtual void register_notifier(Core::Notifier&) override;
     virtual void unregister_notifier(Core::Notifier&) override;

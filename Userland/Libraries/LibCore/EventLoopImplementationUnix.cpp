@@ -509,11 +509,11 @@ int EventLoopManagerUnix::register_timer(EventReceiver& object, int milliseconds
     return timer_id;
 }
 
-bool EventLoopManagerUnix::unregister_timer(int timer_id)
+void EventLoopManagerUnix::unregister_timer(int timer_id)
 {
     auto& thread_data = ThreadData::the();
     thread_data.id_allocator.deallocate(timer_id);
-    return thread_data.timers.remove(timer_id);
+    VERIFY(thread_data.timers.remove(timer_id));
 }
 
 void EventLoopManagerUnix::register_notifier(Notifier& notifier)

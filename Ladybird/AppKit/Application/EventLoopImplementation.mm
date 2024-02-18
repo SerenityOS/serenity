@@ -82,18 +82,15 @@ int CFEventLoopManager::register_timer(Core::EventReceiver& receiver, int interv
     return timer_id;
 }
 
-bool CFEventLoopManager::unregister_timer(int timer_id)
+void CFEventLoopManager::unregister_timer(int timer_id)
 {
     auto& thread_data = ThreadData::the();
     thread_data.timer_id_allocator.deallocate(timer_id);
 
-    if (auto timer = thread_data.timers.take(timer_id); timer.has_value()) {
-        CFRunLoopTimerInvalidate(*timer);
-        CFRelease(*timer);
-        return true;
-    }
-
-    return false;
+    auto timer = thread_data.timers.take(timer_id);
+    VERIFY(timer.has_value());
+    CFRunLoopTimerInvalidate(*timer);
+    CFRelease(*timer);
 }
 
 static void socket_notifier(CFSocketRef socket, CFSocketCallBackType notification_type, CFDataRef, void const*, void* info)

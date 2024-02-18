@@ -130,9 +130,9 @@ int EventLoop::register_timer(EventReceiver& object, int milliseconds, bool shou
     return EventLoopManager::the().register_timer(object, milliseconds, should_reload, fire_when_not_visible);
 }
 
-bool EventLoop::unregister_timer(int timer_id)
+void EventLoop::unregister_timer(int timer_id)
 {
-    return EventLoopManager::the().unregister_timer(timer_id);
+    EventLoopManager::the().unregister_timer(timer_id);
 }
 
 void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
