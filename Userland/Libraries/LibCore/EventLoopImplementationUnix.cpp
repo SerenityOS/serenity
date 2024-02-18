@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/IDAllocator.h>
 #include <AK/Singleton.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
@@ -94,7 +93,7 @@ struct ThreadData {
     }
 
     // Each thread has its own timers, notifiers and a wake pipe.
-    HashMap<int, NonnullOwnPtr<EventLoopTimer>> timers;
+    HashTable<EventLoopTimer*> timers;
 
     Vector<pollfd> poll_fds;
     HashMap<Notifier*, size_t> notifier_by_ptr;
@@ -105,8 +104,6 @@ struct ThreadData {
     int wake_pipe_fds[2] { -1, -1 };
 
     pid_t pid { 0 };
-
-    IDAllocator id_allocator;
 };
 
 EventLoopImplementationUnix::EventLoopImplementationUnix()
@@ -234,7 +231,7 @@ try_select_again:
         auto now = MonotonicTime::now_coarse();
 
         for (auto& it : thread_data.timers) {
-            auto& timer = *it.value;
+            auto& timer = *it;
             if (!timer.has_expired(now))
                 continue;
             auto owner = timer.owner.strong_ref();
@@ -364,9 +361,9 @@ Optional<MonotonicTime> EventLoopManagerUnix::get_next_timer_expiration()
     auto now = MonotonicTime::now_coarse();
     Optional<MonotonicTime> soonest {};
     for (auto& it : ThreadData::the().timers) {
-        auto& fire_time = it.value->fire_time;
-        auto owner = it.value->owner.strong_ref();
-        if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
+        auto& fire_time = it->fire_time;
+        auto owner = it->owner.strong_ref();
+        if (it->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
             && owner && !owner->is_visible_for_timer_purposes()) {
             continue;
         }
@@ -493,27 +490,26 @@ void EventLoopManagerUnix::unregister_signal(int handler_id)
         info.signal_handlers.remove(remove_signal_number);
 }
 
-int EventLoopManagerUnix::register_timer(EventReceiver& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
+intptr_t EventLoopManagerUnix::register_timer(EventReceiver& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     VERIFY(milliseconds >= 0);
     auto& thread_data = ThreadData::the();
-    auto timer = make<EventLoopTimer>();
+    auto timer = new EventLoopTimer;
     timer->owner = object;
     timer->interval = Duration::from_milliseconds(milliseconds);
     timer->reload(MonotonicTime::now_coarse());
     timer->should_reload = should_reload;
     timer->fire_when_not_visible = fire_when_not_visible;
-    int timer_id = thread_data.id_allocator.allocate();
-    timer->timer_id = timer_id;
-    thread_data.timers.set(timer_id, move(timer));
-    return timer_id;
+    thread_data.timers.set(timer);
+    return bit_cast<intptr_t>(timer);
 }
 
-void EventLoopManagerUnix::unregister_timer(int timer_id)
+void EventLoopManagerUnix::unregister_timer(intptr_t timer_id)
 {
     auto& thread_data = ThreadData::the();
-    thread_data.id_allocator.deallocate(timer_id);
-    VERIFY(thread_data.timers.remove(timer_id));
+    auto* timer = bit_cast<EventLoopTimer*>(timer_id);
+    VERIFY(thread_data.timers.remove(timer));
+    delete timer;
 }
 
 void EventLoopManagerUnix::register_notifier(Notifier& notifier)

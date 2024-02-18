@@ -76,8 +76,8 @@ public:
     bool was_exit_requested() const;
 
     // The registration functions act upon the current loop of the current thread.
-    static int register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
-    static void unregister_timer(int timer_id);
+    static intptr_t register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
+    static void unregister_timer(intptr_t timer_id);
 
     static void register_notifier(Badge<Notifier>, Notifier&);
     static void unregister_notifier(Badge<Notifier>, Notifier&);

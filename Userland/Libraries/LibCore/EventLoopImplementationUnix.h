@@ -17,8 +17,8 @@ public:
 
     virtual NonnullOwnPtr<EventLoopImplementation> make_implementation() override;
 
-    virtual int register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) override;
-    virtual void unregister_timer(int timer_id) override;
+    virtual intptr_t register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) override;
+    virtual void unregister_timer(intptr_t timer_id) override;
 
     virtual void register_notifier(Notifier&) override;
     virtual void unregister_notifier(Notifier&) override;

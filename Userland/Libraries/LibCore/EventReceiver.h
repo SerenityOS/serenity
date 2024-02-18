@@ -169,7 +169,7 @@ protected:
 private:
     EventReceiver* m_parent { nullptr };
     ByteString m_name;
-    int m_timer_id { 0 };
+    intptr_t m_timer_id { 0 };
     Vector<NonnullRefPtr<EventReceiver>> m_children;
     Function<bool(Core::Event&)> m_event_filter;
 };

@@ -29,8 +29,6 @@ struct ThreadData {
         return *s_thread_data;
     }
 
-    IDAllocator timer_id_allocator;
-    HashMap<int, NonnullOwnPtr<QTimer>> timers;
     HashMap<Core::Notifier*, NonnullOwnPtr<QSocketNotifier>> notifiers;
 };
 
@@ -90,13 +88,11 @@ static void qt_timer_fired(Core::TimerShouldFireWhenNotVisible should_fire_when_
     object.dispatch_event(event);
 }
 
-int EventLoopManagerQt::register_timer(Core::EventReceiver& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
+intptr_t EventLoopManagerQt::register_timer(Core::EventReceiver& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
 {
-    auto& thread_data = ThreadData::the();
-    auto timer = make<QTimer>();
+    auto timer = new QTimer;
     timer->setInterval(milliseconds);
     timer->setSingleShot(!should_reload);
-    auto timer_id = thread_data.timer_id_allocator.allocate();
     auto weak_object = object.make_weak_ptr();
     QObject::connect(timer, &QTimer::timeout, [should_fire_when_not_visible, weak_object = move(weak_object)] {
         auto object = weak_object.strong_ref();
@@ -105,15 +101,13 @@ int EventLoopManagerQt::register_timer(Core::EventReceiver& object, int millisec
         qt_timer_fired(should_fire_when_not_visible, *object);
     });
     timer->start();
-    thread_data.timers.set(timer_id, move(timer));
-    return timer_id;
+    return bit_cast<intptr_t>(timer);
 }
 
-void EventLoopManagerQt::unregister_timer(int timer_id)
+void EventLoopManagerQt::unregister_timer(intptr_t timer_id)
 {
-    auto& thread_data = ThreadData::the();
-    thread_data.timer_id_allocator.deallocate(timer_id);
-    VERIFY(thread_data.timers.remove(timer_id));
+    auto* timer = bit_cast<QTimer*>(timer_id);
+    delete timer;
 }
 
 static void qt_notifier_activated(Core::Notifier& notifier)
