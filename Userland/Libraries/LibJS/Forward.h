@@ -292,6 +292,7 @@ struct CalendarMethods;
 struct DurationRecord;
 struct DateDurationRecord;
 struct TimeDurationRecord;
+struct TimeZoneMethods;
 struct PartialDurationRecord;
 };
 
