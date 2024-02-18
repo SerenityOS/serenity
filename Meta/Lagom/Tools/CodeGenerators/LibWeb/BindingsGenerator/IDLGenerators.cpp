@@ -373,12 +373,25 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 {
     auto scoped_generator = generator.fork();
     auto acceptable_cpp_name = make_input_acceptable_cpp(cpp_name);
+    auto explicit_null = parameter.extended_attributes.contains("ExplicitNull");
     scoped_generator.set("cpp_name", acceptable_cpp_name);
     scoped_generator.set("js_name", js_name);
     scoped_generator.set("js_suffix", js_suffix);
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("string_type", string_to_fly_string ? "FlyString" : "String");
     scoped_generator.set("parameter.type.name", parameter.type->name());
+
+    if (explicit_null) {
+        if (!IDL::is_platform_object(*parameter.type)) {
+            dbgln("Parameter marked [ExplicitNull] in interface {} must be a platform object", interface.name);
+            VERIFY_NOT_REACHED();
+        }
+
+        if (!optional || !parameter.type->is_nullable()) {
+            dbgln("Parameter marked [ExplicitNull] in interface {} must be an optional and nullable type", interface.name);
+            VERIFY_NOT_REACHED();
+        }
+    }
 
     if (optional_default_value.has_value())
         scoped_generator.set("parameter.optional_default_value", *optional_default_value);
@@ -435,8 +448,19 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
         } else {
+            if (explicit_null) {
+                scoped_generator.append(R"~~~(
+    Optional<JS::GCPtr<@parameter.type.name@>> @cpp_name@;
+    if (maybe_@js_name@@js_suffix@.has_value()) {
+        auto @js_name@@js_suffix@ = maybe_@js_name@@js_suffix@.release_value();
+)~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    JS::GCPtr<@parameter.type.name@> @cpp_name@;
+)~~~");
+            }
+
             scoped_generator.append(R"~~~(
-    @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
@@ -444,6 +468,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @cpp_name@ = &static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object());
     }
 )~~~");
+
+            if (explicit_null) {
+                scoped_generator.append(R"~~~(
+    }
+)~~~");
+            }
         }
     } else if (parameter.type->name() == "double" || parameter.type->name() == "float") {
         if (!optional) {
@@ -1575,9 +1605,17 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
             parameter_names.append(move(parameter_name));
 
             arguments_generator.set("argument.index", ByteString::number(argument_index));
-            arguments_generator.append(R"~~~(
+
+            if (parameter.extended_attributes.contains("ExplicitNull")) {
+                arguments_generator.set("argument.size", ByteString::number(argument_index + 1));
+                arguments_generator.append(R"~~~(
+    auto maybe_arg@argument.index@ = vm.argument_count() >= @argument.size@ ? Optional<JS::Value> { vm.argument(@argument.index@) } : OptionalNone {};
+)~~~");
+            } else {
+                arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
+            }
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
