@@ -2039,11 +2039,11 @@ ThrowCompletionOr<NonnullGCPtr<Duration>> add_duration_to_or_subtract_duration_f
     // 3. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(vm, options_value));
 
-    // 4. Let relativeTo be ? ToRelativeTemporalObject(options).
-    auto relative_to = TRY(to_relative_temporal_object(vm, *options));
+    // 4. Let relativeToRecord be ? ToRelativeTemporalObject(options).
+    auto relative_to_record = TRY(to_relative_temporal_object(vm, *options));
 
     // 5. Let result be ? AddDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], sign × other.[[Years]], sign × other.[[Months]], sign × other.[[Weeks]], sign × other.[[Days]], sign × other.[[Hours]], sign × other.[[Minutes]], sign × other.[[Seconds]], sign × other.[[Milliseconds]], sign × other.[[Microseconds]], sign × other.[[Nanoseconds]], relativeTo).
-    auto result = TRY(add_duration(vm, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds(), sign * other.years, sign * other.months, sign * other.weeks, sign * other.days, sign * other.hours, sign * other.minutes, sign * other.seconds, sign * other.milliseconds, sign * other.microseconds, sign * other.nanoseconds, relative_to));
+    auto result = TRY(add_duration(vm, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds(), sign * other.years, sign * other.months, sign * other.weeks, sign * other.days, sign * other.hours, sign * other.minutes, sign * other.seconds, sign * other.milliseconds, sign * other.microseconds, sign * other.nanoseconds, relative_to_converted_to_value(relative_to_record)));
 
     // 6. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(vm, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));

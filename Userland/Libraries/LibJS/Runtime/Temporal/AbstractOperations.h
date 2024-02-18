@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/ISO8601.h>
+#include <LibJS/Runtime/Temporal/TimeZoneMethods.h>
 #include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Temporal {
@@ -148,7 +149,16 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(VM&, Object const& normali
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM&, Object const& normalized_options, StringView smallest_unit);
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM&, Object const& normalized_options);
 ThrowCompletionOr<Optional<String>> get_temporal_unit(VM&, Object const& normalized_options, PropertyKey const&, UnitGroup, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values = {});
-ThrowCompletionOr<Value> to_relative_temporal_object(VM&, Object const& options);
+
+struct RelativeTo {
+    GCPtr<PlainDate> plain_relative_to;         // [[PlainRelativeTo]]
+    GCPtr<ZonedDateTime> zoned_relative_to;     // [[ZonedRelativeTo]]
+    Optional<TimeZoneMethods> time_zone_record; // [[TimeZoneRec]]
+};
+ThrowCompletionOr<RelativeTo> to_relative_temporal_object(VM&, Object const& options);
+
+Value relative_to_converted_to_value(RelativeTo const&);
+
 StringView larger_of_two_temporal_units(StringView, StringView);
 ThrowCompletionOr<Object*> merge_largest_unit_option(VM&, Object const& options, String largest_unit);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);

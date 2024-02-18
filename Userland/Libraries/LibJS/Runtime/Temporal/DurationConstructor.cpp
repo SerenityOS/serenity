@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     auto const* options = TRY(get_options_object(vm, vm.argument(2)));
 
     // 4. Let relativeTo be ? ToRelativeTemporalObject(options).
-    auto relative_to = TRY(to_relative_temporal_object(vm, *options));
+    auto relative_to = relative_to_converted_to_value(TRY(to_relative_temporal_object(vm, *options)));
 
     // 5. Let shift1 be ? CalculateOffsetShift(relativeTo, one.[[Years]], one.[[Months]], one.[[Weeks]], one.[[Days]]).
     auto shift1 = TRY(calculate_offset_shift(vm, relative_to, one->years(), one->months(), one->weeks(), one->days()));

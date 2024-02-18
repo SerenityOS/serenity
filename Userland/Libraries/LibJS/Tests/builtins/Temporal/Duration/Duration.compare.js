@@ -98,7 +98,7 @@ describe("errors", () => {
         const duration = new Temporal.Duration();
         expect(() => {
             Temporal.Duration.compare(duration, duration, { relativeTo: zonedDateTime });
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 
     test("UTC designator only allowed with bracketed time zone", () => {
