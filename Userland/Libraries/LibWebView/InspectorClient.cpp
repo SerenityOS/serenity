@@ -96,6 +96,7 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     m_content_web_view.on_finshed_editing_dom_node = [this](auto const& node_id) {
         m_pending_selection = node_id;
         m_dom_tree_loaded = false;
+        m_dom_node_attributes.clear();
 
         inspect();
     };
@@ -122,7 +123,11 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_content_web_view.js_console_request_messages(0);
     };
 
-    m_inspector_web_view.on_inspector_requested_dom_tree_context_menu = [this](auto node_id, auto position, auto const& type, auto const& tag, auto const& attribute) {
+    m_inspector_web_view.on_inspector_requested_dom_tree_context_menu = [this](auto node_id, auto position, auto const& type, auto const& tag, auto const& attribute_index) {
+        Optional<Attribute> attribute;
+        if (attribute_index.has_value())
+            attribute = m_dom_node_attributes.get(node_id)->at(*attribute_index);
+
         m_context_menu_data = ContextMenuData { node_id, tag, attribute };
 
         if (type.is_one_of("text"sv, "comment"sv)) {
@@ -158,8 +163,9 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         m_content_web_view.add_dom_node_attributes(node_id, attributes);
     };
 
-    m_inspector_web_view.on_inspector_replaced_dom_node_attribute = [this](auto node_id, auto const& name, auto const& replacement_attributes) {
-        m_content_web_view.replace_dom_node_attribute(node_id, name, replacement_attributes);
+    m_inspector_web_view.on_inspector_replaced_dom_node_attribute = [this](auto node_id, u32 attribute_index, auto const& replacement_attributes) {
+        auto const& attribute = m_dom_node_attributes.get(node_id)->at(attribute_index);
+        m_content_web_view.replace_dom_node_attribute(node_id, attribute.name, replacement_attributes);
     };
 
     m_inspector_web_view.on_inspector_executed_console_script = [this](auto const& script) {
@@ -200,6 +206,8 @@ void InspectorClient::reset()
     m_body_node_id.clear();
     m_pending_selection.clear();
     m_dom_tree_loaded = false;
+
+    m_dom_node_attributes.clear();
 
     m_highest_notified_message_index = -1;
     m_highest_received_message_index = -1;
@@ -461,12 +469,16 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
             data_attributes.appendff("data-{}=\"{}\"", name, value);
         };
 
+        i32 node_id = 0;
+
         if (auto pseudo_element = node.get_integer<i32>("pseudo-element"sv); pseudo_element.has_value()) {
-            append_data_attribute("id"sv, node.get_integer<i32>("parent-id"sv).value());
+            node_id = node.get_integer<i32>("parent-id"sv).value();
             append_data_attribute("pseudo-element"sv, *pseudo_element);
         } else {
-            append_data_attribute("id"sv, node.get_integer<i32>("id"sv).value());
+            node_id = node.get_integer<i32>("id"sv).value();
         }
+
+        append_data_attribute("id"sv, node_id);
 
         if (type == "text"sv) {
             auto deprecated_text = node.get_byte_string("text"sv).release_value();
@@ -513,7 +525,7 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
         }
 
         if (name.equals_ignoring_ascii_case("BODY"sv))
-            m_body_node_id = node.get_integer<i32>("id"sv).value();
+            m_body_node_id = node_id;
 
         auto tag = name.to_lowercase();
 
@@ -523,14 +535,17 @@ String InspectorClient::generate_dom_tree(JsonObject const& dom_tree)
 
         if (auto attributes = node.get_object("attributes"sv); attributes.has_value()) {
             attributes->for_each_member([&](auto const& name, auto const& value) {
+                auto& dom_node_attributes = m_dom_node_attributes.ensure(node_id);
                 auto value_string = value.as_string();
 
                 builder.append("&nbsp;"sv);
-                builder.appendff("<span data-node-type=\"attribute\" data-tag=\"{}\" data-attribute-name=\"{}\" data-attribute-value=\"{}\" class=\"editable\">", tag, name, value_string);
+                builder.appendff("<span data-node-type=\"attribute\" data-tag=\"{}\" data-attribute-index={} class=\"editable\">", tag, dom_node_attributes.size());
                 builder.appendff("<span class=\"attribute-name\">{}</span>", name);
                 builder.append('=');
                 builder.appendff("<span class=\"attribute-value\">\"{}\"</span>", value_string);
                 builder.append("</span>"sv);
+
+                dom_node_attributes.empend(MUST(String::from_byte_string(name)), MUST(String::from_byte_string(value_string)));
             });
         }
 

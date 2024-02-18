@@ -174,8 +174,8 @@ public:
     Function<void(i32, String const&)> on_inspector_set_dom_node_text;
     Function<void(i32, String const&)> on_inspector_set_dom_node_tag;
     Function<void(i32, Vector<Attribute> const&)> on_inspector_added_dom_node_attributes;
-    Function<void(i32, String const&, Vector<Attribute> const&)> on_inspector_replaced_dom_node_attribute;
-    Function<void(i32, Gfx::IntPoint, String const&, Optional<String> const&, Optional<Attribute> const&)> on_inspector_requested_dom_tree_context_menu;
+    Function<void(i32, size_t, Vector<Attribute> const&)> on_inspector_replaced_dom_node_attribute;
+    Function<void(i32, Gfx::IntPoint, String const&, Optional<String> const&, Optional<size_t> const&)> on_inspector_requested_dom_tree_context_menu;
     Function<void(String const&)> on_inspector_executed_console_script;
     Function<SocketPair()> on_request_worker_agent;
 

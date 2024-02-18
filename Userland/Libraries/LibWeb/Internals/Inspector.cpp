@@ -61,14 +61,14 @@ void Inspector::add_dom_node_attributes(i32 node_id, JS::NonnullGCPtr<DOM::Named
     global_object().browsing_context()->page().client().inspector_did_add_dom_node_attributes(node_id, attributes);
 }
 
-void Inspector::replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes)
+void Inspector::replace_dom_node_attribute(i32 node_id, WebIDL::UnsignedLongLong attribute_index, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes)
 {
-    global_object().browsing_context()->page().client().inspector_did_replace_dom_node_attribute(node_id, name, replacement_attributes);
+    global_object().browsing_context()->page().client().inspector_did_replace_dom_node_attribute(node_id, static_cast<size_t>(attribute_index), replacement_attributes);
 }
 
-void Inspector::request_dom_tree_context_menu(i32 node_id, i32 client_x, i32 client_y, String const& type, Optional<String> const& tag, Optional<String> const& attribute_name, Optional<String> const& attribute_value)
+void Inspector::request_dom_tree_context_menu(i32 node_id, i32 client_x, i32 client_y, String const& type, Optional<String> const& tag, Optional<WebIDL::UnsignedLongLong> const& attribute_index)
 {
-    global_object().browsing_context()->page().client().inspector_did_request_dom_tree_context_menu(node_id, { client_x, client_y }, type, tag, attribute_name, attribute_value);
+    global_object().browsing_context()->page().client().inspector_did_request_dom_tree_context_menu(node_id, { client_x, client_y }, type, tag, attribute_index.map([](auto index) { return static_cast<size_t>(index); }));
 }
 
 void Inspector::execute_console_script(String const& script)

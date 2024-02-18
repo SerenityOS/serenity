@@ -923,7 +923,7 @@ void WebContentClient::inspector_did_add_dom_node_attributes(u64 page_id, i32 no
         view.on_inspector_added_dom_node_attributes(node_id, attributes);
 }
 
-void WebContentClient::inspector_did_replace_dom_node_attribute(u64 page_id, i32 node_id, String const& name, Vector<Attribute> const& replacement_attributes)
+void WebContentClient::inspector_did_replace_dom_node_attribute(u64 page_id, i32 node_id, size_t attribute_index, Vector<Attribute> const& replacement_attributes)
 {
     auto maybe_view = m_views.get(page_id);
     if (!maybe_view.has_value()) {
@@ -933,10 +933,10 @@ void WebContentClient::inspector_did_replace_dom_node_attribute(u64 page_id, i32
     auto& view = *maybe_view.value();
 
     if (view.on_inspector_replaced_dom_node_attribute)
-        view.on_inspector_replaced_dom_node_attribute(node_id, name, replacement_attributes);
+        view.on_inspector_replaced_dom_node_attribute(node_id, attribute_index, replacement_attributes);
 }
 
-void WebContentClient::inspector_did_request_dom_tree_context_menu(u64 page_id, i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag, Optional<Attribute> const& attribute)
+void WebContentClient::inspector_did_request_dom_tree_context_menu(u64 page_id, i32 node_id, Gfx::IntPoint position, String const& type, Optional<String> const& tag, Optional<size_t> const& attribute_index)
 {
     auto maybe_view = m_views.get(page_id);
     if (!maybe_view.has_value()) {
@@ -946,7 +946,7 @@ void WebContentClient::inspector_did_request_dom_tree_context_menu(u64 page_id, 
     auto& view = *maybe_view.value();
 
     if (view.on_inspector_requested_dom_tree_context_menu)
-        view.on_inspector_requested_dom_tree_context_menu(node_id, view.to_widget_position(position), type, tag, attribute);
+        view.on_inspector_requested_dom_tree_context_menu(node_id, view.to_widget_position(position), type, tag, attribute_index);
 }
 
 void WebContentClient::inspector_did_execute_console_script(u64 page_id, String const& script)

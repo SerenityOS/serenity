@@ -288,8 +288,10 @@ const editDOMNode = domNode => {
             const element = document.createElement(value);
             inspector.setDOMNodeTag(domNodeID, value);
         } else if (type === "attribute") {
+            const attributeIndex = domNode.dataset.attributeIndex;
             const attributes = parseDOMAttributes(value);
-            inspector.replaceDOMNodeAttribute(domNodeID, domNode.dataset.attributeName, attributes);
+
+            inspector.replaceDOMNodeAttribute(domNodeID, attributeIndex, attributes);
         }
     };
 
@@ -354,28 +356,17 @@ const requestContextMenu = (clientX, clientY, domNode) => {
     }
 
     let tag = null;
-    let attributeName = null;
-    let attributeValue = null;
+    let attributeIndex = null;
 
     if (type === "tag") {
         tag = domNode.dataset.tag;
     } else if (type === "attribute") {
         tag = domNode.dataset.tag;
-        attributeName = domNode.dataset.attributeName;
-        attributeValue = domNode.dataset.attributeValue;
+        attributeIndex = domNode.dataset.attributeIndex;
     }
 
     pendingEditDOMNode = domNode;
-
-    inspector.requestDOMTreeContextMenu(
-        domNodeID,
-        clientX,
-        clientY,
-        type,
-        tag,
-        attributeName,
-        attributeValue
-    );
+    inspector.requestDOMTreeContextMenu(domNodeID, clientX, clientY, type, tag, attributeIndex);
 };
 
 const executeConsoleScript = consoleInput => {
