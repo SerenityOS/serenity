@@ -25,6 +25,7 @@
 #include <LibWeb/CSS/VisualViewport.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Attr.h>
+#include <LibWeb/DOM/CDATASection.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/CustomEvent.h>
 #include <LibWeb/DOM/DOMImplementation.h>
@@ -1471,6 +1472,21 @@ JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 JS::NonnullGCPtr<Text> Document::create_text_node(String const& data)
 {
     return heap().allocate<Text>(realm(), *this, data);
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createcdatasection
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CDATASection>> Document::create_cdata_section(String const& data)
+{
+    // 1. If this is an HTML document, then throw a "NotSupportedError" DOMException.
+    if (is_html_document())
+        return WebIDL::NotSupportedError::create(realm(), "This operation is not supported for HTML documents"_fly_string);
+
+    // 2. If data contains the string "]]>", then throw an "InvalidCharacterError" DOMException.
+    if (data.contains("]]>"sv))
+        return WebIDL::InvalidCharacterError::create(realm(), "String may not contain ']]>'"_fly_string);
+
+    // 3. Return a new CDATASection node with its data set to data and node document set to this.
+    return heap().allocate<CDATASection>(realm(), *this, data);
 }
 
 JS::NonnullGCPtr<Comment> Document::create_comment(String const& data)
