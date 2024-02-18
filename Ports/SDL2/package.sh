@@ -6,6 +6,7 @@ files=(
     "https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz#64b1102fa22093515b02ef33dd8739dee1ba57e9dbba6a092942b8bbed1a1c5e"
 )
 configopts=(
+    "-DCMAKE_CXX_FLAGS=-I${SERENITY_BUILD_DIR}/Root/usr/include/Services/ -I${SERENITY_BUILD_DIR}/Root/usr/include/Userland/Services/"
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
     "-DPULSEAUDIO=OFF"
     "-DJACK=OFF"
