@@ -28,7 +28,7 @@ public:
 
     static void set_use_gpu_painter();
 
-    void schedule_repaint();
+    virtual void schedule_repaint() override;
 
     virtual Web::Page& page() override { return *m_page; }
     virtual Web::Page const& page() const override { return *m_page; }

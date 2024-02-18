@@ -30,6 +30,7 @@ public:
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override;
     virtual void paint(Web::DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override;
     virtual void request_file(Web::FileRequest) override;
+    virtual void schedule_repaint() override {};
 
 private:
     explicit PageHost(ConnectionFromClient&);

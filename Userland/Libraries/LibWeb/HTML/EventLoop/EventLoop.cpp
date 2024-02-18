@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
 
@@ -213,7 +214,12 @@ void EventLoop::process()
 
     // FIXME:     15. Invoke the mark paint timing algorithm for each Document object in docs.
 
-    // FIXME:     16. For each fully active Document in docs, update the rendering or user interface of that Document and its browsing context to reflect the current state.
+    // 16. For each fully active Document in docs, update the rendering or user interface of that Document and its browsing context to reflect the current state.
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        auto* browsing_context = document.browsing_context();
+        auto& page = browsing_context->page();
+        page.client().schedule_repaint();
+    });
 
     // 13. If all of the following are true
     // - this is a window event loop

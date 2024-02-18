@@ -48,6 +48,7 @@ public:
     virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
     virtual void request_file(FileRequest) override { }
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override { }
+    virtual void schedule_repaint() override { }
 
 private:
     explicit SVGPageClient(Page& host_page)
