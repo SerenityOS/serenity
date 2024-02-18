@@ -161,6 +161,7 @@ static WebIDL::ExceptionOr<String> serialize_text(DOM::Text const& text, Require
 static WebIDL::ExceptionOr<String> serialize_document_fragment(DOM::DocumentFragment const& document_fragment, Optional<FlyString>& namespace_, HashMap<FlyString, Vector<Optional<FlyString>>>& namespace_prefix_map, u64& prefix_index, RequireWellFormed require_well_formed);
 static WebIDL::ExceptionOr<String> serialize_document_type(DOM::DocumentType const& document_type, RequireWellFormed require_well_formed);
 static WebIDL::ExceptionOr<String> serialize_processing_instruction(DOM::ProcessingInstruction const& processing_instruction, RequireWellFormed require_well_formed);
+static WebIDL::ExceptionOr<String> serialize_cdata_section(DOM::CDATASection const& cdata_section, RequireWellFormed require_well_formed);
 
 // https://w3c.github.io/DOM-Parsing/#dfn-xml-serialization-algorithm
 WebIDL::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<DOM::Node const> root, Optional<FlyString>& namespace_, HashMap<FlyString, Vector<Optional<FlyString>>>& namespace_prefix_map, u64& prefix_index, RequireWellFormed require_well_formed)
@@ -194,7 +195,7 @@ WebIDL::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<D
         return serialize_comment(static_cast<DOM::Comment const&>(*root), require_well_formed);
     }
 
-    if (is<DOM::Text>(*root) || is<DOM::CDATASection>(*root)) {
+    if (is<DOM::Text>(*root)) {
         // -> Text
         //    Run the algorithm for XML serializing a Text node node.
         return serialize_text(static_cast<DOM::Text const&>(*root), require_well_formed);
@@ -216,6 +217,12 @@ WebIDL::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<D
         // -> ProcessingInstruction
         //    Run the algorithm for XML serializing a ProcessingInstruction node node.
         return serialize_processing_instruction(static_cast<DOM::ProcessingInstruction const&>(*root), require_well_formed);
+    }
+
+    if (is<DOM::CDATASection>(*root)) {
+        // Note: Serialization of CDATASection nodes is not mentioned in the specification, but treating CDATASection nodes as
+        // text leads to incorrect serialization.
+        return serialize_cdata_section(static_cast<DOM::CDATASection const&>(*root), require_well_formed);
     }
 
     if (is<DOM::Attr>(*root)) {
@@ -895,6 +902,20 @@ static WebIDL::ExceptionOr<String> serialize_processing_instruction(DOM::Process
     markup.append("?>"sv);
 
     // 4. Return the value of markup.
+    return MUST(markup.to_string());
+}
+
+// FIXME: This is ad-hoc
+static WebIDL::ExceptionOr<String> serialize_cdata_section(DOM::CDATASection const& cdata_section, RequireWellFormed require_well_formed)
+{
+    if (require_well_formed == RequireWellFormed::Yes && cdata_section.data().contains("]]>"sv))
+        return WebIDL::InvalidStateError::create(cdata_section.realm(), "CDATA section data contains a CDATA section end delimiter"_fly_string);
+
+    StringBuilder markup;
+    markup.append("<![CDATA["sv);
+    markup.append(cdata_section.data());
+    markup.append("]]>"sv);
+
     return MUST(markup.to_string());
 }
 
