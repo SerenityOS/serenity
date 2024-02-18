@@ -52,6 +52,7 @@ button, input[type=submit], input[type=button], input[type=reset], select {
     background-color: ButtonFace;
     border: 1px solid ButtonBorder;
     color: ButtonText;
+    cursor: default;
 }
 
 button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover, select:hover {
