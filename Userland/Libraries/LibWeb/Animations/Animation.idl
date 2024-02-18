@@ -6,7 +6,7 @@
 [Exposed=Window]
 interface Animation : EventTarget {
     constructor(optional AnimationEffect? effect = null,
-                optional AnimationTimeline? timeline);
+                [ExplicitNull] optional AnimationTimeline? timeline);
 
     attribute DOMString id;
     attribute AnimationEffect? effect;
