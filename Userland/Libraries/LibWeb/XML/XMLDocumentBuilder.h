@@ -42,10 +42,10 @@ private:
     XMLScriptingSupport m_scripting_support { XMLScriptingSupport::Enabled };
     bool m_has_error { false };
     StringBuilder text_builder;
-    FlyString m_namespace;
+    Optional<FlyString> m_namespace;
 
     struct NamespaceStackEntry {
-        FlyString ns;
+        Optional<FlyString> ns;
         size_t depth;
     };
     Vector<NamespaceStackEntry, 2> m_namespace_stack;
