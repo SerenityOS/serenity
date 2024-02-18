@@ -36,7 +36,7 @@ public:
     virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer>, u16) override { return ENOTSUP; }
 
 private:
-    EHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region);
+    EHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region, VirtualAddress register_base_address);
 
     NonnullOwnPtr<Memory::Region> m_register_region;
     CapabilityRegisters const* m_cap_regs;
