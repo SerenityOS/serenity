@@ -8,6 +8,7 @@
 
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::Internals {
 
@@ -24,9 +25,9 @@ public:
     void set_dom_node_text(i32 node_id, String const& text);
     void set_dom_node_tag(i32 node_id, String const& tag);
     void add_dom_node_attributes(i32 node_id, JS::NonnullGCPtr<DOM::NamedNodeMap> attributes);
-    void replace_dom_node_attribute(i32 node_id, String const& name, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes);
+    void replace_dom_node_attribute(i32 node_id, WebIDL::UnsignedLongLong attribute_index, JS::NonnullGCPtr<DOM::NamedNodeMap> replacement_attributes);
 
-    void request_dom_tree_context_menu(i32 node_id, i32 client_x, i32 client_y, String const& type, Optional<String> const& tag, Optional<String> const& attribute_name, Optional<String> const& attribute_value);
+    void request_dom_tree_context_menu(i32 node_id, i32 client_x, i32 client_y, String const& type, Optional<String> const& tag, Optional<WebIDL::UnsignedLongLong> const& attribute_index);
 
     void execute_console_script(String const& script);
 
