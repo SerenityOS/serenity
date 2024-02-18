@@ -74,12 +74,12 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
     // When an XML parser with XML scripting support enabled creates a script element,
     // it must have its parser document set and its "force async" flag must be unset.
     // FIXME: If the parser was created as part of the XML fragment parsing algorithm, then the element must be marked as "already started" also.
-    if (m_scripting_support == XMLScriptingSupport::Enabled && HTML::TagNames::script.to_deprecated_fly_string() == name) {
+    if (m_scripting_support == XMLScriptingSupport::Enabled && node->is_html_script_element()) {
         auto& script_element = static_cast<HTML::HTMLScriptElement&>(*node);
         script_element.set_parser_document(Badge<XMLDocumentBuilder> {}, m_document);
         script_element.set_force_async(Badge<XMLDocumentBuilder> {}, false);
     }
-    if (HTML::TagNames::template_.to_deprecated_fly_string() == m_current_node->node_name().to_deprecated_fly_string()) {
+    if (m_current_node->is_html_template_element()) {
         // When an XML parser would append a node to a template element, it must instead append it to the template element's template contents (a DocumentFragment node).
         MUST(static_cast<HTML::HTMLTemplateElement&>(*m_current_node).content()->append_child(node));
     } else {
@@ -104,7 +104,7 @@ void XMLDocumentBuilder::element_end(const XML::Name& name)
     VERIFY(m_current_node->node_name().equals_ignoring_ascii_case(name));
     // When an XML parser with XML scripting support enabled creates a script element, [...]
     // When the element's end tag is subsequently parsed,
-    if (m_scripting_support == XMLScriptingSupport::Enabled && HTML::TagNames::script.to_deprecated_fly_string() == name) {
+    if (m_scripting_support == XMLScriptingSupport::Enabled && m_current_node->is_html_script_element()) {
         // the user agent must perform a microtask checkpoint,
         HTML::perform_a_microtask_checkpoint();
         // and then prepare the script element.
