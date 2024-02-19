@@ -525,6 +525,9 @@ public:
     void register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver&);
     void unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver&);
 
+    void register_resize_observer(Badge<ResizeObserver::ResizeObserver>, ResizeObserver::ResizeObserver&);
+    void unregister_resize_observer(Badge<ResizeObserver::ResizeObserver>, ResizeObserver::ResizeObserver&);
+
     void run_the_update_intersection_observations_steps(HighResolutionTime::DOMHighResTimeStamp time);
 
     void start_intersection_observing_a_lazy_loading_element(Element&);
@@ -781,6 +784,8 @@ private:
     // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-intersection-observer
     // Each Document has a lazy load intersection observer, initially set to null but can be set to an IntersectionObserver instance.
     JS::GCPtr<IntersectionObserver::IntersectionObserver> m_lazy_load_intersection_observer;
+
+    Vector<JS::NonnullGCPtr<ResizeObserver::ResizeObserver>> m_resize_observers;
 
     // https://html.spec.whatwg.org/multipage/semantics.html#will-declaratively-refresh
     // A Document object has an associated will declaratively refresh (a boolean). It is initially false.

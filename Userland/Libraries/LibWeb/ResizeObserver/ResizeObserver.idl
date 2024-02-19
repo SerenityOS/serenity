@@ -1,6 +1,6 @@
 #import <DOM/Element.idl>
 
-// https://drafts.csswg.org/resize-observer/#resize-observer-interface
+// https://drafts.csswg.org/resize-observer-1/#resize-observer-interface
 [Exposed=(Window)]
 interface ResizeObserver {
 
@@ -19,5 +19,5 @@ dictionary ResizeObserverOptions {
     ResizeObserverBoxOptions box = "content-box";
 };
 
-// https://drafts.csswg.org/resize-observer/#resize-observer-callback
+// https://drafts.csswg.org/resize-observer-1/#resize-observer-callback
 callback ResizeObserverCallback = undefined (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
