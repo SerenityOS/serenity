@@ -538,29 +538,20 @@ WebIDL::ExceptionOr<bool> HTMLFormElement::report_validity()
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#category-submit
-ErrorOr<Vector<JS::NonnullGCPtr<DOM::Element>>> HTMLFormElement::get_submittable_elements()
+Vector<JS::NonnullGCPtr<DOM::Element>> HTMLFormElement::get_submittable_elements()
 {
-    Vector<JS::NonnullGCPtr<DOM::Element>> submittable_elements = {};
-    for (size_t i = 0; i < elements()->length(); i++) {
-        auto* element = elements()->item(i);
-        TRY(populate_vector_with_submittable_elements_in_tree_order(*element, submittable_elements));
-    }
+    Vector<JS::NonnullGCPtr<DOM::Element>> submittable_elements;
+
+    root().for_each_in_subtree([&](auto& node) {
+        if (auto* form_associated_element = dynamic_cast<FormAssociatedElement*>(&node)) {
+            if (form_associated_element->is_submittable() && form_associated_element->form() == this)
+                submittable_elements.append(form_associated_element->form_associated_element_to_html_element());
+        }
+
+        return IterationDecision::Continue;
+    });
+
     return submittable_elements;
-}
-
-ErrorOr<void> HTMLFormElement::populate_vector_with_submittable_elements_in_tree_order(JS::NonnullGCPtr<DOM::Element> element, Vector<JS::NonnullGCPtr<DOM::Element>>& elements)
-{
-    if (auto* form_associated_element = dynamic_cast<HTML::FormAssociatedElement*>(element.ptr())) {
-        if (form_associated_element->is_submittable())
-            TRY(elements.try_append(element));
-    }
-
-    for (size_t i = 0; i < element->children()->length(); i++) {
-        auto* child = element->children()->item(i);
-        TRY(populate_vector_with_submittable_elements_in_tree_order(*child, elements));
-    }
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-method

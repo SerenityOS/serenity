@@ -74,7 +74,7 @@ public:
     void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
     void remove_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
 
-    ErrorOr<Vector<JS::NonnullGCPtr<DOM::Element>>> get_submittable_elements();
+    Vector<JS::NonnullGCPtr<DOM::Element>> get_submittable_elements();
 
     JS::NonnullGCPtr<DOM::HTMLFormControlsCollection> elements() const;
     unsigned length() const;
@@ -108,8 +108,6 @@ private:
     virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const override;
     virtual Vector<FlyString> supported_property_names() const override;
     virtual bool is_supported_property_index(u32) const override;
-
-    ErrorOr<void> populate_vector_with_submittable_elements_in_tree_order(JS::NonnullGCPtr<DOM::Element> element, Vector<JS::NonnullGCPtr<DOM::Element>>& elements);
 
     ErrorOr<String> pick_an_encoding() const;
 
