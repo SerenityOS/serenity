@@ -207,6 +207,45 @@ void EventLoop::process()
         run_animation_frame_callbacks(document, now);
     });
 
+    // FIXME: This step is implemented following the latest specification, while the rest of this method uses an outdated spec.
+    // NOTE: Gathering and broadcasting of resize observations need to happen after evaluating media queries but before
+    //       updating intersection observations steps.
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        // 1. Let resizeObserverDepth be 0.
+        size_t resize_observer_depth = 0;
+
+        // 2. While true:
+        while (true) {
+            // 1. Recalculate styles and update layout for doc.
+            // NOTE: Recalculation of styles is handled by update_layout()
+            document.update_layout();
+
+            // FIXME: 2. Let hadInitialVisibleContentVisibilityDetermination be false.
+            // FIXME: 3. For each element element with 'auto' used value of 'content-visibility':
+            // FIXME: 4. If hadInitialVisibleContentVisibilityDetermination is true, then continue.
+
+            // 5. Gather active resize observations at depth resizeObserverDepth for doc.
+            document.gather_active_observations_at_depth(resize_observer_depth);
+
+            // 6. If doc has active resize observations:
+            if (document.has_active_resize_observations()) {
+                // 1. Set resizeObserverDepth to the result of broadcasting active resize observations given doc.
+                resize_observer_depth = document.broadcast_active_resize_observations();
+
+                // 2. Continue.
+                continue;
+            }
+
+            // 7. Otherwise, break.
+            break;
+        }
+
+        // 3. If doc has skipped resize observations, then deliver resize loop error given doc.
+        if (document.has_skipped_resize_observations()) {
+            // FIXME: Deliver resize loop error.
+        }
+    });
+
     // 14. For each fully active Document in docs, run the update intersection observations steps for that Document, passing in now as the timestamp. [INTERSECTIONOBSERVER]
     for_each_fully_active_document_in_docs([&](DOM::Document& document) {
         document.run_the_update_intersection_observations_steps(now);

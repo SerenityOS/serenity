@@ -4138,4 +4138,134 @@ String Document::query_command_value(String)
     return String {};
 }
 
+// https://drafts.csswg.org/resize-observer-1/#calculate-depth-for-node
+static size_t calculate_depth_for_node(Node const& node)
+{
+    // 1. Let p be the parent-traversal path from node to a root Element of this element’s flattened DOM tree.
+    // 2. Return number of nodes in p.
+
+    size_t depth = 0;
+    for (auto const* current = &node; current; current = current->parent())
+        ++depth;
+    return depth;
+}
+
+// https://drafts.csswg.org/resize-observer-1/#gather-active-observations-h
+void Document::gather_active_observations_at_depth(size_t depth)
+{
+    // 1. Let depth be the depth passed in.
+
+    // 2. For each observer in [[resizeObservers]] run these steps:
+    for (auto const& observer : m_resize_observers) {
+        // 1. Clear observer’s [[activeTargets]], and [[skippedTargets]].
+        observer->active_targets().clear();
+        observer->skipped_targets().clear();
+
+        // 2. For each observation in observer.[[observationTargets]] run this step:
+        for (auto const& observation : observer->observation_targets()) {
+            // 1. If observation.isActive() is true
+            if (observation->is_active()) {
+                // 1. Let targetDepth be result of calculate depth for node for observation.target.
+                auto target_depth = calculate_depth_for_node(*observation->target());
+
+                // 2. If targetDepth is greater than depth then add observation to [[activeTargets]].
+                if (target_depth > depth) {
+                    observer->active_targets().append(observation);
+                } else {
+                    // 3. Else add observation to [[skippedTargets]].
+                    observer->skipped_targets().append(observation);
+                }
+            }
+        }
+    }
+}
+
+// https://drafts.csswg.org/resize-observer-1/#broadcast-active-resize-observations
+size_t Document::broadcast_active_resize_observations()
+{
+    // 1. Let shallowestTargetDepth be ∞
+    auto shallowest_target_depth = NumericLimits<size_t>::max();
+
+    // 2. For each observer in document.[[resizeObservers]] run these steps:
+    for (auto const& observer : m_resize_observers) {
+        // 1. If observer.[[activeTargets]] slot is empty, continue.
+        if (observer->active_targets().is_empty()) {
+            continue;
+        }
+
+        // 2. Let entries be an empty list of ResizeObserverEntryies.
+        Vector<JS::NonnullGCPtr<ResizeObserver::ResizeObserverEntry>> entries;
+
+        // 3. For each observation in [[activeTargets]] perform these steps:
+        for (auto const& observation : observer->active_targets()) {
+            // 1. Let entry be the result of running create and populate a ResizeObserverEntry given observation.target.
+            auto entry = ResizeObserver::ResizeObserverEntry::create_and_populate(realm(), *observation->target()).release_value_but_fixme_should_propagate_errors();
+
+            // 2. Add entry to entries.
+            entries.append(entry);
+
+            // 3. Set observation.lastReportedSizes to matching entry sizes.
+            switch (observation->observed_box()) {
+            case Bindings::ResizeObserverBoxOptions::BorderBox:
+                // Matching sizes are entry.borderBoxSize if observation.observedBox is "border-box"
+                observation->last_reported_sizes() = entry->border_box_size();
+                break;
+            case Bindings::ResizeObserverBoxOptions::ContentBox:
+                // Matching sizes are entry.contentBoxSize if observation.observedBox is "content-box"
+                observation->last_reported_sizes() = entry->content_box_size();
+                break;
+            case Bindings::ResizeObserverBoxOptions::DevicePixelContentBox:
+                // Matching sizes are entry.devicePixelContentBoxSize if observation.observedBox is "device-pixel-content-box"
+                observation->last_reported_sizes() = entry->device_pixel_content_box_size();
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+
+            // 4. Set targetDepth to the result of calculate depth for node for observation.target.
+            auto target_depth = calculate_depth_for_node(*observation->target());
+
+            // 5. Set shallowestTargetDepth to targetDepth if targetDepth < shallowestTargetDepth
+            if (target_depth < shallowest_target_depth)
+                shallowest_target_depth = target_depth;
+        }
+
+        // 4. Invoke observer.[[callback]] with entries.
+        observer->invoke_callback(entries);
+
+        // 5. Clear observer.[[activeTargets]].
+        observer->active_targets().clear();
+    }
+
+    return shallowest_target_depth;
+}
+
+// https://drafts.csswg.org/resize-observer-1/#has-active-observations-h
+bool Document::has_active_resize_observations()
+{
+    // 1. For each observer in [[resizeObservers]] run this step:
+    for (auto const& observer : m_resize_observers) {
+        // 1. If observer.[[activeTargets]] is not empty, return true.
+        if (!observer->active_targets().is_empty())
+            return true;
+    }
+
+    // 2. Return false.
+    return false;
+}
+
+// https://drafts.csswg.org/resize-observer-1/#has-skipped-observations-h
+bool Document::has_skipped_resize_observations()
+{
+    // 1. For each observer in [[resizeObservers]] run this step:
+    for (auto const& observer : m_resize_observers) {
+        // 1. If observer.[[skippedTargets]] is not empty, return true.
+        if (!observer->skipped_targets().is_empty())
+            return true;
+    }
+
+    // 2. Return false.
+    return false;
+}
+
 }
