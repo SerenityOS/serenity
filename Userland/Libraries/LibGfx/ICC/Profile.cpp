@@ -1219,14 +1219,21 @@ ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBy
     // Assumes a "normal" device_class() (i.e. not DeviceLink).
     VERIFY(number_of_components_in_color_space(connection_space()) == 3);
 
+    if (m_to_pcs_clut_cache.has_value() && m_to_pcs_clut_cache->key == color)
+        return m_to_pcs_clut_cache->value;
+
+    FloatVector3 result;
+
     switch (tag_data.type()) {
     case Lut16TagData::Type: {
         auto const& a_to_b = static_cast<Lut16TagData const&>(tag_data);
-        return a_to_b.evaluate(data_color_space(), connection_space(), color);
+        result = TRY(a_to_b.evaluate(data_color_space(), connection_space(), color));
+        break;
     }
     case Lut8TagData::Type: {
         auto const& a_to_b = static_cast<Lut8TagData const&>(tag_data);
-        return a_to_b.evaluate(data_color_space(), connection_space(), color);
+        result = TRY(a_to_b.evaluate(data_color_space(), connection_space(), color));
+        break;
     }
     case LutAToBTagData::Type: {
         auto const& a_to_b = static_cast<LutAToBTagData const&>(tag_data);
@@ -1236,10 +1243,19 @@ ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBy
         if (a_to_b.number_of_output_channels() != number_of_components_in_color_space(connection_space()))
             return Error::from_string_literal("ICC::Profile::to_pcs_a_to_b: mAB output channel count does not match profile connection space size");
 
-        return a_to_b.evaluate(connection_space(), color);
+        result = TRY(a_to_b.evaluate(connection_space(), color));
+        break;
     }
+    default:
+        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+
+    if (!m_to_pcs_clut_cache.has_value())
+        m_to_pcs_clut_cache = OneElementCLUTCache {};
+    m_to_pcs_clut_cache->key = Vector<u8, 4>(color);
+    m_to_pcs_clut_cache->value = result;
+
+    return result;
 }
 
 ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
