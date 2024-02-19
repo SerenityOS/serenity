@@ -715,7 +715,7 @@ void Tab::copy_link_url(URL const& url)
 
 void Tab::location_edit_return_pressed()
 {
-    navigate(ak_url_from_qurl(m_location_edit->text()));
+    navigate(ak_url_from_qstring(m_location_edit->text()));
 }
 
 void Tab::open_file()
