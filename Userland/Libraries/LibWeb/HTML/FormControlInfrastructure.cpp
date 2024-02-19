@@ -51,8 +51,6 @@ WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String co
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-the-form-data-set
 WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(JS::Realm& realm, HTMLFormElement& form, JS::GCPtr<HTMLElement> submitter, Optional<String> encoding)
 {
-    auto& vm = realm.vm();
-
     // 1. If form's constructing entry list is true, then return null.
     if (form.constructing_entry_list())
         return Optional<Vector<XHR::FormDataEntry>> {};
@@ -61,7 +59,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
     form.set_constructing_entry_list(true);
 
     // 3. Let controls be a list of all the submittable elements whose form owner is form, in tree order.
-    auto controls = TRY_OR_THROW_OOM(vm, form.get_submittable_elements());
+    auto controls = form.get_submittable_elements();
 
     // 4. Let entry list be a new empty entry list.
     Vector<XHR::FormDataEntry> entry_list;
