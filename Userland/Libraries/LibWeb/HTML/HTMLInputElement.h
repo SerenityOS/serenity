@@ -8,10 +8,12 @@
 
 #pragma once
 
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/FileAPI/FileList.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Layout/ImageProvider.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::HTML {
@@ -44,7 +46,8 @@ namespace Web::HTML {
 class HTMLInputElement final
     : public HTMLElement
     , public FormAssociatedElement
-    , public DOM::EditableTextNodeOwner {
+    , public DOM::EditableTextNodeOwner
+    , public Layout::ImageProvider {
     WEB_PLATFORM_OBJECT(HTMLInputElement, HTMLElement);
     JS_DECLARE_ALLOCATOR(HTMLInputElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLInputElement)
@@ -186,6 +189,14 @@ private:
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 
+    // ^Layout::ImageProvider
+    virtual bool is_image_available() const override;
+    virtual Optional<CSSPixels> intrinsic_width() const override;
+    virtual Optional<CSSPixels> intrinsic_height() const override;
+    virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;
+    virtual RefPtr<Gfx::ImmutableBitmap> current_image_bitmap(Gfx::IntSize = {}) const override;
+    virtual void set_visible_in_viewport(bool) override;
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -212,6 +223,7 @@ private:
     void set_checked_within_group();
 
     void handle_readonly_attribute(Optional<String> const& value);
+    WebIDL::ExceptionOr<void> handle_src_attribute(StringView value);
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     String value_sanitization_algorithm(String const&) const;
@@ -237,6 +249,11 @@ private:
 
     void update_slider_thumb_element();
     JS::GCPtr<DOM::Element> m_slider_thumb;
+
+    JS::GCPtr<DecodedImageData> image_data() const;
+    JS::GCPtr<SharedImageRequest> m_image_request;
+
+    Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-indeterminate
     bool m_indeterminate { false };
