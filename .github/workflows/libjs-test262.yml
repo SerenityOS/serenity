@@ -114,7 +114,8 @@ jobs:
             --test262 ../test262 \
             --test262-parser-tests ../test262-parser-tests \
             --results-json ../libjs-data/test262/results.json \
-            --per-file-output ../libjs-data/test262/per-file-master.json
+            --per-file-output ../libjs-data/test262/per-file-master.json \
+            --per-file-jit-output ../libjs-data/test262/per-file-master-jit.json
 
       - name: Run test-wasm
         working-directory: libjs-test262
@@ -145,6 +146,12 @@ jobs:
 
       - name: Compare test262 results
         run: ./libjs-test262/per_file_result_diff.py -o old-libjs-data/test262/per-file-master.json -n libjs-data/test262/per-file-master.json
+
+      - name: Compare test262 JIT results
+        run: |
+          if [ -f old-libjs-data/test262/per-file-master-jit.json ]; then
+            ./libjs-test262/per_file_result_diff.py -o old-libjs-data/test262/per-file-master-jit.json -n libjs-data/test262/per-file-master-jit.json
+          fi
 
       - name: Compare Wasm results
         run: ./libjs-test262/per_file_result_diff.py -o old-libjs-data/wasm/per-file-master.json -n libjs-data/wasm/per-file-master.json

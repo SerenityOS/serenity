@@ -7,6 +7,8 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/RegexTable.h>
+#include <LibJS/JIT/Compiler.h>
+#include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/SourceCode.h>
 
 namespace JS::Bytecode {
@@ -48,6 +50,15 @@ void Executable::dump() const
         block->dump(*this);
 
     warnln("");
+}
+
+JIT::NativeExecutable const* Executable::get_or_create_native_executable()
+{
+    if (!m_did_try_jitting) {
+        m_did_try_jitting = true;
+        m_native_executable = JIT::Compiler::compile(*this);
+    }
+    return m_native_executable;
 }
 
 }

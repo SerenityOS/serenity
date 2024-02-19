@@ -15,6 +15,7 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -973,26 +974,53 @@ struct [[gnu::packed]] NativeStackFrame {
 };
 #endif
 
-static Optional<UnrealizedSourceRange> get_source_range(ExecutionContext const* context)
+Vector<FlatPtr> VM::get_native_stack_trace() const
+{
+    Vector<FlatPtr> buffer;
+#if ARCH(X86_64)
+    // Manually walk the stack, because backtrace() does not traverse through JIT frames.
+    auto* frame = bit_cast<NativeStackFrame*>(__builtin_frame_address(0));
+    while (bit_cast<FlatPtr>(frame) < m_stack_info.top() && bit_cast<FlatPtr>(frame) >= m_stack_info.base()) {
+        buffer.append(frame->return_address);
+        frame = frame->prev;
+    }
+#endif
+    return buffer;
+}
+
+static Optional<UnrealizedSourceRange> get_source_range(ExecutionContext const* context, Vector<FlatPtr> const& native_stack)
 {
     // native function
     if (!context->executable)
         return {};
 
-    // Interpreter frame
-    if (context->instruction_stream_iterator.has_value())
-        return context->instruction_stream_iterator->source_range();
+    auto const* native_executable = context->executable->native_executable();
+    if (!native_executable) {
+        // Interpreter frame
+        if (context->instruction_stream_iterator.has_value())
+            return context->instruction_stream_iterator->source_range();
+        return {};
+    }
+
+    // JIT frame
+    for (auto address : native_stack) {
+        auto range = native_executable->get_source_range(*context->executable, address);
+        if (range.has_value())
+            return range;
+    }
+
     return {};
 }
 
 Vector<StackTraceElement> VM::stack_trace() const
 {
+    auto native_stack = get_native_stack_trace();
     Vector<StackTraceElement> stack_trace;
     for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; i--) {
         auto* context = m_execution_context_stack[i];
         stack_trace.append({
             .execution_context = context,
-            .source_range = get_source_range(context).value_or({}),
+            .source_range = get_source_range(context, native_stack).value_or({}),
         });
     }
 
