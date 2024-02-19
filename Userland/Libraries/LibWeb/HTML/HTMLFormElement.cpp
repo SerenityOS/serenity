@@ -265,6 +265,8 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
     // User agents should, in the absence of another specification defining this, act in a manner analogous to that defined
     // in this specification for similar schemes.
 
+    // AD-HOC: In accordance with the above paragraph, we implement file:// submission URLs the same as data: URLs.
+
     // This should have been handled above.
     VERIFY(method != MethodAttributeState::Dialog);
 
@@ -275,7 +277,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
             TRY_OR_THROW_OOM(vm, submit_as_entity_body(move(parsed_action), move(entry_list), encoding_type, move(encoding), *target_navigable, history_handling, options.user_involvement));
     } else if (scheme.is_one_of("ftp"sv, "javascript"sv)) {
         get_action_url(move(parsed_action), *target_navigable, history_handling, options.user_involvement);
-    } else if (scheme == "data"sv) {
+    } else if (scheme.is_one_of("data"sv, "file"sv)) {
         if (method == MethodAttributeState::GET)
             TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling, options.user_involvement));
         else
