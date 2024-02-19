@@ -623,7 +623,8 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
                                item:item];
         }
 
-        auto* event = Ladybird::create_context_menu_mouse_event(self, content_position);
+        auto device_pixel_ratio = m_web_view_bridge->device_pixel_ratio();
+        auto* event = Ladybird::create_context_menu_mouse_event(self, Gfx::IntPoint { content_position.x() / device_pixel_ratio, content_position.y() / device_pixel_ratio });
         [NSMenu popUpContextMenu:self.select_dropdown withEvent:event forView:self];
     };
 
