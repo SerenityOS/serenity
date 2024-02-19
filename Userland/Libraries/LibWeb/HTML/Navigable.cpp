@@ -2093,7 +2093,6 @@ void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig
     auto viewport_rect = page.css_to_device_rect(this->viewport_rect());
     Gfx::IntRect bitmap_rect { {}, viewport_rect.size().to_type<int>() };
 
-    document->update_layout();
     auto background_color = document->background_color();
 
     recording_painter.fill_rect(bitmap_rect, background_color);

@@ -590,6 +590,11 @@ public:
     virtual Vector<FlyString> supported_property_names() const override;
     Vector<JS::NonnullGCPtr<DOM::Element>> const& potentially_named_elements() const { return m_potentially_named_elements; }
 
+    void gather_active_observations_at_depth(size_t depth);
+    [[nodiscard]] size_t broadcast_active_resize_observations();
+    [[nodiscard]] bool has_active_resize_observations();
+    [[nodiscard]] bool has_skipped_resize_observations();
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
