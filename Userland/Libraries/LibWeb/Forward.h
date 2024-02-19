@@ -508,6 +508,7 @@ class ButtonBox;
 class CheckBox;
 class FlexFormattingContext;
 class FormattingContext;
+class ImageBox;
 class InlineFormattingContext;
 class Label;
 class LabelableNode;
