@@ -142,7 +142,7 @@ class Configuration:
     # QEMU -append
     kernel_cmdline: list[str] = field(default_factory=lambda: ["hello"])
     # QEMU -m
-    ram_size: str | None = "1G"
+    ram_size: str | None = "2G"
     # QEMU -cpu
     qemu_cpu: str | None = "max"
     # QEMU -smp
@@ -318,7 +318,7 @@ def detect_bochs() -> Path:
 
 
 def detect_ram_size() -> str | None:
-    return environ.get("SERENITY_RAM_SIZE", "1G")
+    return environ.get("SERENITY_RAM_SIZE", "2G")
 
 
 def set_up_qemu_binary(config: Configuration):
