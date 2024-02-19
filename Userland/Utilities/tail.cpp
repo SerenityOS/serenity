@@ -11,6 +11,20 @@
 #include <LibCore/FileWatcher.h>
 #include <LibCore/System.h>
 
+#define TRY_OR_REPORT_ERROR(expression)                                                              \
+    ({                                                                                               \
+        /* Ignore -Wshadow to allow nesting the macro. */                                            \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
+            auto&& _temporary_result = (expression));                                                \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        if (_temporary_result.is_error()) [[unlikely]] {                                             \
+            warnln("{}", _temporary_result.error().string_literal());                                \
+            event_loop.quit(_temporary_result.error().code());                                       \
+        }                                                                                            \
+        _temporary_result.release_value();                                                           \
+    })
+
 #define DEFAULT_LINE_COUNT 10
 
 static ErrorOr<void> tail_from_pos(Core::File& file, off_t startline)
@@ -166,42 +180,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto watcher = TRY(Core::FileWatcher::create());
         watcher->on_change = [&](Core::FileWatcherEvent const& event) {
             if (event.type == Core::FileWatcherEvent::Type::ContentModified) {
-                auto maybe_current_size = f->size();
-                if (maybe_current_size.is_error()) {
-                    auto error = maybe_current_size.release_error();
-                    warnln(error.string_literal());
-                    event_loop.quit(error.code());
-                    return;
-                }
-                auto current_size = maybe_current_size.value();
+                auto current_size = TRY_OR_REPORT_ERROR(f->size());
                 if (current_size < file_size) {
                     warnln("{}: file truncated", event.event_path);
-                    auto maybe_seek_error = f->seek(0, SeekMode::SetPosition);
-                    if (maybe_seek_error.is_error()) {
-                        auto error = maybe_seek_error.release_error();
-                        warnln(error.string_literal());
-                        event_loop.quit(error.code());
-                        return;
-                    }
+                    TRY_OR_REPORT_ERROR(f->seek(0, SeekMode::SetPosition));
                 }
                 file_size = current_size;
-                auto buffer_or_error = f->read_until_eof();
-                if (buffer_or_error.is_error()) {
-                    auto error = buffer_or_error.release_error();
-                    warnln(error.string_literal());
-                    event_loop.quit(error.code());
-                    return;
-                }
-                auto bytes = buffer_or_error.value().bytes();
+                auto bytes = TRY_OR_REPORT_ERROR(f->read_until_eof());
                 out("{}", StringView { bytes });
-
-                auto potential_error = f->seek(0, SeekMode::FromEndPosition);
-                if (potential_error.is_error()) {
-                    auto error = potential_error.release_error();
-                    warnln(error.string_literal());
-                    event_loop.quit(error.code());
-                    return;
-                }
+                TRY_OR_REPORT_ERROR(f->seek(0, SeekMode::FromEndPosition));
             }
         };
         TRY(watcher->add_watch(file, Core::FileWatcherEvent::Type::ContentModified));
