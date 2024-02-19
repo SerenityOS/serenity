@@ -321,6 +321,12 @@ private:
     FloatMatrix3x3 rgb_to_xyz_matrix() const;
 
     mutable Optional<FloatMatrix3x3> m_cached_xyz_to_rgb_matrix;
+
+    struct OneElementCLUTCache {
+        Vector<u8, 4> key;
+        FloatVector3 value;
+    };
+    mutable Optional<OneElementCLUTCache> m_to_pcs_clut_cache;
 };
 
 }
