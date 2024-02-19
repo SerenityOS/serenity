@@ -1,15 +1,10 @@
-<script src="../include.js"></script>
 <script>
     function filename(path) {
         url = new URL(path)
         return url.pathname.split('/').pop() + url.hash
     }
-    asyncTest(async done => {
-    if (window.self === window.top) {
-        test(() => {});
-        return;
-    }
 
+    (async () => {
     try {
         parent.postMessage(`Initial history length is ${navigation.entries().length}`, "*");
 
@@ -74,10 +69,10 @@
         // })
 
         // parent.postMessage(`History length after forward is ${navigation.entries().length}`, "*");
-        
+
     } catch (e) {
         parent.postMessage("ERROR:" + e, "*");
     }
     parent.postMessage("DONE", "*");
-    });
+    })();
 </script>
