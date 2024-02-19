@@ -194,6 +194,7 @@ private:
 
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // ^Layout::ImageProvider
     virtual bool is_image_available() const override;

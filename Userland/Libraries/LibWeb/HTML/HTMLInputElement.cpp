@@ -26,6 +26,7 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/Numbers.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/SharedImageRequest.h>
 #include <LibWeb/HTML/Window.h>
@@ -1309,6 +1310,24 @@ i32 HTMLInputElement::default_tab_index_value() const
 {
     // See the base function for the spec comments.
     return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):the-input-element-11
+void HTMLInputElement::apply_presentational_hints(CSS::StyleProperties& style) const
+{
+    // The input element supports dimension attributes.
+    if (type_state() != TypeAttributeState::ImageButton)
+        return;
+
+    for_each_attribute([&](auto& name, auto& value) {
+        if (name == HTML::AttributeNames::width) {
+            if (auto parsed_value = parse_dimension_value(value))
+                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
+        } else if (name == HTML::AttributeNames::height) {
+            if (auto parsed_value = parse_dimension_value(value))
+                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
+        }
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
