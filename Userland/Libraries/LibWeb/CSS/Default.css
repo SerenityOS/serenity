@@ -26,7 +26,7 @@ label {
 }
 
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
-input:not([type=submit], input[type=button], input[type=reset], input[type=color], input[type=checkbox], input[type=radio], input[type=range]), textarea {
+input:not([type=submit], input[type=button], input[type=image], input[type=reset], input[type=color], input[type=checkbox], input[type=radio], input[type=range]), textarea {
     border: 1px solid ButtonBorder;
     min-height: 16px;
     width: attr(size ch, 20ch);
@@ -53,6 +53,10 @@ button, input[type=submit], input[type=button], input[type=reset], select {
     border: 1px solid ButtonBorder;
     color: ButtonText;
     cursor: default;
+}
+
+input[type=image] {
+    cursor: pointer;
 }
 
 button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover, select:hover {

@@ -17,20 +17,24 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Dates.h>
+#include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/SharedImageRequest.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
+#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/RadioButton.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
@@ -66,6 +70,7 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group);
     visitor.visit(m_selected_files);
     visitor.visit(m_slider_thumb);
+    visitor.visit(m_image_request);
 }
 
 JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -75,6 +80,9 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
 
     if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload)
         return heap().allocate_without_realm<Layout::ButtonBox>(document(), *this, move(style));
+
+    if (type_state() == TypeAttributeState::ImageButton)
+        return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *this);
 
     if (type_state() == TypeAttributeState::Checkbox)
         return heap().allocate_without_realm<Layout::CheckBox>(document(), *this, move(style));
@@ -284,6 +292,23 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior(DOM::E
         TRY(form->submit_form(*this, { .user_involvement = user_navigation_involvement(event) }));
     } else if (type_state() == TypeAttributeState::FileUpload || type_state() == TypeAttributeState::Color) {
         show_the_picker_if_applicable(*this);
+    }
+    // https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):input-activation-behavior
+    else if (type_state() == TypeAttributeState::ImageButton) {
+        // 1. If the element does not have a form owner, then return.
+        auto* form = this->form();
+        if (!form)
+            return {};
+
+        // 2. If the element's node document is not fully active, then return.
+        if (!document().is_fully_active())
+            return {};
+
+        // FIXME: 3. If the user activated the control while explicitly selecting a coordinate, then set the element's selected
+        //           coordinate to that coordinate.
+
+        // 4. Submit the element's form owner from the element with userInvolvement set to event's user navigation involvement.
+        TRY(form->submit_form(*this, { .user_involvement = user_navigation_involvement(event) }));
     }
 
     return {};
@@ -869,7 +894,75 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
             m_placeholder_text_node->set_data(placeholder());
     } else if (name == HTML::AttributeNames::readonly) {
         handle_readonly_attribute(value);
+    } else if (name == HTML::AttributeNames::src) {
+        handle_src_attribute(value.value_or({})).release_value_but_fixme_should_propagate_errors();
+    } else if (name == HTML::AttributeNames::alt) {
+        if (layout_node() && type_state() == TypeAttributeState::ImageButton)
+            did_update_alt_text(verify_cast<Layout::ImageBox>(*layout_node()));
     }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-src
+WebIDL::ExceptionOr<void> HTMLInputElement::handle_src_attribute(StringView value)
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    if (type_state() != TypeAttributeState::ImageButton)
+        return {};
+
+    // 1. Let url be the result of encoding-parsing a URL given the src attribute's value, relative to the element's
+    //    node document.
+    auto url = document().parse_url(value);
+
+    // 2. If url is failure, then return.
+    if (!url.is_valid())
+        return {};
+
+    // 3. Let request be a new request whose URL is url, client is the element's node document's relevant settings
+    //    object, destination is "image", initiator type is "input", credentials mode is "include", and whose
+    //    use-URL-credentials flag is set.
+    auto request = Fetch::Infrastructure::Request::create(vm);
+    request->set_url(move(url));
+    request->set_client(&document().relevant_settings_object());
+    request->set_destination(Fetch::Infrastructure::Request::Destination::Image);
+    request->set_initiator_type(Fetch::Infrastructure::Request::InitiatorType::Input);
+    request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
+    request->set_use_url_credentials(true);
+
+    // 4. Fetch request, with processResponseEndOfBody set to the following step given response response:
+    m_image_request = SharedImageRequest::get_or_create(realm, document().page(), request->url());
+    m_image_request->add_callbacks(
+        [this, &realm]() {
+            // 1. If the download was successful and the image is available, queue an element task on the user interaction
+            //    task source given the input element to fire an event named load at the input element.
+            queue_an_element_task(HTML::Task::Source::UserInteraction, [this, &realm]() {
+                dispatch_event(DOM::Event::create(realm, HTML::EventNames::load));
+            });
+
+            m_load_event_delayer.clear();
+            document().invalidate_layout();
+        },
+        [this, &realm]() {
+            // 2. Otherwise, if the fetching process fails without a response from the remote server, or completes but the
+            //    image is not a valid or supported image, then queue an element task on the user interaction task source
+            //    given the input element to fire an event named error on the input element.
+            queue_an_element_task(HTML::Task::Source::UserInteraction, [this, &realm]() {
+                dispatch_event(DOM::Event::create(realm, HTML::EventNames::error));
+            });
+
+            m_load_event_delayer.clear();
+        });
+
+    if (m_image_request->needs_fetching()) {
+        m_image_request->fetch_image(realm, request);
+    }
+
+    // Fetching the image must delay the load event of the element's node document until the task that is queued by the
+    // networking task source once the resource has been fetched (defined below) has been run.
+    m_load_event_delayer.emplace(document());
+
+    return {};
 }
 
 HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(StringView type)
@@ -1159,6 +1252,51 @@ void HTMLInputElement::legacy_cancelled_activation_behavior()
 void HTMLInputElement::legacy_cancelled_activation_behavior_was_not_called()
 {
     m_legacy_pre_activation_behavior_checked_element_in_group = nullptr;
+}
+
+JS::GCPtr<DecodedImageData> HTMLInputElement::image_data() const
+{
+    if (m_image_request)
+        return m_image_request->image_data();
+    return nullptr;
+}
+
+bool HTMLInputElement::is_image_available() const
+{
+    return image_data() != nullptr;
+}
+
+Optional<CSSPixels> HTMLInputElement::intrinsic_width() const
+{
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_width();
+    return {};
+}
+
+Optional<CSSPixels> HTMLInputElement::intrinsic_height() const
+{
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_height();
+    return {};
+}
+
+Optional<CSSPixelFraction> HTMLInputElement::intrinsic_aspect_ratio() const
+{
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_aspect_ratio();
+    return {};
+}
+
+RefPtr<Gfx::ImmutableBitmap> HTMLInputElement::current_image_bitmap(Gfx::IntSize size) const
+{
+    if (auto image_data = this->image_data())
+        return image_data->bitmap(0, size);
+    return nullptr;
+}
+
+void HTMLInputElement::set_visible_in_viewport(bool)
+{
+    // FIXME: Loosen grip on image data when it's not visible, e.g via volatile memory.
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
