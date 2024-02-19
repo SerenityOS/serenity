@@ -439,6 +439,7 @@ set(SOURCES
     Layout/FrameBox.cpp
     Layout/GridFormattingContext.cpp
     Layout/ImageBox.cpp
+    Layout/ImageProvider.cpp
     Layout/Viewport.cpp
     Layout/InlineFormattingContext.cpp
     Layout/InlineLevelIterator.cpp

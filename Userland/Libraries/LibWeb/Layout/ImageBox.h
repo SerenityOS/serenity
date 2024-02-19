@@ -29,7 +29,7 @@ public:
     auto const& image_provider() const { return m_image_provider; }
     auto& image_provider() { return m_image_provider; }
 
-    void dom_node_did_update_alt_text(Badge<HTML::HTMLImageElement>);
+    void dom_node_did_update_alt_text(Badge<ImageProvider>);
 
 private:
     ImageProvider const& m_image_provider;

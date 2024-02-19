@@ -369,6 +369,11 @@ JS::GCPtr<DecodedImageData> HTMLObjectElement::image_data() const
     return m_image_request->image_data();
 }
 
+bool HTMLObjectElement::is_image_available() const
+{
+    return image_data() != nullptr;
+}
+
 Optional<CSSPixels> HTMLObjectElement::intrinsic_width() const
 {
     if (auto image_data = this->image_data())

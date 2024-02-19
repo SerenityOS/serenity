@@ -53,7 +53,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     if (phase == PaintPhase::Foreground) {
         auto image_rect = context.rounded_device_rect(absolute_rect());
         if (layout_box().renders_as_alt_text()) {
-            auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
+            auto const& image_element = verify_cast<HTML::HTMLElement>(*dom_node());
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
             context.recording_painter().paint_frame(enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
             auto alt = image_element.get_attribute_value(HTML::AttributeNames::alt);
