@@ -6,6 +6,7 @@
 
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/Iterator.h>
+#include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/KeyframeEffect.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -580,6 +581,36 @@ void KeyframeEffect::generate_initial_and_final_frames(RefPtr<KeyFrameSet> keyfr
         if (!final_keyframe->resolved_properties.contains(property))
             final_keyframe->resolved_properties.set(property, KeyFrameSet::UseInitial {});
     }
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-composite-order
+int KeyframeEffect::composite_order(JS::NonnullGCPtr<KeyframeEffect> a, JS::NonnullGCPtr<KeyframeEffect> b)
+{
+    // 1. Let the associated animation of an animation effect be the animation associated with the animation effect.
+    auto a_animation = a->associated_animation();
+    auto b_animation = b->associated_animation();
+
+    // 2. Sort A and B by applying the following conditions in turn until the order is resolved,
+
+    //    1. If A and B’s associated animations differ by class, sort by any inter-class composite order defined for
+    //       the corresponding classes.
+    auto a_class = a_animation->animation_class();
+    auto b_class = b_animation->animation_class();
+
+    // From https://www.w3.org/TR/css-animations-2/#animation-composite-order:
+    // "CSS Animations with an owning element have a later composite order than CSS Transitions but an earlier
+    // composite order than animations without a specific animation class."
+    if (a_class != b_class)
+        return to_underlying(a_class) - to_underlying(b_class);
+
+    //    2. If A and B are still not sorted, sort by any class-specific composite order defined by the common class of
+    //       A and B’s associated animations.
+    if (auto order = a_animation->class_specific_composite_order(*b_animation); order.has_value())
+        return order.value();
+
+    //    3. If A and B are still not sorted, sort by the position of their associated animations in the global
+    //       animation list.
+    return a_animation->global_animation_list_order() - b_animation->global_animation_list_order();
 }
 
 JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
