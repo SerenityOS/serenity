@@ -81,6 +81,8 @@ public:
     virtual AnimationClass animation_class() const { return AnimationClass::None; }
     virtual Optional<int> class_specific_composite_order(JS::NonnullGCPtr<Animation>) const { return {}; }
 
+    unsigned int global_animation_list_order() const { return m_global_animation_list_order; }
+
 protected:
     Animation(JS::Realm&);
 
@@ -118,6 +120,9 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-id
     FlyString m_id;
+
+    // https://www.w3.org/TR/web-animations-1/#global-animation-list
+    unsigned int m_global_animation_list_order { 0 };
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-effect
     JS::GCPtr<AnimationEffect> m_effect;

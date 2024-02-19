@@ -62,6 +62,12 @@ Animations::AnimationClass CSSAnimation::animation_class() const
 CSSAnimation::CSSAnimation(JS::Realm& realm)
     : Animations::Animation(realm)
 {
+    // FIXME:
+    // CSS Animations generated using the markup defined in this specification are not added to the global animation
+    // list when they are created. Instead, these animations are appended to the global animation list at the first
+    // moment when they transition out of the idle play state after being disassociated from their owning element. CSS
+    // Animations that have been disassociated from their owning element but are still idle do not have a defined
+    // composite order.
 }
 
 void CSSAnimation::initialize(JS::Realm& realm)

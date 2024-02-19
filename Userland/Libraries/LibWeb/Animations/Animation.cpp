@@ -844,6 +844,8 @@ JS::NonnullGCPtr<WebIDL::Promise> Animation::current_finished_promise() const
 Animation::Animation(JS::Realm& realm)
     : DOM::EventTarget(realm)
 {
+    static unsigned int next_animation_list_order = 0;
+    m_global_animation_list_order = next_animation_list_order++;
 }
 
 void Animation::initialize(JS::Realm& realm)
