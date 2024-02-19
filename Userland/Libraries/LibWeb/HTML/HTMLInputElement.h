@@ -105,8 +105,8 @@ public:
     WebIDL::ExceptionOr<void> set_size(unsigned value);
 
     struct SelectedCoordinate {
-        double x { 0.0 };
-        double y { 0.0 };
+        int x { 0 };
+        int y { 0 };
     };
     SelectedCoordinate selected_coordinate() const { return m_selected_coordinate; }
 
