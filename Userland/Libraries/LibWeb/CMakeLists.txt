@@ -539,7 +539,10 @@ set(SOURCES
     ReferrerPolicy/AbstractOperations.cpp
     ReferrerPolicy/ReferrerPolicy.cpp
     RequestIdleCallback/IdleDeadline.cpp
+    ResizeObserver/ResizeObservation.cpp
     ResizeObserver/ResizeObserver.cpp
+    ResizeObserver/ResizeObserverEntry.cpp
+    ResizeObserver/ResizeObserverSize.cpp
     SecureContexts/AbstractOperations.cpp
     SRI/SRI.cpp
     Streams/AbstractOperations.cpp

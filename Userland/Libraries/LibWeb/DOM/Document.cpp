@@ -95,6 +95,8 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
+#include <LibWeb/ResizeObserver/ResizeObserver.h>
+#include <LibWeb/ResizeObserver/ResizeObserverEntry.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -451,6 +453,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
         visitor.visit(target);
 
     for (auto& observer : m_intersection_observers)
+        visitor.visit(observer);
+
+    for (auto& observer : m_resize_observers)
         visitor.visit(observer);
 
     for (auto& image : m_shared_image_requests)
@@ -3159,6 +3164,18 @@ void Document::unregister_intersection_observer(Badge<IntersectionObserver::Inte
 {
     bool was_removed = m_intersection_observers.remove(observer);
     VERIFY(was_removed);
+}
+
+void Document::register_resize_observer(Badge<ResizeObserver::ResizeObserver>, ResizeObserver::ResizeObserver& observer)
+{
+    m_resize_observers.append(observer);
+}
+
+void Document::unregister_resize_observer(Badge<ResizeObserver::ResizeObserver>, ResizeObserver::ResizeObserver& observer)
+{
+    m_resize_observers.remove_first_matching([&](auto& registered_observer) {
+        return registered_observer.ptr() == &observer;
+    });
 }
 
 // https://www.w3.org/TR/intersection-observer/#queue-an-intersection-observer-task

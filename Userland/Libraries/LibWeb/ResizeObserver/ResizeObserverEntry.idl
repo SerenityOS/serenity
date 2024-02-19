@@ -1,0 +1,15 @@
+#import <Geometry/DOMRectReadOnly.idl>
+#import <DOM/Element.idl>
+
+// https://drafts.csswg.org/resize-observer-1/#resize-observer-entry-interface
+[Exposed=Window]
+interface ResizeObserverEntry {
+    readonly attribute Element target;
+    readonly attribute DOMRectReadOnly contentRect;
+    // FIXME: Return FrozenArray<ResizeObserverSize> instead of any.
+    [ImplementedAs=border_box_size_js_array] readonly attribute any borderBoxSize;
+    // FIXME: Return FrozenArray<ResizeObserverSize> instead of any.
+    [ImplementedAs=content_box_size_js_array] readonly attribute any contentBoxSize;
+    // FIXME: Return FrozenArray<ResizeObserverSize> instead of any.
+    [ImplementedAs=device_pixel_content_box_size_js_array] readonly attribute any devicePixelContentBoxSize;
+};
