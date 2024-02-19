@@ -63,12 +63,16 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& do
     return bitmap;
 }
 
-static PDF::PDFErrorOr<void> save_rendered_page(PDF::Document& document, int page_index, int repeats, StringView out_path)
+static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page_to_memory(PDF::Document& document, int page_index, int repeats)
 {
     auto bitmap = TRY(render_page(document, page_index));
     for (int i = 0; i < repeats - 1; ++i)
         (void)TRY(render_page(document, page_index));
+    return bitmap;
+}
 
+static PDF::PDFErrorOr<void> save_rendered_page(NonnullRefPtr<Gfx::Bitmap> bitmap, StringView out_path)
+{
     if (!out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
         return Error::from_string_view("can only save to .png files"sv);
 
@@ -199,6 +203,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     StringView render_path;
     args_parser.add_option(render_path, "Path to render PDF page to", "render", {}, "FILE.png");
 
+    bool render_bench = false;
+    args_parser.add_option(render_bench, "Render to memory, then throw away result (for profiling)", "render-bench", {});
+
     u32 render_repeats = 1;
     args_parser.add_option(render_repeats, "Number of times to render page (for profiling)", "render-repeats", {}, "N");
 
@@ -222,7 +229,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     TRY(document->initialize());
 
 #if !defined(AK_OS_SERENITY)
-    if (debugging_stats || !render_path.is_empty()) {
+    if (debugging_stats || !render_path.is_empty() || render_bench) {
         // Get from Build/lagom/bin/pdf to Build/lagom/Root/res.
         auto source_root = LexicalPath(MUST(Core::System::current_executable_path())).parent().parent().string();
         Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(TRY(String::formatted("{}/Root/res", source_root))));
@@ -253,8 +260,10 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
         return 0;
     }
 
-    if (!render_path.is_empty()) {
-        TRY(save_rendered_page(document, page_index, render_repeats, render_path));
+    if (!render_path.is_empty() || render_bench) {
+        auto bitmap = TRY(render_page_to_memory(document, page_index, render_repeats));
+        if (!render_path.is_empty())
+            TRY(save_rendered_page(move(bitmap), render_path));
         return 0;
     }
 
