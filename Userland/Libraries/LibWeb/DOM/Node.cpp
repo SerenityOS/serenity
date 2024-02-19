@@ -974,6 +974,12 @@ void Node::inserted()
     set_needs_style_update(true);
 }
 
+void Node::removed_from(Node*)
+{
+    m_layout_node = nullptr;
+    m_paintable = nullptr;
+}
+
 ParentNode* Node::parent_or_shadow_host()
 {
     if (is<ShadowRoot>(*this))
