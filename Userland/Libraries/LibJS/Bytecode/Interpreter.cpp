@@ -15,8 +15,6 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
-#include <LibJS/JIT/Compiler.h>
-#include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -373,21 +371,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
 
     vm().execution_context_stack().last()->executable = &executable;
 
-    if (auto native_executable = executable.get_or_create_native_executable()) {
-        auto block_index = 0;
-        if (entry_point)
-            block_index = executable.basic_blocks.find_first_index_if([&](auto const& block) { return block.ptr() == entry_point; }).value();
-        native_executable->run(vm(), block_index);
-
-#if 0
-        for (size_t i = 0; i < vm().running_execution_context().local_variables.size(); ++i) {
-            dbgln("%{}: {}", i, vm().running_execution_context().local_variables[i]);
-        }
-#endif
-
-    } else {
-        run_bytecode();
-    }
+    run_bytecode();
 
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
 

@@ -24,8 +24,6 @@ set(SOURCES
     Heap/Heap.cpp
     Heap/HeapBlock.cpp
     Heap/MarkedVector.cpp
-    JIT/Compiler.cpp
-    JIT/NativeExecutable.cpp
     Lexer.cpp
     MarkupGenerator.cpp
     Module.cpp
@@ -269,7 +267,7 @@ set(SOURCES
 )
 
 serenity_lib(LibJS js)
-target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode LibTimeZone LibJIT)
+target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode LibTimeZone)
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
     target_link_libraries(LibJS PRIVATE LibX86)
 endif()

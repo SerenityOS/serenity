@@ -286,8 +286,6 @@ private:
 
     void set_well_known_symbols(WellKnownSymbols well_known_symbols) { m_well_known_symbols = move(well_known_symbols); }
 
-    Vector<FlatPtr> get_native_stack_trace() const;
-
     HashMap<String, GCPtr<PrimitiveString>> m_string_cache;
     HashMap<ByteString, GCPtr<PrimitiveString>> m_byte_string_cache;
 
