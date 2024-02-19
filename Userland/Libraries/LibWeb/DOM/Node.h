@@ -187,7 +187,7 @@ public:
     Element const* parent_element() const;
 
     virtual void inserted();
-    virtual void removed_from(Node*) { }
+    virtual void removed_from(Node*);
     virtual void children_changed() { }
     virtual void adopted_from(Document&) { }
     virtual void cloned(Node&, bool) {};
