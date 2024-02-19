@@ -88,13 +88,32 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
 
         // 2. If the field element is an input element whose type attribute is in the Image Button state, then:
         if (auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); input_element && input_element->type_state() == HTMLInputElement::TypeAttributeState::ImageButton) {
-            // FIXME: 1. If the field element has a name attribute specified and its value is not the empty string, let name be that value followed by a single U+002E FULL STOP character (.). Otherwise, let name be the empty string.
-            // FIXME: 2. Let namex be the string consisting of the concatenation of name and a single U0078 LATIN SMALL LETTER X character (x).
-            // FIXME: 3. Let namey be the string consisting of the concatenation of name and a single U+0079 LATIN SMALL LETTER Y character (y).
-            // FIXME: 4. The field element is submitter, and before this algorithm was invoked the user indicated a coordinate. Let x be the x-component of the coordinate selected by the user, and let y be the y-component of the coordinate selected by the user.
-            // FIXME: 5. Create an entry with namex and x, and append it to entry list.
-            // FIXME: 6. Create an entry with namey and y, and append it to entry list.
-            // 7. Continue.
+            // 1. If the field element is not submitter, then continue.
+            if (input_element != submitter.ptr())
+                continue;
+
+            // 2. If the field element has a name attribute specified and its value is not the empty string, let name be
+            //    that value followed by U+002E (.). Otherwise, let name be the empty string.
+            String name;
+            if (auto value = input_element->get_attribute(AttributeNames::name); value.has_value() && !value->is_empty())
+                name = MUST(String::formatted("{}.", *value));
+
+            // 3. Let namex be the concatenation of name and U+0078 (x).
+            auto name_x = MUST(String::formatted("{}x", name));
+
+            // 4. Let namey be the concatenation of name and U+0079 (y).
+            auto name_y = MUST(String::formatted("{}y", name));
+
+            // 5. Let (x, y) be the selected coordinate.
+            auto [x, y] = input_element->selected_coordinate();
+
+            // 6. Create an entry with namex and x, and append it to entry list.
+            entry_list.append(XHR::FormDataEntry { .name = move(name_x), .value = MUST(String::number(x)) });
+
+            // 7. Create an entry with namey and y, and append it to entry list.
+            entry_list.append(XHR::FormDataEntry { .name = move(name_y), .value = MUST(String::number(y)) });
+
+            // 8. Continue.
             continue;
         }
 

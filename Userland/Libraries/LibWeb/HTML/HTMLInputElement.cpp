@@ -39,6 +39,7 @@
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -304,8 +305,12 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior(DOM::E
         if (!document().is_fully_active())
             return {};
 
-        // FIXME: 3. If the user activated the control while explicitly selecting a coordinate, then set the element's selected
-        //           coordinate to that coordinate.
+        // 3. If the user activated the control while explicitly selecting a coordinate, then set the element's selected
+        //    coordinate to that coordinate.
+        if (event.is_trusted() && is<UIEvents::MouseEvent>(event)) {
+            auto const& mouse_event = static_cast<UIEvents::MouseEvent const&>(event);
+            m_selected_coordinate = { mouse_event.offset_x(), mouse_event.offset_y() };
+        }
 
         // 4. Submit the element's form owner from the element with userInvolvement set to event's user navigation involvement.
         TRY(form->submit_form(*this, { .user_involvement = user_navigation_involvement(event) }));

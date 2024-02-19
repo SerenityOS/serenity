@@ -189,12 +189,22 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
         // 3. Let result be null.
         Optional<String> result;
 
-        // FIXME: 4. If submitter is an input element whose type attribute is in the Image Button state, then:
-        //           1. Let (x, y) be the selected coordinate.
-        //           2. Set result to the concatenation of x, ",", and y.
+        // 4. If submitter is an input element whose type attribute is in the Image Button state, then:
+        if (is<HTMLInputElement>(*submitter)) {
+            auto const& input_element = static_cast<HTMLInputElement const&>(*submitter);
+
+            if (input_element.type_state() == HTMLInputElement::TypeAttributeState::ImageButton) {
+                // 1. Let (x, y) be the selected coordinate.
+                auto [x, y] = input_element.selected_coordinate();
+
+                // 2. Set result to the concatenation of x, ",", and y.
+                result = MUST(String::formatted("{},{}", x, y));
+            }
+        }
 
         // 5. Otherwise, if submitter has a value, then set result to that value.
-        result = submitter->get_attribute_value(AttributeNames::value);
+        if (!result.has_value())
+            result = submitter->get_attribute_value(AttributeNames::value);
 
         // 6. Close the dialog subject with result.
         subject->close(move(result));

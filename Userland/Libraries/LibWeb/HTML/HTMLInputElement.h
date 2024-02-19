@@ -104,6 +104,12 @@ public:
     unsigned size() const;
     WebIDL::ExceptionOr<void> set_size(unsigned value);
 
+    struct SelectedCoordinate {
+        double x { 0.0 };
+        double y { 0.0 };
+    };
+    SelectedCoordinate selected_coordinate() const { return m_selected_coordinate; }
+
     JS::Object* value_as_date() const;
     WebIDL::ExceptionOr<void> set_value_as_date(Optional<JS::Handle<JS::Object>> const&);
 
@@ -252,6 +258,7 @@ private:
 
     JS::GCPtr<DecodedImageData> image_data() const;
     JS::GCPtr<SharedImageRequest> m_image_request;
+    SelectedCoordinate m_selected_coordinate;
 
     Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;
 
