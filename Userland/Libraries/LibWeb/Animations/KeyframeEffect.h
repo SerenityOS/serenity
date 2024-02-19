@@ -69,6 +69,8 @@ public:
     };
     static void generate_initial_and_final_frames(RefPtr<KeyFrameSet>, HashTable<CSS::PropertyID> const& animated_properties);
 
+    static int composite_order(JS::NonnullGCPtr<KeyframeEffect>, JS::NonnullGCPtr<KeyframeEffect>);
+
     static JS::NonnullGCPtr<KeyframeEffect> create(JS::Realm&);
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> construct_impl(
