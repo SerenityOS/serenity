@@ -19,10 +19,6 @@
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 
-namespace JS::JIT {
-class NativeExecutable;
-}
-
 namespace JS::Bytecode {
 
 struct PropertyLookupCache {
@@ -82,13 +78,6 @@ public:
     DeprecatedFlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
 
     void dump() const;
-
-    JIT::NativeExecutable const* get_or_create_native_executable();
-    JIT::NativeExecutable const* native_executable() const { return m_native_executable; }
-
-private:
-    OwnPtr<JIT::NativeExecutable> m_native_executable;
-    bool m_did_try_jitting { false };
 };
 
 }
