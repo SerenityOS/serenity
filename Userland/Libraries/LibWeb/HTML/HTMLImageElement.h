@@ -85,6 +85,7 @@ public:
     void upgrade_pending_request_to_current_request();
 
     // ^Layout::ImageProvider
+    virtual bool is_image_available() const override;
     virtual Optional<CSSPixels> intrinsic_width() const override;
     virtual Optional<CSSPixels> intrinsic_height() const override;
     virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;

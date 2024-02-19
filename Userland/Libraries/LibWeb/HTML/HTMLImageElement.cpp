@@ -109,7 +109,7 @@ void HTMLImageElement::form_associated_element_attribute_changed(FlyString const
 
     if (name == HTML::AttributeNames::alt) {
         if (layout_node())
-            verify_cast<Layout::ImageBox>(*layout_node()).dom_node_did_update_alt_text({});
+            did_update_alt_text(verify_cast<Layout::ImageBox>(*layout_node()));
     }
 }
 
@@ -128,6 +128,11 @@ RefPtr<Gfx::Bitmap const> HTMLImageElement::bitmap() const
     if (auto immutable_bitmap = this->immutable_bitmap())
         return immutable_bitmap->bitmap();
     return {};
+}
+
+bool HTMLImageElement::is_image_available() const
+{
+    return m_current_request && m_current_request->is_available();
 }
 
 Optional<CSSPixels> HTMLImageElement::intrinsic_width() const
