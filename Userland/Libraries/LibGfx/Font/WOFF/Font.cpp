@@ -158,7 +158,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     if (header.total_sfnt_size != expected_total_sfnt_size)
         return Error::from_string_literal("Invalid WOFF total sfnt size");
 
-    auto input_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_buffer.bytes(), index));
+    auto input_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_buffer.bytes(), { .index = index }));
     auto font = adopt_ref(*new Font(input_font, move(font_buffer)));
     return font;
 }

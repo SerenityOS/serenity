@@ -26,12 +26,19 @@ public:
     virtual u32 glyph_id_for_code_point(u32) const = 0;
 };
 
+// This is not a nested struct to work around https://llvm.org/PR36684
+struct FontOptions {
+    unsigned index { 0 };
+    OwnPtr<CharCodeToGlyphIndex> external_cmap {};
+};
+
 class Font : public Gfx::VectorFont {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
+    using Options = FontOptions;
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_resource(Core::Resource const&, unsigned index = 0);
-    static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(ReadonlyBytes bytes, unsigned index = 0, OwnPtr<CharCodeToGlyphIndex> external_cmap = {});
+    static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(ReadonlyBytes bytes, Options options = {});
 
     virtual Gfx::ScaledFontMetrics metrics(float x_scale, float y_scale) const override;
     virtual Gfx::ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const override;
@@ -74,7 +81,7 @@ private:
 
     EmbeddedBitmapData embedded_bitmap_data_for_glyph(u32 glyph_id) const;
 
-    static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index, OwnPtr<CharCodeToGlyphIndex> external_cmap);
+    static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, u32 offset, Options options);
 
     Font(
         Head&& head,

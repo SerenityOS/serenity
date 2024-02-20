@@ -151,12 +151,12 @@ float be_fword(u8 const* ptr)
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& resource, unsigned index)
 {
-    auto font = TRY(try_load_from_externally_owned_memory(resource.data(), index));
+    auto font = TRY(try_load_from_externally_owned_memory(resource.data(), { .index = index }));
     font->m_resource = resource;
     return font;
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned index, OwnPtr<CharCodeToGlyphIndex> external_cmap)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, Options options)
 {
     FixedMemoryStream stream { buffer };
 
@@ -167,12 +167,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         auto ttc_header_v1 = TRY(stream.read_in_place<TTCHeaderV1>());
         // FIXME: Check for major_version == 2.
 
-        if (index >= ttc_header_v1->num_fonts)
+        if (options.index >= ttc_header_v1->num_fonts)
             return Error::from_string_literal("Requested font index is too large");
 
-        TRY(stream.seek(ttc_header_v1->table_directory_offsets + sizeof(u32) * index, SeekMode::SetPosition));
+        TRY(stream.seek(ttc_header_v1->table_directory_offsets + sizeof(u32) * options.index, SeekMode::SetPosition));
         auto offset = TRY(stream.read_value<BigEndian<u32>>());
-        return try_load_from_offset(buffer, offset, move(external_cmap));
+        return try_load_from_offset(buffer, offset, move(options));
     }
     if (tag == Tag("OTTO"))
         return Error::from_string_literal("CFF fonts not supported yet");
@@ -180,11 +180,11 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     if (tag.to_u32() != 0x00010000 && tag != Tag("true"))
         return Error::from_string_literal("Not a valid font");
 
-    return try_load_from_offset(buffer, 0, move(external_cmap));
+    return try_load_from_offset(buffer, 0, move(options));
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset, OwnPtr<CharCodeToGlyphIndex> external_cmap)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset, Options options)
 {
     FixedMemoryStream stream { buffer };
     TRY(stream.seek(offset, AK::SeekMode::SetPosition));
@@ -272,7 +272,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Font is missing Hmtx");
     auto hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
 
-    NonnullOwnPtr<CharCodeToGlyphIndex> cmap = external_cmap ? external_cmap.release_nonnull() : TRY(CmapCharCodeToGlyphIndex::from_slice(opt_cmap_slice.value()));
+    NonnullOwnPtr<CharCodeToGlyphIndex> cmap = options.external_cmap ? options.external_cmap.release_nonnull() : TRY(CmapCharCodeToGlyphIndex::from_slice(opt_cmap_slice.value()));
 
     Optional<Loca> loca;
     if (opt_loca_slice.has_value())
