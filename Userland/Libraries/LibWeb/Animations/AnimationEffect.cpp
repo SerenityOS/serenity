@@ -9,6 +9,7 @@
 #include <LibWeb/Animations/AnimationEffect.h>
 #include <LibWeb/Animations/AnimationTimeline.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -181,8 +182,14 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
         m_playback_direction = timing.direction.value();
 
     //    - easing → timing function
-    if (timing.easing.has_value())
+    if (timing.easing.has_value()) {
         m_easing_function = timing.easing.value();
+        if (auto timing_function = parse_easing_string(realm(), m_easing_function)) {
+            m_timing_function = TimingFunction::from_easing_style_value(timing_function->as_easing());
+        } else {
+            m_timing_function = Animations::linear_timing_function;
+        }
+    }
 
     if (auto animation = m_associated_animation)
         animation->effect_timing_changed({});
@@ -578,6 +585,20 @@ Optional<double> AnimationEffect::transformed_progress() const
     // 3. Return the result of evaluating the animation effect’s timing function passing directed progress as the input progress value and
     //    before flag as the before flag.
     return m_timing_function(directed_progress.value(), before_flag);
+}
+
+RefPtr<CSS::StyleValue const> AnimationEffect::parse_easing_string(JS::Realm& realm, StringView value)
+{
+    auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value);
+    if (maybe_parser.is_error())
+        return {};
+
+    if (auto style_value = maybe_parser.release_value().parse_as_css_value(CSS::PropertyID::AnimationTimingFunction)) {
+        if (style_value->is_easing())
+            return style_value;
+    }
+
+    return {};
 }
 
 AnimationEffect::AnimationEffect(JS::Realm& realm)
