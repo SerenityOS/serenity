@@ -10,6 +10,10 @@
 #include <AK/Function.h>
 #include <AK/Vector.h>
 
+namespace Web::CSS {
+class EasingStyleValue;
+}
+
 namespace Web::Animations {
 
 // https://www.w3.org/TR/css-easing-1/#the-linear-easing-function
@@ -45,6 +49,8 @@ struct StepsTimingFunction {
 };
 
 struct TimingFunction {
+    static TimingFunction from_easing_style_value(CSS::EasingStyleValue const&);
+
     Variant<LinearTimingFunction, CubicBezierTimingFunction, StepsTimingFunction> function;
 
     double operator()(double input_progress, bool before_flag) const;
