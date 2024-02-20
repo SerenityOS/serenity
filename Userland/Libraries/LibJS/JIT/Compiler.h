@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2023, Simon Wanner <simon@skyrising.xyz>
+ * Copyright (c) 2023-2024, Simon Wanner <simon@skyrising.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,7 +41,6 @@ private:
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
-    static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R12;
     static constexpr auto RUNNING_EXECUTION_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
 
@@ -73,14 +72,11 @@ private:
         JS_ENUMERATE_COMMON_BINARY_OPS(O)                                        \
         JS_ENUMERATE_COMMON_UNARY_OPS(O)                                         \
         JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(O)                           \
-        O(LoadImmediate, load_immediate)                                         \
-        O(Load, load)                                                            \
-        O(Store, store)                                                          \
-        O(GetLocal, get_local)                                                   \
+        O(Mov, mov)                                                              \
+        O(End, end)                                                              \
         O(SetLocal, set_local)                                                   \
-        O(TypeofLocal, typeof_local)                                             \
         O(Jump, jump)                                                            \
-        O(JumpConditional, jump_conditional)                                     \
+        O(JumpIf, jump_if)                                                       \
         O(JumpNullish, jump_nullish)                                             \
         O(JumpUndefined, jump_undefined)                                         \
         O(Increment, increment)                                                  \
@@ -125,9 +121,10 @@ private:
         O(IteratorNext, iterator_next)                                           \
         O(ThrowIfNotObject, throw_if_not_object)                                 \
         O(ThrowIfNullish, throw_if_nullish)                                      \
+        O(ThrowIfTDZ, throw_if_tdz)                                              \
         O(IteratorClose, iterator_close)                                         \
         O(IteratorToArray, iterator_to_array)                                    \
-        O(Append, append)                                                        \
+        O(ArrayAppend, array_append)                                             \
         O(DeleteById, delete_by_id)                                              \
         O(DeleteByValue, delete_by_value)                                        \
         O(DeleteByValueWithThis, delete_by_value_with_this)                      \
@@ -157,9 +154,9 @@ private:
     JS_ENUMERATE_IMPLEMENTED_JIT_OPS(DECLARE_COMPILE_OP)
 #    undef DECLARE_COMPILE_OP
 
-    void compile_builtin(Bytecode::Builtin, Assembler::Label& slow_case, Assembler::Label& end);
+    void compile_builtin(Bytecode::Operand dst, Bytecode::Builtin, Assembler::Label& slow_case, Assembler::Label& end);
 #    define DECLARE_COMPILE_BUILTIN(name, snake_case_name, ...) \
-        void compile_builtin_##snake_case_name(Assembler::Label& slow_case, Assembler::Label& end);
+        void compile_builtin_##snake_case_name(Bytecode::Operand dst, Assembler::Label& slow_case, Assembler::Label& end);
     JS_ENUMERATE_BUILTINS(DECLARE_COMPILE_BUILTIN)
 #    undef DECLARE_COMPILE_BUILTIN
 
@@ -169,12 +166,10 @@ private:
     void store_vm_local(size_t, Assembler::Reg);
     void load_vm_local(Assembler::Reg, size_t);
 
-    void reload_cached_accumulator();
-    void flush_cached_accumulator();
-    void load_accumulator(Assembler::Reg);
-    void store_accumulator(Assembler::Reg);
+    void load(Assembler::Reg, Bytecode::Operand);
+    void store(Bytecode::Operand, Assembler::Reg);
 
-    void compile_continuation(Optional<Bytecode::Label>, bool is_await);
+    void compile_continuation(Bytecode::Operand, Optional<Bytecode::Label>, bool is_await);
 
     template<typename Codegen>
     void branch_if_same_type_for_equality(Assembler::Reg, Assembler::Reg, Codegen);
@@ -219,9 +214,9 @@ private:
     void jump_if_not_double(Assembler::Reg reg, Assembler::Reg nan, Assembler::Reg temp, Assembler::Label&);
 
     template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
-    void compile_binary_op_fastpaths(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
+    void compile_binary_op_fastpaths(Bytecode::Operand dst, Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
     template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
-    void compiler_comparison_fastpaths(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
+    void compiler_comparison_fastpaths(Bytecode::Operand dst, Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
 
     explicit Compiler(Bytecode::Executable& bytecode_executable)
         : m_bytecode_executable(bytecode_executable)
