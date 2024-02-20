@@ -1113,6 +1113,31 @@ ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
+ThrowCompletionOr<void> PostfixIncrement::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto old_value = interpreter.get(m_src);
+
+    // OPTIMIZATION: Fast path for Int32 values.
+    if (old_value.is_int32()) {
+        auto integer_value = old_value.as_i32();
+        if (integer_value != NumericLimits<i32>::max()) [[likely]] {
+            interpreter.set(m_dst, old_value);
+            interpreter.set(m_src, Value { integer_value + 1 });
+            return {};
+        }
+    }
+
+    old_value = TRY(old_value.to_numeric(vm));
+    interpreter.set(m_dst, old_value);
+
+    if (old_value.is_number())
+        interpreter.set(m_src, Value(old_value.as_double() + 1));
+    else
+        interpreter.set(m_src, BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 })));
+    return {};
+}
+
 ThrowCompletionOr<void> Decrement::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1124,6 +1149,21 @@ ThrowCompletionOr<void> Decrement::execute_impl(Bytecode::Interpreter& interpret
         interpreter.set(dst(), Value(old_value.as_double() - 1));
     else
         interpreter.set(dst(), BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 })));
+    return {};
+}
+
+ThrowCompletionOr<void> PostfixDecrement::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto old_value = interpreter.get(m_src);
+
+    old_value = TRY(old_value.to_numeric(vm));
+    interpreter.set(m_dst, old_value);
+
+    if (old_value.is_number())
+        interpreter.set(m_src, Value(old_value.as_double() - 1));
+    else
+        interpreter.set(m_src, BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 })));
     return {};
 }
 
@@ -1353,12 +1393,6 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 {
     auto& vm = interpreter.vm();
     interpreter.set(dst(), TRY(typeof_variable(vm, interpreter.current_executable().get_identifier(m_identifier))));
-    return {};
-}
-
-ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.set(dst(), TRY(interpreter.get(src()).to_numeric(interpreter.vm())));
     return {};
 }
 
@@ -1763,9 +1797,23 @@ ByteString Increment::to_byte_string_impl(Bytecode::Executable const& executable
     return ByteString::formatted("Increment {}", format_operand("dst"sv, m_dst, executable));
 }
 
-ByteString Decrement::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString PostfixIncrement::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return "Decrement";
+    return ByteString::formatted("PostfixIncrement {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("src"sv, m_dst, executable));
+}
+
+ByteString Decrement::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("Decrement {}", format_operand("dst"sv, m_dst, executable));
+}
+
+ByteString PostfixDecrement::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("PostfixDecrement {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("src"sv, m_dst, executable));
 }
 
 ByteString Throw::to_byte_string_impl(Bytecode::Executable const& executable) const
@@ -1972,13 +2020,6 @@ ByteString TypeofVariable::to_byte_string_impl(Bytecode::Executable const& execu
     return ByteString::formatted("TypeofVariable {}, {}",
         format_operand("dst"sv, m_dst, executable),
         executable.identifier_table->get(m_identifier));
-}
-
-ByteString ToNumeric::to_byte_string_impl(Bytecode::Executable const& executable) const
-{
-    return ByteString::formatted("ToNumeric {}, {}",
-        format_operand("dst"sv, m_dst, executable),
-        format_operand("src"sv, m_src, executable));
 }
 
 ByteString BlockDeclarationInstantiation::to_byte_string_impl(Bytecode::Executable const&) const

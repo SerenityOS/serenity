@@ -2373,15 +2373,22 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> UpdateExpression::g
     auto reference = TRY(generator.emit_load_from_reference(*m_argument));
 
     Optional<Bytecode::Operand> previous_value_for_postfix;
-    if (!m_prefixed) {
-        previous_value_for_postfix = Bytecode::Operand(generator.allocate_register());
-        generator.emit<Bytecode::Op::ToNumeric>(*previous_value_for_postfix, *reference.loaded_value);
-    }
 
-    if (m_op == UpdateOp::Increment)
-        generator.emit<Bytecode::Op::Increment>(*reference.loaded_value);
-    else
-        generator.emit<Bytecode::Op::Decrement>(*reference.loaded_value);
+    if (m_op == UpdateOp::Increment) {
+        if (m_prefixed) {
+            generator.emit<Bytecode::Op::Increment>(*reference.loaded_value);
+        } else {
+            previous_value_for_postfix = Bytecode::Operand(generator.allocate_register());
+            generator.emit<Bytecode::Op::PostfixIncrement>(*previous_value_for_postfix, *reference.loaded_value);
+        }
+    } else {
+        if (m_prefixed) {
+            generator.emit<Bytecode::Op::Decrement>(*reference.loaded_value);
+        } else {
+            previous_value_for_postfix = Bytecode::Operand(generator.allocate_register());
+            generator.emit<Bytecode::Op::PostfixDecrement>(*previous_value_for_postfix, *reference.loaded_value);
+        }
+    }
 
     if (is<Identifier>(*m_argument))
         (void)TRY(generator.emit_store_to_reference(static_cast<Identifier const&>(*m_argument), *reference.loaded_value));
