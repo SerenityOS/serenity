@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
 namespace Kernel::FIS {
@@ -38,6 +39,7 @@ struct [[gnu::packed]] Header {
     u8 fis_type;
     u8 port_muliplier;
 };
+static_assert(AssertSize<Header, 2>());
 
 }
 
@@ -56,6 +58,7 @@ struct [[gnu::packed]] Register {
     u8 control;
     u32 reserved;
 };
+static_assert(AssertSize<Register, 5 * 4>());
 
 };
 
@@ -72,6 +75,7 @@ struct [[gnu::packed]] Register {
     u16 count;
     u8 reserved2[6];
 };
+static_assert(AssertSize<Register, 5 * 4>());
 
 struct [[gnu::packed]] SetDeviceBits {
     Header header;
@@ -79,11 +83,13 @@ struct [[gnu::packed]] SetDeviceBits {
     u8 error;
     u32 protocol_specific;
 };
+static_assert(AssertSize<SetDeviceBits, 2 * 4>());
 
 struct [[gnu::packed]] DMAActivate {
     Header header;
     u16 reserved;
 };
+static_assert(AssertSize<DMAActivate, 1 * 4>());
 
 struct [[gnu::packed]] PIOSetup {
     Header header;
@@ -99,6 +105,7 @@ struct [[gnu::packed]] PIOSetup {
     u16 transfer_count;
     u16 reserved3;
 };
+static_assert(AssertSize<PIOSetup, 5 * 4>());
 
 }
 
@@ -109,6 +116,7 @@ struct [[gnu::packed]] Data {
     u16 reserved;
     u32 data[];
 };
+static_assert(AssertSize<Data, 1 * 4>());
 
 struct [[gnu::packed]] BISTActivate {
 };
@@ -122,6 +130,7 @@ struct [[gnu::packed]] DMASetup {
     u32 dma_transfer_count;
     u32 reserved3;
 };
+static_assert(AssertSize<DMASetup, 7 * 4>());
 
 }
 
@@ -263,6 +272,7 @@ struct [[gnu::packed]] HBADefinedCapabilities {
     bool aggressive_device_sleep_management_supported : 1 { false };
     bool devsleep_entrance_from_slumber_only : 1 { false };
 };
+static_assert(AssertSize<HBADefinedCapabilities, 20>());
 
 enum class DeviceDetectionInitialization {
     NoActionRequested,
@@ -381,6 +391,7 @@ struct [[gnu::packed]] PortRegisters {
     u8 reserved2[0x70 - 0x48];
     u8 vs[16]; /* Port x Vendor Specific */
 };
+static_assert(AssertSize<PortRegisters, 0x80>());
 
 struct [[gnu::packed]] GenericHostControl {
     u32 cap; /* Host Capabilities */
@@ -395,6 +406,7 @@ struct [[gnu::packed]] GenericHostControl {
     u32 cap2;      /* Host Capabilities Extended */
     u32 bohc;      /* BIOS/OS Handoff Control and Status */
 };
+static_assert(AssertSize<GenericHostControl, 0x2c>());
 
 struct [[gnu::packed]] HBA {
     GenericHostControl control_regs;
@@ -403,6 +415,8 @@ struct [[gnu::packed]] HBA {
     u8 vendor_specific[96];
     PortRegisters port_regs[];
 };
+static_assert(AssertSize<HBA, 0x100>());
+static_assert(__builtin_offsetof(HBA, port_regs[32]) == 0x1100);
 
 struct [[gnu::packed]] CommandHeader {
     u16 attributes;
@@ -412,6 +426,7 @@ struct [[gnu::packed]] CommandHeader {
     u32 ctbau; /* Command Table Descriptor Base Address Upper 32-bits */
     u32 reserved[4];
 };
+static_assert(AssertSize<CommandHeader, 8 * 4>());
 
 struct [[gnu::packed]] PhysicalRegionDescriptor {
     u32 base_low;
@@ -419,6 +434,7 @@ struct [[gnu::packed]] PhysicalRegionDescriptor {
     u32 reserved;
     u32 byte_count; /* Bit 31 - Interrupt completion, Bit 0 to 21 - Data Byte Count */
 };
+static_assert(AssertSize<PhysicalRegionDescriptor, 4 * 4>());
 
 struct [[gnu::packed]] CommandTable {
     u8 command_fis[64];
@@ -426,4 +442,6 @@ struct [[gnu::packed]] CommandTable {
     u8 reserved[32];
     PhysicalRegionDescriptor descriptors[];
 };
+static_assert(AssertSize<CommandTable, 0x80>());
+
 }
