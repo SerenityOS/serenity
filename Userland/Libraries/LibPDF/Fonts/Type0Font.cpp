@@ -183,7 +183,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
     if (descriptor->contains(CommonNames::FontFile2)) {
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
         float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
-        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), { .external_cmap = move(cid_to_gid_map) }));
+        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), { .external_cmap = move(cid_to_gid_map), .skip_tables = pdf_skipped_opentype_tables }));
         font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
     }
 
