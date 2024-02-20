@@ -622,6 +622,8 @@ public:
 
     OrderedHashTable<JS::NonnullGCPtr<Element>> const& top_layer_elements() const { return m_top_layer_elements; }
 
+    size_t transition_generation() const { return m_transition_generation; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -842,6 +844,9 @@ private:
     // https://www.w3.org/TR/web-animations-1/#pending-animation-event-queue
     Vector<PendingAnimationEvent> m_pending_animation_event_queue;
     RefPtr<Core::Timer> m_animation_driver_timer;
+
+    // https://drafts.csswg.org/css-transitions-2/#current-transition-generation
+    size_t m_transition_generation { 0 };
 
     bool m_needs_to_call_page_did_load { false };
 

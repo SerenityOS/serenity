@@ -1166,6 +1166,10 @@ void Document::update_style()
 
     update_animated_style_if_needed();
 
+    // Associated with each top-level browsing context is a current transition generation that is incremented on each
+    // style change event. [CSS-Transitions-2]
+    m_transition_generation++;
+
     if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
 
