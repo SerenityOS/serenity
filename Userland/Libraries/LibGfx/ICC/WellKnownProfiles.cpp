@@ -18,7 +18,7 @@ static ProfileHeader rgb_header()
     header.device_class = DeviceClass::DisplayDevice;
     header.data_color_space = ColorSpace::RGB;
     header.connection_space = ColorSpace::PCSXYZ;
-    header.creation_timestamp = time(NULL);
+    header.creation_timestamp = MUST(DateTime::from_time_t(0));
     header.rendering_intent = RenderingIntent::Perceptual;
     header.pcs_illuminant = XYZ { 0.9642, 1.0, 0.8249 };
     return header;

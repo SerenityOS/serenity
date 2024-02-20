@@ -21,45 +21,16 @@ namespace Gfx::ICC {
 
 namespace {
 
-ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
+ErrorOr<DateTime> parse_date_time_number(DateTimeNumber const& date_time)
 {
-    // ICC V4, 4.2 dateTimeNumber
-
-    // "Number of the month (1 to 12)"
-    if (date_time.month < 1 || date_time.month > 12)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber month out of bounds");
-
-    // "Number of the day of the month (1 to 31)"
-    if (date_time.day < 1 || date_time.day > 31)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber day out of bounds");
-
-    // "Number of hours (0 to 23)"
-    if (date_time.hours > 23)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber hours out of bounds");
-
-    // "Number of minutes (0 to 59)"
-    if (date_time.minutes > 59)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber minutes out of bounds");
-
-    // "Number of seconds (0 to 59)"
-    // ICC profiles apparently can't be created during leap seconds (seconds would be 60 there, but the spec doesn't allow that).
-    if (date_time.seconds > 59)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber seconds out of bounds");
-
-    struct tm tm = {};
-    tm.tm_year = date_time.year - 1900;
-    tm.tm_mon = date_time.month - 1;
-    tm.tm_mday = date_time.day;
-    tm.tm_hour = date_time.hours;
-    tm.tm_min = date_time.minutes;
-    tm.tm_sec = date_time.seconds;
-    // timegm() doesn't read tm.tm_isdst, tm.tm_wday, and tm.tm_yday, no need to fill them in.
-
-    time_t timestamp = timegm(&tm);
-    if (timestamp == -1)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber not representable as timestamp");
-
-    return timestamp;
+    return DateTime {
+        .year = date_time.year,
+        .month = date_time.month,
+        .day = date_time.day,
+        .hours = date_time.hours,
+        .minutes = date_time.minutes,
+        .seconds = date_time.seconds,
+    };
 }
 
 ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
@@ -183,7 +154,7 @@ ErrorOr<ColorSpace> parse_connection_space(ICCHeader const& header)
     return space;
 }
 
-ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
+ErrorOr<DateTime> parse_creation_date_time(ICCHeader const& header)
 {
     // ICC v4, 7.2.8 Date and time field
     return parse_date_time_number(header.profile_creation_time);
@@ -356,6 +327,74 @@ DeviceAttributes::DeviceAttributes() = default;
 DeviceAttributes::DeviceAttributes(u64 bits)
     : m_bits(bits)
 {
+}
+
+static ErrorOr<void> validate_date_time(DateTime const& date_time)
+{
+    // Returns if a DateTime is valid per ICC V4, 4.2 dateTimeNumber.
+    // In practice, some profiles contain invalid dates, but we should enforce this for data we write at least.
+
+    // "Number of the month (1 to 12)"
+    if (date_time.month < 1 || date_time.month > 12)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber month out of bounds");
+
+    // "Number of the day of the month (1 to 31)"
+    if (date_time.day < 1 || date_time.day > 31)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber day out of bounds");
+
+    // "Number of hours (0 to 23)"
+    if (date_time.hours > 23)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber hours out of bounds");
+
+    // "Number of minutes (0 to 59)"
+    if (date_time.minutes > 59)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber minutes out of bounds");
+
+    // "Number of seconds (0 to 59)"
+    // ICC profiles apparently can't be created during leap seconds (seconds would be 60 there, but the spec doesn't allow that).
+    if (date_time.seconds > 59)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber seconds out of bounds");
+
+    return {};
+}
+
+ErrorOr<time_t> DateTime::to_time_t() const
+{
+    TRY(validate_date_time(*this));
+
+    struct tm tm = {};
+    tm.tm_year = year - 1900;
+    tm.tm_mon = month - 1;
+    tm.tm_mday = day;
+    tm.tm_hour = hours;
+    tm.tm_min = minutes;
+    tm.tm_sec = seconds;
+    // timegm() doesn't read tm.tm_isdst, tm.tm_wday, and tm.tm_yday, no need to fill them in.
+
+    time_t timestamp = timegm(&tm);
+    if (timestamp == -1)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber not representable as timestamp");
+
+    return timestamp;
+}
+
+ErrorOr<DateTime> DateTime::from_time_t(time_t timestamp)
+{
+    struct tm gmt_tm;
+    if (gmtime_r(&timestamp, &gmt_tm) == NULL)
+        return Error::from_string_literal("ICC::Profile: timestamp not representable as DateTimeNumber");
+
+    // FIXME: Range-check, using something like `TRY(Checked<u16>(x).try_value())`?
+    DateTime result {
+        .year = static_cast<u16>(gmt_tm.tm_year + 1900),
+        .month = static_cast<u16>(gmt_tm.tm_mon + 1),
+        .day = static_cast<u16>(gmt_tm.tm_mday),
+        .hours = static_cast<u16>(gmt_tm.tm_hour),
+        .minutes = static_cast<u16>(gmt_tm.tm_min),
+        .seconds = static_cast<u16>(gmt_tm.tm_sec),
+    };
+    TRY(validate_date_time(result));
+    return result;
 }
 
 static ErrorOr<ProfileHeader> read_header(ReadonlyBytes bytes)

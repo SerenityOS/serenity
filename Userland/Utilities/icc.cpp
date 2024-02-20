@@ -324,7 +324,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("          device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
     outln("      data color space: {}", Gfx::ICC::data_color_space_name(profile->data_color_space()));
     outln("      connection space: {}", Gfx::ICC::profile_connection_space_name(profile->connection_space()));
-    outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()));
+
+    if (auto time = profile->creation_timestamp().to_time_t(); !time.is_error()) {
+        // Print in friendly localtime for valid profiles.
+        outln("creation date and time: {}", Core::DateTime::from_timestamp(time.release_value()));
+    } else {
+        outln("creation date and time: {:04}-{:02}-{:02} {:02}:{:02}:{:02} UTC (invalid)",
+            profile->creation_timestamp().year, profile->creation_timestamp().month, profile->creation_timestamp().day,
+            profile->creation_timestamp().hours, profile->creation_timestamp().minutes, profile->creation_timestamp().seconds);
+    }
+
     out_optional("      primary platform", profile->primary_platform().map([](auto platform) { return primary_platform_name(platform); }));
 
     auto flags = profile->flags();
