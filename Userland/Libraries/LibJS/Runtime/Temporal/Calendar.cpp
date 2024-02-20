@@ -115,55 +115,52 @@ ThrowCompletionOr<void> calendar_methods_record_lookup(VM& vm, CalendarMethods& 
 {
     auto& realm = *vm.current_realm();
 
-    // FIXME: Spec bug? https://github.com/tc39/proposal-temporal/issues/2772
-    //        Following builtin-lookups should probably be using Temporal.Calendar.prototype
-
     // 1. Assert: CalendarMethodsRecordHasLookedUp(calendarRec, methodName) is false.
-    // 2. If methodName is dateAdd, then
+    // 2. If methodName is DATE-ADD, then
     //     a. If calendarRec.[[Receiver]] is a String, then
     //         i. Set calendarRec.[[DateAdd]] to %Temporal.Calendar.prototype.dateAdd%.
     //     b. Else,
     //         i. Set calendarRec.[[DateAdd]] to ? GetMethod(calendarRec.[[Receiver]], "dateAdd").
     //         ii. If calendarRec.[[DateAdd]] is undefined, throw a TypeError exception.
-    // 3. Else if methodName is dateFromFields, then
+    // 3. Else if methodName is DATE-FROM-FIELDS, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[DateFromFields]] to %Temporal.TimeZone.prototype.dateFromFields%.
+    //         i. Set calendarRec.[[DateFromFields]] to %Temporal.Calendar.prototype.dateFromFields%.
     //     b. Else,
     //         i. Set calendarRec.[[DateFromFields]] to ? GetMethod(calendarRec.[[Receiver]], "dateFromFields").
     //         ii. If calendarRec.[[DateFromFields]] is undefined, throw a TypeError exception.
-    // 4. Else if methodName is dateUntil, then
+    // 4. Else if methodName is DATE-UNTIL, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[DateUntil]] to %Temporal.TimeZone.prototype.dateUntil%.
+    //         i. Set calendarRec.[[DateUntil]] to %Temporal.Calendar.prototype.dateUntil%.
     //     b. Else,
     //         i. Set calendarRec.[[DateUntil]] to ? GetMethod(calendarRec.[[Receiver]], "dateUntil").
     //         ii. If calendarRec.[[DateUntil]] is undefined, throw a TypeError exception.
-    // 5. Else if methodName is day, then
+    // 5. Else if methodName is DAY, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[Day]] to %Temporal.TimeZone.prototype.day%.
+    //         i. Set calendarRec.[[Day]] to %Temporal.Calendar.prototype.day%.
     //     b. Else,
     //         i. Set calendarRec.[[Day]] to ? GetMethod(calendarRec.[[Receiver]], "day").
     //         ii. If calendarRec.[[Day]] is undefined, throw a TypeError exception.
-    // 6. Else if methodName is fields, then
+    // 6. Else if methodName is FIELDS, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[Fields]] to %Temporal.TimeZone.prototype.fields%.
+    //         i. Set calendarRec.[[Fields]] to %Temporal.Calendar.prototype.fields%.
     //     b. Else,
     //         i. Set calendarRec.[[Fields]] to ? GetMethod(calendarRec.[[Receiver]], "fields").
     //         ii. If calendarRec.[[Fields]] is undefined, throw a TypeError exception.
-    // 7. Else if methodName is mergeFields, then
+    // 7. Else if methodName is MERGE-FIELDS, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[MergeFields]] to %Temporal.TimeZone.prototype.mergeFields%.
+    //         i. Set calendarRec.[[MergeFields]] to %Temporal.Calendar.prototype.mergeFields%.
     //     b. Else,
     //         i. Set calendarRec.[[MergeFields]] to ? GetMethod(calendarRec.[[Receiver]], "mergeFields").
     //         ii. If calendarRec.[[MergeFields]] is undefined, throw a TypeError exception.
-    // 8. Else if methodName is monthDayFromFields, then
+    // 8. Else if methodName is MONTH-DAY-FROM-FIELDS, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[MonthDayFromFields]] to %Temporal.TimeZone.prototype.monthDayFromFields%.
+    //         i. Set calendarRec.[[MonthDayFromFields]] to %Temporal.Calendar.prototype.monthDayFromFields%.
     //     b. Else,
     //         i. Set calendarRec.[[MonthDayFromFields]] to ? GetMethod(calendarRec.[[Receiver]], "monthDayFromFields").
     //         ii. If calendarRec.[[MonthDayFromFields]] is undefined, throw a TypeError exception.
-    // 9. Else if methodName is yearMonthFromFields, then
+    // 9. Else if methodName is YEAR-MONTH-FROM-FIELDS, then
     //     a. If calendarRec.[[Receiver]] is a String, then
-    //         i. Set calendarRec.[[YearMonthFromFields]] to %Temporal.TimeZone.prototype.yearMonthFromFields%.
+    //         i. Set calendarRec.[[YearMonthFromFields]] to %Temporal.Calendar.prototype.yearMonthFromFields%.
     //     b. Else,
     //         i. Set calendarRec.[[YearMonthFromFields]] to ? GetMethod(calendarRec.[[Receiver]], "yearMonthFromFields").
     //         ii. If calendarRec.[[YearMonthFromFields]] is undefined, throw a TypeError exception.
@@ -241,10 +238,10 @@ ThrowCompletionOr<Value> calendar_methods_record_call(VM& vm, CalendarMethods co
 
     // 2. Let receiver be calendarRec.[[Receiver]].
     // 3. If CalendarMethodsRecordIsBuiltin(calendarRec) is true, then
-    //     a. Set receiver to ! CreateTemporalTimeZone(calendarRec.[[Receiver]]).
+    //     a. Set receiver to ! CreateTemporalCalendar(calendarRec.[[Receiver]]).
     GCPtr<Object> receiver;
     if (calendar_methods_record_is_builtin(calendar_record))
-        receiver = MUST(create_temporal_time_zone(vm, calendar_record.receiver.get<String>()));
+        receiver = MUST(create_temporal_calendar(vm, calendar_record.receiver.get<String>()));
     else
         receiver = calendar_record.receiver.get<NonnullGCPtr<Object>>();
 
