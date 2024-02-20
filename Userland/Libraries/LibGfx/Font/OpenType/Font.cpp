@@ -278,6 +278,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
     }
 
+    if (!options.external_cmap && !opt_cmap_slice.has_value())
+        return Error::from_string_literal("Font is missing Cmap");
     NonnullOwnPtr<CharCodeToGlyphIndex> cmap = options.external_cmap ? options.external_cmap.release_nonnull() : TRY(CmapCharCodeToGlyphIndex::from_slice(opt_cmap_slice.value()));
 
     Optional<Loca> loca;
