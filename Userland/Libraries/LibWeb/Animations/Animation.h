@@ -99,6 +99,9 @@ public:
     void effect_timing_changed(Badge<AnimationEffect>);
 
     virtual bool is_css_animation() const { return false; }
+    virtual bool is_css_transition() const { return false; }
+
+    virtual JS::GCPtr<DOM::Element> owning_element() const { return {}; }
 
     virtual AnimationClass animation_class() const { return AnimationClass::None; }
     virtual Optional<int> class_specific_composite_order(JS::NonnullGCPtr<Animation>) const { return {}; }
