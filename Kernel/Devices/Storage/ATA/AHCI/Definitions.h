@@ -401,7 +401,7 @@ struct [[gnu::packed]] HBA {
     u8 reserved[52];
     u8 nvmhci[64];
     u8 vendor_specific[96];
-    PortRegisters port_regs[32];
+    PortRegisters port_regs[];
 };
 
 struct [[gnu::packed]] CommandHeader {
