@@ -2348,12 +2348,56 @@
     ],
     "percentages-resolve-to": "length"
   },
+  "transition": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "none",
+    "longhands": [
+      "transition-property",
+      "transition-duration",
+      "transition-timing-function",
+      "transition-delay"
+    ]
+  },
   "transition-delay": {
+    "affects-layout": true,
     "animation-type": "none",
     "inherited": false,
     "initial": "0s",
     "valid-types": [
       "time"
+    ]
+  },
+  "transition-duration": {
+    "affects-layout": true,
+    "animation-type": "none",
+    "inherited": false,
+    "initial": "0s",
+    "valid-types": [
+      "time"
+    ]
+  },
+  "transition-property": {
+    "affects-layout": true,
+    "animation-type": "none",
+    "inherited": false,
+    "initial": "all",
+    "valid-types": [
+      "string",
+      "custom-ident"
+    ],
+    "valid-identifiers": [
+      "all",
+      "none"
+    ]
+  },
+  "transition-timing-function": {
+    "affects-layout": true,
+    "animation-type": "none",
+    "inherited": false,
+    "initial": "ease",
+    "valid-types": [
+      "easing-function"
     ]
   },
   "user-select": {
