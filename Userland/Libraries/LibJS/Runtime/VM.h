@@ -98,7 +98,7 @@ public:
     {
         // Address sanitizer (ASAN) used to check for more space but
         // currently we can't detect the stack size with it enabled.
-        return m_stack_info.size_free() < 128 * KiB;
+        return m_stack_info.size_free() < 256 * KiB;
     }
 
     // TODO: Rename this function instead of providing a second argument, now that the global object is no longer passed in.
