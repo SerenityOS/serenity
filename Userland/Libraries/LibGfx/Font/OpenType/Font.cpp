@@ -210,7 +210,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     for (auto i = 0; i < table_directory.num_tables; i++) {
         auto& table_record = *TRY(stream.read_in_place<TableRecord const>());
 
-        if (table_record.length == 0 || Checked<u32>::addition_would_overflow(static_cast<u32>(table_record.offset), static_cast<u32>(table_record.length)))
+        if (Checked<u32>::addition_would_overflow(static_cast<u32>(table_record.offset), static_cast<u32>(table_record.length)))
             return Error::from_string_literal("Invalid table offset or length in font");
 
         if (buffer.size() < table_record.offset + table_record.length)
