@@ -290,8 +290,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     }
 
     Optional<OS2> os2;
-    if (opt_os2_slice.has_value())
-        os2 = TRY(OS2::from_slice(opt_os2_slice.value()));
+    if (!(options.skip_tables & Options::SkipTables::OS2)) {
+        if (opt_os2_slice.has_value())
+            os2 = TRY(OS2::from_slice(opt_os2_slice.value()));
+    }
 
     Optional<Kern> kern {};
     if (opt_kern_slice.has_value())

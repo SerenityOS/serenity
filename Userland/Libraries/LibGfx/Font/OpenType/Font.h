@@ -37,6 +37,9 @@ struct FontOptions {
 
         // If set, do not try to read the 'hmtx' table. This will make glyph_metrics() return 0 for everyting and is_fixed_width() return true.
         Hmtx = 1 << 1,
+
+        // If set, do not try to read the 'OS/2' table. metrics(), resolve_ascender_and_descender(), weight(), width(), and slope() will return different values.
+        OS2 = 1 << 2,
     };
     u32 skip_tables { 0 };
 };
